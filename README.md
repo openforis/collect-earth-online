@@ -2,7 +2,8 @@
 
 *Crowdsourced visual interpretation of on-demand satellite imagery*
 
-This is a Java 8 application written with the Spark web framework.
+This is a Java 8 application written with the Spark web framework
+(http://sparkjava.com).
 
 To launch the webserver on http://localhost:8080, run either:
 
