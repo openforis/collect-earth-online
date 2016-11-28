@@ -1,0 +1,22 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'openforis.CollectEarthOnline'
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    baseName = 'collect-earth-online'
+    version = '1.0.0-SNAPSHOT'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile "com.sparkjava:spark-core:2.5"
+    compile "org.slf4j:slf4j-simple:1.7.21"
+    testCompile "junit:junit:4.12"
+}
