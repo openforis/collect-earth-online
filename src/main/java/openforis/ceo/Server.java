@@ -1,42 +1,85 @@
 package openforis.ceo;
 
-import static spark.Spark.*;
-// TODO: Fix this import.
-// import static spark.route.RouteOverview;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateExceptionHandler;
+import java.io.File;
+import java.net.URL;
+import static spark.Spark.get;
+import static spark.Spark.exception;
+import static spark.Spark.port;
+import static spark.Spark.staticFileLocation;
+import spark.template.freemarker.FreeMarkerEngine;
 
 public class Server {
 
-    public static void main(String[] args) {
+    private static FreeMarkerEngine getTemplateRenderer() throws Exception {
+        Configuration cfg = new Configuration(Configuration.VERSION_2_3_23);
+        URL templateDirectory = Server.class.getResource("/template/freemarker");
+        cfg.setDirectoryForTemplateLoading(new File(templateDirectory.toURI()));
+        cfg.setDefaultEncoding("UTF-8");
+        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
+        // cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        cfg.setLogTemplateExceptions(false);
+        return new FreeMarkerEngine(cfg);
+    }
+
+    public static void main(String[] args) throws Exception {
+        // Configure Spark
         port(8080);
+        staticFileLocation("/public");
 
-        // TODO: Get deploy/clientkeystore signed by a certificate authority.
-        //       https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
-        // secure("deploy/clientkeystore", "ceocert", null, null);
+        // Configure FreeMarker
+        FreeMarkerEngine renderer = getTemplateRenderer();
 
-        staticFiles.location("/public");
+        // Setup Routes
+        get("/", Views.homePage, renderer);
+        get("/about", (request, response) -> "About");
+        get("/login", (request, response) -> "Login");
+        get("/register", (request, response) -> "Register");
+        get("/password", (request, response) -> "Password");
+        get("/password-reset", (request, response) -> "Password-Reset");
+        get("/logout", (request, response) -> "Logout");
+        get("/select-project", (request, response) -> "Select-Project");
+        get("/account", (request, response) -> "Account");
+        get("/dashboard", (request, response) -> "Dashboard");
+        get("/admin", (request, response) -> "Admin");
+        get("*", (request, response) -> "Page Not Found");
 
-        get("/hello", (request, response) -> "Hello World");
-
-        get("/hello/:name", (request, response) -> {
-                return "Hello: " + request.params(":name");
+        // Handle Exceptions
+        exception(Exception.class, (exception, request, response) -> {
+                System.out.println("Exception Thrown: " + exception);
             });
-
-        get("/say/*/to/*", (request, response) -> {
-                return "Number of splat parameters: " + request.splat().length;
-            });
-
-        before("/protected/*", (request, response) -> {
-                boolean authenticated = false;
-                // ... check if authenticated
-                if (!authenticated) {
-                    halt(401, "Go Away!");
-                }
-            });
-        
-        // RouteOverview.enableRouteOverview("/allroutes");
     }
 
 }
+
+/*
+get("/hello", (request, response) -> "Hello World");
+
+get("/hello/:name", (request, response) -> {
+        return "Hello: " + request.params(":name");
+    });
+*/
+// get("/say/*/to/*", (request, response) -> {
+//         return "Number of splat parameters: " + request.splat().length;
+//     });
+/*
+before("/protected/*", (request, response) -> {
+        boolean authenticated = false;
+        // ... check if authenticated
+        if (!authenticated) {
+            halt(401, "Go Away!");
+        }
+    });
+
+after((request, response) -> {
+    response.header("foo", "set by after filter");
+});
+
+// TODO: Get deploy/clientkeystore signed by a certificate authority.
+// https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
+secure("deploy/clientkeystore", "ceocert", null, null);
+*/
 
 /*
 request.attributes();             // the attributes list
