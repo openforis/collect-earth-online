@@ -1,10 +1,10 @@
-package openforis;
+package openforis.ceo;
 
 import static spark.Spark.*;
 // TODO: Fix this import.
 // import static spark.route.RouteOverview;
 
-public class CollectEarthOnline {
+public class Server {
 
     public static void main(String[] args) {
         port(8080);

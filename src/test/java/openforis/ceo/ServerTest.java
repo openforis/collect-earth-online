@@ -1,16 +1,16 @@
-package openforis;
+package openforis.ceo;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-public class CollectEarthOnlineTest extends TestCase {
+public class ServerTest extends TestCase {
     /**
      * Create the test case
      *
      * @param testName name of the test case
      */
-    public CollectEarthOnlineTest(String testName) {
+    public ServerTest(String testName) {
         super(testName);
     }
 
@@ -18,13 +18,13 @@ public class CollectEarthOnlineTest extends TestCase {
      * @return the suite of tests being tested
      */
     public static Test suite() {
-        return new TestSuite(CollectEarthOnlineTest.class);
+        return new TestSuite(ServerTest.class);
     }
 
     /**
      * Rigourous Test :-)
      */
-    public void testCollectEarthOnline() {
+    public void testServer() {
         assertTrue(true);
     }
 }

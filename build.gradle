@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'openforis.CollectEarthOnline'
+mainClassName = 'openforis.ceo.Server'
 
 repositories {
     mavenCentral()
