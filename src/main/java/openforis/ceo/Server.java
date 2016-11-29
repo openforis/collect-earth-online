@@ -32,18 +32,18 @@ public class Server {
         FreeMarkerEngine renderer = getTemplateRenderer();
 
         // Setup Routes
-        get("/", Views.homePage, renderer);
-        get("/about", (request, response) -> "About");
-        get("/login", (request, response) -> "Login");
-        get("/register", (request, response) -> "Register");
-        get("/password", (request, response) -> "Password");
-        get("/password-reset", (request, response) -> "Password-Reset");
-        get("/logout", (request, response) -> "Logout");
-        get("/select-project", (request, response) -> "Select-Project");
-        get("/account", (request, response) -> "Account");
-        get("/dashboard", (request, response) -> "Dashboard");
-        get("/admin", (request, response) -> "Admin");
-        get("*", (request, response) -> "Page Not Found");
+        get("/",               Views.home,          renderer);
+        get("/about",          Views.about,         renderer);
+        get("/login",          Views.login,         renderer);
+        get("/register",       Views.register,      renderer);
+        get("/password",       Views.password,      renderer);
+        get("/password-reset", Views.passwordReset, renderer);
+        get("/logout",         Views.logout,        renderer);
+        get("/select-project", Views.selectProject, renderer);
+        get("/account",        Views.account,       renderer);
+        get("/dashboard",      Views.dashboard,     renderer);
+        get("/admin",          Views.admin,         renderer);
+        get("*",               Views.pageNotFound,  renderer);
 
         // Handle Exceptions
         exception(Exception.class, (exception, request, response) -> {
