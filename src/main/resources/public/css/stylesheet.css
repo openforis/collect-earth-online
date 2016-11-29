@@ -1,3 +1,770 @@
 body {
-    background-color:green;
+  font-family: Open Sans;
+  font-size: 16px;
+  height: 100vh;
+  background-image: url(../img/mountain_field_scenery_small.jpg);
+  background-size: cover;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+}
+
+header, nav, section {
+  display: block;
+}
+
+h1, h2, h3, h4, h5, h6, h7, p, label {
+  font-family: Open Sans;
+  font-weight: 400;
+}
+
+.button {
+  line-height: 100%;
+  cursor: pointer;
+  background-color: #3FABC6;
+  color: white;
+  font-family: Oswald;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  border-radius: 0px;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  -o-border-radius: 0px;
+}
+
+header {
+  position: fixed;
+  top: 0rem;
+  left: 0rem;
+  height: 6rem;
+  width: 100%;
+  color: #eee;
+  background-color: #3a3a3a;
+}
+
+header a {
+  color: #eee;
+}
+
+header a:link, header a:visited, header a:active {
+  text-decoration: none;
+}
+
+header a:hover, header a.active-link {
+  text-shadow: 0px 0px 4px #fff;
+}
+
+#logos {
+  position: relative;
+  margin: 0px;
+  width: 100%;
+  height: 55px;
+  background-color: #fff;
+}
+
+#logos img#usaid {
+  position: absolute;
+  top: 5px;
+  left: 30px;
+  width: 150px;
+}
+
+#logos img#nasa {
+  position: absolute;
+  top: 0px;
+  left: 210px;
+  width: 60px;
+}
+
+#logos img#adpc {
+  position: absolute;
+  top: 9px;
+  left: 300px;
+  width: 80px;
+}
+
+#logos img#servir {
+  position: absolute;
+  top: 12px;
+  right: 30px;
+  width: 250px;
+}
+
+nav {
+  position: absolute;
+  top: 64px;
+  left: 30px;
+}
+
+nav ul li {
+  display: inline;
+  list-style-type: none;
+  padding: 0.4rem;
+}
+
+#login-info {
+  position: absolute;
+  top: 66px;
+  right: 30px;
+}
+
+#login-info p {
+  color: #eee;
+  font-size: 0.8rem;
+}
+
+#login-info p a {
+  margin-left: 0.2rem;
+  padding: 0.4rem;
+  border: 1px solid #999;
+}
+
+#content {
+  position: fixed;
+  top: 6rem;
+  left: 0rem;
+  height: calc(100vh - 6rem);
+  width: 100%;
+  background-color: rgba(255,255,255,0.2);
+}
+
+#content a {
+  color: #444;
+}
+
+#content a:link, #content a:visited, #content a:active {
+  text-decoration: none;
+}
+
+#content a:hover, #content a.active-link {
+  text-shadow: 0px 0px 4px #333;
+}
+
+#home {
+  position: absolute;
+  right: 5rem;
+  height: 100%;
+  width: 350px;
+  padding: 2rem;
+  background: rgba(255,255,255,0.8);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+  -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+}
+
+#home h1 {
+  margin-top: 20px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: gray;
+  line-height: 80%;
+}
+
+#home h2 {
+  margin-bottom: 10px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: gray;
+  line-height: 110%;
+}
+
+#home h3 {
+  padding: 0.5rem 0.5rem 0.75rem 1rem;
+  color: #3C948B;
+  font-family: Open Sans;
+  font-weight: 400;
+  font-size: 1.1rem;
+  font-style: normal;
+}
+
+#home p {
+  padding: 0.5rem;
+}
+
+#about {
+  position: absolute;
+  right: 5rem;
+  height: 100%;
+  width: 350px;
+  padding: 2rem;
+  background: rgba(255,255,255,0.8);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+  -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+}
+
+#about h1 {
+  font-size: 1.9rem;
+  font-weight: 100;
+  padding: 0.5rem;
+  color: gray;
+}
+
+#about img {
+  padding: 0rem 0.5rem;
+}
+
+#about p {
+  padding: 0.5rem;
+}
+
+#login-form, #register-form, #password-form, #account-form {
+  position: absolute;
+  right: 5rem;
+  height: 100%;
+  width: 350px;
+  padding: 2rem;
+  background: rgba(255,255,255,0.8);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+  -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+}
+
+#login-form h1, #register-form h1, #password-form h1, #account-form h1 {
+  font-size: 1.9rem;
+  font-weight: 100;
+  padding: 0.5rem;
+  color: gray;
+}
+
+#login-form h2, #register-form h2, #password-form h2, #account-form h2 {
+  font-size: 1rem;
+  font-weight: 400;
+  padding: 0.1rem;
+  color: darkgray;
+}
+
+#login-form input#email, #login-form input#password, #login-form input#password-confirmation, #login-form input#password-reset-key, #login-form input#current-password, #register-form input#email, #register-form input#password, #register-form input#password-confirmation, #register-form input#password-reset-key, #register-form input#current-password, #password-form input#email, #password-form input#password, #password-form input#password-confirmation, #password-form input#password-reset-key, #password-form input#current-password, #account-form input#email, #account-form input#password, #account-form input#password-confirmation, #account-form input#password-reset-key, #account-form input#current-password {
+  height: 2rem;
+  width: 20rem;
+  border: 1px solid #ececec;
+  margin: 0.3rem;
+  padding: 0px 5px;
+}
+
+#login-form input#email:focus, #login-form input#password:focus, #login-form input#password-confirmation:focus, #login-form input#password-reset-key:focus, #login-form input#current-password:focus, #register-form input#email:focus, #register-form input#password:focus, #register-form input#password-confirmation:focus, #register-form input#password-reset-key:focus, #register-form input#current-password:focus, #password-form input#email:focus, #password-form input#password:focus, #password-form input#password-confirmation:focus, #password-form input#password-reset-key:focus, #password-form input#current-password:focus, #account-form input#email:focus, #account-form input#password:focus, #account-form input#password-confirmation:focus, #account-form input#password-reset-key:focus, #account-form input#current-password:focus {
+  border: 1px solid darkgray;
+  cursor: grab;
+}
+
+#login-form input#email:hover, #login-form input#password:hover, #login-form input#password-confirmation:hover, #login-form input#password-reset-key:hover, #login-form input#current-password:hover, #register-form input#email:hover, #register-form input#password:hover, #register-form input#password-confirmation:hover, #register-form input#password-reset-key:hover, #register-form input#current-password:hover, #password-form input#email:hover, #password-form input#password:hover, #password-form input#password-confirmation:hover, #password-form input#password-reset-key:hover, #password-form input#current-password:hover, #account-form input#email:hover, #account-form input#password:hover, #account-form input#password-confirmation:hover, #account-form input#password-reset-key:hover, #account-form input#current-password:hover {
+  border: 1px solid gray;
+  cursor: pointer;
+}
+
+#login-form p#forgot-password a, #register-form p#forgot-password a, #password-form p#forgot-password a, #account-form p#forgot-password a {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0.5rem 0.5rem 0rem 1rem;
+}
+
+#login-form input.button, #register-form input.button, #password-form input.button, #account-form input.button {
+  height: 2rem;
+  width: 21rem;
+  margin: 0.6rem 0.3rem;
+  padding: 0.5rem;
+  border: 1px solid #ececec;
+}
+
+#login-form input.button:focus, #register-form input.button:focus, #password-form input.button:focus, #account-form input.button:focus {
+  border: 1px solid #999;
+}
+
+#login-form hr, #register-form hr, #password-form hr, #account-form hr {
+  height: 12px;
+  border: 0;
+  box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
+}
+
+#select-project-form {
+  position: absolute;
+  right: 5rem;
+  height: 100%;
+  width: 350px;
+  padding: 2rem;
+  background: rgba(255,255,255,0.8);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+  -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+}
+
+#select-project-form h1 {
+  font-size: 1.9rem;
+  font-weight: 100;
+  padding: 0.5rem;
+  color: gray;
+}
+
+#select-project-form ul {
+  list-style-type: none;
+  padding: 0.5rem;
+  height: 80%;
+  overflow: scroll;
+}
+
+#select-project-form ul li a {
+  color: #3C948B;
+  text-align: center;
+  font-size: 1rem;
+  width: 95%;
+  padding: 0.25rem;
+  text-decoration: none;
+  display: block;
+  border: 1px solid blue;
+  margin-bottom: 0.5rem;
+}
+
+#dashboard {
+  height: 100%;
+  padding: 0rem;
+  background: rgba(255,255,255,0.8);
+}
+
+#dashboard #quit-button {
+  width: 5rem;
+  height: 40px;
+  border: none;
+  text-align: center;
+  position: absolute;
+  margin-top: 0rem;
+  z-index: 500;
+  font-size: 17;
+  background-color: #3FABC6;
+  display: inline-block;
+  left: calc(70vw - 5rem);
+}
+
+#dashboard #image-analysis-pane {
+  float: left;
+  height: 100%;
+  width: 70%;
+  background-color: darkgray;
+}
+
+#dashboard .ol-dragbox {
+  background-color: rgba(255,255,255,0.4);
+  border-color: rgba(100,150,0,1);
+}
+
+#dashboard .ol-rotate {
+  top: 4rem;
+}
+
+#dashboard #sidebar {
+  float: right;
+  height: 100%;
+  width: 30%;
+  padding: 0rem;
+  overflow: scroll;
+}
+
+#dashboard #sidebar #sidebar-contents {
+  height: 100%;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset {
+  margin-top: 0px;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset legend {
+  margin-top: -5px;
+  padding: 10px 0px;
+  color: #3FABC6;
+  font-size: 1.2rem;
+  font-family: Oswald;
+  font-weight: 400;
+  text-transform: uppercase;
+  text-indent: 10px;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset select#project-id {
+  line-height: 90%;
+  width: 100%;
+  text-index: 5px;
+  font-family: Verdana,Geneva,sans-serif;
+  height: 1.8rem;
+  border: none;
+  padding: 0rem;
+  outline: none;
+  font-weight: 200;
+  font-size: 0.9rem;
+  color: #3D3B39;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset option {
+  color: #3D3B39;
+  text-indent: 5px;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset input#new-plot-button {
+  margin: 10px 5px 5px 5px;
+  padding: 8px 0px;
+  font-size: 1.2rem;
+  text-align: left;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset ul li {
+  float: left;
+  width: 50%;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset ul li input {
+  height: 40px;
+  width: 100%;
+  font-family: Verdana,Geneva,sans-serif;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  text-align: left;
+  text-indent: 10px;
+  cursor: pointer;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset #final-plot-options {
+  clear: left;
+  float: left;
+  margin-left: 5px;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset #final-plot-options td {
+  padding: 5px;
+  color: #3FABC6;
+  font-size: 1.2rem;
+  font-family: Oswald;
+  font-weight: 400;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+#dashboard #sidebar #sidebar-contents fieldset #final-plot-options td input#save-values-button, #dashboard #sidebar #sidebar-contents fieldset #final-plot-options td input#flag-plot-button {
+  padding: 8px 0px;
+  font-size: 1.2rem;
+}
+
+#dashboard #imagery-info {
+  width: 40%;
+  top: -1.5rem;
+  padding: 0.25rem;
+  text-align: center;
+  position: relative;
+  font-size: 0.8rem;
+  background-color: rgba(75,75,150,0.6);
+  clear: both;
+  color: white;
+  left: 18%;
+}
+
+#admin {
+  height: 100%;
+  width: 100%;
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.9);
+  overflow: scroll;
+}
+
+#admin h1 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+#admin #project-selection {
+  margin-bottom: 10px;
+}
+
+#admin #project-selection label {
+  font-size: 1rem;
+  font-family: Oswald;
+  font-weight: 400;
+  color: #3fabc6;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#admin #project-selection select {
+  border: 1px solid darkgray;
+  height: 2rem;
+  font-size: 0.9rem;
+}
+
+#admin input#download-plot-data {
+  position: absolute;
+  top: 10px;
+  right: 15rem;
+  font-size: 1rem;
+  padding: 0.5rem;
+  color: white;
+  box-shadow: 0.25rem 0.25rem 0.5rem rgba(21,21,153,0.6);
+}
+
+#admin input#create-project {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 1rem;
+  padding: 0.5rem;
+  color: white;
+  box-shadow: 0.25rem 0.25rem 0.5rem rgba(21,21,153,0.6);
+}
+
+#admin fieldset {
+  margin-right: 1.5rem;
+}
+
+#admin legend {
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-family: Oswald;
+  font-weight: 400;
+  color: #3fabc6;
+  text-transform: uppercase;
+}
+
+#admin #project-info label, #admin #plot-info label, #admin #sample-info label, #admin #bounding-box label {
+  display: block;
+  font-size: 0.8rem;
+  padding: 0.25rem 0rem;
+}
+
+#admin input#project-name, #admin input#plots, #admin input#radius, #admin input#samples-per-plot, #admin input#sample-resolution, #admin input#lat-max, #admin input#lon-min, #admin input#lon-max, #admin input#lat-min {
+  height: 1rem;
+  padding: 0.3rem;
+  margin-bottom: 5px;
+}
+
+#admin fieldset#project-info {
+  float: left;
+  width: 18%;
+}
+
+#admin fieldset#project-info input#project-name {
+  width: 90%;
+}
+
+#admin fieldset#project-info textarea#project-description {
+  height: 6rem;
+  width: 90%;
+  padding: 0rem 0.7rem;
+  border-radius: 0.25rem;
+  border: 1px solid darkgray;
+}
+
+#admin fieldset#plot-info {
+  float: left;
+  width: 10%;
+}
+
+#admin fieldset#plot-info input#plots, #admin fieldset#plot-info input#radius {
+  width: 80%;
+}
+
+#admin fieldset#sample-info {
+  float: left;
+  width: 12%;
+}
+
+#admin fieldset#sample-info input#random-sample-type, #admin fieldset#sample-info input#gridded-sample-type {
+  vertical-align: middle;
+}
+
+#admin fieldset#sample-info input#samples-per-plot, #admin fieldset#sample-info input#sample-resolution {
+  width: 80%;
+}
+
+#admin fieldset#sample-info table {
+  margin-left: 1rem;
+  background-color: white;
+  border: 1px solid #aaa;
+}
+
+#admin fieldset#sample-info table td {
+  padding: 0px 5px;
+}
+
+#admin fieldset#bounding-box {
+  float: left;
+  width: 15rem;
+}
+
+#admin fieldset#bounding-box label {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+#admin fieldset#bounding-box input {
+  display: block;
+  width: 5rem;
+}
+
+#admin fieldset#bounding-box input#lat-max {
+  margin: 0rem auto 0.25rem auto;
+}
+
+#admin fieldset#bounding-box input#lon-min {
+  margin: 0.25rem 0rem;
+  float: left;
+}
+
+#admin fieldset#bounding-box input#lon-max {
+  margin: 0.25rem 0rem;
+  float: right;
+}
+
+#admin fieldset#bounding-box input#lat-min {
+  clear: both;
+  margin: 0.25rem auto;
+}
+
+#admin #map-and-imagery {
+  position: absolute;
+  top: 5rem;
+  right: 20px;
+  width: calc(100% - 18% - 10% - 12% - 15rem - 4.5rem - 50px);
+  height: calc(60vh + 2rem + 5px);
+}
+
+#admin #map-and-imagery #new-project-map {
+  height: 60vh;
+  margin-bottom: 5px;
+  border: 1px solid black;
+}
+
+#admin #map-and-imagery label {
+  font-size: 1rem;
+  font-family: Oswald;
+  font-weight: 400;
+  color: #3fabc6;
+  text-transform: uppercase;
+  display: inline;
+}
+
+#admin #map-and-imagery select {
+  border: 1px solid darkgray;
+  height: 2rem;
+  font-size: 0.9rem;
+}
+
+#admin fieldset#sample-value-info {
+  float: left;
+  clear: both;
+  margin-bottom: 20px;
+}
+
+#admin fieldset#sample-value-info th, #admin fieldset#sample-value-info td {
+  text-align: center;
+  font-size: 0.8rem;
+  padding: 0.25rem;
+}
+
+#admin fieldset#sample-value-info input.button {
+  padding: 0.25rem;
+  min-width: 2rem;
+  color: white;
+}
+
+#admin fieldset#sample-value-info .circle {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.5rem;
+  margin: 0rem auto;
+}
+
+#admin fieldset#sample-value-info input#value-name, #admin fieldset#sample-value-info input#value-color, #admin fieldset#sample-value-info input#value-image {
+  font-size: 0.9rem;
+  height: 2rem;
+  padding: 0rem;
+  margin-bottom: 5px;
+}
+
+#admin fieldset#sample-value-info input#add-sample-value {
+  margin: 0.5rem 3rem;
+  box-shadow: 0.25rem 0.25rem 0.5rem rgba(21,21,153,0.6);
+}
+
+#admin #spinner {
+  position: absolute;
+  top: 1rem;
+  left: 45%;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 2rem;
+  border-bottom: 0.5rem solid #3fabc6;
+  visibility: hidden;
+  animation: sweep 1s infinite linear;
+  -webkit-animation: sweep 1s infinite linear;
+  -moz-animation: sweep 1s infinite linear;
+  -o-animation: sweep 1s infinite linear;
+}
+
+.alert {
+  width: 35rem;
+  top: 1rem;
+  border: 1px solid #009;
+  padding: 1rem;
+  position: absolute;
+  z-index: 1000;
+  font-size: 1rem;
+  font-style: italic;
+  background: white;
+  opacity: 0;
+  left: 1rem;
+  animation: fade-out 5s;
+  -webkit-animation: fade-out 5s;
+  -moz-animation: fade-out 5s;
+  -o-animation: fade-out 5s;
+}
+
+p.error-message {
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-style: normal;
+  color: #555;
+}
+
+#access-denied, #page-not-found, #error-page {
+  position: absolute;
+  right: 5rem;
+  height: 100%;
+  width: 350px;
+  padding: 2rem;
+  background: rgba(255,255,255,0.8);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+  -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+}
+
+#access-denied h3, #page-not-found h3, #error-page h3 {
+  font-size: 1.5rem;
+  font-weight: 100;
+  color: gray;
+}
+
+@-webkit-keyframes sweep { to { -webkit-transform:rotate(360deg); } }
+
+@-moz-keyframes    sweep { to { -moz-transform:rotate(360deg); } }
+
+@-o-keyframes      sweep { to { -o-transform:rotate(360deg); } }
+
+@keyframes         sweep { to { transform:rotate(360deg); } }
+
+@-webkit-keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@-moz-keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@-o-keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
 }

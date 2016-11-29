@@ -46,9 +46,7 @@ public class Server {
         get("*",               Views.pageNotFound,  renderer);
 
         // Handle Exceptions
-        exception(Exception.class, (exception, request, response) -> {
-                System.out.println("Exception Thrown: " + exception);
-            });
+        exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
     }
 
 }
