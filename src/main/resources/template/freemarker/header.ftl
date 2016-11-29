@@ -26,15 +26,38 @@
             </div>
             <nav>
                 <ul>
-                    <li><a class="active-link" href="/">Home</a></li>
-                    <li><a href="/about">About</a></li>
-                    <li><a href="/account">Account</a></li>
-                    <li><a href="/dashboard">Dashboard</a></li>
-                    <li><a href="/admin">Admin</a></li>
+                    <#if role == "admin">
+                        <li><a class="active-link" href="/">Home</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="/account">Account</a></li>
+                        <li><a href="/dashboard">Dashboard</a></li>
+                        <li><a href="/admin">Admin</a></li>
+                    <#elseif role == "user">
+                        <li><a class="active-link" href="/">Home</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="/account">Account</a></li>
+                        <li><a href="/dashboard">Dashboard</a></li>
+                    <#else>
+                        <li><a class="active-link" href="/">Home</a></li>
+                        <li><a href="/about">About</a></li>
+                    </#if>
                 </ul>
             </nav>
             <div id="login-info">
-                <p>Logged in as admin@sig-gis.com <a href="/logout">Logout</a></p>
+                <p>
+                    <#if username??>
+                        Logged in as ${username} <a href="/logout">Logout</a>
+                    <#else>
+                        <a href="/login">Login</a>
+                    </#if>
+                </p>
             </div>
         </header>
         <section id="content">
+            <#list flash_messages>
+                <div class="alert">
+                    <#items as flash_message>
+                        <p>${flash_message}</p>
+                    </#items>
+                </div>
+            </#list>
