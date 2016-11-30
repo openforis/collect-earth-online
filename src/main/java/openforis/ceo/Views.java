@@ -1,7 +1,10 @@
 package openforis.ceo;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -72,6 +75,16 @@ public class Views {
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Select Project Page"});
+        List<Map<String, Object>> projects =
+            Stream.of("Mekong River Region", "Laos", "Vietnam", "Cambodia")
+            .map(name -> {
+                    Map<String, Object> project = new HashMap<String, Object>();
+                    project.put("id", name.length());
+                    project.put("name", name);
+                    return project;
+                })
+            .collect(Collectors.toList());
+        model.put("projects", projects);
         return new ModelAndView(model, "select-project.ftl");
     };
 
