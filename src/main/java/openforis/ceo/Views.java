@@ -101,6 +101,8 @@ public class Views {
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Dashboard Page"});
+        model.put("user_id", 1);
+        model.put("project_id", 1);
         return new ModelAndView(model, "dashboard.ftl");
     };
 
