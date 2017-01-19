@@ -1,4 +1,4 @@
-package openforis.ceo;
+package org.openforis.ceo;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -8,25 +8,26 @@ import static spark.Spark.get;
 import static spark.Spark.exception;
 import static spark.Spark.port;
 import static spark.Spark.staticFileLocation;
+
+import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
-public class Server {
+public class Server implements SparkApplication {
 
-    private static FreeMarkerEngine getTemplateRenderer() throws Exception {
-        Configuration cfg = new Configuration(Configuration.VERSION_2_3_23);
-        URL templateDirectory = Server.class.getResource("/template/freemarker");
-        cfg.setDirectoryForTemplateLoading(new File(templateDirectory.toURI()));
-        cfg.setDefaultEncoding("UTF-8");
-        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
-        // cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-        cfg.setLogTemplateExceptions(false);
-        return new FreeMarkerEngine(cfg);
-    }
-
+	@Override
+	public void init() {
+		initialize();
+	}
+	
     public static void main(String[] args) throws Exception {
         // Configure Spark
         port(8080);
-        staticFileLocation("/public");
+        
+        initialize();
+    }
+
+	private static void initialize() {
+		staticFileLocation("/public");
 
         // Configure FreeMarker
         FreeMarkerEngine renderer = getTemplateRenderer();
@@ -47,6 +48,21 @@ public class Server {
 
         // Handle Exceptions
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
+	}
+
+	private static FreeMarkerEngine getTemplateRenderer() {
+    	try {
+	        Configuration cfg = new Configuration(Configuration.VERSION_2_3_23);
+	        URL templateDirectory = Server.class.getResource("/template/freemarker");
+	        cfg.setDirectoryForTemplateLoading(new File(templateDirectory.toURI()));
+	        cfg.setDefaultEncoding("UTF-8");
+	        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
+	        // cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+	        cfg.setLogTemplateExceptions(false);
+	        return new FreeMarkerEngine(cfg);
+    	} catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
     }
 
 }
