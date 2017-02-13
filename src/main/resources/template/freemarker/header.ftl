@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app>
     <head>
         <title>Mapcha</title>
         <meta charset="utf-8">
@@ -15,6 +15,7 @@
         <!--[if lt IE 9]>
           <script type="text/javascript" src="/js/html5shiv.js"></script>
         <![endif]-->
+        <script type="text/javascript" src="/js/angular.min.js"></script>
     </head>
     <body>
         <header>
