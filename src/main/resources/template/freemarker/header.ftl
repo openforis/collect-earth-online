@@ -17,7 +17,7 @@
         <![endif]-->
         <script type="text/javascript" src="/js/angular.min.js"></script>
        <!-- <script type="text/javascript" src="/js/angular-route.min.js"></script> -->
-	<script type="text/javascript" src="/js/collectEarth.js"></script>
+	<script type="text/javascript" src="/js/collect-earth.js"></script>
     </head>
     <body ng-controller="ctlBody">
         <header>
