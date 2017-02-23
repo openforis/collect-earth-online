@@ -1,7 +1,6 @@
 <#include "header.ftl">
 <div id="about">
-    <h1>About {{ name }}</h1>
-    <input type="text" ng-model="name">
+    <h1>{{ hdrAbout }}</h1>
     <p>Mapcha is a custom built, open-source, high resolution
     satellite image viewing and interpretation system that is being
     developed by SERVIR-Mekong as a tool for use in projects that

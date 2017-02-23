@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app>
+<html lang="en" ng-app="collectEarth">
     <head>
         <title>Mapcha</title>
         <meta charset="utf-8">
@@ -16,8 +16,10 @@
           <script type="text/javascript" src="/js/html5shiv.js"></script>
         <![endif]-->
         <script type="text/javascript" src="/js/angular.min.js"></script>
+       <!-- <script type="text/javascript" src="/js/angular-route.min.js"></script> -->
+	<script type="text/javascript" src="/js/collectEarth.js"></script>
     </head>
-    <body>
+    <body ng-controller="ctlBody">
         <header>
             <div id="logos">
                 <img id="usaid" src="/img/usaid.png">
