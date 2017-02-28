@@ -13,23 +13,47 @@ var ctlDashboard = function($scope) {
   $scope.tpEmail = "email";
   $scope.tpPassword = "password";
 
-  $scope.projects = new Array();
-  populateProjects($scope.projects);
+  $scope.projects = ceo.project_list;
 
   $scope.map_config = new mapConfig;
   $scope.map_config.div_name = "image-analysis-pane";
-  $scope.map_config.center_coords = [102.0, 17.0];
+  $scope.map_config.center_coords = [102.0, 7.0];
   $scope.map_config.zoom_level = 5;
 
-//  map_utils.set_current_imagery('Mekong River Region');
-// map_utils.draw_polygon('DigitalGlobeRecentImagery+Streets');
+  // Initialize base map
   map_utils.digital_globe_base_map($scope.map_config);
+  $scope.imageryInfoText = map_utils.current_imagery;
+
+  $scope.update = function() {
+	$scope.test = $scope.selProj;
+
+	$scope.project = getProject($scope.selProj);
+//	var format = new ol.format.GeoJSON();
+//	var geometry = format.readGeometry(project.boundary);
+//	var coord = geometry.getCoordinates();
+	
+	if ($scope.project) {
+		$scope.imageryInfoText = $scope.project.attribution;
+		map_utils.remove_plot_layer();
+		map_utils.remove_sample_layer();
+		map_utils.draw_polygon($scope.project.boundary);
+	}
+ }
+
+
 }
 
-function updateUserInfo($scope) {
-	$scope.updateMessage = "User Password Has Been Reset";
-	return false;
+
+
+function getProject(projectId) {
+	var i = 0;
+	for (i=0; i < ceo.project_list.length; i++) {
+		if (ceo.project_list[i].id == projectId) {
+			return ceo.project_list[i];
+		}
+	}
 }
+
 
 function mapConfig(divName, centerCoords, zoomLevel){
 	this.div_name = divName;
@@ -38,7 +62,8 @@ function mapConfig(divName, centerCoords, zoomLevel){
 }
 
 function populateProjects(_projects) {
-	_projects.push({id:1,name:'Mekong River Region'})
+	_projects.push({id:1,name:'Mekong River Region'});
+        _projects.push({id:2,name:'California, USA'})
 	_projects.push({id:12,name:'Mekong_River_Sample'});
 	_projects.push({id:14,name:'Lower Mekong Region'});
 	_projects.push({id:15,name:'Myanmar Landcover Classification'});
