@@ -16,11 +16,11 @@
           <script type="text/javascript" src="/js/html5shiv.js"></script>
         <![endif]-->
         <script type="text/javascript" src="/js/angular.min.js"></script>
-	<!--<script src="https://openlayers.org/en/v3.13.0/build/ol.js"></script> -->
-	<script type="text/javascript" src="/js/open-layers.js"></script>
-	<script type="text/javascript" src="/js/map_utils.js"></script>
-       <!-- <script type="text/javascript" src="/js/angular-route.min.js"></script> -->
-	<script type="text/javascript" src="/js/collect-earth.js"></script>
+	      <!-- <script src="https://openlayers.org/en/v3.13.0/build/ol.js"></script> -->
+	      <script type="text/javascript" src="/js/open-layers.js"></script>
+	      <script type="text/javascript" src="/js/map_utils.js"></script>
+        <!-- <script type="text/javascript" src="/js/angular-route.min.js"></script> -->
+	      <script type="text/javascript" src="/js/collect-earth.js"></script>
     </head>
     <body ng-controller="ctlBody">
         <header>
