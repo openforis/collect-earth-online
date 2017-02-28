@@ -8,14 +8,8 @@
     <div id="sidebar">
         <div id="sidebar-contents">
             <fieldset>
-<<<<<<< HEAD
-                <div>{{ test }}</div> 
-		<legend>1. Select Project</legend>
-                <select name="project-id" size="1" id="project-id" ng-change="update()" ng-model="selProj"> 
-=======
                 <legend>1. Select Project</legend>
                 <select name="project-id" size="1" id="project-id">
->>>>>>> 04032130fa9a9a86ed29ae283f9b75256a1fa163
 		    <option ng-repeat="project in projects" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
 		
