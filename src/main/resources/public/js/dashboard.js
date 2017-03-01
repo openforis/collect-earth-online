@@ -13,7 +13,6 @@ var ctlDashboard = function($scope) {
   $scope.tpEmail = "email";
   $scope.tpPassword = "password";
 
-<<<<<<< HEAD
   $scope.projects = ceo.project_list;
 
   $scope.map_config = new mapConfig;
@@ -24,14 +23,10 @@ var ctlDashboard = function($scope) {
   // Initialize base map
   map_utils.digital_globe_base_map($scope.map_config);
   $scope.imageryInfoText = map_utils.current_imagery;
-
   $scope.update = function() {
 	$scope.test = $scope.selProj;
 
 	$scope.project = getProject($scope.selProj);
-//	var format = new ol.format.GeoJSON();
-//	var geometry = format.readGeometry(project.boundary);
-//	var coord = geometry.getCoordinates();
 	
 	if ($scope.project) {
 		$scope.imageryInfoText = $scope.project.attribution;
@@ -40,7 +35,6 @@ var ctlDashboard = function($scope) {
 		map_utils.draw_polygon($scope.project.boundary);
 	}
  }
-
 
 }
 
@@ -56,26 +50,6 @@ function getProject(projectId) {
 }
 
 
-=======
-  $scope.projects = new Array();
-  populateProjects($scope.projects);
-
-  $scope.map_config = new mapConfig;
-  $scope.map_config.div_name = "image-analysis-pane";
-  $scope.map_config.center_coords = [102.0, 17.0];
-  $scope.map_config.zoom_level = 5;
-
-//  map_utils.set_current_imagery('Mekong River Region');
-// map_utils.draw_polygon('DigitalGlobeRecentImagery+Streets');
-  map_utils.digital_globe_base_map($scope.map_config);
-}
-
-function updateUserInfo($scope) {
-	$scope.updateMessage = "User Password Has Been Reset";
-	return false;
-}
-
->>>>>>> 04032130fa9a9a86ed29ae283f9b75256a1fa163
 function mapConfig(divName, centerCoords, zoomLevel){
 	this.div_name = divName;
 	this.center_coords = centerCoords;
@@ -83,12 +57,8 @@ function mapConfig(divName, centerCoords, zoomLevel){
 }
 
 function populateProjects(_projects) {
-<<<<<<< HEAD
 	_projects.push({id:1,name:'Mekong River Region'});
         _projects.push({id:2,name:'California, USA'})
-=======
-	_projects.push({id:1,name:'Mekong River Region'})
->>>>>>> 04032130fa9a9a86ed29ae283f9b75256a1fa163
 	_projects.push({id:12,name:'Mekong_River_Sample'});
 	_projects.push({id:14,name:'Lower Mekong Region'});
 	_projects.push({id:15,name:'Myanmar Landcover Classification'});

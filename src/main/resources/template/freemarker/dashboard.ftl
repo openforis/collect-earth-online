@@ -9,14 +9,12 @@
         <div id="sidebar-contents">
             <fieldset>
                 <legend>1. Select Project</legend>
-                <select name="project-id" size="1" id="project-id">
+		<div><p>{{ debugText }}</p></div>
+                <select name="project-id" size="1" id="project-id" ng-model="selProj" ng-change="update()">
 		    <option ng-repeat="project in projects" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
 		
-		<!--
-		<select name="project-id" size="1" id="project-id" ng-change="update()" ng-model="selProj" ng-options="project.name for option in projects track by project.id">
-                </select>
-		-->
+
 		<input name="new-plot" value="2. Analyze New Plot" id="new-plot-button" class="button" type="button">
             </fieldset>
             <fieldset>
