@@ -20,33 +20,9 @@
             <fieldset>
                 <legend>3. Assign Values</legend>
                 <ul>
-                    <li>
-                        <input name="Forest_1" value="Forest" style="border-left: 1.5rem solid rgb(30, 198, 27);" type="button">
-                    </li>
-                    <li>
-                        <input name="Grassland_2" value="Grassland" style="border-left: 1.5rem solid rgb(156, 241, 53);" type="button">
-                    </li>
-                    <li>
-                        <input name="Bare Surface_3" value="Bare Surface" style="border-left: 1.5rem solid rgb(213, 222, 133);" type="button">
-                    </li>
-                    <li>
-                        <input name="Impervious Surface_4" value="Impervious Surface" style="border-left: 1.5rem solid rgb(139, 144, 132);" type="button">
-                    </li>
-                    <li>
-                        <input name="Agriculture_5" value="Agriculture" style="border-left: 1.5rem solid rgb(242, 198, 19);" type="button">
-                    </li>
-                    <li>
-                        <input name="Urban_6" value="Urban" style="border-left: 1.5rem solid rgb(106, 58, 117);" type="button">
-                    </li>
-                    <li>
-                        <input name="Water_7" value="Water" style="border-left: 1.5rem solid rgb(47, 77, 192);" type="button">
-                    </li>
-                    <li>
-                        <input name="Cloud_8" value="Cloud" style="border-left: 1.5rem solid rgb(255, 255, 255);" type="button">
-                    </li>
-                    <li>
-                        <input name="Unknown_9" value="Unknown" style="border-left: 1.5rem solid rgb(0, 0, 0);" type="button">
-                    </li>
+		    <li ng-repeat="sample in currentProject.sample_values">
+			<input id="{{ sample.id }}" value="{{ sample.value }}" style="border-left:1.5rem solid {{ sample.color }}" type="button">
+		    </li>
                 </ul>
                 <div id="final-plot-options">
                     <table>
@@ -72,12 +48,6 @@
         </div>
     </div>
     <div id="imagery-info" ng-model="imageryInfo"><p>{{ imageryInfoText }}</p></div>
-<!--
-    <div id="imagery-info">
-        <p>DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 |
-        © DigitalGlobe, Inc</p>
-    </div>
--->
     <input id="user-id" name="user-id" value=${user_id} type="hidden">
     <input id="initial-project-id" name="initial-project-id" value=${project_id} type="hidden">
 </div>
