@@ -13,15 +13,15 @@
         <link href="css/openlayers_3.13.0.css" rel="stylesheet" type="text/css">
         <link href="css/stylesheet.css" rel="stylesheet" type="text/css">
         <!--[if lt IE 9]>
-          <script type="text/javascript" src="/js/html5shiv.js"></script>
+          <script type="text/javascript" src="js/html5shiv.js"></script>
         <![endif]-->
-        <script type="text/javascript" src="/js/angular.min.js"></script>
+        <script type="text/javascript" src="js/angular.min.js"></script>
 <!--	<script src="https://openlayers.org/en/v3.13.0/build/ol.js"></script> -->
-	<script type="text/javascript" src="/js/open-layers.js"></script>
-	<script type="text/javascript" src="/js/map_utils.js"></script>
-	<script type="text/javascript" src="/js/ceo_sample_data.js"></script>
-       <!-- <script type="text/javascript" src="/js/angular-route.min.js"></script> -->
-	<script type="text/javascript" src="/js/collect-earth.js"></script>
+	<script type="text/javascript" src="js/open-layers.js"></script>
+	<script type="text/javascript" src="js/map_utils.js"></script>
+	<script type="text/javascript" src="js/ceo_sample_data.js"></script>
+       <!-- <script type="text/javascript" src="js/angular-route.min.js"></script> -->
+	<script type="text/javascript" src="js/collect-earth.js"></script>
     </head>
     <body ng-controller="ctlBody">
         <header>
@@ -34,7 +34,7 @@
             <nav>
                 <ul>
                     <#if role == "admin">
-                        <li><a class="active-link" href="">Home</a></li>
+                        <li><a class="active-link" href="/">Home</a></li>
                         <li><a href="about">About</a></li>
                         <li><a href="account">Account</a></li>
                         <li><a href="dashboard">Dashboard</a></li>
@@ -53,7 +53,7 @@
             <div id="login-info">
                 <p>
                     <#if username??>
-                        Logged in as ${username} <a href="/logout">Logout</a>
+                        Logged in as ${username} <a href="logout">Logout</a>
                     <#else>
                         <a href="login">Login</a>
                     </#if>

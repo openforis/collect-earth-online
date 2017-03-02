@@ -1,4 +1,4 @@
-package openforis.ceo;
+package org.openforis.ceo;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
