@@ -40,6 +40,7 @@ public class Server implements SparkApplication {
 
         // Setup Routes
         get("/",               Views.home,          renderer);
+        get("/home",           Views.home,          renderer);
         get("/about",          Views.about,         renderer);
         get("/login",          Views.login,         renderer);
         get("/register",       Views.register,      renderer);

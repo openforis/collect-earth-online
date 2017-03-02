@@ -1,9 +1,9 @@
 <#include "header.ftl">
 
-<script type="text/javascript" src="/js/dashboard.js"></script>
+<script type="text/javascript" src="js/dashboard.js"></script>
 
 <div ng-controller="ctlDashboard"  ng-attr-id="{{ formID }}">
-    <input class="button" id="quit-button" name="dashboard-quit" onclick="window.location='/select-project'" value="Quit" type="button">
+    <input class="button" id="quit-button" name="dashboard-quit" onclick="window.location='select-project'" value="Quit" type="button">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">
         <div id="sidebar-contents">

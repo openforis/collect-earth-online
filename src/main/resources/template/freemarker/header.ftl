@@ -34,18 +34,18 @@
             <nav>
                 <ul>
                     <#if role == "admin">
-                        <li><a class="active-link" href="/">Home</a></li>
+                        <li><a class="active-link" href="home">Home</a></li>
                         <li><a href="about">About</a></li>
                         <li><a href="account">Account</a></li>
                         <li><a href="dashboard">Dashboard</a></li>
                         <li><a href="admin">Admin</a></li>
                     <#elseif role == "user">
-                        <li><a class="active-link" href="/">Home</a></li>
+                        <li><a class="active-link" href="home">Home</a></li>
                         <li><a href="about">About</a></li>
                         <li><a href="account">Account</a></li>
                         <li><a href="dashboard">Dashboard</a></li>
                     <#else>
-                        <li><a class="active-link" href="/">Home</a></li>
+                        <li><a class="active-link" href="home">Home</a></li>
                         <li><a href="about">About</a></li>
                     </#if>
                 </ul>

@@ -1,6 +1,6 @@
 <#include "header.ftl">
 
-<script type="text/javascript" src="/js/account.js"></script>
+<script type="text/javascript" src="js/account.js"></script>
 
 <div ng-controller="ctlAccount" ng-attr-id="{{ formID }}">
     <h1>Account Settings</h1>
