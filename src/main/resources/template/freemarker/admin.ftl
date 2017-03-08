@@ -1,37 +1,15 @@
 <#include "header.ftl">
+
+<script type="text/javascript" src="/js/admin.js"></script>
+
 <div id="admin">
     <h1>Project Management</h1>
-    <div id="create-project-form">
+    <div ng-controller="ctlAdmin"  ng-attr-id="{{ formID }}">
         <form method="post" action="/admin" id="project-management-form">
             <div id="project-selection">
                 <label>Currently Viewing:</label>
-                <select name="project-selector" size="1" id="project-selector">
-                    <option value="0">New Project</option>
-                    <option value="1">Mekong River Region</option>
-                    <option value="12">Mekong_River_Sample</option>
-                    <option value="14">Lower Mekong Region</option>
-                    <option value="15">Myanmar_Landcover Classification</option>
-                    <option value="16">MK_Laos</option>
-                    <option value="18">Classification of land Cover</option>
-                    <option value="19">Cambodia</option>
-                    <option value="20">Cambodia Land Cover</option>
-                    <option value="23">MK_VN</option>
-                    <option value="24">DN_VN</option>
-                    <option value="25">CM_VN</option>
-                    <option value="26">Myanmar_landcover</option>
-                    <option value="37">DN2</option>
-                    <option value="38">DN2_2</option>
-                    <option value="39">FAO Regional Subset Collection</option>
-                    <option value="40">FAO_Test</option>
-                    <option value="41">FAO Regional Subset Collection v2</option>
-                    <option value="42">FAO Test 2</option>
-                    <option value="45">Myanmar_test</option>
-                    <option value="47">Gridded Sample Test</option>
-                    <option value="49">SCO_test</option>
-                    <option value="50">Bing Maps Test</option>
-                    <option value="53">HB Blowdown 2</option>
-                    <option value="54">HB Blowdown 3</option>
-                    <option value="55">TEST FAO</option>
+		<select name="project-selector" size="1" id="project-selector" ng-model="selProj" ng-change="update()">
+                    <option ng-repeat="project in projects" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
             </div>
             <input name="download-plot-data" value="Download Data" id="download-plot-data" class="button" style="visibility: hidden;" type="button">
