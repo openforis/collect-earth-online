@@ -376,6 +376,8 @@ map_utils.dragbox_draw_interaction = null;
 
 map_utils.current_bbox = null;
 
+map_utils.set_bbox_coords = null;
+
 map_utils.enable_dragbox_draw = function () {
     var source = new ol.source.Vector({"features": []});
     var style = map_utils.styles["polygon"];
@@ -390,11 +392,18 @@ map_utils.enable_dragbox_draw = function () {
         var extent = geom.clone().transform("EPSG:3857", "EPSG:4326").getExtent();
         source.clear();
         source.addFeature(feature);
-        map_utils.current_bbox = {"minlon": extent[0],
-                                  "minlat": extent[1],
-                                  "maxlon": extent[2],
-                                  "maxlat": extent[3]};
+        map_utils.current_bbox = {minlon: extent[0],
+                                  minlat: extent[1],
+                                  maxlon: extent[2],
+                                  maxlat: extent[3]};
+
+	/* If Angular code defines this function, then, write values of extent to max-min lat-lon inputs. */
+	if (map_utils.set_bbox_coords) {
+		map_utils.set_bbox_coords();
+	}
+
     };
+
     dragbox.on("boxend", boxend_action);
     map_utils.map_ref.addLayer(draw_layer);
     map_utils.map_ref.addInteraction(dragbox);
