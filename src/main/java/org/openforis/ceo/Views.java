@@ -1,4 +1,4 @@
-package openforis.ceo;
+package org.openforis.ceo;
 
 import java.util.HashMap;
 import java.util.List;

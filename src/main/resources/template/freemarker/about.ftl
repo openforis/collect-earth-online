@@ -10,7 +10,7 @@
     change. The full functionality of Mapcha including collaborative
     compilation of reference point databases is implemented online so
     there is no need for desktop installation.</p>
-    <a href="http://www.sig-gis.com"><img src="/img/sig-logo.png"></a>
+    <a href="http://www.sig-gis.com"><img src="img/sig-logo.png"></a>
     <p>Copyright © <a href="http://www.sig-gis.com">SIG-GIS</a> 2016</p>
 </div>
 <#include "footer.ftl">

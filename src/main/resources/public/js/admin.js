@@ -11,7 +11,6 @@ var ctlAdmin = function($scope) {
   // Initialize New Sample Value Fields
   resetNewSampleValue($scope);
 
-
   // Initialize base map
   map_utils.digital_globe_base_map($scope.map_config);
   $scope.imageryInfoText = map_utils.current_imagery;
@@ -42,11 +41,11 @@ var ctlAdmin = function($scope) {
 	resetNewSampleValue($scope);
   }
 
-
   $scope.update = function() {
 	$scope.test = $scope.selProj;
 	$scope.newSample = [];
 	resetNewSampleValue($scope);
+
 
 	$scope.currentProject = getProject($scope.selProj);
 	

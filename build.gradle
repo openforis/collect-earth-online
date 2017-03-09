@@ -1,13 +1,14 @@
 apply plugin: 'java'
+apply plugin: 'war'
 apply plugin: 'application'
 
-mainClassName = 'openforis.ceo.Server'
+mainClassName = 'org.openforis.ceo.Server'
 
 repositories {
     mavenCentral()
 }
 
-jar {
+war {
     baseName = 'collect-earth-online'
     version = '1.0.0-SNAPSHOT'
 }

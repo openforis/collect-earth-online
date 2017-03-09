@@ -4,7 +4,7 @@
     <#list projects>
         <ul>
             <#items as project>
-            <li><a href="/dashboard?project=${project.id}">${project.name}</a></li>
+            <li><a href="dashboard?project=${project.id}">${project.name}</a></li>
             </#items>
         </ul>
     </#list>
