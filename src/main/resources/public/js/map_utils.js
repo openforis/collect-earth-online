@@ -326,18 +326,19 @@ map_utils.remove_sample_layer = function () {
 
 map_utils.draw_points = function (samples) {
     var features = [];
-    for (sample in samples) {
+    for (i=0; i<samples.length; i++) {
+        sample = samples[i];
         var format = new ol.format.GeoJSON();
-        var latlon = format.readGeometry(sample["point"]);
-        var geometry = latlon.transform("EPSG:4326", "EPSG:3857");
-        var feature = new ol.Feature({"geometry": geometry,
-                                      "sample_id": sample["id"]});
+        var latlon = format.readGeometry(sample.point);
+        var geometry = latlon.transform('EPSG:4326', 'EPSG:3857');
+        var feature = new ol.Feature({geometry: geometry,
+                                      sample_id: sample["id"]});
         features.push(feature);
     }
-    var vector_source = new ol.source.Vector({"features": features});
+    var vector_source = new ol.source.Vector({features: features});
     var style = map_utils.styles["red_point"];
     var vector_layer = new ol.layer.Vector({source: vector_source,
-                                            "style": style});
+                                            style: style});
     map_utils.remove_sample_layer();
     map_utils.current_samples = vector_layer;
     map_utils.disable_selection();

@@ -1,21 +1,23 @@
 <#include "header.ftl">
 
-<script type="text/javascript" src="js/dashboard.js"></script>
+<script type="text/javascript" src="/js/dashboard.js"></script>
 
 <div ng-controller="ctlDashboard"  ng-attr-id="{{ formID }}">
-    <input class="button" id="quit-button" name="dashboard-quit" onclick="window.location='select-project'" value="Quit" type="button">
+    <input class="button" id="quit-button" name="dashboard-quit" onclick="window.location='/select-project'" value="Quit" type="button">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">
         <div id="sidebar-contents">
             <fieldset>
                 <legend>1. Select Project</legend>
 		<div><p>{{ debugText }}</p></div>
+
+		<!-- Thomas DeVera - sample code for inserting Angular directive; can be deleted -->
+		<!-- <div rating-stars rating="3"></div> -->
+
                 <select name="project-id" size="1" id="project-id" ng-model="selProj" ng-change="update()">
 		    <option ng-repeat="project in projects" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
-		
-
-		<input name="new-plot" value="2. Analyze New Plot" id="new-plot-button" class="button" type="button">
+		<input name="new-plot" value="2. Analyze New Plot" id="new-plot-button" class="button" type="button" ng-click="getNewPlot()">
             </fieldset>
             <fieldset>
                 <legend>3. Assign Values</legend>
