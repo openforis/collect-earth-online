@@ -136,17 +136,19 @@ map_utils.digital_globe_base_map = function (map_config) {
 map_utils.current_imagery = "DigitalGlobeRecentImagery+Streets";
 
 map_utils.set_current_imagery = function (new_imagery) {
-      var layers = map_utils.map_ref.getLayers().getArray();    
-      
-      for (var layer in layers) {
-        var title = layers[layer].get("title");
-        if (title == map_utils.current_imagery && layer < 5) {
-          layers[layer].set("visible", false);
+   var layers = map_utils.map_ref.getLayers().getArray();    
+
+   for (i=0; i<layers.length; i++) {
+      var layer = layers[i];
+        var title = layer.get("title");
+        if (title == map_utils.current_imagery) {
+          layer.set("visible", false);
         }
-        if (title == new_imagery  && layer < 5) {
-          layers[layer].set("visible", true); 
+        if (title == new_imagery ) {
+          layer.set("visible", true);
         }
     }
+
     map_utils.current_imagery = new_imagery;
     return new_imagery;
 };
