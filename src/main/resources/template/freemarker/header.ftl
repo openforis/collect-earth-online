@@ -33,19 +33,29 @@
             <nav>
                 <ul>
                     <#if role == "admin">
-                        <li><a class="active-link" href="home">Home</a></li>
-                        <li><a href="about">About</a></li>
-                        <li><a href="account">Account</a></li>
-                        <li><a href="dashboard">Dashboard</a></li>
-                        <li><a href="admin">Admin</a></li>
+                        <#list ["Home", "About", "Account", "Dashboard", "Admin"] as url>
+                            <#if navlink == url>
+                                <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
+                            <#else>
+                                <li><a href="${url?lower_case}">${url}</a></li>
+                            </#if>
+                        </#list>
                     <#elseif role == "user">
-                        <li><a class="active-link" href="home">Home</a></li>
-                        <li><a href="about">About</a></li>
-                        <li><a href="account">Account</a></li>
-                        <li><a href="dashboard">Dashboard</a></li>
+                        <#list ["Home", "About", "Account", "Dashboard"] as url>
+                            <#if navlink == url>
+                                <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
+                            <#else>
+                                <li><a href="${url?lower_case}">${url}</a></li>
+                            </#if>
+                        </#list>
                     <#else>
-                        <li><a class="active-link" href="home">Home</a></li>
-                        <li><a href="about">About</a></li>
+                        <#list ["Home", "About"] as url>
+                            <#if navlink == url>
+                                <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
+                            <#else>
+                                <li><a href="${url?lower_case}">${url}</a></li>
+                            </#if>
+                        </#list>
                     </#if>
                 </ul>
             </nav>

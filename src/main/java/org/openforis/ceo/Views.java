@@ -14,6 +14,7 @@ public class Views {
 
     public static TemplateViewRoute home = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Home");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Home Page"});
@@ -22,6 +23,7 @@ public class Views {
 
     public static TemplateViewRoute about = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "About");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"About Page"});
@@ -30,6 +32,7 @@ public class Views {
 
     public static TemplateViewRoute login = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Login");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Login Page"});
@@ -38,6 +41,7 @@ public class Views {
 
     public static TemplateViewRoute register = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Register");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Register Page"});
@@ -46,6 +50,7 @@ public class Views {
 
     public static TemplateViewRoute password = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Password");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Password Page"});
@@ -54,6 +59,7 @@ public class Views {
 
     public static TemplateViewRoute passwordReset = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Password-Reset");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Password Reset Page"});
@@ -64,6 +70,7 @@ public class Views {
 
     public static TemplateViewRoute logout = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Logout");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Logout Page"});
@@ -72,6 +79,7 @@ public class Views {
 
     public static TemplateViewRoute selectProject = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Select-Project");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Select Project Page"});
@@ -90,6 +98,7 @@ public class Views {
 
     public static TemplateViewRoute account = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Account");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Account Page"});
@@ -98,6 +107,7 @@ public class Views {
 
     public static TemplateViewRoute dashboard = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Dashboard");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Dashboard Page"});
@@ -108,6 +118,7 @@ public class Views {
 
     public static TemplateViewRoute admin = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Admin");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Admin Page"});
@@ -116,6 +127,7 @@ public class Views {
 
     public static TemplateViewRoute pageNotFound = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Page-Not-Found");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Page Not Found Page"});
