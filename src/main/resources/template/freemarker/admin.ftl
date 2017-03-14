@@ -1,6 +1,6 @@
 <#include "header.ftl">
 
-<script type="text/javascript" src="/js/admin.js"></script>
+<script type="text/javascript" src="js/admin.js"></script>
 
 <div id="admin">
     <h1>Project Management</h1>
