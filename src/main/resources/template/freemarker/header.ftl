@@ -63,13 +63,13 @@
             <div id="login-info">
                 <p>
                     <#if username??>
-                        <#if navlink == "logout">
+                        <#if navlink == "Logout">
                             Logged in as ${username} <a class="active-link" href="logout">Logout</a>
                         <#else>
                             Logged in as ${username} <a href="logout">Logout</a>
                         </#if>
                     <#else>
-                        <#if navlink == "login">
+                        <#if navlink == "Login">
                             <a class="active-link" href="login">Login</a>
                         <#else>
                             <a href="login">Login</a>
