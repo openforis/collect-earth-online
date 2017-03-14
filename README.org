@@ -1,0 +1,56 @@
+* Collect Earth Online
+
+/Crowdsourced visual interpretation of on-demand satellite imagery/
+
+This is a Java 8 application written with the Spark web framework
+(http://sparkjava.com).
+
+** Installation
+
+In order to build and run Collect Earth Online, you will need:
+
+- Java Development Kit 1.8+
+- Either Maven 3.3.9+ or Gradle 3.3+
+- Tomcat 8+ (optional)
+
+** Running with an Embedded Jetty Webserver
+
+This is the simplest solution to get up and running quickly. The
+application will be available at http://localhost:8080.
+
+*** With Maven
+
+#+begin_src sh
+$ mvn compile exec:java
+#+end_src
+
+*** With Gradle
+
+#+begin_src sh
+$ gradle run
+#+end_src
+
+** Running inside Tomcat
+
+This allows multiple web applications to share the same host and port
+on your machine. You will need to install a recent version of Tomcat
+(version 8+ recommended) to use this method. The application will be
+available at http://localhost:8080/ceo.
+
+*** With Maven
+
+#+begin_src sh
+$ mvn package
+$ export TOMCAT_HOME="where/you/installed/tomcat"
+$ sudo ln -s $PWD/target/collect-earth-online-<version>.war $TOMCAT_HOME/webapps/ceo.war
+$ sudo $TOMCAT_HOME/bin/startup.sh
+#+end_src
+
+*** With Gradle
+
+#+begin_src sh
+$ gradle build
+$ export TOMCAT_HOME="where/you/installed/tomcat"
+$ sudo ln -s $PWD/build/libs/collect-earth-online-<version>.war $TOMCAT_HOME/webapps/ceo.war
+$ sudo $TOMCAT_HOME/bin/startup.sh
+#+end_src
