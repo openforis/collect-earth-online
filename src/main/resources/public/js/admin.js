@@ -7,22 +7,19 @@
 var admin = {};
 
 admin.controller = function ($scope) {
-    $scope.formID = "create-project-form";
-    $scope.projects = ceo.project_list;
+    // FIXME: Set using an AJAX request
+    $scope.projectList = ceo_sample_data.project_list;
 
-    $scope.map_config = new mapConfig;
-    $scope.map_config.div_name = "new-project-map";
-    $scope.map_config.center_coords = [102.0, 17.0];
-    $scope.map_config.zoom_level = 5;
+    // Initialize the base map and enable the dragbox interaction
+    map_utils.digital_globe_base_map({div_name: "new-project-map",
+                                      center_coords: [102.0, 17.0],
+                                      zoom_level: 5});
+    map_utils.enable_dragbox_draw();
 
     // Initialize New Sample Value Fields
     resetNewSampleValue($scope);
 
-    // Initialize base map
-    map_utils.digital_globe_base_map($scope.map_config);
     $scope.imageryInfoText = map_utils.current_imagery;
-
-    map_utils.enable_dragbox_draw();
 
     $scope.addSample = function() {
         var id = 0;
@@ -96,7 +93,7 @@ admin.controller = function ($scope) {
         latmin.value = map_utils.current_bbox.minlat;
         lonmin.value = map_utils.current_bbox.minlon;
     }
-}
+};
 
 function getProject(projectId) {
     var i = 0;

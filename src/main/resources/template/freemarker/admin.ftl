@@ -4,12 +4,12 @@
 
 <div id="admin">
     <h1>Project Management</h1>
-    <div ng-controller="admin.controller" ng-attr-id="{{ formID }}">
+    <div id="create-project-form" ng-attr-id="create-project-form" ng-controller="admin.controller">
         <form method="post" action="/admin" id="project-management-form">
             <div id="project-selection">
                 <label>Currently Viewing:</label>
 		<select name="project-selector" size="1" id="project-selector" ng-model="selProj" ng-change="update()">
-                    <option ng-repeat="project in projects" value="{{ project.id }}">{{ project.name }}</option>
+                    <option ng-repeat="project in projectList" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
             </div>
             <input name="download-plot-data" value="Download Data" id="download-plot-data" class="button" style="visibility: hidden;" type="button">
