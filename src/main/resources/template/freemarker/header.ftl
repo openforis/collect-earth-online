@@ -18,6 +18,7 @@
         <script type="text/javascript" src="js/angular.min.js"></script>
         <script type="text/javascript" src="js/openlayers_3.13.0.js"></script>
         <script type="text/javascript" src="js/map_utils.js"></script>
+        <script type="text/javascript" src="js/utils.js"></script>
         <script type="text/javascript" src="js/ceo_sample_data.js"></script>
         <!-- <script type="text/javascript" src="js/angular-route.min.js"></script> -->
         <script type="text/javascript" src="js/collect-earth.js"></script>
