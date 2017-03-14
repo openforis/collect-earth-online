@@ -87,14 +87,31 @@ dashboard.controller = function ($scope) {
         }
     };
 
-    // FIXME: Stub
     $scope.saveValues = function () {
-        alert("Called saveValues");
+        var userId = parseInt(document.getElementById("user-id").value);
+        var plotId = $scope.currentPlot.id;
+        var imagery = $scope.currentProject.imagery;
+        var userSamples = JSON.stringify($scope.userSamples, null, 4);
+        // FIXME: Implement this as an AJAX call
+        alert("Called saveValues with:\n" +
+              "userId = " + userId + "\n" +
+              "plotId = " + plotId + "\n" +
+              "imagery = " + imagery + "\n" +
+              "userSamples = " + userSamples);
+        // alert("Your assignments have been saved to the database.");
+        utils.enable_element("new-plot-button");
+        utils.disable_element("flag-plot-button");
+        utils.disable_element("save-values-button");
+        $scope.currentPlot = null;
+        map_utils.disable_selection();
     };
 
-    // FIXME: Stub
     $scope.flagPlot = function () {
-        alert("Called flagPlot");
+        var plotId = $scope.currentPlot.id;
+        // FIXME: Implement this as an AJAX call
+        alert("Called flagPlot with plotId = " + plotId);
+        // alert("Plot " + plotId + " has been flagged");
+        $scope.loadRandomPlot();
     };
 };
 
