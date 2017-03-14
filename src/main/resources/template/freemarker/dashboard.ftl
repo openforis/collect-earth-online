@@ -1,30 +1,23 @@
 <#include "header.ftl">
-
-<script type="text/javascript" src="/js/dashboard.js"></script>
-
-<div ng-controller="ctlDashboard"  ng-attr-id="{{ formID }}">
-    <input class="button" id="quit-button" name="dashboard-quit" onclick="window.location='/select-project'" value="Quit" type="button">
+<div id="dashboard" ng-attr-id="dashboard" ng-controller="dashboard.controller">
+    <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='/select-project'">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">
         <div id="sidebar-contents">
             <fieldset>
                 <legend>1. Select Project</legend>
-		<div><p>{{ debugText }}</p></div>
-
-		<!-- Thomas DeVera - sample code for inserting Angular directive; can be deleted -->
-		<!-- <div rating-stars rating="3"></div> -->
-
-                <select name="project-id" size="1" id="project-id" ng-model="selProj" ng-change="update()">
-		    <option ng-repeat="project in projects" value="{{ project.id }}">{{ project.name }}</option>
+                <select id="project-id" name="project-id" size="1" ng-model="currentProjectId" ng-change="switchProject()">
+                    <option ng-repeat="project in projectList" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
-		<input name="new-plot" value="2. Analyze New Plot" id="new-plot-button" class="button" type="button" ng-click="getNewPlot()">
+                <input id="new-plot-button" class="button" type="button" name="new-plot" value="2. Analyze New Plot" ng-click="loadRandomPlot()">
             </fieldset>
             <fieldset>
                 <legend>3. Assign Values</legend>
                 <ul>
-		    <li ng-repeat="sample in currentProject.sample_values">
-			<input id="{{ sample.id }}" value="{{ sample.value }}" style="border-left:1.5rem solid {{ sample.color }}" type="button">
-		    </li>
+                    <li ng-repeat="sample in currentProject.sample_values">
+                        <input type="button" name="{{ sample.value + '_' + sample.id }}" value="{{ sample.value }}" style="border-left:1.5rem solid {{ sample.color }}"
+                        ng-click="setCurrentValue(sample)">
+                    </li>
                 </ul>
                 <div id="final-plot-options">
                     <table>
@@ -33,14 +26,14 @@
                                 <td>4.</td>
                                 <td>Either</td>
                                 <td>
-                                    <input name="save-values" value="Save Assignments" id="save-values-button" class="button" disabled="" style="opacity: 0.5;" type="button">
+                                    <input id="save-values-button" class="button" type="button" name="save-values" value="Save Assignments" ng-click="saveValues()" style="opacity:0.5" disabled>
                                 </td>
                             </tr>
                             <tr>
                                 <td> </td>
                                 <td>or</td>
                                 <td>
-                                    <input name="flag-plot" value="Flag Plot as Bad" id="flag-plot-button" class="button" disabled="" style="opacity: 0.5;" type="button">
+                                    <input id="flag-plot-button" class="button" type="button" name="flag-plot" value="Flag Plot as Bad" ng-click="flagPlot()" style="opacity:0.5" disabled>
                                 </td>
                             </tr>
                         </tbody>
@@ -49,8 +42,9 @@
             </fieldset>
         </div>
     </div>
-    <div id="imagery-info" ng-model="imageryInfo"><p>{{ imageryInfoText }}</p></div>
-    <input id="user-id" name="user-id" value=${user_id} type="hidden">
-    <input id="initial-project-id" name="initial-project-id" value=${project_id} type="hidden">
+    <div id="imagery-info"><p>{{ currentProject.attribution }}</p></div>
+    <input id="user-id" type="hidden" name="user-id" value=${user_id}>
+    <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id}>
 </div>
+<script type="text/javascript" src="/js/dashboard.js"></script>
 <#include "footer.ftl">
