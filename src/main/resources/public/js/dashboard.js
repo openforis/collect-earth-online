@@ -99,11 +99,7 @@ dashboard.controller = function ($scope) {
               "imagery = " + imagery + "\n" +
               "userSamples = " + userSamples);
         // alert("Your assignments have been saved to the database.");
-        utils.enable_element("new-plot-button");
-        utils.disable_element("flag-plot-button");
-        utils.disable_element("save-values-button");
-        $scope.currentPlot = null;
-        map_utils.disable_selection();
+        $scope.loadRandomPlot();
     };
 
     $scope.flagPlot = function () {
