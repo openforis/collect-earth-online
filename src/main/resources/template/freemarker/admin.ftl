@@ -8,7 +8,7 @@
         <form method="post" action="/admin" id="project-management-form">
             <div id="project-selection">
                 <label>Currently Viewing:</label>
-		<select name="project-selector" size="1" id="project-selector" ng-model="selProj" ng-change="update()">
+                <select name="project-selector" size="1" id="project-selector" ng-model="selProj" ng-change="update()">
                     <option ng-repeat="project in projectList" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
             </div>
@@ -92,7 +92,7 @@
                             <td>
                             </td>
                             <td>
-				<label>{{ sample.value }}</label>
+                                <label>{{ sample.value }}</label>
                             </td>
                             <td>
                                 <input name="value-color" id="value-color" type="color" value="{{ sample.color }}">
@@ -101,11 +101,11 @@
                                 <input name="value-image" accept="image/*" id="value-image" type="file" value="{{ sample.image }}">
                             </td>
                         </tr>
-			<tr>
+                        <tr>
                             <td>
                             </td>
                             <td>
-                               <input name="new-value-name" autocomplete="off" id="new-value-name" type="text" ng-model="newValueName">
+                                <input name="new-value-name" autocomplete="off" id="new-value-name" type="text" ng-model="newValueName">
                             </td>
                             <td>
                                 <input name="new-value-color" id="new-value-color" type="color" value="" ng-model="newValueColor">

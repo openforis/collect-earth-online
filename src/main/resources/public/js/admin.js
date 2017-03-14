@@ -76,8 +76,8 @@ admin.controller = function ($scope) {
             $scope.projName = $scope.currentProject.name;
             $scope.projDescr = $scope.currentProject.description;
             $scope.projPlots = 3;
-            $scope.projRadius = ceo.plot_data[$scope.currentProject.id][0].plot.radius;
-            $scope.samplesPerPlot = ceo.plot_data[$scope.currentProject.id][0].samples.length;
+            $scope.projRadius = ceo_sample_data.plot_data[$scope.currentProject.id][0].plot.radius;
+            $scope.samplesPerPlot = ceo_sample_data.plot_data[$scope.currentProject.id][0].samples.length;
             $scope.sampleResolution = "";
         }
     }
@@ -97,9 +97,9 @@ admin.controller = function ($scope) {
 
 function getProject(projectId) {
     var i = 0;
-    for (i=0; i < ceo.project_list.length; i++) {
-        if (ceo.project_list[i].id == projectId) {
-            return ceo.project_list[i];
+    for (i=0; i < ceo_sample_data.project_list.length; i++) {
+        if (ceo_sample_data.project_list[i].id == projectId) {
+            return ceo_sample_data.project_list[i];
         }
     }
 }
