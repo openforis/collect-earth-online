@@ -7,7 +7,7 @@
 var dashboard = {};
 
 dashboard.controller = function ($scope) {
-    // FIXME: set using AJAX request
+    // FIXME: Set using AJAX request
     $scope.projectList = ceo_sample_data.project_list;
 
     $scope.getProjectById = function (projectId) {
@@ -52,17 +52,20 @@ dashboard.controller = function ($scope) {
         }
     };
 
-    // FIXME: Review this function
     $scope.loadRandomPlot = function () {
-        if ($scope.currentProject) {
-            var currProj = ceo_sample_data.plot_data[$scope.currentProject.id];
-            var numPlots = currProj.length;
-            var rndmPlotId = Math.floor((Math.random() * numPlots) + 1);
-            var rndmPlot = currProj[rndmPlotId];
-
-            map_utils.draw_buffer(rndmPlot.plot.center, rndmPlot.plot.radius);
-            map_utils.draw_points(rndmPlot.samples);
-        }
+        // FIXME: Set using an AJAX request
+        var currentProjectPlots = ceo_sample_data.plot_data[$scope.currentProjectId];
+        var randomIndex = Math.floor(Math.random() * currentProjectPlots.length);
+        var newPlot = currentProjectPlots[randomIndex].plot;
+        var newSamples = currentProjectPlots[randomIndex].samples;
+        $scope.currentPlot = newPlot;
+        $scope.currentSamples = newSamples;
+        $scope.userSamples = {};
+        utils.disable_element("new-plot-button");
+        utils.enable_element("flag-plot-button");
+        utils.disable_element("save-values-button");
+        map_utils.draw_buffer(newPlot.center, newPlot.radius);
+        map_utils.draw_points(newSamples);
     };
 
     // FIXME: Stub
