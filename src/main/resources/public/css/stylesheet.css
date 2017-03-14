@@ -151,22 +151,25 @@ nav ul li {
   -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
 }
 
+#home img#ceo-logo {
+  width: 400px;
+  margin: -15px 0px 15px -25px;
+}
+
 #home h1 {
-  margin-top: 20px;
-  padding: 0.5rem 0.5rem 0.5rem 1rem;
-  font-size: 3.5rem;
+  margin-top: 10px;
+  font-size: 3.0rem;
   font-weight: bold;
   color: gray;
-  line-height: 80%;
+  text-align: center;
 }
 
 #home h2 {
   margin-bottom: 10px;
-  padding: 0.5rem 0.5rem 0.5rem 1rem;
-  font-size: 2.5rem;
+  font-size: 1.6rem;
   font-weight: 400;
   color: gray;
-  line-height: 110%;
+  text-align: center;
 }
 
 #home h3 {
@@ -194,7 +197,7 @@ nav ul li {
 }
 
 #about h1 {
-  font-size: 1.9rem;
+  font-size: 1.5rem;
   font-weight: 100;
   padding: 0.5rem;
   color: gray;
@@ -220,7 +223,7 @@ nav ul li {
 }
 
 #login-form h1, #register-form h1, #password-form h1, #account-form h1 {
-  font-size: 1.9rem;
+  font-size: 1.7rem;
   font-weight: 100;
   padding: 0.5rem;
   color: gray;
