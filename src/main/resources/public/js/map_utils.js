@@ -43,7 +43,6 @@ map_utils.get_full_extent = function () {
 // This reference will hold the current page's OpenLayers map object
 map_utils.map_ref = null;
 
- 
 // Example call:
 // map_utils.digital_globe_base_map({"div_name":      "image-analysis-pane",
 //                                   "center_coords": [102.0, 17.0],
@@ -60,15 +59,15 @@ map_utils.digital_globe_base_map = function (map_config) {
 
     // Declare each of the layer sources that will be shown in the map
     var source1 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
-                                            recent_imagery_url +
-                                            "/{z}/{x}/{y}.png?access_token=" +
-                                            digital_globe_access_token,
+                                          recent_imagery_url +
+                                          "/{z}/{x}/{y}.png?access_token=" +
+                                          digital_globe_access_token,
                                      attribution: "© DigitalGlobe, Inc"});
 
     var source2 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
-                                            recent_imagery_and_streets_url +
-                                            "/{z}/{x}/{y}.png?access_token=" +
-                                            digital_globe_access_token,
+                                          recent_imagery_and_streets_url +
+                                          "/{z}/{x}/{y}.png?access_token=" +
+                                          digital_globe_access_token,
                                      attribution: "© DigitalGlobe, Inc"});
 
     var source3 = new ol.source.BingMaps({key: bing_maps_access_token,
@@ -81,7 +80,7 @@ map_utils.digital_globe_base_map = function (map_config) {
 
     var source5 = new ol.source.TileWMS({url: sig_geoserver_url,
                                          params: {"LAYERS": "servir:yr2002",
-                                                    "TILED": true},
+                                                  "TILED": true},
                                          serverType: "geoserver"});
 
     // Wrap each source in a layer object
@@ -110,17 +109,17 @@ map_utils.digital_globe_base_map = function (map_config) {
     var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
 
     // Create the map view using the passed in center_coords and zoom_level
-    var view = new ol.View({projection: 'EPSG:3857', 
-	center: ol.proj.fromLonLat(map_config.center_coords),
-	extent: map_utils.get_full_extent(), 
-	zoom: map_config.zoom_level});
+    var view = new ol.View({projection: 'EPSG:3857',
+                            center: ol.proj.fromLonLat(map_config.center_coords),
+                            extent: map_utils.get_full_extent(),
+                            zoom: map_config.zoom_level});
 
     // Create the new OpenLayers map object
     var openlayers_map = new ol.Map({target: map_config.div_name,
                                      layers: [layer1, layer2, layer3,
-                                                layer4, layer5],
+                                              layer4, layer5],
                                      controls: controls,
-                                    view: view});
+                                     view: view});
 
     // Store the new OpenLayers map object in map_utils.map_ref and return it
     map_utils.map_ref = openlayers_map;
@@ -136,16 +135,16 @@ map_utils.digital_globe_base_map = function (map_config) {
 map_utils.current_imagery = "DigitalGlobeRecentImagery+Streets";
 
 map_utils.set_current_imagery = function (new_imagery) {
-   var layers = map_utils.map_ref.getLayers().getArray();    
+    var layers = map_utils.map_ref.getLayers().getArray();
 
-   for (i=0; i<layers.length; i++) {
-      var layer = layers[i];
+    for (i=0; i<layers.length; i++) {
+        var layer = layers[i];
         var title = layer.get("title");
         if (title == map_utils.current_imagery) {
-          layer.set("visible", false);
+            layer.set("visible", false);
         }
         if (title == new_imagery ) {
-          layer.set("visible", true);
+            layer.set("visible", true);
         }
     }
 
@@ -259,8 +258,8 @@ map_utils.make_click_select = function (layer) {
             }
         });
     };
-   select.on("select", action);
-   return select;
+    select.on("select", action);
+    return select;
 };
 
 map_utils.dragbox_interaction = null;
@@ -402,10 +401,10 @@ map_utils.enable_dragbox_draw = function () {
                                   maxlon: extent[2],
                                   maxlat: extent[3]};
 
-	/* If Angular code defines this function, then, write values of extent to max-min lat-lon inputs. */
-	if (map_utils.set_bbox_coords) {
-		map_utils.set_bbox_coords();
-	}
+        /* If Angular code defines this function, then, write values of extent to max-min lat-lon inputs. */
+        if (map_utils.set_bbox_coords) {
+            map_utils.set_bbox_coords();
+        }
 
     };
 
