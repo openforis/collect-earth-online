@@ -4,7 +4,7 @@
 
 <div id="admin">
     <h1>Project Management</h1>
-    <div ng-controller="ctlAdmin"  ng-attr-id="{{ formID }}">
+    <div ng-controller="admin.controller" ng-attr-id="{{ formID }}">
         <form method="post" action="/admin" id="project-management-form">
             <div id="project-selection">
                 <label>Currently Viewing:</label>
