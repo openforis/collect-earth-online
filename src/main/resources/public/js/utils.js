@@ -19,3 +19,22 @@ utils.disable_element = function (element_id) {
     element.style.opacity = 0.5;
     return null;
 };
+
+utils.highlight_border = function (element_id) {
+    var element = document.getElementById(element_id);
+    var shadow_style = "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset";
+    element.style.boxShadow = shadow_style;
+    return null;
+};
+
+utils.lowlight_border = function (element_id) {
+    var element = document.getElementById(element_id);
+    element.style.boxShadow = "initial";
+    return null;
+};
+
+utils.blink_border = function (element_id) {
+    utils.highlight_border(element_id);
+    setTimeout(function () { utils.lowlight_border(element_id) }, 500);
+    return null;
+};
