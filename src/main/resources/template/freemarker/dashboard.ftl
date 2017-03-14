@@ -1,6 +1,9 @@
 <#include "header.ftl">
+
+<script type="text/javascript" src="js/dashboard.js"></script>
+
 <div id="dashboard" ng-attr-id="dashboard" ng-controller="dashboard.controller">
-    <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='/select-project'">
+    <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='select-project'">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">
         <div id="sidebar-contents">
@@ -16,7 +19,7 @@
                 <ul>
                     <li ng-repeat="sample in currentProject.sample_values">
                         <input type="button" name="{{ sample.value + '_' + sample.id }}" value="{{ sample.value }}" style="border-left:1.5rem solid {{ sample.color }}"
-                        ng-click="setCurrentValue(sample)">
+                               ng-click="setCurrentValue(sample)">
                     </li>
                 </ul>
                 <div id="final-plot-options">
@@ -46,5 +49,4 @@
     <input id="user-id" type="hidden" name="user-id" value=${user_id}>
     <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id}>
 </div>
-<script type="text/javascript" src="/js/dashboard.js"></script>
 <#include "footer.ftl">
