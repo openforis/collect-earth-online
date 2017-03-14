@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <div id="register-form">
     <h1>Register a new account</h1>
-    <form action="/register" method="post">
+    <form action="register" method="post">
         <input autocomplete="off" id="email" name="email" placeholder="Email" value="" type="email">
         <input autocomplete="off" id="password" name="password" placeholder="Password" value="" type="password">
         <input autocomplete="off" id="password-confirmation" name="password-confirmation" placeholder="Password confirmation" value="" type="password">
