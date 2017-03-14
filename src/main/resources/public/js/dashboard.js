@@ -7,12 +7,11 @@
 var dashboard = {};
 
 dashboard.controller = function ($scope) {
-    // FIXME: Set using AJAX request
+    // FIXME: Set using an AJAX request
     $scope.projectList = ceo_sample_data.project_list;
 
     $scope.getProjectById = function (projectId) {
-        var i = 0;
-        for (i = 0; i < $scope.projectList.length; i++) {
+        for (var i = 0; i < $scope.projectList.length; i++) {
             if ($scope.projectList[i].id == projectId) {
                 return $scope.projectList[i];
             }
@@ -68,19 +67,34 @@ dashboard.controller = function ($scope) {
         map_utils.draw_points(newSamples);
     };
 
-    // FIXME: Stub
-    $scope.setCurrentValue = function (sample) {
-        window.alert("Called setCurrentValue");
+    $scope.setCurrentValue = function (sampleValue) {
+        var selectedFeatures = map_utils.get_selected_samples();
+        if (selectedFeatures) {
+            var samples = selectedFeatures.getArray();
+            utils.blink_border(sampleValue.id);
+            for (var i = 0; i < samples.length; i++) {
+                var sample = samples[i];
+                var sampleId = sample.get("sample_id");
+                $scope.userSamples[sampleId] = sampleValue.id;
+                map_utils.highlight_sample(sample, sampleValue.color)
+            }
+            selectedFeatures.clear();
+            if (Object.keys($scope.userSamples).length == $scope.currentSamples.length) {
+                utils.enable_element("save-values-button");
+            }
+        } else {
+            alert("No sample points selected. Please click some first.");
+        }
     };
 
     // FIXME: Stub
     $scope.saveValues = function () {
-        window.alert("Called saveValues");
+        alert("Called saveValues");
     };
 
     // FIXME: Stub
     $scope.flagPlot = function () {
-        window.alert("Called flagPlot");
+        alert("Called flagPlot");
     };
 };
 
