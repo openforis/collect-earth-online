@@ -6,6 +6,34 @@
 
 var admin = {};
 
+// FIXME: admin.controller needs to define these terms:
+// - currentProjectId (set to "0" initially)
+// - setCurrentProject()
+// - projectList
+// - exportCurrentPlotData()
+// - submitForm()
+// - projectName
+// - projectDescription
+// - numPlots
+// - plotRadius
+// - setSampleType('random')
+// - setSampleType('gridded')
+// - currentSampleType
+// - samplesPerPlot
+// - sampleResolution
+// - latMin
+// - latMax
+// - lonMin
+// - lonMax
+// - currentImagery = "DigitalGlobeRecentImagery+Streets"
+// - setCurrentImagery()
+// - currentSampleValues
+// - removeSampleValueRow(sampleValue.id)
+// - valueName
+// - valueColor
+// - valueImage
+// - addSampleValueRow()
+// - sampleValues
 admin.controller = function ($scope) {
     // FIXME: Set using an AJAX request
     $scope.projectList = ceo_sample_data.project_list;
@@ -15,6 +43,8 @@ admin.controller = function ($scope) {
                                       center_coords: [102.0, 17.0],
                                       zoom_level: 5});
     map_utils.enable_dragbox_draw();
+
+    // FIXME: Review and fix the code below this point
 
     // Initialize New Sample Value Fields
     resetNewSampleValue($scope);
@@ -29,13 +59,13 @@ admin.controller = function ($scope) {
             id = $scope.currentProject.sample_values[$scope.currentProject.sample_values.length - 1].id + 1;
         }
 
-        if ($scope.newValueImage) {
-            imageVal = $scope.newValueImage;
+        if ($scope.valueImage) {
+            imageVal = $scope.valueImage;
         }
 
         var newSampleItem = {
-            color: $scope.newValueColor,
-            value: $scope.newValueName,
+            color: $scope.valueColor,
+            value: $scope.valueName,
             id: id,
             image: imageVal
         }
@@ -45,13 +75,13 @@ admin.controller = function ($scope) {
         resetNewSampleValue($scope);
     }
 
-    $scope.update = function() {
-        $scope.test = $scope.selProj;
+    $scope.setCurrentProject = function() {
+        $scope.test = $scope.currentProjectId;
         $scope.newSample = [];
         resetNewSampleValue($scope);
 
 
-        $scope.currentProject = getProject($scope.selProj);
+        $scope.currentProject = getProject($scope.currentProjectId);
 
         if ($scope.currentProject) {
             $scope.imageryInfoText = $scope.currentProject.attribution;
@@ -61,7 +91,7 @@ admin.controller = function ($scope) {
             map_utils.draw_polygon($scope.currentProject.boundary);
             map_utils.disable_dragbox_draw();
 
-            $scope.basemapSelect = $scope.currentProject.imagery;
+            $scope.currentImagery = $scope.currentProject.imagery;
 
             // Populate lat-max,lat-min, lon-mat, lon-min inut fields with data from project
             var extents0 = map_utils.current_boundary.getSource().getExtent();
@@ -73,10 +103,10 @@ admin.controller = function ($scope) {
             map_utils.set_bbox_coords();
 
             // Populate other input fields with data from project
-            $scope.projName = $scope.currentProject.name;
-            $scope.projDescr = $scope.currentProject.description;
-            $scope.projPlots = 3;
-            $scope.projRadius = ceo_sample_data.plot_data[$scope.currentProject.id][0].plot.radius;
+            $scope.projectName = $scope.currentProject.name;
+            $scope.projectDescription = $scope.currentProject.description;
+            $scope.numPlots = 3;
+            $scope.plotRadius = ceo_sample_data.plot_data[$scope.currentProject.id][0].plot.radius;
             $scope.samplesPerPlot = ceo_sample_data.plot_data[$scope.currentProject.id][0].samples.length;
             $scope.sampleResolution = "";
         }
@@ -104,16 +134,10 @@ function getProject(projectId) {
     }
 }
 
-function mapConfig(divName, centerCoords, zoomLevel){
-    this.div_name = divName;
-    this.center_coords = centerCoords;
-    this.zoom_level = zoomLevel;
-}
-
 function resetNewSampleValue($scope) {
-    $scope.newValueName = "";
-    $scope.newValueColor = "#000000";
-    $scope.newValueImage = null;
+    $scope.valueName = "";
+    $scope.valueColor = "#000000";
+    $scope.valueImage = null;
 }
 
 angular
