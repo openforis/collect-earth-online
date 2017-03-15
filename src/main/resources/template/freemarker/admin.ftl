@@ -56,10 +56,10 @@
                 </table>
                 <label>Samples per plot</label>
                 <input id="samples-per-plot" type="number" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="samplesPerPlot"
-                       {{ currentSampleType == 'gridded' ? 'disabled' : '' }}>
+                       {{ sampleType == 'gridded' ? 'disabled' : '' }}>
                 <label>Sample resolution (m)</label>
                 <input id="sample-resolution" type="number" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="sampleResolution"
-                       {{ currentSampleType == 'random' ? 'disabled' : '' }}>
+                       {{ sampleType == 'random' ? 'disabled' : '' }}>
             </fieldset>
             <fieldset id="bounding-box">
                 <legend>Define Bounding Box</legend>
@@ -92,7 +92,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="sampleValue in currentSampleValues">
+                        <tr ng-repeat="sampleValue in sampleValues">
                             <td>
                                 <input class="button" type="button" value="-" ng-click="removeSampleValueRow(sampleValue.id)"
                                        {{ currentProjectId == 0 ? '' : 'disabled' }}>

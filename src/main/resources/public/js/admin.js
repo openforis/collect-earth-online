@@ -7,36 +7,34 @@
 var admin = {};
 
 // FIXME: admin.controller needs to define these terms:
-// - currentProjectId (set to "0" initially)
-// - setCurrentProject()
-// - projectList
 // - exportCurrentPlotData()
 // - submitForm()
-// - projectName
-// - projectDescription
-// - numPlots
-// - plotRadius
 // - setSampleType('random')
 // - setSampleType('gridded')
-// - currentSampleType
-// - samplesPerPlot
-// - sampleResolution
-// - latMin
-// - latMax
-// - lonMin
-// - lonMax
-// - currentImagery = "DigitalGlobeRecentImagery+Streets"
 // - setCurrentImagery()
-// - currentSampleValues
 // - removeSampleValueRow(sampleValue.id)
-// - valueName
-// - valueColor
-// - valueImage
 // - addSampleValueRow()
-// - sampleValues
 admin.controller = function ($scope) {
     // FIXME: Set using an AJAX request
     $scope.projectList = ceo_sample_data.project_list;
+    $scope.currentProjectId = "0";
+    $scope.currentProject = null;
+    $scope.projectName = "";
+    $scope.projectDescription = "";
+    $scope.numPlots = "";
+    $scope.plotRadius = "";
+    $scope.sampleType = "random";
+    $scope.samplesPerPlot = "";
+    $scope.sampleResolution = "";
+    $scope.latMin = "";
+    $scope.latMax = "";
+    $scope.lonMin = "";
+    $scope.lonMax = "";
+    $scope.currentImagery = "DigitalGlobeRecentImagery+Streets";
+    $scope.valueName = "";
+    $scope.valueColor = "#000000";
+    $scope.valueImage = "";
+    $scope.sampleValues = [];
 
     // Initialize the base map and enable the dragbox interaction
     map_utils.digital_globe_base_map({div_name: "new-project-map",
@@ -44,12 +42,74 @@ admin.controller = function ($scope) {
                                       zoom_level: 5});
     map_utils.enable_dragbox_draw();
 
+    $scope.getProjectById = function (projectId) {
+        for (var i = 0; i < $scope.projectList.length; i++) {
+            if ($scope.projectList[i].id == projectId) {
+                return $scope.projectList[i];
+            }
+        }
+        return null;
+    };
+
+    $scope.setCurrentProject = function() {
+        // FIXME: Set using an AJAX request
+        var project = $scope.getProjectById($scope.currentProjectId);
+        $scope.currentProject = project;
+
+        if (project) {
+            // FIXME: Set using an AJAX request
+            var plotData = ceo_sample_data.plot_data[$scope.currentProjectId];
+            $scope.projectName = project.name;
+            $scope.projectDescription = project.description;
+            $scope.numPlots = plotData.length;
+            $scope.plotRadius = plotData[0].plot.radius;
+            if (project.sample_resolution) {
+                $scope.sampleType = "gridded";
+                document.getElementById("gridded-sample-type").checked = true;
+            } else {
+                $scope.sampleType = "random";
+                document.getElementById("random-sample-type").checked = true;
+            }
+            $scope.samplesPerPlot = plotData[0].samples.length;
+            $scope.sampleResolution = project.sample_resolution || "";
+            $scope.currentImagery = project.imagery;
+            map_utils.set_current_imagery($scope.currentImagery);
+            map_utils.disable_dragbox_draw();
+            map_utils.draw_polygon(project.boundary);
+            $scope.sampleValues = project.sample_values;
+        } else {
+            $scope.projectName = "";
+            $scope.projectDescription = "";
+            $scope.numPlots = "";
+            $scope.plotRadius = "";
+            $scope.sampleType = "random";
+            document.getElementById("random-sample-type").checked = true;
+            $scope.samplesPerPlot = "";
+            $scope.sampleResolution = "";
+            $scope.currentImagery = "DigitalGlobeRecentImagery+Streets";
+            map_utils.set_current_imagery($scope.currentImagery);
+            map_utils.enable_dragbox_draw();
+            map_utils.map_ref.removeLayer(map_utils.current_boundary);
+            map_utils.current_boundary = null;
+            map_utils.zoom_and_recenter_map(102.0, 17.0, 5);
+            $scope.sampleValues = [];
+        }
+    };
+
     // FIXME: Review and fix the code below this point
 
-    // Initialize New Sample Value Fields
-    resetNewSampleValue($scope);
+    ////////////////////
+    // $scope.newSample = [];
+    // var extents0 = map_utils.current_boundary.getSource().getExtent();
+    // var extents = ol.extent.applyTransform(extents0, ol.proj.getTransform("EPSG:3857", "EPSG:4326"));
+    // map_utils.current_bbox = {minlon: extents[0],
+    //                           minlat: extents[1],
+    //                           maxlon: extents[2],
+    //                           maxlat: extents[3]};
+    // map_utils.set_bbox_coords();
+    ////////////////////
 
-    $scope.imageryInfoText = map_utils.current_imagery;
+    // Initialize New Sample Value Fields
 
     $scope.addSample = function() {
         var id = 0;
@@ -72,44 +132,6 @@ admin.controller = function ($scope) {
 
         $scope.currentProject.sample_values.push(newSampleItem);
         $scope.newSample.push(newSampleItem);
-        resetNewSampleValue($scope);
-    }
-
-    $scope.setCurrentProject = function() {
-        $scope.test = $scope.currentProjectId;
-        $scope.newSample = [];
-        resetNewSampleValue($scope);
-
-
-        $scope.currentProject = getProject($scope.currentProjectId);
-
-        if ($scope.currentProject) {
-            $scope.imageryInfoText = $scope.currentProject.attribution;
-            map_utils.set_current_imagery($scope.currentProject.imagery);
-            map_utils.remove_plot_layer();
-            map_utils.remove_sample_layer();
-            map_utils.draw_polygon($scope.currentProject.boundary);
-            map_utils.disable_dragbox_draw();
-
-            $scope.currentImagery = $scope.currentProject.imagery;
-
-            // Populate lat-max,lat-min, lon-mat, lon-min inut fields with data from project
-            var extents0 = map_utils.current_boundary.getSource().getExtent();
-            var extents = ol.extent.applyTransform(extents0, ol.proj.getTransform("EPSG:3857", "EPSG:4326"));
-            map_utils.current_bbox = {minlon: extents[0],
-                                      minlat: extents[1],
-                                      maxlon: extents[2],
-                                      maxlat: extents[3]};
-            map_utils.set_bbox_coords();
-
-            // Populate other input fields with data from project
-            $scope.projectName = $scope.currentProject.name;
-            $scope.projectDescription = $scope.currentProject.description;
-            $scope.numPlots = 3;
-            $scope.plotRadius = ceo_sample_data.plot_data[$scope.currentProject.id][0].plot.radius;
-            $scope.samplesPerPlot = ceo_sample_data.plot_data[$scope.currentProject.id][0].samples.length;
-            $scope.sampleResolution = "";
-        }
     }
 
     map_utils.set_bbox_coords = function() {
@@ -124,21 +146,6 @@ admin.controller = function ($scope) {
         lonmin.value = map_utils.current_bbox.minlon;
     }
 };
-
-function getProject(projectId) {
-    var i = 0;
-    for (i=0; i < ceo_sample_data.project_list.length; i++) {
-        if (ceo_sample_data.project_list[i].id == projectId) {
-            return ceo_sample_data.project_list[i];
-        }
-    }
-}
-
-function resetNewSampleValue($scope) {
-    $scope.valueName = "";
-    $scope.valueColor = "#000000";
-    $scope.valueImage = null;
-}
 
 angular
     .module('collectEarth')
