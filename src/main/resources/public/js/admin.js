@@ -7,7 +7,6 @@
 var admin = {};
 
 // FIXME: admin.controller needs to define these terms:
-// - setCurrentImagery()
 // - removeSampleValueRow(sampleValue.id)
 // - addSampleValueRow()
 admin.controller = function ($scope) {
@@ -62,9 +61,13 @@ admin.controller = function ($scope) {
             if (project.sample_resolution) {
                 $scope.sampleType = "gridded";
                 document.getElementById("gridded-sample-type").checked = true;
+                utils.enable_element("samples-per-plot");
+                utils.enable_element("sample-resolution");
             } else {
                 $scope.sampleType = "random";
                 document.getElementById("random-sample-type").checked = true;
+                utils.enable_element("samples-per-plot");
+                utils.disable_element("sample-resolution");
             }
             $scope.samplesPerPlot = plotData[0].samples.length;
             $scope.sampleResolution = project.sample_resolution || "";
@@ -82,6 +85,8 @@ admin.controller = function ($scope) {
             document.getElementById("random-sample-type").checked = true;
             $scope.samplesPerPlot = "";
             $scope.sampleResolution = "";
+            utils.enable_element("samples-per-plot");
+            utils.disable_element("sample-resolution");
             $scope.currentImagery = "DigitalGlobeRecentImagery+Streets";
             map_utils.set_current_imagery($scope.currentImagery);
             map_utils.enable_dragbox_draw();
@@ -112,6 +117,11 @@ admin.controller = function ($scope) {
             utils.disable_element("samples-per-plot");
             utils.enable_element("sample-resolution");
         }
+    };
+
+    // FIXME: stub
+    $scope.setCurrentImagery = function () {
+        alert("Called setCurrentImagery()");
     };
 
     // FIXME: Review and fix the code below this point

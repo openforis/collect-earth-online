@@ -85,7 +85,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                                  {color: "#e96412", value: "Agriculture", id: 57, image: ""},
                                                  {color: "#1ba7d1", value: "Water", id: 58, image: ""},
                                                  {color: "#000000", value: "Unknown", id: 59, image: ""}],
-                                 sample_resolution: null,
+                                 sample_resolution: 20,
                                  imagery: "BingAerialWithLabels"},
                                 {description: "",
                                  name: "HB BlowDown",
@@ -95,7 +95,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                  sample_values: [{color: "#115805", value: "Forest", id: 60, image: ""},
                                                  {color: "#f70d15", value: "BlowDown", id: 61, image: ""},
                                                  {color: "#000000", value: "Other", id: 62, image: ""}],
-                                 sample_resolution: null,
+                                 sample_resolution: 5,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "",
                                  name: "Heilongjiang",
@@ -114,7 +114,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                  sample_values: [{color: "#1e88f5", value: "Katakana", id: 65, image: ""},
                                                  {color: "#c95b23", value: "Hiragana", id: 66, image: ""},
                                                  {color: "#11dd55", value: "Kanji", id: 67, image: ""}],
-                                 sample_resolution: null,
+                                 sample_resolution: 20,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "",
                                  name: "NASA SERVIR Chipset Test",
@@ -123,7 +123,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                  attribution: "June 2002 Imagery Data Courtesy of DigitalGlobe",
                                  sample_values: [{color: "#0dee0b", value: "Chipset Point", id: 80, image: ""},
                                                  {color: "#ec1717", value: "No Imagery", id: 81, image: ""}],
-                                 sample_resolution: null,
+                                 sample_resolution: 30,
                                  imagery: "NASASERVIRChipset2002"}];
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
