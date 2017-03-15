@@ -159,6 +159,13 @@ map_utils.zoom_map_to_layer = function (layer) {
     return view.fit(extent, size);
 };
 
+map_utils.zoom_and_recenter_map = function (longitude, latitude, zoom_level) {
+    var view = map_utils.map_ref.getView();
+    view.setCenter(map_utils.reproject_to_map(longitude, latitude));
+    view.setZoom(zoom_level);
+    return view;
+};
+
 /*****************************************************************************
 ***
 *** Functions to draw project boundaries and plot buffers
