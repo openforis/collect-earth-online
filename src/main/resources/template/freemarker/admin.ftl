@@ -38,7 +38,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <input id="random-sample-type" type="radio" name="sample-type" value="random" ng-change="setSampleType('random')" checked>
+                                <input id="random-sample-type" type="radio" name="sample-type" value="random" ng-click="setSampleType('random')" checked>
                             </td>
                             <td>
                                 <label>Random</label>
@@ -46,7 +46,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <input id="gridded-sample-type" type="radio" name="sample-type" value="gridded" ng-change="setSampleType('gridded')">
+                                <input id="gridded-sample-type" type="radio" name="sample-type" value="gridded" ng-click="setSampleType('gridded')">
                             </td>
                             <td>
                                 <label>Gridded</label>
@@ -55,11 +55,9 @@
                     </tbody>
                 </table>
                 <label>Samples per plot</label>
-                <input id="samples-per-plot" type="number" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="samplesPerPlot"
-                       {{ sampleType == 'gridded' ? 'disabled' : '' }}>
+                <input id="samples-per-plot" type="number" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="samplesPerPlot">
                 <label>Sample resolution (m)</label>
-                <input id="sample-resolution" type="number" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="sampleResolution"
-                       {{ sampleType == 'random' ? 'disabled' : '' }}>
+                <input id="sample-resolution" type="number" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="sampleResolution" disabled>
             </fieldset>
             <fieldset id="bounding-box">
                 <legend>Define Bounding Box</legend>

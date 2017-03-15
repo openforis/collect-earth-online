@@ -7,10 +7,6 @@
 var admin = {};
 
 // FIXME: admin.controller needs to define these terms:
-// - exportCurrentPlotData()
-// - submitForm()
-// - setSampleType('random')
-// - setSampleType('gridded')
 // - setCurrentImagery()
 // - removeSampleValueRow(sampleValue.id)
 // - addSampleValueRow()
@@ -93,6 +89,28 @@ admin.controller = function ($scope) {
             map_utils.current_boundary = null;
             map_utils.zoom_and_recenter_map(102.0, 17.0, 5);
             $scope.sampleValues = [];
+        }
+    };
+
+    // FIXME: stub
+    $scope.exportCurrentPlotData = function () {
+        alert("Called exportCurrentPlotData()");
+    };
+
+    // FIXME: stub
+    $scope.submitForm = function () {
+        alert("Called submitForm()");
+    };
+
+    // FIXME: stub
+    $scope.setSampleType = function (sampleType) {
+        alert("Called sampleType(" + sampleType + ")");
+        if (sampleType == "random") {
+            utils.enable_element("samples-per-plot");
+            utils.disable_element("sample-resolution");
+        } else {
+            utils.disable_element("samples-per-plot");
+            utils.enable_element("sample-resolution");
         }
     };
 
