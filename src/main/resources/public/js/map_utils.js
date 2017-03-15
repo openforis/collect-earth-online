@@ -215,6 +215,12 @@ map_utils.draw_polygon = function (polygon) {
     return map_utils.map_ref;
 };
 
+map_utils.polygon_extent = function (polygon) {
+    var format = new ol.format.GeoJSON();
+    var geometry = format.readGeometry(polygon);
+    return geometry.getExtent();
+};
+
 map_utils.current_buffer = null;
 
 map_utils.remove_plot_layer = function () {

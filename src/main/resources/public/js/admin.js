@@ -21,10 +21,10 @@ admin.controller = function ($scope) {
     $scope.sampleType = "random";
     $scope.samplesPerPlot = "";
     $scope.sampleResolution = "";
-    $scope.latMin = "";
-    $scope.latMax = "";
     $scope.lonMin = "";
+    $scope.latMin = "";
     $scope.lonMax = "";
+    $scope.latMax = "";
     $scope.currentImagery = "DigitalGlobeRecentImagery+Streets";
     $scope.valueName = "";
     $scope.valueColor = "#000000";
@@ -71,6 +71,11 @@ admin.controller = function ($scope) {
             }
             $scope.samplesPerPlot = plotData[0].samples.length;
             $scope.sampleResolution = project.sample_resolution || "";
+            var boundaryExtent = map_utils.polygon_extent(project.boundary);
+            $scope.lonMin = boundaryExtent[0];
+            $scope.latMin = boundaryExtent[1];
+            $scope.lonMax = boundaryExtent[2];
+            $scope.latMax = boundaryExtent[3];
             $scope.currentImagery = project.imagery;
             map_utils.set_current_imagery($scope.currentImagery);
             map_utils.disable_dragbox_draw();
@@ -83,10 +88,14 @@ admin.controller = function ($scope) {
             $scope.plotRadius = "";
             $scope.sampleType = "random";
             document.getElementById("random-sample-type").checked = true;
-            $scope.samplesPerPlot = "";
-            $scope.sampleResolution = "";
             utils.enable_element("samples-per-plot");
             utils.disable_element("sample-resolution");
+            $scope.samplesPerPlot = "";
+            $scope.sampleResolution = "";
+            $scope.lonMin = "";
+            $scope.latMin = "";
+            $scope.lonMax = "";
+            $scope.latMax = "";
             $scope.currentImagery = "DigitalGlobeRecentImagery+Streets";
             map_utils.set_current_imagery($scope.currentImagery);
             map_utils.enable_dragbox_draw();
