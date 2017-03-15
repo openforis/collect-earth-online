@@ -24,6 +24,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                                  {color: "#2F4DC0", value: "Water", id: 7, image: null},
                                                  {color: "#FFFFFF", value: "Cloud", id: 8, image: null},
                                                  {color: "#000000", value: "Unknown", id: 9, image: null}],
+                                 sample_resolution: null,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "The most populous state in the United States.",
                                  name: "California, USA",
@@ -39,6 +40,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                                  {color: null, value: "Buildings", id: 16, image: null},
                                                  {color: null, value: "Water", id: 17, image: null},
                                                  {color: null, value: "Unknown", id: 19, image: null}],
+                                 sample_resolution: null,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "The land of yurt-dwelling pastoral nomads.",
                                  name: "Mongolia",
@@ -60,6 +62,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                                  {color: "#df0606", value: "M", id: 45, image: ""},
                                                  {color: "#38182b", value: "N", id: 46, image: ""},
                                                  {color: "#f2e2e2", value: "O", id: 47, image: ""}],
+                                 sample_resolution: null,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "",
                                  name: "FAO Regional Subset Collection",
@@ -71,6 +74,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                                  {color: "#9CF135", value: "Other wooded land", id: 53, image: null},
                                                  {color: "#1a9db2", value: "Inland water body", id: 54, image: null},
                                                  {color: "#000000", value: "Other", id: 55, image: null}],
+                                 sample_resolution: null,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "",
                                  name: "Bing Maps Test",
@@ -81,6 +85,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                                  {color: "#e96412", value: "Agriculture", id: 57, image: ""},
                                                  {color: "#1ba7d1", value: "Water", id: 58, image: ""},
                                                  {color: "#000000", value: "Unknown", id: 59, image: ""}],
+                                 sample_resolution: null,
                                  imagery: "BingAerialWithLabels"},
                                 {description: "",
                                  name: "HB BlowDown",
@@ -90,6 +95,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                  sample_values: [{color: "#115805", value: "Forest", id: 60, image: ""},
                                                  {color: "#f70d15", value: "BlowDown", id: 61, image: ""},
                                                  {color: "#000000", value: "Other", id: 62, image: ""}],
+                                 sample_resolution: null,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "",
                                  name: "Heilongjiang",
@@ -98,6 +104,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                  attribution: "Bing Maps API: Aerial with Labels | © Microsoft Corporation",
                                  sample_values: [{color: "#d82a2a", value: "Type A", id: 63, image: ""},
                                                  {color: "#4dd50c", value: "Type B", id: 64, image: ""}],
+                                 sample_resolution: null,
                                  imagery: "BingAerialWithLabels"},
                                 {description: "",
                                  name: "Central Japan",
@@ -107,6 +114,7 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                  sample_values: [{color: "#1e88f5", value: "Katakana", id: 65, image: ""},
                                                  {color: "#c95b23", value: "Hiragana", id: 66, image: ""},
                                                  {color: "#11dd55", value: "Kanji", id: 67, image: ""}],
+                                 sample_resolution: null,
                                  imagery: "DigitalGlobeRecentImagery+Streets"},
                                 {description: "",
                                  name: "NASA SERVIR Chipset Test",
@@ -115,8 +123,8 @@ ceo_sample_data.project_list = [{description: "Laos, Cambodia, Vietnam, Thailand
                                  attribution: "June 2002 Imagery Data Courtesy of DigitalGlobe",
                                  sample_values: [{color: "#0dee0b", value: "Chipset Point", id: 80, image: ""},
                                                  {color: "#ec1717", value: "No Imagery", id: 81, image: ""}],
+                                 sample_resolution: null,
                                  imagery: "NASASERVIRChipset2002"}];
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // Javascript object containing 3 plots and their sample points per project, keyed by the project's id
