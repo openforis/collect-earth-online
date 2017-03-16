@@ -17,7 +17,6 @@ public class Views {
         model.put("navlink", "Home");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Home Page"});
         return new ModelAndView(model, "home.ftl");
     };
 
@@ -26,7 +25,6 @@ public class Views {
         model.put("navlink", "About");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"About Page"});
         return new ModelAndView(model, "about.ftl");
     };
 
@@ -35,7 +33,6 @@ public class Views {
         model.put("navlink", "Login");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Login Page"});
         return new ModelAndView(model, "login.ftl");
     };
 
@@ -44,7 +41,6 @@ public class Views {
         model.put("navlink", "Register");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Register Page"});
         return new ModelAndView(model, "register.ftl");
     };
 
@@ -53,7 +49,6 @@ public class Views {
         model.put("navlink", "Password");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Password Page"});
         return new ModelAndView(model, "password.ftl");
     };
 
@@ -62,7 +57,6 @@ public class Views {
         model.put("navlink", "Password-Reset");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Password Reset Page"});
         model.put("email", "admin@sig-gis.com");
         model.put("password_reset_key", "1234567890ABCDEF");
         return new ModelAndView(model, "password-reset.ftl");
@@ -73,7 +67,6 @@ public class Views {
         model.put("navlink", "Logout");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Logout Page"});
         return new ModelAndView(model, "logout.ftl");
     };
 
@@ -82,7 +75,6 @@ public class Views {
         model.put("navlink", "Select-Project");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Select Project Page"});
         List<Map<String, Object>> projects =
             Stream.of("Mekong River Region", "Laos", "Vietnam", "Cambodia")
             .map(name -> {
@@ -101,7 +93,6 @@ public class Views {
         model.put("navlink", "Account");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Account Page"});
         return new ModelAndView(model, "account.ftl");
     };
 
@@ -110,7 +101,6 @@ public class Views {
         model.put("navlink", "Dashboard");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Dashboard Page"});
         model.put("user_id", 1);
         model.put("project_id", 1);
         return new ModelAndView(model, "dashboard.ftl");
@@ -121,7 +111,6 @@ public class Views {
         model.put("navlink", "Admin");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Admin Page"});
         return new ModelAndView(model, "admin.ftl");
     };
 
@@ -130,7 +119,7 @@ public class Views {
         model.put("navlink", "Page-Not-Found");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Page Not Found Page"});
+        model.put("flash_messages", new String[] {"Page Not Found"});
         return new ModelAndView(model, "page-not-found.ftl");
     };
 
