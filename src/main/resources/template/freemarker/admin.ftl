@@ -93,7 +93,7 @@
                         <tr ng-repeat="sampleValue in sampleValues">
                             <td>
                                 <input class="button" type="button" value="-" ng-click="removeSampleValueRow(sampleValue.id)"
-                                       {{ currentProjectId == 0 ? '' : 'disabled' }}>
+                                       style="visibility: {{ currentProjectId == 0 ? 'visible' : 'hidden' }}">
                             </td>
                             <td>
                                 {{ sampleValue.value }}
@@ -107,24 +107,24 @@
                         </tr>
                         <tr>
                             <td>
+                                <input class="button" type="button" name="add-sample-value" value="+" ng-click="addSampleValueRow()"
+                                       style="visibility: {{ currentProjectId == 0 ? 'visible' : 'hidden' }}">
                             </td>
                             <td>
                                 <input id="value-name" type="text" name="value-name" autocomplete="off" ng-model="valueName"
-                                       {{ currentProjectId == 0 ? '' : 'disabled' }}>
+                                       style="visibility: {{ currentProjectId == 0 ? 'visible' : 'hidden' }}">
                             </td>
                             <td>
                                 <input id="value-color" type="color" name="value-color" ng-model="valueColor"
-                                       {{ currentProjectId == 0 ? '' : 'disabled' }}>
+                                       style="visibility: {{ currentProjectId == 0 ? 'visible' : 'hidden' }}">
                             </td>
                             <td>
                                 <input id="value-image" type="file" name="value-image" accept="image/*" ng-model="valueImage"
-                                       {{ currentProjectId == 0 ? '' : 'disabled' }}>
+                                       style="visibility: {{ currentProjectId == 0 ? 'visible' : 'hidden' }}">
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <input id="add-sample-value" class="button" type="button" name="add-sample-value" value="Add sample value" ng-click="addSampleValueRow()"
-                       {{ currentProjectId == 0 ? '' : 'disabled' }}>
                 <input type="hidden" name="sample-values" ng-model="sampleValues">
             </fieldset>
             <div id="spinner"></div>

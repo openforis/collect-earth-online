@@ -133,6 +133,16 @@ admin.controller = function ($scope) {
         alert("Called setCurrentImagery()");
     };
 
+    // FIXME: stub
+    $scope.removeSampleValueRow = function (sampleValueId) {
+        alert("Called removeSampleValueRow(" + sampleValueId + ")");
+    };
+
+    // FIXME: stub
+    $scope.addSampleValueRow = function () {
+        alert("Called addSampleValueRow()");
+    };
+
     // FIXME: Review and fix the code below this point
 
     ////////////////////
