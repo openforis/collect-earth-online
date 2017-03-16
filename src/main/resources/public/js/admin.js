@@ -6,9 +6,6 @@
 
 var admin = {};
 
-// FIXME: admin.controller needs to define these terms:
-// - removeSampleValueRow(sampleValue.id)
-// - addSampleValueRow()
 admin.controller = function ($scope) {
     // FIXME: Set using an AJAX request
     $scope.projectList = ceo_sample_data.project_list;
@@ -36,6 +33,17 @@ admin.controller = function ($scope) {
                                       center_coords: [102.0, 17.0],
                                       zoom_level: 5});
     map_utils.enable_dragbox_draw();
+
+    map_utils.set_bbox_coords = function () {
+        var latmax = document.getElementById('lat-max');
+        var lonmax = document.getElementById('lon-max');
+        var latmin = document.getElementById('lat-min');
+        var lonmin = document.getElementById('lon-min');
+        latmax.value = map_utils.current_bbox.maxlat;
+        lonmax.value = map_utils.current_bbox.maxlon;
+        latmin.value = map_utils.current_bbox.minlat;
+        lonmin.value = map_utils.current_bbox.minlon;
+    }
 
     $scope.getProjectById = function (projectId) {
         for (var i = 0; i < $scope.projectList.length; i++) {
@@ -141,24 +149,8 @@ admin.controller = function ($scope) {
     // FIXME: stub
     $scope.addSampleValueRow = function () {
         alert("Called addSampleValueRow()");
-    };
 
-    // FIXME: Review and fix the code below this point
-
-    ////////////////////
-    // $scope.newSample = [];
-    // var extents0 = map_utils.current_boundary.getSource().getExtent();
-    // var extents = ol.extent.applyTransform(extents0, ol.proj.getTransform("EPSG:3857", "EPSG:4326"));
-    // map_utils.current_bbox = {minlon: extents[0],
-    //                           minlat: extents[1],
-    //                           maxlon: extents[2],
-    //                           maxlat: extents[3]};
-    // map_utils.set_bbox_coords();
-    ////////////////////
-
-    // Initialize New Sample Value Fields
-
-    $scope.addSample = function() {
+        // FIXME: Review and fix the code below this point
         var id = 0;
         var imageVal = null;
 
@@ -179,19 +171,7 @@ admin.controller = function ($scope) {
 
         $scope.currentProject.sample_values.push(newSampleItem);
         $scope.newSample.push(newSampleItem);
-    }
-
-    map_utils.set_bbox_coords = function() {
-        var latmax = document.getElementById('lat-max');
-        var lonmax = document.getElementById('lon-max');
-        var latmin = document.getElementById('lat-min');
-        var lonmin = document.getElementById('lon-min');
-
-        latmax.value = map_utils.current_bbox.maxlat;
-        lonmax.value = map_utils.current_bbox.maxlon;
-        latmin.value = map_utils.current_bbox.minlat;
-        lonmin.value = map_utils.current_bbox.minlon;
-    }
+    };
 };
 
 angular
