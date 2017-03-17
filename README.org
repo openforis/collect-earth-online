@@ -21,13 +21,13 @@ application will be available at http://localhost:8080.
 *** With Maven
 
 #+begin_src sh
-$ mvn compile exec:java
+mvn compile exec:java
 #+end_src
 
 *** With Gradle
 
 #+begin_src sh
-$ gradle run
+gradle run
 #+end_src
 
 ** Running inside Tomcat
@@ -40,17 +40,141 @@ available at http://localhost:8080/ceo.
 *** With Maven
 
 #+begin_src sh
-$ mvn package
-$ export TOMCAT_HOME="where/you/installed/tomcat"
-$ sudo ln -s $PWD/target/collect-earth-online-<version>.war $TOMCAT_HOME/webapps/ceo.war
-$ sudo $TOMCAT_HOME/bin/startup.sh
+mvn package
+export TOMCAT_HOME="where/you/installed/tomcat"
+sudo ln -s $PWD/target/collect-earth-online-<version>.war $TOMCAT_HOME/webapps/ceo.war
+sudo $TOMCAT_HOME/bin/startup.sh
 #+end_src
 
 *** With Gradle
 
 #+begin_src sh
-$ gradle build
-$ export TOMCAT_HOME="where/you/installed/tomcat"
-$ sudo ln -s $PWD/build/libs/collect-earth-online-<version>.war $TOMCAT_HOME/webapps/ceo.war
-$ sudo $TOMCAT_HOME/bin/startup.sh
+gradle build
+export TOMCAT_HOME="where/you/installed/tomcat"
+sudo ln -s $PWD/build/libs/collect-earth-online-<version>.war $TOMCAT_HOME/webapps/ceo.war
+sudo $TOMCAT_HOME/bin/startup.sh
+#+end_src
+
+** Building OpenForis Collect
+
+In order to easily exchange information with OpenForis' other software
+products, Collect Earth Online (CEO) shares a database with OpenForis
+Collect. Access to this database is made through REST API calls to the
+Collect web application running on the same host as CEO. In order to
+build and launch Collect, follow these steps:
+
+1. Install Maven 3.0.5. You can download this version here:
+   https://archive.apache.org/dist/maven/maven-3/3.0.5/
+
+2. Set M2_HOME to the directory where you installed this version of
+   Maven.
+
+#+begin_src sh
+export M2_HOME="/where/you/installed/maven-3.0.5"
+#+end_src
+
+3. Clone the collect repository and package it as a WAR file.
+
+#+begin_src sh
+git clone https://github.com/openforis/collect.git
+cd collect
+mvn clean
+mvn verify
+sudo ln -s $PWD/collect-web/collect-webapp/target/collect.war $TOMCAT_HOME/webapps/collect.war
+#+end_src
+
+4. Create $TOMCAT_HOME/conf/Catalina/localhost/collect.xml with the
+   following contents (but replace "/your/home/directory" in the url
+   field with the path to your actual home directory):
+
+#+begin_src nxml
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Context path="/collect" reloadable="false">
+  <Parameter name="collect.simple_editor" value="false" />
+  <Resource
+      name="jdbc/collectDs"
+      auth="Container"
+      type="javax.sql.DataSource"
+      factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+      driverClassName="org.h2.Driver"
+      url="jdbc:h2:/your/home/directory/.openforis/collect">
+  </Resource>
+</Context>
+#+end_src
+
+5. Create the ".openforis" directory referenced in the above url field
+   to hold Collect's database.
+
+#+begin_src sh
+mkdir /your/home/directory/.openforis
+#+end_src
+
+6. Launch Tomcat.
+
+#+begin_src sh
+sudo $TOMCAT_HOME/bin/startup.sh
+#+end_src
+
+The Collect web application should now be running at http://localhost:8080/collect.
+
+** Building OpenForis Users
+
+In order to share user logins and user groups across the various
+OpenForis software products, we need to install a final web
+application called OpenForis Users. To build and launch Users, follow
+these steps:
+
+1. Like CEO, Users needs to be built with a recent version of Maven.
+   Set M2_HOME to the directory where you installed Maven 3.3.9+.
+
+#+begin_src sh
+export M2_HOME="/where/you/installed/maven-3.3.9"
+#+end_src
+
+2. Clone the users repository and package it as a WAR file.
+
+#+begin_src sh
+git clone https://github.com/openforis/users.git
+cd users
+mvn clean
+mvn generate-sources -Pcode-gen
+mvn package
+sudo ln -s $PWD/target/of-users.war $TOMCAT_HOME/webapps/of-users.war
+#+end_src
+
+3. Create $TOMCAT_HOME/conf/Catalina/localhost/of-users.xml with the
+   following contents (but replace "/your/home/directory" in the url
+   field with the path to your actual home directory):
+
+#+begin_src nxml
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Context path="/of-users" reloadable="false">
+  <Resource
+      name="jdbc/of-users-ds"
+      auth="Container"
+      type="javax.sql.DataSource"
+      factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+      driverClassName="org.h2.Driver"
+      url="jdbc:h2:/your/home/directory/.openforis/of-users">
+  </Resource>
+</Context>
+#+end_src
+
+4. Create the ".openforis" directory referenced in the above url field
+   to hold Collect's database.
+
+#+begin_src sh
+mkdir /your/home/directory/.openforis
+#+end_src
+
+5. Add the H2 JAR file to the $TOMCAT_HOME/lib directory. You can
+   download it from here:
+   http://repo2.maven.org/maven2/com/h2database/h2/1.4.193/h2-1.4.193.jar
+
+6. Launch Tomcat.
+
+#+begin_src sh
+sudo $TOMCAT_HOME/bin/startup.sh
 #+end_src
