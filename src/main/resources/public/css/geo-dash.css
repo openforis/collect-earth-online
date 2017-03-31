@@ -7,7 +7,9 @@ body {
   padding-top: 50px;
 }
 
-
+#content{
+overflow-x:auto;
+}
 /*
  * Global add-ons
  */
@@ -134,7 +136,21 @@ body {
      height:100%;
      background-color:white;
      min-height: 200px;
+     overflow-y: auto;
+     padding:10px;
+     color:#334c57;
  }
+ .ctr{
+ display:none;
+ }
+ .btn.btn-primary
+ {
+  backface-visibility:auto!important;
+ }
+
+
+
+
  .full .panel .flip-container .back{
      height:100%!important;
  }

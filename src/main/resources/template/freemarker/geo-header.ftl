@@ -22,6 +22,7 @@
         <script type="text/javascript" src="js/ceo_sample_data.js"></script>
         <!-- <script type="text/javascript" src="js/angular-route.min.js"></script> -->
         <script type="text/javascript" src="js/collect-earth.js"></script>
+
     </head>
     <body ng-controller="ctlBody">
         <header>

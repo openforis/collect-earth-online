@@ -1,5 +1,6 @@
  var debugme;
         var theURL = "geo-dash/"; //"http://localhost:4567/dashboard/";
+        var gateway = "http://gateway.servirglobal.net:8888";
         var wCount = 0;
         var wLoaded = 0;
         var projAOI;
@@ -292,7 +293,7 @@
                     var collectionName = pageWidgets[i].properties[1];
                     var dateFrom = pageWidgets[i].properties[2];
                     var dateTo = pageWidgets[i].properties[3];
-                    var url = "http://54.186.177.52:8888/imageByMosaicCollection";
+                    var url = gateway + "/imageByMosaicCollection"; //http://54.186.177.52:8888/imageByMosaicCollection";
                     var bands = '';
                     if (pageWidgets[i].properties.length == 5)
                     {
@@ -349,7 +350,7 @@
                     var dateTo = pageWidgets[i].properties[3];
                     var indexName = pageWidgets[i].properties[4];
                     var polygon = eval(projPairAOI); //eval(pageWidgets[i].properties[5]);
-                    var url = "http://54.186.177.52:8888/timeSeriesIndex";
+                    var url = gateway + "/timeSeriesIndex";//http://54.186.177.52:8888/timeSeriesIndex";
                     $.ajax({
                         url: url,
                         type: 'POST',
@@ -456,7 +457,7 @@
                     var polygon = eval(projPairAOI); //eval(pageWidgets[i].properties[2]);
                     console.info('***************' + paramType + '****************************');
                     console.info('***************' + polygon + '****************************');
-                    var url = "http://54.186.177.52:8888/getStats";
+                    var url =  gateway + "/getStats"; //http://54.186.177.52:8888/getStats";
                     $.ajax({
                         url: url,
                         type: 'POST',
@@ -485,7 +486,12 @@
                     });
                 }
             }
-
+            $('.input-daterange input').each(function() {
+                $(this).datepicker({
+                                         changeMonth: true,
+                                         changeYear: true
+                                       });
+            });
             //a74a24f2a0c84ce1111e34818cc06318
             //c4739ba8174f2c096a6447b144a8b5a1
             //addTileServer('a74a24f2a0c84ce1111e34818cc06318', 'c4739ba8174f2c096a6447b144a8b5a1');
@@ -507,14 +513,20 @@
             return numberWithCommas(area_ha);
         }
         function numberWithCommas(x) {
-            var parts = x.toString().split(".");
-            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            return parts.join(".");
+            try{
+                var parts = x.toString().split(".");
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return parts.join(".");
+            }
+            catch(e){}
+            return 'N/A';
         }
         function flipme(which)
         {
-           // alert(which);
+            //alert(which);
             $("#" + which).flip('toggle');
+            $('#' + which + ' .back div.ctr').toggle();
+
         }
         var isAdmin = true;
         function addWidget(widget) {
@@ -588,6 +600,7 @@
                     graphdiv.append(title).append(sub);
                     front.append(graphdiv);
                     flippercontainer.append(front);
+                    back.html('');
                     back.append(getTimeSeriesGraphForm(widget));
                     flippercontainer.append(back);
                     panel.append(flippercontainer);
@@ -644,7 +657,7 @@
             return awidget;
             // $("#dashHolder").append('<h1 class="page-header">Dashboard</h1>');
         }
-        function getTimeSeriesGraphForm(which)
+      /*  function getTimeSeriesGraphForm(which)
         {
             var theForm = $('<div />');
             theForm.append('<div class="appm">Edit widget</div>');
@@ -660,23 +673,71 @@
             theForm.append(theTable);
             theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
             return theForm;
+        }*/
+        function getTimeSeriesGraphForm(which) {
+            /*var theForm = $('<div />', {'class':'ctr'});
+            theForm.append('<div class="appm">Edit widget</div>');
+            var titlegroup = ' <div class="form-group"><label for="title_' + which.id + '">Title:</label><input type="text" class="form-control" id="title_' + which.id + '" placeholder="Title" value="' + which.name + '"></div>';
+            var collectiongroup = '<div class="form-group"><label for="collection_' + which.id + '">Image Collection:</label><input type="text" class="form-control" id="collection_' + which.id + '" placeholder="Image Collection"  value="' + which.properties[1] + '"> </div>';
+            var rangegroup = '<div class="input-group input-daterange" id="range_' + which.id + '"><input type="text" class="form-control" value="2012-04-05" id="sDate_' + which.id + '"><div class="input-group-addon">to</div><input type="text" class="form-control" value="2012-04-05" id="eDate_' + which.id + '">';
+
+            var bandsgroup = '<div class="form-group"><label for="bands_' + which.id + '">Bands:(optional)</label> <input type="text" placeholder="Columns" id="bands_' + which.id + '" name="bands_' + which.id + '" value="3" class="form-control">';
+             var columns = 3;
+            if (which.width) {
+                columns = which.width;
+            }
+            var columnsgroup = '<div class="form-group"><label for="columns_' + which.id + '">Columns:</label><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns_' + which.id + '" value="'+columns+'" class="form-control">';
+            theForm.append(titlegroup).append(collectiongroup).append(rangegroup).append(bandsgroup).append(columnsgroup);
+            theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
+            return theForm;
+            */
+            return editForm(which, false);
         }
         function getImageCollectionForm(which)
         {
-            var theForm = $('<div />');
+            /*var theForm = $('<div />', {'class':'ctr'});
             theForm.append('<div class="appm">Edit widget</div>');
-            var theTable = $("<table />", { width: '100%' });
-            theTable.append('<tr><td><span>Title: <span></td><td><input type="text" placeholder="Title" name="widgetTitle" id="title_' + which.id + '" value="' + which.name + '"/></td></tr>');
-            theTable.append('<tr><td><span>Image Collection: <span></td><td><input type="text" placeholder="Image Collection" id="collection_' + which.id + '" name="imagecollection" value="' + which.properties[1] + '"/></td></tr>');
-            theTable.append('<tr><td colspan="2"><input type="text" placeholder="Start Date" id="sDate_' + which.id + '" name="sDate" value="' + which.properties[2] + '"/> to <input type="text" placeholder="End Date" id="eDate_' + which.id + '" name="eDate" value="' + which.properties[3] + '"/></td></tr>');
-            var columns = 3;
-            if (which.width)
-            {
+            var titlegroup = ' <div class="form-group"><label for="title_' + which.id + '">Title:</label><input type="text" class="form-control" id="title_' + which.id + '" value="' + which.name + '" placeholder="Title"></div>';
+            var collectiongroup = '<div class="form-group"><label for="collection_' + which.id + '">Image Collection:</label><input type="text" class="form-control" id="collection_' + which.id + '" placeholder="Image Collection" value="' + which.properties[1] + '"> </div>';
+            var rangegroup = '<div class="input-group input-daterange" id="range_' + which.id + '"><input type="text" class="form-control"  value="' + which.properties[2] + '" id="sDate_' + which.id + '"><div class="input-group-addon">to</div><input type="text" class="form-control" value="' + which.properties[3] + '" id="eDate_' + which.id + '">';
+
+            var bandsgroup = '<div class="form-group"><label for="bands_' + which.id + '">Bands:(optional)</label> <input type="text" placeholder="Columns" id="bands_' + which.id + '" name="bands_' + which.id + '" value="' + which.properties[4] + '" class="form-control">';
+             var columns = 3;
+            if (which.width) {
                 columns = which.width;
             }
-            theTable.append('<tr><td><span>Columns: <span></td><td><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns" value="' + columns + '"/></td></tr>');
-            theForm.append(theTable);
+            var columnsgroup = '<div class="form-group"><label for="columns_' + which.id + '">Columns:</label><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns_' + which.id + '" value="'+columns+'" class="form-control">';
+            theForm.append(titlegroup).append(collectiongroup).append(rangegroup).append(bandsgroup).append(columnsgroup);
             theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
+
+            return theForm;*/
+            return editForm(which, true);
+        }
+        function editForm(which, bandsupport)
+        {
+            var theForm = $('<div />', {'class':'ctr'});
+            var titlegroup = ' <div class="form-group"><label for="title_' + which.id + '">Title:</label><input type="text" class="form-control" id="title_' + which.id + '" value="' + which.name + '" placeholder="Title"></div>';
+            var collectiongroup = '<div class="form-group"><label for="collection_' + which.id + '">Image Collection:</label><input type="text" class="form-control" id="collection_' + which.id + '" placeholder="Image Collection" value="' + which.properties[1] + '"> </div>';
+            var rangegroup = '<div class="input-group input-daterange" id="range_' + which.id + '"><input type="text" class="form-control"  value="' + which.properties[2] + '" id="sDate_' + which.id + '"><div class="input-group-addon">to</div><input type="text" class="form-control" value="' + which.properties[3] + '" id="eDate_' + which.id + '">';
+            if(bandsupport)
+            {
+            var bandsgroup = '<div class="form-group"><label for="bands_' + which.id + '">Bands:(optional)</label> <input type="text" placeholder="Columns" id="bands_' + which.id + '" name="bands_' + which.id + '" value="' + which.properties[4] + '" class="form-control">';
+            }
+             var columns = 3;
+            if (which.width) {
+                columns = which.width;
+            }
+            var columnsgroup = '<div class="form-group"><label for="columns_' + which.id + '">Columns:</label><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns_' + which.id + '" value="'+columns+'" class="form-control">';
+            if(bandsgroup)
+            {
+            theForm.append(titlegroup).append(collectiongroup).append(rangegroup).append(bandsgroup).append(columnsgroup);
+            }else
+            {
+            theForm.append(titlegroup).append(collectiongroup).append(rangegroup).append(columnsgroup);
+            }
+
+            theForm.append('<br><input type="submit" id="savebutton" value="Save" class="btn btn-primary" />');
+
             return theForm;
         }
         function getParameterByName(name, url) {
