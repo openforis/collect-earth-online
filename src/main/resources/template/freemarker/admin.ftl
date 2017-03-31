@@ -15,8 +15,10 @@
             </div>
             <input id="download-plot-data" class="button" type="button" name="download-plot-data" value="Download Data"
                    ng-click="exportCurrentPlotData()" style="visibility: {{ currentProjectId == 0 ? 'hidden' : 'visible' }}">
+
             <input id="create-project" class="button" type="button" name="create-project" ng-click="submitForm()"
                    value="{{ currentProjectId == 0 ? 'Create and launch this project' : 'Delete this project' }}">
+
             <fieldset id="project-info">
                 <legend>Project Info</legend>
                 <label>Name</label>

@@ -11,6 +11,7 @@ admin.controller = function ($scope) {
     $scope.projectList = ceo_sample_data.project_list;
     $scope.currentProjectId = "0";
     $scope.currentProject = null;
+    $scope.plotData = null;
     $scope.projectName = "";
     $scope.projectDescription = "";
     $scope.numPlots = "";
@@ -61,7 +62,7 @@ admin.controller = function ($scope) {
 
         if (project) {
             // FIXME: Set using an AJAX request
-            var plotData = ceo_sample_data.plot_data[$scope.currentProjectId];
+            $scope.plotData = ceo_sample_data.plot_data[$scope.currentProjectId];
             $scope.projectName = project.name;
             $scope.projectDescription = project.description;
             $scope.numPlots = plotData.length;
@@ -114,9 +115,28 @@ admin.controller = function ($scope) {
         }
     };
 
-    // FIXME: stub
-    $scope.exportCurrentPlotData = function () {
+    // FIXME: Set using an AJAX request 
+        $scope.exportCurrentPlotData = function () {
         alert("Called exportCurrentPlotData()");
+
+        var csv = "data:text/csv;charset=utf-8,"; 
+        csv += 'PLOT_ID,CENTER_LON,CENTER_LAT,RADIUS_M,SAMPLE_POINTS\n';
+        $scope.plotData.forEach(function(row) {
+           var plotID = JSON.parse(row.plot.id);
+           var centerLon = JSON.parse(row.plot.center).coordinates[0];
+           var centerLat = JSON.parse(row.plot.center).coordinates[1];
+           var plotRadius = JSON.parse(row.plot.radius);
+           var samplePoints = row.samples.length;
+           csv += plotID + ',' + centerLon + ',' + centerLat + ',' + plotRadius + ',' + samplePoints;
+           csv += "\n";
+        });
+
+       var encodedUri = encodeURI(csv);
+       var link = document.createElement("a");
+       link.setAttribute("href", encodedUri);
+       link.setAttribute("download", $scope.currentProject.name.replace(/\s+/g, "_") + ".csv" );
+       document.body.appendChild(link); // Required for FF
+       link.click();
     };
 
     // FIXME: stub
@@ -136,21 +156,19 @@ admin.controller = function ($scope) {
         }
     };
 
-    // FIXME: stub
     $scope.setCurrentImagery = function () {
-        alert("Called setCurrentImagery()");
+        map_utils.set_current_imagery($scope.currentImagery); 
     };
 
-    // FIXME: stub
     $scope.removeSampleValueRow = function (sampleValueId) {
-        alert("Called removeSampleValueRow(" + sampleValueId + ")");
+        // Find and remove item from array
+        var i = $scope.sampleValues.indexOf(sampleValueId);
+        if(i != 1) {
+           $scope.sampleValues.splice(i,1);
+        }	
     };
 
-    // FIXME: stub
     $scope.addSampleValueRow = function () {
-        alert("Called addSampleValueRow()");
-
-        // FIXME: Review and fix the code below this point
         var id = 0;
         var imageVal = null;
 
@@ -169,8 +187,7 @@ admin.controller = function ($scope) {
             image: imageVal
         }
 
-        $scope.currentProject.sample_values.push(newSampleItem);
-        $scope.newSample.push(newSampleItem);
+        $scope.sampleValues.push(newSampleItem);
     };
 };
 
