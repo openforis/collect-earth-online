@@ -124,6 +124,14 @@ public class Views {
         model.put("flash_messages", new String[] {});
         return new ModelAndView(model, "admin.ftl");
     };
+    public static TemplateViewRoute geodash = (Request req, Response rsp) -> {
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Admin");
+        model.put("role", "admin");
+        model.put("username", "admin@sig-gis.com");
+        model.put("flash_messages", new String[] {});
+        return new ModelAndView(model, "geo-dash.ftl");
+    };
 
     public static TemplateViewRoute pageNotFound = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
