@@ -8,30 +8,30 @@
         <form id="project-management-form" method="post" action="admin">
             <div id="project-selection">
                 <label>Currently Viewing:</label>
-                <select id="project-selector" name="project-selector" size="1" ng-model="currentProjectId" ng-change="setCurrentProject()">
+                <select id="project-selector" name="project-selector" size="1" ng-model="project.currentProjectId" ng-change="setCurrentProject()">
                     <option value="0">New Project</option>
                     <option ng-repeat="project in projectList" value="{{ project.id }}">{{ project.name }}</option>
                 </select>
             </div>
             <input id="download-plot-data" class="button" type="button" name="download-plot-data" value="Download Data"
-                   ng-click="exportCurrentPlotData()" style="visibility: {{ currentProjectId == 0 ? 'hidden' : 'visible' }}">
+                   ng-click="exportCurrentPlotData()" style="visibility: {{ project.currentProjectId == 0 ? 'hidden' : 'visible' }}">
 
-            <input id="create-project" class="button" type="button" name="create-project" ng-click="submitForm()"
-                   value="{{ currentProjectId == 0 ? 'Create and launch this project' : 'Delete this project' }}">
+            <input id="create-project" class="button" type="button" name="create-project" ng-click="submitForm($event)"
+                   value="{{ project.currentProjectId == 0 ? 'Create and launch this project' : 'Delete this project' }}">
 
             <fieldset id="project-info">
                 <legend>Project Info</legend>
                 <label>Name</label>
-                <input id="project-name" type="text" name="project-name" autocomplete="off" ng-model="projectName">
+                <input id="project-name" type="text" name="project-name" autocomplete="off" ng-model="project.projectName">
                 <label>Description</label>
-                <textarea id="project-description" name="project-description" ng-model="projectDescription"></textarea>
+                <textarea id="project-description" name="project-description" ng-model="project.projectDescription"></textarea>
             </fieldset>
             <fieldset id="plot-info">
                 <legend>Plot Info</legend>
                 <label>Number of plots</label>
-                <input id="plots" type="number" name="plots" autocomplete="off" min="0" step="1" ng-model="numPlots">
+                <input id="plots" type="number" name="plots" autocomplete="off" min="0" step="1" ng-model="project.numPlots">
                 <label>Plot radius (m)</label>
-                <input id="radius" type="number" name="buffer-radius" autocomplete="off" min="0.0" step="any" ng-model="plotRadius">
+                <input id="radius" type="number" name="buffer-radius" autocomplete="off" min="0.0" step="any" ng-model="project.plotRadius">
             </fieldset>
             <fieldset id="sample-info">
                 <legend>Sample Info</legend>
@@ -57,22 +57,22 @@
                     </tbody>
                 </table>
                 <label>Samples per plot</label>
-                <input id="samples-per-plot" type="number" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="samplesPerPlot">
+                <input id="samples-per-plot" type="number" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="project.samplesPerPlot">
                 <label>Sample resolution (m)</label>
-                <input id="sample-resolution" type="number" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="sampleResolution" disabled>
+                <input id="sample-resolution" type="number" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="project.sampleResolution" disabled>
             </fieldset>
             <fieldset id="bounding-box">
                 <legend>Define Bounding Box</legend>
                 <label>Hold CTRL and click-and-drag a bounding box on the map</label>
-                <input id="lat-max" type="number" name="boundary-lat-max" ng-model="latMax" placeholder="North" autocomplete="off" min="-90.0" max="90.0" step="any">
-                <input id="lon-min" type="number" name="boundary-lon-min" ng-model="lonMin" placeholder="West" autocomplete="off" min="-180.0" max="180.0" step="any">
-                <input id="lon-max" type="number" name="boundary-lon-max" ng-model="lonMax" placeholder="East" autocomplete="off" min="-180.0" max="180.0" step="any">
-                <input id="lat-min" type="number" name="boundary-lat-min" ng-model="latMin" placeholder="South" autocomplete="off" min="-90.0" max="90.0" step="any">
+                <input id="lat-max" type="number" name="boundary-lat-max" ng-model="project.latMax" placeholder="North" autocomplete="off" min="-90.0" max="90.0" step="any">
+                <input id="lon-min" type="number" name="boundary-lon-min" ng-model="project.lonMin" placeholder="West" autocomplete="off" min="-180.0" max="180.0" step="any">
+                <input id="lon-max" type="number" name="boundary-lon-max" ng-model="project.lonMax" placeholder="East" autocomplete="off" min="-180.0" max="180.0" step="any">
+                <input id="lat-min" type="number" name="boundary-lat-min" ng-model="project.latMin" placeholder="South" autocomplete="off" min="-90.0" max="90.0" step="any">
             </fieldset>
             <div id="map-and-imagery">
                 <div id="new-project-map"></div>
                 <label>Basemap imagery: </label>
-                <select id="imagery-selector" name="imagery-selector" size="1" ng-model="currentImagery" ng-change="setCurrentImagery()">
+                <select id="imagery-selector" name="imagery-selector" size="1" ng-model="project.currentImagery" ng-change="setCurrentImagery()">
                     <option value="DigitalGlobeRecentImagery">DigitalGlobe: Recent Imagery</option>
                     <option value="DigitalGlobeRecentImagery+Streets">DigitalGlobe: Recent Imagery+Streets</option>
                     <option value="BingAerial">Bing Maps: Aerial</option>
@@ -92,7 +92,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="sampleValue in sampleValues">
+                        <tr ng-repeat="sampleValue in project.sampleValues">
                             <td>
                                 <input class="button" type="button" value="-" ng-click="removeSampleValueRow(sampleValue.id)"
                                        style="visibility: {{ currentProjectId == 0 ? 'visible' : 'hidden' }}">
@@ -127,7 +127,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <input type="hidden" name="sample-values" ng-model="sampleValues">
+                <input type="hidden" name="sample-values" ng-model="project.sampleValues">
             </fieldset>
             <div id="spinner"></div>
         </form>
