@@ -6,6 +6,7 @@ import java.io.File;
 import java.net.URL;
 import spark.servlet.SparkApplication;
 import static spark.Spark.get;
+import static spark.Spark.post;
 import static spark.Spark.exception;
 import static spark.Spark.port;
 import static spark.Spark.staticFileLocation;
@@ -51,6 +52,10 @@ public class Server implements SparkApplication {
         get("/account",        Views.account,       renderer);
         get("/dashboard",      Views.dashboard,     renderer);
         get("/admin",          Views.admin,         renderer);
+
+       //  Gary:  replace the /clone routing with the page that will process the posted form from the admin page
+       //  Added by Thomas DeVera on 4/3/17 for testing
+        post("/clone",         Views.clone,         renderer);
         get("*",               Views.pageNotFound,  renderer);
 
         // Handle Exceptions
