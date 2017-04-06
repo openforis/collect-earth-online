@@ -7,8 +7,8 @@
 var admin = {};
 
 admin.controller = function ($scope, $http) {
-    // FIXME: Set using an AJAX request 
-    $scope.projectList = ceo_sample_data.project_list;
+    // FIXED: Set using an AJAX request 
+    $scope.projectList = getProjectList($http);
     $scope.project = {};
     $scope.project.currentProjectId = "0";
     $scope.currentProject = null;
@@ -29,6 +29,7 @@ admin.controller = function ($scope, $http) {
     $scope.valueColor = "#000000";
     $scope.valueImage = "";
     $scope.project.sampleValues = [];
+    $scope.project.isGridded = false;
 
     // Initialize the base map and enable the dragbox interaction
     map_utils.digital_globe_base_map({div_name: "new-project-map",
@@ -47,6 +48,17 @@ admin.controller = function ($scope, $http) {
         lonmin.value = map_utils.current_bbox.minlon;
     }
 
+    $scope.deleteCurrentProject = function() {
+        $http.get('archive-project').
+            then (function() {
+                alert("Project \"" + $scope.project.projectName + "\" has been deleted." + "\n");
+                $scope.project.currentProjectId = 0;
+                getProjectList();            
+            }, function(response) {
+                console.log(response.status);
+            });
+    }
+
     $scope.getProjectById = function (projectId) {
         for (var i = 0; i < $scope.projectList.length; i++) {
             if ($scope.projectList[i].id == projectId) {
@@ -57,13 +69,12 @@ admin.controller = function ($scope, $http) {
     };
 
     $scope.setCurrentProject = function() {
-        // FIXME: Set using an AJAX request
         var project = $scope.getProjectById($scope.project.currentProjectId);
         $scope.currentProject = project;
 
         if (project) {
-            // FIXME: Set using an AJAX request
-            $scope.plotData = ceo_sample_data.plot_data[$scope.project.currentProjectId];
+            // FIXED: Set using an AJAX request
+            $scope.plotData = $scope.projectList.plot_data[$scope.project.currentProjectId];
             $scope.project.projectName = project.name;
             $scope.project.projectDescription = project.description;
             $scope.project.numPlots = $scope.plotData.length;
@@ -116,52 +127,40 @@ admin.controller = function ($scope, $http) {
         }
     };
 
-    // FIXME: Set using an AJAX request 
-        $scope.exportCurrentPlotData = function () {
-        alert("Called exportCurrentPlotData()");
-        //FIXME:  dump-project-aggregate-data [project id]
-        var csv = "data:text/csv;charset=utf-8,"; 
-        csv += 'PLOT_ID,CENTER_LON,CENTER_LAT,RADIUS_M,SAMPLE_POINTS\n';
-        $scope.plotData.forEach(function(row) {
-           var plotID = JSON.parse(row.plot.id);
-           var centerLon = JSON.parse(row.plot.center).coordinates[0];
-           var centerLat = JSON.parse(row.plot.center).coordinates[1];
-           var plotRadius = JSON.parse(row.plot.radius);
-           var samplePoints = row.samples.length;
-           csv += plotID + ',' + centerLon + ',' + centerLat + ',' + plotRadius + ',' + samplePoints;
-           csv += "\n";
-        });
-
-       var encodedUri = encodeURI(csv);
-       var link = document.createElement("a");
-       link.setAttribute("href", encodedUri);
-       link.setAttribute("download", $scope.currentProject.name.replace(/\s+/g, "_") + ".csv" );
-       document.body.appendChild(link); // Required for FF
-       link.click();
+    // FIXED: Set using an AJAX request 
+    $scope.exportCurrentPlotData = function () {
+        var projId = {project_id: $scope.project.currentProjectId};
+        var data = JSON.stringify(projId);
+        if ($scope.project.currentProjectId != 0) {
+            $http.post('dump_project_aggregate_data', data).
+            then(function(data) {
+                window.open(data);
+            }, function(response) {
+                console.log(response.status);
+            });
+        } 
     };
 
 
     $scope.submitForm = function ($event) {
         if ($scope.project.currentProjectId != "0") {
            if (confirm("Do you REALLY want to delete this project?!")) {
-              alert("Project \"" + $scope.project.projectName + "\" has been deleted." + "\n");
-              // FIXME:  remote-callback :archive-project [project id]
-              // FIXME:  remote-callback :get-all-projects
-           }
+               $scope.deleteCurrentProject();
+           } 
 
            var spinnerElem = document.getElementById("spinner");
            spinnerElem.style.visibility = "visible";
            $scope.project.buttonDelete = $event.currentTarget;
            $scope.project.buttonDelete.value = "Processing...please wait...";
+           
 
            postFormData($scope.project, $http).
-              then(function(response) {
-                 console.log(response.config.data);
-                 spinnerElem.style.visibility = "hidden";
-                 response.config.data["buttonDelete"].value = "Delete this project";
-              }, function(response) { 
-                console.log(response.status);
-              });
+               then(function(response, data, status, headers) {
+                   spinnerElem.style.visibility = "hidden";
+                   response.config.data["buttonDelete"].value = "Delete this project";
+               }, function(response) { 
+                   console.log(response.status);
+               });
         }
     };
   
@@ -211,9 +210,22 @@ admin.controller = function ($scope, $http) {
 
 };
 
+var getProjectList = function ($http) {
+//  FIXME:  GARY - Once the get-all-projects route is created, uncomment the block of code below
+/*    $http.get('get-all-projects').
+        then (function(data) {
+            return data;
+        }, function(response) {
+            console.log(response.status);
+            return {};
+        });
+*/
 
-var postFormData = function (project, $http) {
-   return $http.post('clone', project);
+    return ceo_sample_data.project_list;  
+}
+
+var postFormData = function (data, $http) {
+   return $http.post('admin', data);
 }
 
 

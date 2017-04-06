@@ -68,8 +68,10 @@ public class Server implements SparkApplication {
 
 
        //  Gary:  replace the /clone routing with the page that will process the posted form from the admin page
-       //  Added by Thomas DeVera on 4/3/17 for testing
-        post("/clone",         Views.clone,         renderer);
+        post("/clone", (req, res) -> {
+           String body = req.body();
+           return body;
+        });
 
         get("/geo-dash",          Views.geodash,         renderer);
         get("/geo-dash/id/:id", (req, res) -> {
