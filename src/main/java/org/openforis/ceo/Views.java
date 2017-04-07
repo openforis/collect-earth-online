@@ -142,14 +142,4 @@ public class Views {
         return new ModelAndView(model, "page-not-found.ftl");
     };
     
-    //  Test View:  added by Thomas DeVera 4/3/17
-    //  Gary:  replace or delete the clone view which I used to test the form posting from the admin page
-    public static TemplateViewRoute clone = (Request req, Response rsp) -> {
-        Map<String, Object> model = new HashMap<String, Object>();
-        model.put("navlink", "Admin");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
-        return new ModelAndView(model, "clone.php");
-    };
 }
