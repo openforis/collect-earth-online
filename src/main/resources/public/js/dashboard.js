@@ -6,9 +6,9 @@
 
 var dashboard = {};
 
-dashboard.controller = function ($scope) {
-    // FIXME: Set using an AJAX request
-    $scope.projectList = ceo_sample_data.project_list;
+dashboard.controller = function ($scope, $http) {
+    // FIXED: Set using an AJAX request
+    $scope.projectList = getProjectList($http);
 
     $scope.getProjectById = function (projectId) {
         for (var i = 0; i < $scope.projectList.length; i++) {
@@ -52,8 +52,9 @@ dashboard.controller = function ($scope) {
     };
 
     $scope.loadRandomPlot = function () {
-        // FIXME: Set using an AJAX request
-        var currentProjectPlots = ceo_sample_data.plot_data[$scope.currentProjectId];
+        // FIXED: Set using an AJAX request
+       // var currentProjectPlots = ceo_sample_data.plot_data[$scope.currentProjectId];
+        var currentProjectPlots  = $scope.projectList.plot_data[$scope.project.currentProjectId];
         var randomIndex = Math.floor(Math.random() * currentProjectPlots.length);
         var newPlot = currentProjectPlots[randomIndex].plot;
         var newSamples = currentProjectPlots[randomIndex].samples;
@@ -103,24 +104,54 @@ dashboard.controller = function ($scope) {
         var plotId = $scope.currentPlot.id;
         var imagery = $scope.currentProject.imagery;
         var userSamples = JSON.stringify($scope.userSamples, null, 4);
-        // FIXME: Implement this as an AJAX call
-        alert("Called saveValues with:\n" +
-              "userId = " + userId + "\n" +
-              "plotId = " + plotId + "\n" +
-              "imagery = " + imagery + "\n" +
-              "userSamples = " + userSamples);
+        var postData = [userId, plotId, imagery, userSamples];
+
+        // FIXED: Implement this as an AJAX call
+        $http.post('add-user-samples', postData).
+            then (function() {
+                alert("Called saveValues with:\n" +
+                  "userId = " + userId + "\n" +
+                  "plotId = " + plotId + "\n" +
+                  "imagery = " + imagery + "\n" +
+                  "userSamples = " + userSamples);
+                map_utils.disable_selection();
+                $scope.currentPlot = null;
+             }, function(response) {
+                console.log(response.data);
+             });
         // alert("Your assignments have been saved to the database.");
         $scope.loadRandomPlot();
     };
 
     $scope.flagPlot = function () {
         var plotId = $scope.currentPlot.id;
-        // FIXME: Implement this as an AJAX call
-        alert("Called flagPlot with plotId = " + plotId);
+        // FIXED: Implement this as an AJAX call
+        $http.post('flag-plot', plotId).
+            then (function() {
+                alert("Called flagPlot with plotId = " + plotId);
+                $scope.loadRandomPlot();
+            }, function(response) {
+                console.log(response.data);
+            });
         // alert("Plot " + plotId + " has been flagged");
         $scope.loadRandomPlot();
     };
 };
+
+var getProjectList = function ($http) {
+//  FIXME:  GARY - Once the get-all-projects route is created, uncomment the block of code below
+/*    $http.get('get-all-projects').
+        then (function(data) {
+            return data;
+        }, function(response) {
+            console.log(response.status);
+            return {};
+        });
+*/
+
+    return ceo_sample_data.project_list;
+}
+
 
 angular
     .module('collectEarth')
