@@ -219,6 +219,6 @@ public class Views {
 
         return returnString ;
 
-    }
+    };
 
 }
