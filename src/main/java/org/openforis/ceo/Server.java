@@ -15,6 +15,7 @@ import spark.Response;
 import spark.Route;
 import spark.servlet.SparkApplication;
 import static spark.Spark.get;
+import static spark.Spark.post;
 import static spark.Spark.exception;
 import static spark.Spark.port;
 import static spark.Spark.staticFileLocation;
@@ -64,6 +65,14 @@ public class Server implements SparkApplication {
         get("/account",        Views.account,       renderer);
         get("/dashboard",      Views.dashboard,     renderer);
         get("/admin",          Views.admin,         renderer);
+
+
+       //  Gary:  replace the /clone routing with the page that will process the posted form from the admin page
+        post("/clone", (req, res) -> {
+           String body = req.body();
+           return body;
+        });
+
         get("/geo-dash",          Views.geodash,         renderer);
         get("/geo-dash/id/:id", (req, res) -> {
             boolean isAdmin = true; //Need to link to user and check
@@ -131,6 +140,7 @@ public class Server implements SparkApplication {
                 return returnString ;
 
         });
+
         get("*",               Views.pageNotFound,  renderer);
 
         // Handle Exceptions

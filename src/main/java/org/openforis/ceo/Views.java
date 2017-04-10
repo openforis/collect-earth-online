@@ -141,5 +141,5 @@ public class Views {
         model.put("flash_messages", new String[] {"Page Not Found"});
         return new ModelAndView(model, "page-not-found.ftl");
     };
-
+    
 }
