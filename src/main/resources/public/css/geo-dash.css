@@ -140,6 +140,10 @@ overflow-x:auto;
      padding:10px;
      color:#334c57;
  }
+ .front{
+ overflow-y: auto;
+ overflow-x:hidden;
+  }
  .ctr{
  display:none;
  }

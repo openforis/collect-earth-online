@@ -616,7 +616,7 @@
                     //statsDiv.append(header);
                     //build table here
 
-                    var content = "<table style='border:0px; width:100%'>"
+                   /* var content = "<table style='border:0px; width:100%'>"
                     //total pop
                     content += '<tr style="padding-top:20px;"><td style="width:80px"  class="statsWidget">';
                         content += '<img src="img/icon_population.png" style="width: 50px; height: 50px; -webkit-border-radius: 25px; -moz-border-radius: 25px; border-radius: 25px; background-color: #e2843a; "></td>';
@@ -634,7 +634,20 @@
                         content += '</td></tr>';
 
                     //close table
-                    content += "</table>"
+                    content += '</table>';
+                    */
+
+                    var content = '<div><div class="form-group"><div class="input-group"><div class="input-group-addon"><img src="img/icon_population.png" style="width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);"></div>';
+                    content += '  <label for="totalPop_' + widget.id + '" style="color:#787878">Total population</label>';
+                    content += '<h4 id="totalPop_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" /></div></div>';
+                    content += '<div class="form-group"><div class="input-group"><div class="input-group-addon"><img src="img/icon_area.png" style="width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);"></div>';
+                    content += '<label for="totalArea_' + widget.id + '" style="color:#787878">Area</label>';
+                    content += '<h4 id="totalArea_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" /></div></div>';
+                    content += '<div class="form-group"><div class="input-group"><div class="input-group-addon"><img src="img/icon_elevation.png" style="width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);"></div>';
+                    content += '<label for="elevationRange_' + widget.id + '" style="color:#787878">Elevation</label>';
+                    content += '<h4 id="elevationRange_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" /></div></div>';
+
+
 
                     statsDiv.append(content);
                     statsDiv.append(title).append(sub);
@@ -657,63 +670,15 @@
             return awidget;
             // $("#dashHolder").append('<h1 class="page-header">Dashboard</h1>');
         }
-      /*  function getTimeSeriesGraphForm(which)
-        {
-            var theForm = $('<div />');
-            theForm.append('<div class="appm">Edit widget</div>');
-            var theTable = $("<table />", { width: '100%' });
-            theTable.append('<tr><td><span>Title: <span></td><td><input type="text" placeholder="Title" name="widgetTitle" id="title_' + which.id + '" value="' + which.name + '"/></td></tr>');
-            theTable.append('<tr><td><span>Image Collection: <span></td><td><input type="text" placeholder="Image Collection" id="collection_' + which.id + '" name="imagecollection" value="' + which.properties[1] + '"/></td></tr>');
-            theTable.append('<tr><td colspan="2"><input type="text" placeholder="Start Date" id="sDate_' + which.id + '" name="sDate" value="' + which.properties[2] + '"/> to <input type="text" placeholder="End Date" id="eDate_' + which.id + '" name="eDate" value="' + which.properties[3] + '"/></td></tr>');
-            var columns = 3;
-            if (which.width) {
-                columns = which.width;
-            }
-            theTable.append('<tr><td><span>Columns: <span></td><td><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns" value="' + columns + '"/></td></tr>');
-            theForm.append(theTable);
-            theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
-            return theForm;
-        }*/
-        function getTimeSeriesGraphForm(which) {
-            /*var theForm = $('<div />', {'class':'ctr'});
-            theForm.append('<div class="appm">Edit widget</div>');
-            var titlegroup = ' <div class="form-group"><label for="title_' + which.id + '">Title:</label><input type="text" class="form-control" id="title_' + which.id + '" placeholder="Title" value="' + which.name + '"></div>';
-            var collectiongroup = '<div class="form-group"><label for="collection_' + which.id + '">Image Collection:</label><input type="text" class="form-control" id="collection_' + which.id + '" placeholder="Image Collection"  value="' + which.properties[1] + '"> </div>';
-            var rangegroup = '<div class="input-group input-daterange" id="range_' + which.id + '"><input type="text" class="form-control" value="2012-04-05" id="sDate_' + which.id + '"><div class="input-group-addon">to</div><input type="text" class="form-control" value="2012-04-05" id="eDate_' + which.id + '">';
 
-            var bandsgroup = '<div class="form-group"><label for="bands_' + which.id + '">Bands:(optional)</label> <input type="text" placeholder="Columns" id="bands_' + which.id + '" name="bands_' + which.id + '" value="3" class="form-control">';
-             var columns = 3;
-            if (which.width) {
-                columns = which.width;
-            }
-            var columnsgroup = '<div class="form-group"><label for="columns_' + which.id + '">Columns:</label><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns_' + which.id + '" value="'+columns+'" class="form-control">';
-            theForm.append(titlegroup).append(collectiongroup).append(rangegroup).append(bandsgroup).append(columnsgroup);
-            theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
-            return theForm;
-            */
-            return editForm(which, false);
+        function getTimeSeriesGraphForm(which) {
+            return getEditForm(which, false);
         }
         function getImageCollectionForm(which)
         {
-            /*var theForm = $('<div />', {'class':'ctr'});
-            theForm.append('<div class="appm">Edit widget</div>');
-            var titlegroup = ' <div class="form-group"><label for="title_' + which.id + '">Title:</label><input type="text" class="form-control" id="title_' + which.id + '" value="' + which.name + '" placeholder="Title"></div>';
-            var collectiongroup = '<div class="form-group"><label for="collection_' + which.id + '">Image Collection:</label><input type="text" class="form-control" id="collection_' + which.id + '" placeholder="Image Collection" value="' + which.properties[1] + '"> </div>';
-            var rangegroup = '<div class="input-group input-daterange" id="range_' + which.id + '"><input type="text" class="form-control"  value="' + which.properties[2] + '" id="sDate_' + which.id + '"><div class="input-group-addon">to</div><input type="text" class="form-control" value="' + which.properties[3] + '" id="eDate_' + which.id + '">';
-
-            var bandsgroup = '<div class="form-group"><label for="bands_' + which.id + '">Bands:(optional)</label> <input type="text" placeholder="Columns" id="bands_' + which.id + '" name="bands_' + which.id + '" value="' + which.properties[4] + '" class="form-control">';
-             var columns = 3;
-            if (which.width) {
-                columns = which.width;
-            }
-            var columnsgroup = '<div class="form-group"><label for="columns_' + which.id + '">Columns:</label><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns_' + which.id + '" value="'+columns+'" class="form-control">';
-            theForm.append(titlegroup).append(collectiongroup).append(rangegroup).append(bandsgroup).append(columnsgroup);
-            theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
-
-            return theForm;*/
-            return editForm(which, true);
+            return getEditForm(which, true);
         }
-        function editForm(which, bandsupport)
+        function getEditForm(which, bandsupport)
         {
             var theForm = $('<div />', {'class':'ctr'});
             var titlegroup = ' <div class="form-group"><label for="title_' + which.id + '">Title:</label><input type="text" class="form-control" id="title_' + which.id + '" value="' + which.name + '" placeholder="Title"></div>';
