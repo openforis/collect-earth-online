@@ -2,28 +2,22 @@ package org.openforis.ceo;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
-
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.net.URL;
 import java.util.UUID;
-
-import spark.Request;
-import spark.Response;
-import spark.Route;
-import spark.servlet.SparkApplication;
-import static spark.Spark.get;
-import static spark.Spark.post;
-import static spark.Spark.exception;
-import static spark.Spark.port;
-import static spark.Spark.staticFileLocation;
-import spark.template.freemarker.FreeMarkerEngine;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
+import spark.servlet.SparkApplication;
+import spark.template.freemarker.FreeMarkerEngine;
+import static spark.Spark.exception;
+import static spark.Spark.get;
+import static spark.Spark.port;
+import static spark.Spark.post;
+import static spark.Spark.staticFileLocation;
 
 public class Server implements SparkApplication {
 
