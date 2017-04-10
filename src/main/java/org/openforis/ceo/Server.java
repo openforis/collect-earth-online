@@ -52,7 +52,7 @@ public class Server implements SparkApplication {
         get("/account",         Views.account,       renderer);
         get("/dashboard",       Views.dashboard,     renderer);
         get("/admin",           Views.admin,         renderer);
-        post("/clone",          (req, res) -> { return req.body() }); // FIXME: replace
+        post("/clone",          Views.clone); // FIXME: replace
         get("/geo-dash",        Views.geodash,       renderer);
         get("/geo-dash/id/:id", Views.geodashId);
         get("*",                Views.pageNotFound,  renderer);

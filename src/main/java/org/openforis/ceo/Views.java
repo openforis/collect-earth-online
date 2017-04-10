@@ -132,6 +132,10 @@ public class Views {
         return new ModelAndView(model, "admin.ftl");
     };
 
+    public static TemplateViewRoute clone = (Request req, Response rsp) -> {
+        return req.body();
+    };
+
     public static TemplateViewRoute geodash = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Admin");
