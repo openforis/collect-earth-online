@@ -64,7 +64,7 @@ public class Server implements SparkApplication {
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
         // Set the webserver port
-        port(8081);
+        port(8080);
 
         // Set up the routing table
         declareRoutes();
