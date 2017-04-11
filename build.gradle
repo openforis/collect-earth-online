@@ -21,5 +21,6 @@ dependencies {
     compile "com.sparkjava:spark-template-freemarker:2.3"
     compile "org.freemarker:freemarker:2.3.23"
     compile "org.slf4j:slf4j-simple:1.7.21"
+    compile "com.googlecode.json-simple:json-simple:1.1.1"
     testCompile "junit:junit:4.12"
 }

@@ -2,28 +2,15 @@ package org.openforis.ceo;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.net.URL;
-import java.util.UUID;
-
-import spark.Request;
-import spark.Response;
-import spark.Route;
 import spark.servlet.SparkApplication;
-import static spark.Spark.get;
-import static spark.Spark.post;
-import static spark.Spark.exception;
-import static spark.Spark.port;
-import static spark.Spark.staticFileLocation;
 import spark.template.freemarker.FreeMarkerEngine;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
+import static spark.Spark.exception;
+import static spark.Spark.get;
+import static spark.Spark.port;
+import static spark.Spark.post;
+import static spark.Spark.staticFileLocation;
 
 public class Server implements SparkApplication {
 
@@ -53,39 +40,22 @@ public class Server implements SparkApplication {
         staticFileLocation("/public");
 
         // Setup Routes
-        get("/",               Views.home,          renderer);
-        get("/home",           Views.home,          renderer);
-        get("/about",          Views.about,         renderer);
-        get("/login",          Views.login,         renderer);
-        get("/register",       Views.register,      renderer);
-        get("/password",       Views.password,      renderer);
-        get("/password-reset", Views.passwordReset, renderer);
-        get("/logout",         Views.logout,        renderer);
-        get("/select-project", Views.selectProject, renderer);
-        get("/account",        Views.account,       renderer);
-        get("/dashboard",      Views.dashboard,     renderer);
-        get("/admin",          Views.admin,         renderer);
-
-
-       //  Gary:  replace the /clone routing with the page that will process the posted form from the admin page
-        post("/clone", (req, res) -> {
-           String body = req.body();
-           return body;
-        });
-
-        get("/geo-dash",          Views.geodash,         renderer);
-        get("/geo-dash/id/:id", (req, res) -> {
-            return Geo_Dash_Utils.GetDashBoardByID(req, res);
-        });
-        get("/geo-dash/update/id/:id", (req, res) -> {
-            return Geo_Dash_Utils.UpdateDashBoardByID(req, res);
-        });
-        get("/geo-dash/updatewidget/id/widget/:id", (req, res) -> {
-            return Geo_Dash_Utils.UpdateDashBoardWidgetByID(req, res);
-        });
-
-
-        get("*",               Views.pageNotFound,  renderer);
+        get("/",                Views.home,          renderer);
+        get("/home",            Views.home,          renderer);
+        get("/about",           Views.about,         renderer);
+        get("/login",           Views.login,         renderer);
+        get("/register",        Views.register,      renderer);
+        get("/password",        Views.password,      renderer);
+        get("/password-reset",  Views.passwordReset, renderer);
+        get("/logout",          Views.logout,        renderer);
+        get("/select-project",  Views.selectProject, renderer);
+        get("/account",         Views.account,       renderer);
+        get("/dashboard",       Views.dashboard,     renderer);
+        get("/admin",           Views.admin,         renderer);
+        post("/clone",          Views.clone); // FIXME: replace
+        get("/geo-dash",        Views.geodash,       renderer);
+        get("/geo-dash/id/:id", Views.geodashId);
+        get("*",                Views.pageNotFound,  renderer);
 
         // Handle Exceptions
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
@@ -94,7 +64,7 @@ public class Server implements SparkApplication {
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
         // Set the webserver port
-        port(8081);
+        port(8080);
 
         // Set up the routing table
         declareRoutes();
