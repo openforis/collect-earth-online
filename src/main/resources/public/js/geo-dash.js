@@ -9,6 +9,7 @@
         var theSplit;
         var ajaxurl = '';
         var title = '';
+        var dashboardID;
         $(function () {
 
             var pid = getParameterByName('pid');
@@ -215,6 +216,7 @@
             $("#projectTitle").text(dashboard.projectTitle);
             var colCount = 0;
             wCount = 0;
+            dashboardID = dashboard.dashboardID;
             if (dashboard.widgets != null && dashboard.widgets.length > 0) {
                 rowDiv = null;
                 for (var i = 0; i < dashboard.widgets.length; i++) {
@@ -609,34 +611,6 @@
                 {
 
                     var statsDiv = $('<div/>', { "id": "widgetstats_" + widget.id, 'class': 'minmapwidget' });
-                   // var header = $('<div/>', { 'style': 'padding-left:20px;padding-top:20px;' });
-                    //var wtitle = $('<span/>', { 'style': 'color: #333333; font-size: 18px;' }).html('Key Information');
-
-                    //header.append(wtitle).append($('<br/>')).append($('<br/>'));
-                    //statsDiv.append(header);
-                    //build table here
-
-                   /* var content = "<table style='border:0px; width:100%'>"
-                    //total pop
-                    content += '<tr style="padding-top:20px;"><td style="width:80px"  class="statsWidget">';
-                        content += '<img src="img/icon_population.png" style="width: 50px; height: 50px; -webkit-border-radius: 25px; -moz-border-radius: 25px; border-radius: 25px; background-color: #e2843a; "></td>';
-                        content += '<td class="statsWidget"><span style="color:#787878">Total population</span><h4 id="totalPop_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" />';
-                        content += '</td></tr>';
-                    //area
-                        content += '<tr style="padding-top:20px;"><td style="width:80px" class="statsWidget">';
-                        content += '<img src="img/icon_area.png" style="width: 50px; height: 50px; -webkit-border-radius: 25px; -moz-border-radius: 25px; border-radius: 25px; background-color: #e2843a; "></td>';
-                        content += '<td class="statsWidget"><span style="color:#787878">Area</span><h4 id="totalArea_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" />';
-                        content += '</td></tr>';
-                    //elevation
-                        content += '<tr style="padding-top:20px;"><td style="width:80px" class="statsWidget">';
-                        content += '<img src="img/icon_elevation.png" style="width: 50px; height: 50px; -webkit-border-radius: 25px; -moz-border-radius: 25px; border-radius: 25px; background-color: #e2843a; "></td>';
-                        content += '<td class="statsWidget"><span style="color:#787878">Elevation</span><h4 id="elevationRange_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" />';
-                        content += '</td></tr>';
-
-                    //close table
-                    content += '</table>';
-                    */
-
                     var content = '<div><div class="form-group"><div class="input-group"><div class="input-group-addon"><img src="img/icon_population.png" style="width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);"></div>';
                     content += '  <label for="totalPop_' + widget.id + '" style="color:#787878">Total population</label>';
                     content += '<h4 id="totalPop_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" /></div></div>';
@@ -701,9 +675,158 @@
             theForm.append(titlegroup).append(collectiongroup).append(rangegroup).append(columnsgroup);
             }
 
-            theForm.append('<br><input type="submit" id="savebutton" value="Save" class="btn btn-primary" />');
+            theForm.append('<br><input type="submit" id="savebutton_' + which.id + '" value="Save" class="btn btn-primary" onclick="updatewidget(this)"/>');
 
             return theForm;
+        }
+        function updatewidget(which)
+        {
+            var widgetID = which.id.replace("savebutton_", "");
+            var updatingWidget;
+            var outWidget;
+            for(var i = 0; i < pageWidgets.length; i++)
+            {
+                if(pageWidgets[i].id == widgetID)
+                {
+                    updatingWidget = pageWidgets[i];
+                    break;
+                }
+            }
+            if(updatingWidget.properties[0] == "addImageCollection")
+            {
+                var newProperties = [];
+                var outWidget = {};
+                newProperties.push("addImageCollection");
+
+                var collection = $("#collection_" + widgetID).val();
+                newProperties.push(collection);
+
+
+                var startDate = $("#sDate_" + widgetID).val();
+                newProperties.push(startDate);
+                var endDate = $("#eDate_" + widgetID).val();
+                newProperties.push(endDate);
+                var bands = $("#bands_" + widgetID).val();
+                newProperties.push(bands);
+                var title = $("#title_" + widgetID).val();
+                var columns = $("#columns_" + widgetID).val();
+                outWidget.id = widgetID;
+                outWidget.name = title;
+                outWidget.properties = newProperties;
+                outWidget.width = columns;
+
+                var wjson = JSON.stringify(outWidget);
+                sendUpdate(widgetID, wjson);
+            //dashboardID
+            }
+            else if(updatingWidget.properties[0] == "timeSeriesGraph")
+            {}
+            else if(updatingWidget.properties[0] == "getStats")
+            {}
+
+
+        }
+        function sendUpdate(id, wjson)
+        {
+             ajaxurl = theURL + "updatewidget/id/widget/" + id;
+                        $.ajax({
+                            url: ajaxurl, //theURL + "id/" + pid,
+                            type: "get", //send it through get method
+                            dataType: 'jsonp',
+                            indexVal: id,
+                            data: {
+                                dashID: dashboardID,
+                                widgetJSON: wjson
+                            },
+                            success: function (response) {
+                                debugupdateme = response;
+                                //update the widget with new params;
+                                updateWidgetUI(this.indexVal);
+                                console.warn("Back from update");
+                            },
+                            error: function (xhr) {
+                                //Do Something to handle error
+                                debugme = xhr;
+                                alert("error");
+                            }
+                        });
+        }
+        function updateWidgetUI(which)
+        {
+            var widgetID = which;
+            var updatingWidget;
+            var outWidget;
+            for(var i = 0; i < pageWidgets.length; i++)
+            {
+                if(pageWidgets[i].id == widgetID)
+                {
+                    updatingWidget = pageWidgets[i];
+                    break;
+                }
+            }
+            if(updatingWidget.properties[0] == "addImageCollection")
+            {
+                var themap = mapWidgetArray["widgetmap_" + widgetID];
+                themap.removeLayer(themap.getLayers().getArray()[1]);
+
+                var collectionName = $("#collection_" + widgetID).val();
+                var dateFrom = $("#sDate_" + widgetID).val();
+                var dateTo = $("#eDate_" + widgetID).val();
+                var url = gateway + "/imageByMosaicCollection"; //http://54.186.177.52:8888/imageByMosaicCollection";
+                var bands = '';
+                if ($("#bands_" + widgetID).val().length > 1)
+                {
+                    bands = $("#bands_" + widgetID).val();
+                }
+                console.info(bands);
+                var visParams = {
+                    min: '',
+                    max: '0.3',
+                    bands: bands
+                };
+
+
+                imageCollectionAJAX(url, widgetID, collectionName, visParams,dateFrom, dateTo )
+            }
+        }
+        function imageCollectionAJAX(url, id, collectionName, visParams,dateFrom, dateTo )
+        {
+        $.ajax({
+                                url: url,
+                                type: 'POST',
+                                async: true,
+                                indexVal : id,
+                                crossDomain: true,
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    collectionName: collectionName,
+                                    visParams: visParams,
+                                    dateFrom: dateFrom,
+                                    dateTo: dateTo
+                                })
+                            }).fail(function (jqXHR, textStatus, errorThrown) {
+                                alert(textStatus);
+                            }).done(function (data, _textStatus, _jqXHR) {
+                                if (data.errMsg) {
+                                    alert(data.errMsg);
+                                } else {
+                                    if (data.hasOwnProperty('mapid')) {
+                                        icameback = data;
+                                        textStatus = _textStatus;
+                                        jqXHR = _jqXHR;
+                                        console.warn('Data Returned')
+                                        var mapId = data.mapid;
+                                        var token = data.token;
+
+
+                                        addTileServer(mapId, token, 'widgetmap_' + this.indexVal);// + pageWidgets[i].id);
+
+
+
+                                    }
+                                    else { console.warn('Wrong Data Returned') }
+                                }
+                            });
         }
         function getParameterByName(name, url) {
             if (!url) {
