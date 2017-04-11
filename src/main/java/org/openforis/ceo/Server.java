@@ -52,9 +52,9 @@ public class Server implements SparkApplication {
         get("/account",         (req, res) -> { return freemarker.render(Views.account(req, res)); });
         get("/dashboard",       (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
         get("/admin",           (req, res) -> { return freemarker.render(Views.admin(req, res)); });
-        post("/clone",          (req, res) -> { return Views.clone(req, res); }); // FIXME: replace
+        post("/clone",          (req, res) -> { return AJAX.clone(req, res); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
-        get("/geo-dash/id/:id", (req, res) -> { return Views.geodashId(req, res); });
+        get("/geo-dash/id/:id", (req, res) -> { return AJAX.geodashId(req, res); });
         get("*",                (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });
 
         // Handle Exceptions
