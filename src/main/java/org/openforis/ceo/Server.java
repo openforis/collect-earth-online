@@ -34,28 +34,28 @@ public class Server implements SparkApplication {
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes() {
         // Configure FreeMarker
-        FreeMarkerEngine renderer = getTemplateRenderer();
+        FreeMarkerEngine freemarker = getTemplateRenderer();
 
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
 
         // Setup Routes
-        get("/",                Views.home,          renderer);
-        get("/home",            Views.home,          renderer);
-        get("/about",           Views.about,         renderer);
-        get("/login",           Views.login,         renderer);
-        get("/register",        Views.register,      renderer);
-        get("/password",        Views.password,      renderer);
-        get("/password-reset",  Views.passwordReset, renderer);
-        get("/logout",          Views.logout,        renderer);
-        get("/select-project",  Views.selectProject, renderer);
-        get("/account",         Views.account,       renderer);
-        get("/dashboard",       Views.dashboard,     renderer);
-        get("/admin",           Views.admin,         renderer);
-        post("/clone",          Views.clone); // FIXME: replace
-        get("/geo-dash",        Views.geodash,       renderer);
-        get("/geo-dash/id/:id", Views.geodashId);
-        get("*",                Views.pageNotFound,  renderer);
+        get("/",                (req, res) -> { return freemarker.render(Views.home(req, res)); });
+        get("/home",            (req, res) -> { return freemarker.render(Views.home(req, res)); });
+        get("/about",           (req, res) -> { return freemarker.render(Views.about(req, res)); });
+        get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
+        get("/register",        (req, res) -> { return freemarker.render(Views.register(req, res)); });
+        get("/password",        (req, res) -> { return freemarker.render(Views.password(req, res)); });
+        get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
+        get("/logout",          (req, res) -> { return freemarker.render(Views.logout(req, res)); });
+        get("/select-project",  (req, res) -> { return freemarker.render(Views.selectProject(req, res)); });
+        get("/account",         (req, res) -> { return freemarker.render(Views.account(req, res)); });
+        get("/dashboard",       (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
+        get("/admin",           (req, res) -> { return freemarker.render(Views.admin(req, res)); });
+        post("/clone",          (req, res) -> { return Views.clone(req, res); }); // FIXME: replace
+        get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
+        get("/geo-dash/id/:id", (req, res) -> { return Views.geodashId(req, res); });
+        get("*",                (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });
 
         // Handle Exceptions
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
