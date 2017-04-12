@@ -2,10 +2,24 @@ apply plugin: 'java'
 apply plugin: 'war'
 apply plugin: 'application'
 
-mainClassName = 'org.openforis.ceo.Server'
-
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    compile 'com.sparkjava:spark-core:2.5'
+    compile 'com.sparkjava:spark-template-freemarker:2.3'
+    compile 'org.freemarker:freemarker:2.3.23'
+    compile 'org.slf4j:slf4j-simple:1.7.21'
+    compile 'com.googlecode.json-simple:json-simple:1.1.1'
+    testCompile 'junit:junit:4.12'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
 }
 
 war {
@@ -13,14 +27,4 @@ war {
     version = '1.0.0-SNAPSHOT'
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-dependencies {
-    compile "com.sparkjava:spark-core:2.5"
-    compile "com.sparkjava:spark-template-freemarker:2.3"
-    compile "org.freemarker:freemarker:2.3.23"
-    compile "org.slf4j:slf4j-simple:1.7.21"
-    compile "com.googlecode.json-simple:json-simple:1.1.1"
-    testCompile "junit:junit:4.12"
-}
+mainClassName = 'org.openforis.ceo.Server'
