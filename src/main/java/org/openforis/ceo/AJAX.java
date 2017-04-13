@@ -3,6 +3,7 @@ package org.openforis.ceo;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Optional;
@@ -17,8 +18,14 @@ public class AJAX {
         return req.body();
     }
 
+    public static String expandResourcePath(String filename) {
+        return (new AJAX()).getClass().getClassLoader().getResource(filename).getFile();
+    }
+
     public static String geodashId(Request req, Response res) {
-        try (FileReader projectFileReader = new FileReader("proj.json")) {
+        String geodashDataDir = expandResourcePath("public/json/");
+
+        try (FileReader projectFileReader = new FileReader(new File(geodashDataDir, "proj.json"))) {
             JsonParser parser = new JsonParser();
             JsonArray projects = parser.parse(projectFileReader).getAsJsonArray();
 
@@ -26,7 +33,7 @@ public class AJAX {
                 .map(project -> project.getAsJsonObject())
                 .filter(project -> req.params(":id").equals(project.get("projectID").getAsString()))
                 .map(project -> {
-                        try (FileReader dashboardFileReader = new FileReader("dash-" + project.get("dashboard").getAsString() + ".json")) {
+                        try (FileReader dashboardFileReader = new FileReader(new File(geodashDataDir, "dash-" + project.get("dashboard").getAsString() + ".json"))) {
                             return parser.parse(dashboardFileReader).getAsJsonObject();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
@@ -49,7 +56,7 @@ public class AJAX {
                     newProject.addProperty("dashboard", newUUID);
                     projects.add(newProject);
 
-                    try (FileWriter projectFileWriter = new FileWriter("proj.json")) {
+                    try (FileWriter projectFileWriter = new FileWriter(new File(geodashDataDir, "proj.json"))) {
                         projectFileWriter.write(projects.toString());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -61,7 +68,7 @@ public class AJAX {
                     newDashboard.addProperty("widgets", "[]");
                     newDashboard.addProperty("dashboardID", newUUID);
 
-                    try (FileWriter dashboardFileWriter = new FileWriter("dash-" + newUUID + ".json")) {
+                    try (FileWriter dashboardFileWriter = new FileWriter(new File(geodashDataDir, "dash-" + newUUID + ".json"))) {
                         dashboardFileWriter.write(newDashboard.toString());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
