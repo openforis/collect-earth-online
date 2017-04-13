@@ -1,12 +1,13 @@
 package org.openforis.ceo;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Optional;
 import java.util.UUID;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import java.util.stream.StreamSupport;
 import spark.Request;
 import spark.Response;
 
@@ -18,15 +19,15 @@ public class AJAX {
 
     public static String geodashId(Request req, Response res) {
         try (FileReader projectFileReader = new FileReader("proj.json")) {
-            JSONParser parser = new JSONParser();
-            JSONArray projects = (JSONArray) parser.parse(projectFileReader);
+            JsonParser parser = new JsonParser();
+            JsonArray projects = parser.parse(projectFileReader).getAsJsonArray();
 
-            Optional matchingProject = projects
-                .stream()
-                .filter(project -> req.params(":id").equals(((JSONObject) project).get("projectID")))
+            Optional matchingProject = StreamSupport.stream(projects.spliterator(), false)
+                .map(project -> project.getAsJsonObject())
+                .filter(project -> req.params(":id").equals(project.get("projectID").getAsString()))
                 .map(project -> {
-                        try (FileReader dashboardFileReader = new FileReader("dash-" + ((JSONObject) project).get("dashboard") + ".json")) {
-                            return (JSONObject) parser.parse(dashboardFileReader);
+                        try (FileReader dashboardFileReader = new FileReader("dash-" + project.get("dashboard").getAsString() + ".json")) {
+                            return parser.parse(dashboardFileReader).getAsJsonObject();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -43,9 +44,9 @@ public class AJAX {
                 if (true) { // FIXME: Make sure this is true if the user has role admin
                     String newUUID = UUID.randomUUID().toString();
 
-                    JSONObject newProject = new JSONObject();
-                    newProject.put("projectID", req.params(":id"));
-                    newProject.put("dashboard", newUUID);
+                    JsonObject newProject = new JsonObject();
+                    newProject.addProperty("projectID", req.params(":id"));
+                    newProject.addProperty("dashboard", newUUID);
                     projects.add(newProject);
 
                     try (FileWriter projectFileWriter = new FileWriter("proj.json")) {
@@ -54,11 +55,11 @@ public class AJAX {
                         throw new RuntimeException(e);
                     }
 
-                    JSONObject newDashboard = new JSONObject();
-                    newDashboard.put("projectID", req.params(":id"));
-                    newDashboard.put("projectTitle", req.queryParams("title"));
-                    newDashboard.put("widgets", "[]");
-                    newDashboard.put("dashboardID", newUUID);
+                    JsonObject newDashboard = new JsonObject();
+                    newDashboard.addProperty("projectID", req.params(":id"));
+                    newDashboard.addProperty("projectTitle", req.queryParams("title"));
+                    newDashboard.addProperty("widgets", "[]");
+                    newDashboard.addProperty("dashboardID", newUUID);
 
                     try (FileWriter dashboardFileWriter = new FileWriter("dash-" + newUUID + ".json")) {
                         dashboardFileWriter.write(newDashboard.toString());
