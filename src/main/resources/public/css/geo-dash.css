@@ -1,13 +1,4 @@
 /*
- * Base structure
- */
-
-/* Move down content because we have a fixed navbar that is 50px tall */
-body {
-    padding-top: 50px;
-}
-
-/*
  * Global add-ons
  */
 .sub-header {
@@ -104,14 +95,6 @@ body {
 .placeholder img {
     display: inline-block;
     border-radius: 50%;
-}
-
-html{
-    height:100%;
-}
-
-body{
-    min-height:100%;
 }
 
 .panel-default {
