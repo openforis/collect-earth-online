@@ -47,7 +47,11 @@
         <!--------------------------------------------------------------->
     </head>
     <body ng-controller="ctlBody">
+        <#if nav_visibility == "visible">
         <header>
+        <#else>
+        <header style="height:55px">
+        </#if>
             <div id="logos">
                 <img id="usaid" src="img/usaid.png">
                 <img id="nasa" src="img/nasa.png">
@@ -101,7 +105,11 @@
                 </p>
             </div>
         </header>
+        <#if nav_visibility == "visible">
         <section id="content">
+        <#else>
+        <section id="content" style="top:55px;height:calc(100vh - 55px)">
+        </#if>
             <#list flash_messages>
                 <div class="alert">
                     <#items as flash_message>
