@@ -19,11 +19,11 @@ public class AJAX {
     }
 
     public static String expandResourcePath(String filename) {
-        return (new AJAX()).getClass().getClassLoader().getResource(filename).getFile();
+        return AJAX.class.getResource(filename).getFile();
     }
 
     public static String geodashId(Request req, Response res) {
-        String geodashDataDir = expandResourcePath("public/json/");
+        String geodashDataDir = expandResourcePath("/public/json/");
 
         try (FileReader projectFileReader = new FileReader(new File(geodashDataDir, "proj.json"))) {
             JsonParser parser = new JsonParser();
