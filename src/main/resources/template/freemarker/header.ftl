@@ -23,11 +23,11 @@
         <script type="text/javascript" src="js/ceo_sample_data.js"></script>
         <!-- <script type="text/javascript" src="js/angular-route.min.js"></script> -->
         <script type="text/javascript" src="js/collect-earth.js"></script>
+        <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
-        <!-- BEGIN: Billy's GEODASH libraries, FIXME: Simplify this list -->
+        <!-- BEGIN: Billy's GEODASH libraries -->
         <!----------------------------------------------------------------->
         <link href="css/bootstrap.min.css" rel="stylesheet">
-        <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
         <link href="css/ie10-viewport-bug-workaround.css" rel="stylesheet">
         <link href="css/geo-dash.css" rel="stylesheet">
         <script src="js/ie-emulation-modes-warning.js"></script>
@@ -45,6 +45,7 @@
         <!--------------------------------------------------------------->
         <!-- END: Billy's GEODASH libraries, FIXME: Simplify this list -->
         <!--------------------------------------------------------------->
+        </#if>
     </head>
     <body ng-controller="ctlBody">
         <#if nav_visibility == "visible">
@@ -58,7 +59,8 @@
                 <img id="adpc" src="img/ADPC.jpg">
                 <img id="servir" src="img/servir.png">
             </div>
-            <nav style="visibility:${nav_visibility}">
+            <#if nav_visibility == "visible">
+            <nav>
                 <ul>
                     <#if role == "admin">
                         <#list ["Home", "About", "Account", "Dashboard", "Admin"] as url>
@@ -87,7 +89,7 @@
                     </#if>
                 </ul>
             </nav>
-            <div id="login-info" style="visibility:${nav_visibility}">
+            <div id="login-info">
                 <p>
                     <#if username??>
                         <#if navlink == "Logout">
@@ -104,6 +106,7 @@
                     </#if>
                 </p>
             </div>
+            </#if>
         </header>
         <#if nav_visibility == "visible">
         <section id="content">
