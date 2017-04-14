@@ -8,19 +8,18 @@ var wStateFull = false;
 var theSplit;
 var ajaxurl = '';
 var title = '';
-$(function () {
 
+$(function () {
     var pid = getParameterByName('pid');
     title = getParameterByName('title');
     projAOI = getParameterByName('aoi');
-    if (projAOI)
-    {
+    if (projAOI) {
         try {
             theSplit = decodeURI(projAOI).replace('[','').replace(']','').split(',');
-
-            projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
-        }
-        catch (e) { }
+            projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + ","
+                        + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0]
+                        + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
+        } catch (e) { }
     }
     ajaxurl = theURL + "id/" + pid;
     $.ajax({
@@ -42,8 +41,8 @@ $(function () {
         }
     });
 });
-function tryMeNow()
-{
+
+function tryMeNow() {
     $.ajax({
         url: ajaxurl, //theURL + "id/" + pid,
         type: "post", //send it through get method
@@ -63,9 +62,10 @@ function tryMeNow()
         }
     });
 }
+
 var iamthis;
-function makeAdjustable()
-{
+
+function makeAdjustable() {
     $(".panel-fullscreen").click(function (e) {
         console.info("****************************Clicked*********************");
         e.preventDefault();
@@ -75,8 +75,7 @@ function makeAdjustable()
         if ($this.children('i').hasClass('glyphicon-resize-full')) {
             $this.children('i').removeClass('glyphicon-resize-full');
             $this.children('i').addClass('glyphicon-resize-small');
-        }
-        else if ($this.children('i').hasClass('glyphicon-resize-small')) {
+        } else if ($this.children('i').hasClass('glyphicon-resize-small')) {
             $this.children('i').removeClass('glyphicon-resize-small');
             $this.children('i').addClass('glyphicon-resize-full');
         }
@@ -89,6 +88,7 @@ function makeAdjustable()
 
             var mapdivid = 'widgetmap_' + $(theWidget).attr('id').substring(7);
             console.info('************adjust map image widget************************');
+
             if (wStateFull) {
                 // minimize css
                 $(theWidget).css('height', 'auto');
@@ -97,31 +97,26 @@ function makeAdjustable()
                 $("#" + mapdivid).removeClass('fullmapwidget');
                 $("#" + mapdivid).addClass('minmapwidget');
                 $(theWidget.children()[1]).height('auto');
-            }
-            else {
+            } else {
                 //maximize css
                 $("#fulldiv").css('z-index', '1031');
                 $(theWidget).css('height', '100%');
                 $(theWidget).css('margin-bottom', '0');
-
-
                 $("#" + mapdivid).removeClass('minmapwidget');
                 $("#" + mapdivid).addClass('fullmapwidget');
                 $(theWidget.children()[1]).height('100%');
-                /*
-
-                 */
             }
             wStateFull = !wStateFull;
             mapWidgetArray[mapdivid].updateSize();
-        }
-        else if (theWidget.children().children().children()[2].id.includes('widgetgraph_')) {
+        } else if (theWidget.children().children().children()[2].id.includes('widgetgraph_')) {
             var graphdivid = 'widgetgraph_' + $(theWidget).attr('id').substring(7);
 
             console.info('************adjust graph widget************************');
             /*********************resize the graph here*****************************/
+
             var width = 0;
             var height = 0;
+
             if (wStateFull) {
                 // minimize css
                 $(theWidget).css('height', 'auto');
@@ -130,19 +125,13 @@ function makeAdjustable()
                 $("#" + graphdivid).removeClass('fullmapwidget');
                 $("#" + graphdivid).addClass('minmapwidget');
                 $(theWidget.children()[1]).height('auto');
-            }
-            else {
+            } else {
                 //maximize css
                 $("#fulldiv").css('z-index', '1031');
                 $(theWidget).css('height', '100%');
                 $(theWidget).css('margin-bottom', '0');
-
-
                 $("#" + graphdivid).removeClass('minmapwidget');
                 $("#" + graphdivid).addClass('fullmapwidget');
-                /*
-
-                 */
                 $(theWidget.children()[1]).height('100%');
             }
             width = $("#" + graphdivid).outerWidth();
@@ -150,11 +139,11 @@ function makeAdjustable()
             wStateFull = !wStateFull;
             graphWidgetArray[graphdivid].setSize(width, height, doAnimation = true);
             completeGraph();
-        }
-        else if (theWidget.children().children().children()[2].id.includes('widgetstats_')) {
+        } else if (theWidget.children().children().children()[2].id.includes('widgetstats_')) {
             var statsdivid = 'widgetstats_' + $(theWidget).attr('id').substring(7);
             var width = 0;
             var height = 0;
+
             if (wStateFull) {
                 // minimize css
                 $(theWidget).css('height', 'auto');
@@ -162,19 +151,13 @@ function makeAdjustable()
                 $(theWidget).css('margin-bottom', '20px');
                 $("#" + statsdivid).removeClass('fullmapwidget');
                 $("#" + statsdivid).addClass('minmapwidget');
-            }
-            else {
+            } else {
                 //maximize css
                 $("#fulldiv").css('z-index', '1031');
                 $(theWidget).css('height', '100%');
                 $(theWidget).css('margin-bottom', '0');
-
-
                 $("#" + statsdivid).removeClass('minmapwidget');
                 $("#" + statsdivid).addClass('fullmapwidget');
-                /*
-
-                 */
             }
             width = $("#" + statsdivid).outerWidth();
             height = $("#" + statsdivid).outerHeight();
@@ -183,63 +166,62 @@ function makeAdjustable()
 
     });
 }
+
 var rowDiv = null;
 var pageWidgets = [];
 var icameback;
 var textStatus, jqXHR;
-function completeGraph()
-{
-    for (var i = 0; i < pageWidgets.length; i++) {
 
+function completeGraph() {
+    for (var i = 0; i < pageWidgets.length; i++) {
         if (pageWidgets[i].properties[0] == 'addImageCollection') {
             //return;
-        }
-        else if (pageWidgets[i].properties[0] == 'timeSeriesGraph') {
-            try{
+        } else if (pageWidgets[i].properties[0] == 'timeSeriesGraph') {
+            try {
                 var graphname = pageWidgets[i].properties[4];
-
                 var title = $('#widgetgraph_' + pageWidgets[i].id + ' .highcharts-title').children()[0]
-
                 title.innerHTML = graphname
-
-
                 var yaxis = $('#widgetgraph_' + pageWidgets[i].id + ' .highcharts-yaxis').children()[0]
                 yaxis.innerHTML = graphname
-            }
-            catch(e){}
+            } catch(e) { }
         }
     }
 }
+
 function fillDashboard(dashboard) {
     $("#projectTitle").text(dashboard.projectTitle);
     var colCount = 0;
     wCount = 0;
+
     if (dashboard.widgets != null && dashboard.widgets.length > 0) {
         rowDiv = null;
+
         for (var i = 0; i < dashboard.widgets.length; i++) {
             if (dashboard.widgets[i].width) {
                 /*   FIX THIS  */
-            }
-            else {
-                if (wCount % 4 == 0) {//beginning a new row
+            } else {
+                if (wCount % 4 == 0) { //beginning a new row
                     if (rowDiv) {
                         $("#dashHolder").append(rowDiv);
                     }
                     rowDiv = $('<div/>', { "class": "row placeholders" });
                 }
             }
-            if (!rowDiv)
-            {
+
+            if (!rowDiv) {
                 rowDiv = $('<div/>', { "class": "row placeholders" });
             }
+
             rowDiv.append(addWidget(dashboard.widgets[i]));
             pageWidgets.push(dashboard.widgets[i]);
             wCount++;
         }
+
         if (rowDiv) {
             $("#dashHolder").append(rowDiv);
         }
     }
+
     for (var i = 0; i < pageWidgets.length; i++) {
         // check if they are addImageCollection, if so enable
         //
@@ -250,12 +232,11 @@ function fillDashboard(dashboard) {
             $("#flip-container_" + pageWidgets[i].id).flip({
                 trigger: 'manual'
             });
-        }
-        catch (e) { }
+        } catch (e) { }
+
         try {
             $(".back").height($("#widget_" + pageWidgets[i].id).height());
-        }
-        catch (e) { }
+        } catch (e) { }
         //widget_0
 
         if (pageWidgets[i].properties[0] == 'addImageCollection') {
@@ -268,21 +249,21 @@ function fillDashboard(dashboard) {
             //[-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375]  //california sample
             //[-86.93115, 34.86516, -86.413707, 34.538107]  //huntsville sample
             //var extent =
-            if (projAOI == "")
-            {
+
+            if (projAOI == "") {
                 projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
-            }
-            else {
+            } else {
                 projAOI = eval(projAOI);
             }
-            var theMap = mapWidgetArray['widgetmap_' + pageWidgets[i].id];// + pageWidgets[i].id]
+
+            var theMap = mapWidgetArray['widgetmap_' + pageWidgets[i].id]; // + pageWidgets[i].id]
+
             if (projAOI) {
                 theMap.getView().fit(
                     projAOI,
                     theMap.getSize()
                 );
-            }
-            else {
+            } else {
                 theMap.getView().fit(
                     projAOI,
                     theMap.getSize()
@@ -294,16 +275,19 @@ function fillDashboard(dashboard) {
             var dateTo = pageWidgets[i].properties[3];
             var url = "http://54.186.177.52:8888/imageByMosaicCollection";
             var bands = '';
-            if (pageWidgets[i].properties.length == 5)
-            {
+
+            if (pageWidgets[i].properties.length == 5) {
                 bands = pageWidgets[i].properties[4];
             }
+
             console.info(bands);
+
             var visParams = {
                 min: '',
                 max: '0.3',
                 bands: bands
             };
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -327,29 +311,23 @@ function fillDashboard(dashboard) {
                         icameback = data;
                         textStatus = _textStatus;
                         jqXHR = _jqXHR;
-                        console.warn('Data Returned')
+                        console.warn('Data Returned');
                         var mapId = data.mapid;
                         var token = data.token;
-
-
-                        addTileServer(mapId, token, 'widgetmap_' + this.indexVal);// + pageWidgets[i].id);
-
-
-
+                        addTileServer(mapId, token, 'widgetmap_' + this.indexVal); // + pageWidgets[i].id);
+                    } else {
+                        console.warn('Wrong Data Returned');
                     }
-                    else { console.warn('Wrong Data Returned') }
                 }
             });
-
-        }
-        else if(pageWidgets[i].properties[0] == 'timeSeriesGraph')
-        {
+        } else if(pageWidgets[i].properties[0] == 'timeSeriesGraph') {
             var collectionName = pageWidgets[i].properties[1];
             var dateFrom = pageWidgets[i].properties[2];
             var dateTo = pageWidgets[i].properties[3];
             var indexName = pageWidgets[i].properties[4];
             var polygon = eval(projPairAOI); //eval(pageWidgets[i].properties[5]);
             var url = "http://54.186.177.52:8888/timeSeriesIndex";
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -375,16 +353,15 @@ function fillDashboard(dashboard) {
                         icameback = data;
                         textStatus = _textStatus;
                         jqXHR = _jqXHR;
-                        console.warn('Data Returned')
+                        console.warn('Data Returned');
                         timeseriesData = [];
                         $.each(data.timeseries, function (index, value) {
                             if (value[0] != null) {
                                 timeseriesData.push([value[1], value[0]]);
                             }
                         });
-                        //
                         text = indexName;
-                        console.info('Creating :widgetgraph_' + this.indexVal)
+                        console.info('Creating :widgetgraph_' + this.indexVal);
                         graphWidgetArray['widgetgraph_' + this.indexVal] = Highcharts.chart('graphcontainer_' + this.indexVal, {
                             chart: {
                                 zoomType: 'x'
@@ -441,17 +418,14 @@ function fillDashboard(dashboard) {
                                 data: timeseriesData
                             }]
                         }, function (chart) {
-
                             completeGraph();
-
                         });
-
+                    } else {
+                        console.warn('Wrong Data Returned');
                     }
-                    else { console.warn('Wrong Data Returned') }
                 }
             });
-        }
-        else if (pageWidgets[i].properties[0] == 'getStats') {
+        } else if (pageWidgets[i].properties[0] == 'getStats') {
             var paramType = pageWidgets[i].properties[1];
             var polygon = eval(projPairAOI); //eval(pageWidgets[i].properties[2]);
             console.info('***************' + paramType + '****************************');
@@ -480,7 +454,6 @@ function fillDashboard(dashboard) {
                     $('#totalPop_' + this.indexVal).text(numberWithCommas(data.pop));
                     $('#totalArea_' + this.indexVal).text(calculateArea(this.polyVal) + ' ha');
                     $('#elevationRange_' + this.indexVal).text(numberWithCommas(data.minElev) + ' - ' + numberWithCommas(data.maxElev) + ' m');
-
                 }
             });
         }
@@ -492,31 +465,34 @@ function fillDashboard(dashboard) {
 
     // mapWidgetArray[0].zoomToExtent(new ol.Bounds(minLng, minLat, maxLng, maxLat));//.transform("EPSG:4326", "EPSG:900913"))
 }
+
 var statcameback;
-function calculateArea(poly)
-{
+
+function calculateArea(poly) {
     var sphere = new ol.Sphere(6378137);
     var coordinates = poly; //[[-105.30322265625, 22.33544921875], [-105.047900390625, 22.33544921875], [-105.047900390625, 23.53271484375], [-105.30322265625, 23.53271484375], [-105.30322265625, 22.33544921875]];
     var area_m = sphere.geodesicArea(coordinates);
     var area_km = area_m / 1000 / 1000;
     var area_ha = area_m / 10000;
-    if (area_ha < 0)
-    {
+    if (area_ha < 0) {
         area_ha = area_ha * -1;
     }
     return numberWithCommas(area_ha);
 }
+
 function numberWithCommas(x) {
     var parts = x.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return parts.join(".");
 }
-function flipme(which)
-{
+
+function flipme(which) {
     // alert(which);
     $("#" + which).flip('toggle');
 }
+
 var isAdmin = true;
+
 function addWidget(widget) {
     console.info(widget.name);
 
@@ -530,8 +506,8 @@ function addWidget(widget) {
     panel.attr('id', 'widget_' + widget.id);
     var panHead = $("<div/>", { "class": "panel-heading" });
     var toolsholder = $("<ul/>", { "class": "list-inline panel-actions pull-right" });
-    if (isAdmin)
-    {
+
+    if (isAdmin) {
         //glyphicon glyphicon-cog
         var clickcommand = 'flipme("flip-container_' + widget.id +'")';
         var toolfliptog = $("<li/>");
@@ -543,6 +519,7 @@ function addWidget(widget) {
         toolfliptog.append(theflipbutton);
         toolsholder.append(toolfliptog);
     }
+
     var toolmaxtog = $("<li/>");
     var thebutton = $("<a/>", { "class": "list-inline panel-actions panel-fullscreen" });
     var theicon = $("<i/>", { "class": "glyphicon glyphicon-resize-full" });
@@ -551,22 +528,20 @@ function addWidget(widget) {
     thebutton.attr('title', 'Toggle Fullscreen');
     toolmaxtog.append(thebutton);
     toolsholder.append(toolmaxtog);
-
     panHead.append(toolsholder);
     panel.append(panHead);
     var img;
     var wtext = "I had no property";
-    if (widget.properties[0]) {
 
+    if (widget.properties[0]) {
         if (isAdmin) {
             var flippercontainer = $('<div />', { "id": "flip-container_" + widget.id, 'class' : 'flip-container' }); //ontouchstart="this.classList.toggle('hover');">')
             // var flipper =$('<div />').addClass('flipper');
             var front =$('<div />').addClass('front');
             var back = $('<div />').addClass('back').html('this is the Admin side which will contain a form');
-
         }
         wtext = widget.properties[0];
-        var title = $('<h4 />').html(widget.name)
+        var title = $('<h4 />').html(widget.name);
         var sub = $('<br />'); // $('<span />').addClass('text-muted').html(wtext);
         if (wtext == "addImageCollection") {
             var maddiv = $('<div/>', { "id": "widgetmap_" + widget.id, 'class' : 'minmapwidget' });
@@ -578,9 +553,7 @@ function addWidget(widget) {
             flippercontainer.append(back);
             //flippercontainer.append(flipper)
             panel.append(flippercontainer);
-        }
-        else if (wtext == "timeSeriesGraph")
-        {
+        } else if (wtext == "timeSeriesGraph") {
             //build graph here
             var graphdiv = $('<div/>', { "id": "widgetgraph_" + widget.id, 'class': 'minmapwidget' });
             var graphcontainer = $('<div/>', { 'id': 'graphcontainer_' + widget.id, 'class': 'minmapwidget' });
@@ -591,19 +564,14 @@ function addWidget(widget) {
             back.append(getTimeSeriesGraphForm(widget));
             flippercontainer.append(back);
             panel.append(flippercontainer);
-        }
-        else if (wtext == "getStats")
-        {
-
+        } else if (wtext == "getStats") {
             var statsDiv = $('<div/>', { "id": "widgetstats_" + widget.id, 'class': 'minmapwidget' });
             // var header = $('<div/>', { 'style': 'padding-left:20px;padding-top:20px;' });
             //var wtitle = $('<span/>', { 'style': 'color: #333333; font-size: 18px;' }).html('Key Information');
-
             //header.append(wtitle).append($('<br/>')).append($('<br/>'));
             //statsDiv.append(header);
             //build table here
-
-            var content = "<table style='border:0px; width:100%'>"
+            var content = "<table style='border:0px; width:100%'>";
             //total pop
             content += '<tr style="padding-top:20px;"><td style="width:80px"  class="statsWidget">';
             content += '<img src="img/icon_population.png" style="width: 50px; height: 50px; -webkit-border-radius: 25px; -moz-border-radius: 25px; border-radius: 25px; background-color: #e2843a; "></td>';
@@ -619,9 +587,8 @@ function addWidget(widget) {
             content += '<img src="img/icon_elevation.png" style="width: 50px; height: 50px; -webkit-border-radius: 25px; -moz-border-radius: 25px; border-radius: 25px; background-color: #e2843a; "></td>';
             content += '<td class="statsWidget"><span style="color:#787878">Elevation</span><h4 id="elevationRange_' + widget.id + '" style="color: #606060; font-size: 16px; font-weight: bold; "></h4><img src="static/img/loading.gif" id="loading-indicator-1" style="display:none" />';
             content += '</td></tr>';
-
             //close table
-            content += "</table>"
+            content += "</table>";
 
             statsDiv.append(content);
             statsDiv.append(title).append(sub);
@@ -629,8 +596,7 @@ function addWidget(widget) {
             flippercontainer.append(front);
             flippercontainer.append(back);
             panel.append(flippercontainer);
-        }
-        else {
+        } else {
             img = $('<img>'); //Equivalent: $(document.createElement('img'))
             img.attr('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==');
             img.attr('width', '200');
@@ -644,8 +610,8 @@ function addWidget(widget) {
     return awidget;
     // $("#dashHolder").append('<h1 class="page-header">Dashboard</h1>');
 }
-function getTimeSeriesGraphForm(which)
-{
+
+function getTimeSeriesGraphForm(which) {
     var theForm = $('<div />');
     theForm.append('<div class="appm">Edit widget</div>');
     var theTable = $("<table />", { width: '100%' });
@@ -661,8 +627,8 @@ function getTimeSeriesGraphForm(which)
     theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
     return theForm;
 }
-function getImageCollectionForm(which)
-{
+
+function getImageCollectionForm(which) {
     var theForm = $('<div />');
     theForm.append('<div class="appm">Edit widget</div>');
     var theTable = $("<table />", { width: '100%' });
@@ -670,8 +636,7 @@ function getImageCollectionForm(which)
     theTable.append('<tr><td><span>Image Collection: <span></td><td><input type="text" placeholder="Image Collection" id="collection_' + which.id + '" name="imagecollection" value="' + which.properties[1] + '"/></td></tr>');
     theTable.append('<tr><td colspan="2"><input type="text" placeholder="Start Date" id="sDate_' + which.id + '" name="sDate" value="' + which.properties[2] + '"/> to <input type="text" placeholder="End Date" id="eDate_' + which.id + '" name="eDate" value="' + which.properties[3] + '"/></td></tr>');
     var columns = 3;
-    if (which.width)
-    {
+    if (which.width) {
         columns = which.width;
     }
     theTable.append('<tr><td><span>Columns: <span></td><td><input type="text" placeholder="Columns" id="columns_' + which.id + '" name="columns" value="' + columns + '"/></td></tr>');
@@ -679,19 +644,22 @@ function getImageCollectionForm(which)
     theForm.append('<br><input type="submit" id="savebutton" value="Save" />');
     return theForm;
 }
+
 function getParameterByName(name, url) {
     if (!url) {
         url = window.location.href;
     }
     name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+    var results = regex.exec(url);
+    if (!results) { return null; }
+    if (!results[2]) { return ''; }
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
+
 var mapWidgetArray = {};
 var graphWidgetArray = {};
+
 function enableMapWidget(mapdiv) {
     var raster = new ol.layer.Tile({
         source: new ol.source.OSM()
@@ -708,6 +676,7 @@ function enableMapWidget(mapdiv) {
     });
     mapWidgetArray[mapdiv] = map;
 }
+
 function addTileServer(imageid, token, mapdiv) {
     var googleLayer = new ol.layer.Tile({
         source: new ol.source.XYZ({
@@ -716,7 +685,9 @@ function addTileServer(imageid, token, mapdiv) {
     });
     mapWidgetArray[mapdiv].addLayer(googleLayer);
 }
+
 var o1, o2;
+
 function swapElements(obj1, obj2) {
     // create marker element and insert it where obj1 is
     obj1 = obj1.get(0);
@@ -725,20 +696,20 @@ function swapElements(obj1, obj2) {
     if (obj1.parentNode) {
         obj1.parentNode.insertBefore(temp, obj1);
         console.info('0');
-    }
-    else {
+    } else {
         obj1.parent().insertBefore(temp, obj1);
         console.info('1');
     }
+
     if (obj2.parentNode) {
         // move obj1 to right before obj2
         obj2.parentNode.insertBefore(obj1, obj2);
         console.info('2');
-    }
-    else {
+    } else {
         obj2.parent().insertBefore(obj1, obj2);
         console.info('3');
     }
+
     if (temp.parentNode) {
         // move obj2 to right before where obj1 used to be
         temp.parentNode.insertBefore(obj2, temp);
@@ -746,14 +717,11 @@ function swapElements(obj1, obj2) {
         // remove temporary marker node
         temp.parentNode.removeChild(temp);
         console.info('5');
-    }
-    else {
+    } else {
         temp.parent().insertBefore(obj2, temp);
         console.info('6');
         // remove temporary marker node
         temp.parent().removeChild(temp);
         console.info('7');
     }
-
-
 }
