@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="collectEarth">
     <head>
-        <title>Collect Earth Online</title>
         <meta charset="utf-8">
-        <meta content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by Spatial Informatics Group" name="description">
-        <meta content="collect earth online image analysis crowdsourcing platform asia mekong cambodia thailand laos vietnam myanmar SIG spatial informatics group" name="keywords">
-        <meta content="width=device-width, initial-scale=1.0" name="viewport">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by Spatial Informatics Group">
+        <meta name="keywords" content="collect earth online image analysis crowdsourcing platform SIG spatial informatics group">
+        <title>Collect Earth Online</title>
         <link href="favicon.ico" rel="shortcut icon">
         <link href="css/cssreset-min.css" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:100,400,700" rel="stylesheet" type="text/css">
