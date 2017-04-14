@@ -31,7 +31,7 @@
                 <img id="adpc" src="img/ADPC.jpg">
                 <img id="servir" src="img/servir.png">
             </div>
-            <nav>
+            <nav style="visibility:${nav_visibility}">
                 <ul>
                     <#if role == "admin">
                         <#list ["Home", "About", "Account", "Dashboard", "Admin"] as url>
@@ -60,7 +60,7 @@
                     </#if>
                 </ul>
             </nav>
-            <div id="login-info">
+            <div id="login-info" style="visibility:${nav_visibility}">
                 <p>
                     <#if username??>
                         <#if navlink == "Logout">

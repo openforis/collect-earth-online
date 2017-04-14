@@ -1,4 +1,5 @@
-<#include "geo-header.ftl">
+<#include "header.ftl">
+
 <link href="css/bootstrap.min.css" rel="stylesheet">
 
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->

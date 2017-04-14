@@ -14,6 +14,7 @@ public class Views {
     public static ModelAndView home(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Home");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -23,6 +24,7 @@ public class Views {
     public static ModelAndView about(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "About");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -32,6 +34,7 @@ public class Views {
     public static ModelAndView login(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Login");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -41,6 +44,7 @@ public class Views {
     public static ModelAndView register(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Register");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -50,6 +54,7 @@ public class Views {
     public static ModelAndView password(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Password");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -59,6 +64,7 @@ public class Views {
     public static ModelAndView passwordReset(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Password-Reset");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -70,6 +76,7 @@ public class Views {
     public static ModelAndView logout(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Logout");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -79,6 +86,7 @@ public class Views {
     public static ModelAndView selectProject(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Select-Project");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -98,6 +106,7 @@ public class Views {
     public static ModelAndView account(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Account");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -107,6 +116,7 @@ public class Views {
     public static ModelAndView dashboard(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Dashboard");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -118,6 +128,7 @@ public class Views {
     public static ModelAndView admin(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Admin");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -126,7 +137,8 @@ public class Views {
 
     public static ModelAndView geodash(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
-        model.put("navlink", "Admin");
+        model.put("navlink", "Geo-Dash");
+        model.put("nav_visibility", "hidden");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
@@ -136,6 +148,7 @@ public class Views {
     public static ModelAndView pageNotFound(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Page-Not-Found");
+        model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {"Page Not Found"});
