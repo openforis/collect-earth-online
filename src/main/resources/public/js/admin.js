@@ -59,12 +59,11 @@ admin.controller = function ($scope, $http) {
     }
 
     $scope.getProjectById = function (projectId) {
-        for (var i = 0; i < $scope.projectList.length; i++) {
-            if ($scope.projectList[i].id == projectId) {
-                return $scope.projectList[i];
+        $scope.projectList.find(
+            function (project) {
+                return project.id == projectId;
             }
-        }
-        return null;
+        );
     };
 
     $scope.setCurrentProject = function() {
@@ -211,8 +210,7 @@ var getProjectList = function ($http) {
             return {};
         });
 */
-
-    return ceo_sample_data.project_list;  
+    return ceo_sample_data.project_list;
 }
 
 var postFormData = function (data, $http) {
