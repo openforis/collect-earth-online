@@ -12,7 +12,6 @@ admin.controller = function ($scope, $http) {
     $scope.project = {};
     $scope.project.currentProjectId = "0";
     $scope.currentProject = null;
-    $scope.plotData = null;
     $scope.project.projectName = "";
     $scope.project.projectDescription = "";
     $scope.project.numPlots = "";
@@ -74,11 +73,11 @@ admin.controller = function ($scope, $http) {
 
         if (project) {
             // FIXED: Set using an AJAX request
-            $scope.plotData = $scope.projectList.plot_data[$scope.project.currentProjectId];
+            var plotData = $scope.projectList.plot_data[$scope.project.currentProjectId];
             $scope.project.projectName = project.name;
             $scope.project.projectDescription = project.description;
-            $scope.project.numPlots = $scope.plotData.length;
-            $scope.project.plotRadius = $scope.plotData[0].plot.radius;
+            $scope.project.numPlots = plotData.length;
+            $scope.project.plotRadius = plotData[0].plot.radius;
             if (project.sample_resolution) {
                 $scope.project.sampleType = "gridded";
                 document.getElementById("gridded-sample-type").checked = true;
@@ -90,7 +89,7 @@ admin.controller = function ($scope, $http) {
                 utils.enable_element("samples-per-plot");
                 utils.disable_element("sample-resolution");
             }
-            $scope.project.samplesPerPlot = $scope.plotData[0].samples.length;
+            $scope.project.samplesPerPlot = plotData[0].samples.length;
             $scope.project.sampleResolution = project.sample_resolution || "";
             var boundaryExtent = map_utils.polygon_extent(project.boundary);
             $scope.project.lonMin = boundaryExtent[0];
