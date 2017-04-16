@@ -175,37 +175,30 @@ admin.controller = function ($scope, $http) {
     };
 
     $scope.setCurrentImagery = function () {
-        map_utils.set_current_imagery($scope.project.currentImagery); 
+        map_utils.set_current_imagery($scope.project.currentImagery);
     };
 
-    $scope.removeSampleValueRow = function (sampleValueId) {
-        // Find and remove item from array
-        var i = $scope.project.sampleValues.indexOf(sampleValueId);
-        if(i != 1) {
-           $scope.project.sampleValues.splice(i,1);
-        }	
+    $scope.removeSampleValueRow = function (sampleValueName) {
+        $scope.project.sampleValues = $scope.project.sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.name != sampleValueName;
+            }
+        );
     };
 
     $scope.addSampleValueRow = function () {
-        var id = 0;
-        var imageVal = null;
+        var name = $scope.valueName;
+        var color = $scope.valueColor;
+        var image = $scope.valueImage;
 
-        if ($scope.currentProject) {
-            id = $scope.currentProject.sample_values[$scope.currentProject.sample_values.length - 1].id + 1;
+        if (name != "") {
+            $scope.sampleValues.push({name: name, color: color, image: image});
+            $scope.valueName = "";
+            $scope.valueColor = "#000000";
+            $scope.valueImage = "";
+        } else {
+            alert("A sample value must possess both a name and a color.");
         }
-
-        if ($scope.valueImage) {
-            imageVal = $scope.valueImage;
-        }
-
-        var newSampleItem = {
-            color: $scope.valueColor,
-            value: $scope.valueName,
-            id: id,
-            image: imageVal
-        }
-
-        $scope.project.sampleValues.push(newSampleItem);
     };
 
 };

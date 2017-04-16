@@ -15,10 +15,8 @@
             </div>
             <input id="download-plot-data" class="button" type="button" name="download-plot-data" value="Download Data"
                    ng-click="exportCurrentPlotData()" style="visibility: {{ project.currentProjectId == 0 ? 'hidden' : 'visible' }}">
-
             <input id="create-project" class="button" type="button" name="create-project" ng-click="submitForm($event)"
                    value="{{ project.currentProjectId == 0 ? 'Create and launch this project' : 'Delete this project' }}">
-
             <fieldset id="project-info">
                 <legend>Project Info</legend>
                 <label>Name</label>
@@ -94,11 +92,11 @@
                     <tbody>
                         <tr ng-repeat="sampleValue in project.sampleValues">
                             <td>
-                                <input class="button" type="button" value="-" ng-click="removeSampleValueRow(sampleValue.id)"
+                                <input class="button" type="button" value="-" ng-click="removeSampleValueRow(sampleValue.name)"
                                        style="visibility: {{ currentProjectId == 0 ? 'visible' : 'hidden' }}">
                             </td>
                             <td>
-                                {{ sampleValue.value }}
+                                {{ sampleValue.name }}
                             </td>
                             <td>
                                 <div class="circle" style="background-color: {{ sampleValue.color }}"></div>
