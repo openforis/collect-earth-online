@@ -7,7 +7,19 @@
 var admin = {};
 
 admin.controller = function ($scope, $http) {
-    $scope.projectList = getProjectList($http);
+    $scope.getProjectList = function () {
+        // FIXME:  GARY - Once the get-all-projects route is created, uncomment the block of code below
+        // $http.get("get-all-projects").
+        //     then (function(data) {
+        //         return data;
+        //     }, function(response) {
+        //         console.log(response.status);
+        //         return {};
+        //     });
+        return ceo_sample_data.project_list;
+    };
+
+    $scope.projectList = $scope.getProjectList();
     $scope.currentProjectId = "0";
     $scope.currentProject = null;
     $scope.projectName = "";
@@ -42,17 +54,6 @@ admin.controller = function ($scope, $http) {
         lonmax.value = map_utils.current_bbox.maxlon;
         latmin.value = map_utils.current_bbox.minlat;
         lonmin.value = map_utils.current_bbox.minlon;
-    }
-
-    $scope.deleteCurrentProject = function() {
-        $http.get("archive-project").
-            then (function() {
-                alert("Project \"" + $scope.projectName + "\" has been deleted." + "\n");
-                $scope.currentProjectId = 0;
-                getProjectList();
-            }, function(response) {
-                console.log(response.status);
-            });
     }
 
     $scope.getProjectById = function (projectId) {
@@ -135,6 +136,17 @@ admin.controller = function ($scope, $http) {
         }
     };
 
+    $scope.deleteCurrentProject = function() {
+        $http.get("archive-project").
+            then (function() {
+                alert("Project \"" + $scope.projectName + "\" has been deleted." + "\n");
+                $scope.currentProjectId = 0;
+                $scope.getProjectList();
+            }, function(response) {
+                console.log(response.status);
+            });
+    }
+
     $scope.submitForm = function ($event) {
         if ($scope.currentProjectId != "0") {
             if (confirm("Do you REALLY want to delete this project?!")) {
@@ -185,19 +197,6 @@ admin.controller = function ($scope, $http) {
     };
 
 };
-
-var getProjectList = function ($http) {
-    //  FIXME:  GARY - Once the get-all-projects route is created, uncomment the block of code below
-    /*    $http.get("get-all-projects").
-          then (function(data) {
-          return data;
-          }, function(response) {
-          console.log(response.status);
-          return {};
-          });
-    */
-    return ceo_sample_data.project_list;
-}
 
 angular
     .module("collectEarth")
