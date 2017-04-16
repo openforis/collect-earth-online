@@ -34,10 +34,10 @@ admin.controller = function ($scope, $http) {
     map_utils.enable_dragbox_draw();
 
     map_utils.set_bbox_coords = function () {
-        var latmax = document.getElementById('lat-max');
-        var lonmax = document.getElementById('lon-max');
-        var latmin = document.getElementById('lat-min');
-        var lonmin = document.getElementById('lon-min');
+        var latmax = document.getElementById("lat-max");
+        var lonmax = document.getElementById("lon-max");
+        var latmin = document.getElementById("lat-min");
+        var lonmin = document.getElementById("lon-min");
         latmax.value = map_utils.current_bbox.maxlat;
         lonmax.value = map_utils.current_bbox.maxlon;
         latmin.value = map_utils.current_bbox.minlat;
@@ -45,7 +45,7 @@ admin.controller = function ($scope, $http) {
     }
 
     $scope.deleteCurrentProject = function() {
-        $http.get('archive-project').
+        $http.get("archive-project").
             then (function() {
                 alert("Project \"" + $scope.projectName + "\" has been deleted." + "\n");
                 $scope.currentProjectId = 0;
@@ -188,7 +188,7 @@ admin.controller = function ($scope, $http) {
 
 var getProjectList = function ($http) {
     //  FIXME:  GARY - Once the get-all-projects route is created, uncomment the block of code below
-    /*    $http.get('get-all-projects').
+    /*    $http.get("get-all-projects").
           then (function(data) {
           return data;
           }, function(response) {
@@ -200,5 +200,5 @@ var getProjectList = function ($http) {
 }
 
 angular
-    .module('collectEarth')
-    .controller('admin.controller', admin.controller);
+    .module("collectEarth")
+    .controller("admin.controller", admin.controller);
