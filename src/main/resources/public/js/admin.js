@@ -126,20 +126,19 @@ admin.controller = function ($scope, $http) {
         }
     };
 
-    // FIXED: Set using an AJAX request 
     $scope.exportCurrentPlotData = function () {
-        var projId = {project_id: $scope.project.currentProjectId};
-        var data = JSON.stringify(projId);
-        if ($scope.project.currentProjectId != 0) {
-            $http.post('dump_project_aggregate_data', data).
-            then(function(data) {
-                window.open(data);
-            }, function(response) {
-                console.log(response.status);
-            });
+        var project_id = parseInt($scope.project.currentProjectId);
+        if (project_id != 0) {
+            $http.post("dump-project-aggregate-data",
+                       {project_id: project_id})
+                .then(function successCallback(response) {
+                    window.open(response.data);
+                }, function errorCallback(response) {
+                    console.log(response);
+                    alert("Error downloading data for this project. See the console for more information.");
+                });
         } 
     };
-
 
     $scope.submitForm = function ($event) {
         if ($scope.project.currentProjectId != "0") {
