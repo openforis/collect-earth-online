@@ -43,6 +43,7 @@ admin.controller = function ($scope, $http) {
     map_utils.digital_globe_base_map({div_name: "new-project-map",
                                       center_coords: [102.0, 17.0],
                                       zoom_level: 5});
+
     map_utils.enable_dragbox_draw();
 
     map_utils.set_bbox_coords = function () {
@@ -54,7 +55,7 @@ admin.controller = function ($scope, $http) {
         lonmax.value = map_utils.current_bbox.maxlon;
         latmin.value = map_utils.current_bbox.minlat;
         lonmin.value = map_utils.current_bbox.minlon;
-    }
+    };
 
     $scope.getProjectById = function (projectId) {
         $scope.projectList.find(
@@ -145,7 +146,7 @@ admin.controller = function ($scope, $http) {
             }, function(response) {
                 console.log(response.status);
             });
-    }
+    };
 
     $scope.submitForm = function ($event) {
         if ($scope.currentProjectId != "0") {
