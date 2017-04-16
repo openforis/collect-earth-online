@@ -714,10 +714,6 @@ nav ul li {
   -o-animation: fade-out 5s;
 }
 
-.notification {
-  color: #8B0000;
-}
-
 p.error-message {
   margin-top: 1rem;
   font-size: 1rem;
