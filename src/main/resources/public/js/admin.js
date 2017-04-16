@@ -8,12 +8,13 @@ var admin = {};
 
 admin.controller = function ($scope, $http) {
     $scope.getProjectList = function () {
-        // FIXME:  GARY - Once the get-all-projects route is created, uncomment the block of code below
-        // $http.get("get-all-projects").
-        //     then (function(data) {
-        //         return data;
-        //     }, function(response) {
-        //         console.log(response.status);
+        // FIXME: Replace with an AJAX request
+        // $http.get("get-all-projects")
+        //     .then(function successCallback(response) {
+        //         return response.data;
+        //     }, function errorCallback(response) {
+        //         console.log(response);
+        //         alert("Error retrieving the project list. See the console for more information.");
         //         return {};
         //     });
         return ceo_sample_data.project_list;
@@ -65,8 +66,8 @@ admin.controller = function ($scope, $http) {
         );
     };
 
-    // FIXME: Replace with an AJAX request
     $scope.getPlotData = function (projectId) {
+        // FIXME: Replace with an AJAX request
         return ceo_sample_data.plot_data[projectId];
     };
 
