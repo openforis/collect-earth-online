@@ -65,12 +65,17 @@ admin.controller = function ($scope, $http) {
         );
     };
 
+    // FIXME: Replace with an AJAX request
+    $scope.getPlotData = function (projectId) {
+        return ceo_sample_data.plot_data[projectId];
+    };
+
     $scope.setCurrentProject = function() {
         var project = $scope.getProjectById($scope.currentProjectId);
         $scope.currentProject = project;
 
         if (project) {
-            var plotData = $scope.projectList.plot_data[$scope.currentProjectId];
+            var plotData = $scope.getPlotData(project.id);
             $scope.projectName = project.name;
             $scope.projectDescription = project.description;
             $scope.numPlots = plotData.length;
