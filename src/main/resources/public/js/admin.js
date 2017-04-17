@@ -7,163 +7,165 @@
 var admin = {};
 
 admin.controller = function ($scope, $http) {
-    // FIXED: Set using an AJAX request 
-    $scope.projectList = getProjectList($http);
-    $scope.project = {};
-    $scope.project.currentProjectId = "0";
+    $scope.getProjectList = function () {
+        // FIXME: Replace with an AJAX request
+        // $http.get("get-all-projects")
+        //     .then(function successCallback(response) {
+        //         return response.data;
+        //     }, function errorCallback(response) {
+        //         console.log(response);
+        //         alert("Error retrieving the project list. See the console for more information.");
+        //         return {};
+        //     });
+        return ceo_sample_data.project_list;
+    };
+
+    $scope.projectList = $scope.getProjectList();
+    $scope.currentProjectId = "0";
     $scope.currentProject = null;
-    $scope.plotData = null;
-    $scope.project.projectName = "";
-    $scope.project.projectDescription = "";
-    $scope.project.numPlots = "";
-    $scope.project.plotRadius = "";
-    $scope.project.sampleType = "random";
-    $scope.project.samplesPerPlot = "";
-    $scope.project.sampleResolution = "";
-    $scope.project.lonMin = "";
-    $scope.project.latMin = "";
-    $scope.project.lonMax = "";
-    $scope.project.latMax = "";
-    $scope.project.currentImagery = "DigitalGlobeRecentImagery+Streets";
+    $scope.projectName = "";
+    $scope.projectDescription = "";
+    $scope.numPlots = "";
+    $scope.plotRadius = "";
+    $scope.sampleType = "random";
+    $scope.samplesPerPlot = "";
+    $scope.sampleResolution = "";
+    $scope.lonMin = "";
+    $scope.latMin = "";
+    $scope.lonMax = "";
+    $scope.latMax = "";
+    $scope.currentImagery = "DigitalGlobeRecentImagery+Streets";
     $scope.valueName = "";
     $scope.valueColor = "#000000";
     $scope.valueImage = "";
-    $scope.project.sampleValues = [];
-    $scope.project.isGridded = false;
+    $scope.sampleValues = [];
 
     // Initialize the base map and enable the dragbox interaction
     map_utils.digital_globe_base_map({div_name: "new-project-map",
                                       center_coords: [102.0, 17.0],
                                       zoom_level: 5});
+
     map_utils.enable_dragbox_draw();
 
     map_utils.set_bbox_coords = function () {
-        var latmax = document.getElementById('lat-max');
-        var lonmax = document.getElementById('lon-max');
-        var latmin = document.getElementById('lat-min');
-        var lonmin = document.getElementById('lon-min');
+        var latmax = document.getElementById("lat-max");
+        var lonmax = document.getElementById("lon-max");
+        var latmin = document.getElementById("lat-min");
+        var lonmin = document.getElementById("lon-min");
         latmax.value = map_utils.current_bbox.maxlat;
         lonmax.value = map_utils.current_bbox.maxlon;
         latmin.value = map_utils.current_bbox.minlat;
         lonmin.value = map_utils.current_bbox.minlon;
-    }
-
-    $scope.deleteCurrentProject = function() {
-        $http.get('archive-project').
-            then (function() {
-                alert("Project \"" + $scope.project.projectName + "\" has been deleted." + "\n");
-                $scope.project.currentProjectId = 0;
-                getProjectList();            
-            }, function(response) {
-                console.log(response.status);
-            });
-    }
+    };
 
     $scope.getProjectById = function (projectId) {
-        for (var i = 0; i < $scope.projectList.length; i++) {
-            if ($scope.projectList[i].id == projectId) {
-                return $scope.projectList[i];
+        $scope.projectList.find(
+            function (project) {
+                return project.id == projectId;
             }
-        }
-        return null;
+        );
+    };
+
+    $scope.getPlotData = function (projectId) {
+        // FIXME: Replace with an AJAX request
+        return ceo_sample_data.plot_data[projectId];
     };
 
     $scope.setCurrentProject = function() {
-        var project = $scope.getProjectById($scope.project.currentProjectId);
+        var project = $scope.getProjectById($scope.currentProjectId);
         $scope.currentProject = project;
 
         if (project) {
-            // FIXED: Set using an AJAX request
-            $scope.plotData = $scope.projectList.plot_data[$scope.project.currentProjectId];
-            $scope.project.projectName = project.name;
-            $scope.project.projectDescription = project.description;
-            $scope.project.numPlots = $scope.plotData.length;
-            $scope.project.plotRadius = $scope.plotData[0].plot.radius;
+            var plotData = $scope.getPlotData(project.id);
+            $scope.projectName = project.name;
+            $scope.projectDescription = project.description;
+            $scope.numPlots = plotData.length;
+            $scope.plotRadius = plotData[0].plot.radius;
             if (project.sample_resolution) {
-                $scope.project.sampleType = "gridded";
+                $scope.sampleType = "gridded";
                 document.getElementById("gridded-sample-type").checked = true;
                 utils.enable_element("samples-per-plot");
                 utils.enable_element("sample-resolution");
             } else {
-                $scope.project.sampleType = "random";
+                $scope.sampleType = "random";
                 document.getElementById("random-sample-type").checked = true;
                 utils.enable_element("samples-per-plot");
                 utils.disable_element("sample-resolution");
             }
-            $scope.project.samplesPerPlot = $scope.plotData[0].samples.length;
-            $scope.project.sampleResolution = project.sample_resolution || "";
+            $scope.samplesPerPlot = plotData[0].samples.length;
+            $scope.sampleResolution = project.sample_resolution || "";
             var boundaryExtent = map_utils.polygon_extent(project.boundary);
-            $scope.project.lonMin = boundaryExtent[0];
-            $scope.project.latMin = boundaryExtent[1];
-            $scope.project.lonMax = boundaryExtent[2];
-            $scope.project.latMax = boundaryExtent[3];
-            $scope.project.currentImagery = project.imagery;
-            map_utils.set_current_imagery($scope.project.currentImagery);
+            $scope.lonMin = boundaryExtent[0];
+            $scope.latMin = boundaryExtent[1];
+            $scope.lonMax = boundaryExtent[2];
+            $scope.latMax = boundaryExtent[3];
+            $scope.currentImagery = project.imagery;
+            map_utils.set_current_imagery($scope.currentImagery);
             map_utils.disable_dragbox_draw();
             map_utils.draw_polygon(project.boundary);
-            $scope.project.sampleValues = project.sample_values;
+            $scope.sampleValues = project.sample_values;
         } else {
-            $scope.project.projectName = "";
-            $scope.project.projectDescription = "";
-            $scope.project.numPlots = "";
-            $scope.project.plotRadius = "";
-            $scope.project.sampleType = "random";
+            $scope.projectName = "";
+            $scope.projectDescription = "";
+            $scope.numPlots = "";
+            $scope.plotRadius = "";
+            $scope.sampleType = "random";
             document.getElementById("random-sample-type").checked = true;
             utils.enable_element("samples-per-plot");
             utils.disable_element("sample-resolution");
-            $scope.project.samplesPerPlot = "";
-            $scope.project.sampleResolution = "";
-            $scope.project.lonMin = "";
-            $scope.project.latMin = "";
-            $scope.project.lonMax = "";
-            $scope.project.latMax = "";
-            $scope.project.currentImagery = "DigitalGlobeRecentImagery+Streets";
-            map_utils.set_current_imagery($scope.project.currentImagery);
+            $scope.samplesPerPlot = "";
+            $scope.sampleResolution = "";
+            $scope.lonMin = "";
+            $scope.latMin = "";
+            $scope.lonMax = "";
+            $scope.latMax = "";
+            $scope.currentImagery = "DigitalGlobeRecentImagery+Streets";
+            map_utils.set_current_imagery($scope.currentImagery);
             map_utils.enable_dragbox_draw();
             map_utils.map_ref.removeLayer(map_utils.current_boundary);
             map_utils.current_boundary = null;
             map_utils.zoom_and_recenter_map(102.0, 17.0, 5);
-            $scope.project.sampleValues = [];
+            $scope.sampleValues = [];
         }
     };
 
-    // FIXED: Set using an AJAX request 
     $scope.exportCurrentPlotData = function () {
-        var projId = {project_id: $scope.project.currentProjectId};
-        var data = JSON.stringify(projId);
-        if ($scope.project.currentProjectId != 0) {
-            $http.post('dump_project_aggregate_data', data).
-            then(function(data) {
-                window.open(data);
+        var project_id = parseInt($scope.currentProjectId);
+        if (project_id != 0) {
+            $http.post("dump-project-aggregate-data",
+                       {project_id: project_id})
+                .then(function successCallback(response) {
+                    window.open(response.data);
+                }, function errorCallback(response) {
+                    console.log(response);
+                    alert("Error downloading data for this project. See the console for more information.");
+                });
+        }
+    };
+
+    $scope.deleteCurrentProject = function() {
+        $http.get("archive-project").
+            then (function() {
+                alert("Project \"" + $scope.projectName + "\" has been deleted." + "\n");
+                $scope.currentProjectId = 0;
+                $scope.getProjectList();
             }, function(response) {
                 console.log(response.status);
             });
-        } 
     };
-
 
     $scope.submitForm = function ($event) {
-        if ($scope.project.currentProjectId != "0") {
-           if (confirm("Do you REALLY want to delete this project?!")) {
-               $scope.deleteCurrentProject();
-           } 
-
-           var spinnerElem = document.getElementById("spinner");
-           spinnerElem.style.visibility = "visible";
-           $scope.project.buttonDelete = $event.currentTarget;
-           $scope.project.buttonDelete.value = "Processing...please wait...";
-           
-
-           postFormData($scope.project, $http).
-               then(function(response, data, status, headers) {
-                   spinnerElem.style.visibility = "hidden";
-                   response.config.data["buttonDelete"].value = "Delete this project";
-               }, function(response) { 
-                   console.log(response.status);
-               });
+        if ($scope.currentProjectId != "0") {
+            if (confirm("Do you REALLY want to delete this project?!")) {
+                $scope.deleteCurrentProject();
+            }
+        } else {
+            $event.currentTarget.value = "Processing...please wait...";
+            document.getElementById("spinner").style.visibility = "visible";
+            document.getElementById("project-management-form").submit();
         }
     };
-  
+
     $scope.setSampleType = function (sampleType) {
         if (sampleType == "random") {
             utils.enable_element("samples-per-plot");
@@ -175,60 +177,34 @@ admin.controller = function ($scope, $http) {
     };
 
     $scope.setCurrentImagery = function () {
-        map_utils.set_current_imagery($scope.project.currentImagery); 
+        map_utils.set_current_imagery($scope.currentImagery);
     };
 
-    $scope.removeSampleValueRow = function (sampleValueId) {
-        // Find and remove item from array
-        var i = $scope.project.sampleValues.indexOf(sampleValueId);
-        if(i != 1) {
-           $scope.project.sampleValues.splice(i,1);
-        }	
+    $scope.removeSampleValueRow = function (sampleValueName) {
+        $scope.sampleValues = $scope.sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.name != sampleValueName;
+            }
+        );
     };
 
     $scope.addSampleValueRow = function () {
-        var id = 0;
-        var imageVal = null;
+        var name = $scope.valueName;
+        var color = $scope.valueColor;
+        var image = $scope.valueImage;
 
-        if ($scope.currentProject) {
-            id = $scope.currentProject.sample_values[$scope.currentProject.sample_values.length - 1].id + 1;
+        if (name != "") {
+            $scope.sampleValues.push({name: name, color: color, image: image});
+            $scope.valueName = "";
+            $scope.valueColor = "#000000";
+            $scope.valueImage = "";
+        } else {
+            alert("A sample value must possess both a name and a color.");
         }
-
-        if ($scope.valueImage) {
-            imageVal = $scope.valueImage;
-        }
-
-        var newSampleItem = {
-            color: $scope.valueColor,
-            value: $scope.valueName,
-            id: id,
-            image: imageVal
-        }
-
-        $scope.project.sampleValues.push(newSampleItem);
     };
 
 };
 
-var getProjectList = function ($http) {
-//  FIXME:  GARY - Once the get-all-projects route is created, uncomment the block of code below
-/*    $http.get('get-all-projects').
-        then (function(data) {
-            return data;
-        }, function(response) {
-            console.log(response.status);
-            return {};
-        });
-*/
-
-    return ceo_sample_data.project_list;  
-}
-
-var postFormData = function (data, $http) {
-   return $http.post('admin', data);
-}
-
-
 angular
-    .module('collectEarth')
-    .controller('admin.controller', admin.controller);
+    .module("collectEarth")
+    .controller("admin.controller", admin.controller);

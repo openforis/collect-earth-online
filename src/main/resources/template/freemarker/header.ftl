@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="collectEarth">
     <head>
-        <title>Collect Earth Online</title>
         <meta charset="utf-8">
-        <meta content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by Spatial Informatics Group" name="description">
-        <meta content="collect earth online image analysis crowdsourcing platform asia mekong cambodia thailand laos vietnam myanmar SIG spatial informatics group" name="keywords">
-        <meta content="width=device-width, initial-scale=1.0" name="viewport">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by Spatial Informatics Group">
+        <meta name="keywords" content="collect earth online image analysis crowdsourcing platform SIG spatial informatics group">
+        <title>Collect Earth Online</title>
         <link href="favicon.ico" rel="shortcut icon">
         <link href="css/cssreset-min.css" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:100,400,700" rel="stylesheet" type="text/css">
@@ -22,15 +23,43 @@
         <script type="text/javascript" src="js/ceo_sample_data.js"></script>
         <!-- <script type="text/javascript" src="js/angular-route.min.js"></script> -->
         <script type="text/javascript" src="js/collect-earth.js"></script>
+        <#if navlink == "Geo-Dash">
+        <!----------------------------------------------------------------->
+        <!-- BEGIN: Billy's GEODASH libraries -->
+        <!----------------------------------------------------------------->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+        <link href="css/geo-dash.css" rel="stylesheet">
+        <script src="js/ie-emulation-modes-warning.js"></script>
+        <!-- Respond.js for IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery-3.1.1.min.js"></script>
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script src="https://cdn.rawgit.com/nnattawat/flip/master/dist/jquery.flip.min.js"></script>
+        <!--------------------------------------------------------------->
+        <!-- END: Billy's GEODASH libraries, FIXME: Simplify this list -->
+        <!--------------------------------------------------------------->
+        </#if>
     </head>
     <body ng-controller="ctlBody">
+        <#if nav_visibility == "visible">
         <header>
+        <#else>
+        <header style="height:55px">
+        </#if>
             <div id="logos">
                 <img id="usaid" src="img/usaid.png">
                 <img id="nasa" src="img/nasa.png">
                 <img id="adpc" src="img/ADPC.jpg">
                 <img id="servir" src="img/servir.png">
             </div>
+            <#if nav_visibility == "visible">
             <nav>
                 <ul>
                     <#if role == "admin">
@@ -77,8 +106,13 @@
                     </#if>
                 </p>
             </div>
+            </#if>
         </header>
+        <#if nav_visibility == "visible">
         <section id="content">
+        <#else>
+        <section id="content" style="top:55px;height:calc(100vh - 55px)">
+        </#if>
             <#list flash_messages>
                 <div class="alert">
                     <#items as flash_message>
