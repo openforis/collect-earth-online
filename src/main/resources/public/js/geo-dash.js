@@ -489,10 +489,14 @@
                 }
             }
             $('.input-daterange input').each(function() {
+            try{
                 $(this).datepicker({
                                          changeMonth: true,
-                                         changeYear: true
+                                         changeYear: true,
+                                         dateFormat: 'yy-mm-dd'
                                        });
+                                       }
+                                       catch(e){}
             });
             //a74a24f2a0c84ce1111e34818cc06318
             //c4739ba8174f2c096a6447b144a8b5a1

@@ -52,9 +52,17 @@ public class Server implements SparkApplication {
         get("/account",         Views.account,       renderer);
         get("/dashboard",       Views.dashboard,     renderer);
         get("/admin",           Views.admin,         renderer);
-        post("/clone",          Views.clone); // FIXME: replace
+        //post("/clone",          Views.clone); // FIXME: replace
         get("/geo-dash",        Views.geodash,       renderer);
-        get("/geo-dash/id/:id", Views.geodashId);
+        get("/geo-dash/id/:id", (req, res) -> {
+            return Geo_Dash_Utils.GetDashBoardByID(req, res);
+        });
+        get("/geo-dash/update/id/:id", (req, res) -> {
+            return Geo_Dash_Utils.UpdateDashBoardByID(req, res);
+        });
+        get("/geo-dash/updatewidget/id/widget/:id", (req, res) -> {
+            return Geo_Dash_Utils.UpdateDashBoardWidgetByID(req, res);
+        });
         get("*",                Views.pageNotFound,  renderer);
 
         // Handle Exceptions
@@ -64,7 +72,7 @@ public class Server implements SparkApplication {
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
         // Set the webserver port
-        port(8080);
+        port(8081);
 
         // Set up the routing table
         declareRoutes();

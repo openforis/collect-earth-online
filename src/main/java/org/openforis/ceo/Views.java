@@ -132,9 +132,10 @@ public class Views {
         return new ModelAndView(model, "admin.ftl");
     };
 
-    public static TemplateViewRoute clone = (Request req, Response rsp) -> {
+    /*public static TemplateViewRoute clone = (Request req, Response rsp) -> {
         return req.body();
     };
+    */
 
     public static TemplateViewRoute geodash = (Request req, Response rsp) -> {
         Map<String, Object> model = new HashMap<String, Object>();
@@ -154,7 +155,7 @@ public class Views {
         return new ModelAndView(model, "page-not-found.ftl");
     };
 
-    public static TemplateViewRoute geodashId = (Request req, Response res) -> {
+   /* public static TemplateViewRoute geodashId = (Request req, Response res) -> {
         boolean isAdmin = true; //Need to link to user and check
         String returnString = "";
         JSONParser projectParser = new JSONParser();
@@ -220,5 +221,6 @@ public class Views {
         return returnString ;
 
     };
+    */
 
 }
