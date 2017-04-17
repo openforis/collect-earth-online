@@ -74,7 +74,7 @@ dashboard.controller = function ($scope) {
         var elt = document.getElementById('project-id');
         var title = elt.options[elt.selectedIndex].text;
         var pid = elt.options[elt.selectedIndex].value;
-        var url = "http://localhost:8081/geo-dash?title=" + title + "&pid=" + pid + "&aoi=[" + aOIExtent + "]&daterange=";
+        var url = "geo-dash?title=" + title + "&pid=" + pid + "&aoi=[" + aOIExtent + "]&daterange=";
         window.open(url, '_geo-dash');
     };
 
