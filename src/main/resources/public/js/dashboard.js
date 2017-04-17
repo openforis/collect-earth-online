@@ -66,17 +66,12 @@ dashboard.controller = function ($scope, $http) {
         utils.disable_element("save-values-button");
         map_utils.draw_buffer(newPlot.center, newPlot.radius);
         map_utils.draw_points(newSamples);
-        var map = map_utils.map_ref;
-
-        var aOIExtent= ol.proj.transformExtent(map.getView().calculateExtent(map.getSize()), 'EPSG:3857', 'EPSG:4326');
-
-        console.info(aOIExtent + "***********");
-
-        var elt = document.getElementById('project-id');
-        var title = elt.options[elt.selectedIndex].text;
-        var pid = elt.options[elt.selectedIndex].value;
-        var url = "http://localhost:8081/geo-dash?title=" + title + "&pid=" + pid + "&aoi=[" + aOIExtent + "]&daterange=";
-        window.open(url, '_geo-dash');
+        console.info(map_utils.get_view_extent() + "***********");
+        window.open("geo-dash?title=" + $scope.currentProject.name
+                    + "&pid=" + $scope.currentProjectId
+                    + "&aoi=[" + map_utils.get_view_extent()
+                    + "]&daterange=",
+                    "_geo-dash");
     };
 
     $scope.setCurrentValue = function (sampleValue) {

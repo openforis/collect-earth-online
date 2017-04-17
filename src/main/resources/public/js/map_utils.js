@@ -34,6 +34,13 @@ map_utils.get_full_extent = function () {
     return [llxy[0], llxy[1], urxy[0], urxy[1]];
 };
 
+map_utils.get_view_extent = function () {
+    var view = map_utils.map_ref.getView();
+    var size = map_utils.map_ref.getSize();
+    var extent = view.calculateExtent(size);
+    return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+};
+
 /*****************************************************************************
 ***
 *** Create the default OpenLayers Map Object used on all pages
