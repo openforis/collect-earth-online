@@ -37,14 +37,14 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         };
     };
 
-    // FIXME: Replace with an AJAX request
+    // FIXME: Replace with an AJAX request and implement this endpoint
     this.getProjectList = function () {
         // $http.get("get-all-projects")
         //     .then(function successCallback(response) {
         //         return response.data;
         //     }, function errorCallback(response) {
         //         console.log(response);
-        //         alert("Error retrieving the project list. See the console for more information.");
+        //         alert("Error retrieving the project list. See console for details.");
         //         return [];
         //     });
         return ceo_sample_data.project_list;
@@ -58,7 +58,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         );
     };
 
-    // FIXME: Replace with an AJAX request
+    // FIXME: Replace with an AJAX request and implement this endpoint
     this.getPlotData = function (projectId) {
         return ceo_sample_data.plot_data[projectId];
     };
@@ -121,30 +121,37 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         }
     };
 
+    // FIXME: Implement this endpoint
     this.exportCurrentPlotData = function () {
-        var project_id = parseInt(this.currentProjectId);
-        if (project_id != 0) {
+        var projectId = parseInt(this.currentProjectId);
+        if (projectId != 0) {
             $http.post("dump-project-aggregate-data",
-                       {project_id: project_id})
+                       {project_id: projectId})
                 .then(function successCallback(response) {
                     window.open(response.data);
                 }, function errorCallback(response) {
                     console.log(response);
-                    alert("Error downloading data for this project. See the console for more information.");
+                    alert("Error downloading data for this project. See console for details.");
                 });
         }
     };
 
-    // FIXME: Needs to be translated correctly from admin.cljs
+    // FIXME: Implement this endpoint
     this.deleteCurrentProject = function () {
-        $http.get("archive-project").
-            then (function() {
-                alert("Project \"" + this.projectName + "\" has been deleted." + "\n");
-                this.currentProjectId = "0";
-                this.getProjectList();
-            }, function(response) {
-                console.log(response.status);
-            });
+        var projectId = parseInt(this.currentProjectId);
+        if (projectId != 0) {
+            $http.post("archive-project",
+                       {project_id: projectId})
+                .then(function successCallback(response) {
+                    alert("Project " + projectId + " has been deleted.");
+                    this.currentProjectId = "0";
+                    this.setCurrentProject();
+                    this.projectList = this.getProjectList();
+                }, function errorCallback(response) {
+                    console.log(response);
+                    alert("Error archiving project. See console for details.");
+                });
+        }
     };
 
     this.submitForm = function ($event) {
