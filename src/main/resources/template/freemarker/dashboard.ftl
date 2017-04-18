@@ -18,7 +18,7 @@
                 <legend>3. Assign Values</legend>
                 <ul>
                     <li ng-repeat="sample in dashboard.currentProject.sample_values">
-                        <input type="button" id="{{ sample.id }}" name="{{ sample.value + '_' + sample.id }}" value="{{ sample.value }}"
+                        <input type="button" id="{{ sample.id }}" name="{{ sample.name + '_' + sample.id }}" value="{{ sample.name }}"
                                style="border-left:1.5rem solid {{ sample.color }}" ng-click="dashboard.setCurrentValue(sample)">
                     </li>
                 </ul>
