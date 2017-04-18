@@ -1,4 +1,4 @@
-angular.module("admin", []).controller("AdminController", function AdminController() {
+angular.module("admin", []).controller("AdminController", ["$http", function AdminController($http) {
     this.projectList = [];
     this.currentProjectId = "0";
     this.currentProject = null;
@@ -37,7 +37,7 @@ angular.module("admin", []).controller("AdminController", function AdminControll
         };
     };
 
-    // FIXME: Needs $http
+    // FIXME: Replace with an AJAX request
     this.getProjectList = function () {
         // $http.get("get-all-projects")
         //     .then(function successCallback(response) {
@@ -121,7 +121,6 @@ angular.module("admin", []).controller("AdminController", function AdminControll
         }
     };
 
-    // FIXME: Needs $http
     this.exportCurrentPlotData = function () {
         var project_id = parseInt(this.currentProjectId);
         if (project_id != 0) {
@@ -136,8 +135,8 @@ angular.module("admin", []).controller("AdminController", function AdminControll
         }
     };
 
-    // FIXME: Needs $http and needs to be translated correctly from admin.cljs
-    this.deleteCurrentProject = function() {
+    // FIXME: Needs to be translated correctly from admin.cljs
+    this.deleteCurrentProject = function () {
         $http.get("archive-project").
             then (function() {
                 alert("Project \"" + this.projectName + "\" has been deleted." + "\n");
@@ -197,4 +196,4 @@ angular.module("admin", []).controller("AdminController", function AdminControll
         }
     };
 
-});
+}]);
