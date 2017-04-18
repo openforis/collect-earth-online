@@ -77,7 +77,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         utils.disable_element("save-values-button");
         map_utils.draw_buffer(newPlot.center, newPlot.radius);
         map_utils.draw_points(newSamples);
-        console.info(map_utils.get_view_extent() + "***********");
+        console.log("AOI: " + map_utils.get_view_extent());
         window.open("geo-dash?title=" + this.currentProject.name
                     + "&pid=" + this.currentProjectId
                     + "&aoi=[" + map_utils.get_view_extent()
@@ -87,16 +87,16 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
 
     this.setCurrentValue = function (sampleValue) {
         var selectedFeatures = map_utils.get_selected_samples();
-        if (selectedFeatures) {
-            var samples = selectedFeatures.getArray();
-            utils.blink_border(sampleValue.id);
-            for (var i = 0; i < samples.length; i++) {
-                var sample = samples[i];
-                var sampleId = sample.get("sample_id");
-                this.userSamples[sampleId] = sampleValue.id;
-                map_utils.highlight_sample(sample, sampleValue.color)
-            }
+        if (selectedFeatures && selectedFeatures.getLength() > 0) {
+            selectedFeatures.forEach(
+                function (sample) {
+                    this.userSamples[sample.get("sample_id")] = sampleValue.id;
+                    map_utils.highlight_sample(sample, sampleValue.color);
+                },
+                this // necessary to pass outer scope into function
+            );
             selectedFeatures.clear();
+            utils.blink_border(sampleValue.id);
             if (Object.keys(this.userSamples).length == this.currentSamples.length) {
                 utils.enable_element("save-values-button");
             }
@@ -105,6 +105,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         }
     };
 
+    // FIXME: Implement this endpoint
     this.saveValues = function () {
         var userId = parseInt(document.getElementById("user-id").value);
         var plotId = this.currentPlot.id;
@@ -125,6 +126,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             });
     };
 
+    // FIXME: Implement this endpoint
     this.flagPlot = function () {
         var plotId = this.currentPlot.id;
         $http.post("flag-plot", plotId)
