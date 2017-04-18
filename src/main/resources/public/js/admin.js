@@ -19,7 +19,23 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.valueColor = "#000000";
     this.valueImage = "";
 
-    this.initializeMap = function () {
+    // FIXME: Replace with an AJAX request and implement this endpoint
+    this.getProjectList = function () {
+        // $http.get("get-all-projects")
+        //     .then(function successCallback(response) {
+        //         return response.data;
+        //     }, function errorCallback(response) {
+        //         console.log(response);
+        //         alert("Error retrieving the project list. See console for details.");
+        //         return [];
+        //     });
+        return ceo_sample_data.project_list;
+    };
+
+    this.initialize = function () {
+        // Load the projectList
+        this.projectList = this.getProjectList();
+
         // Initialize the base map and enable the dragbox interaction
         map_utils.digital_globe_base_map({div_name: "new-project-map",
                                           center_coords: [102.0, 17.0],
@@ -35,19 +51,6 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
             latmin.value = map_utils.current_bbox.minlat;
             lonmin.value = map_utils.current_bbox.minlon;
         };
-    };
-
-    // FIXME: Replace with an AJAX request and implement this endpoint
-    this.getProjectList = function () {
-        // $http.get("get-all-projects")
-        //     .then(function successCallback(response) {
-        //         return response.data;
-        //     }, function errorCallback(response) {
-        //         console.log(response);
-        //         alert("Error retrieving the project list. See console for details.");
-        //         return [];
-        //     });
-        return ceo_sample_data.project_list;
     };
 
     this.getProjectById = function (projectId) {

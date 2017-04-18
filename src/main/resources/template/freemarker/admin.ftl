@@ -2,7 +2,7 @@
 
 <script type="text/javascript" src="js/admin.js"></script>
 
-<div id="admin" ng-app="admin" ng-controller="AdminController as admin" ng-init="admin.initializeMap(); admin.projectList = admin.getProjectList();">
+<div id="admin" ng-app="admin" ng-controller="AdminController as admin" ng-init="admin.initialize()">
     <h1>Project Management</h1>
     <div id="create-project-form">
         <form id="project-management-form" method="post" action="admin">
