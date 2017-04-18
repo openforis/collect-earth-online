@@ -18,7 +18,7 @@ public class AJAX {
         return req.body();
     }
 
-    public static String expandResourcePath(String filename) {
+    private static String expandResourcePath(String filename) {
         return AJAX.class.getResource(filename).getFile();
     }
 
