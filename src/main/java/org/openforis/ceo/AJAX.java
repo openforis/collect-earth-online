@@ -6,14 +6,9 @@ import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.net.URLDecoder;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import spark.Request;
 import spark.Response;
 
@@ -91,52 +86,6 @@ public class AJAX {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-    public static String UpdateDashBoardByID(Request req, Response res)
-    {
-        String returnString = "";
-
-/* Code will go here to update dashboard*/
-
-
-        return  returnString;
-    }
-    public static String UpdateDashBoardWidgetByID(Request req, Response res) {
-        String geodashDataDir = expandResourcePath("/public/json/");
-        String returnString = "Update Success";
-        try {
-            String widgetID = req.params(":id");
-            String dashID = req.queryParams("dashID");
-            String widgetJSON = URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8");
-            JSONParser parser2 = new JSONParser();
-            JSONObject dashboardObj = (JSONObject)parser2.parse(new FileReader(geodashDataDir + "dash-" + dashID + ".json"));
-            JSONArray jsonMainArr = (JSONArray)dashboardObj.get("widgets");
-            JSONArray finalArr = new JSONArray();
-            for (int i = 0; i < jsonMainArr.size(); i++) {  // **line 2**
-                JSONObject childJSONObject = (JSONObject)jsonMainArr.get(i);
-                String wID = (String)childJSONObject.get("id").toString();
-                if(wID.equals(widgetID))
-                {
-                    JSONParser parser = new JSONParser();
-                    childJSONObject =  (JSONObject) parser.parse(widgetJSON);;
-                }
-                finalArr.add(childJSONObject);
-            }
-            dashboardObj.remove("widgets");
-            dashboardObj.put("widgets", finalArr);
-            new FileWriter(geodashDataDir +"dash-" + dashID + ".json").write(returnString);
-            try (FileWriter file = new FileWriter(geodashDataDir +"dash-" + dashID + ".json")) {
-                file.write(dashboardObj.toString());
-            }
-
-        } catch (Exception e) {
-
-            returnString = e.getMessage();
-        }
-        if (req.queryParams("callback") != null) {
-            returnString = req.queryParams("callback").toString() + "()";
-        }
-        return returnString;
     }
 
 }

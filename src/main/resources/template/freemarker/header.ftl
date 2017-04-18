@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="collectEarth">
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -21,8 +21,6 @@
         <script type="text/javascript" src="js/map_utils.js"></script>
         <script type="text/javascript" src="js/utils.js"></script>
         <script type="text/javascript" src="js/ceo_sample_data.js"></script>
-        <!-- <script type="text/javascript" src="js/angular-route.min.js"></script> -->
-        <script type="text/javascript" src="js/collect-earth.js"></script>
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
         <!-- BEGIN: Billy's GEODASH libraries -->
@@ -30,7 +28,6 @@
         <link href="css/bootstrap.min.css" rel="stylesheet">
         <link href="css/ie10-viewport-bug-workaround.css" rel="stylesheet">
         <link href="css/geo-dash.css" rel="stylesheet">
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
         <script src="js/ie-emulation-modes-warning.js"></script>
         <!-- Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -41,7 +38,6 @@
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="js/bootstrap.min.js"></script>
         <script src="js/jquery-3.1.1.min.js"></script>
-        <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script src="https://code.highcharts.com/highcharts.js"></script>
         <script src="https://cdn.rawgit.com/nnattawat/flip/master/dist/jquery.flip.min.js"></script>
         <!--------------------------------------------------------------->
@@ -49,7 +45,7 @@
         <!--------------------------------------------------------------->
         </#if>
     </head>
-    <body ng-controller="ctlBody">
+    <body>
         <#if nav_visibility == "visible">
         <header>
         <#else>

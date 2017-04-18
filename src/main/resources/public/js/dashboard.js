@@ -1,45 +1,53 @@
-/*****************************************************************************
- ***
- *** Create the dashboard object to act as a namespace for this file
- ***
- *****************************************************************************/
+angular.module("dashboard", []).controller("DashboardController", ["$http", function DashboardController($http) {
+    this.projectList = [];
+    this.currentProjectId = "";
+    this.currentProject = null;
+    this.currentPlot = null;
+    this.currentSamples = [];
+    this.userSamples = {};
 
-var dashboard = {};
-
-dashboard.controller = function ($scope) {
-    // FIXME: Set using an AJAX request
-    $scope.projectList = ceo_sample_data.project_list;
-
-    $scope.getProjectById = function (projectId) {
-        for (var i = 0; i < $scope.projectList.length; i++) {
-            if ($scope.projectList[i].id == projectId) {
-                return $scope.projectList[i];
-            }
-        }
-        return null;
+    // FIXME: Implement this endpoint
+    this.getProjectList = function () {
+        // $http.get("get-all-projects")
+        //     .then(function successCallback(response) {
+        //         return response.data;
+        //     }, function errorCallback(response) {
+        //         console.log(response);
+        //         alert("Error retrieving the project list. See console for details.");
+        //         return [];
+        //     });
+        return ceo_sample_data.project_list;
     };
 
-    $scope.currentProjectId = document.getElementById("initial-project-id").value;
-    $scope.currentProject = $scope.getProjectById($scope.currentProjectId);
-    $scope.currentPlot = null;
-    $scope.currentSamples = [];
-    $scope.userSamples = {};
+    this.getProjectById = function (projectId) {
+        return this.projectList.find(
+            function (project) {
+                return project.id == projectId;
+            }
+        );
+    };
 
-    // Initialize the base map and show the selected project's boundary
-    map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
-                                      center_coords: [102.0, 17.0],
-                                      zoom_level: 5});
-    map_utils.set_current_imagery($scope.currentProject.imagery);
-    map_utils.draw_polygon($scope.currentProject.boundary);
+    this.initialize = function () {
+        // Load the projectList and currentProject
+        this.projectList = this.getProjectList();
+        this.currentProjectId = document.getElementById("initial-project-id").value;
+        this.currentProject = this.getProjectById(parseInt(this.currentProjectId));
 
-    $scope.switchProject = function () {
-        var newProject = $scope.getProjectById($scope.currentProjectId);
+        // Initialize the base map and show the selected project's boundary
+        map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
+                                          center_coords: [102.0, 17.0],
+                                          zoom_level: 5});
+        map_utils.set_current_imagery(this.currentProject.imagery);
+        map_utils.draw_polygon(this.currentProject.boundary);
+    };
 
+    this.switchProject = function () {
+        var newProject = this.getProjectById(parseInt(this.currentProjectId));
         if (newProject) {
-            $scope.currentProject = newProject;
-            $scope.currentPlot = null;
-            $scope.currentSamples = [];
-            $scope.userSamples = {};
+            this.currentProject = newProject;
+            this.currentPlot = null;
+            this.currentSamples = [];
+            this.userSamples = {};
             map_utils.remove_plot_layer();
             map_utils.remove_sample_layer();
             map_utils.disable_selection();
@@ -51,46 +59,54 @@ dashboard.controller = function ($scope) {
         }
     };
 
-    $scope.loadRandomPlot = function () {
-        // FIXME: Set using an AJAX request
-        var currentProjectPlots = ceo_sample_data.plot_data[$scope.currentProjectId];
+    // FIXME: Implement this endpoint
+    this.getPlotData = function (projectId) {
+        // $http.post("get-project-plots",
+        //            {project_id: projectId})
+        //     .then(function successCallback(response) {
+        //         return response.data;
+        //     }, function errorCallback(response) {
+        //         console.log(response);
+        //         alert("Error retrieving plot data. See console for details.");
+        //         return [];
+        //     });
+        return ceo_sample_data.plot_data[projectId];
+    };
+
+    this.loadRandomPlot = function () {
+        var currentProjectPlots = this.getPlotData(parseInt(this.currentProjectId));
         var randomIndex = Math.floor(Math.random() * currentProjectPlots.length);
         var newPlot = currentProjectPlots[randomIndex].plot;
         var newSamples = currentProjectPlots[randomIndex].samples;
-        $scope.currentPlot = newPlot;
-        $scope.currentSamples = newSamples;
-        $scope.userSamples = {};
+        this.currentPlot = newPlot;
+        this.currentSamples = newSamples;
+        this.userSamples = {};
         utils.disable_element("new-plot-button");
         utils.enable_element("flag-plot-button");
         utils.disable_element("save-values-button");
         map_utils.draw_buffer(newPlot.center, newPlot.radius);
         map_utils.draw_points(newSamples);
-        var map = map_utils.map_ref;
-
-        var aOIExtent= ol.proj.transformExtent(map.getView().calculateExtent(map.getSize()), 'EPSG:3857', 'EPSG:4326');
-
-        console.info(aOIExtent + "***********");
-
-        var elt = document.getElementById('project-id');
-        var title = elt.options[elt.selectedIndex].text;
-        var pid = elt.options[elt.selectedIndex].value;
-        var url = "geo-dash?title=" + title + "&pid=" + pid + "&aoi=[" + aOIExtent + "]&daterange=";
-        window.open(url, '_geo-dash');
+        console.log("AOI: " + map_utils.get_view_extent());
+        window.open("geo-dash?title=" + this.currentProject.name
+                    + "&pid=" + this.currentProjectId
+                    + "&aoi=[" + map_utils.get_view_extent()
+                    + "]&daterange=",
+                    "_geo-dash");
     };
 
-    $scope.setCurrentValue = function (sampleValue) {
+    this.setCurrentValue = function (sampleValue) {
         var selectedFeatures = map_utils.get_selected_samples();
-        if (selectedFeatures) {
-            var samples = selectedFeatures.getArray();
-            utils.blink_border(sampleValue.id);
-            for (var i = 0; i < samples.length; i++) {
-                var sample = samples[i];
-                var sampleId = sample.get("sample_id");
-                $scope.userSamples[sampleId] = sampleValue.id;
-                map_utils.highlight_sample(sample, sampleValue.color)
-            }
+        if (selectedFeatures && selectedFeatures.getLength() > 0) {
+            selectedFeatures.forEach(
+                function (sample) {
+                    this.userSamples[sample.get("sample_id")] = sampleValue.id;
+                    map_utils.highlight_sample(sample, sampleValue.color);
+                },
+                this // necessary to pass outer scope into function
+            );
             selectedFeatures.clear();
-            if (Object.keys($scope.userSamples).length == $scope.currentSamples.length) {
+            utils.blink_border(sampleValue.id);
+            if (Object.keys(this.userSamples).length == this.currentSamples.length) {
                 utils.enable_element("save-values-button");
             }
         } else {
@@ -98,30 +114,43 @@ dashboard.controller = function ($scope) {
         }
     };
 
-    $scope.saveValues = function () {
+    // FIXME: Implement this endpoint
+    this.saveValues = function () {
         var userId = parseInt(document.getElementById("user-id").value);
-        var plotId = $scope.currentPlot.id;
-        var imagery = $scope.currentProject.imagery;
-        var userSamples = JSON.stringify($scope.userSamples, null, 4);
-        // FIXME: Implement this as an AJAX call
-        alert("Called saveValues with:\n" +
-              "userId = " + userId + "\n" +
-              "plotId = " + plotId + "\n" +
-              "imagery = " + imagery + "\n" +
-              "userSamples = " + userSamples);
-        // alert("Your assignments have been saved to the database.");
-        $scope.loadRandomPlot();
+        var plotId = this.currentPlot.id;
+        var imagery = this.currentProject.imagery;
+        var userSamples = JSON.stringify(this.userSamples, null, 4);
+        $http.post("add-user-samples",
+                   {user_id: userId,
+                    plot_id: plotId,
+                    imagery: imagery,
+                    user_samples: userSamples})
+            .then(function successCallback(response) {
+                alert("Your assignments have been saved to the database.");
+                utils.enable_element("new-plot-button");
+                utils.disable_element("flag-plot-button");
+                utils.disable_element("save-values-button");
+                this.currentPlot = null;
+                map_utils.disable_selection();
+                this.loadRandomPlot();
+            }, function errorCallback(response) {
+                console.log(response.data);
+                alert("Error saving your assignments to the database. See console for details.");
+            });
     };
 
-    $scope.flagPlot = function () {
-        var plotId = $scope.currentPlot.id;
-        // FIXME: Implement this as an AJAX call
-        alert("Called flagPlot with plotId = " + plotId);
-        // alert("Plot " + plotId + " has been flagged");
-        $scope.loadRandomPlot();
+    // FIXME: Implement this endpoint
+    this.flagPlot = function () {
+        var plotId = this.currentPlot.id;
+        $http.post("flag-plot",
+                   {plot_id: plotId})
+            .then(function successCallback(response) {
+                alert("Plot " + plotId + " has been flagged");
+                this.loadRandomPlot();
+            }, function errorCallback(response) {
+                console.log(response.data);
+                alert("Error flagging plot as bad. See console for details.");
+            });
     };
-};
 
-angular
-    .module('collectEarth')
-    .controller('dashboard.controller', dashboard.controller);
+}]);
