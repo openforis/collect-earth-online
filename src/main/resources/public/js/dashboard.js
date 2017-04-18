@@ -6,7 +6,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.currentSamples = [];
     this.userSamples = {};
 
-    // FIXME: Replace with an AJAX request and implement this endpoint
+    // FIXME: Implement this endpoint
     this.getProjectList = function () {
         // $http.get("get-all-projects")
         //     .then(function successCallback(response) {
@@ -59,8 +59,17 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         }
     };
 
-    // FIXME: Replace with an AJAX request and implement this endpoint
+    // FIXME: Implement this endpoint
     this.getPlotData = function (projectId) {
+        // $http.post("get-project-plots",
+        //            {project_id: projectId})
+        //     .then(function successCallback(response) {
+        //         return response.data;
+        //     }, function errorCallback(response) {
+        //         console.log(response);
+        //         alert("Error retrieving plot data. See console for details.");
+        //         return [];
+        //     });
         return ceo_sample_data.plot_data[projectId];
     };
 
@@ -111,7 +120,11 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         var plotId = this.currentPlot.id;
         var imagery = this.currentProject.imagery;
         var userSamples = JSON.stringify(this.userSamples, null, 4);
-        $http.post("add-user-samples", [userId, plotId, imagery, userSamples])
+        $http.post("add-user-samples",
+                   {user_id: userId,
+                    plot_id: plotId,
+                    imagery: imagery,
+                    user_samples: userSamples})
             .then(function successCallback(response) {
                 alert("Your assignments have been saved to the database.");
                 utils.enable_element("new-plot-button");
@@ -129,7 +142,8 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     // FIXME: Implement this endpoint
     this.flagPlot = function () {
         var plotId = this.currentPlot.id;
-        $http.post("flag-plot", plotId)
+        $http.post("flag-plot",
+                   {plot_id: plotId})
             .then(function successCallback(response) {
                 alert("Plot " + plotId + " has been flagged");
                 this.loadRandomPlot();

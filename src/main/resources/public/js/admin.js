@@ -19,7 +19,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.valueColor = "#000000";
     this.valueImage = "";
 
-    // FIXME: Replace with an AJAX request and implement this endpoint
+    // FIXME: Implement this endpoint
     this.getProjectList = function () {
         // $http.get("get-all-projects")
         //     .then(function successCallback(response) {
@@ -61,8 +61,17 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         );
     };
 
-    // FIXME: Replace with an AJAX request and implement this endpoint
+    // FIXME: Implement this endpoint
     this.getPlotData = function (projectId) {
+        // $http.post("get-project-plots",
+        //            {project_id: projectId})
+        //     .then(function successCallback(response) {
+        //         return response.data;
+        //     }, function errorCallback(response) {
+        //         console.log(response);
+        //         alert("Error retrieving plot data. See console for details.");
+        //         return [];
+        //     });
         return ceo_sample_data.plot_data[projectId];
     };
 
