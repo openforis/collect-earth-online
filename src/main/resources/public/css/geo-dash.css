@@ -1,4 +1,19 @@
 /*
+<<<<<<< HEAD
+ * Base structure
+ */
+
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+  padding-top: 50px;
+}
+
+#content{
+overflow-x:auto;
+}
+/*
+=======
+>>>>>>> upstream/master
  * Global add-ons
  */
 .sub-header {
@@ -93,6 +108,75 @@
 }
 
 .placeholder img {
+<<<<<<< HEAD
+  display: inline-block;
+  border-radius: 50%;
+}
+
+   html{
+            height:100%;
+        }
+         body{
+            min-height:100%;
+        }
+         .panel-default {
+             perspective: 1000px;
+         }
+        .panel-default > .panel-heading {
+            min-height: 35px;
+        }
+        .full{position:absolute; top:0; left:0; width:100%; height:100%;text-align: center;}
+        .fullmapwidget{
+             height: -webkit-calc(100% - 94px);
+                    height:    -moz-calc(100% - 94px);
+                    height:         calc(100% - 94px);
+
+        }
+        .minmapwidget{
+            height:200px;
+        }
+        .statsWidget{
+            padding: 5px;
+        }
+ .back{
+     width:100%;
+     height:100%;
+     background-color:white;
+     min-height: 200px;
+     overflow-y: auto;
+     padding:10px;
+     color:#334c57;
+ }
+ .front{
+ overflow-y: auto;
+ overflow-x:hidden;
+  }
+ .ctr{
+ display:none;
+ }
+ .btn.btn-primary
+ {
+  backface-visibility:auto!important;
+ }
+
+
+
+
+ .full .panel .flip-container .back{
+     height:100%!important;
+ }
+
+ .page-header{
+     color: white;
+     text-shadow: 3px 3px 3px rgba(0,0,0,.45);
+ }
+
+ .panel-default {
+     border-color: #ddd;
+     webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
+     box-shadow: 8px 5px 3px rgba(0,0,0,.45);
+ }
+=======
     display: inline-block;
     border-radius: 50%;
 }
@@ -149,3 +233,4 @@
     webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
     box-shadow: 8px 5px 3px rgba(0,0,0,.45);
 }
+>>>>>>> upstream/master

@@ -91,14 +91,14 @@ public class Views {
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
         List<Map<String, Object>> projects =
-            Stream.of("Mekong River Region", "Laos", "Vietnam", "Cambodia")
-            .map(name -> {
-                    Map<String, Object> project = new HashMap<String, Object>();
-                    project.put("id", name.length());
-                    project.put("name", name);
-                    return project;
-                })
-            .collect(Collectors.toList());
+                Stream.of("Mekong River Region", "Laos", "Vietnam", "Cambodia")
+                        .map(name -> {
+                            Map<String, Object> project = new HashMap<String, Object>();
+                            project.put("id", name.length());
+                            project.put("name", name);
+                            return project;
+                        })
+                        .collect(Collectors.toList());
         model.put("projects", projects);
         return new ModelAndView(model, "select-project.ftl");
     }
