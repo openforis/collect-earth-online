@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="collectEarth">
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -21,8 +21,6 @@
         <script type="text/javascript" src="js/map_utils.js"></script>
         <script type="text/javascript" src="js/utils.js"></script>
         <script type="text/javascript" src="js/ceo_sample_data.js"></script>
-        <!-- <script type="text/javascript" src="js/angular-route.min.js"></script> -->
-        <script type="text/javascript" src="js/collect-earth.js"></script>
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
         <!-- BEGIN: Billy's GEODASH libraries -->
@@ -47,7 +45,7 @@
         <!--------------------------------------------------------------->
         </#if>
     </head>
-    <body ng-controller="ctlBody">
+    <body>
         <#if nav_visibility == "visible">
         <header>
         <#else>
