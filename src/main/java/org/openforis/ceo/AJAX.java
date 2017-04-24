@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.File;
@@ -11,6 +12,8 @@ import java.util.UUID;
 import java.util.stream.StreamSupport;
 import spark.Request;
 import spark.Response;
+import java.net.URLDecoder;
+
 
 public class AJAX {
 
@@ -30,16 +33,16 @@ public class AJAX {
             JsonArray projects = parser.parse(projectFileReader).getAsJsonArray();
 
             Optional matchingProject = StreamSupport.stream(projects.spliterator(), false)
-                .map(project -> project.getAsJsonObject())
-                .filter(project -> req.params(":id").equals(project.get("projectID").getAsString()))
-                .map(project -> {
+                    .map(project -> project.getAsJsonObject())
+                    .filter(project -> req.params(":id").equals(project.get("projectID").getAsString()))
+                    .map(project -> {
                         try (FileReader dashboardFileReader = new FileReader(new File(geodashDataDir, "dash-" + project.get("dashboard").getAsString() + ".json"))) {
                             return parser.parse(dashboardFileReader).getAsJsonObject();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
                     })
-                .findFirst();
+                    .findFirst();
 
             if (matchingProject.isPresent()) {
                 if (req.queryParams("callback") != null) {
@@ -87,5 +90,62 @@ public class AJAX {
             throw new RuntimeException(e);
         }
     }
+    public static String UpdateDashBoardByID(Request req, Response res)
+    {
+        String returnString = "";
 
+/* Code will go here to update dashboard*/
+
+
+        return  returnString;
+    }
+    public static String CreateDashBoardWidgetByID(Request req, Response res) {
+        return "";
+    }
+    public static String UpdateDashBoardWidgetByID(Request req, Response res) {
+        String geodashDataDir = expandResourcePath("/public/json/");
+        JsonParser parser = new JsonParser();
+        JsonObject dashboardObj = new JsonObject();
+        JsonArray finalArr = new JsonArray();
+        try (FileReader dashboardFileReader = new FileReader(geodashDataDir + "dash-" + req.queryParams("dashID") + ".json"))
+        {
+            dashboardObj = parser.parse(dashboardFileReader).getAsJsonObject();
+            JsonArray widgets = dashboardObj.getAsJsonArray("widgets");
+
+
+            for (int i = 0; i < widgets.size(); i++) {  // **line 2**
+                JsonObject childJSONObject = (JsonObject)widgets.get(i);
+                String wID = childJSONObject.get("id").getAsString();
+                if(wID.equals(req.params(":id")))
+                {
+                    JsonParser widgetParser = new JsonParser();
+                    childJSONObject =  (JsonObject) widgetParser.parse(URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8"));;
+                }
+                finalArr.add(childJSONObject);
+            }
+            dashboardObj.remove("widgets");
+            dashboardObj.add("widgets", finalArr); //dashboardObj.put("widgets", finalArr);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        try(FileWriter dashReader = new FileWriter(geodashDataDir +"dash-" + req.queryParams("dashID") + ".json"))
+        {
+            dashReader.write(dashboardObj.toString());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        if (req.queryParams("callback") != null) {
+            return req.queryParams("callback").toString() + "()";
+        }
+        else
+        {
+            return "";
+        }
+
+    }
+    public static String DeleteDashBoardWidgetByID(Request req, Response res) {
+        return "";
+    }
 }

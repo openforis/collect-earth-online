@@ -90,7 +90,8 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         window.open("geo-dash?title=" + this.currentProject.name
                     + "&pid=" + this.currentProjectId
                     + "&aoi=[" + map_utils.get_view_extent()
-                    + "]&daterange=",
+                    + "]&daterange=&bcenter=" + newPlot.center
+                    + "&bradius=" + newPlot.radius,
                     "_geo-dash");
     };
 
@@ -137,6 +138,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                 console.log(response.data);
                 alert("Error saving your assignments to the database. See console for details.");
             });
+            this.loadRandomPlot();
     };
 
     // FIXME: Implement this endpoint
