@@ -1,21 +1,10 @@
-/*
-<<<<<<< HEAD
- * Base structure
- */
-
-/* Move down content because we have a fixed navbar that is 50px tall */
-body {
-  padding-top: 50px;
-}
-
-#content{
-overflow-x:auto;
+#content {
+    overflow-x: auto;
 }
 /*
-=======
->>>>>>> upstream/master
  * Global add-ons
  */
+
 .sub-header {
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
@@ -61,21 +50,23 @@ overflow-x:auto;
     margin-left: -20px;
 }
 
-.nav-sidebar > li > a {
-    padding-right: 20px;
-    padding-left: 20px;
-}
+    .nav-sidebar > li > a {
+        padding-right: 20px;
+        padding-left: 20px;
+    }
 
-.nav-sidebar > .active > a,
-.nav-sidebar > .active > a:hover,
-.nav-sidebar > .active > a:focus {
-    color: #fff;
-    background-color: #428bca;
-}
+    .nav-sidebar > .active > a,
+    .nav-sidebar > .active > a:hover,
+    .nav-sidebar > .active > a:focus {
+        color: #fff;
+        background-color: #428bca;
+    }
+
 
 /*
  * Main content
  */
+
 .main {
     padding: 20px;
 }
@@ -91,121 +82,62 @@ overflow-x:auto;
     margin-top: 0;
 }
 
+
 /*
  * Placeholder dashboard ideas
  */
+
 .placeholders {
     margin-bottom: 30px;
     text-align: center;
 }
 
-.placeholders h4 {
-    margin-bottom: 0;
-}
+    .placeholders h4 {
+        margin-bottom: 0;
+    }
 
 .placeholder {
     margin-bottom: 20px;
 }
 
-.placeholder img {
-<<<<<<< HEAD
-  display: inline-block;
-  border-radius: 50%;
+    .placeholder img {
+        display: inline-block;
+        border-radius: 50%;
+    }
+
+html {
+    height: 100%;
 }
 
-   html{
-            height:100%;
-        }
-         body{
-            min-height:100%;
-        }
-         .panel-default {
-             perspective: 1000px;
-         }
-        .panel-default > .panel-heading {
-            min-height: 35px;
-        }
-        .full{position:absolute; top:0; left:0; width:100%; height:100%;text-align: center;}
-        .fullmapwidget{
-             height: -webkit-calc(100% - 94px);
-                    height:    -moz-calc(100% - 94px);
-                    height:         calc(100% - 94px);
-
-        }
-        .minmapwidget{
-            height:200px;
-        }
-        .statsWidget{
-            padding: 5px;
-        }
- .back{
-     width:100%;
-     height:100%;
-     background-color:white;
-     min-height: 200px;
-     overflow-y: auto;
-     padding:10px;
-     color:#334c57;
- }
- .front{
- overflow-y: auto;
- overflow-x:hidden;
-  }
- .ctr{
- display:none;
- }
- .btn.btn-primary
- {
-  backface-visibility:auto!important;
- }
-
-
-
-
- .full .panel .flip-container .back{
-     height:100%!important;
- }
-
- .page-header{
-     color: white;
-     text-shadow: 3px 3px 3px rgba(0,0,0,.45);
- }
-
- .panel-default {
-     border-color: #ddd;
-     webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
-     box-shadow: 8px 5px 3px rgba(0,0,0,.45);
- }
-=======
-    display: inline-block;
-    border-radius: 50%;
+body {
+    min-height: 100%;
 }
 
 .panel-default {
     perspective: 1000px;
 }
 
-.panel-default > .panel-heading {
-    min-height: 35px;
-}
+    .panel-default > .panel-heading {
+        min-height: 35px;
+    }
 
 .full {
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     text-align: center;
 }
 
 .fullmapwidget {
     height: -webkit-calc(100% - 94px);
-    height:    -moz-calc(100% - 94px);
-    height:         calc(100% - 94px);
+    height: -moz-calc(100% - 94px);
+    height: calc(100% - 94px);
 }
 
 .minmapwidget {
-    height:200px;
+    height: 200px;
 }
 
 .statsWidget {
@@ -213,14 +145,33 @@ overflow-x:auto;
 }
 
 .back {
-    width:100%;
-    height:100%;
-    background-color:white;
+    width: 100%;
+    height: 100%;
+    background-color: white;
     min-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    color: #334c57;
 }
 
+.front {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.ctr {
+    display: none;
+}
+
+.btn.btn-primary {
+    backface-visibility: auto !important;
+}
+
+
+
+
 .full .panel .flip-container .back {
-    height:100%!important;
+    height: 100% !important;
 }
 
 .page-header {
@@ -233,4 +184,3 @@ overflow-x:auto;
     webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
     box-shadow: 8px 5px 3px rgba(0,0,0,.45);
 }
->>>>>>> upstream/master
