@@ -34,7 +34,8 @@
         <!--[if lt IE 9]>
           <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-        <script src="js/jquery-3.1.1.min.js"></script>
+        <script src="js/jquery-3.1.1.min.js"></script><!--jQuery lib -->
+        <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script><!--jQuery UI lib -->
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="js/bootstrap.min.js"></script>
 
