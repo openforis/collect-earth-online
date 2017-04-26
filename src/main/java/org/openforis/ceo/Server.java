@@ -56,7 +56,7 @@ public class Server implements SparkApplication {
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
         get("/geo-dash/id/:id", (req, res) -> { return AJAX.geodashId(req, res); });
         get("/geo-dash/update/id/:id", (req, res) -> { return AJAX.UpdateDashBoardByID(req, res); });
-        get("/geo-dash/createwidget/widget/:id", (req, res) -> { return AJAX.CreateDashBoardWidgetByID(req, res); });
+        get("/geo-dash/createwidget/widget", (req, res) -> { return AJAX.CreateDashBoardWidgetByID(req, res); });
         get("/geo-dash/updatewidget/widget/:id", (req, res) -> { return AJAX.UpdateDashBoardWidgetByID(req, res); });
         get("/geo-dash/deletewidget/widget/:id", (req, res) -> { return AJAX.DeleteDashBoardWidgetByID(req, res); });
         get("*",                (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });

@@ -100,31 +100,13 @@ public class AJAX {
         return  returnString;
     }
     public static String CreateDashBoardWidgetByID(Request req, Response res) {
-        return "";
-    }
-    public static String UpdateDashBoardWidgetByID(Request req, Response res) {
         String geodashDataDir = expandResourcePath("/public/json/");
         JsonParser parser = new JsonParser();
         JsonObject dashboardObj = new JsonObject();
-        JsonArray finalArr = new JsonArray();
         try (FileReader dashboardFileReader = new FileReader(geodashDataDir + "dash-" + req.queryParams("dashID") + ".json"))
         {
             dashboardObj = parser.parse(dashboardFileReader).getAsJsonObject();
-            JsonArray widgets = dashboardObj.getAsJsonArray("widgets");
-
-
-            for (int i = 0; i < widgets.size(); i++) {  // **line 2**
-                JsonObject childJSONObject = (JsonObject)widgets.get(i);
-                String wID = childJSONObject.get("id").getAsString();
-                if(wID.equals(req.params(":id")))
-                {
-                    JsonParser widgetParser = new JsonParser();
-                    childJSONObject =  (JsonObject) widgetParser.parse(URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8"));;
-                }
-                finalArr.add(childJSONObject);
-            }
-            dashboardObj.remove("widgets");
-            dashboardObj.add("widgets", finalArr); //dashboardObj.put("widgets", finalArr);
+            dashboardObj.getAsJsonArray("widgets").add((JsonObject) parser.parse(URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8")));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -143,9 +125,71 @@ public class AJAX {
         {
             return "";
         }
+    }
+    public static String UpdateDashBoardWidgetByID(Request req, Response res) {
+
+        deleteOrUpdate(req.queryParams("dashID"), req.params(":id"), req.queryParams("widgetJSON"), Boolean.FALSE);
+        if (req.queryParams("callback") != null) {
+            return req.queryParams("callback").toString() + "()";
+        }
+        else
+        {
+            return "";
+        }
 
     }
     public static String DeleteDashBoardWidgetByID(Request req, Response res) {
-        return "";
+
+        deleteOrUpdate(req.queryParams("dashID"), req.params(":id"), "", Boolean.TRUE);
+
+        if (req.queryParams("callback") != null) {
+            return req.queryParams("callback").toString() + "()";
+        }
+        else
+        {
+            return "";
+        }
+    }
+    private static void deleteOrUpdate(String dashID, String ID, String widgetJSON, Boolean delete)
+    {
+        String geodashDataDir = expandResourcePath("/public/json/");
+        JsonParser parser = new JsonParser();
+        JsonObject dashboardObj = new JsonObject();
+        JsonArray finalArr = new JsonArray();
+        try (FileReader dashboardFileReader = new FileReader(geodashDataDir + "dash-" + dashID + ".json"))
+        {
+            dashboardObj = parser.parse(dashboardFileReader).getAsJsonObject();
+            JsonArray widgets = dashboardObj.getAsJsonArray("widgets");
+
+
+            for (int i = 0; i < widgets.size(); i++) {  // **line 2**
+                JsonObject childJSONObject = (JsonObject)widgets.get(i);
+                String wID = childJSONObject.get("id").getAsString();
+                if(wID.equals(ID))
+                {
+                    if(! delete) {
+                        JsonParser widgetParser = new JsonParser();
+                        childJSONObject = (JsonObject) widgetParser.parse(URLDecoder.decode(widgetJSON, "UTF-8"));
+                        finalArr.add(childJSONObject);
+                    }
+                }
+                else{
+                    finalArr.add(childJSONObject);
+                }
+
+            }
+            dashboardObj.remove("widgets");
+            dashboardObj.add("widgets", finalArr); //dashboardObj.put("widgets", finalArr);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        try(FileWriter dashReader = new FileWriter(geodashDataDir +"dash-" + dashID + ".json"))
+        {
+            dashReader.write(dashboardObj.toString());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
