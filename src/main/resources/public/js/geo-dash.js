@@ -683,6 +683,9 @@ function updateWidgetUI(which) {
         $("#widgettitle_" + widgetID).html($("#title_" + widgetID).val());
         imageCollectionAJAX(url, widgetID, collectionName, visParams, dateFrom, dateTo);
     }
+    else {
+        console.info("I have to write this");
+    }
 }
 function sendUpdate(id, wjson) {
     "use strict";
@@ -726,11 +729,13 @@ function updatewidget(which) {
             updatingWidget = widget;
             return;
         }
-    });
-    if (updatingWidget.properties[0] === "addImageCollection") {
+    }); if (updatingWidget.properties[0] === "getStats") {
+        console.info("i need to write this");
+    }
+    else {
         var newProperties = [];
         outWidget = {};
-        newProperties.push("addImageCollection");
+        newProperties.push(updatingWidget.properties[0]);
 
         var collection = $("#collection_" + widgetID).val();
         newProperties.push(collection);
@@ -740,11 +745,18 @@ function updatewidget(which) {
         newProperties.push(startDate);
         var endDate = $("#eDate_" + widgetID).val();
         newProperties.push(endDate);
-        var bands = $("#bands_" + widgetID).val();
-        newProperties.push(bands);
         var wtitle = $("#title_" + widgetID).val();
+        if (updatingWidget.properties[0] === "addImageCollection") {
+            var bands = $("#bands_" + widgetID).val();
+            newProperties.push(bands);
+        }
+        else {
+            newProperties.push(wtitle);
+        }
+        
+        
         var columns = $("#columns_" + widgetID).val();
-        outWidget.id = widgetID;
+        outWidget.id = parseInt(widgetID);
         outWidget.name = wtitle;
         outWidget.properties = newProperties;
         outWidget.width = columns;
@@ -752,11 +764,12 @@ function updatewidget(which) {
         var wjson = JSON.stringify(outWidget);
         sendUpdate(widgetID, wjson);
         //dashboardID
-    } else if (updatingWidget.properties[0] === "timeSeriesGraph") {
-        console.info("i need to write this");
-    } else if (updatingWidget.properties[0] === "getStats") {
-        console.info("i need to write this");
     }
+    // else if (updatingWidget.properties[0] === "timeSeriesGraph") {
+    //    console.info("i need to write this");
+    //} else if (updatingWidget.properties[0] === "getStats") {
+    //    console.info("i need to write this");
+    //}
 }
 Array.prototype.removeValue = function (name, value) {
     var array = $.map(this, function (v, i) {
