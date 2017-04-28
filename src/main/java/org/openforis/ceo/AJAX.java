@@ -161,12 +161,10 @@ public class AJAX {
             return "";
         }
     }
-    private static void deleteOrUpdate(String dashID, String ID, String widgetJSON, Boolean delete)
-    {
-        try
-        {
+    private static void deleteOrUpdate(String dashID, String ID, String widgetJSON, Boolean delete) {
+        try {
             String geodashDataDir = expandResourcePath("/public/json/");
-            if(geodashDataDir.indexOf("/") == 0){
+            if (geodashDataDir.indexOf("/") == 0) {
                 geodashDataDir = geodashDataDir.substring(1);
             }
             JsonParser parser = new JsonParser();
@@ -216,67 +214,8 @@ public class AJAX {
                     retries++;
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-    private static void deleteOrUpdateLock(String dashID, String ID, String widgetJSON, Boolean delete)
-    {
-        String geodashDataDir = expandResourcePath("/public/json/");
-        if(geodashDataDir.indexOf("/") == 0){
-            geodashDataDir = geodashDataDir.substring(1);
-        }
-        JsonParser parser = new JsonParser();
-        JsonObject dashboardObj = new JsonObject();
-        JsonArray finalArr = new JsonArray();
-        FileSystem fs = FileSystems.getDefault();
-        Path path = fs.getPath(geodashDataDir + "dash-" + dashID + ".json");
-        int retries = 0;
-        while (retries < 200) {
-            try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-                FileLock lock = fileChannel.tryLock();
-                ByteBuffer buffer = ByteBuffer.allocate(2000);
-                int noOfBytesRead = fileChannel.read(buffer);
-                String jsonString = "";
-                while (noOfBytesRead != -1) {
-                    buffer.flip();
-                    while (buffer.hasRemaining()) {
-                        jsonString += (char) buffer.get();
-                    }
-                    buffer.clear();
-                    noOfBytesRead = fileChannel.read(buffer);
-                }
-                dashboardObj = parser.parse(jsonString).getAsJsonObject();
-                JsonArray widgets = dashboardObj.getAsJsonArray("widgets");
-
-
-                for (int i = 0; i < widgets.size(); i++) {  // **line 2**
-                    JsonObject childJSONObject = (JsonObject) widgets.get(i);
-                    String wID = childJSONObject.get("id").getAsString();
-                    if (wID.equals(ID)) {
-                        if (!delete) {
-                            JsonParser widgetParser = new JsonParser();
-                            childJSONObject = (JsonObject) widgetParser.parse(URLDecoder.decode(widgetJSON, "UTF-8"));
-                            finalArr.add(childJSONObject);
-                        }
-                    } else {
-                        finalArr.add(childJSONObject);
-                    }
-
-                }
-                dashboardObj.remove("widgets");
-                dashboardObj.add("widgets", finalArr); //dashboardObj.put("widgets", finalArr);
-                byte[] inputBytes = dashboardObj.toString().getBytes();
-                ByteBuffer buffer2 = ByteBuffer.wrap(inputBytes);
-                fileChannel.truncate(0);
-                fileChannel.write(buffer2);
-                fileChannel.close();
-                retries = 201;
-                //fileChannel.
-            } catch (Exception e) {
-                retries++;
-            }
         }
     }
 }
