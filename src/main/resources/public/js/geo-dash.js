@@ -1,3 +1,29 @@
+/*property
+    Circle, Color, Feature, Map, OSM, Sphere, Stroke, Style, Tile, Vector,
+    View, XYZ, addClass, addFeatures, addLayer, ajax, append, apply, area,
+    async, attr, bands, center, changeMonth, changeYear, chart, children,
+    class, click, closest, collectionName, collectionNameTimeSeries, color,
+    colors, concat, contentType, coordinates, createElement, crossDomain, css,
+    dashID, dashboardID, data, dataType, dateFormat, dateFrom,
+    dateFromTimeSeries, dateTo, dateToTimeSeries, datepicker, debug, done,
+    each, enabled, errMsg, error, exec, fail, fill, fillColor, firstChild, fit,
+    flip, forEach, geodesicArea, geom, get, getArray, getElementById,
+    getLayers, getOptions, getSize, getView, grabElement, handle, hasClass,
+    hasOwnProperty, height, hover, href, html, id, includes, index, indexName,
+    indexOf, indexVal, info, innerHTML, insertBefore, join, layer, layers,
+    legend, length, lineWidth, linearGradient, location, map, mapid, marker,
+    max, maxElev, message, min, minElev, name, onclick, ontouchstart,
+    outerHeight, outerWidth, paramType, paramValue, parent, parentNode, parse,
+    parseJSON, plotOptions, pointFormat, polyVal, polygon, pop, position,
+    preventDefault, proj, projectTitle, projection, properties, prototype,
+    push, radius, remove, removeChild, removeClass, removeLayer, removeValue,
+    replace, series, setData, setOpacity, setSize, sort, sortable, source,
+    split, states, stops, stringify, stroke, style, substring, subtitle,
+    success, target, text, threshold, timeseries, title, toString, toggle,
+    toggleClass, token, tooltip, transform, trigger, type, update, updateSize,
+    url, val, view, visParams, warn, widgetJSON, widgets, width, x1, x2, xAxis,
+    y1, y2, yAxis, zoom, zoomType
+*/
 /*jslint browser: true*/ /*global  $, console, window, getParameterByName, ol, Highcharts*/ /*  node: true */ /*jshint strict:false */
 
 var debugme;
@@ -69,6 +95,55 @@ function addBuffer(whichMap) {
     }
 }
 var theDash;
+var panelList;
+var giveme;
+var changedList = [];
+function updatePosition(listObject)
+{
+    "use strict";
+    var positionedList = [];
+    changedList = [];
+    pageWidgets.forEach(function (widget, index) {
+        if (widget.position !== listObject[widget.id])
+        {
+            widget.position = listObject[widget.id];
+            positionedList.push(widget);
+            changedList.push(widget);
+        }
+        widget.position = listObject[widget.id];
+        positionedList.push(widget);
+    });
+    pageWidgets = positionedList.sort(function (a, b) {
+        return parseFloat(a.position) - parseFloat(b.position);
+    });
+    changedList.forEach(function (widget, index) {
+        sendUpdate(widget.id, JSON.stringify(widget));
+        //JSON.stringify(pageWidgets[0])
+    });
+    //
+}
+var updateList;
+function makeDragable()
+{
+    "use strict";
+    panelList = $('.row.placeholders');
+    panelList.sortable({
+        // Only make the .panel-heading child elements support dragging.
+        // Omit this to make then entire <li>...</li> draggable.
+        handle: '.panel-heading',
+        update: function () {
+            updateList = [];
+            $('.placeholder', panelList).each(function (index, elem) {
+                var $listItem = $(elem);
+                giveme = $listItem;
+                var newIndex = $listItem.index();
+                console.info("dragged: " + $(elem)["0"].firstChild.id + " to " + newIndex);
+                updateList[$(elem)["0"].firstChild.id.substring($(elem)["0"].firstChild.id.indexOf("_") + 1)] = newIndex;
+            });
+            updatePosition(updateList);
+        }
+    });
+}
 
 function createChart(wIndex, wText, wTimeseriesData) {
     "use strict";
@@ -194,7 +269,7 @@ function getEditForm(which, bandsupport) {
 }
 function getTimeSeriesGraphForm(which) {
     "use strict";
-    return getEditForm(which, false);
+    return getEditForm(which, true);
 }
 function getImageCollectionForm(which) {
     "use strict";
@@ -377,22 +452,12 @@ function fillDashboard(dashboard) {
     } catch (e) {
         console.warn("dashboard failed: " + e.message);
     }
+    dashboard.widgets.sort(function (a, b) {
+        return parseFloat(a.position) - parseFloat(b.position);
+    });
     if (dashboard.widgets !== null && dashboard.widgets.length > 0) {
         rowDiv = null;
         dashboard.widgets.forEach(function (widget, index) {
-            if (widget.width) {
-                /*   FIX THIS  */
-                console.info("is this fixed?" + index);
-            } else {
-                if (wCount % 4 === 0) {//beginning a new row
-                    if (rowDiv) {
-                        $("#dashHolder").append(rowDiv);
-                    }
-                    rowDiv = $("<div/>", {
-                        "class": "row placeholders"
-                    });
-                }
-            }
             if (!rowDiv) {
                 rowDiv = $("<div/>", {
                     "class": "row placeholders"
@@ -427,7 +492,7 @@ function fillDashboard(dashboard) {
             if (projAOI === "") {
                 projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
             } else {
-                if (typeof projAOI === 'string') {
+                if (typeof projAOI === "string") {
                     projAOI = $.parseJSON(projAOI);
                 }
             }
@@ -492,11 +557,7 @@ function fillDashboard(dashboard) {
             });
         } else if (widget.properties[0] === "timeSeriesGraph") {
             collectionName = widget.properties[1];
-            //var dateFrom = pageWidgets[i].properties[2];
-            //var dateTo = pageWidgets[i].properties[3];
             var indexName = widget.properties[4];
-            //var polygon = eval(projPairAOI); //eval(pageWidgets[i].properties[5]);
-            //var url = gateway + "/timeSeriesIndex";//http://54.186.177.52:8888/timeSeriesIndex";
             $.ajax({
                 url: gateway + "/timeSeriesIndex",
                 type: "POST",
@@ -583,6 +644,7 @@ function fillDashboard(dashboard) {
             console.warn(e.message);
         }
     });
+    makeDragable();
 }
 function imageCollectionAJAX(url, id, collectionName, visParams, dateFrom, dateTo) {
     "use strict";
@@ -619,14 +681,18 @@ function imageCollectionAJAX(url, id, collectionName, visParams, dateFrom, dateT
         }
     });
 }
-function createWidget(which)
-{
+function createWidget(which) {
     "use strict";
     pageWidgets.sort(function (a, b) {
         return parseInt(a.id) - parseInt(b.id);
     });
-    var id = pageWidgets[pageWidgets.length - 1].id + 1
-    var outWidget = { "name": "NDWI", "width": "3", "id": id, "properties": ["timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDWI", "2015-01-01", "2016-01-01", "NDWI", ""] };
+    var id = pageWidgets[pageWidgets.length - 1].id + 1;
+    var outWidget = {
+        "name": "NDWI",
+        "width": "3",
+        "id": id,
+        "properties": ["timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDWI", "2015-01-01", "2016-01-01", "NDWI", ""]
+    };
     //var outWidget = { "id": id, "name": "LANDSAT7 TOA", "properties": ["addImageCollection", "LANDSAT/LE7_L1T_32DAY_TOA", "2006-01-01", "2016-01-01", "B5, B4, B3"], "width": "3" };
     console.info("will create " + which);
     ajaxurl = theURL + "createwidget/widget";
@@ -682,11 +748,66 @@ function updateWidgetUI(which) {
         //update text as well
         $("#widgettitle_" + widgetID).html($("#title_" + widgetID).val());
         imageCollectionAJAX(url, widgetID, collectionName, visParams, dateFrom, dateTo);
-    }
-    else {
+    } else if (updatingWidget.properties[0] === "timeSeriesGraph") {
+        var collectionName = $("#collection_" + widgetID).val();
+        updatingWidget.properties[2] = $("#sDate_" + widgetID).val();
+        updatingWidget.properties[3] = $("#eDate_" + widgetID).val();
+        var wtitle = $("#title_" + widgetID).val();
+        collectionName = collectionName;
+        updatingWidget.properties[1] = collectionName;
+        var indexName = wtitle;
+        updatingWidget.properties[4] = wtitle;
+        $.ajax({
+            url: gateway + "/timeSeriesIndex",
+            type: "POST",
+            async: true,
+            indexVal: updatingWidget.id,
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify({
+                collectionNameTimeSeries: updatingWidget.properties[1],
+                polygon: $.parseJSON(projPairAOI),
+                indexName: updatingWidget.properties[4],
+                dateFromTimeSeries: updatingWidget.properties[2],
+                dateToTimeSeries: updatingWidget.properties[3]
+            })
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.warn(jqXHR + textStatus + errorThrown);
+        }).done(function (data, _textStatus, _jqXHR) {
+            if (data.errMsg) {
+                console.warn(data.errMsg);
+            } else {
+                if (data.hasOwnProperty("timeseries")) {
+                    icameback = data;
+                    textStatus = _textStatus;
+                    jqXHR = _jqXHR;
+                    console.warn("Data Returned");
+                    var timeseriesData = [];
+
+                    $.each(data.timeseries, function (index, value) {
+                        if (value[0] !== null) {
+                            timeseriesData.push([value[1], value[0]]);
+                        } else {
+                            console.info(value[0] + " at " + index);
+                        }
+                    });
+                    rdatafromupdate = timeseriesData;
+                    var $this = this;
+                    
+                    console.info("Creating :widgetgraph_" + $this.indexVal);
+                    //graphWidgetArray["widgetgraph_" + $this.indexVal].series[0].remove();
+                    graphWidgetArray["widgetgraph_" + $this.indexVal].series[0].setData(timeseriesData, true);// = createChart($this.indexVal, text, timeseriesData);
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }
+        });
+
+    } else {
         console.info("I have to write this");
     }
 }
+var rdatafromupdate;
 function sendUpdate(id, wjson) {
     "use strict";
     ajaxurl = theURL + "updatewidget/widget/" + id;
@@ -729,10 +850,10 @@ function updatewidget(which) {
             updatingWidget = widget;
             return;
         }
-    }); if (updatingWidget.properties[0] === "getStats") {
+    });
+    if (updatingWidget.properties[0] === "getStats") {
         console.info("i need to write this");
-    }
-    else {
+    } else {
         var newProperties = [];
         outWidget = {};
         newProperties.push(updatingWidget.properties[0]);
@@ -746,21 +867,17 @@ function updatewidget(which) {
         var endDate = $("#eDate_" + widgetID).val();
         newProperties.push(endDate);
         var wtitle = $("#title_" + widgetID).val();
-        if (updatingWidget.properties[0] === "addImageCollection") {
-            var bands = $("#bands_" + widgetID).val();
-            newProperties.push(bands);
-        }
-        else {
-            newProperties.push(wtitle);
-        }
+        var bands = $("#bands_" + widgetID).val();
+        newProperties.push(bands);
         
-        
+
+
         var columns = $("#columns_" + widgetID).val();
         outWidget.id = parseInt(widgetID);
         outWidget.name = wtitle;
         outWidget.properties = newProperties;
         outWidget.width = columns;
-
+        outWidget.position = updatingWidget.position;
         var wjson = JSON.stringify(outWidget);
         sendUpdate(widgetID, wjson);
         //dashboardID
@@ -772,31 +889,34 @@ function updatewidget(which) {
     //}
 }
 Array.prototype.removeValue = function (name, value) {
+    "use strict";
     var array = $.map(this, function (v, i) {
-        return v[name] === value ? null : v;
+        return v[name] === value
+            ? null
+            : v;
     });
     this.length = 0; //clear original array
     this.push.apply(this, array); //push all elements except the one we want to delete
-}
+};
 Array.prototype.grabElement = function (name, value) {
+    "use strict";
     var array = $.map(this, function (v, i) {
-        return v[name] === value ? v : null;
+        return v[name] === value
+            ? v
+            : null;
     });
     return array[0];
-}
+};
 function removeWidgetFromUI(wID) {
     "use strict";
     wID = parseInt(wID);
-    if (pageWidgets.grabElement('id', wID).properties[0] === "addImageCollection")
-    {
+    if (pageWidgets.grabElement("id", wID).properties[0] === "addImageCollection") {
         delete graphWidgetArray["widgetmap_" + wID];
-    }
-    else if (pageWidgets.grabElement('id', wID).properties[0] === "timeSeriesGraph")
-    {
+    } else if (pageWidgets.grabElement("id", wID).properties[0] === "timeSeriesGraph") {
         delete graphWidgetArray["widgetgraph_" + wID];
     }
     $("#widget_" + wID).parent().remove();
-    pageWidgets.removeValue('id', wID);
+    pageWidgets.removeValue("id", wID);
 }
 function deleteWidget(which) {
     "use strict";
@@ -812,8 +932,6 @@ function deleteWidget(which) {
             dashID: dashboardID
         },
         success: function () {
-            //update the widget with new params;
-            // updateWidgetUI(this.indexVal);
             console.warn("Back from delete");
         },
         error: function (xhr) {

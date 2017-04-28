@@ -28,19 +28,19 @@
         <link href="css/bootstrap.min.css" rel="stylesheet">
         <link href="css/ie10-viewport-bug-workaround.css" rel="stylesheet">
         <link href="css/geo-dash.css" rel="stylesheet">
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <link rel="stylesheet" href="css/jquery-ui.css">
         <script src="js/ie-emulation-modes-warning.js"></script>
         <!-- Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
-          <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+          <script src="js/respond.min.js"></script>
         <![endif]-->
         <script src="js/jquery-3.1.1.min.js"></script><!--jQuery lib -->
-        <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script><!--jQuery UI lib -->
+        <script src="js/jquery-ui.min.js"></script><!--jQuery UI lib -->
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="js/bootstrap.min.js"></script>
 
-        <script src="https://code.highcharts.com/highcharts.js"></script>
-        <script src="https://cdn.rawgit.com/nnattawat/flip/master/dist/jquery.flip.min.js"></script>
+        <script src="js/highcharts.js"></script>
+        <script src="js/jquery.flip.min.js"></script>
         <!--------------------------------------------------------------->
         <!-- END: Billy's GEODASH libraries, FIXME: Simplify this list -->
         <!--------------------------------------------------------------->

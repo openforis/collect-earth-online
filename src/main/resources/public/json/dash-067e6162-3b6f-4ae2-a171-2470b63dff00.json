@@ -1,1 +1,70 @@
-{"widgets":[{"name":"LANSAT8 TOA","id":0,"properties":["addImageCollection","LANDSAT/LC8_L1T_32DAY_TOA", "2006-01-01", "2016-01-01", "B4, B3, B2"], "width": "3"},{"name":"NDVI","id":1,"properties":["timeSeriesGraph","LANDSAT/LE7_L1T_32DAY_NDVI", "2015-01-01", "2016-01-01", "NDVI", ""], "width": "6"},{"name":"Statistics","id":2,"properties":["getStats", "poly", ""], "width": "3"},{"name":"NDWI","id":3,"properties":["timeSeriesGraph","LANDSAT/LE7_L1T_32DAY_NDWI", "2015-01-01", "2016-01-01", "NDWI", ""], "width": "12"}],"projectTitle":"Mekong River Region", "projectID": "1", "dashboardID":"067e6162-3b6f-4ae2-a171-2470b63dff00"}
+{
+  "dashboardID": "067e6162-3b6f-4ae2-a171-2470b63dff00",
+  "projectID": "1",
+  "projectTitle": "Mekong River Region",
+  "widgets": [
+    {
+      "id": 0,
+      "name": "LANDSAT8 TOA",
+      "properties": [ "addImageCollection", "LANDSAT/LC8_L1T_32DAY_TOA", "2006-01-01", "2016-01-01", "B7, B4, B1" ],
+      "width": "3",
+      "position":  0
+    },
+    {
+      "name": "NDVI",
+      "width": "6",
+      "id": 1,
+      "properties": [ "timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDVI", "2015-01-01", "2016-01-01", "NDVI", "" ],
+      "position":  1
+    },
+    {
+      "name": "Statistics",
+      "width": "3",
+      "id": 2,
+      "properties": [ "getStats", "poly", "" ],
+      "position":  2
+    },
+    {
+      "name": "NDWI",
+      "width": "12",
+      "id": 7,
+      "properties": [ "timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDWI", "2015-01-01", "2016-01-01", "NDWI", "" ],
+      "position":  3
+    },
+    {
+      "id": 8,
+      "name": "NDWI Awesomeness",
+      "properties": [ "timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDWI", "2015-01-01", "2016-01-01", "NDWI" ],
+      "width": "6",
+      "position":  4
+    },
+    {
+      "id": 9,
+      "name": "NDWI",
+      "properties": [ "timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDWI", "2011-01-01", "2016-01-01", "NDWI" ],
+      "width": "6",
+      "position":  5
+    },
+    {
+      "name": "NDWI",
+      "width": "3",
+      "id": 14,
+      "properties": [ "timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDWI", "2015-01-01", "2016-01-01", "NDWI", "" ],
+      "position":  6
+    },
+    {
+      "id": "15",
+      "name": "LANDSAT7 TOA",
+      "properties": [ "addImageCollection", "LANDSAT/LE7_L1T_32DAY_TOA", "2006-01-01", "2016-01-01", "B2, B5, B3" ],
+      "width": "3",
+      "position":  7
+    },
+    {
+      "id": 16,
+      "name": "LANDSAT7 TOA",
+      "properties": [ "addImageCollection", "LANDSAT/LE7_L1T_32DAY_TOA", "2006-01-01", "2016-01-01", "B5, B4, B3" ],
+      "width": "3",
+      "position":  8
+    }
+  ]
+}
