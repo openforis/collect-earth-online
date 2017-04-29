@@ -98,7 +98,8 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                         + "]&daterange=&bcenter=" + newPlot.center
                         + "&bradius=" + newPlot.radius,
                         "_geo-dash");
-        };
+        }
+    };
 
     this.setCurrentValue = function (sampleValue) {
         var selectedFeatures = map_utils.get_selected_samples();
