@@ -10,10 +10,10 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     // FIXME: Implement this endpoint: get-all-projects -> project_list.json
     this.getProjectList = function () {
         $http.get("get-all-projects")
-            .then(function successCallback(response) {
+            .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
                 this.initialize();
-            }, function errorCallback(response) {
+            }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
             });
@@ -67,11 +67,11 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.getPlotData = function (projectId) {
         $http.post("get-project-plots",
                    {project_id: projectId})
-            .then(function successCallback(response) {
+            .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.loadRandomPlot();
                 this.plotList = [];
-            }, function errorCallback(response) {
+            }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving plot data. See console for details.");
             });
@@ -132,7 +132,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                     plot_id: plotId,
                     imagery: imagery,
                     user_samples: userSamples})
-            .then(function successCallback(response) {
+            .then(angular.bind(this, function successCallback(response) {
                 alert("Your assignments have been saved to the database.");
                 utils.enable_element("new-plot-button");
                 utils.disable_element("flag-plot-button");
@@ -140,7 +140,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                 this.currentPlot = null;
                 map_utils.disable_selection();
                 this.loadRandomPlot();
-            }, function errorCallback(response) {
+            }), function errorCallback(response) {
                 console.log(response.data);
                 alert("Error saving your assignments to the database. See console for details.");
             });
@@ -151,10 +151,10 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         var plotId = this.currentPlot.id;
         $http.post("flag-plot",
                    {plot_id: plotId})
-            .then(function successCallback(response) {
+            .then(angular.bind(this, function successCallback(response) {
                 alert("Plot " + plotId + " has been flagged");
                 this.loadRandomPlot();
-            }, function errorCallback(response) {
+            }), function errorCallback(response) {
                 console.log(response.data);
                 alert("Error flagging plot as bad. See console for details.");
             });

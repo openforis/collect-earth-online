@@ -23,9 +23,9 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     // FIXME: Implement this endpoint: get-all-projects -> project_list.json
     this.getProjectList = function () {
         $http.get("get-all-projects")
-            .then(function successCallback(response) {
+            .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
-            }, function errorCallback(response) {
+            }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
             });
@@ -64,11 +64,11 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.getPlotData = function (projectId) {
         $http.post("get-project-plots",
                    {project_id: projectId})
-            .then(function successCallback(response) {
+            .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.setCurrentProject();
                 this.plotList = [];
-            }, function errorCallback(response) {
+            }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving plot data. See console for details.");
             });
@@ -156,12 +156,12 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         if (projectId != 0) {
             $http.post("archive-project",
                        {project_id: projectId})
-                .then(function successCallback(response) {
+                .then(angular.bind(this, function successCallback(response) {
                     alert("Project " + projectId + " has been deleted.");
                     this.currentProjectId = "0";
                     this.setCurrentProject();
                     this.getProjectList();
-                }, function errorCallback(response) {
+                }), function errorCallback(response) {
                     console.log(response);
                     alert("Error archiving project. See console for details.");
                 });
