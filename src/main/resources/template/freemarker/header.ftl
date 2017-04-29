@@ -29,6 +29,7 @@
         <link rel="stylesheet" type="text/css" href="css/ie10-viewport-bug-workaround.css">
         <link rel="stylesheet" type="text/css" href="css/geo-dash.css">
         <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
+        <link rel="stylesheet" type="text/css" href="css/datepicker.css">
         <script type="text/javascript" src="js/ie-emulation-modes-warning.js"></script>
         <!-- Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
