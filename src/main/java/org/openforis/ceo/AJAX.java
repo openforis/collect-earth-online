@@ -10,7 +10,10 @@ import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.nio.file.*; // FIXME: expand this glob
+import java.nio.file.FileSystems;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
@@ -160,11 +163,11 @@ public class AJAX {
             JsonParser parser = new JsonParser();
             JsonObject dashboardObj = new JsonObject();
             JsonArray finalArr = new JsonArray();
-            FileSystem fs = FileSystems.getDefault(); // FIXME: This class hasn't been imported
-            Path path = fs.getPath(geodashDataDir + "dash-" + dashID + ".json"); // FIXME: This class hasn't been imported
+            FileSystem fs = FileSystems.getDefault();
+            Path path = fs.getPath(geodashDataDir + "dash-" + dashID + ".json");
             int retries = 0;
             while (retries < 200) {
-                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) { // FIXME: This class hasn't been imported
+                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
                     FileLock lock = fileChannel.tryLock();
                     ByteBuffer buffer = ByteBuffer.allocate(2000);
                     int noOfBytesRead = fileChannel.read(buffer);
