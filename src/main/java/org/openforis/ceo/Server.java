@@ -40,26 +40,26 @@ public class Server implements SparkApplication {
         staticFileLocation("/public");
 
         // Setup Routes
-        get("/",                (req, res) -> { return freemarker.render(Views.home(req, res)); });
-        get("/home",            (req, res) -> { return freemarker.render(Views.home(req, res)); });
-        get("/about",           (req, res) -> { return freemarker.render(Views.about(req, res)); });
-        get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
-        get("/register",        (req, res) -> { return freemarker.render(Views.register(req, res)); });
-        get("/password",        (req, res) -> { return freemarker.render(Views.password(req, res)); });
-        get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
-        get("/logout",          (req, res) -> { return freemarker.render(Views.logout(req, res)); });
-        get("/select-project",  (req, res) -> { return freemarker.render(Views.selectProject(req, res)); });
-        get("/account",         (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        get("/dashboard",       (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
-        get("/admin",           (req, res) -> { return freemarker.render(Views.admin(req, res)); });
-        post("/clone",          (req, res) -> { return AJAX.clone(req, res); });
-        get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
-        get("/geo-dash/id/:id", (req, res) -> { return AJAX.geodashId(req, res); });
-        get("/geo-dash/update/id/:id", (req, res) -> { return AJAX.UpdateDashBoardByID(req, res); });
-        get("/geo-dash/createwidget/widget", (req, res) -> { return AJAX.CreateDashBoardWidgetByID(req, res); });
-        get("/geo-dash/updatewidget/widget/:id", (req, res) -> { return AJAX.UpdateDashBoardWidgetByID(req, res); });
-        get("/geo-dash/deletewidget/widget/:id", (req, res) -> { return AJAX.DeleteDashBoardWidgetByID(req, res); });
-        get("*",                (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });
+        get("/",                                 (req, res) -> { return freemarker.render(Views.home(req, res)); });
+        get("/home",                             (req, res) -> { return freemarker.render(Views.home(req, res)); });
+        get("/about",                            (req, res) -> { return freemarker.render(Views.about(req, res)); });
+        get("/login",                            (req, res) -> { return freemarker.render(Views.login(req, res)); });
+        get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });
+        get("/password",                         (req, res) -> { return freemarker.render(Views.password(req, res)); });
+        get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
+        get("/logout",                           (req, res) -> { return freemarker.render(Views.logout(req, res)); });
+        get("/select-project",                   (req, res) -> { return freemarker.render(Views.selectProject(req, res)); });
+        get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
+        get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
+        get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res)); });
+        post("/clone",                           (req, res) -> { return AJAX.clone(req, res); });
+        get("/geo-dash",                         (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
+        get("/geo-dash/id/:id",                  (req, res) -> { return AJAX.geodashId(req, res); });
+        get("/geo-dash/update/id/:id",           (req, res) -> { return AJAX.updateDashBoardByID(req, res); });
+        get("/geo-dash/createwidget/widget",     (req, res) -> { return AJAX.createDashBoardWidgetByID(req, res); });
+        get("/geo-dash/updatewidget/widget/:id", (req, res) -> { return AJAX.updateDashBoardWidgetByID(req, res); });
+        get("/geo-dash/deletewidget/widget/:id", (req, res) -> { return AJAX.deleteDashBoardWidgetByID(req, res); });
+        get("*",                                 (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });
 
         // Handle Exceptions
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
