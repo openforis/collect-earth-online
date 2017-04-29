@@ -138,7 +138,6 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                 console.log(response.data);
                 alert("Error saving your assignments to the database. See console for details.");
             });
-            this.loadRandomPlot();
     };
 
     // FIXME: Implement this endpoint
