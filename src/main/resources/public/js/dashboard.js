@@ -2,21 +2,21 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.projectList = [];
     this.currentProjectId = "";
     this.currentProject = null;
+    this.plotList = [];
     this.currentPlot = null;
     this.currentSamples = [];
     this.userSamples = {};
 
-    // FIXME: Implement this endpoint
+    // FIXME: Implement this endpoint: get-all-projects -> project_list.json
     this.getProjectList = function () {
-        // $http.get("get-all-projects")
-        //     .then(function successCallback(response) {
-        //         return response.data;
-        //     }, function errorCallback(response) {
-        //         console.log(response);
-        //         alert("Error retrieving the project list. See console for details.");
-        //         return [];
-        //     });
-        return ceo_sample_data.project_list;
+        $http.get("get-all-projects")
+            .then(function successCallback(response) {
+                this.projectList = response.data;
+                this.initialize();
+            }, function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the project list. See console for details.");
+            });
     };
 
     this.getProjectById = function (projectId) {
@@ -28,17 +28,21 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     };
 
     this.initialize = function () {
-        // Load the projectList and currentProject
-        this.projectList = this.getProjectList();
-        this.currentProjectId = document.getElementById("initial-project-id").value;
-        this.currentProject = this.getProjectById(parseInt(this.currentProjectId));
+        if (this.projectList.length == 0) {
+            // Load the projectList
+            this.getProjectList();
+        } else {
+            // Load the currentProject
+            this.currentProjectId = document.getElementById("initial-project-id").value;
+            this.currentProject = this.getProjectById(parseInt(this.currentProjectId));
 
-        // Initialize the base map and show the selected project's boundary
-        map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
-                                          center_coords: [102.0, 17.0],
-                                          zoom_level: 5});
-        map_utils.set_current_imagery(this.currentProject.imagery);
-        map_utils.draw_polygon(this.currentProject.boundary);
+            // Initialize the base map and show the selected project's boundary
+            map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
+                                              center_coords: [102.0, 17.0],
+                                              zoom_level: 5});
+            map_utils.set_current_imagery(this.currentProject.imagery);
+            map_utils.draw_polygon(this.currentProject.boundary);
+        }
     };
 
     this.switchProject = function () {
@@ -59,41 +63,42 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         }
     };
 
-    // FIXME: Implement this endpoint
+    // FIXME: Implement this endpoint: get-project-plots projectId -> plot_data_<projectId>.json
     this.getPlotData = function (projectId) {
-        // $http.post("get-project-plots",
-        //            {project_id: projectId})
-        //     .then(function successCallback(response) {
-        //         return response.data;
-        //     }, function errorCallback(response) {
-        //         console.log(response);
-        //         alert("Error retrieving plot data. See console for details.");
-        //         return [];
-        //     });
-        return ceo_sample_data.plot_data[projectId];
+        $http.post("get-project-plots",
+                   {project_id: projectId})
+            .then(function successCallback(response) {
+                this.plotList = response.data;
+                this.loadRandomPlot();
+                this.plotList = [];
+            }, function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
+            });
     };
 
     this.loadRandomPlot = function () {
-        var currentProjectPlots = this.getPlotData(parseInt(this.currentProjectId));
-        var randomIndex = Math.floor(Math.random() * currentProjectPlots.length);
-        var newPlot = currentProjectPlots[randomIndex].plot;
-        var newSamples = currentProjectPlots[randomIndex].samples;
-        this.currentPlot = newPlot;
-        this.currentSamples = newSamples;
-        this.userSamples = {};
-        utils.disable_element("new-plot-button");
-        utils.enable_element("flag-plot-button");
-        utils.disable_element("save-values-button");
-        map_utils.draw_buffer(newPlot.center, newPlot.radius);
-        map_utils.draw_points(newSamples);
-        console.log("AOI: " + map_utils.get_view_extent());
-        window.open("geo-dash?title=" + this.currentProject.name
-                    + "&pid=" + this.currentProjectId
-                    + "&aoi=[" + map_utils.get_view_extent()
-                    + "]&daterange=&bcenter=" + newPlot.center
-                    + "&bradius=" + newPlot.radius,
-                    "_geo-dash");
-    };
+        if (this.plotList.length == 0) {
+            this.getPlotData(parseInt(this.currentProjectId));
+        } else {
+            var randomIndex = Math.floor(Math.random() * this.plotList.length);
+            var newPlot = this.plotList[randomIndex].plot;
+            var newSamples = this.plotList[randomIndex].samples;
+            this.currentPlot = newPlot;
+            this.currentSamples = newSamples;
+            this.userSamples = {};
+            utils.disable_element("new-plot-button");
+            utils.enable_element("flag-plot-button");
+            utils.disable_element("save-values-button");
+            map_utils.draw_buffer(newPlot.center, newPlot.radius);
+            map_utils.draw_points(newSamples);
+            window.open("geo-dash?title=" + this.currentProject.name
+                        + "&pid=" + this.currentProjectId
+                        + "&aoi=[" + map_utils.get_view_extent()
+                        + "]&daterange=&bcenter=" + newPlot.center
+                        + "&bradius=" + newPlot.radius,
+                        "_geo-dash");
+        };
 
     this.setCurrentValue = function (sampleValue) {
         var selectedFeatures = map_utils.get_selected_samples();

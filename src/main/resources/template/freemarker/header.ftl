@@ -20,7 +20,6 @@
         <script type="text/javascript" src="js/openlayers_3.13.0.js"></script>
         <script type="text/javascript" src="js/map_utils.js"></script>
         <script type="text/javascript" src="js/utils.js"></script>
-        <script type="text/javascript" src="js/ceo_sample_data.js"></script>
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
         <!-- BEGIN: Billy's GEODASH libraries -->
