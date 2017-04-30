@@ -62,8 +62,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
 
     // FIXME: Implement this endpoint: get-project-plots projectId -> plot_data_<projectId>.json
     this.getPlotData = function (projectId) {
-        $http.post("get-project-plots",
-                   {project_id: projectId})
+        $http.post("get-project-plots", projectId)
             .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.setCurrentProject();
@@ -139,8 +138,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.exportCurrentPlotData = function () {
         var projectId = parseInt(this.currentProjectId);
         if (projectId != 0) {
-            $http.post("dump-project-aggregate-data",
-                       {project_id: projectId})
+            $http.post("dump-project-aggregate-data", projectId)
                 .then(function successCallback(response) {
                     window.open(response.data);
                 }, function errorCallback(response) {
@@ -154,8 +152,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.deleteCurrentProject = function () {
         var projectId = parseInt(this.currentProjectId);
         if (projectId != 0) {
-            $http.post("archive-project",
-                       {project_id: projectId})
+            $http.post("archive-project", projectId)
                 .then(angular.bind(this, function successCallback(response) {
                     alert("Project " + projectId + " has been deleted.");
                     this.currentProjectId = "0";
@@ -168,6 +165,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         }
     };
 
+    // FIXME: Implement this endpoint
     this.submitForm = function ($event) {
         if (this.currentProjectId != "0") {
             if (confirm("Do you REALLY want to delete this project?!")) {

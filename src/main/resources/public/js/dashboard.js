@@ -65,8 +65,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
 
     // FIXME: Implement this endpoint: get-project-plots projectId -> plot_data_<projectId>.json
     this.getPlotData = function (projectId) {
-        $http.post("get-project-plots",
-                   {project_id: projectId})
+        $http.post("get-project-plots", projectId)
             .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.loadRandomPlot();
@@ -126,12 +125,11 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         var userId = parseInt(document.getElementById("user-id").value);
         var plotId = this.currentPlot.id;
         var imagery = this.currentProject.imagery;
-        var userSamples = JSON.stringify(this.userSamples, null, 4);
         $http.post("add-user-samples",
                    {user_id: userId,
                     plot_id: plotId,
                     imagery: imagery,
-                    user_samples: userSamples})
+                    user_samples: this.userSamples})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Your assignments have been saved to the database.");
                 utils.enable_element("new-plot-button");
@@ -149,8 +147,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     // FIXME: Implement this endpoint
     this.flagPlot = function () {
         var plotId = this.currentPlot.id;
-        $http.post("flag-plot",
-                   {plot_id: plotId})
+        $http.post("flag-plot", plotId)
             .then(angular.bind(this, function successCallback(response) {
                 alert("Plot " + plotId + " has been flagged");
                 this.loadRandomPlot();

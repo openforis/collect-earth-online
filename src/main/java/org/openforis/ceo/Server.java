@@ -52,7 +52,13 @@ public class Server implements SparkApplication {
         get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
         get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
         get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res)); });
-        post("/clone",                           (req, res) -> { return AJAX.clone(req, res); });
+        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(req, res)); });
+        get("/get-all-projects",                 (req, res) -> { return AJAX.getAllProjects(req, res); });
+        post("/get-project-plots",               (req, res) -> { return AJAX.getProjectPlots(req, res); });
+        post("/dump-project-aggregate-data",     (req, res) -> { return AJAX.dumpProjectAggregateData(req, res); });
+        post("/archive-project",                 (req, res) -> { return AJAX.archiveProject(req, res); });
+        post("/add-user-samples",                (req, res) -> { return AJAX.addUserSamples(req, res); });
+        post("/flag-plot",                       (req, res) -> { return AJAX.flagPlot(req, res); });
         get("/geo-dash",                         (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
         get("/geo-dash/id/:id",                  (req, res) -> { return AJAX.geodashId(req, res); });
         get("/geo-dash/update/id/:id",           (req, res) -> { return AJAX.updateDashBoardByID(req, res); });

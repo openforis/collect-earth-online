@@ -22,12 +22,51 @@ import spark.Response;
 
 public class AJAX {
 
-    public static String clone(Request req, Response rsp) {
-        return req.body();
-    }
-
     private static String expandResourcePath(String filename) {
         return AJAX.class.getResource(filename).getFile();
+    }
+
+    public static String getAllProjects(Request req, Response res) {
+        String jsonDataDir = expandResourcePath("/public/json/");
+        try (FileReader projectFileReader = new FileReader(new File(jsonDataDir, "project_list.json"))) {
+            return (new JsonParser()).parse(projectFileReader).toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String getProjectPlots(Request req, Response res) {
+        String jsonDataDir = expandResourcePath("/public/json/");
+        String projectId = req.body();
+        try (FileReader plotFileReader = new FileReader(new File(jsonDataDir, "plot_data_" + projectId + ".json"))) {
+            return (new JsonParser()).parse(plotFileReader).toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String dumpProjectAggregateData(Request req, Response res) {
+        // FIXME: Write downloads/ceo_<project_name>_<yyyy-mm-dd>.csv and return its filename
+        String projectId = req.body();
+        return "downloads/ceo_mekong_river_region_2017-04-29.csv";
+    }
+
+    public static String archiveProject(Request req, Response res) {
+        // FIXME: Mark the selected project as archived = true
+        String projectId = req.body();
+        return "";
+    }
+
+    public static String addUserSamples(Request req, Response res) {
+        // FIXME: Stub
+        JsonObject userSample = (new JsonParser()).parse(req.body()).getAsJsonObject();
+        return "";
+    }
+
+    public static String flagPlot(Request req, Response res) {
+        // FIXME: Stub
+        String plotId = req.body();
+        return "";
     }
 
     public static String geodashId(Request req, Response res) {
