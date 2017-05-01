@@ -111,7 +111,6 @@ public class AJAX {
         updateJsonFile("project_list.json",
                        project -> {
                            if (project.get("id").getAsString().equals(projectId)) {
-                               project.remove("archived");
                                project.addProperty("archived", true);
                                return project;
                            } else {
@@ -135,20 +134,15 @@ public class AJAX {
                            JsonArray samples = plot.get("samples").getAsJsonArray();
                            if (plotAttributes.get("id").getAsString().equals(plotId)) {
                                int currentAnalyses = plotAttributes.get("analyses").getAsInt();
-                               plotAttributes.remove("analyses");
                                plotAttributes.addProperty("analyses", currentAnalyses + 1);
-                               plotAttributes.remove("user");
                                plotAttributes.addProperty("user", userId);
-                               plot.remove("plot");
                                plot.add("plot", plotAttributes);
                                JsonArray updatedSamples = mapJsonArray(samples,
                                                                        sample -> {
                                                                            String sampleId = sample.get("id").getAsString();
-                                                                           sample.remove("value");
                                                                            sample.addProperty("value", userSamples.get(sampleId).getAsInt());
                                                                            return sample;
                                                                        });
-                               plot.remove("samples");
                                plot.add("samples", updatedSamples);
                                return plot;
                            } else {
@@ -168,9 +162,7 @@ public class AJAX {
                        plot -> {
                            JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
                            if (plotAttributes.get("id").getAsString().equals(plotId)) {
-                               plotAttributes.remove("flagged");
                                plotAttributes.addProperty("flagged", true);
-                               plot.remove("plot");
                                plot.add("plot", plotAttributes);
                                return plot;
                            } else {
