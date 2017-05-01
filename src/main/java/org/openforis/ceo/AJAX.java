@@ -61,6 +61,13 @@ public class AJAX {
             .collect(intoJsonArray);
     }
 
+    private static JsonArray filterJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
+        return StreamSupport.stream(array.spliterator(), false)
+            .map(element -> element.getAsJsonObject())
+            .filter(predicate)
+            .collect(intoJsonArray);
+    }
+
     private static Optional<JsonObject> findInJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
         return StreamSupport.stream(array.spliterator(), false)
             .map(element -> element.getAsJsonObject())
@@ -75,9 +82,10 @@ public class AJAX {
         writeJsonFile(filename, updatedArray);
     }
 
-    // FIXME: Filter out projects where archived = true.
     public static String getAllProjects(Request req, Response res) {
-        return readJsonFile("project_list.json").toString();
+        JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
+        JsonArray visibleProjects = filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false);
+        return visibleProjects.toString();
     }
 
     public static String getProjectPlots(Request req, Response res) {
