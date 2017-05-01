@@ -126,7 +126,7 @@ public class AJAX {
         JsonObject jsonInputs = (new JsonParser()).parse(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
-        String userId = jsonInputs.get("userId").getAsString();
+        int userId = jsonInputs.get("userId").getAsInt();
         JsonObject userSamples = jsonInputs.get("userSamples").getAsJsonObject();
 
         updateJsonFile("plot_data_" + projectId + ".json",
