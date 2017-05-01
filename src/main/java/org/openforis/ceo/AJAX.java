@@ -61,8 +61,7 @@ public class AJAX {
             .collect(intoJsonArray);
     }
 
-    // Note: The Optional object will contain either a JsonObject or null.
-    private static Optional findInJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
+    private static Optional<JsonObject> findInJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
         return StreamSupport.stream(array.spliterator(), false)
             .map(element -> element.getAsJsonObject())
             .filter(predicate)
@@ -89,9 +88,8 @@ public class AJAX {
     // FIXME: Write downloads/ceo_<project_name>_<yyyy-mm-dd>.csv and return its filename
     public static String dumpProjectAggregateData(Request req, Response res) {
         String projectId = req.body();
-
         JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
-        Optional matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
+        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
