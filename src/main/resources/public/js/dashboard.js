@@ -118,7 +118,6 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         }
     };
 
-    // FIXME: Implement this endpoint
     this.saveValues = function () {
         $http.post("add-user-samples",
                    {projectId: this.currentProjectId,
@@ -134,7 +133,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                 map_utils.disable_selection();
                 this.loadRandomPlot();
             }), function errorCallback(response) {
-                console.log(response.data);
+                console.log(response);
                 alert("Error saving your assignments to the database. See console for details.");
             });
     };
@@ -149,7 +148,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                 alert("Plot " + plotId + " has been flagged");
                 this.loadRandomPlot();
             }), function errorCallback(response) {
-                console.log(response.data);
+                console.log(response);
                 alert("Error flagging plot as bad. See console for details.");
             });
     };

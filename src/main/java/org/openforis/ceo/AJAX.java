@@ -112,8 +112,9 @@ public class AJAX {
                         JsonArray updatedSamples = StreamSupport.stream(samples.spliterator(), false)
                             .map(sample -> sample.getAsJsonObject())
                             .map(sample -> {
+                                    String sampleId = sample.get("id").getAsString();
                                     sample.remove("value");
-                                    sample.addProperty("value", userSamples.get(sample.get("id").getAsString()));
+                                    sample.addProperty("value", userSamples.get(sampleId).getAsInt());
                                     return sample;
                                 })
                             .collect(intoJsonArray);
