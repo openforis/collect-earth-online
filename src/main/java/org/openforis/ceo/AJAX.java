@@ -71,15 +71,15 @@ public class AJAX {
 
         JsonArray updatedProjects = StreamSupport.stream(projects.spliterator(), false)
             .map(project -> project.getAsJsonObject())
-            .map(project ->
-                 { if (projectId.equals(project.get("id").getAsString())) {
-                         project.remove("archived");
-                         project.addProperty("archived", true);
-                         return project;
-                     } else {
-                         return project;
-                     }
-                 })
+            .map(project -> {
+                    if (projectId.equals(project.get("id").getAsString())) {
+                        project.remove("archived");
+                        project.addProperty("archived", true);
+                        return project;
+                    } else {
+                        return project;
+                    }
+                })
             .collect(intoJsonArray);
 
         writeJsonFile("project_list.json", updatedProjects);
@@ -88,8 +88,46 @@ public class AJAX {
     }
 
     public static String addUserSamples(Request req, Response res) {
-        // FIXME: Stub
-        JsonObject userSample = (new JsonParser()).parse(req.body()).getAsJsonObject();
+        JsonObject jsonInputs = (new JsonParser()).parse(req.body()).getAsJsonObject();
+        String projectId = jsonInputs.get("projectId").getAsString();
+        String plotId = jsonInputs.get("plotId").getAsString();
+        String userId = jsonInputs.get("userId").getAsString();
+        JsonObject userSamples = jsonInputs.get("userSamples").getAsJsonObject();
+
+        JsonArray plots = readJsonFile("plot_data_" + projectId + ".json").getAsJsonArray();
+
+        JsonArray updatedPlots = StreamSupport.stream(plots.spliterator(), false)
+            .map(plot -> plot.getAsJsonObject())
+            .map(plot -> {
+                    JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                    JsonArray samples = plot.get("samples").getAsJsonArray();
+                    if (plotId.equals(plotAttributes.get("id").getAsString())) {
+                        int currentAnalyses = plotAttributes.get("analyses").getAsInt();
+                        plotAttributes.remove("analyses");
+                        plotAttributes.addProperty("analyses", currentAnalyses + 1);
+                        plotAttributes.remove("user");
+                        plotAttributes.addProperty("user", userId);
+                        plot.remove("plot");
+                        plot.add("plot", plotAttributes);
+                        JsonArray updatedSamples = StreamSupport.stream(samples.spliterator(), false)
+                            .map(sample -> sample.getAsJsonObject())
+                            .map(sample -> {
+                                    sample.remove("value");
+                                    sample.addProperty("value", userSamples.get(sample.get("id").getAsString()));
+                                    return sample;
+                                })
+                            .collect(intoJsonArray);
+                        plot.remove("samples");
+                        plot.add("samples", updatedSamples);
+                        return plot;
+                    } else {
+                        return plot;
+                    }
+                })
+            .collect(intoJsonArray);
+
+        writeJsonFile("plot_data_" + projectId + ".json", updatedPlots);
+
         return "";
     }
 
@@ -102,18 +140,18 @@ public class AJAX {
 
         JsonArray updatedPlots = StreamSupport.stream(plots.spliterator(), false)
             .map(plot -> plot.getAsJsonObject())
-            .map(plot ->
-                 { JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                   if (plotId.equals(plotAttributes.get("id").getAsString())) {
-                       plotAttributes.remove("flagged");
-                       plotAttributes.addProperty("flagged", true);
-                       plot.remove("plot");
-                       plot.add("plot", plotAttributes);
-                       return plot;
-                   } else {
-                       return plot;
-                   }
-                 })
+            .map(plot -> {
+                    JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                    if (plotId.equals(plotAttributes.get("id").getAsString())) {
+                        plotAttributes.remove("flagged");
+                        plotAttributes.addProperty("flagged", true);
+                        plot.remove("plot");
+                        plot.add("plot", plotAttributes);
+                        return plot;
+                    } else {
+                        return plot;
+                    }
+                })
             .collect(intoJsonArray);
 
         writeJsonFile("plot_data_" + projectId + ".json", updatedPlots);

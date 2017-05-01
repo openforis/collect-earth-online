@@ -120,14 +120,11 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
 
     // FIXME: Implement this endpoint
     this.saveValues = function () {
-        var userId = parseInt(document.getElementById("user-id").value);
-        var plotId = this.currentPlot.id;
-        var imagery = this.currentProject.imagery;
         $http.post("add-user-samples",
-                   {user_id: userId,
-                    plot_id: plotId,
-                    imagery: imagery,
-                    user_samples: this.userSamples})
+                   {projectId: this.currentProjectId,
+                    plotId: this.currentPlot.id,
+                    userId: parseInt(document.getElementById("user-id").value),
+                    userSamples: this.userSamples})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Your assignments have been saved to the database.");
                 utils.enable_element("new-plot-button");
