@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.StreamSupport;
 import spark.Request;
@@ -60,6 +61,14 @@ public class AJAX {
             .collect(intoJsonArray);
     }
 
+    // Note: The Optional object will contain either a JsonObject or null.
+    private static Optional findInJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
+        return StreamSupport.stream(array.spliterator(), false)
+            .map(element -> element.getAsJsonObject())
+            .filter(predicate)
+            .findFirst();
+    }
+
     // Note: The JSON file must contain an array of objects.
     private static void updateJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
         JsonArray array = readJsonFile(filename).getAsJsonArray();
@@ -67,6 +76,7 @@ public class AJAX {
         writeJsonFile(filename, updatedArray);
     }
 
+    // FIXME: Filter out projects where archived = true.
     public static String getAllProjects(Request req, Response res) {
         return readJsonFile("project_list.json").toString();
     }
@@ -76,32 +86,27 @@ public class AJAX {
         return readJsonFile("plot_data_" + projectId + ".json").toString();
     }
 
+    // FIXME: Write downloads/ceo_<project_name>_<yyyy-mm-dd>.csv and return its filename
     public static String dumpProjectAggregateData(Request req, Response res) {
-        // FIXME: Write downloads/ceo_<project_name>_<yyyy-mm-dd>.csv and return its filename
-        // Fields: plot_id, center_lon, center_lat, radius_m, sample_points,
-        //         user_assignments, value1_%, value2_%, ..., valueN_%
         String projectId = req.body();
 
-        // Get sample values for this project
         JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
+        Optional matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
 
-        String[] labels = StreamSupport.stream(projects.spliterator(), false)
-            .map(project -> project.getAsJsonObject())
-            .filter(project -> project.get("id").getAsString().equals(projectId))
-            .map(project -> {
-                    JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
-                    return StreamSupport.stream(sampleValues.spliterator(), false)
-                        .map(sampleValue -> sampleValue.getAsJsonObject())
-                        .sorted(Comparator.comparing(sampleValue -> sampleValue.get("id").getAsInt()))
-                        .map(sampleValue -> sampleValue.get("name").getAsString())
-                        .toArray(String[]::new);
-                })
-            .findFirst()
-            .get();
+        if (matchingProject.isPresent()) {
+            JsonObject project = matchingProject.get();
+            JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
+            String[] labels = StreamSupport.stream(sampleValues.spliterator(), false)
+                .map(sampleValue -> sampleValue.getAsJsonObject())
+                .sorted(Comparator.comparing(sampleValue -> sampleValue.get("id").getAsInt()))
+                .map(sampleValue -> sampleValue.get("name").getAsString())
+                .toArray(String[]::new);
+            System.out.println("Sample Values:");
+            Arrays.stream(labels).forEach(System.out::println);
+        }
 
-        System.out.println("Sample Values:");
-        Arrays.stream(labels).forEach(System.out::println);
-
+        // Fields: plot_id, center_lon, center_lat, radius_m, sample_points,
+        //         user_assignments, value1_%, value2_%, ..., valueN_%
         return "downloads/ceo_mekong_river_region_2017-04-29.csv";
     }
 

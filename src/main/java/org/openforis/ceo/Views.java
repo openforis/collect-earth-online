@@ -83,6 +83,7 @@ public class Views {
         return new ModelAndView(model, "logout.ftl");
     }
 
+    // FIXME: Get the list of projects from the server side.
     public static ModelAndView selectProject(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Select-Project");
@@ -125,6 +126,7 @@ public class Views {
         return new ModelAndView(model, "dashboard.ftl");
     }
 
+    // FIXME: Implement project creation when request method = POST.
     public static ModelAndView admin(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Admin");
