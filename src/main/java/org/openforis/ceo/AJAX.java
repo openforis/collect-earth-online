@@ -15,6 +15,8 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collector;
@@ -61,7 +63,30 @@ public class AJAX {
 
     public static String dumpProjectAggregateData(Request req, Response res) {
         // FIXME: Write downloads/ceo_<project_name>_<yyyy-mm-dd>.csv and return its filename
+        // Fields: plot_id, center_lon, center_lat, radius_m, sample_points,
+        //         user_assignments, value1_%, value2_%, ..., valueN_%
         String projectId = req.body();
+
+        // Get sample values for this project
+        JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
+
+        String[] labels = StreamSupport.stream(projects.spliterator(), false)
+            .map(project -> project.getAsJsonObject())
+            .filter(project -> projectId.equals(project.get("id").getAsString()))
+            .map(project -> {
+                    JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
+                    return StreamSupport.stream(sampleValues.spliterator(), false)
+                        .map(sampleValue -> sampleValue.getAsJsonObject())
+                        .sorted(Comparator.comparing(sampleValue -> sampleValue.get("id").getAsInt()))
+                        .map(sampleValue -> sampleValue.get("name").getAsString())
+                        .toArray(String[]::new);
+                })
+            .findFirst()
+            .get();
+
+        System.out.println("Sample Values:");
+        Arrays.stream(labels).forEach(System.out::println);
+
         return "downloads/ceo_mekong_river_region_2017-04-29.csv";
     }
 
