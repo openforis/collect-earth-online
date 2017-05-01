@@ -87,7 +87,7 @@ public class AJAX {
 
         String[] labels = StreamSupport.stream(projects.spliterator(), false)
             .map(project -> project.getAsJsonObject())
-            .filter(project -> projectId.equals(project.get("id").getAsString()))
+            .filter(project -> project.get("id").getAsString().equals(projectId))
             .map(project -> {
                     JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
                     return StreamSupport.stream(sampleValues.spliterator(), false)
@@ -110,7 +110,7 @@ public class AJAX {
 
         updateJsonFile("project_list.json",
                        project -> {
-                           if (projectId.equals(project.get("id").getAsString())) {
+                           if (project.get("id").getAsString().equals(projectId)) {
                                project.remove("archived");
                                project.addProperty("archived", true);
                                return project;
@@ -133,7 +133,7 @@ public class AJAX {
                        plot -> {
                            JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
                            JsonArray samples = plot.get("samples").getAsJsonArray();
-                           if (plotId.equals(plotAttributes.get("id").getAsString())) {
+                           if (plotAttributes.get("id").getAsString().equals(plotId)) {
                                int currentAnalyses = plotAttributes.get("analyses").getAsInt();
                                plotAttributes.remove("analyses");
                                plotAttributes.addProperty("analyses", currentAnalyses + 1);
@@ -167,7 +167,7 @@ public class AJAX {
         updateJsonFile("plot_data_" + projectId + ".json",
                        plot -> {
                            JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                           if (plotId.equals(plotAttributes.get("id").getAsString())) {
+                           if (plotAttributes.get("id").getAsString().equals(plotId)) {
                                plotAttributes.remove("flagged");
                                plotAttributes.addProperty("flagged", true);
                                plot.remove("plot");
@@ -190,7 +190,7 @@ public class AJAX {
 
             Optional matchingProject = StreamSupport.stream(projects.spliterator(), false)
                 .map(project -> project.getAsJsonObject())
-                .filter(project -> req.params(":id").equals(project.get("projectID").getAsString()))
+                .filter(project -> project.get("projectID").getAsString().equals(req.params(":id")))
                 .map(project -> {
                         try (FileReader dashboardFileReader = new FileReader(new File(geodashDataDir, "dash-" + project.get("dashboard").getAsString() + ".json"))) {
                             return parser.parse(dashboardFileReader).getAsJsonObject();
