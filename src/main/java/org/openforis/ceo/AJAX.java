@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.StreamSupport;
 import spark.Request;
@@ -51,6 +52,20 @@ public class AJAX {
     private static Collector<JsonElement, ?, JsonArray> intoJsonArray =
         Collector.of(JsonArray::new, JsonArray::add,
                      (left, right) -> { left.addAll(right); return left; });
+
+    private static JsonArray mapJsonArray(JsonArray array, Function<JsonObject, JsonObject> mapper) {
+        return StreamSupport.stream(array.spliterator(), false)
+            .map(element -> element.getAsJsonObject())
+            .map(mapper)
+            .collect(intoJsonArray);
+    }
+
+    // Note: The JSON file must contain an array of objects.
+    private static void updateJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
+        JsonArray array = readJsonFile(filename).getAsJsonArray();
+        JsonArray updatedArray = mapJsonArray(array, mapper);
+        writeJsonFile(filename, updatedArray);
+    }
 
     public static String getAllProjects(Request req, Response res) {
         return readJsonFile("project_list.json").toString();
@@ -92,22 +107,17 @@ public class AJAX {
 
     public static String archiveProject(Request req, Response res) {
         String projectId = req.body();
-        JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
 
-        JsonArray updatedProjects = StreamSupport.stream(projects.spliterator(), false)
-            .map(project -> project.getAsJsonObject())
-            .map(project -> {
-                    if (projectId.equals(project.get("id").getAsString())) {
-                        project.remove("archived");
-                        project.addProperty("archived", true);
-                        return project;
-                    } else {
-                        return project;
-                    }
-                })
-            .collect(intoJsonArray);
-
-        writeJsonFile("project_list.json", updatedProjects);
+        updateJsonFile("project_list.json",
+                       project -> {
+                           if (projectId.equals(project.get("id").getAsString())) {
+                               project.remove("archived");
+                               project.addProperty("archived", true);
+                               return project;
+                           } else {
+                               return project;
+                           }
+                       });
 
         return "";
     }
@@ -119,40 +129,32 @@ public class AJAX {
         String userId = jsonInputs.get("userId").getAsString();
         JsonObject userSamples = jsonInputs.get("userSamples").getAsJsonObject();
 
-        JsonArray plots = readJsonFile("plot_data_" + projectId + ".json").getAsJsonArray();
-
-        JsonArray updatedPlots = StreamSupport.stream(plots.spliterator(), false)
-            .map(plot -> plot.getAsJsonObject())
-            .map(plot -> {
-                    JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                    JsonArray samples = plot.get("samples").getAsJsonArray();
-                    if (plotId.equals(plotAttributes.get("id").getAsString())) {
-                        int currentAnalyses = plotAttributes.get("analyses").getAsInt();
-                        plotAttributes.remove("analyses");
-                        plotAttributes.addProperty("analyses", currentAnalyses + 1);
-                        plotAttributes.remove("user");
-                        plotAttributes.addProperty("user", userId);
-                        plot.remove("plot");
-                        plot.add("plot", plotAttributes);
-                        JsonArray updatedSamples = StreamSupport.stream(samples.spliterator(), false)
-                            .map(sample -> sample.getAsJsonObject())
-                            .map(sample -> {
-                                    String sampleId = sample.get("id").getAsString();
-                                    sample.remove("value");
-                                    sample.addProperty("value", userSamples.get(sampleId).getAsInt());
-                                    return sample;
-                                })
-                            .collect(intoJsonArray);
-                        plot.remove("samples");
-                        plot.add("samples", updatedSamples);
-                        return plot;
-                    } else {
-                        return plot;
-                    }
-                })
-            .collect(intoJsonArray);
-
-        writeJsonFile("plot_data_" + projectId + ".json", updatedPlots);
+        updateJsonFile("plot_data_" + projectId + ".json",
+                       plot -> {
+                           JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                           JsonArray samples = plot.get("samples").getAsJsonArray();
+                           if (plotId.equals(plotAttributes.get("id").getAsString())) {
+                               int currentAnalyses = plotAttributes.get("analyses").getAsInt();
+                               plotAttributes.remove("analyses");
+                               plotAttributes.addProperty("analyses", currentAnalyses + 1);
+                               plotAttributes.remove("user");
+                               plotAttributes.addProperty("user", userId);
+                               plot.remove("plot");
+                               plot.add("plot", plotAttributes);
+                               JsonArray updatedSamples = mapJsonArray(samples,
+                                                                       sample -> {
+                                                                           String sampleId = sample.get("id").getAsString();
+                                                                           sample.remove("value");
+                                                                           sample.addProperty("value", userSamples.get(sampleId).getAsInt());
+                                                                           return sample;
+                                                                       });
+                               plot.remove("samples");
+                               plot.add("samples", updatedSamples);
+                               return plot;
+                           } else {
+                               return plot;
+                           }
+                       });
 
         return "";
     }
@@ -162,25 +164,19 @@ public class AJAX {
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
 
-        JsonArray plots = readJsonFile("plot_data_" + projectId + ".json").getAsJsonArray();
-
-        JsonArray updatedPlots = StreamSupport.stream(plots.spliterator(), false)
-            .map(plot -> plot.getAsJsonObject())
-            .map(plot -> {
-                    JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                    if (plotId.equals(plotAttributes.get("id").getAsString())) {
-                        plotAttributes.remove("flagged");
-                        plotAttributes.addProperty("flagged", true);
-                        plot.remove("plot");
-                        plot.add("plot", plotAttributes);
-                        return plot;
-                    } else {
-                        return plot;
-                    }
-                })
-            .collect(intoJsonArray);
-
-        writeJsonFile("plot_data_" + projectId + ".json", updatedPlots);
+        updateJsonFile("plot_data_" + projectId + ".json",
+                       plot -> {
+                           JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                           if (plotId.equals(plotAttributes.get("id").getAsString())) {
+                               plotAttributes.remove("flagged");
+                               plotAttributes.addProperty("flagged", true);
+                               plot.remove("plot");
+                               plot.add("plot", plotAttributes);
+                               return plot;
+                           } else {
+                               return plot;
+                           }
+                       });
 
         return "";
     }
@@ -366,4 +362,5 @@ public class AJAX {
             throw new RuntimeException(e);
         }
     }
+
 }
