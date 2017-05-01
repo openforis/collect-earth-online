@@ -32,7 +32,12 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             this.getProjectList();
         } else {
             // Load the currentProject
-            this.currentProjectId = document.getElementById("initial-project-id").value;
+            var initialProjectId = document.getElementById("initial-project-id").value;
+            if (initialProjectId == "-1") {
+                this.currentProjectId = this.projectList[0].id.toString();
+            } else {
+                this.currentProjectId = initialProjectId;
+            }
             this.currentProject = this.getProjectById(parseInt(this.currentProjectId));
 
             // Initialize the base map and show the selected project's boundary

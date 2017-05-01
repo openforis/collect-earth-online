@@ -100,7 +100,6 @@ public class Views {
         return new ModelAndView(model, "account.ftl");
     }
 
-    // FIXME: Set project_id to null unless passed in the request object and show the first element in the project list instead.
     public static ModelAndView dashboard(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Dashboard");
@@ -109,7 +108,7 @@ public class Views {
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
         model.put("user_id", 1);
-        model.put("project_id", 1);
+        model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
         return new ModelAndView(model, "dashboard.ftl");
     }
 
