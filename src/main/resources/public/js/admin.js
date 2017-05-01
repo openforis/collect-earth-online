@@ -20,7 +20,6 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.valueColor = "#000000";
     this.valueImage = "";
 
-    // FIXME: Implement this endpoint: get-all-projects -> project_list.json
     this.getProjectList = function () {
         $http.get("get-all-projects")
             .then(angular.bind(this, function successCallback(response) {
@@ -60,7 +59,6 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         );
     };
 
-    // FIXME: Implement this endpoint: get-project-plots projectId -> plot_data_<projectId>.json
     this.getPlotData = function (projectId) {
         $http.post("get-project-plots", projectId)
             .then(angular.bind(this, function successCallback(response) {
@@ -148,7 +146,6 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         }
     };
 
-    // FIXME: Implement this endpoint
     this.deleteCurrentProject = function () {
         var projectId = parseInt(this.currentProjectId);
         if (projectId != 0) {

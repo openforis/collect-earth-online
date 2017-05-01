@@ -7,7 +7,6 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.currentSamples = [];
     this.userSamples = {};
 
-    // FIXME: Implement this endpoint: get-all-projects -> project_list.json
     this.getProjectList = function () {
         $http.get("get-all-projects")
             .then(angular.bind(this, function successCallback(response) {
@@ -63,7 +62,6 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         }
     };
 
-    // FIXME: Implement this endpoint: get-project-plots projectId -> plot_data_<projectId>.json
     this.getPlotData = function (projectId) {
         $http.post("get-project-plots", projectId)
             .then(angular.bind(this, function successCallback(response) {
@@ -144,10 +142,12 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             });
     };
 
-    // FIXME: Implement this endpoint
     this.flagPlot = function () {
+        var projectId = this.currentProjectId;
         var plotId = this.currentPlot.id;
-        $http.post("flag-plot", plotId)
+        $http.post("flag-plot",
+                   {projectId: projectId,
+                    plotId:    plotId})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Plot " + plotId + " has been flagged");
                 this.loadRandomPlot();

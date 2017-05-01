@@ -94,8 +94,30 @@ public class AJAX {
     }
 
     public static String flagPlot(Request req, Response res) {
-        // FIXME: Stub
-        String plotId = req.body();
+        JsonObject jsonInputs = (new JsonParser()).parse(req.body()).getAsJsonObject();
+        String projectId = jsonInputs.get("projectId").getAsString();
+        String plotId = jsonInputs.get("plotId").getAsString();
+
+        JsonArray plots = readJsonFile("plot_data_" + projectId + ".json").getAsJsonArray();
+
+        JsonArray updatedPlots = StreamSupport.stream(plots.spliterator(), false)
+            .map(plot -> plot.getAsJsonObject())
+            .map(plot ->
+                 { JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                   if (plotId.equals(plotAttributes.get("id").getAsString())) {
+                       plotAttributes.remove("flagged");
+                       plotAttributes.addProperty("flagged", true);
+                       plot.remove("plot");
+                       plot.add("plot", plotAttributes);
+                       return plot;
+                   } else {
+                       return plot;
+                   }
+                 })
+            .collect(intoJsonArray);
+
+        writeJsonFile("plot_data_" + projectId + ".json", updatedPlots);
+
         return "";
     }
 
