@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.File;
@@ -10,12 +11,13 @@ import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.nio.file.FileSystems;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collector;
 import java.util.stream.StreamSupport;
 import spark.Request;
 import spark.Response;
@@ -26,23 +28,31 @@ public class AJAX {
         return AJAX.class.getResource(filename).getFile();
     }
 
-    public static String getAllProjects(Request req, Response res) {
+    private static JsonElement readJsonFile(String filename) {
         String jsonDataDir = expandResourcePath("/public/json/");
-        try (FileReader projectFileReader = new FileReader(new File(jsonDataDir, "project_list.json"))) {
-            return (new JsonParser()).parse(projectFileReader).toString();
+        try (FileReader fileReader = new FileReader(new File(jsonDataDir, filename))) {
+            return (new JsonParser()).parse(fileReader);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static String getProjectPlots(Request req, Response res) {
+    private static void writeJsonFile(String filename, JsonElement data) {
         String jsonDataDir = expandResourcePath("/public/json/");
-        String projectId = req.body();
-        try (FileReader plotFileReader = new FileReader(new File(jsonDataDir, "plot_data_" + projectId + ".json"))) {
-            return (new JsonParser()).parse(plotFileReader).toString();
+        try (FileWriter fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
+            fileWriter.write(data.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String getAllProjects(Request req, Response res) {
+        return readJsonFile("project_list.json").toString();
+    }
+
+    public static String getProjectPlots(Request req, Response res) {
+        String projectId = req.body();
+        return readJsonFile("plot_data_" + projectId + ".json").toString();
     }
 
     public static String dumpProjectAggregateData(Request req, Response res) {
@@ -52,8 +62,28 @@ public class AJAX {
     }
 
     public static String archiveProject(Request req, Response res) {
-        // FIXME: Mark the selected project as archived = true
         String projectId = req.body();
+        JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
+
+        Collector<JsonElement, ?, JsonArray> intoJsonArray =
+            Collector.of(JsonArray::new, JsonArray::add,
+                         (left, right) -> { left.addAll(right); return left; });
+
+        JsonArray updatedProjects = StreamSupport.stream(projects.spliterator(), false)
+            .map(project -> project.getAsJsonObject())
+            .map(project ->
+                 { if (projectId.equals(project.get("id").getAsString())) {
+                         project.remove("archived");
+                         project.addProperty("archived", true);
+                         return project;
+                     } else {
+                         return project;
+                     }
+                 })
+            .collect(intoJsonArray);
+
+        writeJsonFile("project_list.json", updatedProjects);
+
         return "";
     }
 
