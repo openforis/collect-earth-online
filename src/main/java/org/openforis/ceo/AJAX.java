@@ -46,6 +46,10 @@ public class AJAX {
         }
     }
 
+    private static Collector<JsonElement, ?, JsonArray> intoJsonArray =
+        Collector.of(JsonArray::new, JsonArray::add,
+                     (left, right) -> { left.addAll(right); return left; });
+
     public static String getAllProjects(Request req, Response res) {
         return readJsonFile("project_list.json").toString();
     }
@@ -64,10 +68,6 @@ public class AJAX {
     public static String archiveProject(Request req, Response res) {
         String projectId = req.body();
         JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
-
-        Collector<JsonElement, ?, JsonArray> intoJsonArray =
-            Collector.of(JsonArray::new, JsonArray::add,
-                         (left, right) -> { left.addAll(right); return left; });
 
         JsonArray updatedProjects = StreamSupport.stream(projects.spliterator(), false)
             .map(project -> project.getAsJsonObject())
