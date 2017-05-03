@@ -168,7 +168,9 @@ body {
 }
 
 
-
+.flip-container{
+    height:100%;
+}
 
 .full .panel .flip-container .back {
     height: 100% !important;

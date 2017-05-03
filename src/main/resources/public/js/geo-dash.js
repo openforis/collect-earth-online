@@ -224,6 +224,21 @@ function getEditForm(which, bandsupport) {
 
     return theForm;
 }
+function getStatsForm(which) {
+    "use strict";
+    var theForm = $("<div />", {
+        "class": "ctr"
+    });
+    var titlegroup = " <div class=\"form-group\"><label for=\"title_" + which.id + "\">Title:</label><input type=\"text\" class=\"form-control\" id=\"title_" + which.id + "\" value=\"" + which.name + "\" placeholder=\"Title\"></div>";
+    var columns = 3;
+    if (which.width) {
+        columns = which.width;
+    }
+    var columnsgroup = "<div class=\"form-group\"><label for=\"columns_" + which.id + "\">Columns:</label><input type=\"text\" placeholder=\"Columns\" id=\"columns_" + which.id + "\" name=\"columns_" + which.id + "\" value=\"" + columns + "\" class=\"form-control\">";
+    theForm.append(titlegroup).append(columnsgroup);
+    theForm.append("<br><input type=\"submit\" id=\"savebutton_" + which.id + "\" value=\"Save\" class=\"btn btn-primary\" onclick=\"updatewidget(this)\"/> <input type=\"submit\" id=\"deletebutton_" + which.id + "\" value=\"Delete\" class=\"btn btn-primary\" onclick=\"deleteWidget(this)\"/>");
+    return theForm;
+}
 function getTimeSeriesGraphForm(which) {
     "use strict";
     return getEditForm(which, true);
@@ -338,7 +353,7 @@ function addWidget(widget) {
             back.append(getTimeSeriesGraphForm(widget));
             flippercontainer.append(back);
             panel.append(flippercontainer);
-        } else if (wtext === "getStats") {
+        } else if (wtext === "getStats") {//create edit - Width
 
             var statsDiv = $("<div/>", {
                 "id": "widgetstats_" + widget.id,
@@ -346,18 +361,20 @@ function addWidget(widget) {
             });
             var content = "<div><div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon_population.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
             content += "  <label for=\"totalPop_" + widget.id + "\" style=\"color:#787878\">Total population</label>";
-            content += "<h4 id=\"totalPop_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"static/img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+            content += "<h4 id=\"totalPop_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
             content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon_area.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
             content += "<label for=\"totalArea_" + widget.id + "\" style=\"color:#787878\">Area</label>";
-            content += "<h4 id=\"totalArea_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"static/img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+            content += "<h4 id=\"totalArea_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
             content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon_elevation.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
             content += "<label for=\"elevationRange_" + widget.id + "\" style=\"color:#787878\">Elevation</label>";
-            content += "<h4 id=\"elevationRange_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"static/img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+            content += "<h4 id=\"elevationRange_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
 
             statsDiv.append(content);
-            statsDiv.append(title).append(sub);
+            //statsDiv.append(title).append(sub);
             front.append(statsDiv);
             flippercontainer.append(front);
+            back.html("");
+            back.append(getStatsForm(widget));
             flippercontainer.append(back);
             panel.append(flippercontainer);
         } else {
@@ -460,6 +477,7 @@ function createWidget(which) {
         success: function () {
             //update the widget with new params;
             // updateWidgetUI(this.indexVal);
+            // push widget to the page
             pageWidgets.push(outWidget);
             console.warn("Back from create");
         },
@@ -470,17 +488,35 @@ function createWidget(which) {
         }
     });
 }
+var updatingWidget;
+var debugID;
 function updateWidgetUI(which) {
     "use strict";
     var widgetID = which;
-    var updatingWidget;
+    debugID = widgetID;
     var collectionName;
+    var updateWidth = false;
     pageWidgets.forEach(function (widget) {
         if (parseInt(widget.id) === parseInt(widgetID)) {
             updatingWidget = widget;
             return;
         }
     });
+    /*
+    .parent().removeClass(function (index, className) {
+    return (className.match (/(^|\s)col-sm-\S+/g) || []).join(' ');
+});
+    */
+    updateWidth = $("#columns_" + widgetID).val() != updatingWidget.width;
+    if (updateWidth) {
+        console.info("trying to update width");
+        $("#widget_" + widgetID).parent().removeClass(function (index, className) {
+            return (className.match(/(^|\s)col-sm-\S+/g) || []).join(' ');
+        });
+        $("#widget_" + widgetID).parent().addClass("col-sm-" + $("#columns_" + widgetID).val());
+        updatingWidget.width = $("#columns_" + widgetID).val();
+        /*******************************Refresh the map******************************/
+    }
     if (updatingWidget.properties[0] === "addImageCollection") {
         var themap = mapWidgetArray["widgetmap_" + widgetID];
         themap.removeLayer(themap.getLayers().getArray()[1]);
@@ -502,6 +538,7 @@ function updateWidgetUI(which) {
         //update text as well
         $("#widgettitle_" + widgetID).html($("#title_" + widgetID).val());
         imageCollectionAJAX(url, widgetID, collectionName, visParams, dateFrom, dateTo);
+        mapWidgetArray["widgetmap_" + widgetID].updateSize();
     } else if (updatingWidget.properties[0] === "timeSeriesGraph") {
         collectionName = $("#collection_" + widgetID).val();
         updatingWidget.properties[2] = $("#sDate_" + widgetID).val();
@@ -554,6 +591,8 @@ function updateWidgetUI(which) {
                 }
             }
         });
+        graphWidgetArray["widgetgraph_" + widgetID].setSize($("#widgetgraph_" + widgetID).outerWidth(), $("#widgetgraph_" + widgetID).outerHeight(), true);
+        completeGraph();
 
     } else {
         console.info("I have to write this");
@@ -851,15 +890,20 @@ function updatewidget(which) {
     });
     if (updatingWidget.properties[0] === "getStats") {
         console.info("i need to write this");
+        if (parseInt(updatingWidget.width) !== parseInt($("#columns_" + widgetID).val())) {
+            var newObject = $.extend(true, {}, updatingWidget);
+            newObject.width = $("#columns_" + widgetID).val();
+            sendUpdate(updatingWidget.id, JSON.stringify(newObject));
+        }
+        //find pagewidget change width, send update
+        //pageWidgets[4].width = 4
+        //sendUpdate(2, JSON.stringify(pageWidgets[4]))
     } else {
         var newProperties = [];
         outWidget = {};
         newProperties.push(updatingWidget.properties[0]);
-
         var collection = $("#collection_" + widgetID).val();
         newProperties.push(collection);
-
-
         var startDate = $("#sDate_" + widgetID).val();
         newProperties.push(startDate);
         var endDate = $("#eDate_" + widgetID).val();
@@ -877,11 +921,6 @@ function updatewidget(which) {
         sendUpdate(widgetID, wjson);
         //dashboardID
     }
-    // else if (updatingWidget.properties[0] === "timeSeriesGraph") {
-    //    console.info("i need to write this");
-    //} else if (updatingWidget.properties[0] === "getStats") {
-    //    console.info("i need to write this");
-    //}
 }
 Array.prototype.removeValue = function (name, value) {
     "use strict";
@@ -1012,6 +1051,7 @@ function makeAdjustable() {
                 $(theWidget.children()[1]).height("auto");
             } else {
                 //maximize css
+                $("#content").scrollTop(0);
                 $("#fulldiv").css("z-index", "1031");
                 $(theWidget).css("height", "100%");
                 $(theWidget).css("margin-bottom", "0");
@@ -1034,6 +1074,7 @@ function makeAdjustable() {
                 $(theWidget.children()[1]).height("auto");
             } else {
                 //maximize css
+                $("#content").scrollTop(0);
                 $("#fulldiv").css("z-index", "1031");
                 $(theWidget).css("height", "100%");
                 $(theWidget).css("margin-bottom", "0");
@@ -1057,6 +1098,7 @@ function makeAdjustable() {
                 $("#" + statsdivid).addClass("minmapwidget");
             } else {
                 //maximize css
+                $("#content").scrollTop(0);
                 $("#fulldiv").css("z-index", "1031");
                 $(theWidget).css("height", "100%");
                 $(theWidget).css("margin-bottom", "0");
