@@ -178,3 +178,6 @@
     webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
     box-shadow: 8px 5px 3px rgba(0,0,0,.45);
 }
+.ui-widget.ui-widget-content{
+    z-index:101!important;
+}

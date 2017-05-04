@@ -34,12 +34,14 @@
         <!--[if lt IE 9]>
           <script type="text/javascript" src="js/respond.min.js"></script>
         <![endif]-->
+
         <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
         <script type="text/javascript" src="js/jquery-ui.min.js"></script>
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script type="text/javascript" src="js/bootstrap.min.js"></script>
         <script type="text/javascript" src="js/highcharts.js"></script>
         <script type="text/javascript" src="js/jquery.flip.min.js"></script>
+
         <!--------------------------------------------------------------->
         <!-- END: Billy's GEODASH libraries, FIXME: Simplify this list -->
         <!--------------------------------------------------------------->
