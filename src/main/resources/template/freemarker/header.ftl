@@ -35,10 +35,10 @@
           <script src="js/respond.min.js"></script>
         <![endif]-->
         <script src="js/jquery-3.1.1.min.js"></script><!--jQuery lib -->
-        <script src="js/jquery-ui.min.js"></script><!--jQuery UI lib -->
+
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="js/bootstrap.min.js"></script>
-
+        <script src="js/jquery-ui.min.js"></script><!--jQuery UI lib -->
         <script src="js/highcharts.js"></script>
         <script src="js/jquery.flip.min.js"></script>
         <!--------------------------------------------------------------->

@@ -22,9 +22,11 @@
     success, target, text, threshold, timeseries, title, toString, toggle,
     toggleClass, token, tooltip, transform, trigger, type, update, updateSize,
     url, val, view, visParams, warn, widgetJSON, widgets, width, x1, x2, xAxis,
-    y1, y2, yAxis, zoom, zoomType
+    y1, y2, yAxis, zoom, zoomType, show, extend, match, Color, dialog, scrollTop, widget,
+    autoOpen, modal, buttons, close, is, reset, change, value, find, hide
 */
 /*jslint browser: true*/ /*global  $, console, window, getParameterByName, ol, Highcharts*/ /*  node: true */ /*jshint strict:false */
+/*jslint this */
 
 var debugme;
 var theURL = "geo-dash/";
@@ -42,13 +44,13 @@ var bradius;
 var bcenter;
 var mapWidgetArray = {};
 var graphWidgetArray = {};
-/**********************debug variables remove before production******************************/
-var iamthis;
-var rowDiv = null;
+
 var pageWidgets = [];
 var icameback;
 var textStatus;
 var jqXHR;
+var dialog;
+var form;
 function completeGraph() {
     "use strict";
     pageWidgets.forEach(function (widget, index) {
@@ -88,8 +90,6 @@ function addBuffer(whichMap) {
             ]
         });
         whichMap.addLayer(layer);
-
-        console.info("should have added buffer");
     } catch (e) {
         console.warn("buffer failed: " + e.message);
     }
@@ -180,9 +180,8 @@ function numberWithCommas(x) {
 function calculateArea(poly) {
     "use strict";
     var sphere = new ol.Sphere(6378137);
-    var coordinates = poly; //[[-105.30322265625, 22.33544921875], [-105.047900390625, 22.33544921875], [-105.047900390625, 23.53271484375], [-105.30322265625, 23.53271484375], [-105.30322265625, 22.33544921875]];
+    var coordinates = poly;
     var area_m = sphere.geodesicArea(coordinates);
-    //var area_km = area_m / 1000 / 1000;
     var area_ha = area_m / 10000;
     if (area_ha < 0) {
         area_ha = area_ha * -1;
@@ -207,7 +206,7 @@ function getEditForm(which, bandsupport) {
     var rangegroup = "<div class=\"input-group input-daterange\" id=\"range_" + which.id + "\"><input type=\"text\" class=\"form-control\"  value=\"" + which.properties[2] + "\" id=\"sDate_" + which.id + "\"><div class=\"input-group-addon\">to</div><input type=\"text\" class=\"form-control\" value=\"" + which.properties[3] + "\" id=\"eDate_" + which.id + "\">";
     var bandsgroup = "";
     if (bandsupport) {
-        bandsgroup = "<div class=\"form-group\"><label for=\"bands_" + which.id + "\">Bands:(optional)</label> <input type=\"text\" placeholder=\"Columns\" id=\"bands_" + which.id + "\" name=\"bands_" + which.id + "\" value=\"" + which.properties[4] + "\" class=\"form-control\">";
+        bandsgroup = "<div class=\"form-group\"><label for=\"bands_" + which.id + "\">Bands:(optional)</label> <input type=\"text\" placeholder=\"Bands\" id=\"bands_" + which.id + "\" name=\"bands_" + which.id + "\" value=\"" + which.properties[4] + "\" class=\"form-control\">";
     }
     var columns = 3;
     if (which.width) {
@@ -249,18 +248,14 @@ function getImageCollectionForm(which) {
 }
 function addWidget(widget) {
     "use strict";
-    console.info(widget.name);
-
     var awidget = $("<div/>", {
         "class": "col-xs-6 col-sm-3 placeholder"
     });
-
     if (widget.width) {
         awidget = $("<div/>", {
             "class": "col-xs-6 col-sm-" + widget.width + " placeholder"
         });
     }
-
     var panel = $("<div/>", {
         "class": "panel panel-default"
     });
@@ -299,7 +294,6 @@ function addWidget(widget) {
     thebutton.attr("title", "Toggle Fullscreen");
     toolmaxtog.append(thebutton);
     toolsholder.append(toolmaxtog);
-
     panHead.append(toolsholder);
     panel.append(panHead);
     var img;
@@ -312,17 +306,15 @@ function addWidget(widget) {
             flippercontainer = $("<div />", {
                 "id": "flip-container_" + widget.id,
                 "class": "flip-container"
-            }); //ontouchstart="this.classList.toggle("hover");">")
-
+            });
             front = $("<div />").addClass("front");
             back = $("<div />").addClass("back").html("this is the Admin side which will contain a form");
-
         }
         wtext = widget.properties[0];
         var widgettitle = $("<h4 />", {
             "id": "widgettitle_" + widget.id
         }).html(widget.name);
-        var sub = $("<br />"); // $("<span />").addClass("text-muted").html(wtext);
+        var sub = $("<br />");
         if (wtext === "addImageCollection") {
             var maddiv = $("<div/>", {
                 "id": "widgetmap_" + widget.id,
@@ -336,7 +328,6 @@ function addWidget(widget) {
             flippercontainer.append(back);
             panel.append(flippercontainer);
         } else if (wtext === "timeSeriesGraph") {
-            //build graph here
             var graphdiv = $("<div/>", {
                 "id": "widgetgraph_" + widget.id,
                 "class": "minmapwidget"
@@ -370,7 +361,6 @@ function addWidget(widget) {
             content += "<h4 id=\"elevationRange_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
 
             statsDiv.append(content);
-            //statsDiv.append(title).append(sub);
             front.append(statsDiv);
             flippercontainer.append(front);
             back.html("");
@@ -378,7 +368,7 @@ function addWidget(widget) {
             flippercontainer.append(back);
             panel.append(flippercontainer);
         } else {
-            img = $("<img>"); //Equivalent: $(document.createElement("img"))
+            img = $("<img>");
             img.attr("src", "data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==");
             img.attr("width", "200");
             img.attr("height", "200");
@@ -399,7 +389,7 @@ function enableMapWidget(mapdiv) {
         target: mapdiv,
         view: new ol.View({
             center: [0, 0],
-            projection: "EPSG:3857", //4326",
+            projection: "EPSG:3857",
             zoom: 4
         })
     });
@@ -441,7 +431,6 @@ function imageCollectionAJAX(url, id, collectionName, visParams, dateFrom, dateT
                 icameback = data;
                 textStatus = _textStatus;
                 jqXHR = _jqXHR;
-                console.warn("Data Returned");
                 var mapId = data.mapid;
                 var token = data.token;
                 addTileServer(mapId, token, "widgetmap_" + this.indexVal);
@@ -451,42 +440,158 @@ function imageCollectionAJAX(url, id, collectionName, visParams, dateFrom, dateT
         }
     });
 }
-function createWidget(which) {
+function initWidget(widget) {
     "use strict";
-    pageWidgets.sort(function (a, b) {
-        return parseInt(a.id) - parseInt(b.id);
-    });
-    var id = pageWidgets[pageWidgets.length - 1].id + 1;
-    var outWidget = {
-        "name": "NDWI",
-        "width": "3",
-        "id": id,
-        "properties": ["timeSeriesGraph", "LANDSAT/LE7_L1T_32DAY_NDWI", "2015-01-01", "2016-01-01", "NDWI", ""]
-    };
-    //var outWidget = { "id": id, "name": "LANDSAT7 TOA", "properties": ["addImageCollection", "LANDSAT/LE7_L1T_32DAY_TOA", "2006-01-01", "2016-01-01", "B5, B4, B3"], "width": "3" };
-    console.info("will create " + which);
-    ajaxurl = theURL + "createwidget/widget";
-    $.ajax({
-        url: ajaxurl, //theURL + "id/" + pid,
-        type: "get", //send it through get method
-        dataType: "jsonp",
-        data: {
-            dashID: dashboardID,
-            widgetJSON: JSON.stringify(outWidget)
-        },
-        success: function () {
-            //update the widget with new params;
-            // updateWidgetUI(this.indexVal);
-            // push widget to the page
-            pageWidgets.push(outWidget);
-            console.warn("Back from create");
-        },
-        error: function (xhr) {
-            //Do Something to handle error
-            debugme = xhr;
-            //alert("error");
+    var collectionName;
+    var timeseriesData;
+    var text;
+    try {
+        $("#flip-container_" + widget.id).flip({
+            trigger: "manual"
+        });
+    } catch (e) {
+        console.info("widget flip issue: " + e.message);
+    }
+    try {
+        $(".back").height($("#widget_" + widget.id).height());
+    } catch (e2) {
+        console.info("widget flip issue: " + e2.message);
+    }
+    if (widget.properties[0] === "addImageCollection") {
+        enableMapWidget("widgetmap_" + widget.id);
+        if (projAOI === "") {
+            projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
+        } else {
+            if (typeof projAOI === "string") {
+                projAOI = $.parseJSON(projAOI);
+            }
         }
-    });
+
+        if (projAOI) {
+            mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                ol.proj.transform([projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857")),
+                mapWidgetArray["widgetmap_" + widget.id].getSize()
+            );
+        } else {
+            mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                projAOI,
+                mapWidgetArray["widgetmap_" + widget.id].getSize()
+            );
+        }
+        collectionName = widget.properties[1];
+        var dateFrom = widget.properties[2];
+        var dateTo = widget.properties[3];
+        var url = gateway + "/imageByMosaicCollection";
+        var bands = "";
+        if (widget.properties.length === 5) {
+            bands = widget.properties[4];
+        }
+        var visParams = {
+            min: "",
+            max: "0.3",
+            bands: bands
+        };
+        $.ajax({
+            url: url,
+            type: "POST",
+            async: true,
+            indexVal: widget.id,
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify({
+                collectionName: collectionName,
+                visParams: visParams,
+                dateFrom: dateFrom,
+                dateTo: dateTo
+            })
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.info(jqXHR + textStatus + errorThrown);
+        }).done(function (data, _textStatus, _jqXHR) {
+            if (data.errMsg) {
+                console.info(data.errMsg);
+            } else {
+                if (data.hasOwnProperty("mapid")) {
+                    icameback = data;
+                    textStatus = _textStatus;
+                    jqXHR = _jqXHR;
+                    var mapId = data.mapid;
+                    var token = data.token;
+                    var $this = this;
+                    addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }
+        });
+    } else if (widget.properties[0] === "timeSeriesGraph") {
+        collectionName = widget.properties[1];
+        var indexName = widget.properties[4];
+        $.ajax({
+            url: gateway + "/timeSeriesIndex",
+            type: "POST",
+            async: true,
+            indexVal: widget.id,
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify({
+                collectionNameTimeSeries: widget.properties[1],
+                polygon: $.parseJSON(projPairAOI),
+                indexName: widget.properties[4],
+                dateFromTimeSeries: widget.properties[2],
+                dateToTimeSeries: widget.properties[3]
+            })
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.warn(jqXHR + textStatus + errorThrown);
+        }).done(function (data, _textStatus, _jqXHR) {
+            if (data.errMsg) {
+                console.warn(data.errMsg);
+            } else {
+                if (data.hasOwnProperty("timeseries")) {
+                    icameback = data;
+                    textStatus = _textStatus;
+                    jqXHR = _jqXHR;
+                    timeseriesData = [];
+                    $.each(data.timeseries, function (ignore, value) {
+                        if (value[0] !== null) {
+                            timeseriesData.push([value[1], value[0]]);
+                        }
+                    });
+                    var $this = this;
+                    text = indexName;
+                    graphWidgetArray["widgetgraph_" + $this.indexVal] = createChart($this.indexVal, text, timeseriesData);
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }
+        });
+    } else if (widget.properties[0] === "getStats") {
+        $.ajax({
+            url: gateway + "/getStats",
+            type: "POST",
+            async: true,
+            indexVal: widget.id,
+            polyVal: $.parseJSON(projPairAOI),
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify({
+                paramType: collectionName,
+                paramValue: $.parseJSON(projPairAOI)
+            })
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.warn(jqXHR + textStatus + errorThrown);
+        }).done(function (data, _textStatus, _jqXHR) {
+            statcameback = data;
+            if (data.errMsg) {
+                console.warn(e.message + _textStatus + _jqXHR);
+            } else {
+                var $this = this;
+                $("#totalPop_" + $this.indexVal).text(numberWithCommas(data.pop));
+                $("#totalArea_" + $this.indexVal).text(calculateArea($this.polyVal) + " ha");
+                $("#elevationRange_" + $this.indexVal).text(numberWithCommas(data.minElev) + " - " + numberWithCommas(data.maxElev) + " m");
+
+            }
+        });
+    }
 }
 var updatingWidget;
 var debugID;
@@ -502,25 +607,17 @@ function updateWidgetUI(which) {
             return;
         }
     });
-    /*
-    .parent().removeClass(function (index, className) {
-    return (className.match (/(^|\s)col-sm-\S+/g) || []).join(' ');
-});
-    */
-    updateWidth = $("#columns_" + widgetID).val() != updatingWidget.width;
+    updateWidth = parseInt($("#columns_" + widgetID).val()) !== parseInt(updatingWidget.width);
     if (updateWidth) {
-        console.info("trying to update width");
-        $("#widget_" + widgetID).parent().removeClass(function (index, className) {
-            return (className.match(/(^|\s)col-sm-\S+/g) || []).join(' ');
+        $("#widget_" + widgetID).parent().removeClass(function (ignore, className) {
+            return (className.match(/(^|\s)col-sm-\S+/g) || []).join(" ");
         });
         $("#widget_" + widgetID).parent().addClass("col-sm-" + $("#columns_" + widgetID).val());
         updatingWidget.width = $("#columns_" + widgetID).val();
-        /*******************************Refresh the map******************************/
     }
     if (updatingWidget.properties[0] === "addImageCollection") {
         var themap = mapWidgetArray["widgetmap_" + widgetID];
         themap.removeLayer(themap.getLayers().getArray()[1]);
-
         collectionName = $("#collection_" + widgetID).val();
         var dateFrom = $("#sDate_" + widgetID).val();
         var dateTo = $("#eDate_" + widgetID).val();
@@ -529,13 +626,11 @@ function updateWidgetUI(which) {
         if ($("#bands_" + widgetID).val().length > 1) {
             bands = $("#bands_" + widgetID).val();
         }
-        console.info(bands);
         var visParams = {
             min: "",
             max: "0.3",
             bands: bands
         };
-        //update text as well
         $("#widgettitle_" + widgetID).html($("#title_" + widgetID).val());
         imageCollectionAJAX(url, widgetID, collectionName, visParams, dateFrom, dateTo);
         mapWidgetArray["widgetmap_" + widgetID].updateSize();
@@ -546,7 +641,6 @@ function updateWidgetUI(which) {
         var wtitle = $("#title_" + widgetID).val();
         collectionName = collectionName;
         updatingWidget.properties[1] = collectionName;
-        //var indexName = wtitle;
         updatingWidget.properties[4] = wtitle;
         $.ajax({
             url: gateway + "/timeSeriesIndex",
@@ -572,38 +666,38 @@ function updateWidgetUI(which) {
                     icameback = data;
                     textStatus = _textStatus;
                     jqXHR = _jqXHR;
-                    console.warn("Data Returned");
                     var timeseriesData = [];
 
-                    $.each(data.timeseries, function (index, value) {
+                    $.each(data.timeseries, function (ignore, value) {
                         if (value[0] !== null) {
                             timeseriesData.push([value[1], value[0]]);
-                        } else {
-                            console.info(value[0] + " at " + index);
                         }
                     });
                     var $this = this;
-                    console.info("Creating :widgetgraph_" + $this.indexVal);
-                    //graphWidgetArray["widgetgraph_" + $this.indexVal].series[0].remove();
                     graphWidgetArray["widgetgraph_" + $this.indexVal].series[0].setData(timeseriesData, true);// = createChart($this.indexVal, text, timeseriesData);
                 } else {
                     console.warn("Wrong Data Returned");
                 }
             }
         });
-        graphWidgetArray["widgetgraph_" + widgetID].setSize($("#widgetgraph_" + widgetID).outerWidth(), $("#widgetgraph_" + widgetID).outerHeight(), true);
-        completeGraph();
-
-    } else {
-        console.info("I have to write this");
+        try {
+            graphWidgetArray["widgetgraph_" + widgetID].setSize($("#widgetgraph_" + widgetID).outerWidth(), $("#widgetgraph_" + widgetID).outerHeight(), true);
+        } catch (e) {
+            console.debug(e.message);
+        }
+        try {
+            completeGraph();
+        } catch (e2) {
+            console.debug(e2.message);
+        }
     }
 }
 function sendUpdate(id, wjson) {
     "use strict";
     ajaxurl = theURL + "updatewidget/widget/" + id;
     $.ajax({
-        url: ajaxurl, //theURL + "id/" + pid,
-        type: "get", //send it through get method
+        url: ajaxurl,
+        type: "get",
         dataType: "jsonp",
         indexVal: id,
         data: {
@@ -611,14 +705,10 @@ function sendUpdate(id, wjson) {
             widgetJSON: wjson
         },
         success: function () {
-            //update the widget with new params;
             updateWidgetUI(this.indexVal);
-            console.warn("Back from update");
         },
         error: function (xhr) {
-            //Do Something to handle error
             debugme = xhr;
-            //alert("error");
         }
     });
 }
@@ -640,16 +730,12 @@ function updatePosition(listObject) {
     });
     changedList.forEach(function (widget) {
         sendUpdate(widget.id, JSON.stringify(widget));
-        //JSON.stringify(pageWidgets[0])
     });
-    //
 }
 function makeDragable() {
     "use strict";
     panelList = $(".row.placeholders");
     panelList.sortable({
-        // Only make the .panel-heading child elements support dragging.
-        // Omit this to make then entire <li>...</li> draggable.
         handle: ".panel-heading",
         update: function () {
             updateList = [];
@@ -657,7 +743,6 @@ function makeDragable() {
                 var $listItem = $(elem);
                 giveme = index;
                 var newIndex = $listItem.index();
-                console.info("dragged: " + $(elem)["0"].firstChild.id + " to " + newIndex);
                 updateList[$(elem)["0"].firstChild.id.substring($(elem)["0"].firstChild.id.indexOf("_") + 1)] = newIndex;
             });
             updatePosition(updateList);
@@ -679,7 +764,7 @@ function fillDashboard(dashboard) {
         return parseFloat(a.position) - parseFloat(b.position);
     });
     if (dashboard.widgets !== null && dashboard.widgets.length > 0) {
-        rowDiv = null;
+        var rowDiv = null;
         dashboard.widgets.forEach(function (widget) {
             if (!rowDiv) {
                 rowDiv = $("<div/>", {
@@ -694,167 +779,8 @@ function fillDashboard(dashboard) {
             $("#dashHolder").append(rowDiv);
         }
     }
-    var collectionName;
-    var timeseriesData = [];
-    var text;
     pageWidgets.forEach(function (widget) {
-        try {
-            $("#flip-container_" + widget.id).flip({
-                trigger: "manual"
-            });
-        } catch (e) {
-            console.info("widget flip issue: " + e.message);
-        }
-        try {
-            $(".back").height($("#widget_" + widget.id).height());
-        } catch (e2) {
-            console.info("widget flip issue: " + e2.message);
-        }
-        if (widget.properties[0] === "addImageCollection") {
-            enableMapWidget("widgetmap_" + widget.id);
-            if (projAOI === "") {
-                projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
-            } else {
-                if (typeof projAOI === "string") {
-                    projAOI = $.parseJSON(projAOI);
-                }
-            }
-
-            if (projAOI) {
-                mapWidgetArray["widgetmap_" + widget.id].getView().fit(
-                    ol.proj.transform([projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857")),
-                    mapWidgetArray["widgetmap_" + widget.id].getSize()
-                );
-            } else {
-                mapWidgetArray["widgetmap_" + widget.id].getView().fit(
-                    projAOI,
-                    mapWidgetArray["widgetmap_" + widget.id].getSize()
-                );
-            }
-            collectionName = widget.properties[1];
-            var dateFrom = widget.properties[2];
-            var dateTo = widget.properties[3];
-            var url = gateway + "/imageByMosaicCollection";
-            var bands = "";
-            if (widget.properties.length === 5) {
-                bands = widget.properties[4];
-            }
-            console.info(bands);
-            var visParams = {
-                min: "",
-                max: "0.3",
-                bands: bands
-            };
-            $.ajax({
-                url: url,
-                type: "POST",
-                async: true,
-                indexVal: widget.id,
-                crossDomain: true,
-                contentType: "application/json",
-                data: JSON.stringify({
-                    collectionName: collectionName,
-                    visParams: visParams,
-                    dateFrom: dateFrom,
-                    dateTo: dateTo
-                })
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.info(jqXHR + textStatus + errorThrown);
-            }).done(function (data, _textStatus, _jqXHR) {
-                if (data.errMsg) {
-                    console.info(data.errMsg);
-                } else {
-                    if (data.hasOwnProperty("mapid")) {
-                        icameback = data;
-                        textStatus = _textStatus;
-                        jqXHR = _jqXHR;
-                        console.warn("Data Returned");
-                        var mapId = data.mapid;
-                        var token = data.token;
-                        var $this = this;
-                        addTileServer(mapId, token, "widgetmap_" + $this.indexVal);// + pageWidgets[i].id);
-                    } else {
-                        console.warn("Wrong Data Returned");
-                    }
-                }
-            });
-        } else if (widget.properties[0] === "timeSeriesGraph") {
-            collectionName = widget.properties[1];
-            var indexName = widget.properties[4];
-            $.ajax({
-                url: gateway + "/timeSeriesIndex",
-                type: "POST",
-                async: true,
-                indexVal: widget.id,
-                crossDomain: true,
-                contentType: "application/json",
-                data: JSON.stringify({
-                    collectionNameTimeSeries: widget.properties[1],
-                    polygon: $.parseJSON(projPairAOI),
-                    indexName: widget.properties[4],
-                    dateFromTimeSeries: widget.properties[2],
-                    dateToTimeSeries: widget.properties[3]
-                })
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.warn(jqXHR + textStatus + errorThrown);
-            }).done(function (data, _textStatus, _jqXHR) {
-                if (data.errMsg) {
-                    console.warn(data.errMsg);
-                } else {
-                    if (data.hasOwnProperty("timeseries")) {
-                        icameback = data;
-                        textStatus = _textStatus;
-                        jqXHR = _jqXHR;
-                        console.warn("Data Returned");
-                        timeseriesData = [];
-                        $.each(data.timeseries, function (index, value) {
-                            if (value[0] !== null) {
-                                timeseriesData.push([value[1], value[0]]);
-                            } else {
-                                console.info(index);
-                            }
-                        });
-                        var $this = this;
-                        text = indexName;
-                        console.info("Creating :widgetgraph_" + $this.indexVal);
-                        graphWidgetArray["widgetgraph_" + $this.indexVal] = createChart($this.indexVal, text, timeseriesData);
-                    } else {
-                        console.warn("Wrong Data Returned");
-                    }
-                }
-            });
-        } else if (widget.properties[0] === "getStats") {
-            //var paramType = pageWidgets[i].properties[1];
-            //var polygon = eval(projPairAOI); //eval(pageWidgets[i].properties[2]);
-            //var url = gateway + "/getStats"; //http://54.186.177.52:8888/getStats";
-            $.ajax({
-                url: gateway + "/getStats",
-                type: "POST",
-                async: true,
-                indexVal: widget.id,
-                polyVal: $.parseJSON(projPairAOI),
-                crossDomain: true,
-                contentType: "application/json",
-                data: JSON.stringify({
-                    paramType: collectionName,
-                    paramValue: $.parseJSON(projPairAOI)
-                })
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.warn(jqXHR + textStatus + errorThrown);
-            }).done(function (data, _textStatus, _jqXHR) {
-                statcameback = data;
-                if (data.errMsg) {
-                    console.warn(e.message + _textStatus + _jqXHR);
-                } else {
-                    //put stats on page
-                    var $this = this;
-                    $("#totalPop_" + $this.indexVal).text(numberWithCommas(data.pop));
-                    $("#totalArea_" + $this.indexVal).text(calculateArea($this.polyVal) + " ha");
-                    $("#elevationRange_" + $this.indexVal).text(numberWithCommas(data.minElev) + " - " + numberWithCommas(data.maxElev) + " m");
-
-                }
-            });
-        }
+        initWidget(widget);
     });
     $(".input-daterange input").each(function () {
         try {
@@ -868,19 +794,16 @@ function fillDashboard(dashboard) {
         }
     });
     makeDragable();
+    if (isAdmin) {
+        $("#btnNewWidget").show();
+    }
 }
+
 var needit;
 function updatewidget(which) {
     "use strict";
     var widgetID = which.id.replace("savebutton_", "");
-    var updatingWidget;
     var outWidget;
-    //for ( i = 0; i < pageWidgets.length; i++) {
-    //    if (pageWidgets[i].id == widgetID) {
-    //        updatingWidget = pageWidgets[i];
-    //        break;
-    //    }
-    //}
     needit = widgetID;
     pageWidgets.forEach(function (widget) {
         if (parseInt(widget.id) === parseInt(widgetID)) {
@@ -889,15 +812,11 @@ function updatewidget(which) {
         }
     });
     if (updatingWidget.properties[0] === "getStats") {
-        console.info("i need to write this");
         if (parseInt(updatingWidget.width) !== parseInt($("#columns_" + widgetID).val())) {
             var newObject = $.extend(true, {}, updatingWidget);
             newObject.width = $("#columns_" + widgetID).val();
             sendUpdate(updatingWidget.id, JSON.stringify(newObject));
         }
-        //find pagewidget change width, send update
-        //pageWidgets[4].width = 4
-        //sendUpdate(2, JSON.stringify(pageWidgets[4]))
     } else {
         var newProperties = [];
         outWidget = {};
@@ -919,22 +838,21 @@ function updatewidget(which) {
         outWidget.position = updatingWidget.position;
         var wjson = JSON.stringify(outWidget);
         sendUpdate(widgetID, wjson);
-        //dashboardID
     }
 }
 Array.prototype.removeValue = function (name, value) {
     "use strict";
-    var array = $.map(this, function (v, i) {
+    var array = $.map(this, function (v, ignore) {
         return v[name] === value
             ? null
             : v;
     });
-    this.length = 0; //clear original array
-    this.push.apply(this, array); //push all elements except the one we want to delete
+    this.length = 0;
+    this.push.apply(this, array);
 };
 Array.prototype.grabElement = function (name, value) {
     "use strict";
-    var array = $.map(this, function (v, i) {
+    var array = $.map(this, function (v, ignore) {
         return v[name] === value
             ? v
             : null;
@@ -955,27 +873,27 @@ function removeWidgetFromUI(wID) {
 function deleteWidget(which) {
     "use strict";
     var widgetID = which.id.replace("deletebutton_", "");
-    console.info("will delete " + widgetID);
     removeWidgetFromUI(widgetID);
     ajaxurl = theURL + "deletewidget/widget/" + widgetID;
     $.ajax({
-        url: ajaxurl, //theURL + "id/" + pid,
-        type: "get", //send it through get method
+        url: ajaxurl,
+        type: "get",
         dataType: "jsonp",
         data: {
             dashID: dashboardID
         },
-        success: function () {
-            console.warn("Back from delete");
+        success: function (xhr) {
+            debugme = xhr;
         },
         error: function (xhr) {
-            //Do Something to handle error
             debugme = xhr;
-            //alert("error");
         }
     });
 }
-/*******************Utilities**********************************/
+function createNewWidget() {
+    "use strict";
+    dialog.dialog("open");
+}
 function getParameterByName(name, url) {
     "use strict";
     if (!url) {
@@ -994,7 +912,6 @@ function getParameterByName(name, url) {
 }
 function swapElements(obj1, obj2) {
     "use strict";
-    // create marker element and insert it where obj1 is
     obj1 = obj1.get(0);
     var temp = document.createElement("div");
     if (obj1.parentNode) {
@@ -1003,19 +920,15 @@ function swapElements(obj1, obj2) {
         obj1.parent().insertBefore(temp, obj1);
     }
     if (obj2.parentNode) {
-        // move obj1 to right before obj2
         obj2.parentNode.insertBefore(obj1, obj2);
     } else {
         obj2.parent().insertBefore(obj1, obj2);
     }
     if (temp.parentNode) {
-        // move obj2 to right before where obj1 used to be
         temp.parentNode.insertBefore(obj2, temp);
-        // remove temporary marker node
         temp.parentNode.removeChild(temp);
     } else {
         temp.parent().insertBefore(obj2, temp);
-        // remove temporary marker node
         temp.parent().removeChild(temp);
     }
 }
@@ -1023,9 +936,7 @@ function makeAdjustable() {
     "use strict";
     $(".panel-fullscreen").click(function (e) {
         e.preventDefault();
-
         var $this = $(this);
-
         if ($this.children("i").hasClass("glyphicon-resize-full")) {
             $this.children("i").removeClass("glyphicon-resize-full");
             $this.children("i").addClass("glyphicon-resize-small");
@@ -1034,7 +945,6 @@ function makeAdjustable() {
             $this.children("i").addClass("glyphicon-resize-full");
         }
         $this.closest(".panel").toggleClass("panel-fullscreen");
-        iamthis = $this;
         var theWidget = $this.parent().parent().parent().parent();
         swapElements(theWidget, document.getElementById("fullholder"));
         var width = 0;
@@ -1042,7 +952,6 @@ function makeAdjustable() {
         if (theWidget.children().children().children()[2].id.includes("widgetmap_")) {
             var mapdivid = "widgetmap_" + $(theWidget).attr("id").substring(7);
             if (wStateFull) {
-                // minimize css
                 $(theWidget).css("height", "auto");
                 $("#fulldiv").css("z-index", "0");
                 $(theWidget).css("margin-bottom", "20px");
@@ -1050,7 +959,6 @@ function makeAdjustable() {
                 $("#" + mapdivid).addClass("minmapwidget");
                 $(theWidget.children()[1]).height("auto");
             } else {
-                //maximize css
                 $("#content").scrollTop(0);
                 $("#fulldiv").css("z-index", "1031");
                 $(theWidget).css("height", "100%");
@@ -1063,9 +971,7 @@ function makeAdjustable() {
             mapWidgetArray[mapdivid].updateSize();
         } else if (theWidget.children().children().children()[2].id.includes("widgetgraph_")) {
             var graphdivid = "widgetgraph_" + $(theWidget).attr("id").substring(7);
-            /*********************resize the graph here*****************************/
             if (wStateFull) {
-                // minimize css
                 $(theWidget).css("height", "auto");
                 $("#fulldiv").css("z-index", "0");
                 $(theWidget).css("margin-bottom", "20px");
@@ -1073,7 +979,6 @@ function makeAdjustable() {
                 $("#" + graphdivid).addClass("minmapwidget");
                 $(theWidget.children()[1]).height("auto");
             } else {
-                //maximize css
                 $("#content").scrollTop(0);
                 $("#fulldiv").css("z-index", "1031");
                 $(theWidget).css("height", "100%");
@@ -1090,20 +995,16 @@ function makeAdjustable() {
         } else if (theWidget.children().children().children()[2].id.includes("widgetstats_")) {
             var statsdivid = "widgetstats_" + $(theWidget).attr("id").substring(7);
             if (wStateFull) {
-                // minimize css
                 $(theWidget).css("height", "auto");
                 $("#fulldiv").css("z-index", "0");
                 $(theWidget).css("margin-bottom", "20px");
                 $("#" + statsdivid).removeClass("fullmapwidget");
                 $("#" + statsdivid).addClass("minmapwidget");
             } else {
-                //maximize css
                 $("#content").scrollTop(0);
                 $("#fulldiv").css("z-index", "1031");
                 $(theWidget).css("height", "100%");
                 $(theWidget).css("margin-bottom", "0");
-
-
                 $("#" + statsdivid).removeClass("minmapwidget");
                 $("#" + statsdivid).addClass("fullmapwidget");
             }
@@ -1114,7 +1015,57 @@ function makeAdjustable() {
 
     });
 }
-/*********************init********************************/
+function createWidget(which) {
+    "use strict";
+    ajaxurl = theURL + "createwidget/widget";
+    $.ajax({
+        url: ajaxurl,
+        type: "get",
+        dataType: "jsonp",
+        widget: JSON.stringify(which),
+        data: {
+            dashID: dashboardID,
+            widgetJSON: JSON.stringify(which)
+        },
+        success: function () {
+            var myWidget = JSON.parse(this.widget);
+            $(".row.placeholders")[0].append(addWidget(myWidget)[0]);
+            pageWidgets.push(myWidget);
+            initWidget(pageWidgets[pageWidgets.length - 1]);
+            makeAdjustable();
+        },
+        error: function (xhr) {
+            debugme = xhr;
+        }
+    });
+}
+function createUserWidget() {
+    "use strict";
+    var newWidget = {};
+    pageWidgets.sort(function (a, b) {
+        return parseInt(a.id) - parseInt(b.id);
+    });
+    var newid = pageWidgets[pageWidgets.length - 1].id + 1;
+    pageWidgets.sort(function (a, b) {
+        return parseInt(a.position) - parseInt(b.position);
+    });
+    var newposition = pageWidgets[pageWidgets.length - 1].position + 1;
+    if ($("#mainform").is(":visible")) {
+        newWidget.name = $("#title").val();
+        newWidget.width = $("#columns").val();
+        newWidget.id = newid;
+        newWidget.properties = [$("#widgetType").val(), $("#collection").val(), $("#sDate_new").val(), $("#eDate_new").val(), $("#bands").val()];
+        newWidget.position = newposition;
+    } else if ($("#statsform").is(":visible")) {
+        newWidget.name = $("#stattitle").val();
+        newWidget.width = $("#statcolumns").val();
+        newWidget.id = newid;
+        newWidget.properties = ["getStats", "poly", ""];
+        newWidget.position = newposition;
+    }
+    createWidget(newWidget);
+    dialog.dialog("close");
+}
 $(function () {
     "use strict";
     var pid = getParameterByName("pid");
@@ -1132,8 +1083,8 @@ $(function () {
     }
     ajaxurl = theURL + "id/" + pid;
     $.ajax({
-        url: ajaxurl, //theURL + "id/" + pid,
-        type: "get", //send it through get method
+        url: ajaxurl,
+        type: "get",
         dataType: "jsonp",
         data: {
             title: title
@@ -1144,17 +1095,56 @@ $(function () {
             makeAdjustable();
         },
         error: function (xhr) {
-            //Do Something to handle error
             debugme = xhr;
-            //alert("error");
+        }
+    });
+    dialog = $("#dialog-form").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        buttons: [{
+            text: "Create widget",
+            "class": "btn btn-primary",
+            click: createUserWidget
+        },
+                {
+            text: "Cancel",
+            "class": "btn btn-primary",
+            click: function () {
+                dialog.dialog("close");
+            }
+        }],
+        close: function () {
+            form[0].reset();
+            $("#widgetType").trigger("change");
+            //allFields.removeClass("ui-state-error");
+        }
+    });
+    form = dialog.find("form");
+});
+$(function () {
+    "use strict";
+    $("#widgetType").change(function () {
+        if (this.value === "getStats") {
+            if ($("#mainform").is(":visible")) {
+                $("#mainform").hide();
+            }
+            $("#statsform").show();
+        } else {
+            if ($("#statsform").is(":visible")) {
+                $("#statsform").hide();
+            }
+            $("#mainform").show();
         }
     });
 });
+
 function tryMeNow() {
     "use strict";
     $.ajax({
-        url: ajaxurl, //theURL + "id/" + pid,
-        type: "post", //send it through get method
+        url: ajaxurl,
+        type: "post",
         dataType: "jsonp",
         data: {
             title: title
@@ -1165,7 +1155,6 @@ function tryMeNow() {
             makeAdjustable();
         },
         error: function (xhr) {
-            //Do Something to handle error
             debugme = xhr;
             console.warn("error" + debugme);
         }
