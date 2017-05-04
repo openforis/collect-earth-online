@@ -7,12 +7,12 @@
         <meta name="description" content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by Spatial Informatics Group">
         <meta name="keywords" content="collect earth online image analysis crowdsourcing platform SIG spatial informatics group">
         <title>Collect Earth Online</title>
-        <link href="favicon.ico" rel="shortcut icon">
-        <link href="css/cssreset-min.css" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:100,400,700" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Oswald:normal" rel="stylesheet" type="text/css">
-        <link href="css/openlayers_3.13.0.css" rel="stylesheet" type="text/css">
-        <link href="css/stylesheet.css" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="favicon.ico">
+        <link rel="stylesheet" type="text/css" href="css/cssreset-min.css">
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:100,400,700">
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Oswald:normal">
+        <link rel="stylesheet" type="text/css" href="css/openlayers_3.13.0.css">
+        <link rel="stylesheet" type="text/css" href="css/stylesheet.css">
         <!--[if lt IE 9]>
           <script type="text/javascript" src="js/html5shiv.js"></script>
         <![endif]-->
@@ -20,27 +20,28 @@
         <script type="text/javascript" src="js/openlayers_3.13.0.js"></script>
         <script type="text/javascript" src="js/map_utils.js"></script>
         <script type="text/javascript" src="js/utils.js"></script>
-        <script type="text/javascript" src="js/ceo_sample_data.js"></script>
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
         <!-- BEGIN: Billy's GEODASH libraries -->
         <!----------------------------------------------------------------->
-        <link href="css/bootstrap.min.css" rel="stylesheet">
-        <link href="css/ie10-viewport-bug-workaround.css" rel="stylesheet">
-        <link href="css/geo-dash.css" rel="stylesheet">
-        <link rel="stylesheet" href="css/jquery-ui.css">
-        <script src="js/ie-emulation-modes-warning.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="css/ie10-viewport-bug-workaround.css">
+        <link rel="stylesheet" type="text/css" href="css/geo-dash.css">
+        <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
+        <link rel="stylesheet" type="text/css" href="css/datepicker.css">
+        <script type="text/javascript" src="js/ie-emulation-modes-warning.js"></script>
         <!-- Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
-          <script src="js/respond.min.js"></script>
+          <script type="text/javascript" src="js/respond.min.js"></script>
         <![endif]-->
-        <script src="js/jquery-3.1.1.min.js"></script><!--jQuery lib -->
 
+        <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.min.js"></script>
         <!-- Include all compiled plugins (below), or include individual files as needed -->
-        <script src="js/bootstrap.min.js"></script>
-        <script src="js/jquery-ui.min.js"></script><!--jQuery UI lib -->
-        <script src="js/highcharts.js"></script>
-        <script src="js/jquery.flip.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/highcharts.js"></script>
+        <script type="text/javascript" src="js/jquery.flip.min.js"></script>
+
         <!--------------------------------------------------------------->
         <!-- END: Billy's GEODASH libraries, FIXME: Simplify this list -->
         <!--------------------------------------------------------------->

@@ -1,10 +1,7 @@
 package org.openforis.ceo;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -90,16 +87,6 @@ public class Views {
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
-        List<Map<String, Object>> projects =
-                Stream.of("Mekong River Region", "Laos", "Vietnam", "Cambodia")
-                        .map(name -> {
-                            Map<String, Object> project = new HashMap<String, Object>();
-                            project.put("id", name.length());
-                            project.put("name", name);
-                            return project;
-                        })
-                        .collect(Collectors.toList());
-        model.put("projects", projects);
         return new ModelAndView(model, "select-project.ftl");
     }
 
@@ -121,10 +108,11 @@ public class Views {
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
         model.put("user_id", 1);
-        model.put("project_id", 1);
+        model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
         return new ModelAndView(model, "dashboard.ftl");
     }
 
+    // FIXME: Implement project creation when request method = POST.
     public static ModelAndView admin(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Admin");
