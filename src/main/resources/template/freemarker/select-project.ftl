@@ -1,12 +1,13 @@
 <#include "header.ftl">
-<div id="select-project-form">
+
+<script type="text/javascript" src="js/selectProject.js"></script>
+
+<div id="select-project-form" ng-app="selectProject" ng-controller="SelectProjectController as selectProject" ng-init="selectProject.initialize()">
     <h1>Select a Project</h1>
-    <#list projects>
-        <ul>
-            <#items as project>
-            <li><a href="dashboard?project=${project.id}">${project.name}</a></li>
-            </#items>
-        </ul>
-    </#list>
+    <ul>
+        <li ng-repeat="project in selectProject.projectList">
+            <a href="dashboard?project={{ project.id }}">{{ project.name }}</a>
+        </li>
+    </ul>
 </div>
 <#include "footer.ftl">
