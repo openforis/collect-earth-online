@@ -181,3 +181,6 @@
 .ui-widget.ui-widget-content{
     z-index:101!important;
 }
+.ui-datepicker .ui-datepicker-prev {
+    background-image: none;
+}
