@@ -168,12 +168,14 @@ function createChart(wIndex, wText, wTimeseriesData) {
 var statcameback;
 function numberWithCommas(x) {
     "use strict";
-    try {
-        var parts = x.toString().split(".");
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        return parts.join(".");
-    } catch (e) {
-        console.warn(e.message);
+    if (typeof x === "number") {
+        try {
+            var parts = x.toString().split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join(".");
+        } catch (e) {
+            console.warn(e.message);
+        }
     }
     return "N/A";
 }
@@ -755,10 +757,12 @@ function fillDashboard(dashboard) {
     wCount = 0;
     theDash = dashboard;
     dashboardID = dashboard.dashboardID;
-    try {
-        dashboard.widgets = JSON.parse(dashboard.widgets);
-    } catch (e) {
-        console.warn("dashboard failed: " + e.message);
+    if (typeof theDash.widgets[0].id === "undefined" || theDash.widgets[0].id === null) {
+        try {
+            dashboard.widgets = JSON.parse(dashboard.widgets);
+        } catch (e) {
+            console.warn("dashboard failed: " + e.message);
+        }
     }
     dashboard.widgets.sort(function (a, b) {
         return parseFloat(a.position) - parseFloat(b.position);
@@ -1091,7 +1095,12 @@ $(function () {
         },
         success: function (response) {
             debugme = response;
-            fillDashboard(response);
+            try{
+                fillDashboard(response);
+            }
+            catch (e) {
+                console.debug(e.message);
+            }
             makeAdjustable();
         },
         error: function (xhr) {
