@@ -1,6 +1,10 @@
 <#include "header.ftl">
+<#if role == "admin">
+    <script type="text/javascript" src="js/geo-dash-admin.js"></script>
+<#else>
+    <script type="text/javascript" src="js/geo-dash.js"></script>
+</#if>
 
-<script type="text/javascript" src="js/geo-dash.js"></script>
 
 <div id="fulldiv" class="full">
     <div id="fullholder"></div>
@@ -15,6 +19,7 @@
         </div>
     </div>
 </div>
+<#if role == "admin">
 <div id="dialog-form" title="Create new widget">
   <p class="validateTips">All form fields are required.</p>
 
@@ -71,4 +76,5 @@
     </fieldset>
   </form>
 </div>
+</#if>
 <#include "footer.ftl">
