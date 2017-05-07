@@ -83,20 +83,20 @@ public class AJAX {
     }
 
     public static String getAllProjects(Request req, Response res) {
-        JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         JsonArray visibleProjects = filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false);
         return visibleProjects.toString();
     }
 
     public static String getProjectPlots(Request req, Response res) {
         String projectId = req.body();
-        return readJsonFile("plot_data_" + projectId + ".json").toString();
+        return readJsonFile("plot-data-" + projectId + ".json").toString();
     }
 
-    // FIXME: Write downloads/ceo_<project_name>_<yyyy-mm-dd>.csv and return its filename
+    // FIXME: Write downloads/ceo-<project-name>-<yyyy-mm-dd>.csv and return its filename
     public static String dumpProjectAggregateData(Request req, Response res) {
         String projectId = req.body();
-        JsonArray projects = readJsonFile("project_list.json").getAsJsonArray();
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
 
         if (matchingProject.isPresent()) {
@@ -113,13 +113,13 @@ public class AJAX {
 
         // Fields: plot_id, center_lon, center_lat, radius_m, sample_points,
         //         user_assignments, value1_%, value2_%, ..., valueN_%
-        return "downloads/ceo_mekong_river_region_2017-04-29.csv";
+        return "downloads/ceo-mekong-river-region-2017-04-29.csv";
     }
 
     public static String archiveProject(Request req, Response res) {
         String projectId = req.body();
 
-        updateJsonFile("project_list.json",
+        updateJsonFile("project-list.json",
                        project -> {
                            if (project.get("id").getAsString().equals(projectId)) {
                                project.addProperty("archived", true);
@@ -139,7 +139,7 @@ public class AJAX {
         int userId = jsonInputs.get("userId").getAsInt();
         JsonObject userSamples = jsonInputs.get("userSamples").getAsJsonObject();
 
-        updateJsonFile("plot_data_" + projectId + ".json",
+        updateJsonFile("plot-data-" + projectId + ".json",
                        plot -> {
                            JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
                            JsonArray samples = plot.get("samples").getAsJsonArray();
@@ -169,7 +169,7 @@ public class AJAX {
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
 
-        updateJsonFile("plot_data_" + projectId + ".json",
+        updateJsonFile("plot-data-" + projectId + ".json",
                        plot -> {
                            JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
                            if (plotAttributes.get("id").getAsString().equals(plotId)) {
