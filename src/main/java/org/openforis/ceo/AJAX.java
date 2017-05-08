@@ -15,13 +15,18 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import spark.Request;
 import spark.Response;
@@ -45,6 +50,16 @@ public class AJAX {
         String jsonDataDir = expandResourcePath("/public/json/");
         try (FileWriter fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
             fileWriter.write(data.toString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void writeCsvFile(String filename, String header, String[] rows) {
+        String csvDataDir = expandResourcePath("/public/downloads/");
+        try (FileWriter fileWriter = new FileWriter(new File(csvDataDir, filename))) {
+            fileWriter.write(header + "\n");
+            fileWriter.write(Arrays.stream(rows).collect(Collectors.joining("\n")));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -75,6 +90,12 @@ public class AJAX {
             .findFirst();
     }
 
+    private static void forEachInJsonArray(JsonArray array, Consumer<JsonObject> action) {
+        StreamSupport.stream(array.spliterator(), false)
+            .map(element -> element.getAsJsonObject())
+            .forEach(action);
+    }
+
     // Note: The JSON file must contain an array of objects.
     private static void updateJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
         JsonArray array = readJsonFile(filename).getAsJsonArray();
@@ -93,7 +114,18 @@ public class AJAX {
         return readJsonFile("plot-data-" + projectId + ".json").toString();
     }
 
-    // FIXME: Write downloads/ceo-<project-name>-<yyyy-mm-dd>.csv and return its filename
+    private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueNames) {
+        Map<String, Long> valueCounts = StreamSupport.stream(samples.spliterator(), false)
+            .map(sample -> sample.getAsJsonObject())
+            .map(sample -> sample.has("value") ? sample.get("value").getAsInt() : -1)
+            .map(value -> sampleValueNames.getOrDefault(value, "NoValue"))
+            .collect(Collectors.groupingBy(Function.identity(),
+                                           Collectors.counting()));
+        JsonObject valueDistribution = new JsonObject();
+        valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
+        return valueDistribution;
+    }
+
     public static String dumpProjectAggregateData(Request req, Response res) {
         String projectId = req.body();
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -102,18 +134,59 @@ public class AJAX {
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
             JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
-            String[] labels = StreamSupport.stream(sampleValues.spliterator(), false)
-                .map(sampleValue -> sampleValue.getAsJsonObject())
-                .sorted(Comparator.comparing(sampleValue -> sampleValue.get("id").getAsInt()))
-                .map(sampleValue -> sampleValue.get("name").getAsString())
-                .toArray(String[]::new);
-            System.out.println("Sample Values:");
-            Arrays.stream(labels).forEach(System.out::println);
-        }
 
-        // Fields: plot_id, center_lon, center_lat, radius_m, sample_points,
-        //         user_assignments, value1_%, value2_%, ..., valueN_%
-        return "downloads/ceo-mekong-river-region-2017-04-29.csv";
+            Map<Integer, String> sampleValueNames = StreamSupport.stream(sampleValues.spliterator(), false)
+                .map(sampleValue -> sampleValue.getAsJsonObject())
+                .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
+                                          sampleValue -> sampleValue.get("name").getAsString(),
+                                          (a, b) -> b));
+
+            JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+            JsonArray plotSummaries = mapJsonArray(plots,
+                                                   plot -> {
+                                                       JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                                                       JsonArray samples = plot.get("samples").getAsJsonArray();
+                                                       JsonObject plotCenter = (new JsonParser()).parse(plotAttributes.get("center").getAsString()).getAsJsonObject();
+                                                       JsonObject plotSummary = new JsonObject();
+                                                       plotSummary.addProperty("plot_id", plotAttributes.get("id").getAsInt());
+                                                       plotSummary.addProperty("center_lon", plotCenter.get("coordinates").getAsJsonArray().get(0).getAsDouble());
+                                                       plotSummary.addProperty("center_lat", plotCenter.get("coordinates").getAsJsonArray().get(1).getAsDouble());
+                                                       plotSummary.addProperty("radius_m", plotAttributes.get("radius").getAsInt());
+                                                       plotSummary.addProperty("flagged", plotAttributes.get("flagged").getAsBoolean());
+                                                       plotSummary.addProperty("analyses", plotAttributes.get("analyses").getAsInt());
+                                                       plotSummary.addProperty("sample_points", samples.size());
+                                                       plotSummary.add("user_id", plotAttributes.get("user"));
+                                                       plotSummary.add("distribution", getValueDistribution(samples, sampleValueNames));
+                                                       return plotSummary;
+                                                   });
+
+            String[] fields = {"plot_id", "center_lon", "center_lat", "radius_m", "flagged", "analyses", "sample_points", "user_id"};
+            String[] labels = sampleValueNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+
+            String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+
+            String[] csvRows = StreamSupport.stream(plotSummaries.spliterator(), false)
+                .map(plotSummary -> plotSummary.getAsJsonObject())
+                .map(plotSummary -> {
+                        Stream<String> fieldStream = Arrays.stream(fields);
+                        Stream<String> labelStream = Arrays.stream(labels);
+                        JsonObject distribution = plotSummary.get("distribution").getAsJsonObject();
+                        return Stream.concat(fieldStream.map(field -> plotSummary.get(field).isJsonNull() ? "" : plotSummary.get(field).getAsString()),
+                                             labelStream.map(label -> distribution.has(label) ? distribution.get(label).getAsString() : "0.0"))
+                                     .collect(Collectors.joining(","));
+                    })
+                .toArray(String[]::new);
+
+            String projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
+            String currentDate = LocalDate.now().toString();
+            String outputFileName = "ceo-" + projectName + "-" + currentDate + ".csv";
+
+            writeCsvFile(outputFileName, csvHeader, csvRows);
+
+            return "/downloads/" + outputFileName;
+        } else {
+            return "/project-not-found";
+        }
     }
 
     public static String archiveProject(Request req, Response res) {
