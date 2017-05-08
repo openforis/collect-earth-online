@@ -311,6 +311,16 @@ public class AJAX {
         return geoJsonPolygon;
     }
 
+    private static String getImageryAttribution(String imagerySelector) {
+        Map<String, String> imageryAttribution = new HashMap<String, String>();
+        imageryAttribution.put("DigitalGlobeRecentImagery+Streets", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
+        imageryAttribution.put("DigitalGlobeRecentImagery",         "DigitalGlobe Maps API: Recent Imagery | June 2015 | © DigitalGlobe, Inc");
+        imageryAttribution.put("BingAerial",                        "Bing Maps API: Aerial | © Microsoft Corporation");
+        imageryAttribution.put("BingAerialWithLabels",              "Bing Maps API: Aerial with Labels | © Microsoft Corporation");
+        imageryAttribution.put("NASASERVIRChipset2002",             "June 2002 Imagery Data Courtesy of DigitalGlobe");
+        return imageryAttribution.get(imagerySelector);
+    }
+
     private static Double[][] createRandomPointsInBounds(double lonMin, double latMin, double lonMax, double latMax, int numPoints) {
         double lonRange = lonMax - lonMin;
         double latRange = latMax - latMin;
@@ -322,57 +332,136 @@ public class AJAX {
             .toArray(Double[][]::new);
     }
 
-    // FIXME: Implement project creation as in mapcha.db
-    public static void createNewProject(Request req, Response res) {
-        // Stream.of("project-name", "project-description", "boundary-lon-min", "boundary-lon-max", "boundary-lat-min", "boundary-lat-max",
-        //           "plots", "buffer-radius", "sample-type", "samples-per-plot", "sample-resolution", "imagery-selector")
-        //     .forEach(param -> System.out.println(param + ": " + req.queryParams(param)));
-        // System.out.println("sample-values: " + (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray());
+    private static double squareDistance(double x1, double y1, double x2, double y2) {
+        return Math.pow(x2 - x1, 2.0) + Math.pow(y2 - y1, 2.0);
+    }
 
+    private static Double[][] createGriddedSampleSet(Double[] plotCenter, double bufferRadius, double sampleResolution) {
+        double plotX =  plotCenter[0]; // FIXME: convert plotCenter[0] to web mercator (4326 -> 3857)
+        double plotY =  plotCenter[1]; // FIXME: convert plotCenter[1] to web mercator (4326 -> 3857)
+        double left =   plotX - bufferRadius;
+        double right =  plotX + bufferRadius;
+        double top =    plotY - bufferRadius;
+        double bottom = plotY + bufferRadius;
+        double radiusSquared = bufferRadius * bufferRadius;
+        long steps = (long) Math.floor(2 * bufferRadius / sampleResolution);
+        return Stream.iterate(left, x -> x + sampleResolution)
+            .limit(steps)
+            .flatMap(x -> {
+                    return Stream.iterate(top, y -> y + sampleResolution)
+                        .limit(steps)
+                        .filter(y -> squareDistance(x, y, plotX, plotY) < radiusSquared)
+                        .map(y -> { return new Double[]{x, y}; }); // FIXME: convert sample points back to lon/lat (3857 -> 4326)
+                })
+            .toArray(Double[][]::new);
+    }
+
+    private static Double[][] createRandomSampleSet(Double[] plotCenter, double bufferRadius, int samplesPerPlot) {
+        double plotX =  plotCenter[0]; // FIXME: convert plotCenter[0] to web mercator (4326 -> 3857)
+        double plotY =  plotCenter[1]; // FIXME: convert plotCenter[1] to web mercator (4326 -> 3857)
+        return Stream.generate(() -> { return 2.0 * Math.PI * Math.random(); })
+            .limit(samplesPerPlot)
+            .map(offsetAngle -> {
+                    double offsetMagnitude = bufferRadius * Math.random();
+                    double xOffset = offsetMagnitude * Math.cos(offsetAngle);
+                    double yOffset = offsetMagnitude * Math.sin(offsetAngle);
+                    return new Double[]{plotX + xOffset, plotY + yOffset}; // FIXME: convert sample points back to lon/lat (3857 -> 4326)
+                })
+            .toArray(Double[][]::new);
+    }
+
+    // FIXME: Don't create a new project unless all inputs have been provided
+    public static void createNewProject(Request req, Response res) {
+        String projectName = req.queryParams("project-name");
+        String projectDescription = req.queryParams("project-description");
+        double lonMin = Double.parseDouble(req.queryParams("boundary-lon-min"));
+        double latMin = Double.parseDouble(req.queryParams("boundary-lat-min"));
+        double lonMax = Double.parseDouble(req.queryParams("boundary-lon-max"));
+        double latMax = Double.parseDouble(req.queryParams("boundary-lat-max"));
+        int numPlots = Integer.parseInt(req.queryParams("plots"));
+        double bufferRadius = Double.parseDouble(req.queryParams("buffer-radius"));
+        String sampleType = req.queryParams("sample-type");
+        int samplesPerPlot = req.queryParams("samples-per-plot") != null ? Integer.parseInt(req.queryParams("samples-per-plot")) : 0;
+        double sampleResolution = req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : 0.0;
+        String imagerySelector = req.queryParams("imagery-selector");
+        JsonArray sampleValues = (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray();
+
+        // BEGIN: Add a new entry to project-list.json
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
 
-        int maxProjectId = StreamSupport.stream(projects.spliterator(), false)
+        int newProjectId = StreamSupport.stream(projects.spliterator(), false)
             .map(project -> project.getAsJsonObject())
             .map(project -> project.get("id").getAsInt())
             .max(Comparator.naturalOrder())
-            .get();
+            .get() + 1;
 
-        JsonObject boundary = makeGeoJsonPolygon(Double.parseDouble(req.queryParams("boundary-lon-min")),
-                                                 Double.parseDouble(req.queryParams("boundary-lat-min")),
-                                                 Double.parseDouble(req.queryParams("boundary-lon-max")),
-                                                 Double.parseDouble(req.queryParams("boundary-lat-max")));
+        JsonObject boundary = makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax);
 
-        Map<String, String> imageryAttribution = new HashMap<String, String>();
-        imageryAttribution.put("DigitalGlobeRecentImagery+Streets", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
-        imageryAttribution.put("DigitalGlobeRecentImagery",         "DigitalGlobe Maps API: Recent Imagery | June 2015 | © DigitalGlobe, Inc");
-        imageryAttribution.put("BingAerial",                        "Bing Maps API: Aerial | © Microsoft Corporation");
-        imageryAttribution.put("BingAerialWithLabels",              "Bing Maps API: Aerial with Labels | © Microsoft Corporation");
-        imageryAttribution.put("NASASERVIRChipset2002",             "June 2002 Imagery Data Courtesy of DigitalGlobe");
-
-        JsonArray sampleValues = (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray();
         IntSupplier sampleValueIndexer = makeCounter();
         JsonArray updatedSampleValues = mapJsonArray(sampleValues,
                                                      sampleValue -> {
                                                          sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
                                                          sampleValue.remove("$$hashKey");
                                                          sampleValue.remove("object");
+                                                         if (sampleValue.get("image").getAsString().equals("")) {
+                                                             sampleValue.add("image", null);
+                                                         }
                                                          return sampleValue;
                                                      });
 
-        // FIXME: Don't create a new project unless all inputs have been provided
         JsonObject newProject = new JsonObject();
-        newProject.addProperty("id", maxProjectId + 1);
-        newProject.addProperty("name", req.queryParams("project-name"));
-        newProject.addProperty("description", req.queryParams("project-description"));
+        newProject.addProperty("id", newProjectId);
+        newProject.addProperty("name", projectName);
+        newProject.addProperty("description", projectDescription);
         newProject.addProperty("boundary", boundary.toString());
-        newProject.addProperty("sample_resolution", req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : null);
-        newProject.addProperty("imagery", req.queryParams("imagery-selector"));
-        newProject.addProperty("attribution", imageryAttribution.get(req.queryParams("imagery-selector")));
+        newProject.addProperty("sample_resolution", sampleResolution > 0.0 ? sampleResolution : null);
+        newProject.addProperty("imagery", imagerySelector);
+        newProject.addProperty("attribution", getImageryAttribution(imagerySelector));
         newProject.add("sample_values", updatedSampleValues);
         newProject.addProperty("archived", false);
 
         projects.add(newProject);
         writeJsonFile("project-list.json", projects);
+        // END: Add a new entry to project-list.json
+
+        // BEGIN: Create a new plot-data-<newProjectId>.json file
+        Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
+
+        IntSupplier plotIndexer = makeCounter();
+        JsonArray newPlots = Arrays.stream(newPlotCenters)
+            .map(plotCenter -> {
+                    JsonObject newPlotAttributes = new JsonObject();
+                    newPlotAttributes.addProperty("id", plotIndexer.getAsInt());
+                    newPlotAttributes.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
+                    newPlotAttributes.addProperty("radius", bufferRadius);
+                    newPlotAttributes.addProperty("flagged", false);
+                    newPlotAttributes.addProperty("analyses", 0);
+                    newPlotAttributes.add("user", null);
+
+                    Double[][] newSamplePoints = (sampleType == "gridded")
+                      ? createGriddedSampleSet(plotCenter, bufferRadius, sampleResolution)
+                      : createRandomSampleSet(plotCenter, bufferRadius, samplesPerPlot);
+
+                    IntSupplier sampleIndexer = makeCounter();
+                    JsonArray newSamples = Arrays.stream(newSamplePoints)
+                        .map(point -> {
+                                JsonObject sample = new JsonObject();
+                                sample.addProperty("id", sampleIndexer.getAsInt());
+                                sample.addProperty("point", makeGeoJsonPoint(point[0], point[1]).toString());
+                                return sample;
+                            })
+                        .collect(intoJsonArray);
+
+                    JsonObject newPlot = new JsonObject();
+                    newPlot.add("plot", newPlotAttributes);
+                    newPlot.add("samples", newSamples);
+
+                    return newPlot;
+                })
+            .collect(intoJsonArray);
+
+        writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
+        // END: Create a new plot-data-<newProjectId>.json file
     }
 
     public static String geodashId(Request req, Response res) {
