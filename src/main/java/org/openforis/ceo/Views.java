@@ -112,14 +112,19 @@ public class Views {
         return new ModelAndView(model, "dashboard.ftl");
     }
 
-    // FIXME: Implement project creation when request method = POST.
-    public static ModelAndView admin(Request req, Response rsp) {
+    public static ModelAndView admin(Request req, Response rsp, Boolean projectCreated) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Admin");
         model.put("nav_visibility", "visible");
         model.put("role", "admin");
         model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        if (projectCreated == null) {
+            model.put("flash_messages", new String[] {});
+        } else if (projectCreated == true) {
+            model.put("flash_messages", new String[] {"New project " + req.queryParams("project-name") + " created and launched!"});
+        } else {
+            model.put("flash_messages", new String[] {"Error with project creation!"});
+        }
         return new ModelAndView(model, "admin.ftl");
     }
 

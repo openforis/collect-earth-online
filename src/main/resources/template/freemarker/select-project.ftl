@@ -1,6 +1,6 @@
 <#include "header.ftl">
 
-<script type="text/javascript" src="js/selectProject.js"></script>
+<script type="text/javascript" src="js/select-project.js"></script>
 
 <div id="select-project-form" ng-app="selectProject" ng-controller="SelectProjectController as selectProject" ng-init="selectProject.initialize()">
     <h1>Select a Project</h1>

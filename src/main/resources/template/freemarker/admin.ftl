@@ -125,7 +125,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <input type="hidden" name="sample-values" ng-model="admin.sampleValues">
+                <input type="hidden" id="sample-values" name="sample-values" value="">
             </fieldset>
             <div id="spinner"></div>
         </form>

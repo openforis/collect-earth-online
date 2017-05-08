@@ -171,6 +171,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         } else {
             $event.currentTarget.value = "Processing...please wait...";
             document.getElementById("spinner").style.visibility = "visible";
+            document.getElementById("sample-values").value = JSON.stringify(this.sampleValues);
             document.getElementById("project-management-form").submit();
         }
     };

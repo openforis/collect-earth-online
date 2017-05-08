@@ -11,14 +11,14 @@
         <link rel="stylesheet" type="text/css" href="css/cssreset-min.css">
         <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:100,400,700">
         <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Oswald:normal">
-        <link rel="stylesheet" type="text/css" href="css/openlayers_3.13.0.css">
+        <link rel="stylesheet" type="text/css" href="css/openlayers-3.13.0.css">
         <link rel="stylesheet" type="text/css" href="css/stylesheet.css">
         <!--[if lt IE 9]>
           <script type="text/javascript" src="js/html5shiv.js"></script>
         <![endif]-->
         <script type="text/javascript" src="js/angular.min.js"></script>
-        <script type="text/javascript" src="js/openlayers_3.13.0.js"></script>
-        <script type="text/javascript" src="js/map_utils.js"></script>
+        <script type="text/javascript" src="js/openlayers-3.13.0.js"></script>
+        <script type="text/javascript" src="js/map-utils.js"></script>
         <script type="text/javascript" src="js/utils.js"></script>
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
@@ -56,7 +56,7 @@
             <div id="logos">
                 <img id="usaid" src="img/usaid.png">
                 <img id="nasa" src="img/nasa.png">
-                <img id="adpc" src="img/ADPC.jpg">
+                <img id="adpc" src="img/adpc.jpg">
                 <img id="servir" src="img/servir.png">
             </div>
             <#if nav_visibility == "visible">
