@@ -265,6 +265,63 @@ public class AJAX {
         return () -> { counter[0] += 1; return counter[0]; };
     }
 
+    private static JsonObject makeGeoJsonPoint(double lon, double lat) {
+        JsonArray coordinates = new JsonArray();
+        coordinates.add(lon);
+        coordinates.add(lat);
+
+        JsonObject geoJsonPoint = new JsonObject();
+        geoJsonPoint.addProperty("type", "Point");
+        geoJsonPoint.add("coordinates", coordinates);
+
+        return geoJsonPoint;
+    }
+
+    private static JsonObject makeGeoJsonPolygon(double lonMin, double latMin, double lonMax, double latMax) {
+        JsonArray lowerLeft = new JsonArray();
+        lowerLeft.add(lonMin);
+        lowerLeft.add(latMin);
+
+        JsonArray upperLeft = new JsonArray();
+        upperLeft.add(lonMin);
+        upperLeft.add(latMax);
+
+        JsonArray upperRight = new JsonArray();
+        upperRight.add(lonMax);
+        upperRight.add(latMax);
+
+        JsonArray lowerRight = new JsonArray();
+        lowerRight.add(lonMax);
+        lowerRight.add(latMin);
+
+        JsonArray coordinates = new JsonArray();
+        coordinates.add(lowerLeft);
+        coordinates.add(upperLeft);
+        coordinates.add(upperRight);
+        coordinates.add(lowerRight);
+        coordinates.add(lowerLeft);
+
+        JsonArray polygon = new JsonArray();
+        polygon.add(coordinates);
+
+        JsonObject geoJsonPolygon = new JsonObject();
+        geoJsonPolygon.addProperty("type", "Polygon");
+        geoJsonPolygon.add("coordinates", polygon);
+
+        return geoJsonPolygon;
+    }
+
+    private static Double[][] createRandomPointsInBounds(double lonMin, double latMin, double lonMax, double latMax, int numPoints) {
+        double lonRange = lonMax - lonMin;
+        double latRange = latMax - latMin;
+        return Stream.generate(() -> {
+                return new Double[]{lonMin + Math.random() * lonRange,
+                                    latMin + Math.random() * latRange};
+            })
+            .limit(numPoints)
+            .toArray(Double[][]::new);
+    }
+
     // FIXME: Implement project creation as in mapcha.db
     public static void createNewProject(Request req, Response res) {
         // Stream.of("project-name", "project-description", "boundary-lon-min", "boundary-lon-max", "boundary-lat-min", "boundary-lat-max",
@@ -280,35 +337,10 @@ public class AJAX {
             .max(Comparator.naturalOrder())
             .get();
 
-        JsonArray lowerLeft = new JsonArray();
-        lowerLeft.add(Double.parseDouble(req.queryParams("boundary-lon-min")));
-        lowerLeft.add(Double.parseDouble(req.queryParams("boundary-lat-min")));
-
-        JsonArray upperLeft = new JsonArray();
-        upperLeft.add(Double.parseDouble(req.queryParams("boundary-lon-min")));
-        upperLeft.add(Double.parseDouble(req.queryParams("boundary-lat-max")));
-
-        JsonArray upperRight = new JsonArray();
-        upperRight.add(Double.parseDouble(req.queryParams("boundary-lon-max")));
-        upperRight.add(Double.parseDouble(req.queryParams("boundary-lat-max")));
-
-        JsonArray lowerRight = new JsonArray();
-        lowerRight.add(Double.parseDouble(req.queryParams("boundary-lon-max")));
-        lowerRight.add(Double.parseDouble(req.queryParams("boundary-lat-min")));
-
-        JsonArray coordinates = new JsonArray();
-        coordinates.add(lowerLeft);
-        coordinates.add(upperLeft);
-        coordinates.add(upperRight);
-        coordinates.add(lowerRight);
-        coordinates.add(lowerLeft);
-
-        JsonArray polygon = new JsonArray();
-        polygon.add(coordinates);
-
-        JsonObject boundary = new JsonObject();
-        boundary.addProperty("type", "Polygon");
-        boundary.add("coordinates", polygon);
+        JsonObject boundary = makeGeoJsonPolygon(Double.parseDouble(req.queryParams("boundary-lon-min")),
+                                                 Double.parseDouble(req.queryParams("boundary-lat-min")),
+                                                 Double.parseDouble(req.queryParams("boundary-lon-max")),
+                                                 Double.parseDouble(req.queryParams("boundary-lat-max")));
 
         Map<String, String> imageryAttribution = new HashMap<String, String>();
         imageryAttribution.put("DigitalGlobeRecentImagery+Streets", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
@@ -318,10 +350,10 @@ public class AJAX {
         imageryAttribution.put("NASASERVIRChipset2002",             "June 2002 Imagery Data Courtesy of DigitalGlobe");
 
         JsonArray sampleValues = (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray();
-        IntSupplier counter = makeCounter();
+        IntSupplier sampleValueIndexer = makeCounter();
         JsonArray updatedSampleValues = mapJsonArray(sampleValues,
                                                      sampleValue -> {
-                                                         sampleValue.addProperty("id", counter.getAsInt());
+                                                         sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
                                                          sampleValue.remove("$$hashKey");
                                                          sampleValue.remove("object");
                                                          return sampleValue;
