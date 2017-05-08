@@ -462,7 +462,7 @@ public class AJAX {
                     newPlotAttributes.addProperty("analyses", 0);
                     newPlotAttributes.add("user", null);
 
-                    Double[][] newSamplePoints = (sampleType == "gridded")
+                    Double[][] newSamplePoints = sampleType.equals("gridded")
                       ? createGriddedSampleSet(plotCenter, bufferRadius, sampleResolution)
                       : createRandomSampleSet(plotCenter, bufferRadius, samplesPerPlot);
 
