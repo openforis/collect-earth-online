@@ -51,8 +51,8 @@ public class Server implements SparkApplication {
         get("/select-project",                   (req, res) -> { return freemarker.render(Views.selectProject(req, res)); });
         get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
         get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
-        get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res)); });
-        post("/admin",                           (req, res) -> { AJAX.createNewProject(req, res); return freemarker.render(Views.admin(req, res)); });
+        get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res, null)); });
+        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(req, res, AJAX.createNewProject(req, res))); });
         get("/get-all-projects",                 (req, res) -> { return AJAX.getAllProjects(req, res); });
         post("/get-project-plots",               (req, res) -> { return AJAX.getProjectPlots(req, res); });
         post("/dump-project-aggregate-data",     (req, res) -> { return AJAX.dumpProjectAggregateData(req, res); });

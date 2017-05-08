@@ -395,79 +395,80 @@ public class AJAX {
     }
 
     // FIXME: Don't create a new project unless all inputs have been provided
-    public static void createNewProject(Request req, Response res) {
-        String projectName = req.queryParams("project-name");
-        String projectDescription = req.queryParams("project-description");
-        double lonMin = Double.parseDouble(req.queryParams("boundary-lon-min"));
-        double latMin = Double.parseDouble(req.queryParams("boundary-lat-min"));
-        double lonMax = Double.parseDouble(req.queryParams("boundary-lon-max"));
-        double latMax = Double.parseDouble(req.queryParams("boundary-lat-max"));
-        int numPlots = Integer.parseInt(req.queryParams("plots"));
-        double bufferRadius = Double.parseDouble(req.queryParams("buffer-radius"));
-        String sampleType = req.queryParams("sample-type");
-        int samplesPerPlot = req.queryParams("samples-per-plot") != null ? Integer.parseInt(req.queryParams("samples-per-plot")) : 0;
-        double sampleResolution = req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : 0.0;
-        String imagerySelector = req.queryParams("imagery-selector");
-        JsonArray sampleValues = (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray();
+    public static boolean createNewProject(Request req, Response res) {
+        try {
+            String projectName = req.queryParams("project-name");
+            String projectDescription = req.queryParams("project-description");
+            double lonMin = Double.parseDouble(req.queryParams("boundary-lon-min"));
+            double latMin = Double.parseDouble(req.queryParams("boundary-lat-min"));
+            double lonMax = Double.parseDouble(req.queryParams("boundary-lon-max"));
+            double latMax = Double.parseDouble(req.queryParams("boundary-lat-max"));
+            int numPlots = Integer.parseInt(req.queryParams("plots"));
+            double bufferRadius = Double.parseDouble(req.queryParams("buffer-radius"));
+            String sampleType = req.queryParams("sample-type");
+            int samplesPerPlot = req.queryParams("samples-per-plot") != null ? Integer.parseInt(req.queryParams("samples-per-plot")) : 0;
+            double sampleResolution = req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : 0.0;
+            String imagerySelector = req.queryParams("imagery-selector");
+            JsonArray sampleValues = (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray();
 
-        // BEGIN: Add a new entry to project-list.json
-        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+            // BEGIN: Add a new entry to project-list.json
+            JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
 
-        int newProjectId = StreamSupport.stream(projects.spliterator(), false)
-            .map(project -> project.getAsJsonObject())
-            .map(project -> project.get("id").getAsInt())
-            .max(Comparator.naturalOrder())
-            .get() + 1;
+            int newProjectId = StreamSupport.stream(projects.spliterator(), false)
+                .map(project -> project.getAsJsonObject())
+                .map(project -> project.get("id").getAsInt())
+                .max(Comparator.naturalOrder())
+                .get() + 1;
 
-        JsonObject boundary = makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax);
+            JsonObject boundary = makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax);
 
-        IntSupplier sampleValueIndexer = makeCounter();
-        JsonArray updatedSampleValues = mapJsonArray(sampleValues,
-                                                     sampleValue -> {
-                                                         sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
-                                                         sampleValue.remove("$$hashKey");
-                                                         sampleValue.remove("object");
-                                                         if (sampleValue.get("image").getAsString().equals("")) {
-                                                             sampleValue.add("image", null);
-                                                         }
-                                                         return sampleValue;
-                                                     });
+            IntSupplier sampleValueIndexer = makeCounter();
+            JsonArray updatedSampleValues = mapJsonArray(sampleValues,
+                                                         sampleValue -> {
+                                                             sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
+                                                             sampleValue.remove("$$hashKey");
+                                                             sampleValue.remove("object");
+                                                             if (sampleValue.get("image").getAsString().equals("")) {
+                                                                 sampleValue.add("image", null);
+                                                             }
+                                                             return sampleValue;
+                                                         });
 
-        JsonObject newProject = new JsonObject();
-        newProject.addProperty("id", newProjectId);
-        newProject.addProperty("name", projectName);
-        newProject.addProperty("description", projectDescription);
-        newProject.addProperty("boundary", boundary.toString());
-        newProject.addProperty("sample_resolution", sampleResolution > 0.0 ? sampleResolution : null);
-        newProject.addProperty("imagery", imagerySelector);
-        newProject.addProperty("attribution", getImageryAttribution(imagerySelector));
-        newProject.add("sample_values", updatedSampleValues);
-        newProject.addProperty("archived", false);
+            JsonObject newProject = new JsonObject();
+            newProject.addProperty("id", newProjectId);
+            newProject.addProperty("name", projectName);
+            newProject.addProperty("description", projectDescription);
+            newProject.addProperty("boundary", boundary.toString());
+            newProject.addProperty("sample_resolution", sampleResolution > 0.0 ? sampleResolution : null);
+            newProject.addProperty("imagery", imagerySelector);
+            newProject.addProperty("attribution", getImageryAttribution(imagerySelector));
+            newProject.add("sample_values", updatedSampleValues);
+            newProject.addProperty("archived", false);
 
-        projects.add(newProject);
-        writeJsonFile("project-list.json", projects);
-        // END: Add a new entry to project-list.json
+            projects.add(newProject);
+            writeJsonFile("project-list.json", projects);
+            // END: Add a new entry to project-list.json
 
-        // BEGIN: Create a new plot-data-<newProjectId>.json file
-        Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
+            // BEGIN: Create a new plot-data-<newProjectId>.json file
+            Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
 
-        IntSupplier plotIndexer = makeCounter();
-        JsonArray newPlots = Arrays.stream(newPlotCenters)
-            .map(plotCenter -> {
-                    JsonObject newPlotAttributes = new JsonObject();
-                    newPlotAttributes.addProperty("id", plotIndexer.getAsInt());
-                    newPlotAttributes.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                    newPlotAttributes.addProperty("radius", bufferRadius);
-                    newPlotAttributes.addProperty("flagged", false);
-                    newPlotAttributes.addProperty("analyses", 0);
-                    newPlotAttributes.add("user", null);
+            IntSupplier plotIndexer = makeCounter();
+            JsonArray newPlots = Arrays.stream(newPlotCenters)
+                .map(plotCenter -> {
+                        JsonObject newPlotAttributes = new JsonObject();
+                        newPlotAttributes.addProperty("id", plotIndexer.getAsInt());
+                        newPlotAttributes.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
+                        newPlotAttributes.addProperty("radius", bufferRadius);
+                        newPlotAttributes.addProperty("flagged", false);
+                        newPlotAttributes.addProperty("analyses", 0);
+                        newPlotAttributes.add("user", null);
 
-                    Double[][] newSamplePoints = sampleType.equals("gridded")
-                      ? createGriddedSampleSet(plotCenter, bufferRadius, sampleResolution)
-                      : createRandomSampleSet(plotCenter, bufferRadius, samplesPerPlot);
+                        Double[][] newSamplePoints = sampleType.equals("gridded")
+                        ? createGriddedSampleSet(plotCenter, bufferRadius, sampleResolution)
+                        : createRandomSampleSet(plotCenter, bufferRadius, samplesPerPlot);
 
-                    IntSupplier sampleIndexer = makeCounter();
-                    JsonArray newSamples = Arrays.stream(newSamplePoints)
+                        IntSupplier sampleIndexer = makeCounter();
+                        JsonArray newSamples = Arrays.stream(newSamplePoints)
                         .map(point -> {
                                 JsonObject sample = new JsonObject();
                                 sample.addProperty("id", sampleIndexer.getAsInt());
@@ -476,16 +477,23 @@ public class AJAX {
                             })
                         .collect(intoJsonArray);
 
-                    JsonObject newPlot = new JsonObject();
-                    newPlot.add("plot", newPlotAttributes);
-                    newPlot.add("samples", newSamples);
+                        JsonObject newPlot = new JsonObject();
+                        newPlot.add("plot", newPlotAttributes);
+                        newPlot.add("samples", newSamples);
 
-                    return newPlot;
-                })
-            .collect(intoJsonArray);
+                        return newPlot;
+                    })
+                .collect(intoJsonArray);
 
-        writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
-        // END: Create a new plot-data-<newProjectId>.json file
+            writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
+            // END: Create a new plot-data-<newProjectId>.json file
+
+            // Indicate that the project was created successfully
+            return true;
+        } catch (Exception e) {
+            // Indicate that an error occurred with project creation
+            return false;
+        }
     }
 
     public static String geodashId(Request req, Response res) {
