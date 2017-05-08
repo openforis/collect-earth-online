@@ -4,6 +4,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.PrecisionModel;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -31,6 +36,10 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.geotools.geometry.jts.JTS;
+import org.geotools.referencing.CRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
 
@@ -332,13 +341,27 @@ public class AJAX {
             .toArray(Double[][]::new);
     }
 
+    private static Double[] reprojectPoint(Double[] point, int fromEPSG, int toEPSG) {
+        try {
+            Point oldPoint = (new GeometryFactory(new PrecisionModel(), fromEPSG)).createPoint(new Coordinate(point[0], point[1]));
+            CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:" + fromEPSG);
+            CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:" + toEPSG);
+            MathTransform transform = CRS.findMathTransform(sourceCRS, targetCRS);
+            Coordinate newPoint = JTS.transform(oldPoint, transform).getCoordinate();
+            return new Double[]{newPoint.x, newPoint.y};
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static double squareDistance(double x1, double y1, double x2, double y2) {
         return Math.pow(x2 - x1, 2.0) + Math.pow(y2 - y1, 2.0);
     }
 
     private static Double[][] createGriddedSampleSet(Double[] plotCenter, double bufferRadius, double sampleResolution) {
-        double plotX =  plotCenter[0]; // FIXME: convert plotCenter[0] to web mercator (4326 -> 3857)
-        double plotY =  plotCenter[1]; // FIXME: convert plotCenter[1] to web mercator (4326 -> 3857)
+        Double[] plotCenterWebMercator = reprojectPoint(plotCenter, 4326, 3857);
+        double plotX =  plotCenterWebMercator[0];
+        double plotY =  plotCenterWebMercator[1];
         double left =   plotX - bufferRadius;
         double right =  plotX + bufferRadius;
         double top =    plotY - bufferRadius;
@@ -351,21 +374,22 @@ public class AJAX {
                     return Stream.iterate(top, y -> y + sampleResolution)
                         .limit(steps)
                         .filter(y -> squareDistance(x, y, plotX, plotY) < radiusSquared)
-                        .map(y -> { return new Double[]{x, y}; }); // FIXME: convert sample points back to lon/lat (3857 -> 4326)
+                        .map(y -> { return reprojectPoint(new Double[]{x, y}, 3857, 4326); });
                 })
             .toArray(Double[][]::new);
     }
 
     private static Double[][] createRandomSampleSet(Double[] plotCenter, double bufferRadius, int samplesPerPlot) {
-        double plotX =  plotCenter[0]; // FIXME: convert plotCenter[0] to web mercator (4326 -> 3857)
-        double plotY =  plotCenter[1]; // FIXME: convert plotCenter[1] to web mercator (4326 -> 3857)
+        Double[] plotCenterWebMercator = reprojectPoint(plotCenter, 4326, 3857);
+        double plotX =  plotCenterWebMercator[0];
+        double plotY =  plotCenterWebMercator[1];
         return Stream.generate(() -> { return 2.0 * Math.PI * Math.random(); })
             .limit(samplesPerPlot)
             .map(offsetAngle -> {
                     double offsetMagnitude = bufferRadius * Math.random();
                     double xOffset = offsetMagnitude * Math.cos(offsetAngle);
                     double yOffset = offsetMagnitude * Math.sin(offsetAngle);
-                    return new Double[]{plotX + xOffset, plotY + yOffset}; // FIXME: convert sample points back to lon/lat (3857 -> 4326)
+                    return reprojectPoint(new Double[]{plotX + xOffset, plotY + yOffset}, 3857, 4326);
                 })
             .toArray(Double[][]::new);
     }

@@ -4,6 +4,9 @@ apply plugin: 'application'
 
 repositories {
     mavenCentral()
+    maven {
+        url "http://download.osgeo.org/webdav/geotools/"
+    }
 }
 
 dependencies {
@@ -12,6 +15,8 @@ dependencies {
     compile 'org.freemarker:freemarker:2.3.23'
     compile 'org.slf4j:slf4j-simple:1.7.21'
     compile 'com.google.code.gson:gson:2.8.0'
+    compile 'org.geotools:gt-shapefile:15.1'
+    compile 'org.geotools:gt-epsg-hsql:15.1'
     testCompile 'junit:junit:4.12'
 }
 

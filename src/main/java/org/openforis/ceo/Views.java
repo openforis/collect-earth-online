@@ -112,7 +112,7 @@ public class Views {
         return new ModelAndView(model, "dashboard.ftl");
     }
 
-    // FIXME: Implement project creation when request method = POST.
+    // FIXME: Notify the user that the project was created successfully when request method = POST.
     public static ModelAndView admin(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Admin");
