@@ -132,7 +132,7 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Geo-Dash");
         model.put("nav_visibility", "hidden");
-        model.put("role", "admin");
+        model.put("role", "nadmin");
         model.put("username", "admin@sig-gis.com");
         model.put("flash_messages", new String[] {});
         return new ModelAndView(model, "geo-dash.ftl");

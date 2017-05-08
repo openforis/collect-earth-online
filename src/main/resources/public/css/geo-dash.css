@@ -50,17 +50,17 @@
     margin-left: -20px;
 }
 
-.nav-sidebar > li > a {
-    padding-right: 20px;
-    padding-left: 20px;
-}
+    .nav-sidebar > li > a {
+        padding-right: 20px;
+        padding-left: 20px;
+    }
 
-.nav-sidebar > .active > a,
-.nav-sidebar > .active > a:hover,
-.nav-sidebar > .active > a:focus {
-    color: #fff;
-    background-color: #428bca;
-}
+    .nav-sidebar > .active > a,
+    .nav-sidebar > .active > a:hover,
+    .nav-sidebar > .active > a:focus {
+        color: #fff;
+        background-color: #428bca;
+    }
 
 
 /*
@@ -92,26 +92,26 @@
     text-align: center;
 }
 
-.placeholders h4 {
-    margin-bottom: 0;
-}
+    .placeholders h4 {
+        margin-bottom: 0;
+    }
 
 .placeholder {
     margin-bottom: 20px;
 }
 
-.placeholder img {
-    display: inline-block;
-    border-radius: 50%;
-}
+    .placeholder img {
+        display: inline-block;
+        border-radius: 50%;
+    }
 
 .panel-default {
     perspective: 1000px;
 }
 
-.panel-default > .panel-heading {
-    min-height: 35px;
-}
+    .panel-default > .panel-heading {
+        min-height: 35px;
+    }
 
 .full {
     position: absolute;
@@ -149,6 +149,7 @@
 .front {
     overflow-y: auto;
     overflow-x: hidden;
+    width: 100%;
 }
 
 .ctr {
@@ -160,8 +161,8 @@
 }
 
 
-.flip-container{
-    height:100%;
+.flip-container {
+    height: 100%;
 }
 
 .full .panel .flip-container .back {
@@ -178,9 +179,14 @@
     webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
     box-shadow: 8px 5px 3px rgba(0,0,0,.45);
 }
-.ui-widget.ui-widget-content{
-    z-index:101!important;
+
+.ui-widget.ui-widget-content {
+    z-index: 101 !important;
 }
+
 .ui-datepicker .ui-datepicker-prev {
     background-image: none;
+}
+.list-inline {
+    margin-bottom: 0px;
 }
