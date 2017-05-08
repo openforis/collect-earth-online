@@ -17,12 +17,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -255,6 +258,89 @@ public class AJAX {
                        });
 
         return "";
+    }
+
+    private static IntSupplier makeCounter() {
+        int[] counter = {0}; // Have to use an array to move the value onto the heap
+        return () -> { counter[0] += 1; return counter[0]; };
+    }
+
+    // FIXME: Implement project creation as in mapcha.db
+    public static void createNewProject(Request req, Response res) {
+        // Stream.of("project-name", "project-description", "boundary-lon-min", "boundary-lon-max", "boundary-lat-min", "boundary-lat-max",
+        //           "plots", "buffer-radius", "sample-type", "samples-per-plot", "sample-resolution", "imagery-selector")
+        //     .forEach(param -> System.out.println(param + ": " + req.queryParams(param)));
+        // System.out.println("sample-values: " + (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray());
+
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+
+        int maxProjectId = StreamSupport.stream(projects.spliterator(), false)
+            .map(project -> project.getAsJsonObject())
+            .map(project -> project.get("id").getAsInt())
+            .max(Comparator.naturalOrder())
+            .get();
+
+        JsonArray lowerLeft = new JsonArray();
+        lowerLeft.add(Double.parseDouble(req.queryParams("boundary-lon-min")));
+        lowerLeft.add(Double.parseDouble(req.queryParams("boundary-lat-min")));
+
+        JsonArray upperLeft = new JsonArray();
+        upperLeft.add(Double.parseDouble(req.queryParams("boundary-lon-min")));
+        upperLeft.add(Double.parseDouble(req.queryParams("boundary-lat-max")));
+
+        JsonArray upperRight = new JsonArray();
+        upperRight.add(Double.parseDouble(req.queryParams("boundary-lon-max")));
+        upperRight.add(Double.parseDouble(req.queryParams("boundary-lat-max")));
+
+        JsonArray lowerRight = new JsonArray();
+        lowerRight.add(Double.parseDouble(req.queryParams("boundary-lon-max")));
+        lowerRight.add(Double.parseDouble(req.queryParams("boundary-lat-min")));
+
+        JsonArray coordinates = new JsonArray();
+        coordinates.add(lowerLeft);
+        coordinates.add(upperLeft);
+        coordinates.add(upperRight);
+        coordinates.add(lowerRight);
+        coordinates.add(lowerLeft);
+
+        JsonArray polygon = new JsonArray();
+        polygon.add(coordinates);
+
+        JsonObject boundary = new JsonObject();
+        boundary.addProperty("type", "Polygon");
+        boundary.add("coordinates", polygon);
+
+        Map<String, String> imageryAttribution = new HashMap<String, String>();
+        imageryAttribution.put("DigitalGlobeRecentImagery+Streets", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
+        imageryAttribution.put("DigitalGlobeRecentImagery",         "DigitalGlobe Maps API: Recent Imagery | June 2015 | © DigitalGlobe, Inc");
+        imageryAttribution.put("BingAerial",                        "Bing Maps API: Aerial | © Microsoft Corporation");
+        imageryAttribution.put("BingAerialWithLabels",              "Bing Maps API: Aerial with Labels | © Microsoft Corporation");
+        imageryAttribution.put("NASASERVIRChipset2002",             "June 2002 Imagery Data Courtesy of DigitalGlobe");
+
+        JsonArray sampleValues = (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray();
+        IntSupplier counter = makeCounter();
+        JsonArray updatedSampleValues = mapJsonArray(sampleValues,
+                                                     sampleValue -> {
+                                                         sampleValue.addProperty("id", counter.getAsInt());
+                                                         sampleValue.remove("$$hashKey");
+                                                         sampleValue.remove("object");
+                                                         return sampleValue;
+                                                     });
+
+        // FIXME: Don't create a new project unless all inputs have been provided
+        JsonObject newProject = new JsonObject();
+        newProject.addProperty("id", maxProjectId + 1);
+        newProject.addProperty("name", req.queryParams("project-name"));
+        newProject.addProperty("description", req.queryParams("project-description"));
+        newProject.addProperty("boundary", boundary.toString());
+        newProject.addProperty("sample_resolution", req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : null);
+        newProject.addProperty("imagery", req.queryParams("imagery-selector"));
+        newProject.addProperty("attribution", imageryAttribution.get(req.queryParams("imagery-selector")));
+        newProject.add("sample_values", updatedSampleValues);
+        newProject.addProperty("archived", false);
+
+        projects.add(newProject);
+        writeJsonFile("project-list.json", projects);
     }
 
     public static String geodashId(Request req, Response res) {
