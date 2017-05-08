@@ -344,8 +344,8 @@ public class AJAX {
     private static Double[] reprojectPoint(Double[] point, int fromEPSG, int toEPSG) {
         try {
             Point oldPoint = (new GeometryFactory(new PrecisionModel(), fromEPSG)).createPoint(new Coordinate(point[0], point[1]));
-            CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:" + fromEPSG);
-            CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:" + toEPSG);
+            CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:" + fromEPSG, true);
+            CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:" + toEPSG, true);
             MathTransform transform = CRS.findMathTransform(sourceCRS, targetCRS);
             Coordinate newPoint = JTS.transform(oldPoint, transform).getCoordinate();
             return new Double[]{newPoint.x, newPoint.y};
