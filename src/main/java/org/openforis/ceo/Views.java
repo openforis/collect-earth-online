@@ -38,6 +38,98 @@ public class Views {
         return new ModelAndView(model, "about.ftl");
     }
 
+    public static ModelAndView tutorials(Request req, Response rsp) {
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Tutorials");
+        model.put("nav_visibility", "visible");
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
+        return new ModelAndView(model, "tutorials.ftl");
+    }
+
+    public static ModelAndView demo(Request req, Response rsp) {
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Demo");
+        model.put("nav_visibility", "visible");
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
+        return new ModelAndView(model, "demo.ftl");
+    }
+
+    public static ModelAndView account(Request req, Response rsp) {
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Account");
+        model.put("nav_visibility", "visible");
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
+        return new ModelAndView(model, "account.ftl");
+    }
+
+    public static ModelAndView selectProject(Request req, Response rsp) {
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Select-Project");
+        model.put("nav_visibility", "visible");
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
+        return new ModelAndView(model, "select-project.ftl");
+    }
+
+    public static ModelAndView dashboard(Request req, Response rsp) {
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Dashboard");
+        model.put("nav_visibility", "visible");
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
+        model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
+        return new ModelAndView(model, "dashboard.ftl");
+    }
+
+    public static ModelAndView admin(Request req, Response rsp, Boolean projectCreated) {
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put("navlink", "Admin");
+        model.put("nav_visibility", "visible");
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (projectCreated == null) {
+            model.put("flash_messages", new String[]{});
+        } else if (projectCreated == true) {
+            model.put("flash_messages", new String[]{"New project " + req.queryParams("project-name") + " created and launched!"});
+        } else {
+            model.put("flash_messages", new String[]{"Error with project creation!"});
+        }
+        return new ModelAndView(model, "admin.ftl");
+    }
+
     public static ModelAndView login(Request req, Response rsp) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Login");
@@ -113,68 +205,6 @@ public class Views {
             model.put("flash_messages", new String[]{});
         }
         return new ModelAndView(model, "logout.ftl");
-    }
-
-    public static ModelAndView selectProject(Request req, Response rsp) {
-        Map<String, Object> model = new HashMap<String, Object>();
-        model.put("navlink", "Select-Project");
-        model.put("nav_visibility", "visible");
-        model.put("role", req.session().attribute("role"));
-        model.put("username", req.session().attribute("username"));
-        if (req.session().attribute("flash_messages") != null) {
-            model.put("flash_messages", req.session().attribute("flash_messages"));
-            req.session().removeAttribute("flash_messages");
-        } else {
-            model.put("flash_messages", new String[]{});
-        }
-        return new ModelAndView(model, "select-project.ftl");
-    }
-
-    public static ModelAndView account(Request req, Response rsp) {
-        Map<String, Object> model = new HashMap<String, Object>();
-        model.put("navlink", "Account");
-        model.put("nav_visibility", "visible");
-        model.put("role", req.session().attribute("role"));
-        model.put("username", req.session().attribute("username"));
-        if (req.session().attribute("flash_messages") != null) {
-            model.put("flash_messages", req.session().attribute("flash_messages"));
-            req.session().removeAttribute("flash_messages");
-        } else {
-            model.put("flash_messages", new String[]{});
-        }
-        return new ModelAndView(model, "account.ftl");
-    }
-
-    public static ModelAndView dashboard(Request req, Response rsp) {
-        Map<String, Object> model = new HashMap<String, Object>();
-        model.put("navlink", "Dashboard");
-        model.put("nav_visibility", "visible");
-        model.put("role", req.session().attribute("role"));
-        model.put("username", req.session().attribute("username"));
-        if (req.session().attribute("flash_messages") != null) {
-            model.put("flash_messages", req.session().attribute("flash_messages"));
-            req.session().removeAttribute("flash_messages");
-        } else {
-            model.put("flash_messages", new String[]{});
-        }
-        model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
-        return new ModelAndView(model, "dashboard.ftl");
-    }
-
-    public static ModelAndView admin(Request req, Response rsp, Boolean projectCreated) {
-        Map<String, Object> model = new HashMap<String, Object>();
-        model.put("navlink", "Admin");
-        model.put("nav_visibility", "visible");
-        model.put("role", req.session().attribute("role"));
-        model.put("username", req.session().attribute("username"));
-        if (projectCreated == null) {
-            model.put("flash_messages", new String[]{});
-        } else if (projectCreated == true) {
-            model.put("flash_messages", new String[]{"New project " + req.queryParams("project-name") + " created and launched!"});
-        } else {
-            model.put("flash_messages", new String[]{"Error with project creation!"});
-        }
-        return new ModelAndView(model, "admin.ftl");
     }
 
     public static ModelAndView geodash(Request req, Response rsp) {

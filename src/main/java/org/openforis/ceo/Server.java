@@ -47,6 +47,13 @@ public class Server implements SparkApplication {
         get("/",                                 (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/home",                             (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/about",                            (req, res) -> { return freemarker.render(Views.about(req, res)); });
+        get("/tutorials",                        (req, res) -> { return freemarker.render(Views.tutorials(req, res)); });
+        get("/demo",                             (req, res) -> { return freemarker.render(Views.demo(req, res)); });
+        get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
+        get("/select-project",                   (req, res) -> { return freemarker.render(Views.selectProject(req, res)); });
+        get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
+        get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res, null)); });
+        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(req, res, AJAX.createNewProject(req, res))); });
         get("/login",                            (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",                           (req, res) -> { return freemarker.render(Views.login(AJAX.login(req, res), res)); });
         get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });
@@ -54,11 +61,6 @@ public class Server implements SparkApplication {
         get("/password",                         (req, res) -> { return freemarker.render(Views.password(req, res)); });
         get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
         get("/logout",                           (req, res) -> { return freemarker.render(Views.home(AJAX.logout(req), res)); });
-        get("/select-project",                   (req, res) -> { return freemarker.render(Views.selectProject(req, res)); });
-        get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
-        get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res, null)); });
-        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(req, res, AJAX.createNewProject(req, res))); });
         get("/get-all-projects",                 (req, res) -> { return AJAX.getAllProjects(req, res); });
         post("/get-project-plots",               (req, res) -> { return AJAX.getProjectPlots(req, res); });
         post("/dump-project-aggregate-data",     (req, res) -> { return AJAX.dumpProjectAggregateData(req, res); });

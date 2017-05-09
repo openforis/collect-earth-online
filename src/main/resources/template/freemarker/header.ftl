@@ -63,7 +63,7 @@
             <nav>
                 <ul>
                     <#if role?? && role == "admin">
-                        <#list ["Home", "About", "Account", "Dashboard", "Admin"] as url>
+                        <#list ["Home", "About", "Tutorials", "Demo", "Account", "Dashboard", "Admin"] as url>
                             <#if navlink == url>
                                 <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
                             <#else>
@@ -71,7 +71,7 @@
                             </#if>
                         </#list>
                     <#elseif role?? && role == "user">
-                        <#list ["Home", "About", "Account", "Dashboard"] as url>
+                        <#list ["Home", "About", "Tutorials", "Demo", "Account", "Dashboard"] as url>
                             <#if navlink == url>
                                 <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
                             <#else>
@@ -79,7 +79,7 @@
                             </#if>
                         </#list>
                     <#else>
-                        <#list ["Home", "About"] as url>
+                        <#list ["Home", "About", "Tutorials", "Demo"] as url>
                             <#if navlink == url>
                                 <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
                             <#else>
@@ -98,10 +98,10 @@
                             Logged in as ${username} <a href="logout">Logout</a>
                         </#if>
                     <#else>
-                        <#if navlink == "Login">
-                            <a class="active-link" href="login">Login</a>
+                        <#if navlink == "Login" || navlink == "Register">
+                            <a class="active-link" href="login">Login/Register</a>
                         <#else>
-                            <a href="login">Login</a>
+                            <a href="login">Login/Register</a>
                         </#if>
                     </#if>
                 </p>
