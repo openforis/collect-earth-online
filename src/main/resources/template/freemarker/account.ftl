@@ -1,4 +1,10 @@
 <#include "header.ftl">
+<#include "branding-banner.ftl">
+<#include "navbar.ftl">
+<#include "start-content.ftl">
+<#include "flash-messages.ftl">
+<#include "ceo-description.ftl">
+
 <div id="account-form">
     <h1>Account Settings</h1>
     <form action="account" method="post">
@@ -12,4 +18,7 @@
         <input class="button" name="update-account" value="Update account settings" type="submit">
     </form>
 </div>
+
+<#include "end-content.ftl">
+<#include "institution-banner.ftl">
 <#include "footer.ftl">

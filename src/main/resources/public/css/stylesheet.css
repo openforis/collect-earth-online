@@ -398,9 +398,9 @@ section#content a:hover, section#content a.active-link {
     padding: 0.5rem;
 }
 
-/*******************************************/
-/* Login / Register / Password Reset Pages */
-/*******************************************/
+/*****************************************************/
+/* Login / Register / Password Reset / Account Pages */
+/*****************************************************/
 
 #login-form, #register-form, #password-form, #account-form {
     position: absolute;
