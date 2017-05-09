@@ -108,9 +108,7 @@ nav a:hover, nav a.active-link {
 /**********************/
 
 #institution-banner {
-    position: absolute;
-    left: 0px;
-    bottom: 0px;
+    position: relative;
     height: 55px;
     width: 100%;
     background-color: #fff;
@@ -152,7 +150,6 @@ nav a:hover, nav a.active-link {
 section#content {
     display: block;
     position: relative;
-    height: calc(100vh - 2.5rem - 80px - 55px);
     width: 100%;
     color: #222;
     background-size: cover;
