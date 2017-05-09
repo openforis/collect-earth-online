@@ -1,4 +1,7 @@
 <#include "header.ftl">
+<#include "start-content.ftl">
+<#include "flash-messages.ftl">
+
 <#if role?? && role == "admin">
     <script type="text/javascript" src="js/geo-dash-admin.js"></script>
 <#else>
@@ -76,6 +79,8 @@
                 </fieldset>
             </form>
         </div>
+    </#if>
 </div>
-</#if>
+
+<#include "end-content.ftl">
 <#include "footer.ftl">

@@ -1,4 +1,7 @@
 <#include "header.ftl">
+<#include "navbar.ftl">
+<#include "start-content.ftl">
+<#include "flash-messages.ftl">
 
 <script type="text/javascript" src="js/admin.js"></script>
 
@@ -131,4 +134,7 @@
         </form>
     </div>
 </div>
+
+<#include "end-content.ftl">
+<#include "branding-banner.ftl">
 <#include "footer.ftl">

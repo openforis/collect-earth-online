@@ -1,4 +1,7 @@
 <#include "header.ftl">
+<#include "navbar.ftl">
+<#include "start-content.ftl">
+<#include "flash-messages.ftl">
 
 <script type="text/javascript" src="js/dashboard.js"></script>
 
@@ -51,4 +54,7 @@
     <input id="user-id" type="hidden" name="user-id" value=${username!"guest"}>
     <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id!"-1"}>
 </div>
+
+<#include "end-content.ftl">
+<#include "branding-banner.ftl">
 <#include "footer.ftl">

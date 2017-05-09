@@ -89,7 +89,7 @@ public class Views {
     }
 
     public static ModelAndView geodash(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Geo-Dash", "large"), "geo-dash.ftl");
+        return new ModelAndView(getBaseModel(req, "Geo-Dash", "full"), "geo-dash.ftl");
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {
