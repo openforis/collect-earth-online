@@ -142,9 +142,10 @@ nav ul li {
 
 #home {
   position: absolute;
-  left: 5rem;
-  height: 100%;
-  width: 350px;
+  top: 2rem;
+  left: 6rem;
+  height: 75%;
+  width: 550px;
   padding: 2rem;
   background: rgba(255,255,255,0.8);
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
@@ -152,7 +153,7 @@ nav ul li {
 }
 
 #home img#ceo-logo {
-  width: 400px;
+  border:1px solid red;
   margin: -15px 0px 15px -25px;
 }
 
