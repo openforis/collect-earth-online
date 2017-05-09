@@ -81,8 +81,8 @@ public class Views {
 
     public static ModelAndView passwordReset(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Password-Reset");
-        model.put("email", "admin@sig-gis.com");
-        model.put("password_reset_key", "1234567890ABCDEF");
+        model.put("email", req.queryParams("email"));
+        model.put("password_reset_key", req.queryParams("password-reset-key"));
         return new ModelAndView(model, "password-reset.ftl");
     }
 

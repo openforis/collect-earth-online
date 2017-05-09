@@ -6,10 +6,6 @@ body {
     font-family: Open Sans;
     font-size: 16px;
     height: 100vh;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
 }
 
 h1, h2, h3, h4, h5, h6, h7, p, label {
@@ -30,21 +26,81 @@ h1, h2, h3, h4, h5, h6, h7, p, label {
     -o-border-radius: 0px;
 }
 
+/**********/
+/* Navbar */
+/**********/
+
+nav {
+    display: block;
+    position: relative;
+    height: 2.5rem;
+    width: 100%;
+    color: #eee;
+    background-color: #3a3a3a;
+    /* border: 1px solid orange; */
+}
+
+nav ul {
+    position: absolute;
+    top: 0px;
+    left: 40px;
+    padding: 0.5rem;
+    /* border: 1px solid red; */
+}
+
+nav ul li {
+    display: inline;
+    list-style-type: none;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    /* border: 1px solid white; */
+}
+
+nav #login-info {
+    position: absolute;
+    top: 0px;
+    right: 40px;
+    padding: 0.6rem;
+    font-size: 0.8rem;
+    /* border: 1px solid white; */
+}
+
+nav #login-info a {
+    margin-left: 0.2rem;
+    padding: 0.4rem;
+    border: 1px solid #999;
+}
+
+nav a {
+    color: #eee;
+}
+
+nav a:link, nav a:visited, nav a:active {
+    text-decoration: none;
+}
+
+nav a:hover, nav a.active-link {
+    text-shadow: 0px 0px 4px #fff;
+}
+
 /*******************/
 /* Branding Banner */
 /*******************/
 
 #branding-banner {
     position: relative;
-    height: 200px;
+    height: 80px;
     width: 100%;
     background-color: #fff;
+    /* border: 1px solid red; */
 }
 
 #branding-image {
-    position: absolute:
-    height: 100%;
-    margin: auto;
+    display: block;
+    height: 80px;
+    margin-left: auto;
+    margin-right: auto;
+    /* border: 1px solid orange; */
 }
 
 /**********************/
@@ -52,10 +108,13 @@ h1, h2, h3, h4, h5, h6, h7, p, label {
 /**********************/
 
 #institution-banner {
-    position: relative;
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
     height: 55px;
     width: 100%;
     background-color: #fff;
+    /* border: 1px solid purple; */
 }
 
 #institution-banner img#usaid {
@@ -86,62 +145,21 @@ h1, h2, h3, h4, h5, h6, h7, p, label {
     width: 250px;
 }
 
-/**********/
-/* Navbar */
-/**********/
-
-nav {
-    display: block;
-    position: relative;
-    height: 30px;
-    width: 100%;
-    color: #eee;
-    background-color: #3a3a3a;
-}
-
-nav ul {
-    position: absolute;
-    top: 0px;
-    left: 30px;
-}
-
-nav ul li {
-    display: inline;
-    list-style-type: none;
-    padding: 0.4rem;
-}
-
-nav #login-info {
-    position: absolute;
-    top: 0px;
-    right: 30px;
-    font-size: 0.8rem;
-}
-
-nav #login-info a {
-    margin-left: 0.2rem;
-    padding: 0.4rem;
-    border: 1px solid #999;
-}
-
-nav a:link, nav a:visited, nav a:active {
-    text-decoration: none;
-}
-
-nav a:hover, nav a.active-link {
-    text-shadow: 0px 0px 4px #fff;
-}
-
-/******************/
-/* Flash Messages */
-/******************/
+/*******************/
+/* Content Section */
+/*******************/
 
 section#content {
     display: block;
     position: relative;
+    height: calc(100vh - 2.5rem - 80px - 55px);
     width: 100%;
     color: #222;
-    background-color: rgba(255,255,255,0.2);
+    background-size: cover;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    /* border: 1px solid green; */
 }
 
 section#content a {
@@ -155,6 +173,10 @@ section#content a:link, section#content a:visited, section#content a:active {
 section#content a:hover, section#content a.active-link {
     text-shadow: 0px 0px 4px #333;
 }
+
+/******************/
+/* Flash Messages */
+/******************/
 
 .alert {
     position: absolute;
@@ -198,36 +220,32 @@ section#content a:hover, section#content a.active-link {
     100% { opacity: 0; }
 }
 
-/***************/
-/* Other Stuff */
-/***************/
+/*************/
+/* Home Page */
+/*************/
 
-#home {
+#ceo-description {
     position: absolute;
-    top: 2rem;
-    left: 6rem;
-    height: 75%;
-    width: 550px;
+    top: 50%;
+    transform: translate(0, -50%);
+    left: 8vw;
+    height: 80%;
+    width: 45vw;
     padding: 2rem;
     background: rgba(255,255,255,0.8);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
     -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    border: 1px solid darkgray;
 }
 
-#home img#ceo-logo {
-    border:1px solid red;
-    margin: -15px 0px 15px -25px;
+#ceo-description img#ceo-logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    /* border: 1px solid red; */
 }
 
-#home h1 {
-    margin-top: 10px;
-    font-size: 3.0rem;
-    font-weight: bold;
-    color: gray;
-    text-align: center;
-}
-
-#home h2 {
+#ceo-description h1 {
     margin-bottom: 10px;
     font-size: 1.6rem;
     font-weight: 400;
@@ -235,28 +253,76 @@ section#content a:hover, section#content a.active-link {
     text-align: center;
 }
 
-#home h3 {
-    padding: 0.5rem 0.5rem 0.75rem 1rem;
-    color: #3C948B;
+#ceo-description h2 {
     font-family: Open Sans;
-    font-weight: 400;
-    font-size: 1.1rem;
     font-style: normal;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #3C948B;
+    text-align: center;
 }
 
-#home p {
+#ceo-description p {
     padding: 0.5rem;
+    text-align: center;
 }
 
-#about {
+#select-project-form {
     position: absolute;
-    right: 5rem;
-    height: 100%;
-    width: 350px;
+    top: 50%;
+    transform: translate(0, -50%);
+    right: 5vw;
+    height: 80%;
+    width: 25vw;
     padding: 2rem;
     background: rgba(255,255,255,0.8);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
     -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    border: 1px solid darkgray;
+}
+
+#select-project-form h1 {
+    font-size: 1.9rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+}
+
+#select-project-form ul {
+    list-style-type: none;
+    padding: 0.5rem;
+    height: 80%;
+    overflow: scroll;
+}
+
+#select-project-form ul li a {
+    color: #3C948B;
+    text-align: center;
+    font-size: 1rem;
+    width: 95%;
+    padding: 0.25rem;
+    text-decoration: none;
+    display: block;
+    border: 1px solid blue;
+    margin-bottom: 0.5rem;
+}
+
+/**************/
+/* About Page */
+/**************/
+
+#about {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 80%;
+    width: 50vw;
+    padding: 2rem;
+    background: rgba(255,255,255,0.8);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    border: 1px solid darkgray;
 }
 
 #about h1 {
@@ -266,23 +332,88 @@ section#content a:hover, section#content a.active-link {
     color: gray;
 }
 
-#about img {
-    padding: 0rem 0.5rem;
-}
-
 #about p {
     padding: 0.5rem;
 }
 
-#login-form, #register-form, #password-form, #account-form {
+#about img {
+    padding: 0rem 0.5rem;
+}
+
+/******************/
+/* Tutorials Page */
+/******************/
+
+#tutorials {
     position: absolute;
-    right: 5rem;
-    height: 100%;
-    width: 350px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 80%;
+    width: 50vw;
     padding: 2rem;
     background: rgba(255,255,255,0.8);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
     -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    border: 1px solid darkgray;
+}
+
+#tutorials h1 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+}
+
+#tutorials p {
+    padding: 0.5rem;
+}
+
+/*************/
+/* Demo Page */
+/*************/
+
+#demo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 80%;
+    width: 50vw;
+    padding: 2rem;
+    background: rgba(255,255,255,0.8);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    border: 1px solid darkgray;
+}
+
+#demo h1 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+}
+
+#demo p {
+    padding: 0.5rem;
+}
+
+/*******************************************/
+/* Login / Register / Password Reset Pages */
+/*******************************************/
+
+#login-form, #register-form, #password-form, #account-form {
+    position: absolute;
+    top: 50%;
+    transform: translate(0, -50%);
+    right: 5vw;
+    height: 80%;
+    width: 25vw;
+    padding: 2rem;
+    background: rgba(255,255,255,0.8);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    border: 1px solid darkgray;
 }
 
 #login-form h1, #register-form h1, #password-form h1, #account-form h1 {
@@ -342,42 +473,9 @@ section#content a:hover, section#content a.active-link {
     box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
 }
 
-#select-project-form {
-    position: absolute;
-    right: 5rem;
-    height: 100%;
-    width: 350px;
-    padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-}
-
-#select-project-form h1 {
-    font-size: 1.9rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-}
-
-#select-project-form ul {
-    list-style-type: none;
-    padding: 0.5rem;
-    height: 80%;
-    overflow: scroll;
-}
-
-#select-project-form ul li a {
-    color: #3C948B;
-    text-align: center;
-    font-size: 1rem;
-    width: 95%;
-    padding: 0.25rem;
-    text-decoration: none;
-    display: block;
-    border: 1px solid blue;
-    margin-bottom: 0.5rem;
-}
+/*********/
+/* Other */
+/*********/
 
 #dashboard {
     height: 100%;

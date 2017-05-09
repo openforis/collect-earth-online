@@ -1,4 +1,10 @@
 <#include "header.ftl">
+<#include "branding-banner.ftl">
+<#include "navbar.ftl">
+<#include "start-content.ftl">
+<#include "flash-messages.ftl">
+<#include "ceo-description.ftl">
+
 <div id="register-form">
     <h1>Register a new account</h1>
     <form action="register" method="post">
@@ -8,4 +14,7 @@
         <input class="button" name="register" value="Register" type="submit">
     </form>
 </div>
+
+<#include "end-content.ftl">
+<#include "institution-banner.ftl">
 <#include "footer.ftl">
