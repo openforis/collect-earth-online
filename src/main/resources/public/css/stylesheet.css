@@ -501,9 +501,9 @@ p.error-message {
     color: #555;
 }
 
-/*********/
-/* Other */
-/*********/
+/*************/
+/* Dashboard */
+/*************/
 
 #dashboard {
     height: 100%;
@@ -643,6 +643,10 @@ p.error-message {
     color: white;
     left: 18%;
 }
+
+/*********/
+/* Admin */
+/*********/
 
 #admin {
     height: 100%;
