@@ -56,15 +56,9 @@ public class Views {
         return new ModelAndView(getBaseModel(req, "Account"), "account.ftl");
     }
 
-    public static ModelAndView selectProject(Request req, Response res) {
-        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
-        return new ModelAndView(getBaseModel(req, "Select-Project"), "select-project.ftl");
-    }
-
     public static ModelAndView dashboard(Request req, Response res) {
-        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         Map<String, Object> model = getBaseModel(req, "Dashboard");
-        model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
+        model.put("project_id", req.queryParams("project"));
         return new ModelAndView(model, "dashboard.ftl");
     }
 

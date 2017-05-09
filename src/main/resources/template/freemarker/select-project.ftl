@@ -1,5 +1,3 @@
-<#include "header.ftl">
-
 <script type="text/javascript" src="js/select-project.js"></script>
 
 <div id="select-project-form" ng-app="selectProject" ng-controller="SelectProjectController as selectProject" ng-init="selectProject.initialize()">
@@ -10,4 +8,3 @@
         </li>
     </ul>
 </div>
-<#include "footer.ftl">
