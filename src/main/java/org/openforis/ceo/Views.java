@@ -13,7 +13,7 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("background_image_file", "mountain-field-scenery-small.jpg");
         model.put("branding_banner_position", "bottom");
-        model.put("branding_image_file", "ceo_logo1.png");
+        model.put("branding_image_file", "ceo-logo1.png");
         model.put("navlink", navlink);
         model.put("role", req.session().attribute("role"));
         model.put("username", req.session().attribute("username"));
@@ -91,7 +91,6 @@ public class Views {
     }
 
     public static ModelAndView geodash(Request req, Response res) {
-        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         return new ModelAndView(getBaseModel(req, "Geo-Dash"), "geo-dash.ftl");
     }
 
