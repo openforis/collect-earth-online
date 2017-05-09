@@ -47,4 +47,4 @@
         <!--------------------------------------------------------------->
         </#if>
     </head>
-    <body style="background-image:url(img/${background_image_file})">
+    <body>
