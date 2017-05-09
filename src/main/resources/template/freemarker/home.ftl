@@ -1,6 +1,6 @@
 <#include "header.ftl">
 <div id="home">
-    <img id="ceo-logo" src="img/collect-earth-logo.png">
+    <img id="ceo-logo" src="img/ceo-logo1.png">
     <h2>Earth Image Identification</h2>
     <h3>Collaborate. Play. Map the world.</h3>
     <hr>

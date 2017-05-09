@@ -142,7 +142,7 @@ nav ul li {
 
 #home {
   position: absolute;
-  right: 5rem;
+  left: 5rem;
   height: 100%;
   width: 350px;
   padding: 2rem;
