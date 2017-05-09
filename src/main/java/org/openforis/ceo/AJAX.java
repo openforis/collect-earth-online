@@ -325,7 +325,7 @@ public class AJAX {
         JsonObject jsonInputs = (new JsonParser()).parse(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
-        int userId = jsonInputs.get("userId").getAsInt();
+        String userName = jsonInputs.get("userId").getAsString();
         JsonObject userSamples = jsonInputs.get("userSamples").getAsJsonObject();
 
         updateJsonFile("plot-data-" + projectId + ".json",
@@ -335,7 +335,7 @@ public class AJAX {
                            if (plotAttributes.get("id").getAsString().equals(plotId)) {
                                int currentAnalyses = plotAttributes.get("analyses").getAsInt();
                                plotAttributes.addProperty("analyses", currentAnalyses + 1);
-                               plotAttributes.addProperty("user", userId);
+                               plotAttributes.addProperty("user", userName);
                                plot.add("plot", plotAttributes);
                                JsonArray updatedSamples = mapJsonArray(samples,
                                                                        sample -> {

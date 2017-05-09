@@ -48,7 +48,7 @@
         </div>
     </div>
     <div id="imagery-info"><p>{{ dashboard.currentProject.attribution }}</p></div>
-    <input id="user-id" type="hidden" name="user-id" value=${user_id}>
+    <input id="user-id" type="hidden" name="user-id" value=${username}>
     <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id}>
 </div>
 <#include "footer.ftl">

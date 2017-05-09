@@ -157,7 +157,6 @@ public class Views {
         } else {
             model.put("flash_messages", new String[]{});
         }
-        model.put("user_id", 1); // FIXME: Set this from the session
         model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
         return new ModelAndView(model, "dashboard.ftl");
     }

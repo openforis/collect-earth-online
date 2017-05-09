@@ -127,7 +127,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         $http.post("add-user-samples",
                    {projectId: this.currentProjectId,
                     plotId: this.currentPlot.id,
-                    userId: parseInt(document.getElementById("user-id").value),
+                    userId: document.getElementById("user-id").value,
                     userSamples: this.userSamples})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Your assignments have been saved to the database.");
