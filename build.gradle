@@ -3,10 +3,10 @@ apply plugin: 'war'
 apply plugin: 'application'
 
 repositories {
-    mavenCentral()
     maven {
         url "http://download.osgeo.org/webdav/geotools/"
     }
+    mavenCentral()
 }
 
 dependencies {
