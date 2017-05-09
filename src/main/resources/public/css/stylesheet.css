@@ -473,6 +473,37 @@ section#content a:hover, section#content a.active-link {
     box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
 }
 
+/***********************/
+/* Page Not Found Page */
+/***********************/
+
+#access-denied, #page-not-found, #error-page {
+    position: absolute;
+    top: 50%;
+    transform: translate(0, -50%);
+    right: 5vw;
+    height: 80%;
+    width: 25vw;
+    padding: 2rem;
+    background: rgba(255,255,255,0.8);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    border: 1px solid darkgray;
+}
+
+#access-denied h3, #page-not-found h3, #error-page h3 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    color: #f57900;
+}
+
+p.error-message {
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-style: normal;
+    color: #555;
+}
+
 /*********/
 /* Other */
 /*********/
@@ -855,30 +886,6 @@ section#content a:hover, section#content a.active-link {
     -webkit-animation: sweep 1s infinite linear;
     -moz-animation: sweep 1s infinite linear;
     -o-animation: sweep 1s infinite linear;
-}
-
-p.error-message {
-    margin-top: 1rem;
-    font-size: 1rem;
-    font-style: normal;
-    color: #555;
-}
-
-#access-denied, #page-not-found, #error-page {
-    position: absolute;
-    right: 5rem;
-    height: 100%;
-    width: 350px;
-    padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-}
-
-#access-denied h3, #page-not-found h3, #error-page h3 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    color: gray;
 }
 
 @-webkit-keyframes sweep { to { -webkit-transform:rotate(360deg); } }
