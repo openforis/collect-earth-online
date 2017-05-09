@@ -29,7 +29,7 @@ public class Views {
     private static void authenticateOrRedirect(Request req, Response res, String[] requiredRoles) {
         String currentRole = req.session().attribute("role");
         if (! Arrays.asList(requiredRoles).contains(currentRole)) {
-            res.redirect("/home"); // FIXME: Create an Access Denied Page
+            res.redirect("/home");
         }
     }
 
@@ -95,9 +95,7 @@ public class Views {
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "Page-Not-Found");
-        model.put("flash_messages", new String[]{"Page Not Found"});
-        return new ModelAndView(model, "page-not-found.ftl");
+        return new ModelAndView(getBaseModel(req, "Page-Not-Found"), "page-not-found.ftl");
     }
 
 }
