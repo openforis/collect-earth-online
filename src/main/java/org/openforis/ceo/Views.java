@@ -1,5 +1,6 @@
 package org.openforis.ceo;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import spark.ModelAndView;
@@ -23,70 +24,82 @@ public class Views {
         return model;
     }
 
-    public static ModelAndView home(Request req, Response rsp) {
+    private static void authenticateOrRedirect(Request req, Response res, String[] requiredRoles) {
+        String currentRole = req.session().attribute("role");
+        if (! Arrays.asList(requiredRoles).contains(currentRole)) {
+            res.redirect("/home"); // FIXME: Create an Access Denied Page
+        }
+    }
+
+    public static ModelAndView home(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Home"), "home.ftl");
     }
 
-    public static ModelAndView about(Request req, Response rsp) {
+    public static ModelAndView about(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "About"), "about.ftl");
     }
 
-    public static ModelAndView tutorials(Request req, Response rsp) {
+    public static ModelAndView tutorials(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Tutorials"), "tutorials.ftl");
     }
 
-    public static ModelAndView demo(Request req, Response rsp) {
+    public static ModelAndView demo(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Demo"), "demo.ftl");
     }
 
-    public static ModelAndView account(Request req, Response rsp) {
+    public static ModelAndView account(Request req, Response res) {
+        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         return new ModelAndView(getBaseModel(req, "Account"), "account.ftl");
     }
 
-    public static ModelAndView selectProject(Request req, Response rsp) {
+    public static ModelAndView selectProject(Request req, Response res) {
+        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         return new ModelAndView(getBaseModel(req, "Select-Project"), "select-project.ftl");
     }
 
-    public static ModelAndView dashboard(Request req, Response rsp) {
+    public static ModelAndView dashboard(Request req, Response res) {
+        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         Map<String, Object> model = getBaseModel(req, "Dashboard");
         model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
         return new ModelAndView(model, "dashboard.ftl");
     }
 
-    public static ModelAndView admin(Request req, Response rsp) {
+    public static ModelAndView admin(Request req, Response res) {
+        authenticateOrRedirect(req, res, new String[]{"admin"});
         return new ModelAndView(getBaseModel(req, "Admin"), "admin.ftl");
     }
 
-    public static ModelAndView login(Request req, Response rsp) {
+    public static ModelAndView login(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Login"), "login.ftl");
     }
 
-    public static ModelAndView register(Request req, Response rsp) {
+    public static ModelAndView register(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Register"), "register.ftl");
     }
 
-    public static ModelAndView password(Request req, Response rsp) {
+    public static ModelAndView password(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Password"), "password.ftl");
     }
 
-    public static ModelAndView passwordReset(Request req, Response rsp) {
+    public static ModelAndView passwordReset(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Password-Reset");
         model.put("email", "admin@sig-gis.com");
         model.put("password_reset_key", "1234567890ABCDEF");
         return new ModelAndView(model, "password-reset.ftl");
     }
 
-    public static ModelAndView logout(Request req, Response rsp) {
+    public static ModelAndView logout(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Logout"), "logout.ftl");
     }
 
-    public static ModelAndView geodash(Request req, Response rsp) {
+    public static ModelAndView geodash(Request req, Response res) {
+        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         Map<String, Object> model = getBaseModel(req, "Geo-Dash");
         model.put("nav_visibility", "hidden");
         return new ModelAndView(model, "geo-dash.ftl");
     }
 
-    public static ModelAndView pageNotFound(Request req, Response rsp) {
+    public static ModelAndView pageNotFound(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Page-Not-Found");
         model.put("flash_messages", new String[]{"Page Not Found"});
         return new ModelAndView(model, "page-not-found.ftl");
