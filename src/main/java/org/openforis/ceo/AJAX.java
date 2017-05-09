@@ -627,7 +627,7 @@ public class AJAX {
                     return matchingProject.get().toString();
                 }
             } else {
-                if (req.session().attribute("role").equals("admin")) {
+                if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
                     String newUUID = UUID.randomUUID().toString();
 
                     JsonObject newProject = new JsonObject();
