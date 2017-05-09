@@ -36,6 +36,10 @@ public class Server implements SparkApplication {
         // Configure FreeMarker
         FreeMarkerEngine freemarker = getTemplateRenderer();
 
+        // FIXME: Get deploy/clientkeystore signed by a certificate authority.
+        // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
+        // secure("deploy/clientkeystore", "ceocert", null, null);
+
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
 
@@ -44,10 +48,12 @@ public class Server implements SparkApplication {
         get("/home",                             (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/about",                            (req, res) -> { return freemarker.render(Views.about(req, res)); });
         get("/login",                            (req, res) -> { return freemarker.render(Views.login(req, res)); });
+        post("/login",                           (req, res) -> { return freemarker.render(Views.login(AJAX.login(req, res), res)); });
         get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });
+        post("/register",                        (req, res) -> { return freemarker.render(Views.register(AJAX.register(req, res), res)); });
         get("/password",                         (req, res) -> { return freemarker.render(Views.password(req, res)); });
         get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
-        get("/logout",                           (req, res) -> { return freemarker.render(Views.logout(req, res)); });
+        get("/logout",                           (req, res) -> { return freemarker.render(Views.home(AJAX.logout(req), res)); });
         get("/select-project",                   (req, res) -> { return freemarker.render(Views.selectProject(req, res)); });
         get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
         get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
@@ -101,7 +107,4 @@ public class Server implements SparkApplication {
   response.header("foo", "set by after filter");
   });
 
-  // TODO: Get deploy/clientkeystore signed by a certificate authority.
-  // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
-  secure("deploy/clientkeystore", "ceocert", null, null);
 */

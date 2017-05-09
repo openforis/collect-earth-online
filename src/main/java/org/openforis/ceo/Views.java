@@ -12,9 +12,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Home");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "home.ftl");
     }
 
@@ -22,9 +27,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "About");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "about.ftl");
     }
 
@@ -32,9 +42,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Login");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "login.ftl");
     }
 
@@ -42,9 +57,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Register");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "register.ftl");
     }
 
@@ -52,9 +72,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Password");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "password.ftl");
     }
 
@@ -62,9 +87,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Password-Reset");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         model.put("email", "admin@sig-gis.com");
         model.put("password_reset_key", "1234567890ABCDEF");
         return new ModelAndView(model, "password-reset.ftl");
@@ -74,9 +104,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Logout");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "logout.ftl");
     }
 
@@ -84,9 +119,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Select-Project");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "select-project.ftl");
     }
 
@@ -94,9 +134,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Account");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "account.ftl");
     }
 
@@ -104,10 +149,15 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Dashboard");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
-        model.put("user_id", 1);
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
+        model.put("user_id", 1); // FIXME: Set this from the session
         model.put("project_id", req.queryParams("project") != null ? req.queryParams("project") : "-1");
         return new ModelAndView(model, "dashboard.ftl");
     }
@@ -116,14 +166,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Admin");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
         if (projectCreated == null) {
-            model.put("flash_messages", new String[] {});
+            model.put("flash_messages", new String[]{});
         } else if (projectCreated == true) {
-            model.put("flash_messages", new String[] {"New project " + req.queryParams("project-name") + " created and launched!"});
+            model.put("flash_messages", new String[]{"New project " + req.queryParams("project-name") + " created and launched!"});
         } else {
-            model.put("flash_messages", new String[] {"Error with project creation!"});
+            model.put("flash_messages", new String[]{"Error with project creation!"});
         }
         return new ModelAndView(model, "admin.ftl");
     }
@@ -132,9 +182,14 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Geo-Dash");
         model.put("nav_visibility", "hidden");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        if (req.session().attribute("flash_messages") != null) {
+            model.put("flash_messages", req.session().attribute("flash_messages"));
+            req.session().removeAttribute("flash_messages");
+        } else {
+            model.put("flash_messages", new String[]{});
+        }
         return new ModelAndView(model, "geo-dash.ftl");
     }
 
@@ -142,9 +197,9 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("navlink", "Page-Not-Found");
         model.put("nav_visibility", "visible");
-        model.put("role", "admin");
-        model.put("username", "admin@sig-gis.com");
-        model.put("flash_messages", new String[] {"Page Not Found"});
+        model.put("role", req.session().attribute("role"));
+        model.put("username", req.session().attribute("username"));
+        model.put("flash_messages", new String[]{"Page Not Found"});
         return new ModelAndView(model, "page-not-found.ftl");
     }
 

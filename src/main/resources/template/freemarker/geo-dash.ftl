@@ -1,5 +1,5 @@
 <#include "header.ftl">
-<#if role == "admin">
+<#if role?? && role == "admin">
     <script type="text/javascript" src="js/geo-dash-admin.js"></script>
 <#else>
     <script type="text/javascript" src="js/geo-dash.js"></script>
@@ -19,7 +19,7 @@
         </div>
     </div>
 </div>
-<#if role == "admin">
+<#if role?? && role == "admin">
 <div id="dialog-form" title="Create new widget">
   <p class="validateTips">All form fields are required.</p>
 

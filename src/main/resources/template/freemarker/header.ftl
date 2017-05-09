@@ -62,7 +62,7 @@
             <#if nav_visibility == "visible">
             <nav>
                 <ul>
-                    <#if role == "admin">
+                    <#if role?? && role == "admin">
                         <#list ["Home", "About", "Account", "Dashboard", "Admin"] as url>
                             <#if navlink == url>
                                 <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
@@ -70,7 +70,7 @@
                                 <li><a href="${url?lower_case}">${url}</a></li>
                             </#if>
                         </#list>
-                    <#elseif role == "user">
+                    <#elseif role?? && role == "user">
                         <#list ["Home", "About", "Account", "Dashboard"] as url>
                             <#if navlink == url>
                                 <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
