@@ -11,8 +11,10 @@ public class Views {
 
     private static Map<String, Object> getBaseModel(Request req, String navlink) {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("background_image_file", "mountain-field-scenery-small.jpg");
+        model.put("branding_banner_position", "bottom");
+        model.put("branding_image_file", "ceo_logo1.png");
         model.put("navlink", navlink);
-        model.put("nav_visibility", "visible");
         model.put("role", req.session().attribute("role"));
         model.put("username", req.session().attribute("username"));
         if (req.session().attribute("flash_messages") != null) {
@@ -32,7 +34,9 @@ public class Views {
     }
 
     public static ModelAndView home(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Home"), "home.ftl");
+        Map<String, Object> model = getBaseModel(req, "Home");
+        model.put("branding_banner_position", "top");
+        return new ModelAndView(model, "home.ftl");
     }
 
     public static ModelAndView about(Request req, Response res) {
@@ -94,9 +98,7 @@ public class Views {
 
     public static ModelAndView geodash(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
-        Map<String, Object> model = getBaseModel(req, "Geo-Dash");
-        model.put("nav_visibility", "hidden");
-        return new ModelAndView(model, "geo-dash.ftl");
+        return new ModelAndView(getBaseModel(req, "Geo-Dash"), "geo-dash.ftl");
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {

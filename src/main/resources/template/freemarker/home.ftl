@@ -1,4 +1,8 @@
 <#include "header.ftl">
+<#include "branding-banner.ftl">
+<#include "navbar.ftl">
+<#include "flash-messages.ftl">
+
 <script type="text/javascript" src="js/select-project.js"></script>
 
 <div id="home">
@@ -20,4 +24,6 @@
         </li>
     </ul>
 </div>
+
+<#include "insitution-banner.ftl">
 <#include "footer.ftl">
