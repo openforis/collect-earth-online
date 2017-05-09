@@ -59,7 +59,9 @@ public class Server implements SparkApplication {
         get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });
         post("/register",                        (req, res) -> { return freemarker.render(Views.register(AJAX.register(req, res), res)); });
         get("/password",                         (req, res) -> { return freemarker.render(Views.password(req, res)); });
+        post("/password",                        (req, res) -> { return freemarker.render(Views.password(req, res)); });
         get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
+        post("/password-reset",                  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
         get("/logout",                           (req, res) -> { return freemarker.render(Views.home(AJAX.logout(req), res)); });
         get("/get-all-projects",                 (req, res) -> { return AJAX.getAllProjects(req, res); });
         post("/get-project-plots",               (req, res) -> { return AJAX.getProjectPlots(req, res); });
