@@ -50,7 +50,7 @@ public class Server implements SparkApplication {
         get("/tutorials",                        (req, res) -> { return freemarker.render(Views.tutorials(req, res)); });
         get("/demo",                             (req, res) -> { return freemarker.render(Views.demo(req, res)); });
         get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        post("/account",                         (req, res) -> { return freemarker.render(Views.account(req, res)); });
+        post("/account",                         (req, res) -> { return freemarker.render(Views.account(AJAX.updateAccount(req, res), res)); });
         get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
         get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res)); });
         post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(AJAX.createNewProject(req, res), res)); });
@@ -59,9 +59,9 @@ public class Server implements SparkApplication {
         get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });
         post("/register",                        (req, res) -> { return freemarker.render(Views.register(AJAX.register(req, res), res)); });
         get("/password",                         (req, res) -> { return freemarker.render(Views.password(req, res)); });
-        post("/password",                        (req, res) -> { return freemarker.render(Views.password(req, res)); });
+        post("/password",                        (req, res) -> { return freemarker.render(Views.password(AJAX.requestPasswordResetKey(req, res), res)); });
         get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
-        post("/password-reset",                  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
+        post("/password-reset",                  (req, res) -> { return freemarker.render(Views.passwordReset(AJAX.resetPassword(req, res), res)); });
         get("/logout",                           (req, res) -> { return freemarker.render(Views.home(AJAX.logout(req), res)); });
         get("/get-all-projects",                 (req, res) -> { return AJAX.getAllProjects(req, res); });
         post("/get-project-plots",               (req, res) -> { return AJAX.getProjectPlots(req, res); });

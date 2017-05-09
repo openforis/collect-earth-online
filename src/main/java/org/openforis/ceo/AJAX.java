@@ -219,6 +219,24 @@ public class AJAX {
         return req;
     }
 
+    // FIXME: stub
+    public static Request updateAccount(Request req, Response res) {
+        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        return req;
+    }
+
+    // FIXME: stub
+    public static Request requestPasswordResetKey(Request req, Response res) {
+        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        return req;
+    }
+
+    // FIXME: stub
+    public static Request resetPassword(Request req, Response res) {
+        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        return req;
+    }
+
     public static String getAllProjects(Request req, Response res) {
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         JsonArray visibleProjects = filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false);
