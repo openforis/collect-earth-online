@@ -498,7 +498,7 @@ public class AJAX {
             .toArray(Double[][]::new);
     }
 
-    public static boolean createNewProject(Request req, Response res) {
+    public static Request createNewProject(Request req, Response res) {
         try {
             String projectName = req.queryParams("project-name");
             String projectDescription = req.queryParams("project-description");
@@ -592,10 +592,12 @@ public class AJAX {
             // END: Create a new plot-data-<newProjectId>.json file
 
             // Indicate that the project was created successfully
-            return true;
+            req.session().attribute("flash_messages", new String[]{"New project " + req.queryParams("project-name") + " created and launched!"});
+            return req;
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
-            return false;
+            req.session().attribute("flash_messages", new String[]{"Error with project creation!"});
+            return req;
         }
     }
 
