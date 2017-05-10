@@ -2,7 +2,6 @@ package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -84,7 +83,7 @@ public class Projects {
                                                    plot -> {
                                                        JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
                                                        JsonArray samples = plot.get("samples").getAsJsonArray();
-                                                       JsonObject plotCenter = (new JsonParser()).parse(plotAttributes.get("center").getAsString()).getAsJsonObject();
+                                                       JsonObject plotCenter = parseJson(plotAttributes.get("center").getAsString()).getAsJsonObject();
                                                        JsonObject plotSummary = new JsonObject();
                                                        plotSummary.addProperty("plot_id", plotAttributes.get("id").getAsInt());
                                                        plotSummary.addProperty("center_lon", plotCenter.get("coordinates").getAsJsonArray().get(0).getAsDouble());
@@ -144,7 +143,7 @@ public class Projects {
     }
 
     public static String addUserSamples(Request req, Response res) {
-        JsonObject jsonInputs = (new JsonParser()).parse(req.body()).getAsJsonObject();
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
         String userName = jsonInputs.get("userId").getAsString();
@@ -176,7 +175,7 @@ public class Projects {
     }
 
     public static String flagPlot(Request req, Response res) {
-        JsonObject jsonInputs = (new JsonParser()).parse(req.body()).getAsJsonObject();
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
 
@@ -334,7 +333,7 @@ public class Projects {
             int samplesPerPlot = req.queryParams("samples-per-plot") != null ? Integer.parseInt(req.queryParams("samples-per-plot")) : 0;
             double sampleResolution = req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : 0.0;
             String imagerySelector = req.queryParams("imagery-selector");
-            JsonArray sampleValues = (new JsonParser()).parse(req.queryParams("sample-values")).getAsJsonArray();
+            JsonArray sampleValues = parseJson(req.queryParams("sample-values")).getAsJsonArray();
 
             // BEGIN: Add a new entry to project-list.json
             JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();

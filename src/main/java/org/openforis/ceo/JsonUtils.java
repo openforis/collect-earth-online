@@ -20,6 +20,10 @@ public class JsonUtils {
         return JsonUtils.class.getResource(filename).getFile();
     }
 
+    public static JsonElement parseJson(String jsonString) {
+        return (new JsonParser()).parse(jsonString);
+    }
+
     public static JsonElement readJsonFile(String filename) {
         String jsonDataDir = expandResourcePath("/public/json/");
         try (FileReader fileReader = new FileReader(new File(jsonDataDir, filename))) {
