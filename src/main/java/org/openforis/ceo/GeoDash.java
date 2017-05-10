@@ -24,68 +24,41 @@ import static org.openforis.ceo.JsonUtils.*;
 public class GeoDash {
 
     public static String geodashId(Request req, Response res) {
-        String geodashDataDir = expandResourcePath("/public/json/");
-
-        try (FileReader projectFileReader = new FileReader(new File(geodashDataDir, "proj.json"))) {
-            JsonParser parser = new JsonParser();
-            JsonArray projects = parser.parse(projectFileReader).getAsJsonArray();
-
-            Optional matchingProject = StreamSupport.stream(projects.spliterator(), false)
-                .map(project -> project.getAsJsonObject())
-                .filter(project -> project.get("projectID").getAsString().equals(req.params(":id")))
-                .map(project -> {
-                        try (FileReader dashboardFileReader = new FileReader(new File(geodashDataDir, "dash-" + project.get("dashboard").getAsString() + ".json"))) {
-                            return parser.parse(dashboardFileReader).getAsJsonObject();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                .findFirst();
-
-            if (matchingProject.isPresent()) {
-                if (req.queryParams("callback") != null) {
-                    return req.queryParams("callback") + "(" + matchingProject.get().toString() + ")";
-                } else {
-                    return matchingProject.get().toString();
-                }
+        JsonArray projects = readJsonFile("proj.json").getAsJsonArray();
+        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("projectID").getAsString().equals(req.params(":id")));
+        if (matchingProject.isPresent()) {
+            JsonObject project = matchingProject.get();
+            String dashboardJson = readJsonFile("dash-" + project.get("dashboard").getAsString() + ".json").toString();
+            if (req.queryParams("callback") != null) {
+                return req.queryParams("callback") + "(" + dashboardJson + ")";
             } else {
-                if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
-                    String newUUID = UUID.randomUUID().toString();
-
-                    JsonObject newProject = new JsonObject();
-                    newProject.addProperty("projectID", req.params(":id"));
-                    newProject.addProperty("dashboard", newUUID);
-                    projects.add(newProject);
-
-                    try (FileWriter projectFileWriter = new FileWriter(new File(geodashDataDir, "proj.json"))) {
-                        projectFileWriter.write(projects.toString());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    JsonObject newDashboard = new JsonObject();
-                    newDashboard.addProperty("projectID", req.params(":id"));
-                    newDashboard.addProperty("projectTitle", req.queryParams("title"));
-                    newDashboard.addProperty("widgets", "[]");
-                    newDashboard.addProperty("dashboardID", newUUID);
-
-                    try (FileWriter dashboardFileWriter = new FileWriter(new File(geodashDataDir, "dash-" + newUUID + ".json"))) {
-                        dashboardFileWriter.write(newDashboard.toString());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    if (req.queryParams("callback") != null) {
-                        return req.queryParams("callback") + "(" + newDashboard.toString() + ")";
-                    } else {
-                        return newDashboard.toString();
-                    }
-                } else {
-                    return "No project exists with ID: " + req.params(":id") + ".";
-                }
+                return dashboardJson;
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } else if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
+            String newUUID = UUID.randomUUID().toString();
+
+            JsonObject newProject = new JsonObject();
+            newProject.addProperty("projectID", req.params(":id"));
+            newProject.addProperty("dashboard", newUUID);
+            projects.add(newProject);
+
+            writeJsonFile("proj.json", projects);
+
+            JsonObject newDashboard = new JsonObject();
+            newDashboard.addProperty("projectID", req.params(":id"));
+            newDashboard.addProperty("projectTitle", req.queryParams("title"));
+            newDashboard.addProperty("widgets", "[]");
+            newDashboard.addProperty("dashboardID", newUUID);
+
+            writeJsonFile("dash-" + newUUID + ".json", newDashboard);
+
+            if (req.queryParams("callback") != null) {
+                return req.queryParams("callback") + "(" + newDashboard.toString() + ")";
+            } else {
+                return newDashboard.toString();
+            }
+        } else {
+            return "No project exists with ID: " + req.params(":id") + ".";
         }
     }
 
