@@ -1,7 +1,6 @@
 package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -9,16 +8,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.net.URLDecoder;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -26,13 +16,8 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -42,200 +27,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
+import static org.openforis.ceo.JsonUtils.*;
 
-public class AJAX {
-
-    private static String expandResourcePath(String filename) {
-        return AJAX.class.getResource(filename).getFile();
-    }
-
-    private static JsonElement readJsonFile(String filename) {
-        String jsonDataDir = expandResourcePath("/public/json/");
-        try (FileReader fileReader = new FileReader(new File(jsonDataDir, filename))) {
-            return (new JsonParser()).parse(fileReader);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void writeJsonFile(String filename, JsonElement data) {
-        String jsonDataDir = expandResourcePath("/public/json/");
-        try (FileWriter fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
-            fileWriter.write(data.toString());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void writeCsvFile(String filename, String header, String[] rows) {
-        String csvDataDir = expandResourcePath("/public/downloads/");
-        try (FileWriter fileWriter = new FileWriter(new File(csvDataDir, filename))) {
-            fileWriter.write(header + "\n");
-            fileWriter.write(Arrays.stream(rows).collect(Collectors.joining("\n")));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static Collector<JsonElement, ?, JsonArray> intoJsonArray =
-        Collector.of(JsonArray::new, JsonArray::add,
-                     (left, right) -> { left.addAll(right); return left; });
-
-    private static JsonArray mapJsonArray(JsonArray array, Function<JsonObject, JsonObject> mapper) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
-            .map(mapper)
-            .collect(intoJsonArray);
-    }
-
-    private static JsonArray filterJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
-            .filter(predicate)
-            .collect(intoJsonArray);
-    }
-
-    private static Optional<JsonObject> findInJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
-            .filter(predicate)
-            .findFirst();
-    }
-
-    private static void forEachInJsonArray(JsonArray array, Consumer<JsonObject> action) {
-        StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
-            .forEach(action);
-    }
-
-    // Note: The JSON file must contain an array of objects.
-    private static void updateJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
-        JsonArray array = readJsonFile(filename).getAsJsonArray();
-        JsonArray updatedArray = mapJsonArray(array, mapper);
-        writeJsonFile(filename, updatedArray);
-    }
-
-    public static Request login(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        // Check if email exists
-        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-        Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
-        if (matchingUser.isPresent()) {
-            // Check if password matches
-            JsonObject user = matchingUser.get();
-            String savedPassword = user.get("password").getAsString();
-            String savedRole = user.get("role").getAsString();
-            if (inputPassword.equals(savedPassword)) {
-                // Authentication successful
-                req.session().attribute("username", inputEmail);
-                req.session().attribute("role", savedRole);
-                res.redirect("home");
-            } else {
-                // Authentication failed
-                req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
-            }
-        } else {
-            req.session().attribute("flash_messages", new String[]{"No account with email " + inputEmail + " exists."});
-        }
-        return req;
-    }
-
-    private static boolean isEmail(String email) {
-        String emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
-            "(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*" +
-            "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+" +
-            "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
-        return Pattern.matches(emailPattern, email);
-    }
-
-    public static Request register(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
-        // Validate input params and assign flash_messages if invalid
-        if (isEmail(inputEmail)) {
-            if (inputPassword.length() >= 8) {
-                if (inputPassword.equals(inputPasswordConfirmation)) {
-                    JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-                    Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
-
-                    if (matchingUser.isPresent()) {
-                        req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
-                    } else {
-                        // Add a new user to user-list.json
-                        int newUserId = StreamSupport.stream(users.spliterator(), false)
-                            .map(user -> user.getAsJsonObject())
-                            .map(user -> user.get("id").getAsInt())
-                            .max(Comparator.naturalOrder())
-                            .get() + 1;
-
-                        JsonObject newUser = new JsonObject();
-                        newUser.addProperty("id", newUserId);
-                        newUser.addProperty("email", inputEmail);
-                        newUser.addProperty("password", inputPassword);
-                        newUser.addProperty("role", "user");
-                        newUser.add("reset_key", null);
-                        newUser.add("ip_addr", null);
-
-                        users.add(newUser);
-                        writeJsonFile("user-list.json", users);
-
-                        // Update user-group-list.json
-                        updateJsonFile("user-group-list.json",
-                                       userGroup -> {
-                                           if (userGroup.get("name").getAsString().equals("All Users")) {
-                                               JsonArray members = userGroup.get("members").getAsJsonArray();
-                                               members.add(newUserId);
-                                               userGroup.add("members", members);
-                                               return userGroup;
-                                           } else {
-                                               return userGroup;
-                                           }
-                                       });
-
-                        // Assign the username and role session attributes
-                        req.session().attribute("username", inputEmail);
-                        req.session().attribute("role", "user");
-
-                        // Redirect to /home
-                        res.redirect("home");
-                    }
-                } else {
-                    req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
-                }
-            } else {
-                req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
-            }
-        } else {
-            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
-        }
-        return req;
-    }
-
-    public static Request logout(Request req) {
-        req.session().removeAttribute("username");
-        req.session().removeAttribute("role");
-        return req;
-    }
-
-    // FIXME: stub
-    public static Request updateAccount(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
-        return req;
-    }
-
-    // FIXME: stub
-    public static Request requestPasswordResetKey(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
-        return req;
-    }
-
-    // FIXME: stub
-    public static Request resetPassword(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
-        return req;
-    }
+public class Projects {
 
     public static String getAllProjects(Request req, Response res) {
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -258,6 +52,16 @@ public class AJAX {
         JsonObject valueDistribution = new JsonObject();
         valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
         return valueDistribution;
+    }
+
+    private static void writeCsvFile(String filename, String header, String[] rows) {
+        String csvDataDir = expandResourcePath("/public/downloads/");
+        try (FileWriter fileWriter = new FileWriter(new File(csvDataDir, filename))) {
+            fileWriter.write(header + "\n");
+            fileWriter.write(Arrays.stream(rows).collect(Collectors.joining("\n")));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String dumpProjectAggregateData(Request req, Response res) {
@@ -616,188 +420,6 @@ public class AJAX {
             // Indicate that an error occurred with project creation
             req.session().attribute("flash_messages", new String[]{"Error with project creation!"});
             return req;
-        }
-    }
-
-    public static String geodashId(Request req, Response res) {
-        String geodashDataDir = expandResourcePath("/public/json/");
-
-        try (FileReader projectFileReader = new FileReader(new File(geodashDataDir, "proj.json"))) {
-            JsonParser parser = new JsonParser();
-            JsonArray projects = parser.parse(projectFileReader).getAsJsonArray();
-
-            Optional matchingProject = StreamSupport.stream(projects.spliterator(), false)
-                .map(project -> project.getAsJsonObject())
-                .filter(project -> project.get("projectID").getAsString().equals(req.params(":id")))
-                .map(project -> {
-                        try (FileReader dashboardFileReader = new FileReader(new File(geodashDataDir, "dash-" + project.get("dashboard").getAsString() + ".json"))) {
-                            return parser.parse(dashboardFileReader).getAsJsonObject();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                .findFirst();
-
-            if (matchingProject.isPresent()) {
-                if (req.queryParams("callback") != null) {
-                    return req.queryParams("callback") + "(" + matchingProject.get().toString() + ")";
-                } else {
-                    return matchingProject.get().toString();
-                }
-            } else {
-                if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
-                    String newUUID = UUID.randomUUID().toString();
-
-                    JsonObject newProject = new JsonObject();
-                    newProject.addProperty("projectID", req.params(":id"));
-                    newProject.addProperty("dashboard", newUUID);
-                    projects.add(newProject);
-
-                    try (FileWriter projectFileWriter = new FileWriter(new File(geodashDataDir, "proj.json"))) {
-                        projectFileWriter.write(projects.toString());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    JsonObject newDashboard = new JsonObject();
-                    newDashboard.addProperty("projectID", req.params(":id"));
-                    newDashboard.addProperty("projectTitle", req.queryParams("title"));
-                    newDashboard.addProperty("widgets", "[]");
-                    newDashboard.addProperty("dashboardID", newUUID);
-
-                    try (FileWriter dashboardFileWriter = new FileWriter(new File(geodashDataDir, "dash-" + newUUID + ".json"))) {
-                        dashboardFileWriter.write(newDashboard.toString());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    if (req.queryParams("callback") != null) {
-                        return req.queryParams("callback") + "(" + newDashboard.toString() + ")";
-                    } else {
-                        return newDashboard.toString();
-                    }
-                } else {
-                    return "No project exists with ID: " + req.params(":id") + ".";
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static String updateDashBoardByID(Request req, Response res) {
-        String returnString = "";
-
-        /* Code will go here to update dashboard*/
-
-        return  returnString;
-    }
-
-    public static String createDashBoardWidgetByID(Request req, Response res) {
-        String geodashDataDir = expandResourcePath("/public/json/");
-        JsonParser parser = new JsonParser();
-        JsonObject dashboardObj = new JsonObject();
-
-        try (FileReader dashboardFileReader = new FileReader(new File(geodashDataDir, "dash-" + req.queryParams("dashID") + ".json"))) {
-            dashboardObj = parser.parse(dashboardFileReader).getAsJsonObject();
-            dashboardObj.getAsJsonArray("widgets").add(parser.parse(URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8")).getAsJsonObject());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        try (FileWriter dashboardFileWriter = new FileWriter(new File(geodashDataDir, "dash-" + req.queryParams("dashID") + ".json"))) {
-            dashboardFileWriter.write(dashboardObj.toString());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        if (req.queryParams("callback") != null) {
-            return req.queryParams("callback").toString() + "()";
-        } else {
-            return "";
-        }
-    }
-
-    public static String updateDashBoardWidgetByID(Request req, Response res) {
-        try {
-            deleteOrUpdate(req.queryParams("dashID"), req.params(":id"), req.queryParams("widgetJSON"), false);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        if (req.queryParams("callback") != null) {
-            return req.queryParams("callback").toString() + "()";
-        } else {
-            return "";
-        }
-    }
-
-    public static String deleteDashBoardWidgetByID(Request req, Response res) {
-
-        deleteOrUpdate(req.queryParams("dashID"), req.params(":id"), "", true);
-
-        if (req.queryParams("callback") != null) {
-            return req.queryParams("callback").toString() + "()";
-        } else {
-            return "";
-        }
-    }
-
-    private static void deleteOrUpdate(String dashID, String ID, String widgetJSON, boolean delete) {
-        try {
-            String geodashDataDir = expandResourcePath("/public/json/");
-            if (geodashDataDir.indexOf("/") == 0) {
-                geodashDataDir = geodashDataDir.substring(1);
-            }
-            JsonParser parser = new JsonParser();
-            JsonObject dashboardObj = new JsonObject();
-            JsonArray finalArr = new JsonArray();
-            FileSystem fs = FileSystems.getDefault();
-            Path path = fs.getPath(geodashDataDir + "dash-" + dashID + ".json");
-            int retries = 0;
-            while (retries < 200) {
-                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-                    FileLock lock = fileChannel.tryLock();
-                    ByteBuffer buffer = ByteBuffer.allocate(2000);
-                    int noOfBytesRead = fileChannel.read(buffer);
-                    String jsonString = "";
-                    while (noOfBytesRead != -1) {
-                        buffer.flip();
-                        while (buffer.hasRemaining()) {
-                            jsonString += (char) buffer.get();
-                        }
-                        buffer.clear();
-                        noOfBytesRead = fileChannel.read(buffer);
-                    }
-                    dashboardObj = parser.parse(jsonString).getAsJsonObject();
-                    JsonArray widgets = dashboardObj.getAsJsonArray("widgets");
-                    for (int i = 0; i < widgets.size(); i++) {  // **line 2**
-                        JsonObject childJSONObject = widgets.get(i).getAsJsonObject();
-                        String wID = childJSONObject.get("id").getAsString();
-                        if (wID.equals(ID)) {
-                            if (!delete) {
-                                JsonParser widgetParser = new JsonParser();
-                                childJSONObject = widgetParser.parse(URLDecoder.decode(widgetJSON, "UTF-8")).getAsJsonObject();
-                                finalArr.add(childJSONObject);
-                            }
-                        } else {
-                            finalArr.add(childJSONObject);
-                        }
-                    }
-                    dashboardObj.remove("widgets");
-                    dashboardObj.add("widgets", finalArr);
-                    byte[] inputBytes = dashboardObj.toString().getBytes();
-                    ByteBuffer buffer2 = ByteBuffer.wrap(inputBytes);
-                    fileChannel.truncate(0);
-                    fileChannel.write(buffer2);
-                    fileChannel.close();
-                    retries = 201;
-                } catch (Exception e) {
-                    retries++;
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 

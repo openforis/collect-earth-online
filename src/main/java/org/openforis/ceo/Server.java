@@ -33,7 +33,7 @@ public class Server implements SparkApplication {
 
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes() {
-        // Configure FreeMarker
+        // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = getTemplateRenderer();
 
         // FIXME: Get deploy/clientkeystore signed by a certificate authority.
@@ -50,31 +50,31 @@ public class Server implements SparkApplication {
         get("/tutorials",                        (req, res) -> { return freemarker.render(Views.tutorials(req, res)); });
         get("/demo",                             (req, res) -> { return freemarker.render(Views.demo(req, res)); });
         get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        post("/account",                         (req, res) -> { return freemarker.render(Views.account(AJAX.updateAccount(req, res), res)); });
+        post("/account",                         (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
         get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
         get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res)); });
-        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(AJAX.createNewProject(req, res), res)); });
+        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(Projects.createNewProject(req, res), res)); });
         get("/login",                            (req, res) -> { return freemarker.render(Views.login(req, res)); });
-        post("/login",                           (req, res) -> { return freemarker.render(Views.login(AJAX.login(req, res), res)); });
+        post("/login",                           (req, res) -> { return freemarker.render(Views.login(Users.login(req, res), res)); });
         get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });
-        post("/register",                        (req, res) -> { return freemarker.render(Views.register(AJAX.register(req, res), res)); });
+        post("/register",                        (req, res) -> { return freemarker.render(Views.register(Users.register(req, res), res)); });
         get("/password",                         (req, res) -> { return freemarker.render(Views.password(req, res)); });
-        post("/password",                        (req, res) -> { return freemarker.render(Views.password(AJAX.requestPasswordResetKey(req, res), res)); });
+        post("/password",                        (req, res) -> { return freemarker.render(Views.password(Users.requestPasswordResetKey(req, res), res)); });
         get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
-        post("/password-reset",                  (req, res) -> { return freemarker.render(Views.passwordReset(AJAX.resetPassword(req, res), res)); });
-        get("/logout",                           (req, res) -> { return freemarker.render(Views.home(AJAX.logout(req), res)); });
-        get("/get-all-projects",                 (req, res) -> { return AJAX.getAllProjects(req, res); });
-        post("/get-project-plots",               (req, res) -> { return AJAX.getProjectPlots(req, res); });
-        post("/dump-project-aggregate-data",     (req, res) -> { return AJAX.dumpProjectAggregateData(req, res); });
-        post("/archive-project",                 (req, res) -> { return AJAX.archiveProject(req, res); });
-        post("/add-user-samples",                (req, res) -> { return AJAX.addUserSamples(req, res); });
-        post("/flag-plot",                       (req, res) -> { return AJAX.flagPlot(req, res); });
+        post("/password-reset",                  (req, res) -> { return freemarker.render(Views.passwordReset(Users.resetPassword(req, res), res)); });
+        get("/logout",                           (req, res) -> { return freemarker.render(Views.home(Users.logout(req), res)); });
+        get("/get-all-projects",                 (req, res) -> { return Projects.getAllProjects(req, res); });
+        post("/get-project-plots",               (req, res) -> { return Projects.getProjectPlots(req, res); });
+        post("/dump-project-aggregate-data",     (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
+        post("/archive-project",                 (req, res) -> { return Projects.archiveProject(req, res); });
+        post("/add-user-samples",                (req, res) -> { return Projects.addUserSamples(req, res); });
+        post("/flag-plot",                       (req, res) -> { return Projects.flagPlot(req, res); });
         get("/geo-dash",                         (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
-        get("/geo-dash/id/:id",                  (req, res) -> { return AJAX.geodashId(req, res); });
-        get("/geo-dash/update/id/:id",           (req, res) -> { return AJAX.updateDashBoardByID(req, res); });
-        get("/geo-dash/createwidget/widget",     (req, res) -> { return AJAX.createDashBoardWidgetByID(req, res); });
-        get("/geo-dash/updatewidget/widget/:id", (req, res) -> { return AJAX.updateDashBoardWidgetByID(req, res); });
-        get("/geo-dash/deletewidget/widget/:id", (req, res) -> { return AJAX.deleteDashBoardWidgetByID(req, res); });
+        get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
+        get("/geo-dash/update/id/:id",           (req, res) -> { return GeoDash.updateDashBoardByID(req, res); });
+        get("/geo-dash/createwidget/widget",     (req, res) -> { return GeoDash.createDashBoardWidgetByID(req, res); });
+        get("/geo-dash/updatewidget/widget/:id", (req, res) -> { return GeoDash.updateDashBoardWidgetByID(req, res); });
+        get("/geo-dash/deletewidget/widget/:id", (req, res) -> { return GeoDash.deleteDashBoardWidgetByID(req, res); });
         get("*",                                 (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });
 
         // Handle Exceptions
@@ -97,18 +97,3 @@ public class Server implements SparkApplication {
     }
 
 }
-
-/*
-  before("/protected/*", (request, response) -> {
-  boolean authenticated = false;
-  // ... check if authenticated
-  if (!authenticated) {
-  halt(401, "Go Away!");
-  }
-  });
-
-  after((request, response) -> {
-  response.header("foo", "set by after filter");
-  });
-
-*/
