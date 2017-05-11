@@ -903,6 +903,7 @@ function getParameterByName(name, url) {
     if (!url) {
         url = window.location.href;
     }
+    url = decodeURIComponent(url);
     name = name.replace(/[\[\]]/g, "\\$&");
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
     var results = regex.exec(url);

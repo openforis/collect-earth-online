@@ -1,3 +1,5 @@
+var gpid;
+var gurl;
 angular.module("geodash", []).controller("GeodashController", ["$http", function GeodashController($http) {
     this.debugme;
     this.theURL = "geo-dash/";
@@ -19,6 +21,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.initialize = function () {
         geodash = this;
         var pid = this.getParameterByName("pid");
+        gpid = pid;
         var title = this.getParameterByName("title");
         this.projAOI = this.getParameterByName("aoi");
         this.bradius = this.getParameterByName("bradius");
@@ -35,9 +38,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             url: this.theURL + "id/" + pid,
             type: "get",
             dataType: "jsonp",
-            data: {
-                title: title
-            }
+            data: encodeURIComponent({title: title})
         }, function (response) {
             try {
                 geodash.fillDashboard(response);
@@ -495,6 +496,8 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         if (!url) {
             url = window.location.href;
         }
+        url = decodeURIComponent(url);
+        gurl = url;
         name = name.replace(/[\[\]]/g, "\\$&");
         var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
         var results = regex.exec(url);
