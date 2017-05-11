@@ -101,7 +101,7 @@ public class GeoDash {
         JsonArray widgets = dashboard.getAsJsonArray("widgets");
         JsonArray updatedWidgets = filterJsonArray(widgets, widget -> !widget.get("id").getAsString().equals(req.params(":id")));
         dashboard.add("widgets", updatedWidgets);
-        writeJsonFile("dash-" + req.queryParams("dashID") + ".json", updatedWidgets);
+        writeJsonFile("dash-" + req.queryParams("dashID") + ".json", dashboard);
         if (req.queryParams("callback") != null) {
             return req.queryParams("callback") + "()";
         } else {
