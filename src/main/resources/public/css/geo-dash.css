@@ -190,3 +190,8 @@
 .list-inline {
     margin-bottom: 0px;
 }
+@media (max-width: 550px) {
+    .col-xs-6 {
+    width: 100%;
+}
+}
