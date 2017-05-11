@@ -88,7 +88,7 @@ public class GeoDash {
                 }
             });
         dashboard.add("widgets", updatedWidgets);
-        writeJsonFile("dash-" + req.queryParams("dashID") + ".json", updatedWidgets);
+        writeJsonFile("dash-" + req.queryParams("dashID") + ".json", dashboard);
         if (req.queryParams("callback") != null) {
             return req.queryParams("callback") + "()";
         } else {
