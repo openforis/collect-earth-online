@@ -1,0 +1,38 @@
+Home:
+- Gear icon on top right of navbar for Admins to create/delete institutions
+- Welcome text centered and 100% width
+- Three boxes horizontally arranged (Institutions, Projects, Users) -> Institution logo and name, Public projects, User map w/ pushpins
+
+About:
+- Add Disclaimers to bottom w/ TBD text
+- Move all the sponsor logos next to SIG logo
+
+Tutorials/Demo:
+- Rename Tutorials to Support and remove the Demo page
+
+Institution:
+- Show logo, name, and description of institution
+- Show total number of active and completed projects and total number of users
+- Show public projects and any the user has access to
+- Show list of institution users only if the user is logged in and a member of the institution
+- Add a button to request membership in this institution
+
+Institution Admin:
+- Put edit icons next to logo, name, and description fields
+- Put edit icons next to each project -> redirect to the project management page
+- Include a button to create a new project
+- Image Servers:
+  - Include Google Maps, Bing Maps, and DigitalGlobe Maps forms
+  - Include WMS server (e.g., Geoserver) form
+  - Each entry has an Enable button
+- User Management:
+  - Make a div for each user with their name and stats (# of institutions the belong to, # of projects they belong to, # of sample points completed)
+  - Include buttons to Add and Delete members from your institution (only show users who are currently members or who have requested access)
+
+Project Management page:
+- Include Public/Institution/Invite-Only radio button
+- If Invite-Only is selected, provide a list of users who are members of this project with delete buttons next to them
+- Include an Add User button (must type in username)
+- Pop out to Collect for the Entity Design stage
+- Pop out to the GeoDash page for GEE Integration (Add/Remove widgets)
+- Include a time selector
