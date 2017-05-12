@@ -11,7 +11,7 @@ import static org.openforis.ceo.JsonUtils.*;
 
 public class GeoDash {
 
-    public static String geodashId(Request req, Response res) {
+    public static synchronized String geodashId(Request req, Response res) {
         JsonArray projects = readJsonFile("proj.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("projectID").getAsString().equals(req.params(":id")));
         if (matchingProject.isPresent()) {
@@ -50,12 +50,12 @@ public class GeoDash {
         }
     }
 
-    public static String updateDashBoardByID(Request req, Response res) {
+    public static synchronized String updateDashBoardByID(Request req, Response res) {
         /* Code will go here to update dashboard*/
         return  "";
     }
 
-    public static String createDashBoardWidgetByID(Request req, Response res) {
+    public static synchronized String createDashBoardWidgetByID(Request req, Response res) {
         JsonObject dashboard = readJsonFile("dash-" + req.queryParams("dashID") + ".json").getAsJsonObject();
         JsonArray widgets = dashboard.getAsJsonArray("widgets");
         try {
@@ -73,7 +73,7 @@ public class GeoDash {
         }
     }
 
-    public static String updateDashBoardWidgetByID(Request req, Response res) {
+    public static synchronized String updateDashBoardWidgetByID(Request req, Response res) {
         JsonObject dashboard = readJsonFile("dash-" + req.queryParams("dashID") + ".json").getAsJsonObject();
         JsonArray widgets = dashboard.getAsJsonArray("widgets");
         JsonArray updatedWidgets = mapJsonArray(widgets, widget -> {
@@ -96,7 +96,7 @@ public class GeoDash {
         }
     }
 
-    public static String deleteDashBoardWidgetByID(Request req, Response res) {
+    public static synchronized String deleteDashBoardWidgetByID(Request req, Response res) {
         JsonObject dashboard = readJsonFile("dash-" + req.queryParams("dashID") + ".json").getAsJsonObject();
         JsonArray widgets = dashboard.getAsJsonArray("widgets");
         JsonArray updatedWidgets = filterJsonArray(widgets, widget -> !widget.get("id").getAsString().equals(req.params(":id")));
