@@ -53,7 +53,7 @@ public class Projects {
         return valueDistribution;
     }
 
-    private static void writeCsvFile(String filename, String header, String[] rows) {
+    private static synchronized void writeCsvFile(String filename, String header, String[] rows) {
         String csvDataDir = expandResourcePath("/public/downloads/");
         try (FileWriter fileWriter = new FileWriter(new File(csvDataDir, filename))) {
             fileWriter.write(header + "\n");
@@ -126,7 +126,7 @@ public class Projects {
         }
     }
 
-    public static String archiveProject(Request req, Response res) {
+    public static synchronized String archiveProject(Request req, Response res) {
         String projectId = req.body();
 
         mapJsonFile("project-list.json",
@@ -142,7 +142,7 @@ public class Projects {
         return "";
     }
 
-    public static String addUserSamples(Request req, Response res) {
+    public static synchronized String addUserSamples(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -174,7 +174,7 @@ public class Projects {
         return "";
     }
 
-    public static String flagPlot(Request req, Response res) {
+    public static synchronized String flagPlot(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -319,7 +319,7 @@ public class Projects {
             .toArray(Double[][]::new);
     }
 
-    public static Request createNewProject(Request req, Response res) {
+    public static synchronized Request createNewProject(Request req, Response res) {
         try {
             String projectName = req.queryParams("project-name");
             String projectDescription = req.queryParams("project-description");

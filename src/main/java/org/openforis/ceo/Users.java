@@ -46,7 +46,7 @@ public class Users {
         return Pattern.matches(emailPattern, email);
     }
 
-    public static Request register(Request req, Response res) {
+    public static synchronized Request register(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
