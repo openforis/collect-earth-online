@@ -74,9 +74,16 @@ public class JsonUtils {
     }
 
     // Note: The JSON file must contain an array of objects.
-    public static void updateJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
+    public static void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
         JsonArray array = readJsonFile(filename).getAsJsonArray();
         JsonArray updatedArray = mapJsonArray(array, mapper);
+        writeJsonFile(filename, updatedArray);
+    }
+
+    // Note: The JSON file must contain an array of objects.
+    public static void filterJsonFile(String filename, Predicate<JsonObject> predicate) {
+        JsonArray array = readJsonFile(filename).getAsJsonArray();
+        JsonArray updatedArray = filterJsonArray(array, predicate);
         writeJsonFile(filename, updatedArray);
     }
 

@@ -129,15 +129,15 @@ public class Projects {
     public static String archiveProject(Request req, Response res) {
         String projectId = req.body();
 
-        updateJsonFile("project-list.json",
-                       project -> {
-                           if (project.get("id").getAsString().equals(projectId)) {
-                               project.addProperty("archived", true);
-                               return project;
-                           } else {
-                               return project;
-                           }
-                       });
+        mapJsonFile("project-list.json",
+                    project -> {
+                        if (project.get("id").getAsString().equals(projectId)) {
+                            project.addProperty("archived", true);
+                            return project;
+                        } else {
+                            return project;
+                        }
+                    });
 
         return "";
     }
@@ -149,27 +149,27 @@ public class Projects {
         String userName = jsonInputs.get("userId").getAsString();
         JsonObject userSamples = jsonInputs.get("userSamples").getAsJsonObject();
 
-        updateJsonFile("plot-data-" + projectId + ".json",
-                       plot -> {
-                           JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                           JsonArray samples = plot.get("samples").getAsJsonArray();
-                           if (plotAttributes.get("id").getAsString().equals(plotId)) {
-                               int currentAnalyses = plotAttributes.get("analyses").getAsInt();
-                               plotAttributes.addProperty("analyses", currentAnalyses + 1);
-                               plotAttributes.addProperty("user", userName);
-                               plot.add("plot", plotAttributes);
-                               JsonArray updatedSamples = mapJsonArray(samples,
-                                                                       sample -> {
-                                                                           String sampleId = sample.get("id").getAsString();
-                                                                           sample.addProperty("value", userSamples.get(sampleId).getAsInt());
-                                                                           return sample;
-                                                                       });
-                               plot.add("samples", updatedSamples);
-                               return plot;
-                           } else {
-                               return plot;
-                           }
-                       });
+        mapJsonFile("plot-data-" + projectId + ".json",
+                    plot -> {
+                        JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                        JsonArray samples = plot.get("samples").getAsJsonArray();
+                        if (plotAttributes.get("id").getAsString().equals(plotId)) {
+                            int currentAnalyses = plotAttributes.get("analyses").getAsInt();
+                            plotAttributes.addProperty("analyses", currentAnalyses + 1);
+                            plotAttributes.addProperty("user", userName);
+                            plot.add("plot", plotAttributes);
+                            JsonArray updatedSamples = mapJsonArray(samples,
+                                                                    sample -> {
+                                                                        String sampleId = sample.get("id").getAsString();
+                                                                        sample.addProperty("value", userSamples.get(sampleId).getAsInt());
+                                                                        return sample;
+                                                                    });
+                            plot.add("samples", updatedSamples);
+                            return plot;
+                        } else {
+                            return plot;
+                        }
+                    });
 
         return "";
     }
@@ -179,17 +179,17 @@ public class Projects {
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
 
-        updateJsonFile("plot-data-" + projectId + ".json",
-                       plot -> {
-                           JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                           if (plotAttributes.get("id").getAsString().equals(plotId)) {
-                               plotAttributes.addProperty("flagged", true);
-                               plot.add("plot", plotAttributes);
-                               return plot;
-                           } else {
-                               return plot;
-                           }
-                       });
+        mapJsonFile("plot-data-" + projectId + ".json",
+                    plot -> {
+                        JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
+                        if (plotAttributes.get("id").getAsString().equals(plotId)) {
+                            plotAttributes.addProperty("flagged", true);
+                            plot.add("plot", plotAttributes);
+                            return plot;
+                        } else {
+                            return plot;
+                        }
+                    });
 
         return "";
     }

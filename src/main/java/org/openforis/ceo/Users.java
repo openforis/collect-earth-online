@@ -79,17 +79,17 @@ public class Users {
                         writeJsonFile("user-list.json", users);
 
                         // Update user-group-list.json
-                        updateJsonFile("user-group-list.json",
-                                       userGroup -> {
-                                           if (userGroup.get("name").getAsString().equals("All Users")) {
-                                               JsonArray members = userGroup.get("members").getAsJsonArray();
-                                               members.add(newUserId);
-                                               userGroup.add("members", members);
-                                               return userGroup;
-                                           } else {
-                                               return userGroup;
-                                           }
-                                       });
+                        mapJsonFile("user-group-list.json",
+                                    userGroup -> {
+                                        if (userGroup.get("name").getAsString().equals("All Users")) {
+                                            JsonArray members = userGroup.get("members").getAsJsonArray();
+                                            members.add(newUserId);
+                                            userGroup.add("members", members);
+                                            return userGroup;
+                                        } else {
+                                            return userGroup;
+                                        }
+                                    });
 
                         // Assign the username and role session attributes
                         req.session().attribute("username", inputEmail);
