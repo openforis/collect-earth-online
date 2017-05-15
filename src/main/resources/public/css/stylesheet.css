@@ -150,13 +150,9 @@ nav a:hover, nav a.active-link {
 section#content {
     display: block;
     position: relative;
-    width: 100%;
+    width: calc(100% - 2px);
     color: #222;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    /* border: 1px solid green; */
+    border: 1px solid darkgray;
 }
 
 section#content a {
@@ -226,9 +222,9 @@ section#content a:hover, section#content a.active-link {
     height: 140px;
     width: 100%;
     padding: 0.5rem 0rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border-bottom: 2px solid darkgray;
     overflow: scroll;
 }
@@ -266,9 +262,9 @@ section#content a:hover, section#content a.active-link {
     height: calc(100% - 142px - 5rem);
     width: calc(33vw - 4rem - 2px);
     padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border-right: 2px solid darkgray;
 }
 
@@ -305,9 +301,9 @@ section#content a:hover, section#content a.active-link {
     height: calc(100% - 142px - 5rem);
     width: calc(34vw - 4rem - 2px);
     padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border-right: 2px solid darkgray;
 }
 
@@ -344,9 +340,9 @@ section#content a:hover, section#content a.active-link {
     height: calc(100% - 142px - 5rem);
     width: calc(33vw - 4rem);
     padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
 }
 
 #user-list h1 {
@@ -386,9 +382,9 @@ section#content a:hover, section#content a.active-link {
     height: calc(100% - 4rem);
     width: calc(100% - 4rem);
     padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* border: 1px solid darkgray; */
     overflow: scroll;
 }
@@ -419,9 +415,9 @@ section#content a:hover, section#content a.active-link {
     height: calc(100% - 4rem);
     width: calc(100% - 4rem);
     padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* border: 1px solid darkgray; */
     overflow: scroll;
 }
@@ -449,9 +445,9 @@ section#content a:hover, section#content a.active-link {
     height: 80%;
     width: 25vw;
     padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border: 1px solid darkgray;
 }
 
@@ -524,9 +520,9 @@ section#content a:hover, section#content a.active-link {
     height: 80%;
     width: 25vw;
     padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border: 1px solid darkgray;
 }
 

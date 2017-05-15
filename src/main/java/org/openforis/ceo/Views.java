@@ -11,7 +11,8 @@ public class Views {
 
     private static Map<String, Object> getBaseModel(Request req, String navlink, String contentSize) {
         Map<String, Object> model = new HashMap<String, Object>();
-        model.put("background_image_file", "mountain-field-scenery-small.jpg");
+        // model.put("background_image", "url(img/mountain-field-scenery-small.jpg)");
+        model.put("background_image", "linear-gradient(to bottom right, rgba(63,171,198,0.35), rgba(63,171,198,0.05), rgba(63,171,198,0.35))");
         model.put("branding_image_file", "ceo-logo1.png");
         model.put("navlink", navlink);
         model.put("content_size", contentSize);
