@@ -3,7 +3,6 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
-<#include "ceo-description.ftl">
 
 <div id="account-form">
     <h1>Account Settings</h1>

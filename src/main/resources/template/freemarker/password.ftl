@@ -3,7 +3,6 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
-<#include "ceo-description.ftl">
 
 <div id="password-form">
     <h1>Enter your login email</h1>

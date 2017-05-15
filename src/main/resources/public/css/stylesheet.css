@@ -440,9 +440,9 @@ section#content a:hover, section#content a.active-link {
 #login-form, #register-form, #password-form, #account-form {
     position: absolute;
     top: 50%;
-    transform: translate(0, -50%);
-    right: 5vw;
-    height: 80%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: calc(80% - 4rem);
     width: 25vw;
     padding: 2rem;
     /* background: rgba(255,255,255,0.8); */
@@ -454,7 +454,7 @@ section#content a:hover, section#content a.active-link {
 #login-form h1, #register-form h1, #password-form h1, #account-form h1 {
     font-size: 1.7rem;
     font-weight: 100;
-    padding: 0.5rem;
+    padding: 0 0.5rem 0.5rem 0.5rem;
     color: gray;
 }
 
@@ -515,9 +515,9 @@ section#content a:hover, section#content a.active-link {
 #access-denied, #page-not-found, #error-page {
     position: absolute;
     top: 50%;
-    transform: translate(0, -50%);
-    right: 5vw;
-    height: 80%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: calc(80% - 4rem);
     width: 25vw;
     padding: 2rem;
     /* background: rgba(255,255,255,0.8); */
