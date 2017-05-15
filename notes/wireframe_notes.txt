@@ -1,10 +1,10 @@
 Home:
-- [ ] Gear icon on top right of navbar for Admins to create/delete institutions
 - [X] Welcome text centered and 100% width
 - [ ] Three boxes horizontally arranged (Institutions, Projects, Users)
   - [ ] Institution logo and name
   - [ ] Public projects
   - [ ] User map w/ pushpins
+- [ ] Gear icon next to Insitution H1 for Admins to create/delete institutions
 
 About:
 - [X] Add Disclaimers to bottom w/ TBD text

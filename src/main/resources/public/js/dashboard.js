@@ -94,12 +94,13 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             utils.disable_element("save-values-button");
             map_utils.draw_buffer(newPlot.center, newPlot.radius);
             map_utils.draw_points(newSamples);
-            window.open("geo-dash?" + encodeURIComponent("title=" + this.currentProject.name
-                        + "&pid=" + this.currentProjectId
-                        + "&aoi=[" + map_utils.get_view_extent()
-                        + "]&daterange=&bcenter=" + newPlot.center
-                        + "&bradius=" + newPlot.radius,
-                        "_geo-dash"));
+            window.open("geo-dash?"
+                        + encodeURIComponent("title=" + this.currentProject.name
+                                             + "&pid=" + this.currentProjectId
+                                             + "&aoi=[" + map_utils.get_view_extent()
+                                             + "]&daterange=&bcenter=" + newPlot.center
+                                             + "&bradius=" + newPlot.radius),
+                        "_geo-dash");
         }
     };
 
