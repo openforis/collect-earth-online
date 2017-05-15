@@ -43,12 +43,12 @@ public class Views {
     }
 
     public static ModelAndView support(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Support", "small"), "support.ftl");
+        return new ModelAndView(getBaseModel(req, "Support", "large"), "support.ftl");
     }
 
     public static ModelAndView account(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
-        return new ModelAndView(getBaseModel(req, "Account", "small"), "account.ftl");
+        return new ModelAndView(getBaseModel(req, "Account", "large"), "account.ftl");
     }
 
     public static ModelAndView dashboard(Request req, Response res) {
@@ -63,26 +63,22 @@ public class Views {
     }
 
     public static ModelAndView login(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Login", "small"), "login.ftl");
+        return new ModelAndView(getBaseModel(req, "Login", "large"), "login.ftl");
     }
 
     public static ModelAndView register(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Register", "small"), "register.ftl");
+        return new ModelAndView(getBaseModel(req, "Register", "large"), "register.ftl");
     }
 
     public static ModelAndView password(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Password", "small"), "password.ftl");
+        return new ModelAndView(getBaseModel(req, "Password", "large"), "password.ftl");
     }
 
     public static ModelAndView passwordReset(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "Password-Reset", "small");
+        Map<String, Object> model = getBaseModel(req, "Password-Reset", "large");
         model.put("email", req.queryParams("email"));
         model.put("password_reset_key", req.queryParams("password-reset-key"));
         return new ModelAndView(model, "password-reset.ftl");
-    }
-
-    public static ModelAndView logout(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Logout", "small"), "logout.ftl");
     }
 
     public static ModelAndView geodash(Request req, Response res) {
@@ -90,7 +86,7 @@ public class Views {
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Page-Not-Found", "small"), "page-not-found.ftl");
+        return new ModelAndView(getBaseModel(req, "Page-Not-Found", "large"), "page-not-found.ftl");
     }
 
 }
