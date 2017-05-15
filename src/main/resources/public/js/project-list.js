@@ -1,4 +1,4 @@
-angular.module("selectProject", []).controller("SelectProjectController", ["$http", function SelectProjectController($http) {
+angular.module("projectList", []).controller("ProjectListController", ["$http", function ProjectListController($http) {
     this.projectList = [];
 
     this.getProjectList = function () {

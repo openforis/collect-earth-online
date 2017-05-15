@@ -34,7 +34,7 @@ public class Views {
     }
 
     public static ModelAndView home(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Home", "small"), "home.ftl");
+        return new ModelAndView(getBaseModel(req, "Home", "large"), "home.ftl");
     }
 
     public static ModelAndView about(Request req, Response res) {
