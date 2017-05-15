@@ -406,11 +406,11 @@ section#content a:hover, section#content a.active-link {
     padding: 0rem 0.5rem;
 }
 
-/******************/
-/* Tutorials Page */
-/******************/
+/****************/
+/* Support Page */
+/****************/
 
-#tutorials {
+#support {
     position: absolute;
     top: 0;
     left: 0;
@@ -423,42 +423,14 @@ section#content a:hover, section#content a.active-link {
     /* border: 1px solid darkgray; */
 }
 
-#tutorials h1 {
+#support h1 {
     font-size: 1.5rem;
     font-weight: 100;
     padding: 0.5rem;
     color: gray;
 }
 
-#tutorials p {
-    padding: 0.5rem;
-}
-
-/*************/
-/* Demo Page */
-/*************/
-
-#demo {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: calc(100% - 4rem);
-    width: calc(100% - 4rem);
-    padding: 2rem;
-    background: rgba(255,255,255,0.8);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    /* border: 1px solid darkgray; */
-}
-
-#demo h1 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-}
-
-#demo p {
+#support p {
     padding: 0.5rem;
 }
 

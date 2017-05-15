@@ -24,7 +24,8 @@
     <hr>
     <h1>Disclaimers</h1>
     <p>
-        Text TBD...
+        This content is currently under development. Please check back
+        later for updates.
     </p>
 </div>
 

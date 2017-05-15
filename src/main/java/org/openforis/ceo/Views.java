@@ -41,12 +41,8 @@ public class Views {
         return new ModelAndView(getBaseModel(req, "About", "small"), "about.ftl");
     }
 
-    public static ModelAndView tutorials(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Tutorials", "small"), "tutorials.ftl");
-    }
-
-    public static ModelAndView demo(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Demo", "small"), "demo.ftl");
+    public static ModelAndView support(Request req, Response res) {
+        return new ModelAndView(getBaseModel(req, "Support", "small"), "support.ftl");
     }
 
     public static ModelAndView account(Request req, Response res) {

@@ -1,7 +1,7 @@
 <nav>
     <ul>
         <#if role?? && role == "admin">
-            <#list ["Home", "About", "Tutorials", "Demo", "Account", "Dashboard", "Admin"] as url>
+            <#list ["Home", "About", "Support", "Account", "Dashboard", "Admin"] as url>
                 <#if navlink == url>
                     <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
                 <#else>
@@ -9,7 +9,7 @@
                 </#if>
             </#list>
         <#elseif role?? && role == "user">
-            <#list ["Home", "About", "Tutorials", "Demo", "Account", "Dashboard"] as url>
+            <#list ["Home", "About", "Support", "Account", "Dashboard"] as url>
                 <#if navlink == url>
                     <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
                 <#else>
@@ -17,7 +17,7 @@
                 </#if>
             </#list>
         <#else>
-            <#list ["Home", "About", "Tutorials", "Demo"] as url>
+            <#list ["Home", "About", "Support"] as url>
                 <#if navlink == url>
                     <li><a class="active-link" href="${url?lower_case}">${url}</a></li>
                 <#else>

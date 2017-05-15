@@ -47,8 +47,7 @@ public class Server implements SparkApplication {
         get("/",                                 (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/home",                             (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/about",                            (req, res) -> { return freemarker.render(Views.about(req, res)); });
-        get("/tutorials",                        (req, res) -> { return freemarker.render(Views.tutorials(req, res)); });
-        get("/demo",                             (req, res) -> { return freemarker.render(Views.demo(req, res)); });
+        get("/support",                          (req, res) -> { return freemarker.render(Views.support(req, res)); });
         get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
         post("/account",                         (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
         get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
