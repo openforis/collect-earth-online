@@ -4,11 +4,9 @@
 
 <#if role?? && role == "admin">
     <script type="text/javascript" src="js/geo-dash-admin.js"></script>
-<#else>
-    <script type="text/javascript" src="js/geo-dash.js"></script>
 </#if>
 
-<div id="geodash" ng-app="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize()">
+<div id="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize()">
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>

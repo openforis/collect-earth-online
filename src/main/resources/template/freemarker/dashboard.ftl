@@ -3,9 +3,7 @@
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
 
-<script type="text/javascript" src="js/dashboard.js"></script>
-
-<div id="dashboard" ng-app="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize()">
+<div id="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize()">
     <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='home'">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">
