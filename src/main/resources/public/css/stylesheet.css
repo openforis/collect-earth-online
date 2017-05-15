@@ -380,16 +380,15 @@ section#content a:hover, section#content a.active-link {
 
 #about {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    height: 80%;
-    width: 50vw;
+    top: 0;
+    left: 0;
+    height: calc(100% - 4rem);
+    width: calc(100% - 4rem);
     padding: 2rem;
     background: rgba(255,255,255,0.8);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
     -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    border: 1px solid darkgray;
+    /* border: 1px solid darkgray; */
 }
 
 #about h1 {
@@ -413,16 +412,15 @@ section#content a:hover, section#content a.active-link {
 
 #tutorials {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    height: 80%;
-    width: 50vw;
+    top: 0;
+    left: 0;
+    height: calc(100% - 4rem);
+    width: calc(100% - 4rem);
     padding: 2rem;
     background: rgba(255,255,255,0.8);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
     -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    border: 1px solid darkgray;
+    /* border: 1px solid darkgray; */
 }
 
 #tutorials h1 {
@@ -442,16 +440,15 @@ section#content a:hover, section#content a.active-link {
 
 #demo {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    height: 80%;
-    width: 50vw;
+    top: 0;
+    left: 0;
+    height: calc(100% - 4rem);
+    width: calc(100% - 4rem);
     padding: 2rem;
     background: rgba(255,255,255,0.8);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
     -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF);
-    border: 1px solid darkgray;
+    /* border: 1px solid darkgray; */
 }
 
 #demo h1 {

@@ -21,6 +21,11 @@
     </p>
     <a href="http://www.sig-gis.com"><img src="img/sig-logo.png"></a>
     <p>Copyright © <a href="http://www.sig-gis.com">SIG-GIS</a> 2016-2017</p>
+    <hr>
+    <h1>Disclaimers</h1>
+    <p>
+        Text TBD...
+    </p>
 </div>
 
 <#include "end-content.ftl">
