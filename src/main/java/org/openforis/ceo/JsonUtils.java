@@ -25,7 +25,7 @@ public class JsonUtils {
     }
 
     public static JsonElement readJsonFile(String filename) {
-        String jsonDataDir = expandResourcePath("/public/json/");
+        String jsonDataDir = expandResourcePath("/json/");
         try (FileReader fileReader = new FileReader(new File(jsonDataDir, filename))) {
             return (new JsonParser()).parse(fileReader);
         } catch (Exception e) {
@@ -34,7 +34,7 @@ public class JsonUtils {
     }
 
     public static void writeJsonFile(String filename, JsonElement data) {
-        String jsonDataDir = expandResourcePath("/public/json/");
+        String jsonDataDir = expandResourcePath("/json/");
         try (FileWriter fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
             fileWriter.write(data.toString());
         } catch (Exception e) {

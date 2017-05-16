@@ -78,16 +78,16 @@ public class Users {
                         users.add(newUser);
                         writeJsonFile("user-list.json", users);
 
-                        // Update user-group-list.json
-                        mapJsonFile("user-group-list.json",
-                                    userGroup -> {
-                                        if (userGroup.get("name").getAsString().equals("All Users")) {
-                                            JsonArray members = userGroup.get("members").getAsJsonArray();
+                        // Update institution-list.json
+                        mapJsonFile("institution-list.json",
+                                    institution -> {
+                                        if (institution.get("name").getAsString().equals("All Users")) {
+                                            JsonArray members = institution.get("members").getAsJsonArray();
                                             members.add(newUserId);
-                                            userGroup.add("members", members);
-                                            return userGroup;
+                                            institution.add("members", members);
+                                            return institution;
                                         } else {
-                                            return userGroup;
+                                            return institution;
                                         }
                                     });
 
