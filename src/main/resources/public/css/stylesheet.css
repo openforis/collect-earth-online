@@ -647,6 +647,25 @@ p.error-message {
     text-align: center;
 }
 
+#institution #user-list ul {
+    list-style-type: none;
+    padding: 0.5rem;
+    height: calc(100% - 5.5rem);
+    overflow: scroll;
+}
+
+#institution #user-list ul li a {
+    color: #3C948B;
+    text-align: center;
+    font-size: 1rem;
+    width: 95%;
+    padding: 0.25rem;
+    text-decoration: none;
+    display: block;
+    border: 1px solid blue;
+    margin-bottom: 0.5rem;
+}
+
 #institution #user-list #user-map {
     height: calc(100% - 5.5rem);
     padding: 0.5rem;
