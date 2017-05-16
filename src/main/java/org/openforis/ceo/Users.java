@@ -134,4 +134,10 @@ public class Users {
         return req;
     }
 
+    public static String getAllUsers(Request req, Response res) {
+        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+        JsonArray visibleUsers = filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com"));
+        return visibleUsers.toString();
+    }
+
 }

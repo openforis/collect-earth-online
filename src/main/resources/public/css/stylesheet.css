@@ -352,23 +352,8 @@ section#content a:hover, section#content a.active-link {
     color: gray;
 }
 
-#user-list ul {
-    list-style-type: none;
-    padding: 0.5rem;
+#user-list #user-map {
     height: 80%;
-    overflow: scroll;
-}
-
-#user-list ul li a {
-    color: #3C948B;
-    text-align: center;
-    font-size: 1rem;
-    width: 95%;
-    padding: 0.25rem;
-    text-decoration: none;
-    display: block;
-    border: 1px solid blue;
-    margin-bottom: 0.5rem;
 }
 
 /**************/
