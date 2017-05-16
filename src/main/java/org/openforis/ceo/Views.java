@@ -51,6 +51,16 @@ public class Views {
         return new ModelAndView(getBaseModel(req, "Account", "large"), "account.ftl");
     }
 
+    // FIXME: Set the logo, name, and description dynamically based on
+    // the institution id.
+    public static ModelAndView institution(Request req, Response res) {
+        Map<String, Object> model = getBaseModel(req, "Institution", "large");
+        model.put("institution_logo", "img/sig-logo.png");
+        model.put("institution_name", "Spatial Informatics Group (SIG)");
+        model.put("institution_description", "Spatial Informatics Group is an environmental think-tank specializing in the characterization and assessment of wildland and urban landscapes. Our goal is to help our clients make informed management, land-use and policy decisions by converting spatial data into knowledge they can use in a world with ever-changing environmental conditions.");
+        return new ModelAndView(model, "institution.ftl");
+    }
+
     public static ModelAndView dashboard(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Dashboard", "large");
         model.put("project_id", req.queryParams("project"));

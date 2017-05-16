@@ -4,9 +4,12 @@
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
 
-<div id="home">
-    <#include "ceo-description.ftl">
-    <#include "institution-list.ftl">
+<div id="institution">
+    <div id="institution-details">
+        <img src="${institution_logo}">
+        <h1>${institution_name}</h1>
+        <p>${institution_description}</p>
+    </div>
     <#include "project-list.ftl">
     <#include "user-list.ftl">
 </div>

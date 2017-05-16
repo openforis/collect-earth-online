@@ -217,8 +217,19 @@ section#content a:hover, section#content a.active-link {
 /* Home Page */
 /*************/
 
-#ceo-description {
+#home {
     position: relative;
+    height: 100%;
+    width: 100%;
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+}
+
+#home #ceo-description {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 140px;
     width: 100%;
     padding: 0.5rem 0rem;
@@ -229,11 +240,11 @@ section#content a:hover, section#content a.active-link {
     overflow: scroll;
 }
 
-#ceo-description img#ceo-logo {
+#home #ceo-description img#ceo-logo {
     float: left;
 }
 
-#ceo-description h1 {
+#home #ceo-description h1 {
     margin-bottom: 0.5rem;
     font-size: 1.6rem;
     font-weight: 400;
@@ -241,7 +252,7 @@ section#content a:hover, section#content a.active-link {
     text-align: center;
 }
 
-#ceo-description h2 {
+#home #ceo-description h2 {
     font-family: Open Sans;
     font-style: normal;
     font-size: 1.1rem;
@@ -250,39 +261,40 @@ section#content a:hover, section#content a.active-link {
     text-align: center;
 }
 
-#ceo-description p {
+#home #ceo-description p {
     padding: 0.5rem;
     text-align: center;
 }
 
-#institution-list {
+#home #institution-list {
     position: absolute;
     top: calc(142px + 1rem);
     left: 0vw;
-    height: calc(100% - 142px - 5rem);
-    width: calc(33vw - 4rem - 2px);
-    padding: 2rem;
+    height: calc(100% - 142px - 3rem);
+    width: calc(33vw - 2rem - 2px);
+    padding: 1rem;
     /* background: rgba(255,255,255,0.8); */
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border-right: 2px solid darkgray;
 }
 
-#institution-list h1 {
-    font-size: 1.9rem;
+#home #institution-list h1 {
+    font-size: 1.5rem;
     font-weight: 100;
     padding: 0.5rem;
     color: gray;
+    text-align: center;
 }
 
-#institution-list ul {
+#home #institution-list ul {
     list-style-type: none;
     padding: 0.5rem;
-    height: 80%;
+    height: calc(100% - 4.5rem);
     overflow: scroll;
 }
 
-#institution-list ul li a {
+#home #institution-list ul li a {
     color: #3C948B;
     text-align: center;
     font-size: 1rem;
@@ -294,34 +306,35 @@ section#content a:hover, section#content a.active-link {
     margin-bottom: 0.5rem;
 }
 
-#project-list {
+#home #project-list {
     position: absolute;
     top: calc(142px + 1rem);
     left: 33vw;
-    height: calc(100% - 142px - 5rem);
-    width: calc(34vw - 4rem - 2px);
-    padding: 2rem;
+    height: calc(100% - 142px - 3rem);
+    width: calc(34vw - 2rem - 2px);
+    padding: 1rem;
     /* background: rgba(255,255,255,0.8); */
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border-right: 2px solid darkgray;
 }
 
-#project-list h1 {
-    font-size: 1.9rem;
+#home #project-list h1 {
+    font-size: 1.5rem;
     font-weight: 100;
     padding: 0.5rem;
     color: gray;
+    text-align: center;
 }
 
-#project-list ul {
+#home #project-list ul {
     list-style-type: none;
     padding: 0.5rem;
-    height: 80%;
+    height: calc(100% - 4.5rem);
     overflow: scroll;
 }
 
-#project-list ul li a {
+#home #project-list ul li a {
     color: #3C948B;
     text-align: center;
     font-size: 1rem;
@@ -333,27 +346,28 @@ section#content a:hover, section#content a.active-link {
     margin-bottom: 0.5rem;
 }
 
-#user-list {
+#home #user-list {
     position: absolute;
     top: calc(142px + 1rem);
-    right: 0vw;
-    height: calc(100% - 142px - 5rem);
-    width: calc(33vw - 4rem);
-    padding: 2rem;
+    left: 67vw;
+    height: calc(100% - 142px - 3rem);
+    width: calc(33vw - 2rem);
+    padding: 1rem;
     /* background: rgba(255,255,255,0.8); */
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
 }
 
-#user-list h1 {
-    font-size: 1.9rem;
+#home #user-list h1 {
+    font-size: 1.5rem;
     font-weight: 100;
     padding: 0.5rem;
     color: gray;
+    text-align: center;
 }
 
-#user-list #user-map {
-    height: 80%;
+#home #user-list #user-map {
+    height: calc(100% - 4.5rem);
 }
 
 /**************/
@@ -524,9 +538,121 @@ p.error-message {
     color: #555;
 }
 
-/*************/
-/* Dashboard */
-/*************/
+/********************/
+/* Institution Page */
+/********************/
+
+#institution {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+}
+
+#institution #institution-details {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: calc(100% - 2rem);
+    width: calc(34vw - 2rem);
+    padding: 1rem;
+    border:0px;
+    overflow: scroll;
+}
+
+#institution #institution-details img {
+    display: block;
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.5rem;
+}
+
+#institution #institution-details h1 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+    text-align: center;
+}
+
+#institution #institution-details p {
+    padding: 0.5rem;
+}
+
+#institution #project-list {
+    position: absolute;
+    top: 0;
+    left: 34vw;
+    height: calc(100% - 2rem);
+    width: calc(33vw - 2rem - 4px);
+    padding: 1rem;
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    border-top: 0px;
+    border-bottom: 0px;
+    border-right: 2px solid darkgray;
+    border-left: 2px solid darkgray;
+}
+
+#institution #project-list h1 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+    text-align: center;
+}
+
+#institution #project-list ul {
+    list-style-type: none;
+    padding: 0.5rem;
+    height: calc(100% - 4.5rem);
+    overflow: scroll;
+}
+
+#institution #project-list ul li a {
+    color: #3C948B;
+    text-align: center;
+    font-size: 1rem;
+    width: 95%;
+    padding: 0.25rem;
+    text-decoration: none;
+    display: block;
+    border: 1px solid blue;
+    margin-bottom: 0.5rem;
+}
+
+#institution #user-list {
+    position: absolute;
+    top: 0;
+    left: 67vw;
+    height: calc(100% - 2rem);
+    width: calc(33vw - 2rem);
+    padding: 1rem;
+    /* background: rgba(255,255,255,0.8); */
+    /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
+    border:0px;
+}
+
+#institution #user-list h1 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+    text-align: center;
+}
+
+#institution #user-list #user-map {
+    height: calc(100% - 4.5rem);
+}
+
+/******************/
+/* Dashboard Page */
+/******************/
 
 #dashboard {
     height: 100%;
@@ -667,9 +793,9 @@ p.error-message {
     left: 18%;
 }
 
-/*********/
-/* Admin */
-/*********/
+/**************/
+/* Admin Page */
+/**************/
 
 #admin {
     height: 100%;
