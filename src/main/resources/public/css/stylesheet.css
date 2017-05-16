@@ -290,7 +290,7 @@ section#content a:hover, section#content a.active-link {
 #home #institution-list ul {
     list-style-type: none;
     padding: 0.5rem;
-    height: calc(100% - 4.5rem);
+    height: calc(100% - 5.5rem);
     overflow: scroll;
 }
 
@@ -330,7 +330,7 @@ section#content a:hover, section#content a.active-link {
 #home #project-list ul {
     list-style-type: none;
     padding: 0.5rem;
-    height: calc(100% - 4.5rem);
+    height: calc(100% - 5.5rem);
     overflow: scroll;
 }
 
@@ -367,7 +367,8 @@ section#content a:hover, section#content a.active-link {
 }
 
 #home #user-list #user-map {
-    height: calc(100% - 4.5rem);
+    height: calc(100% - 5.5rem);
+    padding: 0.5rem;
 }
 
 /**************/
@@ -609,7 +610,7 @@ p.error-message {
 #institution #project-list ul {
     list-style-type: none;
     padding: 0.5rem;
-    height: calc(100% - 4.5rem);
+    height: calc(100% - 5.5rem);
     overflow: scroll;
 }
 
@@ -647,7 +648,8 @@ p.error-message {
 }
 
 #institution #user-list #user-map {
-    height: calc(100% - 4.5rem);
+    height: calc(100% - 5.5rem);
+    padding: 0.5rem;
 }
 
 /******************/
