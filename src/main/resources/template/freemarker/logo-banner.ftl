@@ -1,4 +1,4 @@
-<div id="institution-banner">
+<div id="logo-banner">
     <img id="usaid" src="img/usaid.png">
     <img id="nasa" src="img/nasa.png">
     <img id="adpc" src="img/adpc.jpg">

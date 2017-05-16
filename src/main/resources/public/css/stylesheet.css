@@ -104,10 +104,10 @@ nav a:hover, nav a.active-link {
 }
 
 /**********************/
-/* Institution Banner */
+/* Logo Banner */
 /**********************/
 
-#institution-banner {
+#logo-banner {
     position: relative;
     height: 55px;
     width: 100%;
@@ -115,28 +115,28 @@ nav a:hover, nav a.active-link {
     /* border: 1px solid purple; */
 }
 
-#institution-banner img#usaid {
+#logo-banner img#usaid {
     position: absolute;
     top: 5px;
     left: 30px;
     width: 150px;
 }
 
-#institution-banner img#nasa {
+#logo-banner img#nasa {
     position: absolute;
     top: 0px;
     left: 210px;
     width: 60px;
 }
 
-#institution-banner img#adpc {
+#logo-banner img#adpc {
     position: absolute;
     top: 9px;
     left: 300px;
     width: 80px;
 }
 
-#institution-banner img#servir {
+#logo-banner img#servir {
     position: absolute;
     top: 12px;
     right: 30px;

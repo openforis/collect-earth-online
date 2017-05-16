@@ -30,5 +30,5 @@
 </div>
 
 <#include "end-content.ftl">
-<#include "institution-banner.ftl">
+<#include "logo-banner.ftl">
 <#include "footer.ftl">
