@@ -1,8 +1,10 @@
 package org.openforis.ceo;
 
+import com.google.gson.JsonObject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -51,13 +53,18 @@ public class Views {
         return new ModelAndView(getBaseModel(req, "Account", "large"), "account.ftl");
     }
 
-    // FIXME: Set the logo, name, and description dynamically based on
-    // the institution id.
     public static ModelAndView institution(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Institution", "large");
-        model.put("institution_logo", "img/sig-logo.png");
-        model.put("institution_name", "Spatial Informatics Group (SIG)");
-        model.put("institution_description", "Spatial Informatics Group is an environmental think-tank specializing in the characterization and assessment of wildland and urban landscapes. Our goal is to help our clients make informed management, land-use and policy decisions by converting spatial data into knowledge they can use in a world with ever-changing environmental conditions.");
+        if (req.queryParams("id") != null) {
+            int institutionId = Integer.parseInt(req.queryParams("id"));
+            Optional<JsonObject> matchingInstitution = Institutions.getInstitutionById(institutionId);
+            if (matchingInstitution.isPresent()) {
+                JsonObject institution = matchingInstitution.get();
+                model.put("institution_logo", institution.get("logo").getAsString());
+                model.put("institution_name", institution.get("name").getAsString());
+                model.put("institution_description", institution.get("description").getAsString());
+            }
+        }
         return new ModelAndView(model, "institution.ftl");
     }
 

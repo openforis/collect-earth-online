@@ -563,20 +563,20 @@ p.error-message {
     overflow: scroll;
 }
 
-#institution #institution-details img {
-    display: block;
-    width: 50%;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0.5rem;
-}
-
 #institution #institution-details h1 {
     font-size: 1.5rem;
     font-weight: 100;
     padding: 0.5rem;
     color: gray;
     text-align: center;
+}
+
+#institution #institution-details img {
+    display: block;
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.5rem;
 }
 
 #institution #institution-details p {
