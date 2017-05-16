@@ -2,7 +2,7 @@ angular.module("institutionList", []).controller("InstitutionListController", ["
     this.institutionList = [];
 
     this.getInstitutionList = function () {
-        $http.get("get-all-projects") // FIXME: Call a remote endpoint that returns a list of institutions
+        $http.get("get-all-institutions")
             .then(angular.bind(this, function successCallback(response) {
                 this.institutionList = response.data;
             }), function errorCallback(response) {
