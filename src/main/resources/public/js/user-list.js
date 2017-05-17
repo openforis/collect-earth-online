@@ -11,15 +11,19 @@ angular.module("userList", []).controller("UserListController", ["$http", functi
             });
     };
 
-    this.initialize = function () {
+    this.initialize = function (showMap) {
         // Load the userList
         this.getUserList();
 
-        // Show a map of users
-        // FIXME: Add markers to the map for each user based on their IP address
-        map_utils.digital_globe_base_map({div_name: "user-map",
-                                          center_coords: [102.0, 17.0],
-                                          zoom_level: 5});
+        if (showMap) {
+            // Show a map of users
+            map_utils.digital_globe_base_map({div_name: "user-map",
+                                              center_coords: [-72.5498326, 44.3736678],
+                                              zoom_level: 5});
+
+            // FIXME: Repeat this for each user dynamically based on their IP address
+            map_utils.draw_point(-72.5498326, 44.3736678); // Worcester, VT
+        }
     };
 
 }]);

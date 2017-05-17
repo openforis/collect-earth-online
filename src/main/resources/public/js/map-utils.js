@@ -181,7 +181,7 @@ map_utils.zoom_and_recenter_map = function (longitude, latitude, zoom_level) {
 
 map_utils.styles =
     {"icon": new ol.style.Style(
-        {"image": new ol.style.Icon({"src": "/favicon.ico"})}),
+        {"image": new ol.style.Icon({"src": "favicon.ico"})}),
 
      "red_point": new ol.style.Style(
          {"image": new ol.style.Circle({"radius": 5,
@@ -343,6 +343,18 @@ map_utils.remove_sample_layer = function () {
         map_utils.current_samples = null;
     }
     return null;
+};
+
+map_utils.draw_point = function (lon, lat) {
+    var coords = map_utils.reproject_to_map(lon, lat);
+    var geometry = new ol.geom.Point(coords);
+    var feature = new ol.Feature({geometry: geometry});
+    var vector_source = new ol.source.Vector({features: [feature]});
+    var style = map_utils.styles["red_point"];
+    var vector_layer = new ol.layer.Vector({source: vector_source,
+                                            style: style});
+    map_utils.map_ref.addLayer(vector_layer);
+    return map_utils.map_ref;
 };
 
 map_utils.draw_points = function (samples) {
