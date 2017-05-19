@@ -8,6 +8,7 @@
     <div id="institution-details">
         <h1>${institution_name!"No institution selected"}</h1>
         <img src=${institution_logo!""}>
+        <a href=${institution_url}>${institution_url}</a>
         <p>${institution_description!""}</p>
     </div>
     <#include "project-list.ftl">

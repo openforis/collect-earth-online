@@ -62,6 +62,7 @@ public class Views {
                 JsonObject institution = matchingInstitution.get();
                 model.put("institution_logo", institution.get("logo").getAsString());
                 model.put("institution_name", institution.get("name").getAsString());
+                model.put("institution_url", institution.get("url").getAsString());
                 model.put("institution_description", institution.get("description").getAsString());
             }
         }
