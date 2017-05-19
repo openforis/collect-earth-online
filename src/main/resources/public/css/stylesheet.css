@@ -334,16 +334,32 @@ section#content a:hover, section#content a.active-link {
     overflow: scroll;
 }
 
-#home #project-list ul li a {
-    color: #3C948B;
-    text-align: center;
-    font-size: 1rem;
-    width: 95%;
-    padding: 0.25rem;
-    text-decoration: none;
-    display: block;
-    border: 1px solid blue;
+#home #project-list ul li {
     margin-bottom: 0.5rem;
+}
+
+#home #project-list ul li a {
+    display: inline-block;
+    width: calc(97% - 0.5rem - 2px);
+    padding: 0.25rem;
+    text-align: center;
+    color: #3C948B;
+    font-size: 1rem;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    border: 1px solid blue;
+}
+
+#home #project-list ul li a.create-project {
+    font-weight: 700;
+}
+
+#home #project-list ul li a.view-project {
+    width: calc(76% - 0.5rem - 2px);
+}
+
+#home #project-list ul li a.edit-project {
+    width: calc(20% - 0.5rem - 2px);
 }
 
 #home #user-list {
@@ -627,7 +643,7 @@ p.error-message {
 
 #institution #project-list ul li a {
     display: inline-block;
-    width: calc(100% - 0.5rem - 2px);
+    width: calc(97% - 0.5rem - 2px);
     padding: 0.25rem;
     text-align: center;
     color: #3C948B;
@@ -637,8 +653,12 @@ p.error-message {
     border: 1px solid blue;
 }
 
+#institution #project-list ul li a.create-project {
+    font-weight: 700;
+}
+
 #institution #project-list ul li a.view-project {
-    width: calc(75% - 0.5rem - 2px);
+    width: calc(76% - 0.5rem - 2px);
 }
 
 #institution #project-list ul li a.edit-project {
