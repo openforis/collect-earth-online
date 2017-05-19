@@ -213,6 +213,57 @@ section#content a:hover, section#content a.active-link {
     100% { opacity: 0; }
 }
 
+/****************/
+/* Project List */
+/****************/
+
+#project-list {
+    padding: 1rem;
+}
+
+#project-list h1 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+    text-align: center;
+}
+
+#project-list ul {
+    list-style-type: none;
+    padding: 0.5rem;
+    height: calc(100% - 5.5rem);
+    overflow: scroll;
+}
+
+#project-list ul li {
+    margin-bottom: 0.5rem;
+}
+
+#project-list ul li a {
+    display: inline-block;
+    width: calc(97% - 0.5rem - 2px);
+    padding: 0.25rem;
+    text-align: center;
+    color: #3C948B;
+    font-size: 1rem;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    border: 1px solid blue;
+}
+
+#project-list ul li a.create-project {
+    font-weight: 700;
+}
+
+#project-list ul li a.view-project {
+    width: calc(76% - 0.5rem - 2px);
+}
+
+#project-list ul li a.edit-project {
+    width: calc(20% - 0.5rem - 2px);
+}
+
 /*************/
 /* Home Page */
 /*************/
@@ -312,54 +363,10 @@ section#content a:hover, section#content a.active-link {
     left: 33vw;
     height: calc(100% - 142px - 3rem);
     width: calc(34vw - 2rem - 2px);
-    padding: 1rem;
     /* background: rgba(255,255,255,0.8); */
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border-right: 2px solid darkgray;
-}
-
-#home #project-list h1 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-    text-align: center;
-}
-
-#home #project-list ul {
-    list-style-type: none;
-    padding: 0.5rem;
-    height: calc(100% - 5.5rem);
-    overflow: scroll;
-}
-
-#home #project-list ul li {
-    margin-bottom: 0.5rem;
-}
-
-#home #project-list ul li a {
-    display: inline-block;
-    width: calc(97% - 0.5rem - 2px);
-    padding: 0.25rem;
-    text-align: center;
-    color: #3C948B;
-    font-size: 1rem;
-    text-decoration: none;
-    text-overflow: ellipsis;
-    border: 1px solid blue;
-}
-
-#home #project-list ul li a.create-project {
-    font-weight: 700;
-}
-
-#home #project-list ul li a.view-project {
-    width: calc(76% - 0.5rem - 2px);
-}
-
-#home #project-list ul li a.edit-project {
-    width: calc(20% - 0.5rem - 2px);
 }
 
 #home #user-list {
@@ -612,7 +619,6 @@ p.error-message {
     left: 34vw;
     height: calc(100% - 2rem);
     width: calc(33vw - 2rem - 4px);
-    padding: 1rem;
     /* background: rgba(255,255,255,0.8); */
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
@@ -620,49 +626,6 @@ p.error-message {
     border-bottom: 0px;
     border-right: 2px solid darkgray;
     border-left: 2px solid darkgray;
-}
-
-#institution #project-list h1 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-    text-align: center;
-}
-
-#institution #project-list ul {
-    list-style-type: none;
-    padding: 0.5rem;
-    height: calc(100% - 5.5rem);
-    overflow: scroll;
-}
-
-#institution #project-list ul li {
-    margin-bottom: 0.5rem;
-}
-
-#institution #project-list ul li a {
-    display: inline-block;
-    width: calc(97% - 0.5rem - 2px);
-    padding: 0.25rem;
-    text-align: center;
-    color: #3C948B;
-    font-size: 1rem;
-    text-decoration: none;
-    text-overflow: ellipsis;
-    border: 1px solid blue;
-}
-
-#institution #project-list ul li a.create-project {
-    font-weight: 700;
-}
-
-#institution #project-list ul li a.view-project {
-    width: calc(76% - 0.5rem - 2px);
-}
-
-#institution #project-list ul li a.edit-project {
-    width: calc(20% - 0.5rem - 2px);
 }
 
 #institution #user-list {
