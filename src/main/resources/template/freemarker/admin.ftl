@@ -131,6 +131,7 @@
             <div id="spinner"></div>
         </form>
     </div>
+    <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id!"0"}>
 </div>
 
 <#include "end-content.ftl">

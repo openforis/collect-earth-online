@@ -24,6 +24,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         $http.get("get-all-projects")
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
+                this.initialize();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
@@ -31,24 +32,33 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     };
 
     this.initialize = function () {
-        // Load the projectList
-        this.getProjectList();
+        if (this.projectList.length == 0) {
+            // Load the projectList
+            this.getProjectList();
+        } else {
+            // Load the currentProject
+            this.currentProjectId = document.getElementById("initial-project-id").value;
 
-        // Initialize the base map and enable the dragbox interaction
-        map_utils.digital_globe_base_map({div_name: "new-project-map",
-                                          center_coords: [102.0, 17.0],
-                                          zoom_level: 5});
-        map_utils.enable_dragbox_draw();
-        map_utils.set_bbox_coords = function () {
-            var latmax = document.getElementById("lat-max");
-            var lonmax = document.getElementById("lon-max");
-            var latmin = document.getElementById("lat-min");
-            var lonmin = document.getElementById("lon-min");
-            latmax.value = map_utils.current_bbox.maxlat;
-            lonmax.value = map_utils.current_bbox.maxlon;
-            latmin.value = map_utils.current_bbox.minlat;
-            lonmin.value = map_utils.current_bbox.minlon;
-        };
+            // Initialize the base map and enable the dragbox interaction
+            map_utils.digital_globe_base_map({div_name: "new-project-map",
+                                              center_coords: [102.0, 17.0],
+                                              zoom_level: 5});
+
+            // Link the bounding box input fields to the map object
+            map_utils.set_bbox_coords = function () {
+                var latmax = document.getElementById("lat-max");
+                var lonmax = document.getElementById("lon-max");
+                var latmin = document.getElementById("lat-min");
+                var lonmin = document.getElementById("lon-min");
+                latmax.value = map_utils.current_bbox.maxlat;
+                lonmax.value = map_utils.current_bbox.maxlon;
+                latmin.value = map_utils.current_bbox.minlat;
+                lonmin.value = map_utils.current_bbox.minlon;
+            };
+
+            // Set all the form fields to the values for the currentProject
+            this.setCurrentProject();
+        }
     };
 
     this.getProjectById = function (projectId) {

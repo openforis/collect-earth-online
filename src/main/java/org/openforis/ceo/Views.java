@@ -77,7 +77,9 @@ public class Views {
 
     public static ModelAndView admin(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"admin"});
-        return new ModelAndView(getBaseModel(req, "Admin", "large"), "admin.ftl");
+        Map<String, Object> model = getBaseModel(req, "Admin", "large");
+        model.put("project_id", req.queryParams("project"));
+        return new ModelAndView(model, "admin.ftl");
     }
 
     public static ModelAndView login(Request req, Response res) {
