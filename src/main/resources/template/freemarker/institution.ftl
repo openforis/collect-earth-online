@@ -5,11 +5,16 @@
 <#include "flash-messages.ftl">
 
 <div id="institution">
-    <div id="institution-details">
-        <h1>${institution_name!"No institution selected"}</h1>
-        <img src=${institution_logo!""}>
-        <a href=${institution_url}>${institution_url}</a>
-        <p>${institution_description!""}</p>
+    <div id="institution-details" ng-controller="InstitutionController as institution" ng-init="institution.initialize()">
+        <h1>{{ institution.details.name }}</h1>
+        <img src="{{ institution.details.logo }}">
+        <a href="{{ institution.details.url }}">{{ institution.details.url }}</a>
+        <p>{{ institution.details.description }}</p>
+        <#if role?? && role == "admin">
+            <input id="edit-institution" class="button" type="button" value="Edit Institution" ng-click="institution.editInstitution()">
+            <input id="delete-institution" class="button" type="button" value="Delete Institution" ng-click="institution.deleteInstitution()">
+        </#if>
+        <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"-1"}>
     </div>
     <#include "project-list.ftl">
     <#include "user-list.ftl">

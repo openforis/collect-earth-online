@@ -17,9 +17,24 @@ public class Institutions {
         return visibleInstitutions.toString();
     }
 
-    public static Optional<JsonObject> getInstitutionById(int institutionId) {
+    private static Optional<JsonObject> getInstitutionById(int institutionId) {
         JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
         return findInJsonArray(institutions, institution -> institution.get("id").getAsInt() == institutionId);
+    }
+
+    public static String getInstitutionDetails(Request req, Response res) {
+        int institutionId = Integer.parseInt(req.body());
+        Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
+        if (matchingInstitution.isPresent()) {
+            return matchingInstitution.get().toString();
+        } else {
+            JsonObject noInstitutionFound = new JsonObject();
+            noInstitutionFound.addProperty("name", "No institution with ID=" + institutionId);
+            noInstitutionFound.addProperty("logo", "");
+            noInstitutionFound.addProperty("url", "");
+            noInstitutionFound.addProperty("description", "");
+            return noInstitutionFound.toString();
+        }
     }
 
 }

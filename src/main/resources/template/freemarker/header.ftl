@@ -23,6 +23,7 @@
         <script type="text/javascript" src="js/institution-list.js"></script>
         <script type="text/javascript" src="js/project-list.js"></script>
         <script type="text/javascript" src="js/user-list.js"></script>
+        <script type="text/javascript" src="js/institution.js"></script>
         <script type="text/javascript" src="js/admin.js"></script>
         <script type="text/javascript" src="js/dashboard.js"></script>
         <script type="text/javascript" src="js/geo-dash.js"></script>

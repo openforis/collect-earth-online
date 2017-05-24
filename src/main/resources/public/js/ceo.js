@@ -1,1 +1,1 @@
-angular.module("ceo", ["institutionList", "projectList", "userList", "admin", "dashboard", "geodash"]);
+angular.module("ceo", ["institutionList", "projectList", "userList", "institution", "admin", "dashboard", "geodash"]);

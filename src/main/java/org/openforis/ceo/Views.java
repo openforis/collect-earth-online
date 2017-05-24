@@ -55,17 +55,7 @@ public class Views {
 
     public static ModelAndView institution(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Institution", "large");
-        if (req.queryParams("id") != null) {
-            int institutionId = Integer.parseInt(req.queryParams("id"));
-            Optional<JsonObject> matchingInstitution = Institutions.getInstitutionById(institutionId);
-            if (matchingInstitution.isPresent()) {
-                JsonObject institution = matchingInstitution.get();
-                model.put("institution_logo", institution.get("logo").getAsString());
-                model.put("institution_name", institution.get("name").getAsString());
-                model.put("institution_url", institution.get("url").getAsString());
-                model.put("institution_description", institution.get("description").getAsString());
-            }
-        }
+        model.put("institution_id", req.queryParams("id"));
         return new ModelAndView(model, "institution.ftl");
     }
 
