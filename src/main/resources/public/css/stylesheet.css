@@ -611,14 +611,21 @@ p.error-message {
 
 #institution #institution-details p {
     padding: 0.5rem;
+    margin-bottom: 1rem;
 }
 
-#institution #institution-details #edit-institution {
-    border: 1px solid red;
-}
-
-#institution #institution-details #delete-institution {
-    border: 1px solid red;
+#institution #institution-details input[type=button] {
+    display: inline-block;
+    margin-left: 5%;
+    width: calc(40% - 0.5rem - 2px);
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.0);
+    padding: 0.25rem;
+    color: #3C948B;
+    font-size: 1rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    border: 1px solid blue;
 }
 
 #institution #project-list {

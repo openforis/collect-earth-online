@@ -11,9 +11,9 @@
         <a href="{{ institution.details.url }}">{{ institution.details.url }}</a>
         <p>{{ institution.details.description }}</p>
         <#if role?? && role == "admin">
-            <input id="edit-institution" class="button" type="button" value="Edit Institution"
+            <input id="edit-institution" type="button" value="Edit Institution"
                    ng-click="institution.editInstitution()" style="visibility: {{ institution.details.id == -1 ? 'hidden' : 'visible' }}">
-            <input id="delete-institution" class="button" type="button" value="Delete Institution"
+            <input id="delete-institution" type="button" value="Delete Institution"
                    ng-click="institution.deleteInstitution()" style="visibility: {{ institution.details.id == -1 ? 'hidden' : 'visible' }}">
         </#if>
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"-1"}>
