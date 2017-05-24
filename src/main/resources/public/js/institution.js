@@ -1,5 +1,6 @@
 angular.module("institution", []).controller("InstitutionController", ["$http", function InstitutionController($http) {
     this.details = {
+        id: "-1",
         name: "No institution selected",
         logo: "",
         url: "",

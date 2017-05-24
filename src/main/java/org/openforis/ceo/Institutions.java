@@ -29,6 +29,7 @@ public class Institutions {
             return matchingInstitution.get().toString();
         } else {
             JsonObject noInstitutionFound = new JsonObject();
+            noInstitutionFound.addProperty("id", "-1");
             noInstitutionFound.addProperty("name", "No institution with ID=" + institutionId);
             noInstitutionFound.addProperty("logo", "");
             noInstitutionFound.addProperty("url", "");
