@@ -1,4 +1,6 @@
 angular.module("institution", []).controller("InstitutionController", ["$http", function InstitutionController($http) {
+    this.pageMode = "view";
+
     this.details = {
         id: "-1",
         name: "No institution selected",
@@ -26,7 +28,11 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     };
 
     this.editInstitution = function () {
-        alert("This function is not yet implemented!");
+        if (this.pageMode == "view") {
+            this.pageMode = "edit";
+        } else {
+            this.pageMode = "view";
+        }
     };
 
     this.deleteInstitution = function () {

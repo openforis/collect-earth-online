@@ -6,15 +6,20 @@
 
 <div id="institution">
     <div id="institution-details" ng-controller="InstitutionController as institution" ng-init="institution.initialize()">
-        <h1>{{ institution.details.name }}</h1>
-        <img src="{{ institution.details.logo }}">
-        <a href="{{ institution.details.url }}">{{ institution.details.url }}</a>
-        <p>{{ institution.details.description }}</p>
+        <div id="institution-view" ng-show="institution.pageMode == 'view'">
+            <h1>{{ institution.details.name }}</h1>
+            <img src="{{ institution.details.logo }}">
+            <a href="{{ institution.details.url }}">{{ institution.details.url }}</a>
+            <p>{{ institution.details.description }}</p>
+        </div>
+        <div id="institution-edit" ng-show="institution.pageMode == 'edit'">
+            <h1>Edit Mode</h1>
+        </div>
         <#if role?? && role == "admin">
-            <input id="edit-institution" type="button" value="Edit Institution"
-                   ng-click="institution.editInstitution()" style="visibility: {{ institution.details.id == -1 ? 'hidden' : 'visible' }}">
+            <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit Institution' : 'Save Changes' }}"
+                   ng-click="institution.editInstitution()" ng-show="institution.details.id != -1">
             <input id="delete-institution" type="button" value="Delete Institution"
-                   ng-click="institution.deleteInstitution()" style="visibility: {{ institution.details.id == -1 ? 'hidden' : 'visible' }}">
+                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id != -1">
         </#if>
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"-1"}>
     </div>
