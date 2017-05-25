@@ -590,11 +590,7 @@ p.error-message {
     margin-bottom: 1rem;
 }
 
-#institution #institution-details #institution-edit {
-    margin-bottom: 1rem;
-}
-
-#institution #institution-details h1 {
+#institution #institution-details #institution-view h1 {
     font-size: 1.5rem;
     font-weight: 100;
     padding: 0.5rem;
@@ -602,7 +598,7 @@ p.error-message {
     text-align: center;
 }
 
-#institution #institution-details img {
+#institution #institution-details #institution-view img {
     display: block;
     width: 50%;
     margin-left: auto;
@@ -610,15 +606,45 @@ p.error-message {
     padding: 0.5rem;
 }
 
-#institution #institution-details a {
+#institution #institution-details #institution-view a {
     display: block;
     padding: 0.5rem;
     text-align: center;
     text-overflow: ellipsis;
 }
 
-#institution #institution-details p {
+#institution #institution-details #institution-view p {
     padding: 0.5rem;
+}
+
+#institution #institution-details #institution-edit {
+    margin-bottom: 1rem;
+}
+
+#institution #institution-details #institution-edit label {
+    display: block;
+    padding: 0.25rem 0rem;
+    font-size: 1.2rem;
+    font-weight: 100;
+    color: gray;
+}
+
+#institution #institution-details #institution-edit input[type=text] {
+    height: 1rem;
+    width: calc(95% - 0.5rem - 2px);
+    padding: 0.25rem;
+    margin-bottom: 0.5rem;
+    color: darkgray;
+    border: 1px solid darkgray;
+}
+
+#institution #institution-details #institution-edit textarea {
+    height: 6rem;
+    width: calc(95% - 0.5rem - 2px);
+    padding: 0.25rem;
+    margin-bottom: 0.5rem;
+    color: darkgray;
+    border: 1px solid darkgray;
 }
 
 #institution #institution-details input[type=button] {

@@ -13,7 +13,14 @@
             <p>{{ institution.details.description }}</p>
         </div>
         <div id="institution-edit" ng-show="institution.pageMode == 'edit'">
-            <h1>Edit Mode</h1>
+            <label>Name</label>
+            <input id="institution-name" type="text" ng-model="institution.details.name">
+            <label>Logo</label>
+            <input id="institution-logo" type="text" ng-model="institution.details.logo">
+            <label>URL</label>
+            <input id="institution-url" type="text" ng-model="institution.details.url">
+            <label>Description</label>
+            <textarea id="institution-description" ng-model="institution.details.description"></textarea>
         </div>
         <#if role?? && role == "admin">
             <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit Institution' : 'Save Changes' }}"
