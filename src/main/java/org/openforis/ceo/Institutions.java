@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.Arrays;
 import java.util.Optional;
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.Part;
 import spark.Request;
 import spark.Response;
 import static org.openforis.ceo.JsonUtils.*;
@@ -35,6 +37,35 @@ public class Institutions {
             noInstitutionFound.addProperty("url", "");
             noInstitutionFound.addProperty("description", "");
             return noInstitutionFound.toString();
+        }
+    }
+
+    public static String updateInstitution(Request req, Response res) {
+        try {
+            String institutionId = req.params(":id");
+
+            // FIXME: Will this work with Tomcat?
+            if (req.raw().getAttribute("org.eclipse.jetty.multipartConfig") == null) {
+                MultipartConfigElement multipartConfigElement = new MultipartConfigElement(expandResourcePath("/public/img/institution-logos/"));
+                req.raw().setAttribute("org.eclipse.jetty.multipartConfig", multipartConfigElement);
+            }
+
+            Part name = req.raw().getPart("institution-name");
+            Part logo = req.raw().getPart("institution-logo");
+            Part url = req.raw().getPart("institution-url");
+            Part description = req.raw().getPart("institution-description");
+
+            if (logo.getSubmittedFileName() != null) {
+                String logoFileName = logo.getSubmittedFileName();
+                String logoFileType = logoFileName.substring(logoFileName.lastIndexOf(".") + 1);
+                String logoFileNameFinal = "institution-" + institutionId + "." + logoFileType;
+                logo.write(logoFileNameFinal);
+                return "img/institution-logos/" + logoFileNameFinal;
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

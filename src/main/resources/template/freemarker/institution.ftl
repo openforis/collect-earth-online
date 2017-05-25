@@ -16,7 +16,7 @@
             <label>Name</label>
             <input id="institution-name" type="text" ng-model="institution.details.name">
             <label>Logo</label>
-            <input id="institution-logo" type="text" ng-model="institution.details.logo">
+            <input id="institution-logo" type="file" accept="image/*">
             <label>URL</label>
             <input id="institution-url" type="text" ng-model="institution.details.url">
             <label>Description</label>

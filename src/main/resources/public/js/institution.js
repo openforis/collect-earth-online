@@ -27,14 +27,36 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         }
     };
 
+    this.updateInstitution = function () {
+        var formData = new FormData();
+        formData.append("institution-name", this.details.name);
+        formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
+        formData.append("institution-url", this.details.url);
+        formData.append("institution-description", this.details.description);
+        $http.post("update-institution/" + this.details.id,
+                   formData,
+                   {transformRequest: angular.identity,
+                    headers: {"Content-Type": undefined}})
+            .then(angular.bind(this, function successCallback(response) {
+                if (response.data != "") {
+                    this.details.logo = response.data;
+                }
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error updating institution details. See console for details.");
+            });
+    };
+
     this.editInstitution = function () {
         if (this.pageMode == "view") {
             this.pageMode = "edit";
         } else {
+            this.updateInstitution();
             this.pageMode = "view";
         }
     };
 
+    // FIXME: stub
     this.deleteInstitution = function () {
         alert("This function is not yet implemented!");
     };
