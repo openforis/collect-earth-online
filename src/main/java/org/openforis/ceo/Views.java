@@ -54,6 +54,9 @@ public class Views {
     }
 
     public static ModelAndView institution(Request req, Response res) {
+        if (req.queryParams("id") == null) {
+            authenticateOrRedirect(req, res, new String[]{"admin"});
+        }
         Map<String, Object> model = getBaseModel(req, "Institution", "large");
         model.put("institution_id", req.queryParams("id"));
         return new ModelAndView(model, "institution.ftl");
