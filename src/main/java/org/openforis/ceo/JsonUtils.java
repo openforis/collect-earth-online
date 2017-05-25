@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -71,6 +72,15 @@ public class JsonUtils {
         StreamSupport.stream(array.spliterator(), false)
             .map(element -> element.getAsJsonObject())
             .forEach(action);
+    }
+
+    // Note: All objects in the JSON array must contain "id" fields.
+    public static int getNextId(JsonArray array) {
+        return StreamSupport.stream(array.spliterator(), false)
+            .map(element -> element.getAsJsonObject())
+            .map(object -> object.get("id").getAsInt())
+            .max(Comparator.naturalOrder())
+            .get() + 1;
     }
 
     // Note: The JSON file must contain an array of objects.

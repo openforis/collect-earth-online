@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Map;
@@ -337,15 +336,8 @@ public class Projects {
 
             // BEGIN: Add a new entry to project-list.json
             JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
-
-            int newProjectId = StreamSupport.stream(projects.spliterator(), false)
-                .map(project -> project.getAsJsonObject())
-                .map(project -> project.get("id").getAsInt())
-                .max(Comparator.naturalOrder())
-                .get() + 1;
-
+            int newProjectId = getNextId(projects);
             JsonObject boundary = makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax);
-
             IntSupplier sampleValueIndexer = makeCounter();
             JsonArray updatedSampleValues = mapJsonArray(sampleValues,
                                                          sampleValue -> {

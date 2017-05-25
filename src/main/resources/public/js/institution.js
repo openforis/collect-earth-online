@@ -3,7 +3,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
     this.details = {
         id: "-1",
-        name: "No institution selected",
+        name: "",
         logo: "",
         url: "",
         description: ""
@@ -20,10 +20,11 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     };
 
     this.initialize = function () {
-        // Load the institution details
-        var initialInstitutionId = document.getElementById("initial-institution-id").value;
-        if (initialInstitutionId != "-1") {
-            this.getInstitutionDetails(initialInstitutionId);
+        this.details.id = document.getElementById("initial-institution-id").value;
+        if (this.details.id == "0") {
+            this.pageMode = "edit";
+        } else {
+            this.getInstitutionDetails(this.details.id);
         }
     };
 
@@ -38,8 +39,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                    {transformRequest: angular.identity,
                     headers: {"Content-Type": undefined}})
             .then(angular.bind(this, function successCallback(response) {
-                if (response.data != "") {
-                    this.details.logo = response.data;
+                this.details.id = response.data.id;
+                if (response.data.logo != "") {
+                    this.details.logo = response.data.logo;
                 }
             }), function errorCallback(response) {
                 console.log(response);
@@ -47,7 +49,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
-    this.editInstitution = function () {
+    this.togglePageMode = function () {
         if (this.pageMode == "view") {
             this.pageMode = "edit";
         } else {

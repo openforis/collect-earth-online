@@ -23,12 +23,14 @@
             <textarea id="institution-description" ng-model="institution.details.description"></textarea>
         </div>
         <#if role?? && role == "admin">
+            <input id="create-institution" type="button" value="Create Institution"
+                   ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
             <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit Institution' : 'Save Changes' }}"
-                   ng-click="institution.editInstitution()" ng-show="institution.details.id != -1">
+                   ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0">
             <input id="delete-institution" type="button" value="Delete Institution"
-                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id != -1">
+                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0">
         </#if>
-        <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"-1"}>
+        <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
     </div>
     <#include "project-list.ftl">
     <#include "user-list.ftl">
