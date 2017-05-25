@@ -2,10 +2,13 @@ package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
 import spark.Request;
@@ -42,7 +45,15 @@ public class Institutions {
         }
     }
 
-    public static String updateInstitution(Request req, Response res) {
+    private static String partToString(Part part) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static synchronized String updateInstitution(Request req, Response res) {
         try {
             String institutionId = req.params(":id");
             String imageDir = expandResourcePath("/public/img/institution-logos/");
@@ -63,9 +74,33 @@ public class Institutions {
                 String logoFileType = logoFileName.substring(logoFileName.lastIndexOf(".") + 1);
                 String logoFileNameFinal = "institution-" + institutionId + "." + logoFileType;
                 logo.write(logoFileNameFinal);
-                String lastModified = Files.getLastModifiedTime((new File(imageDir, logoFileNameFinal)).toPath()).toString();
-                return "img/institution-logos/" + logoFileNameFinal + "?m=" + lastModified;
+
+                mapJsonFile("institution-list.json", institution -> {
+                        if (institution.get("id").getAsString().equals(institutionId)) {
+                            institution.addProperty("name", partToString(name));
+                            institution.addProperty("logo", "img/institution-logos/" + logoFileNameFinal);
+                            institution.addProperty("url", partToString(url));
+                            institution.addProperty("description", partToString(description));
+                            return institution;
+                        } else {
+                            return institution;
+                        }
+                    });
+
+                return "img/institution-logos/" + logoFileNameFinal + "?m="
+                    + Files.getLastModifiedTime((new File(imageDir, logoFileNameFinal)).toPath()).toString();
             } else {
+                mapJsonFile("institution-list.json", institution -> {
+                        if (institution.get("id").getAsString().equals(institutionId)) {
+                            institution.addProperty("name", partToString(name));
+                            institution.addProperty("url", partToString(url));
+                            institution.addProperty("description", partToString(description));
+                            return institution;
+                        } else {
+                            return institution;
+                        }
+                    });
+
                 return "";
             }
         } catch (Exception e) {
