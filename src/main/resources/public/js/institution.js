@@ -56,9 +56,17 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         }
     };
 
-    // FIXME: stub
     this.deleteInstitution = function () {
-        alert("This function is not yet implemented!");
+        if (confirm("Do you REALLY want to delete this institution?!")) {
+            $http.post("archive-institution", this.details.id)
+                .then(angular.bind(this, function successCallback(response) {
+                    alert("Institution " + this.details.name + " has been deleted.");
+                    window.location="home";
+                }), function errorCallback(response) {
+                    console.log(response);
+                    alert("Error deleting institution. See console for details.");
+                });
+        }
     };
 
 }]);

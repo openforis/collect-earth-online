@@ -73,6 +73,7 @@ public class Server implements SparkApplication {
         get("/get-all-institutions",             (req, res) -> { return Institutions.getAllInstitutions(req, res); });
         post("/get-institution-details",         (req, res) -> { return Institutions.getInstitutionDetails(req, res); });
         post("/update-institution/:id",          (req, res) -> { return Institutions.updateInstitution(req, res); });
+        post("/archive-institution",             (req, res) -> { return Institutions.archiveInstitution(req, res); });
         get("/geo-dash",                         (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
         get("/geo-dash/update/id/:id",           (req, res) -> { return GeoDash.updateDashBoardByID(req, res); });

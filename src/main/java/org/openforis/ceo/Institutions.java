@@ -20,7 +20,9 @@ public class Institutions {
     public static String getAllInstitutions(Request req, Response res) {
         JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
         String[] hiddenInstitutions = new String[]{"All Users", "Administrators"};
-        JsonArray visibleInstitutions = filterJsonArray(institutions, institution -> !Arrays.asList(hiddenInstitutions).contains(institution.get("name").getAsString()));
+        JsonArray visibleInstitutions = filterJsonArray(institutions, institution ->
+                                                        institution.get("archived").getAsBoolean() == false
+                                                        && !Arrays.asList(hiddenInstitutions).contains(institution.get("name").getAsString()));
         return visibleInstitutions.toString();
     }
 
@@ -106,6 +108,22 @@ public class Institutions {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static synchronized String archiveInstitution(Request req, Response res) {
+        String institutionId = req.body();
+
+        mapJsonFile("institution-list.json",
+                    institution -> {
+                        if (institution.get("id").getAsString().equals(institutionId)) {
+                            institution.addProperty("archived", true);
+                            return institution;
+                        } else {
+                            return institution;
+                        }
+                    });
+
+        return "";
     }
 
 }
