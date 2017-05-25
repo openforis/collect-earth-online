@@ -2,6 +2,8 @@ package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Optional;
 import javax.servlet.MultipartConfigElement;
@@ -43,10 +45,11 @@ public class Institutions {
     public static String updateInstitution(Request req, Response res) {
         try {
             String institutionId = req.params(":id");
+            String imageDir = expandResourcePath("/public/img/institution-logos/");
 
             // FIXME: Will this work with Tomcat?
             if (req.raw().getAttribute("org.eclipse.jetty.multipartConfig") == null) {
-                MultipartConfigElement multipartConfigElement = new MultipartConfigElement(expandResourcePath("/public/img/institution-logos/"));
+                MultipartConfigElement multipartConfigElement = new MultipartConfigElement(imageDir);
                 req.raw().setAttribute("org.eclipse.jetty.multipartConfig", multipartConfigElement);
             }
 
@@ -60,7 +63,8 @@ public class Institutions {
                 String logoFileType = logoFileName.substring(logoFileName.lastIndexOf(".") + 1);
                 String logoFileNameFinal = "institution-" + institutionId + "." + logoFileType;
                 logo.write(logoFileNameFinal);
-                return "img/institution-logos/" + logoFileNameFinal;
+                String lastModified = Files.getLastModifiedTime((new File(imageDir, logoFileNameFinal)).toPath()).toString();
+                return "img/institution-logos/" + logoFileNameFinal + "?m=" + lastModified;
             } else {
                 return "";
             }
