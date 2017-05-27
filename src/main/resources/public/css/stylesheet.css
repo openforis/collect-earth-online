@@ -283,6 +283,19 @@ section#content a:hover, section#content a.active-link {
     margin-bottom: 0.5rem;
 }
 
+#project-list ul li input#create-project {
+    display: inline-block;
+    width: calc(99.5% - 0.5rem - 2px);
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.0);
+    padding: 0.25rem;
+    color: #3C948B;
+    font-size: 1rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    border: 1px solid blue;
+}
+
 #project-list ul li a {
     display: inline-block;
     width: calc(97% - 0.5rem - 2px);
@@ -293,10 +306,6 @@ section#content a:hover, section#content a.active-link {
     text-decoration: none;
     text-overflow: ellipsis;
     border: 1px solid blue;
-}
-
-#project-list ul li a.create-project {
-    font-weight: 700;
 }
 
 #project-list ul li a.view-project {

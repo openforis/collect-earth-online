@@ -63,7 +63,7 @@ public class Server implements SparkApplication {
         get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
         post("/password-reset",                  (req, res) -> { return freemarker.render(Views.passwordReset(Users.resetPassword(req, res), res)); });
         get("/logout",                           (req, res) -> { return freemarker.render(Views.home(Users.logout(req), res)); });
-        get("/get-all-projects",                 (req, res) -> { return Projects.getAllProjects(req, res); });
+        post("/get-all-projects",                (req, res) -> { return Projects.getAllProjects(req, res); });
         post("/get-project-plots",               (req, res) -> { return Projects.getProjectPlots(req, res); });
         post("/dump-project-aggregate-data",     (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
         post("/archive-project",                 (req, res) -> { return Projects.archiveProject(req, res); });

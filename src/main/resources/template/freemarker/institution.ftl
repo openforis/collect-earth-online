@@ -31,6 +31,7 @@
                    ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0">
         </#if>
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
+        <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>
     <#include "project-list.ftl">
     <#include "user-list.ftl">

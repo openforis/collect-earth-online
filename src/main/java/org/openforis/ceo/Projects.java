@@ -30,9 +30,15 @@ import static org.openforis.ceo.JsonUtils.*;
 public class Projects {
 
     public static String getAllProjects(Request req, Response res) {
+        String institutionId = req.body();
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
-        JsonArray visibleProjects = filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false);
-        return visibleProjects.toString();
+        if (institutionId == "ALL") {
+            return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
+                                                        && project.get("privacy").getAsString().equals("public")).toString();
+        } else {
+            return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
+                                                        && project.get("institution").getAsString().equals(institutionId)).toString();
+        }
     }
 
     public static String getProjectPlots(Request req, Response res) {
