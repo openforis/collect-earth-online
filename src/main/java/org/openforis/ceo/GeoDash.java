@@ -7,7 +7,12 @@ import java.util.Optional;
 import java.util.UUID;
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.JsonUtils.*;
+import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class GeoDash {
 

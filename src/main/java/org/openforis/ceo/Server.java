@@ -38,6 +38,7 @@ public class Server implements SparkApplication {
 
         // FIXME: Get deploy/clientkeystore signed by a certificate authority.
         // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
+        // https://spark.apache.org/docs/latest/security.html
         // secure("deploy/clientkeystore", "ceocert", null, null);
 
         // Serve static files from src/main/resources/public/

@@ -25,7 +25,16 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.JsonUtils.*;
+import static org.openforis.ceo.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.getNextId;
+import static org.openforis.ceo.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class Projects {
 

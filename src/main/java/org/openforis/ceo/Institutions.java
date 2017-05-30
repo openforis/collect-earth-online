@@ -12,7 +12,13 @@ import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.JsonUtils.*;
+import static org.openforis.ceo.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.getNextId;
+import static org.openforis.ceo.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class Institutions {
 
