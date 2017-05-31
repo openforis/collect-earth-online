@@ -21,7 +21,7 @@ angular.module("userList", []).controller("UserListController", ["$http", functi
                                               center_coords: [-72.5498326, 44.3736678],
                                               zoom_level: 5});
 
-            // FIXME: Repeat this for each user dynamically based on their IP address
+            // FIXME: Repeat this for each user dynamically based on their IP address or stated location
             map_utils.draw_point(-72.5498326, 44.3736678); // Worcester, VT
         }
     };
