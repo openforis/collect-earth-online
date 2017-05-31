@@ -63,6 +63,7 @@ map_utils.digital_globe_base_map = function (map_config) {
     var bing_maps_access_token         = "AlQPbThspGcsiCnczC-2QVOYU9u_PrteL" +
                                          "w6dxNQls99dmLXcr9-qWCM5J4Y2G-pS";
     var sig_geoserver_url              = "http://pyrite.sig-gis.com/geoserver/wms";
+    var dg_geoserver_url               = "https://services.digitalglobe.com/mapservice/wmsaccess";
 
     // Declare each of the layer sources that will be shown in the map
     var source1 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
@@ -90,6 +91,11 @@ map_utils.digital_globe_base_map = function (map_config) {
                                                   "TILED": true},
                                          serverType: "geoserver"});
 
+    var source6 = new ol.source.TileWMS({url: dg_geoserver_url,
+                                         params: {"LAYERS": "DigitalGlobe:Imagery",
+                                                  "connectid": "d357775d-8cbc-44c6-b82d-e3399306378b"},
+                                         serverType: "geoserver"});
+
     // Wrap each source in a layer object
     var layer1 = new ol.layer.Tile({title: "DigitalGlobeRecentImagery",
                                     visible: false,
@@ -112,6 +118,10 @@ map_utils.digital_globe_base_map = function (map_config) {
                                     extent: [10298030, 898184, 12094575, 2697289],
                                     source: source5});
 
+    var layer6 = new ol.layer.Tile({title: "DigitalGlobeWMSImagery",
+                                    visible: false,
+                                    source: source6});
+
     // Add a scale line to the default map controls
     var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
 
@@ -124,7 +134,7 @@ map_utils.digital_globe_base_map = function (map_config) {
     // Create the new OpenLayers map object
     var openlayers_map = new ol.Map({target: map_config.div_name,
                                      layers: [layer1, layer2, layer3,
-                                              layer4, layer5],
+                                              layer4, layer5, layer6],
                                      controls: controls,
                                      view: view});
 

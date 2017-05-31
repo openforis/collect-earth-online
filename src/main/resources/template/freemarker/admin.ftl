@@ -77,6 +77,7 @@
                     <option value="BingAerial">Bing Maps: Aerial</option>
                     <option value="BingAerialWithLabels">Bing Maps: Aerial with Labels</option>
                     <option value="NASASERVIRChipset2002">NASA SERVIR Chipset 2002</option>
+                    <option value="DigitalGlobeWMSImagery">DigitalGlobe: WMS Imagery</option>
                 </select>
             </div>
             <fieldset id="sample-value-info">
