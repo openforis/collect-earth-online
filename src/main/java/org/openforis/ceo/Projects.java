@@ -41,7 +41,7 @@ public class Projects {
     public static String getAllProjects(Request req, Response res) {
         String institutionId = req.body();
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
-        if (institutionId == "ALL") {
+        if (institutionId.equals("ALL")) {
             return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
                                                         && project.get("privacy").getAsString().equals("public")).toString();
         } else {
