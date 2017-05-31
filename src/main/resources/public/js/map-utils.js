@@ -55,9 +55,12 @@ map_utils.map_ref = null;
 //                                   "center_coords": [102.0, 17.0],
 //                                   "zoom_level":    5});
 map_utils.digital_globe_base_map = function (map_config) {
+    // var digital_globe_access_token     = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYS" +
+    //                                      "I6ImNpcTJ3ZTlyZTAwOWNuam00ZWU3aTk" +
+    //                                      "xdWIifQ.9OFrmevVe0YB2dJokKhhdA";
     var digital_globe_access_token     = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYS" +
-                                         "I6ImNpcTJ3ZTlyZTAwOWNuam00ZWU3aTk" +
-                                         "xdWIifQ.9OFrmevVe0YB2dJokKhhdA";
+                                         "I6ImNqM2RuZTE3dTAwMncyd3Bwanh4MHJ" +
+                                         "1cmgifQ.LNrR2h_I0kz6fra93XGP2g";
     var recent_imagery_url             = "digitalglobe.nal0g75k";
     var recent_imagery_and_streets_url = "digitalglobe.nal0mpda";
     var bing_maps_access_token         = "AlQPbThspGcsiCnczC-2QVOYU9u_PrteL" +
