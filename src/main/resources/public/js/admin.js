@@ -20,8 +20,8 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.valueColor = "#000000";
     this.valueImage = "";
 
-    this.getProjectList = function () {
-        $http.get("get-all-projects")
+    this.getProjectList = function (institutionId) {
+        $http.post("get-all-projects", institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
                 this.initialize();
@@ -34,7 +34,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.initialize = function () {
         if (this.projectList.length == 0) {
             // Load the projectList
-            this.getProjectList();
+            this.getProjectList("ALL");
         } else {
             // Load the currentProject
             this.currentProjectId = document.getElementById("initial-project-id").value;
@@ -164,7 +164,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
                     alert("Project " + projectId + " has been deleted.");
                     this.currentProjectId = "0";
                     this.setCurrentProject();
-                    this.getProjectList();
+                    this.getProjectList("ALL");
                 }), function errorCallback(response) {
                     console.log(response);
                     alert("Error archiving project. See console for details.");

@@ -7,8 +7,8 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.currentSamples = [];
     this.userSamples = {};
 
-    this.getProjectList = function () {
-        $http.get("get-all-projects")
+    this.getProjectList = function (institutionId) {
+        $http.post("get-all-projects", institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
                 this.initialize();
@@ -29,7 +29,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.initialize = function () {
         if (this.projectList.length == 0) {
             // Load the projectList
-            this.getProjectList();
+            this.getProjectList("ALL");
         } else {
             // Load the currentProject
             var initialProjectId = document.getElementById("initial-project-id").value;
