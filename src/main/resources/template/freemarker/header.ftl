@@ -9,8 +9,8 @@
         <title>Collect Earth Online</title>
         <link rel="shortcut icon" href="favicon.ico">
         <link rel="stylesheet" type="text/css" href="css/cssreset-min.css">
-        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:100,400,700">
-        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Oswald:normal">
+        <link rel="stylesheet" type="text/css" href="css/google-fonts-open-sans.css">
+        <link rel="stylesheet" type="text/css" href="css/google-fonts-oswald.css">
         <link rel="stylesheet" type="text/css" href="css/openlayers-3.13.0.css">
         <link rel="stylesheet" type="text/css" href="css/stylesheet.css">
         <!--[if lt IE 9]>
