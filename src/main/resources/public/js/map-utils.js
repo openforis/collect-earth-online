@@ -67,6 +67,7 @@ map_utils.digital_globe_base_map = function (map_config) {
                                          "w6dxNQls99dmLXcr9-qWCM5J4Y2G-pS";
     var sig_geoserver_url              = "http://pyrite.sig-gis.com/geoserver/wms";
     var dg_geoserver_url               = "https://services.digitalglobe.com/mapservice/wmsaccess";
+    var dg_connect_id                  = "d357775d-8cbc-44c6-b82d-e3399306378b";
 
     // Declare each of the layer sources that will be shown in the map
     var source1 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
@@ -95,8 +96,9 @@ map_utils.digital_globe_base_map = function (map_config) {
                                          serverType: "geoserver"});
 
     var source6 = new ol.source.TileWMS({url: dg_geoserver_url,
-                                         params: {"LAYERS": "DigitalGlobe:Imagery",
-                                                  "connectid": "d357775d-8cbc-44c6-b82d-e3399306378b"},
+                                         params: {"VERSION": "1.1.1",
+                                                  "LAYERS": "DigitalGlobe:Imagery",
+                                                  "CONNECTID": dg_connect_id},
                                          serverType: "geoserver"});
 
     // Wrap each source in a layer object
@@ -129,7 +131,7 @@ map_utils.digital_globe_base_map = function (map_config) {
     var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
 
     // Create the map view using the passed in center_coords and zoom_level
-    var view = new ol.View({projection: 'EPSG:3857',
+    var view = new ol.View({projection: "EPSG:3857",
                             center: ol.proj.fromLonLat(map_config.center_coords),
                             extent: map_utils.get_full_extent(),
                             zoom: map_config.zoom_level});
@@ -376,7 +378,7 @@ map_utils.draw_points = function (samples) {
         sample = samples[i];
         var format = new ol.format.GeoJSON();
         var latlon = format.readGeometry(sample.point);
-        var geometry = latlon.transform('EPSG:4326', 'EPSG:3857');
+        var geometry = latlon.transform("EPSG:4326", "EPSG:3857");
         var feature = new ol.Feature({geometry: geometry,
                                       sample_id: sample["id"]});
         features.push(feature);
