@@ -68,6 +68,7 @@ map_utils.digital_globe_base_map = function (map_config) {
     var sig_geoserver_url              = "http://pyrite.sig-gis.com/geoserver/wms";
     var dg_geoserver_url               = "https://services.digitalglobe.com/mapservice/wmsaccess";
     var dg_connect_id                  = "d357775d-8cbc-44c6-b82d-e3399306378b";
+    var dg_unauthenticated_connect_id  = "a797f723-f91f-40d7-8458-3669a830b6de";
 
     // Declare each of the layer sources that will be shown in the map
     var source1 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
@@ -98,7 +99,7 @@ map_utils.digital_globe_base_map = function (map_config) {
     var source6 = new ol.source.TileWMS({url: dg_geoserver_url,
                                          params: {"VERSION": "1.1.1",
                                                   "LAYERS": "DigitalGlobe:Imagery",
-                                                  "CONNECTID": dg_connect_id},
+                                                  "CONNECTID": dg_unauthenticated_connect_id},
                                          serverType: "geoserver"});
 
     // Wrap each source in a layer object
