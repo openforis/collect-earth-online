@@ -22,7 +22,6 @@ h1, h2, h3, h4, h5, h6, h7, p, label {
     text-transform: uppercase;
     border-radius: 0px;
     -webkit-border-radius: 0px;
-    -moz-border-radius: 0px;
     -o-border-radius: 0px;
 }
 
@@ -774,7 +773,6 @@ p.error-message {
     position: absolute;
     margin-top: 0rem;
     z-index: 500;
-    font-size: 17;
     background-color: #3FABC6;
     display: inline-block;
     left: calc(70vw - 5rem);
@@ -826,7 +824,7 @@ p.error-message {
 #dashboard #sidebar #sidebar-contents fieldset select#project-id {
     line-height: 90%;
     width: 100%;
-    text-index: 5px;
+    text-indent: 5px;
     font-family: Verdana,Geneva,sans-serif;
     height: 1.8rem;
     border: none;
