@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -55,13 +56,15 @@ public class Projects {
         return readJsonFile("plot-data-" + projectId + ".json").toString();
     }
 
+    private static Collector<T, ?, Map<T, Long>> countDistinct =
+        Collectors.groupingBy(Function.identity(), Collectors.counting());
+
     private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueNames) {
         Map<String, Long> valueCounts = StreamSupport.stream(samples.spliterator(), false)
             .map(sample -> sample.getAsJsonObject())
             .map(sample -> sample.has("value") ? sample.get("value").getAsInt() : -1)
             .map(value -> sampleValueNames.getOrDefault(value, "NoValue"))
-            .collect(Collectors.groupingBy(Function.identity(),
-                                           Collectors.counting()));
+            .collect(countDistinct);
         JsonObject valueDistribution = new JsonObject();
         valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
         return valueDistribution;
