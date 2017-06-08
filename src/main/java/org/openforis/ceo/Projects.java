@@ -56,7 +56,7 @@ public class Projects {
         return readJsonFile("plot-data-" + projectId + ".json").toString();
     }
 
-    private static Collector<T, ?, Map<T, Long>> countDistinct =
+    private static Collector<String, ?, Map<String, Long>> countDistinct =
         Collectors.groupingBy(Function.identity(), Collectors.counting());
 
     private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueNames) {
