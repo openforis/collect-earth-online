@@ -19,7 +19,6 @@ import java.util.function.IntSupplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -35,6 +34,7 @@ import static org.openforis.ceo.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.toStream;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class Projects {
@@ -60,8 +60,7 @@ public class Projects {
         Collectors.groupingBy(Function.identity(), Collectors.counting());
 
     private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueNames) {
-        Map<String, Long> valueCounts = StreamSupport.stream(samples.spliterator(), false)
-            .map(sample -> sample.getAsJsonObject())
+        Map<String, Long> valueCounts = toStream(samples)
             .map(sample -> sample.has("value") ? sample.get("value").getAsInt() : -1)
             .map(value -> sampleValueNames.getOrDefault(value, "NoValue"))
             .collect(countDistinct);
@@ -89,8 +88,7 @@ public class Projects {
             JsonObject project = matchingProject.get();
             JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
 
-            Map<Integer, String> sampleValueNames = StreamSupport.stream(sampleValues.spliterator(), false)
-                .map(sampleValue -> sampleValue.getAsJsonObject())
+            Map<Integer, String> sampleValueNames = toStream(sampleValues)
                 .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
                                           sampleValue -> sampleValue.get("name").getAsString(),
                                           (a, b) -> b));
@@ -119,8 +117,7 @@ public class Projects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            String[] csvRows = StreamSupport.stream(plotSummaries.spliterator(), false)
-                .map(plotSummary -> plotSummary.getAsJsonObject())
+            String[] csvRows = toStream(plotSummaries)
                 .map(plotSummary -> {
                         Stream<String> fieldStream = Arrays.stream(fields);
                         Stream<String> labelStream = Arrays.stream(labels);

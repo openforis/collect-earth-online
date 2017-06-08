@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class JsonUtils {
@@ -43,41 +44,42 @@ public class JsonUtils {
         }
     }
 
+    // Note: The JSON array must only contain JSON objects.
+    public static Stream<JsonObject> toStream(JsonArray array) {
+        return StreamSupport.stream(array.spliterator(), false)
+            .map(element -> element.getAsJsonObject());
+    }
+
     public static Collector<JsonElement, ?, JsonArray> intoJsonArray =
         Collector.of(JsonArray::new, JsonArray::add,
                      (left, right) -> { left.addAll(right); return left; });
 
     public static JsonArray mapJsonArray(JsonArray array, Function<JsonObject, JsonObject> mapper) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
+        return toStream(array)
             .map(mapper)
             .collect(intoJsonArray);
     }
 
     public static JsonArray filterJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
+        return toStream(array)
             .filter(predicate)
             .collect(intoJsonArray);
     }
 
     public static Optional<JsonObject> findInJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
+        return toStream(array)
             .filter(predicate)
             .findFirst();
     }
 
     public static void forEachInJsonArray(JsonArray array, Consumer<JsonObject> action) {
-        StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
+        toStream(array)
             .forEach(action);
     }
 
     // Note: All objects in the JSON array must contain "id" fields.
     public static int getNextId(JsonArray array) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject())
+        return toStream(array)
             .map(object -> object.get("id").getAsInt())
             .max(Comparator.naturalOrder())
             .get() + 1;
