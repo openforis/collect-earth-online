@@ -2,14 +2,13 @@ package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.StreamSupport;
 import spark.Request;
 import spark.Response;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.getNextId;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
@@ -65,11 +64,7 @@ public class Users {
                         req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
                     } else {
                         // Add a new user to user-list.json
-                        int newUserId = StreamSupport.stream(users.spliterator(), false)
-                            .map(user -> user.getAsJsonObject())
-                            .map(user -> user.get("id").getAsInt())
-                            .max(Comparator.naturalOrder())
-                            .get() + 1;
+                        int newUserId = getNextId(users);
 
                         JsonObject newUser = new JsonObject();
                         newUser.addProperty("id", newUserId);
