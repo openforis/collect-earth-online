@@ -10,7 +10,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     };
 
     this.getInstitutionDetails = function (institutionId) {
-        $http.post("get-institution-details", institutionId)
+        $http.get("get-institution-details/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.details = response.data;
             }), function errorCallback(response) {
@@ -60,7 +60,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
     this.deleteInstitution = function () {
         if (confirm("Do you REALLY want to delete this institution?!")) {
-            $http.post("archive-institution", this.details.id)
+            $http.post("archive-institution/" + this.details.id)
                 .then(angular.bind(this, function successCallback(response) {
                     alert("Institution " + this.details.name + " has been deleted.");
                     window.location="home";

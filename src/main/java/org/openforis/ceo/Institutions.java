@@ -37,7 +37,7 @@ public class Institutions {
     }
 
     public static String getInstitutionDetails(Request req, Response res) {
-        int institutionId = Integer.parseInt(req.body());
+        int institutionId = Integer.parseInt(req.params(":id"));
         Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             return matchingInstitution.get().toString();
@@ -137,7 +137,7 @@ public class Institutions {
     }
 
     public static synchronized String archiveInstitution(Request req, Response res) {
-        String institutionId = req.body();
+        String institutionId = req.params(":id");
 
         mapJsonFile("institution-list.json",
                     institution -> {

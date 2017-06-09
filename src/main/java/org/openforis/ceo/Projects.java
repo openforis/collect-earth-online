@@ -40,7 +40,7 @@ import static org.openforis.ceo.JsonUtils.writeJsonFile;
 public class Projects {
 
     public static String getAllProjects(Request req, Response res) {
-        String institutionId = req.body();
+        String institutionId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         if (institutionId.equals("ALL")) {
             return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
@@ -52,7 +52,7 @@ public class Projects {
     }
 
     public static String getProjectPlots(Request req, Response res) {
-        String projectId = req.body();
+        String projectId = req.params(":id");
         return readJsonFile("plot-data-" + projectId + ".json").toString();
     }
 
@@ -80,7 +80,7 @@ public class Projects {
     }
 
     public static String dumpProjectAggregateData(Request req, Response res) {
-        String projectId = req.body();
+        String projectId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
 
@@ -141,7 +141,7 @@ public class Projects {
     }
 
     public static synchronized String archiveProject(Request req, Response res) {
-        String projectId = req.body();
+        String projectId = req.params(":id");
 
         mapJsonFile("project-list.json",
                     project -> {

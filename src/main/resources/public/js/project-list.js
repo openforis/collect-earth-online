@@ -2,7 +2,7 @@ angular.module("projectList", []).controller("ProjectListController", ["$http", 
     this.projectList = [];
 
     this.getProjectList = function (institutionId) {
-        $http.post("get-all-projects", institutionId)
+        $http.get("get-all-projects/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
             }), function errorCallback(response) {

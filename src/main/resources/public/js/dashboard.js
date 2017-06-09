@@ -8,7 +8,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.userSamples = {};
 
     this.getProjectList = function (institutionId) {
-        $http.post("get-all-projects", institutionId)
+        $http.get("get-all-projects/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
                 this.initialize();
@@ -68,7 +68,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     };
 
     this.getPlotData = function (projectId) {
-        $http.post("get-project-plots", projectId)
+        $http.get("get-project-plots/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.loadRandomPlot();
