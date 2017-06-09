@@ -3,7 +3,7 @@
 <#include "flash-messages.ftl">
 
 <#if role?? && role == "admin">
-    <script type="text/javascript" src="js/geo-dash-admin.js"></script>
+    <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
 </#if>
 
 <div id="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize()">

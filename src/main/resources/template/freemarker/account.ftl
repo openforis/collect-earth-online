@@ -6,7 +6,7 @@
 
 <div id="account-form">
     <h1>Account Settings</h1>
-    <form action="account" method="post">
+    <form action="${root}/account/${userid}" method="post">
         <h2>Reset email</h2>
         <input autocomplete="off" id="email" name="email" placeholder="New email" value="" type="email">
         <h2>Reset password</h2>

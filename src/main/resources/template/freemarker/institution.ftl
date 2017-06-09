@@ -8,8 +8,8 @@
     <div id="institution-details" ng-controller="InstitutionController as institution" ng-init="institution.initialize()">
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <h1>{{ institution.details.name }}</h1>
-            <img src="{{ institution.details.logo }}">
-            <a href="{{ institution.details.url }}">{{ institution.details.url }}</a>
+            <img src="${root}/{{ institution.details.logo }}">
+            <a href="${root}/{{ institution.details.url }}">{{ institution.details.url }}</a>
             <p>{{ institution.details.description }}</p>
         </div>
         <div id="institution-edit" ng-show="institution.pageMode == 'edit'">

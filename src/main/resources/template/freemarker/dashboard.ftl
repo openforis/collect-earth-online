@@ -4,7 +4,7 @@
 <#include "flash-messages.ftl">
 
 <div id="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize()">
-    <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='home'">
+    <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='${root}/home'">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">
         <div id="sidebar-contents">

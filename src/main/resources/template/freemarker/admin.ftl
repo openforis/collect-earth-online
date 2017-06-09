@@ -6,7 +6,7 @@
 <div id="admin" ng-controller="AdminController as admin" ng-init="admin.initialize()">
     <h1>Project Management</h1>
     <div id="create-project-form">
-        <form id="project-management-form" method="post" action="admin">
+        <form id="project-management-form" action="${root}/admin/${project_id}" method="post">
             <div id="project-selection">
                 <label>Currently Viewing:</label>
                 <select id="project-selector" name="project-selector" size="1" ng-model="admin.currentProjectId" ng-change="admin.setCurrentProject()">
