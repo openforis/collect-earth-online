@@ -142,7 +142,6 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         }
     };
 
-    // FIXME: Implement this endpoint
     this.exportCurrentPlotData = function () {
         var projectId = parseInt(this.currentProjectId);
         if (projectId != 0) {
@@ -172,7 +171,6 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
         }
     };
 
-    // FIXME: Implement this endpoint
     this.submitForm = function ($event) {
         if (this.currentProjectId != "0") {
             if (confirm("Do you REALLY want to delete this project?!")) {

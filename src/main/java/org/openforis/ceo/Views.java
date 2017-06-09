@@ -48,29 +48,30 @@ public class Views {
     }
 
     public static ModelAndView account(Request req, Response res) {
+        String accountId = req.params(":id"); // FIXME: Use this
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         return new ModelAndView(getBaseModel(req, "Account", "large"), "account.ftl");
     }
 
     public static ModelAndView institution(Request req, Response res) {
-        if (req.queryParams("id") == null || req.queryParams("id").equals("0")) {
+        if (req.params(":id").equals("0")) {
             authenticateOrRedirect(req, res, new String[]{"admin"});
         }
         Map<String, Object> model = getBaseModel(req, "Institution", "large");
-        model.put("institution_id", req.queryParams("id"));
+        model.put("institution_id", req.params(":id"));
         return new ModelAndView(model, "institution.ftl");
     }
 
     public static ModelAndView dashboard(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Dashboard", "large");
-        model.put("project_id", req.queryParams("project"));
+        model.put("project_id", req.params(":id"));
         return new ModelAndView(model, "dashboard.ftl");
     }
 
     public static ModelAndView admin(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"admin"});
         Map<String, Object> model = getBaseModel(req, "Admin", "large");
-        model.put("project_id", req.queryParams("project"));
+        model.put("project_id", req.params(":id"));
         return new ModelAndView(model, "admin.ftl");
     }
 

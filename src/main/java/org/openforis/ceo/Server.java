@@ -49,12 +49,12 @@ public class Server implements SparkApplication {
         get("/home",                             (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/about",                            (req, res) -> { return freemarker.render(Views.about(req, res)); });
         get("/support",                          (req, res) -> { return freemarker.render(Views.support(req, res)); });
-        get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        post("/account",                         (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
-        get("/institution",                      (req, res) -> { return freemarker.render(Views.institution(req, res)); });
-        get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
-        get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res)); });
-        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(Projects.createNewProject(req, res), res)); });
+        get("/account/:id",                      (req, res) -> { return freemarker.render(Views.account(req, res)); });
+        post("/account/:id",                     (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
+        get("/institution/:id",                  (req, res) -> { return freemarker.render(Views.institution(req, res)); });
+        get("/dashboard/:id",                    (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
+        get("/admin/:id",                        (req, res) -> { return freemarker.render(Views.admin(req, res)); });
+        post("/admin/:id",                       (req, res) -> { return freemarker.render(Views.admin(Projects.createNewProject(req, res), res)); });
         get("/login",                            (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",                           (req, res) -> { return freemarker.render(Views.login(Users.login(req, res), res)); });
         get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });

@@ -122,6 +122,7 @@ public class Users {
 
     // FIXME: stub
     public static Request updateAccount(Request req, Response res) {
+        String accountId = req.params(":id"); // FIXME: Use this
         req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
         return req;
     }
