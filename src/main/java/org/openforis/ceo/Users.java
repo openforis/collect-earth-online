@@ -24,13 +24,15 @@ public class Users {
         if (matchingUser.isPresent()) {
             // Check if password matches
             JsonObject user = matchingUser.get();
-            String savedPassword = user.get("password").getAsString();
-            String savedRole = user.get("role").getAsString();
-            if (inputPassword.equals(savedPassword)) {
+            String userId = user.get("id").getAsString();
+            String userPassword = user.get("password").getAsString();
+            String userRole = user.get("role").getAsString();
+            if (inputPassword.equals(userPassword)) {
                 // Authentication successful
+                req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
-                req.session().attribute("role", savedRole);
-                res.redirect("home");
+                req.session().attribute("role", userRole);
+                res.redirect(Server.documentRoot + "/home");
             } else {
                 // Authentication failed
                 req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
@@ -65,12 +67,13 @@ public class Users {
                     } else {
                         // Add a new user to user-list.json
                         int newUserId = getNextId(users);
+                        String newUserRole = "user";
 
                         JsonObject newUser = new JsonObject();
                         newUser.addProperty("id", newUserId);
                         newUser.addProperty("email", inputEmail);
                         newUser.addProperty("password", inputPassword);
-                        newUser.addProperty("role", "user");
+                        newUser.addProperty("role", newUserRole);
                         newUser.add("reset_key", null);
                         newUser.add("ip_addr", null);
 
@@ -91,11 +94,12 @@ public class Users {
                                     });
 
                         // Assign the username and role session attributes
+                        req.session().attribute("userid", newUserId);
                         req.session().attribute("username", inputEmail);
-                        req.session().attribute("role", "user");
+                        req.session().attribute("role", newUserRole);
 
-                        // Redirect to /home
-                        res.redirect("home");
+                        // Redirect to the Home page
+                        res.redirect(Server.documentRoot + "/home");
                     }
                 } else {
                     req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
@@ -110,6 +114,7 @@ public class Users {
     }
 
     public static Request logout(Request req) {
+        req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
         return req;

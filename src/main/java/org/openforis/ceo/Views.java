@@ -11,12 +11,14 @@ public class Views {
 
     private static Map<String, Object> getBaseModel(Request req, String navlink, String contentSize) {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("root", Server.documentRoot);
         model.put("background_image", "linear-gradient(to bottom right, rgba(63,171,198,0.35), rgba(63,171,198,0.05), rgba(63,171,198,0.35))");
         model.put("branding_image_file", "ceo-logo1.png");
         model.put("navlink", navlink);
         model.put("content_size", contentSize);
-        model.put("role", req.session().attribute("role"));
+        model.put("userid", req.session().attribute("userid"));
         model.put("username", req.session().attribute("username"));
+        model.put("role", req.session().attribute("role"));
         if (req.session().attribute("flash_messages") != null) {
             model.put("flash_messages", req.session().attribute("flash_messages"));
             req.session().removeAttribute("flash_messages");
@@ -29,7 +31,7 @@ public class Views {
     private static void authenticateOrRedirect(Request req, Response res, String[] requiredRoles) {
         String currentRole = req.session().attribute("role");
         if (! Arrays.asList(requiredRoles).contains(currentRole)) {
-            res.redirect("/home");
+            res.redirect(Server.documentRoot + "/home");
         }
     }
 

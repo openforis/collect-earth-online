@@ -134,9 +134,9 @@ public class Projects {
 
             writeCsvFile(outputFileName, csvHeader, csvRows);
 
-            return "/downloads/" + outputFileName;
+            return Server.documentRoot + "/downloads/" + outputFileName;
         } else {
-            return "/project-not-found";
+            return Server.documentRoot + "/project-not-found";
         }
     }
 

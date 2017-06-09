@@ -87,8 +87,13 @@ public class Server implements SparkApplication {
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
     }
 
+    public static String documentRoot;
+
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
+        // Store the current document root for dynamic link resolution
+        documentRoot = "";
+
         // Set the webserver port
         port(8080);
 
@@ -98,6 +103,9 @@ public class Server implements SparkApplication {
 
     // Tomcat entry point
     public void init() {
+        // Store the current document root for dynamic link resolution
+        documentRoot = "/ceo";
+
         // Set up the routing table
         declareRoutes();
     }

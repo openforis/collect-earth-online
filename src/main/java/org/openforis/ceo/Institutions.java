@@ -66,7 +66,7 @@ public class Institutions {
             String logoFileType = logoFileName.substring(logoFileName.lastIndexOf(".") + 1);
             String logoFileNameFinal = "institution-" + institutionId + "." + logoFileType;
             logo.write(logoFileNameFinal);
-            return "img/institution-logos/" + logoFileNameFinal;
+            return Server.documentRoot + "/img/institution-logos/" + logoFileNameFinal;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
