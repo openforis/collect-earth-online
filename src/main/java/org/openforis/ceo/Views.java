@@ -48,9 +48,10 @@ public class Views {
     }
 
     public static ModelAndView account(Request req, Response res) {
-        String accountId = req.params(":id"); // FIXME: Use this
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
-        return new ModelAndView(getBaseModel(req, "Account", "large"), "account.ftl");
+        Map<String, Object> model = getBaseModel(req, "Account", "large");
+        model.put("account_id", req.params(":id"));
+        return new ModelAndView(model, "account.ftl");
     }
 
     public static ModelAndView institution(Request req, Response res) {
