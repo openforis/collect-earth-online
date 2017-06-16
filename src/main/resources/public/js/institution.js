@@ -67,7 +67,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             $http.post(this.root + "/archive-institution/" + this.details.id)
                 .then(angular.bind(this, function successCallback(response) {
                     alert("Institution " + this.details.name + " has been deleted.");
-                    window.location="home";
+                    window.location = this.root + "/home";
                 }), function errorCallback(response) {
                     console.log(response);
                     alert("Error deleting institution. See console for details.");
