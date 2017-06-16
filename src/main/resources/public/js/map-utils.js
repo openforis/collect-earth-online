@@ -55,9 +55,6 @@ map_utils.map_ref = null;
 //                                   "center_coords": [102.0, 17.0],
 //                                   "zoom_level":    5});
 map_utils.digital_globe_base_map = function (map_config) {
-    // var digital_globe_access_token     = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYS" +
-    //                                      "I6ImNpcTJ3ZTlyZTAwOWNuam00ZWU3aTk" +
-    //                                      "xdWIifQ.9OFrmevVe0YB2dJokKhhdA";
     var digital_globe_access_token     = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYS" +
                                          "I6ImNqM2RuZTE3dTAwMncyd3Bwanh4MHJ" +
                                          "1cmgifQ.LNrR2h_I0kz6fra93XGP2g";
@@ -67,7 +64,6 @@ map_utils.digital_globe_base_map = function (map_config) {
                                          "w6dxNQls99dmLXcr9-qWCM5J4Y2G-pS";
     var sig_geoserver_url              = "http://pyrite.sig-gis.com/geoserver/wms";
     var dg_geoserver_url               = "https://services.digitalglobe.com/mapservice/wmsaccess";
-    var dg_connect_id                  = "d357775d-8cbc-44c6-b82d-e3399306378b";
     var dg_unauthenticated_connect_id  = "a797f723-f91f-40d7-8458-3669a830b6de";
 
     // Declare each of the layer sources that will be shown in the map
@@ -108,7 +104,7 @@ map_utils.digital_globe_base_map = function (map_config) {
                                     source: source1});
 
     var layer2 = new ol.layer.Tile({title: "DigitalGlobeRecentImagery+Streets",
-                                    visible: true,
+                                    visible: false,
                                     source: source2});
 
     var layer3 = new ol.layer.Tile({title: "BingAerial",
@@ -125,7 +121,7 @@ map_utils.digital_globe_base_map = function (map_config) {
                                     source: source5});
 
     var layer6 = new ol.layer.Tile({title: "DigitalGlobeWMSImagery",
-                                    visible: false,
+                                    visible: true,
                                     source: source6});
 
     // Add a scale line to the default map controls
@@ -155,7 +151,7 @@ map_utils.digital_globe_base_map = function (map_config) {
 ***
 *****************************************************************************/
 
-map_utils.current_imagery = "DigitalGlobeRecentImagery+Streets";
+map_utils.current_imagery = "DigitalGlobeWMSImagery";
 
 map_utils.set_current_imagery = function (new_imagery) {
     var layers = map_utils.map_ref.getLayers().getArray();

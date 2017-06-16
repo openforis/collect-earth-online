@@ -15,7 +15,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.latMin = "";
     this.lonMax = "";
     this.latMax = "";
-    this.currentImagery = "DigitalGlobeRecentImagery+Streets";
+    this.currentImagery = "DigitalGlobeWMSImagery";
     this.sampleValues = [];
     this.valueName = "";
     this.valueColor = "#000000";
@@ -136,7 +136,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
             this.latMin = "";
             this.lonMax = "";
             this.latMax = "";
-            this.currentImagery = "DigitalGlobeRecentImagery+Streets";
+            this.currentImagery = "DigitalGlobeWMSImagery";
             map_utils.set_current_imagery(this.currentImagery);
             map_utils.enable_dragbox_draw();
             map_utils.map_ref.removeLayer(map_utils.current_boundary);
