@@ -9,7 +9,7 @@
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <h1>{{ institution.details.name }}</h1>
             <img src="${root}/{{ institution.details.logo }}">
-            <a href="${root}/{{ institution.details.url }}">{{ institution.details.url }}</a>
+            <a href="{{ institution.details.url }}">{{ institution.details.url }}</a>
             <p>{{ institution.details.description }}</p>
         </div>
         <div id="institution-edit" ng-show="institution.pageMode == 'edit'">

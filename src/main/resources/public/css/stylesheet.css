@@ -491,6 +491,7 @@ section#content a:hover, section#content a.active-link {
     height: calc(80% - 4rem);
     width: 25vw;
     padding: 2rem;
+    overflow: scroll;
     /* background: rgba(255,255,255,0.8); */
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
