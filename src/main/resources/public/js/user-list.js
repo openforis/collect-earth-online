@@ -1,8 +1,9 @@
 angular.module("userList", []).controller("UserListController", ["$http", function UserListController($http) {
+    this.root = "";
     this.userList = [];
 
     this.getUserList = function () {
-        $http.get("get-all-users")
+        $http.get(this.root + "/get-all-users")
             .then(angular.bind(this, function successCallback(response) {
                 this.userList = response.data;
             }), function errorCallback(response) {
@@ -11,7 +12,10 @@ angular.module("userList", []).controller("UserListController", ["$http", functi
             });
     };
 
-    this.initialize = function (showMap) {
+    this.initialize = function (documentRoot, showMap) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
         // Load the userList
         this.getUserList();
 

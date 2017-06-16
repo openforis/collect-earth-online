@@ -18,7 +18,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.maxHeight = 0;
     this.sHeight = 0;
     var geodash = this;
-    this.initialize = function () {
+    this.initialize = function (documentRoot) {
         geodash = this;
         var pid = this.getParameterByName("pid");
         gpid = pid;

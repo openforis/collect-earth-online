@@ -3,7 +3,7 @@
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
 
-<div id="admin" ng-controller="AdminController as admin" ng-init="admin.initialize()">
+<div id="admin" ng-controller="AdminController as admin" ng-init="admin.initialize('${root}')">
     <h1>Project Management</h1>
     <div id="create-project-form">
         <form id="project-management-form" action="${root}/admin/${project_id}" method="post">

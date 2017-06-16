@@ -1,4 +1,4 @@
-<div id="user-list" ng-controller="UserListController as userList" ng-init="userList.initialize(${(navlink == 'Home')?c})">
+<div id="user-list" ng-controller="UserListController as userList" ng-init="userList.initialize('${root}', ${(navlink == 'Home')?c})">
     <h1>Users [{{ userList.userList.length }}]</h1>
     <#if navlink == "Home">
         <div id="user-map"></div>

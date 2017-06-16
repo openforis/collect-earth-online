@@ -1,4 +1,5 @@
 angular.module("institution", []).controller("InstitutionController", ["$http", function InstitutionController($http) {
+    this.root = "";
     this.pageMode = "view";
 
     this.details = {
@@ -10,7 +11,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     };
 
     this.getInstitutionDetails = function (institutionId) {
-        $http.get("get-institution-details/" + institutionId)
+        $http.get(this.root + "/get-institution-details/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.details = response.data;
             }), function errorCallback(response) {
@@ -19,7 +20,10 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
-    this.initialize = function () {
+    this.initialize = function (documentRoot) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
         this.details.id = document.getElementById("initial-institution-id").value;
         if (this.details.id == "0") {
             this.pageMode = "edit";
@@ -34,7 +38,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
         formData.append("institution-url", this.details.url);
         formData.append("institution-description", this.details.description);
-        $http.post("update-institution/" + this.details.id,
+        $http.post(this.root + "/update-institution/" + this.details.id,
                    formData,
                    {transformRequest: angular.identity,
                     headers: {"Content-Type": undefined}})
@@ -60,7 +64,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
     this.deleteInstitution = function () {
         if (confirm("Do you REALLY want to delete this institution?!")) {
-            $http.post("archive-institution/" + this.details.id)
+            $http.post(this.root + "/archive-institution/" + this.details.id)
                 .then(angular.bind(this, function successCallback(response) {
                     alert("Institution " + this.details.name + " has been deleted.");
                     window.location="home";

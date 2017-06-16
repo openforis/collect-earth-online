@@ -1,4 +1,5 @@
 angular.module("dashboard", []).controller("DashboardController", ["$http", function DashboardController($http) {
+    this.root = "";
     this.projectList = [];
     this.currentProjectId = "";
     this.currentProject = null;
@@ -8,10 +9,10 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.userSamples = {};
 
     this.getProjectList = function (institutionId) {
-        $http.get("get-all-projects/" + institutionId)
+        $http.get(this.root + "/get-all-projects/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
-                this.initialize();
+                this.initialize(this.root);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
@@ -26,7 +27,10 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         );
     };
 
-    this.initialize = function () {
+    this.initialize = function (documentRoot) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
         if (this.projectList.length == 0) {
             // Load the projectList
             this.getProjectList("ALL");
@@ -68,7 +72,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     };
 
     this.getPlotData = function (projectId) {
-        $http.get("get-project-plots/" + projectId)
+        $http.get(this.root + "/get-project-plots/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.loadRandomPlot();
@@ -125,7 +129,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     };
 
     this.saveValues = function () {
-        $http.post("add-user-samples",
+        $http.post(this.root + "/add-user-samples",
                    {projectId: this.currentProjectId,
                     plotId: this.currentPlot.id,
                     userId: document.getElementById("user-id").value,
@@ -147,7 +151,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.flagPlot = function () {
         var projectId = this.currentProjectId;
         var plotId = this.currentPlot.id;
-        $http.post("flag-plot",
+        $http.post(this.root + "/flag-plot",
                    {projectId: projectId,
                     plotId:    plotId})
             .then(angular.bind(this, function successCallback(response) {

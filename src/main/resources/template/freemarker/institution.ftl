@@ -5,7 +5,7 @@
 <#include "flash-messages.ftl">
 
 <div id="institution">
-    <div id="institution-details" ng-controller="InstitutionController as institution" ng-init="institution.initialize()">
+    <div id="institution-details" ng-controller="InstitutionController as institution" ng-init="institution.initialize('${root}')">
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <h1>{{ institution.details.name }}</h1>
             <img src="${root}/{{ institution.details.logo }}">

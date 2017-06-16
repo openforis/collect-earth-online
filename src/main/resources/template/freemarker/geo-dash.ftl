@@ -6,7 +6,7 @@
     <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
 </#if>
 
-<div id="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize()">
+<div id="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize('${root}')">
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>

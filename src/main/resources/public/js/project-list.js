@@ -1,8 +1,9 @@
 angular.module("projectList", []).controller("ProjectListController", ["$http", function ProjectListController($http) {
+    this.root = "";
     this.projectList = [];
 
     this.getProjectList = function (institutionId) {
-        $http.get("get-all-projects/" + institutionId)
+        $http.get(this.root + "/get-all-projects/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
             }), function errorCallback(response) {
@@ -11,7 +12,10 @@ angular.module("projectList", []).controller("ProjectListController", ["$http", 
             });
     };
 
-    this.initialize = function () {
+    this.initialize = function (documentRoot) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
         this.getProjectList(document.getElementById("initial-institution-id") ? document.getElementById("initial-institution-id").value : "ALL");
     };
 

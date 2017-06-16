@@ -1,4 +1,5 @@
 angular.module("admin", []).controller("AdminController", ["$http", function AdminController($http) {
+    this.root = "";
     this.projectList = [];
     this.currentProjectId = "0";
     this.currentProject = null;
@@ -21,17 +22,20 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.valueImage = "";
 
     this.getProjectList = function (institutionId) {
-        $http.get("get-all-projects/" + institutionId)
+        $http.get(this.root + "/get-all-projects/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
-                this.initialize();
+                this.initialize(this.root);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
             });
     };
 
-    this.initialize = function () {
+    this.initialize = function (documentRoot) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
         if (this.projectList.length == 0) {
             // Load the projectList
             this.getProjectList("ALL");
@@ -70,7 +74,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     };
 
     this.getPlotData = function (projectId) {
-        $http.get("get-project-plots/" + projectId)
+        $http.get(this.root + "/get-project-plots/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.setCurrentProject();
@@ -145,7 +149,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.exportCurrentPlotData = function () {
         var projectId = parseInt(this.currentProjectId);
         if (projectId != 0) {
-            $http.get("dump-project-aggregate-data/" + projectId)
+            $http.get(this.root + "/dump-project-aggregate-data/" + projectId)
                 .then(function successCallback(response) {
                     window.open(response.data);
                 }, function errorCallback(response) {
@@ -158,7 +162,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
     this.deleteCurrentProject = function () {
         var projectId = parseInt(this.currentProjectId);
         if (projectId != 0) {
-            $http.post("archive-project/" + projectId)
+            $http.post(this.root + "/archive-project/" + projectId)
                 .then(angular.bind(this, function successCallback(response) {
                     alert("Project " + projectId + " has been deleted.");
                     this.currentProjectId = "0";

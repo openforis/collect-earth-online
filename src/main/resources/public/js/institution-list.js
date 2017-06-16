@@ -1,8 +1,9 @@
 angular.module("institutionList", []).controller("InstitutionListController", ["$http", function InstitutionListController($http) {
+    this.root = "";
     this.institutionList = [];
 
     this.getInstitutionList = function () {
-        $http.get("get-all-institutions")
+        $http.get(this.root + "/get-all-institutions")
             .then(angular.bind(this, function successCallback(response) {
                 this.institutionList = response.data;
             }), function errorCallback(response) {
@@ -11,7 +12,10 @@ angular.module("institutionList", []).controller("InstitutionListController", ["
             });
     };
 
-    this.initialize = function () {
+    this.initialize = function (documentRoot) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
         // Load the institutionList
         this.getInstitutionList();
     };

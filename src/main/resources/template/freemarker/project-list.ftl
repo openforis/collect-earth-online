@@ -1,4 +1,4 @@
-<div id="project-list" ng-controller="ProjectListController as projectList" ng-init="projectList.initialize()">
+<div id="project-list" ng-controller="ProjectListController as projectList" ng-init="projectList.initialize('${root}')">
     <h1>Projects [{{ projectList.projectList.length }}]</h1>
     <ul>
         <#if role?? && role == "admin">
