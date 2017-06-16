@@ -165,9 +165,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
             $http.post(this.root + "/archive-project/" + projectId)
                 .then(angular.bind(this, function successCallback(response) {
                     alert("Project " + projectId + " has been deleted.");
-                    this.currentProjectId = "0";
-                    this.setCurrentProject();
-                    this.getProjectList("ALL");
+                    window.location = this.root + "/admin/0";
                 }), function errorCallback(response) {
                     console.log(response);
                     alert("Error archiving project. See console for details.");
