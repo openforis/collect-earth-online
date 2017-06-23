@@ -375,6 +375,8 @@ public class Projects {
             newProject.addProperty("attribution", getImageryAttribution(imagerySelector));
             newProject.add("sample_values", updatedSampleValues);
             newProject.addProperty("archived", false);
+            newProject.addProperty("institution", 3); // FIXME: look up the insitution id dynamically
+            newProject.addProperty("privacy", "public"); // FIXME: look up the privacy value dynamically
 
             projects.add(newProject);
             writeJsonFile("project-list.json", projects);
