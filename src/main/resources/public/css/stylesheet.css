@@ -969,7 +969,7 @@ p.error-message {
     text-transform: uppercase;
 }
 
-#project #project-info label, #project #plot-info label, #project #sample-info label, #project #bounding-box label {
+#project #project-info label, #project #plot-info label, #project #sample-info label, #project #bounding-box label, #project #project-visibility label {
     display: block;
     font-size: 0.8rem;
     padding: 0.25rem 0rem;
@@ -1094,8 +1094,8 @@ p.error-message {
 }
 
 #project fieldset#sample-value-info {
+    clear: left;
     float: left;
-    clear: both;
     margin-bottom: 20px;
 }
 
@@ -1126,6 +1126,28 @@ p.error-message {
     height: 2rem;
     padding: 0rem;
     margin-bottom: 5px;
+}
+
+#project fieldset#project-visibility {
+    float: left;
+    width: 12%;
+}
+
+#project fieldset#project-visibility input#privacy-private,
+#project fieldset#project-visibility input#privacy-public,
+#project fieldset#project-visibility input#privacy-institution,
+#project fieldset#project-visibility input#privacy-invitation {
+    vertical-align: middle;
+}
+
+#project fieldset#project-visibility table {
+    margin-left: 1rem;
+    background-color: white;
+    border: 1px solid #aaa;
+}
+
+#project fieldset#project-visibility table td {
+    padding: 0px 5px;
 }
 
 #project #spinner {

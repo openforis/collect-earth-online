@@ -129,6 +129,46 @@
                 </table>
                 <input type="hidden" id="sample-values" name="sample-values" value="">
             </fieldset>
+            <fieldset id="project-visibility">
+                <legend>Project Visibility</legend>
+                <label>Privacy Level</label>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input id="privacy-private" type="radio" name="privacy-level" value="private" ng-click="project.setPrivacyLevel('private')" checked>
+                            </td>
+                            <td>
+                                <label>Private</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input id="privacy-public" type="radio" name="privacy-level" value="public" ng-click="project.setPrivacyLevel('public')">
+                            </td>
+                            <td>
+                                <label>Public</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input id="privacy-institution" type="radio" name="privacy-level" value="institution" ng-click="project.setPrivacyLevel('institution')">
+                            </td>
+                            <td>
+                                <label>Institution</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input id="privacy-invitation" type="radio" name="privacy-level" value="invitation" ng-click="project.setPrivacyLevel('invitation')" disabled>
+                            </td>
+                            <td>
+                                <label>Invitation</label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
             <div id="spinner"></div>
             <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id!"0"}>
             <input id="institution-id" type="hidden" name="institution-id" value=${institution_id!"0"}>

@@ -20,6 +20,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.valueName = "";
     this.valueColor = "#000000";
     this.valueImage = "";
+    this.privacyLevel = "private";
 
     this.getProjectList = function (institutionId) {
         $http.get(this.root + "/get-all-projects/" + institutionId)
@@ -194,6 +195,10 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             utils.disable_element("samples-per-plot");
             utils.enable_element("sample-resolution");
         }
+    };
+
+    this.setPrivacyLevel = function (privacyLevel) {
+        this.privacyLevel = privacyLevel;
     };
 
     this.setCurrentImagery = function () {
