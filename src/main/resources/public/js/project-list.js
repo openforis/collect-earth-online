@@ -26,7 +26,7 @@ angular.module("projectList", []).controller("ProjectListController", ["$http", 
         } else if (institutionId == -1) {
             alert("Projects cannot be created without first selecting an institution.");
         } else {
-            window.location = this.root + "/project/0?institution=" + institutionId; // FIXME: Use the institution queryParam
+            window.location = this.root + "/project/0?institution=" + institutionId;
         }
     };
 

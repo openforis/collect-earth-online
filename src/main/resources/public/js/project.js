@@ -174,15 +174,15 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.submitForm = function ($event) {
-        if (this.currentProjectId != "0") {
-            if (confirm("Do you REALLY want to delete this project?!")) {
-                this.deleteCurrentProject();
-            }
-        } else {
+        if (this.currentProjectId == "0") {
             $event.currentTarget.value = "Processing...please wait...";
             document.getElementById("spinner").style.visibility = "visible";
             document.getElementById("sample-values").value = JSON.stringify(this.sampleValues);
             document.getElementById("project-management-form").submit();
+        } else {
+            if (confirm("Do you REALLY want to delete this project?!")) {
+                this.deleteCurrentProject();
+            }
         }
     };
 

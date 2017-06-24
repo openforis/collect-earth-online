@@ -335,6 +335,7 @@ public class Projects {
 
     public static synchronized Request createNewProject(Request req, Response res) {
         try {
+            int institutionId = Integer.parseInt(req.queryParams("institution-id"));
             String projectName = req.queryParams("project-name");
             String projectDescription = req.queryParams("project-description");
             double lonMin = Double.parseDouble(req.queryParams("boundary-lon-min"));
@@ -375,7 +376,7 @@ public class Projects {
             newProject.addProperty("attribution", getImageryAttribution(imagerySelector));
             newProject.add("sample_values", updatedSampleValues);
             newProject.addProperty("archived", false);
-            newProject.addProperty("institution", 3); // FIXME: look up the insitution id dynamically
+            newProject.addProperty("institution", institutionId);
             newProject.addProperty("privacy", "public"); // FIXME: look up the privacy value dynamically
 
             projects.add(newProject);

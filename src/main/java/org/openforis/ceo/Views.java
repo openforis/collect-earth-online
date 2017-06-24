@@ -73,6 +73,9 @@ public class Views {
         authenticateOrRedirect(req, res, new String[]{"admin"});
         Map<String, Object> model = getBaseModel(req, "Project", "large");
         model.put("project_id", req.params(":id"));
+        if (req.params(":id").equals("0")) {
+            model.put("institution_id", req.queryParams("institution"));
+        }
         return new ModelAndView(model, "project.ftl");
     }
 
