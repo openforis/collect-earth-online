@@ -69,11 +69,11 @@ public class Views {
         return new ModelAndView(model, "dashboard.ftl");
     }
 
-    public static ModelAndView admin(Request req, Response res) {
+    public static ModelAndView project(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"admin"});
-        Map<String, Object> model = getBaseModel(req, "Admin", "large");
+        Map<String, Object> model = getBaseModel(req, "Project", "large");
         model.put("project_id", req.params(":id"));
-        return new ModelAndView(model, "admin.ftl");
+        return new ModelAndView(model, "project.ftl");
     }
 
     public static ModelAndView login(Request req, Response res) {

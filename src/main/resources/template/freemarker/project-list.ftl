@@ -7,7 +7,7 @@
             </#if>
             <li ng-repeat="project in projectList.projectList">
                 <a class="view-project" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
-                <a class="edit-project" href="${root}/admin/{{ project.id }}">Edit</a>
+                <a class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
             </li>
         <#else>
             <li ng-repeat="project in projectList.projectList">

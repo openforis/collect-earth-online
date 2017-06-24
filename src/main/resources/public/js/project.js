@@ -1,4 +1,4 @@
-angular.module("admin", []).controller("AdminController", ["$http", function AdminController($http) {
+angular.module("project", []).controller("ProjectController", ["$http", function ProjectController($http) {
     this.root = "";
     this.projectList = [];
     this.currentProjectId = "0";
@@ -165,7 +165,7 @@ angular.module("admin", []).controller("AdminController", ["$http", function Adm
             $http.post(this.root + "/archive-project/" + projectId)
                 .then(angular.bind(this, function successCallback(response) {
                     alert("Project " + projectId + " has been deleted.");
-                    window.location = this.root + "/admin/0";
+                    window.location = this.root + "/project/0";
                 }), function errorCallback(response) {
                     console.log(response);
                     alert("Error archiving project. See console for details.");

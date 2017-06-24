@@ -24,7 +24,7 @@
         <script type="text/javascript" src="${root}/js/project-list.js"></script>
         <script type="text/javascript" src="${root}/js/user-list.js"></script>
         <script type="text/javascript" src="${root}/js/institution.js"></script>
-        <script type="text/javascript" src="${root}/js/admin.js"></script>
+        <script type="text/javascript" src="${root}/js/project.js"></script>
         <script type="text/javascript" src="${root}/js/dashboard.js"></script>
         <script type="text/javascript" src="${root}/js/geo-dash.js"></script>
         <script type="text/javascript" src="${root}/js/ceo.js"></script>
