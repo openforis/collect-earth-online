@@ -130,10 +130,10 @@
                 <input type="hidden" id="sample-values" name="sample-values" value="">
             </fieldset>
             <div id="spinner"></div>
+            <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id!"0"}>
+            <input id="institution-id" type="hidden" name="institution-id" value=${institution_id!"0"}>
         </form>
     </div>
-    <input id="initial-project-id" type="hidden" name="initial-project-id" value=${project_id!"0"}>
-    <input id="institution-id" type="hidden" name="institution-id" value=${institution_id!"0"}>
 </div>
 
 <#include "end-content.ftl">
