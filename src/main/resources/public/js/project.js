@@ -121,6 +121,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 map_utils.disable_dragbox_draw();
                 map_utils.draw_polygon(project.boundary);
                 this.sampleValues = project.sample_values;
+                this.privacyLevel = project.privacy;
+                document.getElementById("privacy-" + project.privacy).checked = true;
             }
         } else {
             this.projectName = "";
