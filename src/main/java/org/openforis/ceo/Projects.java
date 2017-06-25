@@ -51,6 +51,17 @@ public class Projects {
         }
     }
 
+    public static String getProjectById(Request req, Response res) {
+        String projectId = req.params(":id");
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
+        if (matchingProject.isPresent()) {
+            return matchingProject.get().toString();
+        } else {
+            return "";
+        }
+    }
+
     public static String getProjectPlots(Request req, Response res) {
         String projectId = req.params(":id");
         return readJsonFile("plot-data-" + projectId + ".json").toString();
