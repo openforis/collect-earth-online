@@ -102,7 +102,8 @@
                 <option value="NASASERVIRChipset2002">NASA SERVIR Chipset 2002</option>
             </select>
             <label>Imagery Year</label>
-            <select id="imagery-year" name="imagery-year" size="1" ng-model="project.imageryYear" ng-change="project.setImageryYear()">
+            <select id="imagery-year" name="imagery-year" size="1" ng-model="project.imageryYear" ng-change="project.setImageryYear()"
+                    style="visibility: {{ project.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                 <option value="2016">2016</option>
                 <option value="2015">2015</option>
                 <option value="2014">2014</option>
@@ -115,7 +116,8 @@
                 <option value="2007">2007</option>
             </select>
             <label>Stacking Profile</label>
-            <select id="stacking-profile" name="stacking-profile" size="1" ng-model="project.stackingProfile" ng-change="project.setStackingProfile()">
+            <select id="stacking-profile" name="stacking-profile" size="1" ng-model="project.stackingProfile" ng-change="project.setStackingProfile()"
+                    style="visibility: {{ project.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                 <option value="Accuracy_Profile">Accuracy Profile</option>
                 <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
                 <option value="Global_Currency_Profile">Global Currency Profile</option>
