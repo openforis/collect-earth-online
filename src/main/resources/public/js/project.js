@@ -19,11 +19,16 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.datePublished = null;
     this.dateClosed = null;
 
-    // FIXME: Implement back end AJAX endpoint
     this.createProject = function () {
         if (confirm("Do you REALLY want to create this project?")) {
             utils.show_element("spinner");
-            $http.post(this.root + "/create-project", this.details)
+            this.newProject = this.details;
+            this.newProject.institution = this.institution;
+            this.newProject.lonMin = map_utils.current_bbox.minlon;
+            this.newProject.lonMax = map_utils.current_bbox.maxlon;
+            this.newProject.latMin = map_utils.current_bbox.minlat;
+            this.newProject.latMax = map_utils.current_bbox.maxlat;
+            $http.post(this.root + "/create-project", this.newProject)
                 .then(angular.bind(this, function successCallback(response) {
                     this.details.availability = "unpublished";
                     utils.hide_element("spinner");

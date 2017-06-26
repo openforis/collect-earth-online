@@ -371,27 +371,30 @@ public class Projects {
             .toArray(Double[][]::new);
     }
 
-    public static synchronized Request createNewProject(Request req, Response res) {
+    public static synchronized String createProject(Request req, Response res) {
         try {
-            int institutionId = Integer.parseInt(req.queryParams("institution-id"));
-            String projectName = req.queryParams("project-name");
-            String projectDescription = req.queryParams("project-description");
-            double lonMin = Double.parseDouble(req.queryParams("boundary-lon-min"));
-            double latMin = Double.parseDouble(req.queryParams("boundary-lat-min"));
-            double lonMax = Double.parseDouble(req.queryParams("boundary-lon-max"));
-            double latMax = Double.parseDouble(req.queryParams("boundary-lat-max"));
-            int numPlots = Integer.parseInt(req.queryParams("plots"));
-            double bufferRadius = Double.parseDouble(req.queryParams("buffer-radius"));
-            String sampleType = req.queryParams("sample-type");
-            int samplesPerPlot = req.queryParams("samples-per-plot") != null ? Integer.parseInt(req.queryParams("samples-per-plot")) : 0;
-            double sampleResolution = req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : 0.0;
-            String imagerySelector = req.queryParams("imagery-selector");
-            JsonArray sampleValues = parseJson(req.queryParams("sample-values")).getAsJsonArray();
-
-            // BEGIN: Add a new entry to project-list.json
+            // Read in the new project and the existing project list
+            JsonObject newProject = parseJson(req.body()).getAsJsonObject();
             JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+
+            // Generate a new project id
             int newProjectId = getNextId(projects);
+            newProject.addProperty("id", newProjectId);
+
+            // Convert the bounding box coordinates to GeoJSON
+            double lonMin = newProject.get("lonMin").getAsDouble();
+            double latMin = newProject.get("latMin").getAsDouble();
+            double lonMax = newProject.get("lonMax").getAsDouble();
+            double latMax = newProject.get("latMax").getAsDouble();
             JsonObject boundary = makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax);
+            newProject.remove("lonMin");
+            newProject.remove("latMin");
+            newProject.remove("lonMax");
+            newProject.remove("latMax");
+            newProject.addProperty("boundary", boundary.toString());
+
+            // Add ids to the sampleValues and clean up some of their unnecessary fields
+            JsonArray sampleValues = newProject.get("sampleValues").getAsJsonArray();
             IntSupplier sampleValueIndexer = makeCounter();
             JsonArray updatedSampleValues = mapJsonArray(sampleValues,
                                                          sampleValue -> {
@@ -403,42 +406,45 @@ public class Projects {
                                                              }
                                                              return sampleValue;
                                                          });
+            newProject.add("sampleValues", updatedSampleValues);
 
-            JsonObject newProject = new JsonObject();
-            newProject.addProperty("id", newProjectId);
-            newProject.addProperty("name", projectName);
-            newProject.addProperty("description", projectDescription);
-            newProject.addProperty("boundary", boundary.toString());
-            newProject.addProperty("sample_resolution", sampleResolution > 0.0 ? sampleResolution : null);
-            newProject.addProperty("imagery", imagerySelector);
-            newProject.addProperty("attribution", getImageryAttribution(imagerySelector));
-            newProject.add("sample_values", updatedSampleValues);
-            newProject.addProperty("archived", false);
-            newProject.addProperty("institution", institutionId);
-            newProject.addProperty("privacy", "public"); // FIXME: look up the privacy value dynamically
+            // Add some missing fields that don't come from the web UI
+            newProject.addProperty("availability", "unpublished");
+            newProject.addProperty("attribution", getImageryAttribution(newProject.get("baseMapSource").getAsString()));
 
+            // Write the new entry to project-list.json
             projects.add(newProject);
             writeJsonFile("project-list.json", projects);
-            // END: Add a new entry to project-list.json
 
-            // BEGIN: Create a new plot-data-<newProjectId>.json file
+            // Store the parameters needed for plot generation in local variables with nulls set to 0
+            String plotDistribution = newProject.get("plotDistribution").getAsString();
+            int numPlots = newProject.get("numPlots").isJsonNull() ? 0 : newProject.get("numPlots").getAsInt();
+            double plotSpacing = newProject.get("plotSpacing").isJsonNull() ? 0.0 : newProject.get("plotSpacing").getAsDouble();
+            String plotShape = newProject.get("plotShape").getAsString();
+            double plotSize = newProject.get("plotSize").getAsDouble();
+            String sampleDistribution = newProject.get("sampleDistribution").getAsString();
+            int samplesPerPlot = newProject.get("samplesPerPlot").isJsonNull() ? 0 : newProject.get("samplesPerPlot").getAsInt();
+            double sampleResolution = newProject.get("sampleResolution").isJsonNull() ? 0.0 : newProject.get("sampleResolution").getAsDouble();
+
+            // Generate the plot objects and their associated sample points
+            // FIXME: No support for gridded plotDistributions or square plotShapes
+            // FIXME: Update numPlots and/or samplesPerPlot in newProject when they are auto-generated
+            // FIXME: Simplify the data stored in each plot
             Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
-
             IntSupplier plotIndexer = makeCounter();
             JsonArray newPlots = Arrays.stream(newPlotCenters)
                 .map(plotCenter -> {
                         JsonObject newPlotAttributes = new JsonObject();
                         newPlotAttributes.addProperty("id", plotIndexer.getAsInt());
                         newPlotAttributes.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                        newPlotAttributes.addProperty("radius", bufferRadius);
+                        newPlotAttributes.addProperty("radius", plotSize);
                         newPlotAttributes.addProperty("flagged", false);
                         newPlotAttributes.addProperty("analyses", 0);
                         newPlotAttributes.add("user", null);
 
-                        Double[][] newSamplePoints = sampleType.equals("gridded")
-                        ? createGriddedSampleSet(plotCenter, bufferRadius, sampleResolution)
-                        : createRandomSampleSet(plotCenter, bufferRadius, samplesPerPlot);
-
+                        Double[][] newSamplePoints = sampleDistribution.equals("gridded")
+                                                       ? createGriddedSampleSet(plotCenter, plotSize, sampleResolution)
+                                                       : createRandomSampleSet(plotCenter, plotSize, samplesPerPlot);
                         IntSupplier sampleIndexer = makeCounter();
                         JsonArray newSamples = Arrays.stream(newSamplePoints)
                         .map(point -> {
@@ -457,16 +463,14 @@ public class Projects {
                     })
                 .collect(intoJsonArray);
 
+            // Write the plot data to a new plot-data-<newProjectId>.json file
             writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
-            // END: Create a new plot-data-<newProjectId>.json file
 
             // Indicate that the project was created successfully
-            req.session().attribute("flash_messages", new String[]{"New project " + req.queryParams("project-name") + " created and launched!"});
-            return req;
+            return newProjectId + "";
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
-            req.session().attribute("flash_messages", new String[]{"Error with project creation!"});
-            return req;
+            throw new RuntimeException(e);
         }
     }
 
