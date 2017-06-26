@@ -205,11 +205,23 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 this.lonMax = boundaryExtent[2];
                 this.latMax = boundaryExtent[3];
                 map_utils.draw_polygon(project.boundary);
-                this.baseMapSource = project.imagery;
+                this.baseMapSource = project.baseMapSource || project.imagery; // FIXME: add to JSON file
+                this.imageryYear = project.imageryYear || "2016"; // FIXME: add to JSON file
+                this.stackingProfile = project.stackingProfile || "Accuracy_Profile"; // FIXME: add to JSON file
                 map_utils.set_current_imagery(this.baseMapSource);
-                this.plotDistribution = project.plotDistribution || ""; // FIXME: add to JSON file
+                this.plotDistribution = project.plotDistribution || "random"; // FIXME: add to JSON file
+                document.getElementById("plot-distribution-" + this.plotDistribution).checked = true;
+                if (this.plotDistribution == "random") {
+                    utils.enable_element("num-plots");
+                    utils.disable_element("plot-spacing");
+                } else {
+                    utils.enable_element("num-plots");
+                    utils.enable_element("plot-spacing");
+                }
                 this.numPlots = this.plotList.length;
                 this.plotSpacing = this.plotList[0].plot.spacing || ""; // FIXME: add to JSON file
+                this.plotShape = project.plotShape || "circle"; // FIXME: add to JSON file
+                document.getElementById("plot-shape-" + this.plotShape).checked = true;
                 this.plotSize = this.plotList[0].plot.radius; // FIXME: rename to size
                 if (project.sample_resolution) { // FIXME: no _s, use camelCase
                     this.sampleDistribution = "gridded";
