@@ -1000,12 +1000,15 @@ p.error-message {
 
 #project #project-dashboard #project-management #change-availability {
     display: block;
+    width: 15rem;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 5px;
 }
 
 #project #project-dashboard #project-management #download-plot-data {
     display: block;
+    width: 15rem;
     margin-left: auto;
     margin-right: auto;
 }

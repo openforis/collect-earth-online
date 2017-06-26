@@ -445,7 +445,7 @@ map_utils.enable_dragbox_draw = function () {
                                   maxlon: extent[2],
                                   maxlat: extent[3]};
 
-        /* If Angular code defines this function, then, write values of extent to max-min lat-lon inputs. */
+        /* If Angular code defines this function, then write values of extent to max-min lat-lon inputs. */
         if (map_utils.set_bbox_coords) {
             map_utils.set_bbox_coords();
         }

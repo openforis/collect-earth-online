@@ -1,13 +1,14 @@
 angular.module("project", []).controller("ProjectController", ["$http", function ProjectController($http) {
     this.root = "";
-    this.members = [];
-    this.contributors = [];
-    this.pointsClassified = 0;
-    this.badPlots = 0;
-    this.dateCreated = "2017-06-15";
-    this.datePublished = "2017-06-16";
-    this.dateClosed = null;
-    this.availability = "nonexistent";
+    this.members = []; // FIXME: add to JSON
+    this.contributors = []; // FIXME: add to JSON
+    this.pointsClassified = 0; // FIXME: add to JSON
+    this.badPlots = 0; // FIXME: add to JSON
+    this.dateCreated = null; // FIXME: add to JSON
+    this.datePublished = null; // FIXME: add to JSON
+    this.dateClosed = null; // FIXME: add to JSON
+    this.availability = "nonexistent"; // FIXME: add to JSON
+    this.institutionId = "0";
     this.projectId = "0";
     this.projectName = "";
     this.projectDescription = "";
@@ -16,23 +17,23 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.latMin = "";
     this.lonMax = "";
     this.latMax = "";
-    this.baseMapSource = "DigitalGlobeWMSImagery";
-    this.imageryYear = "2016";
-    this.stackingProfile = "Accuracy_Profile";
-    this.plotDistribution = "random";
+    this.baseMapSource = "DigitalGlobeWMSImagery"; // FIXME: add to JSON
+    this.imageryYear = "2016"; // FIXME: add to JSON
+    this.stackingProfile = "Accuracy_Profile"; // FIXME: add to JSON
+    this.plotDistribution = "random"; // FIXME: add to JSON
     this.numPlots = "";
-    this.plotSpacing = "";
-    this.plotShape = "circle";
-    this.plotSize = "";
-    this.sampleDistribution = "random";
+    this.plotSpacing = ""; // FIXME: add to JSON
+    this.plotShape = "circle"; // FIXME: add to JSON
+    this.plotSize = ""; // FIXME: add to JSON
+    this.sampleDistribution = "random"; // FIXME: add to JSON
     this.samplesPerPlot = "";
     this.sampleResolution = "";
     this.sampleValues = [];
     this.valueName = "";
     this.valueColor = "#000000";
     this.valueImage = "";
+    this.project = null;
     this.plotList = [];
-    this.data = null;
 
     this.stateTransitions = {
         nonexistent: "Create",
@@ -54,8 +55,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
 
     // FIXME: turn this into an AJAX request
     this.createProject = function () {
-        document.getElementById("sample-values").value = JSON.stringify(this.sampleValues);
-        document.getElementById("project-design").submit();
+        // document.getElementById("sample-values").value = JSON.stringify(this.sampleValues);
+        $http.post(this.root + "/project/" + this.projectId);
         var newProjectId = 100; // FIXME: set from the return value of the AJAX call
         window.location = this.root + "/project/" + newProjectId;
     };
@@ -162,8 +163,9 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             .then(angular.bind(this, function successCallback(response) {
                 if (response.data == "") {
                     alert("No project found with ID " + projectId + ".");
+                    window.location = this.root + "/home";
                 } else {
-                    this.data = response.data;
+                    this.project = response.data;
                     this.showProjectDetails();
                 }
             }), function errorCallback(response) {
@@ -184,14 +186,15 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.showProjectDetails = function () {
-        if (this.data == null) {
+        if (this.project == null) {
             // Load the current project details
             this.getProjectById(this.projectId);
         } else {
-            var project = this.data;
+            var project = this.project;
             if (this.plotList.length == 0) {
                 this.getPlotData(project.id);
             } else {
+                // FIXME: Simplify this code by matching binding variable names to JSON object fields
                 this.projectName = project.name;
                 this.projectDescription = project.description;
                 this.privacyLevel = project.privacy;
@@ -226,21 +229,19 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
-    this.initialize = function (documentRoot) {
-        // Make the current documentRoot globally available
+    this.initialize = function (documentRoot, projectId, institutionId) {
+        // Make the documentRoot, projectId, and institutionId globally available
         this.root = documentRoot;
+        this.projectId = projectId;
+        this.institutionId = institutionId;
 
-        // Initialize the base map and enable the dragbox interaction
-        // map_utils.digital_globe_base_map({div_name: "project-map",
-        //                                   center_coords: [102.0, 17.0],
-        //                                   zoom_level: 5});
-
-
-        // Look up the current project id
-        this.projectId = document.getElementById("project-id").value;
+        // Initialize the base map
+        map_utils.digital_globe_base_map({div_name: "project-map",
+                                          center_coords: [0.0, 0.0],
+                                          zoom_level: 1});
 
         if (this.projectId == "0") {
-            // Show the default imagery and enable drawing a bounding box on the map
+            // Show the default imagery and enable the dragbox interaction
             map_utils.set_current_imagery(this.baseMapSource);
             map_utils.enable_dragbox_draw();
 
