@@ -161,7 +161,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         this.root = documentRoot;
         this.institution = institutionId;
 
-        if (this.details = {}) {
+        if (angular.equals(this.details, {})) {
             // Load the current project details
             this.getProjectById(projectId);
         } else {
