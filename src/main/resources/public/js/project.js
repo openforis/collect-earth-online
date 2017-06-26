@@ -84,17 +84,18 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         map_utils.set_current_imagery(this.details.baseMapSource);
     };
 
-    // FIXME: stub
+    // FIXME: Add a new TileWMS source to the map using this.details.imageryYear
     this.setImageryYear = function () {
         alert("This function has not yet been implemented.");
     };
 
-    // FIXME: stub
+    // FIXME: Add a new TileWMS source to the map using this.details.stackingProfile
     this.setStackingProfile = function () {
         alert("This function has not yet been implemented.");
     };
 
     this.setPlotDistribution = function (plotDistribution) {
+        this.details.plotDistribution = plotDistribution;
         if (plotDistribution == "random") {
             utils.enable_element("num-plots");
             utils.disable_element("plot-spacing");
@@ -109,6 +110,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.setSampleDistribution = function (sampleDistribution) {
+        this.details.sampleDistribution = sampleDistribution;
         if (sampleDistribution == "random") {
             utils.enable_element("samples-per-plot");
             utils.disable_element("sample-resolution");
