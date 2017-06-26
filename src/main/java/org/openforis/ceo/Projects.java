@@ -97,7 +97,7 @@ public class Projects {
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
-            JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
+            JsonArray sampleValues = project.get("sampleValues").getAsJsonArray();
 
             Map<Integer, String> sampleValueNames = toStream(sampleValues)
                 .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),

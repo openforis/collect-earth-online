@@ -25,17 +25,6 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         archived: "Archive"
     };
 
-    // FIXME: update this backend function for the new project-list.json contents
-    this.downloadPlotData = function () {
-        $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
-            .then(function successCallback(response) {
-                window.open(response.data);
-            }, function errorCallback(response) {
-                console.log(response);
-                alert("Error downloading data for this project. See console for details.");
-            });
-    };
-
     // FIXME: turn this into an AJAX request
     this.createProject = function () {
         // document.getElementById("sample-values").value = JSON.stringify(this.details.sampleValues);
@@ -74,6 +63,17 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             this.details.availability = "archived";
             this.archiveProject();
         }
+    };
+
+    // FIXME: update this backend function for the new project-list.json contents
+    this.downloadPlotData = function () {
+        $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
+            .then(function successCallback(response) {
+                window.open(response.data);
+            }, function errorCallback(response) {
+                console.log(response);
+                alert("Error downloading data for this project. See console for details.");
+            });
     };
 
     this.setPrivacyLevel = function (privacyLevel) {
