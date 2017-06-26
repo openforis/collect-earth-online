@@ -48,7 +48,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
                                               center_coords: [102.0, 17.0],
                                               zoom_level: 5});
-            map_utils.set_current_imagery(this.currentProject.imagery);
+            map_utils.set_current_imagery(this.currentProject.baseMapSource);
             map_utils.draw_polygon(this.currentProject.boundary);
         }
     };
@@ -66,7 +66,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             utils.enable_element("new-plot-button");
             utils.disable_element("flag-plot-button");
             utils.disable_element("save-values-button");
-            map_utils.set_current_imagery(newProject.imagery);
+            map_utils.set_current_imagery(newProject.baseMapSource);
             map_utils.draw_polygon(newProject.boundary);
         }
     };
