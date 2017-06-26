@@ -207,7 +207,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             if (this.details.plotDistribution == "gridded") {
                 utils.enable_element("plot-spacing");
             }
-            if (this.details.sampleResolution == "gridded") {
+            if (this.details.sampleDistribution == "gridded") {
                 utils.enable_element("sample-resolution");
             }
         }
