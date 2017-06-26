@@ -1,5 +1,5 @@
 [{id: 0,
-  institution: 0,
+  institution: -1,
   availability: "nonexistent",
   name: "",
   description: "",
