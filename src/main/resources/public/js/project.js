@@ -1,174 +1,71 @@
 angular.module("project", []).controller("ProjectController", ["$http", function ProjectController($http) {
     this.root = "";
-    this.projectList = [];
-    this.currentProjectId = "0";
-    this.currentProject = null;
+    this.members = [];
+    this.contributors = [];
+    this.pointsClassified = 0;
+    this.badPlots = 0;
+    this.dateCreated = "2017-06-15";
+    this.datePublished = "2017-06-16";
+    this.dateClosed = null;
+    this.availability = "nonexistent";
+    this.projectId = "0";
     this.projectName = "";
     this.projectDescription = "";
-    this.plotList = [];
-    this.numPlots = "";
-    this.plotRadius = "";
-    this.sampleType = "random";
-    this.samplesPerPlot = "";
-    this.sampleResolution = "";
+    this.privacyLevel = "private";
     this.lonMin = "";
     this.latMin = "";
     this.lonMax = "";
     this.latMax = "";
-    this.currentImagery = "DigitalGlobeWMSImagery";
+    this.baseMapSource = "DigitalGlobeWMSImagery";
+    this.imageryYear = "2016";
+    this.stackingProfile = "Accuracy_Profile";
+    this.plotDistribution = "random";
+    this.numPlots = "";
+    this.plotSpacing = "";
+    this.plotShape = "circle";
+    this.plotSize = "";
+    this.sampleDistribution = "random";
+    this.samplesPerPlot = "";
+    this.sampleResolution = "";
     this.sampleValues = [];
     this.valueName = "";
     this.valueColor = "#000000";
     this.valueImage = "";
-    this.privacyLevel = "private";
+    this.plotList = [];
+    this.data = null;
 
-    this.getProjectList = function (institutionId) {
-        $http.get(this.root + "/get-all-projects/" + institutionId)
-            .then(angular.bind(this, function successCallback(response) {
-                this.projectList = response.data;
-                this.initialize(this.root);
-            }), function errorCallback(response) {
+    this.stateTransitions = {
+        nonexistent: "Create",
+        unpublished: "Publish",
+        published: "Close",
+        closed: "Archive",
+        archived: "Archive"
+    };
+
+    this.downloadPlotData = function () {
+        $http.get(this.root + "/dump-project-aggregate-data/" + this.projectId)
+            .then(function successCallback(response) {
+                window.open(response.data);
+            }, function errorCallback(response) {
                 console.log(response);
-                alert("Error retrieving the project list. See console for details.");
+                alert("Error downloading data for this project. See console for details.");
             });
     };
 
-    this.initialize = function (documentRoot) {
-        // Make the current documentRoot globally available
-        this.root = documentRoot;
-
-        if (this.projectList.length == 0) {
-            // Load the projectList
-            this.getProjectList("ALL");
-        } else {
-            // Load the currentProject
-            this.currentProjectId = document.getElementById("initial-project-id").value;
-
-            // Initialize the base map and enable the dragbox interaction
-            map_utils.digital_globe_base_map({div_name: "new-project-map",
-                                              center_coords: [102.0, 17.0],
-                                              zoom_level: 5});
-
-            // Link the bounding box input fields to the map object
-            map_utils.set_bbox_coords = function () {
-                var latmax = document.getElementById("lat-max");
-                var lonmax = document.getElementById("lon-max");
-                var latmin = document.getElementById("lat-min");
-                var lonmin = document.getElementById("lon-min");
-                latmax.value = map_utils.current_bbox.maxlat;
-                lonmax.value = map_utils.current_bbox.maxlon;
-                latmin.value = map_utils.current_bbox.minlat;
-                lonmin.value = map_utils.current_bbox.minlon;
-            };
-
-            // Set all the form fields to the values for the currentProject
-            this.setCurrentProject();
-        }
+    // FIXME: turn this into an AJAX request
+    this.createProject = function () {
+        document.getElementById("sample-values").value = JSON.stringify(this.sampleValues);
+        document.getElementById("project-design").submit();
+        var newProjectId = 100; // FIXME: set from the return value of the AJAX call
+        window.location = this.root + "/project/" + newProjectId;
     };
 
-    this.getProjectById = function (projectId) {
-        return this.projectList.find(
-            function (project) {
-                return project.id == projectId;
-            }
-        );
-    };
-
-    this.getPlotData = function (projectId) {
-        $http.get(this.root + "/get-project-plots/" + projectId)
-            .then(angular.bind(this, function successCallback(response) {
-                this.plotList = response.data;
-                this.setCurrentProject();
-                this.plotList = [];
-            }), function errorCallback(response) {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            });
-    };
-
-    this.setCurrentProject = function () {
-        var project = this.getProjectById(parseInt(this.currentProjectId));
-        this.currentProject = project;
-
-        if (project) {
-            if (this.plotList.length == 0) {
-                this.getPlotData(project.id);
-            } else {
-                this.projectName = project.name;
-                this.projectDescription = project.description;
-                this.numPlots = this.plotList.length;
-                this.plotRadius = this.plotList[0].plot.radius;
-                if (project.sample_resolution) {
-                    this.sampleType = "gridded";
-                    document.getElementById("gridded-sample-type").checked = true;
-                    utils.enable_element("samples-per-plot");
-                    utils.enable_element("sample-resolution");
-                } else {
-                    this.sampleType = "random";
-                    document.getElementById("random-sample-type").checked = true;
-                    utils.enable_element("samples-per-plot");
-                    utils.disable_element("sample-resolution");
-                }
-                this.samplesPerPlot = this.plotList[0].samples.length;
-                this.sampleResolution = project.sample_resolution || "";
-                var boundaryExtent = map_utils.polygon_extent(project.boundary);
-                this.lonMin = boundaryExtent[0];
-                this.latMin = boundaryExtent[1];
-                this.lonMax = boundaryExtent[2];
-                this.latMax = boundaryExtent[3];
-                this.currentImagery = project.imagery;
-                map_utils.set_current_imagery(this.currentImagery);
-                map_utils.disable_dragbox_draw();
-                map_utils.draw_polygon(project.boundary);
-                this.sampleValues = project.sample_values;
-                this.privacyLevel = project.privacy;
-                document.getElementById("privacy-" + project.privacy).checked = true;
-            }
-        } else {
-            this.projectName = "";
-            this.projectDescription = "";
-            this.numPlots = "";
-            this.plotRadius = "";
-            this.sampleType = "random";
-            document.getElementById("random-sample-type").checked = true;
-            utils.enable_element("samples-per-plot");
-            utils.disable_element("sample-resolution");
-            this.samplesPerPlot = "";
-            this.sampleResolution = "";
-            this.lonMin = "";
-            this.latMin = "";
-            this.lonMax = "";
-            this.latMax = "";
-            this.currentImagery = "DigitalGlobeWMSImagery";
-            map_utils.set_current_imagery(this.currentImagery);
-            map_utils.enable_dragbox_draw();
-            map_utils.map_ref.removeLayer(map_utils.current_boundary);
-            map_utils.current_boundary = null;
-            map_utils.zoom_and_recenter_map(102.0, 17.0, 5);
-            this.sampleValues = [];
-        }
-    };
-
-    this.exportCurrentPlotData = function () {
-        var projectId = parseInt(this.currentProjectId);
-        if (projectId != 0) {
-            $http.get(this.root + "/dump-project-aggregate-data/" + projectId)
-                .then(function successCallback(response) {
-                    window.open(response.data);
-                }, function errorCallback(response) {
-                    console.log(response);
-                    alert("Error downloading data for this project. See console for details.");
-                });
-        }
-    };
-
-    this.deleteCurrentProject = function () {
-        var projectId = parseInt(this.currentProjectId);
-        if (projectId != 0) {
-            $http.post(this.root + "/archive-project/" + projectId)
+    this.archiveProject = function () {
+        if (confirm("Do you REALLY want to archive this project?!")) {
+            $http.post(this.root + "/archive-project/" + this.projectId)
                 .then(angular.bind(this, function successCallback(response) {
-                    alert("Project " + projectId + " has been deleted.");
-                    window.location = this.root + "/project/0";
+                    alert("Project " + this.projectId + " has been archived.");
+                    window.location = this.root + "/home";
                 }), function errorCallback(response) {
                     console.log(response);
                     alert("Error archiving project. See console for details.");
@@ -176,26 +73,22 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
-    this.submitForm = function ($event) {
-        if (this.currentProjectId == "0") {
-            $event.currentTarget.value = "Processing...please wait...";
-            document.getElementById("spinner").style.visibility = "visible";
-            document.getElementById("sample-values").value = JSON.stringify(this.sampleValues);
-            document.getElementById("project-management-form").submit();
-        } else {
-            if (confirm("Do you REALLY want to delete this project?!")) {
-                this.deleteCurrentProject();
-            }
-        }
-    };
-
-    this.setSampleType = function (sampleType) {
-        if (sampleType == "random") {
-            utils.enable_element("samples-per-plot");
-            utils.disable_element("sample-resolution");
-        } else {
-            utils.disable_element("samples-per-plot");
-            utils.enable_element("sample-resolution");
+    // FIXME: callback functions on each branch should set this.availability
+    //        and hide the spinner
+    this.changeAvailability = function () {
+        document.getElementById("spinner").style.visibility = "visible";
+        if (this.availability == "nonexistent") {
+            this.availability = "unpublished";
+            this.createProject();
+        } else if (this.availability == "unpublished") {
+            this.availability = "published";
+            // FIXME: Publish the project
+        } else if (this.availability == "published") {
+            this.availability = "closed";
+            // FIXME: Close the project
+        } else if (this.availability == "closed") {
+            this.availability = "archived";
+            this.archiveProject();
         }
     };
 
@@ -203,8 +96,42 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         this.privacyLevel = privacyLevel;
     };
 
-    this.setCurrentImagery = function () {
-        map_utils.set_current_imagery(this.currentImagery);
+    this.setBaseMapSource = function () {
+        map_utils.set_current_imagery(this.baseMapSource);
+    };
+
+    // FIXME: stub
+    this.setImageryYear = function () {
+        alert("This function has not yet been implemented.");
+    };
+
+    // FIXME: stub
+    this.setStackingProfile = function () {
+        alert("This function has not yet been implemented.");
+    };
+
+    this.setPlotDistribution = function (plotDistribution) {
+        if (plotDistribution == "random") {
+            utils.enable_element("num-plots");
+            utils.disable_element("plot-spacing");
+        } else {
+            utils.disable_element("num-plots");
+            utils.enable_element("plot-spacing");
+        }
+    };
+
+    this.setPlotShape = function (plotShape) {
+        this.plotShape = plotShape;
+    };
+
+    this.setSampleDistribution = function (sampleDistribution) {
+        if (sampleDistribution == "random") {
+            utils.enable_element("samples-per-plot");
+            utils.disable_element("sample-resolution");
+        } else {
+            utils.disable_element("samples-per-plot");
+            utils.enable_element("sample-resolution");
+        }
     };
 
     this.removeSampleValueRow = function (sampleValueName) {
@@ -227,6 +154,110 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             this.valueImage = "";
         } else {
             alert("A sample value must possess both a name and a color.");
+        }
+    };
+
+    this.getProjectById = function (projectId) {
+        $http.get(this.root + "/get-project-by-id/" + projectId)
+            .then(angular.bind(this, function successCallback(response) {
+                if (response.data == "") {
+                    alert("No project found with ID " + projectId + ".");
+                } else {
+                    this.data = response.data;
+                    this.showProjectDetails();
+                }
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
+            });
+    };
+
+    this.getPlotData = function (projectId) {
+        $http.get(this.root + "/get-project-plots/" + projectId)
+            .then(angular.bind(this, function successCallback(response) {
+                this.plotList = response.data;
+                this.showProjectDetails();
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
+            });
+    };
+
+    this.showProjectDetails = function () {
+        if (this.data == null) {
+            // Load the current project details
+            this.getProjectById(this.projectId);
+        } else {
+            var project = this.data;
+            if (this.plotList.length == 0) {
+                this.getPlotData(project.id);
+            } else {
+                this.projectName = project.name;
+                this.projectDescription = project.description;
+                this.privacyLevel = project.privacy;
+                document.getElementById("privacy-" + project.privacy).checked = true;
+                var boundaryExtent = map_utils.polygon_extent(project.boundary);
+                this.lonMin = boundaryExtent[0];
+                this.latMin = boundaryExtent[1];
+                this.lonMax = boundaryExtent[2];
+                this.latMax = boundaryExtent[3];
+                map_utils.draw_polygon(project.boundary);
+                this.baseMapSource = project.imagery;
+                map_utils.set_current_imagery(this.baseMapSource);
+                this.plotDistribution = project.plotDistribution || ""; // FIXME: add to JSON file
+                this.numPlots = this.plotList.length;
+                this.plotSpacing = this.plotList[0].plot.spacing || ""; // FIXME: add to JSON file
+                this.plotSize = this.plotList[0].plot.radius; // FIXME: rename to size
+                if (project.sample_resolution) { // FIXME: no _s, use camelCase
+                    this.sampleDistribution = "gridded";
+                    document.getElementById("sample-distribution-gridded").checked = true;
+                    utils.enable_element("samples-per-plot");
+                    utils.enable_element("sample-resolution");
+                } else {
+                    this.sampleDistribution = "random";
+                    document.getElementById("sample-distribution-random").checked = true;
+                    utils.enable_element("samples-per-plot");
+                    utils.disable_element("sample-resolution");
+                }
+                this.samplesPerPlot = this.plotList[0].samples.length;
+                this.sampleResolution = project.sample_resolution || "";
+                this.sampleValues = project.sample_values; // FIXME: no _s, use camelCase
+            }
+        }
+    };
+
+    this.initialize = function (documentRoot) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
+        // Initialize the base map and enable the dragbox interaction
+        // map_utils.digital_globe_base_map({div_name: "project-map",
+        //                                   center_coords: [102.0, 17.0],
+        //                                   zoom_level: 5});
+
+
+        // Look up the current project id
+        this.projectId = document.getElementById("project-id").value;
+
+        if (this.projectId == "0") {
+            // Show the default imagery and enable drawing a bounding box on the map
+            map_utils.set_current_imagery(this.baseMapSource);
+            map_utils.enable_dragbox_draw();
+
+            // Link the bounding box input fields to the map object
+            map_utils.set_bbox_coords = function () {
+                var latmax = document.getElementById("lat-max");
+                var lonmax = document.getElementById("lon-max");
+                var latmin = document.getElementById("lat-min");
+                var lonmin = document.getElementById("lon-min");
+                latmax.value = map_utils.current_bbox.maxlat;
+                lonmax.value = map_utils.current_bbox.maxlon;
+                latmin.value = map_utils.current_bbox.minlat;
+                lonmin.value = map_utils.current_bbox.minlon;
+            };
+        } else {
+            // Set all the form fields to the values for the current project
+            this.showProjectDetails();
         }
     };
 
