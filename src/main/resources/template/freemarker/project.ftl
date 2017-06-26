@@ -25,12 +25,12 @@
         <div id="project-management">
             <h2>Project Management</h2>
             <input type="button" id="change-availability" class="button"
-                   name="change-availability" value="{{ project.stateTransitions[project.availability] }} Project"
+                   name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
                    ng-click="project.changeAvailability()">
             <input type="button" id="download-plot-data" class="button"
                    name="download-plot-data" value="Download Plot Data"
                    ng-click="project.downloadPlotData()"
-                   style="visibility: {{ project.availability == 'published' || project.availability == 'closed' ? 'visible' : 'hidden' }}">
+                   style="visibility: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'visible' : 'hidden' }}">
         </div>
     </div>
     <div id="project-design">
@@ -38,9 +38,9 @@
         <fieldset id="project-info">
             <legend>Project Info</legend>
             <label>Name</label>
-            <input type="text" id="project-name" name="project-name" autocomplete="off" ng-model="project.projectName">
+            <input type="text" id="project-name" name="project-name" autocomplete="off" ng-model="project.details.name">
             <label>Description</label>
-            <textarea id="project-description" name="project-description" ng-model="project.projectDescription"></textarea>
+            <textarea id="project-description" name="project-description" ng-model="project.details.description"></textarea>
         </fieldset>
         <fieldset id="project-visibility">
             <legend>Project Visibility</legend>
@@ -93,7 +93,7 @@
         <fieldset id="project-imagery">
             <legend>Project Imagery</legend>
             <label>Basemap Source</label>
-            <select id="basemap-source" name="basemap-source" size="1" ng-model="project.baseMapSource" ng-change="project.setBaseMapSource()">
+            <select id="basemap-source" name="basemap-source" size="1" ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
                 <option value="DigitalGlobeWMSImagery">DigitalGlobe: WMS Imagery</option>
                 <option value="DigitalGlobeRecentImagery">DigitalGlobe: Recent Imagery</option>
                 <option value="DigitalGlobeRecentImagery+Streets">DigitalGlobe: Recent Imagery+Streets</option>
@@ -102,8 +102,8 @@
                 <option value="NASASERVIRChipset2002">NASA SERVIR Chipset 2002</option>
             </select>
             <label>Imagery Year</label>
-            <select id="imagery-year" name="imagery-year" size="1" ng-model="project.imageryYear" ng-change="project.setImageryYear()"
-                    style="visibility: {{ project.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
+            <select id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" ng-change="project.setImageryYear()"
+                    style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                 <option value="2016">2016</option>
                 <option value="2015">2015</option>
                 <option value="2014">2014</option>
@@ -116,8 +116,8 @@
                 <option value="2007">2007</option>
             </select>
             <label>Stacking Profile</label>
-            <select id="stacking-profile" name="stacking-profile" size="1" ng-model="project.stackingProfile" ng-change="project.setStackingProfile()"
-                    style="visibility: {{ project.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
+            <select id="stacking-profile" name="stacking-profile" size="1" ng-model="project.details.stackingProfile" ng-change="project.setStackingProfile()"
+                    style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                 <option value="Accuracy_Profile">Accuracy Profile</option>
                 <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
                 <option value="Global_Currency_Profile">Global Currency Profile</option>
@@ -152,9 +152,9 @@
                     </tbody>
                 </table>
                 <label>Number of plots</label>
-                <input type="number" id="num-plots" name="num-plots" autocomplete="off" min="0" step="1" ng-model="project.numPlots">
+                <input type="number" id="num-plots" name="num-plots" autocomplete="off" min="0" step="1" ng-model="project.details.numPlots">
                 <label>Plot spacing (m)</label>
-                <input type="number" id="plot-spacing" name="plot-spacing" autocomplete="off" min="0.0" step="any" ng-model="project.plotSpacing" disabled>
+                <input type="number" id="plot-spacing" name="plot-spacing" autocomplete="off" min="0.0" step="any" ng-model="project.details.plotSpacing" disabled>
             </div>
             <div id="plot-design-col2">
                 <label>Plot Shape</label>
@@ -180,8 +180,8 @@
                         </tr>
                     </tbody>
                 </table>
-                <label>Plot {{ project.plotShape == 'circle' ? 'Radius' : 'Width' }} (m)</label>
-                <input type="number" id="plot-size" name="plot-size" autocomplete="off" min="0.0" step="any" ng-model="project.plotSize">
+                <label>Plot {{ project.details.plotShape == 'circle' ? 'Radius' : 'Width' }} (m)</label>
+                <input type="number" id="plot-size" name="plot-size" autocomplete="off" min="0.0" step="any" ng-model="project.details.plotSize">
             </div>
         </fieldset>
         <fieldset id="sample-design">
@@ -210,9 +210,9 @@
                 </tbody>
             </table>
             <label>Samples per plot</label>
-            <input type="number" id="samples-per-plot" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="project.samplesPerPlot">
+            <input type="number" id="samples-per-plot" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="project.details.samplesPerPlot">
             <label>Sample resolution (m)</label>
-            <input type="number" id="sample-resolution" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="project.sampleResolution" disabled>
+            <input type="number" id="sample-resolution" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="project.details.sampleResolution" disabled>
         </fieldset>
         <fieldset id="sample-value-info">
             <legend>Sample Values</legend>
@@ -226,10 +226,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="sampleValue in project.sampleValues">
+                    <tr ng-repeat="sampleValue in project.details.sampleValues">
                         <td>
                             <input type="button" class="button" value="-" ng-click="project.removeSampleValueRow(sampleValue.name)"
-                                   style="visibility: {{ project.projectId == 0 ? 'visible' : 'hidden' }}">
+                                   style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                         </td>
                         <td>
                             {{ sampleValue.name }}
@@ -244,19 +244,19 @@
                     <tr>
                         <td>
                             <input type="button" class="button" name="add-sample-value" value="+" ng-click="project.addSampleValueRow()"
-                                   style="visibility: {{ project.projectId == 0 ? 'visible' : 'hidden' }}">
+                                   style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                         </td>
                         <td>
                             <input type="text" id="value-name" name="value-name" autocomplete="off" ng-model="project.valueName"
-                                   style="visibility: {{ project.projectId == 0 ? 'visible' : 'hidden' }}">
+                                   style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                         </td>
                         <td>
                             <input type="color" id="value-color" name="value-color" ng-model="project.valueColor"
-                                   style="visibility: {{ project.projectId == 0 ? 'visible' : 'hidden' }}">
+                                   style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                         </td>
                         <td>
                             <input type="file" id="value-image" name="value-image" accept="image/*" ng-model="project.valueImage"
-                                   style="visibility: {{ project.projectId == 0 ? 'visible' : 'hidden' }}">
+                                   style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                         </td>
                     </tr>
                 </tbody>
