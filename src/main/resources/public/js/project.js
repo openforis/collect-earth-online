@@ -9,13 +9,80 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.valueName = "";
     this.valueColor = "#000000";
     this.valueImage = "";
-    this.members = []; // FIXME: add to JSON
-    this.contributors = []; // FIXME: add to JSON
-    this.pointsClassified = 0; // FIXME: add to JSON
-    this.badPlots = 0; // FIXME: add to JSON
-    this.dateCreated = null; // FIXME: add to JSON
-    this.datePublished = null; // FIXME: add to JSON
-    this.dateClosed = null; // FIXME: add to JSON
+
+    // FIXME: Add these attributes to the JSON database
+    this.members = [];
+    this.contributors = [];
+    this.pointsClassified = 0;
+    this.badPlots = 0;
+    this.dateCreated = null;
+    this.datePublished = null;
+    this.dateClosed = null;
+
+    // FIXME: Implement back end AJAX endpoint
+    this.createProject = function () {
+        if (confirm("Do you REALLY want to create this project?")) {
+            utils.show_element("spinner");
+            $http.post(this.root + "/create-project", this.details)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "unpublished";
+                    utils.hide_element("spinner");
+                    var newProjectId = response.data;
+                    window.location = this.root + "/project/" + newProjectId;
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error creating project. See console for details.");
+                });
+        }
+    };
+
+    this.publishProject = function () {
+        if (confirm("Do you REALLY want to publish this project?")) {
+            utils.show_element("spinner");
+            $http.post(this.root + "/publish-project/" + this.details.id)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "published";
+                    utils.hide_element("spinner");
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error publishing project. See console for details.");
+                });
+        }
+    };
+
+    this.closeProject = function () {
+        if (confirm("Do you REALLY want to close this project?")) {
+            utils.show_element("spinner");
+            $http.post(this.root + "/close-project/" + this.details.id)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "closed";
+                    utils.hide_element("spinner");
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error closing project. See console for details.");
+                });
+        }
+    };
+
+    this.archiveProject = function () {
+        if (confirm("Do you REALLY want to archive this project?!")) {
+            utils.show_element("spinner");
+            $http.post(this.root + "/archive-project/" + this.details.id)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "archived";
+                    utils.hide_element("spinner");
+                    alert("Project " + this.details.id + " has been archived.");
+                    window.location = this.root + "/home";
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error archiving project. See console for details.");
+                });
+        }
+    };
 
     this.stateTransitions = {
         nonexistent: "Create",
@@ -25,47 +92,19 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         archived: "Archive"
     };
 
-    // FIXME: turn this into an AJAX request
-    this.createProject = function () {
-        // document.getElementById("sample-values").value = JSON.stringify(this.details.sampleValues);
-        $http.post(this.root + "/project/" + this.details.id);
-        var newProjectId = 100; // FIXME: set from the return value of the AJAX call
-        window.location = this.root + "/project/" + newProjectId;
-    };
-
-    this.archiveProject = function () {
-        if (confirm("Do you REALLY want to archive this project?!")) {
-            $http.post(this.root + "/archive-project/" + this.details.id)
-                .then(angular.bind(this, function successCallback(response) {
-                    alert("Project " + this.details.id + " has been archived.");
-                    window.location = this.root + "/home";
-                }), function errorCallback(response) {
-                    console.log(response);
-                    alert("Error archiving project. See console for details.");
-                });
-        }
-    };
-
-    // FIXME: callback functions on each branch should set this.details.availability
-    //        and hide the spinner
     this.changeAvailability = function () {
-        document.getElementById("spinner").style.visibility = "visible";
         if (this.details.availability == "nonexistent") {
-            this.details.availability = "unpublished";
             this.createProject();
         } else if (this.details.availability == "unpublished") {
-            this.details.availability = "published";
-            // FIXME: Publish the project
+            this.publishProject();
         } else if (this.details.availability == "published") {
-            this.details.availability = "closed";
-            // FIXME: Close the project
+            this.closeProject();
         } else if (this.details.availability == "closed") {
-            this.details.availability = "archived";
             this.archiveProject();
         }
     };
 
-    // FIXME: update this backend function for the new project-list.json contents
+    // FIXME: Update this backend function for the new project-list.json contents
     this.downloadPlotData = function () {
         $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
             .then(function successCallback(response) {

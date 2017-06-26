@@ -68,6 +68,9 @@ public class Server implements SparkApplication {
         get("/get-project-by-id/:id",            (req, res) -> { return Projects.getProjectById(req, res); });
         get("/get-project-plots/:id",            (req, res) -> { return Projects.getProjectPlots(req, res); });
         get("/dump-project-aggregate-data/:id",  (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
+        post("/create-project",                  (req, res) -> { return Projects.createProject(req, res); });
+        post("/publish-project/:id",             (req, res) -> { return Projects.publishProject(req, res); });
+        post("/close-project/:id",               (req, res) -> { return Projects.closeProject(req, res); });
         post("/archive-project/:id",             (req, res) -> { return Projects.archiveProject(req, res); });
         post("/add-user-samples",                (req, res) -> { return Projects.addUserSamples(req, res); });
         post("/flag-plot",                       (req, res) -> { return Projects.flagPlot(req, res); });

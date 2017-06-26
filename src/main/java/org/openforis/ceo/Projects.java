@@ -151,19 +151,46 @@ public class Projects {
         }
     }
 
-    public static synchronized String archiveProject(Request req, Response res) {
+    public static synchronized String publishProject(Request req, Response res) {
         String projectId = req.params(":id");
-
         mapJsonFile("project-list.json",
                     project -> {
                         if (project.get("id").getAsString().equals(projectId)) {
+                            project.addProperty("availability", "published");
+                            return project;
+                        } else {
+                            return project;
+                        }
+                    });
+        return "";
+    }
+
+    public static synchronized String closeProject(Request req, Response res) {
+        String projectId = req.params(":id");
+        mapJsonFile("project-list.json",
+                    project -> {
+                        if (project.get("id").getAsString().equals(projectId)) {
+                            project.addProperty("availability", "closed");
+                            return project;
+                        } else {
+                            return project;
+                        }
+                    });
+        return "";
+    }
+
+    public static synchronized String archiveProject(Request req, Response res) {
+        String projectId = req.params(":id");
+        mapJsonFile("project-list.json",
+                    project -> {
+                        if (project.get("id").getAsString().equals(projectId)) {
+                            project.addProperty("availability", "archived");
                             project.addProperty("archived", true);
                             return project;
                         } else {
                             return project;
                         }
                     });
-
         return "";
     }
 
