@@ -25,6 +25,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         archived: "Archive"
     };
 
+    // FIXME: update this backend function for the new project-list.json contents
     this.downloadPlotData = function () {
         $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
             .then(function successCallback(response) {
@@ -191,6 +192,10 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 this.latMax = boundaryExtent[3];
                 map_utils.draw_polygon(this.details.boundary);
             }
+
+            // Ensure that imageryYear and stackingProfile are set to defaults if undefined
+            this.details.imageryYear = this.details.imageryYear || "2016";
+            this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
 
             // Check the radio button values for this project
             document.getElementById("privacy-" + this.details.privacy).checked = true;

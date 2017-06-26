@@ -101,7 +101,7 @@
                 <option value="BingAerialWithLabels">Bing Maps: Aerial with Labels</option>
                 <option value="NASASERVIRChipset2002">NASA SERVIR Chipset 2002</option>
             </select>
-            <label>Imagery Year</label>
+            <label style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
             <select id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" ng-change="project.setImageryYear()"
                     style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                 <option value="2016">2016</option>
@@ -115,7 +115,7 @@
                 <option value="2008">2008</option>
                 <option value="2007">2007</option>
             </select>
-            <label>Stacking Profile</label>
+            <label style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
             <select id="stacking-profile" name="stacking-profile" size="1" ng-model="project.details.stackingProfile" ng-change="project.setStackingProfile()"
                     style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                 <option value="Accuracy_Profile">Accuracy Profile</option>
