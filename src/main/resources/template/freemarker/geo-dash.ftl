@@ -3,12 +3,16 @@
 <#include "flash-messages.ftl">
 
 <#if role?? && role == "admin">
-    <script type="text/javascript" src="js/geo-dash-admin.js"></script>
-<#else>
     <script type="text/javascript" src="js/geo-dash.js"></script>
+    <div id="geodash" ng-app="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize()">
+
+<#else>
+
+    <script type="text/javascript" src="js/geo-dash-admin.js"></script>
+    <div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize()">
 </#if>
 
-<div id="geodash" ng-app="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize()">
+
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>
@@ -16,13 +20,13 @@
         <div class="row">
             <div id="dashHolder" class="col-sm-12 col-md-12 main">
                 <div>
-                    <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-primary" onclick="createNewWidget()" style="display:none; float:right;">
+                    <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-primary" ng-click="geodash.createNewWidget()" style="display:none; float:right;">
                     <h1 class="page-header">GEO-DASH</h1>
                 </div>
             </div>
         </div>
     </div>
-    <#if role?? && role == "admin">
+
         <div id="dialog-form" title="Create new widget">
             <p class="validateTips">All form fields are required.</p>
 
@@ -79,7 +83,7 @@
                 </fieldset>
             </form>
         </div>
-    </#if>
+
 </div>
 
 <#include "end-content.ftl">
