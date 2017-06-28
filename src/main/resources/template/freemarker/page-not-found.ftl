@@ -3,7 +3,6 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
-<#include "ceo-description.ftl">
 
 <div id="page-not-found">
     <h3>Page Not Found</h3>
@@ -15,5 +14,4 @@
 </div>
 
 <#include "end-content.ftl">
-<#include "institution-banner.ftl">
 <#include "footer.ftl">

@@ -3,10 +3,8 @@
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
 
-<script type="text/javascript" src="js/dashboard.js"></script>
-
-<div id="dashboard" ng-app="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize()">
-    <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='home'">
+<div id="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize('${root}')">
+    <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='${root}/home'">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">
         <div id="sidebar-contents">
@@ -20,7 +18,7 @@
             <fieldset>
                 <legend>3. Assign Values</legend>
                 <ul>
-                    <li ng-repeat="sample in dashboard.currentProject.sample_values">
+                    <li ng-repeat="sample in dashboard.currentProject.sampleValues">
                         <input type="button" id="{{ sample.id }}" name="{{ sample.name + '_' + sample.id }}" value="{{ sample.name }}"
                                style="border-left:1.5rem solid {{ sample.color }}" ng-click="dashboard.setCurrentValue(sample)">
                     </li>

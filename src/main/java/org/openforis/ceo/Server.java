@@ -38,6 +38,7 @@ public class Server implements SparkApplication {
 
         // FIXME: Get deploy/clientkeystore signed by a certificate authority.
         // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
+        // https://spark.apache.org/docs/latest/security.html
         // secure("deploy/clientkeystore", "ceocert", null, null);
 
         // Serve static files from src/main/resources/public/
@@ -47,13 +48,12 @@ public class Server implements SparkApplication {
         get("/",                                 (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/home",                             (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/about",                            (req, res) -> { return freemarker.render(Views.about(req, res)); });
-        get("/tutorials",                        (req, res) -> { return freemarker.render(Views.tutorials(req, res)); });
-        get("/demo",                             (req, res) -> { return freemarker.render(Views.demo(req, res)); });
-        get("/account",                          (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        post("/account",                         (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
-        get("/dashboard",                        (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
-        get("/admin",                            (req, res) -> { return freemarker.render(Views.admin(req, res)); });
-        post("/admin",                           (req, res) -> { return freemarker.render(Views.admin(Projects.createNewProject(req, res), res)); });
+        get("/support",                          (req, res) -> { return freemarker.render(Views.support(req, res)); });
+        get("/account/:id",                      (req, res) -> { return freemarker.render(Views.account(req, res)); });
+        post("/account/:id",                     (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
+        get("/institution/:id",                  (req, res) -> { return freemarker.render(Views.institution(req, res)); });
+        get("/dashboard/:id",                    (req, res) -> { return freemarker.render(Views.dashboard(req, res)); });
+        get("/project/:id",                      (req, res) -> { return freemarker.render(Views.project(req, res)); });
         get("/login",                            (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",                           (req, res) -> { return freemarker.render(Views.login(Users.login(req, res), res)); });
         get("/register",                         (req, res) -> { return freemarker.render(Views.register(req, res)); });
@@ -63,12 +63,21 @@ public class Server implements SparkApplication {
         get("/password-reset",                   (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
         post("/password-reset",                  (req, res) -> { return freemarker.render(Views.passwordReset(Users.resetPassword(req, res), res)); });
         get("/logout",                           (req, res) -> { return freemarker.render(Views.home(Users.logout(req), res)); });
-        get("/get-all-projects",                 (req, res) -> { return Projects.getAllProjects(req, res); });
-        post("/get-project-plots",               (req, res) -> { return Projects.getProjectPlots(req, res); });
-        post("/dump-project-aggregate-data",     (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
-        post("/archive-project",                 (req, res) -> { return Projects.archiveProject(req, res); });
+        get("/get-all-projects/:id",             (req, res) -> { return Projects.getAllProjects(req, res); });
+        get("/get-project-by-id/:id",            (req, res) -> { return Projects.getProjectById(req, res); });
+        get("/get-project-plots/:id",            (req, res) -> { return Projects.getProjectPlots(req, res); });
+        get("/dump-project-aggregate-data/:id",  (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
+        post("/create-project",                  (req, res) -> { return Projects.createProject(req, res); });
+        post("/publish-project/:id",             (req, res) -> { return Projects.publishProject(req, res); });
+        post("/close-project/:id",               (req, res) -> { return Projects.closeProject(req, res); });
+        post("/archive-project/:id",             (req, res) -> { return Projects.archiveProject(req, res); });
         post("/add-user-samples",                (req, res) -> { return Projects.addUserSamples(req, res); });
         post("/flag-plot",                       (req, res) -> { return Projects.flagPlot(req, res); });
+        get("/get-all-users",                    (req, res) -> { return Users.getAllUsers(req, res); });
+        get("/get-all-institutions",             (req, res) -> { return Institutions.getAllInstitutions(req, res); });
+        get("/get-institution-details/:id",      (req, res) -> { return Institutions.getInstitutionDetails(req, res); });
+        post("/update-institution/:id",          (req, res) -> { return Institutions.updateInstitution(req, res); });
+        post("/archive-institution/:id",         (req, res) -> { return Institutions.archiveInstitution(req, res); });
         get("/geo-dash",                         (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
         get("/geo-dash/update/id/:id",           (req, res) -> { return GeoDash.updateDashBoardByID(req, res); });
@@ -81,8 +90,13 @@ public class Server implements SparkApplication {
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
     }
 
+    public static String documentRoot;
+
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
+        // Store the current document root for dynamic link resolution
+        documentRoot = "";
+
         // Set the webserver port
         port(8080);
 
@@ -92,6 +106,9 @@ public class Server implements SparkApplication {
 
     // Tomcat entry point
     public void init() {
+        // Store the current document root for dynamic link resolution
+        documentRoot = "/ceo";
+
         // Set up the routing table
         declareRoutes();
     }

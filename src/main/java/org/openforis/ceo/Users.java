@@ -2,13 +2,16 @@ package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.StreamSupport;
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.JsonUtils.*;
+import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.getNextId;
+import static org.openforis.ceo.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class Users {
 
@@ -21,13 +24,15 @@ public class Users {
         if (matchingUser.isPresent()) {
             // Check if password matches
             JsonObject user = matchingUser.get();
-            String savedPassword = user.get("password").getAsString();
-            String savedRole = user.get("role").getAsString();
-            if (inputPassword.equals(savedPassword)) {
+            String userId = user.get("id").getAsString();
+            String userPassword = user.get("password").getAsString();
+            String userRole = user.get("role").getAsString();
+            if (inputPassword.equals(userPassword)) {
                 // Authentication successful
+                req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
-                req.session().attribute("role", savedRole);
-                res.redirect("home");
+                req.session().attribute("role", userRole);
+                res.redirect(Server.documentRoot + "/home");
             } else {
                 // Authentication failed
                 req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
@@ -46,7 +51,7 @@ public class Users {
         return Pattern.matches(emailPattern, email);
     }
 
-    public static Request register(Request req, Response res) {
+    public static synchronized Request register(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
@@ -61,42 +66,40 @@ public class Users {
                         req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
                     } else {
                         // Add a new user to user-list.json
-                        int newUserId = StreamSupport.stream(users.spliterator(), false)
-                            .map(user -> user.getAsJsonObject())
-                            .map(user -> user.get("id").getAsInt())
-                            .max(Comparator.naturalOrder())
-                            .get() + 1;
+                        int newUserId = getNextId(users);
+                        String newUserRole = "user";
 
                         JsonObject newUser = new JsonObject();
                         newUser.addProperty("id", newUserId);
                         newUser.addProperty("email", inputEmail);
                         newUser.addProperty("password", inputPassword);
-                        newUser.addProperty("role", "user");
+                        newUser.addProperty("role", newUserRole);
                         newUser.add("reset_key", null);
                         newUser.add("ip_addr", null);
 
                         users.add(newUser);
                         writeJsonFile("user-list.json", users);
 
-                        // Update user-group-list.json
-                        mapJsonFile("user-group-list.json",
-                                    userGroup -> {
-                                        if (userGroup.get("name").getAsString().equals("All Users")) {
-                                            JsonArray members = userGroup.get("members").getAsJsonArray();
+                        // Update institution-list.json
+                        mapJsonFile("institution-list.json",
+                                    institution -> {
+                                        if (institution.get("name").getAsString().equals("All Users")) {
+                                            JsonArray members = institution.get("members").getAsJsonArray();
                                             members.add(newUserId);
-                                            userGroup.add("members", members);
-                                            return userGroup;
+                                            institution.add("members", members);
+                                            return institution;
                                         } else {
-                                            return userGroup;
+                                            return institution;
                                         }
                                     });
 
                         // Assign the username and role session attributes
+                        req.session().attribute("userid", newUserId);
                         req.session().attribute("username", inputEmail);
-                        req.session().attribute("role", "user");
+                        req.session().attribute("role", newUserRole);
 
-                        // Redirect to /home
-                        res.redirect("home");
+                        // Redirect to the Home page
+                        res.redirect(Server.documentRoot + "/home");
                     }
                 } else {
                     req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
@@ -111,6 +114,7 @@ public class Users {
     }
 
     public static Request logout(Request req) {
+        req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
         return req;
@@ -118,6 +122,7 @@ public class Users {
 
     // FIXME: stub
     public static Request updateAccount(Request req, Response res) {
+        String accountId = req.params(":id"); // FIXME: Use this
         req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
         return req;
     }
@@ -132,6 +137,12 @@ public class Users {
     public static Request resetPassword(Request req, Response res) {
         req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
         return req;
+    }
+
+    public static String getAllUsers(Request req, Response res) {
+        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+        JsonArray visibleUsers = filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com"));
+        return visibleUsers.toString();
     }
 
 }

@@ -3,8 +3,13 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">
-<#include "ceo-description.ftl">
-<#include "select-project.ftl">
+
+<div id="home">
+    <#include "ceo-description.ftl">
+    <#include "institution-list.ftl">
+    <#include "project-list.ftl">
+    <#include "user-list.ftl">
+</div>
+
 <#include "end-content.ftl">
-<#include "institution-banner.ftl">
 <#include "footer.ftl">

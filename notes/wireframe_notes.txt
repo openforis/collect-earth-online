@@ -1,0 +1,46 @@
+* Remaining Site-wide TODOs
+
+Home:
+- [ ] Enable user map w/ pushpins
+
+About:
+- [ ] Add Disclaimers to bottom
+
+Support:
+- [ ] Create tutorials and demo material
+
+Account:
+- [ ] Rename to Operator page
+- [ ] Restyle according to wireframes
+- [ ] Make a div for each user with their name and stats (# of institutions the belong to, # of projects they belong to, # of sample points completed)
+- [ ] Add location field (for homepage pushpin map)
+- [ ] Implement backend account update functionality (on form submission)
+
+Forgot Password:
+- [ ] Implement backend password retrieval system
+
+Institution:
+- [ ] Show total number of active and completed projects and total number of users
+- [ ] Show public projects and any the user has access to
+- [ ] Show list of institution users only if the user is logged in and a member of the institution
+- [ ] Add a button to request membership in this institution
+- [ ] Include buttons to Add and Delete members from your institution (only show users who are currently members or who have requested access)
+- [ ] Image Servers:
+  - [ ] Include Google Maps, Bing Maps, and DigitalGlobe Maps forms
+  - [ ] Include WMS server (e.g., Geoserver) form
+  - [ ] Each entry has an Enable button
+
+Admin:
+- [ ] Record institution # at project creation time
+- [ ] Rename to Project Management page
+- [ ] Include Public/Institution/Invite-Only radio button
+- [ ] If Invite-Only is selected, provide a list of users who are members of this project with delete buttons next to them
+- [ ] Include an Add User button (must type in username)
+- [ ] Pop out to Collect for the Entity Design stage
+- [ ] Pop out to the GeoDash page for GEE Integration (Add/Remove widgets)
+- [ ] Include a time selector for the WMS imagery
+- [ ] Enable users to include their own WMS feeds as well as DigitalGlobe Maps, Bing Maps, or Google Maps authentication info
+
+Dashboard:
+- [ ] Rename to Collection page
+- [ ] Restyle according to the wireframes

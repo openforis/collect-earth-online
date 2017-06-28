@@ -1,4 +1,5 @@
 angular.module("dashboard", []).controller("DashboardController", ["$http", function DashboardController($http) {
+    this.root = "";
     this.projectList = [];
     this.currentProjectId = "";
     this.currentProject = null;
@@ -7,11 +8,11 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.currentSamples = [];
     this.userSamples = {};
 
-    this.getProjectList = function () {
-        $http.get("get-all-projects")
+    this.getProjectList = function (institutionId) {
+        $http.get(this.root + "/get-all-projects/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
-                this.initialize();
+                this.initialize(this.root);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
@@ -26,10 +27,13 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         );
     };
 
-    this.initialize = function () {
+    this.initialize = function (documentRoot) {
+        // Make the current documentRoot globally available
+        this.root = documentRoot;
+
         if (this.projectList.length == 0) {
             // Load the projectList
-            this.getProjectList();
+            this.getProjectList("ALL");
         } else {
             // Load the currentProject
             var initialProjectId = document.getElementById("initial-project-id").value;
@@ -44,7 +48,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
                                               center_coords: [102.0, 17.0],
                                               zoom_level: 5});
-            map_utils.set_current_imagery(this.currentProject.imagery);
+            map_utils.set_current_imagery(this.currentProject.baseMapSource);
             map_utils.draw_polygon(this.currentProject.boundary);
         }
     };
@@ -62,13 +66,13 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             utils.enable_element("new-plot-button");
             utils.disable_element("flag-plot-button");
             utils.disable_element("save-values-button");
-            map_utils.set_current_imagery(newProject.imagery);
+            map_utils.set_current_imagery(newProject.baseMapSource);
             map_utils.draw_polygon(newProject.boundary);
         }
     };
 
     this.getPlotData = function (projectId) {
-        $http.post("get-project-plots", projectId)
+        $http.get(this.root + "/get-project-plots/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
                 this.loadRandomPlot();
@@ -94,12 +98,13 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             utils.disable_element("save-values-button");
             map_utils.draw_buffer(newPlot.center, newPlot.radius);
             map_utils.draw_points(newSamples);
-            window.open("geo-dash?" + encodeURIComponent("title=" + this.currentProject.name
-                        + "&pid=" + this.currentProjectId
-                        + "&aoi=[" + map_utils.get_view_extent()
-                        + "]&daterange=&bcenter=" + newPlot.center
-                        + "&bradius=" + newPlot.radius,
-                        "_geo-dash"));
+            window.open(this.root + "/geo-dash?"
+                        + encodeURIComponent("title=" + this.currentProject.name
+                                             + "&pid=" + this.currentProjectId
+                                             + "&aoi=[" + map_utils.get_view_extent()
+                                             + "]&daterange=&bcenter=" + newPlot.center
+                                             + "&bradius=" + newPlot.radius),
+                        "_geo-dash");
         }
     };
 
@@ -124,7 +129,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     };
 
     this.saveValues = function () {
-        $http.post("add-user-samples",
+        $http.post(this.root + "/add-user-samples",
                    {projectId: this.currentProjectId,
                     plotId: this.currentPlot.id,
                     userId: document.getElementById("user-id").value,
@@ -146,7 +151,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.flagPlot = function () {
         var projectId = this.currentProjectId;
         var plotId = this.currentPlot.id;
-        $http.post("flag-plot",
+        $http.post(this.root + "/flag-plot",
                    {projectId: projectId,
                     plotId:    plotId})
             .then(angular.bind(this, function successCallback(response) {

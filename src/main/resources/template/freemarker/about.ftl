@@ -19,10 +19,16 @@
         implemented online so there is no need for desktop
         installation.
     </p>
-    <a href="http://www.sig-gis.com"><img src="img/sig-logo.png"></a>
+    <a href="http://www.sig-gis.com"><img src="${root}/img/sig-logo.png"></a>
     <p>Copyright © <a href="http://www.sig-gis.com">SIG-GIS</a> 2016-2017</p>
+    <hr>
+    <h1>Disclaimers</h1>
+    <p>
+        This content is currently under development. Please check back
+        later for updates.
+    </p>
 </div>
 
 <#include "end-content.ftl">
-<#include "institution-banner.ftl">
+<#include "logo-banner.ftl">
 <#include "footer.ftl">

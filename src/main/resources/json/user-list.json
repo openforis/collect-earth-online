@@ -1,0 +1,2 @@
+[{id: 1, email: "admin@sig-gis.com", password: "administrator", role: "admin", reset_key: null, ip_addr: null},
+ {id: 2, email: "gjohnson@sig-gis.com", password: "gjohnson", role: "user", reset_key: null, ip_addr: null}]

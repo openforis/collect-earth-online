@@ -11,12 +11,14 @@ public class Views {
 
     private static Map<String, Object> getBaseModel(Request req, String navlink, String contentSize) {
         Map<String, Object> model = new HashMap<String, Object>();
-        model.put("background_image_file", "mountain-field-scenery-small.jpg");
+        model.put("root", Server.documentRoot);
+        model.put("background_image", "linear-gradient(to bottom right, rgba(63,171,198,0.35), rgba(63,171,198,0.05), rgba(63,171,198,0.35))");
         model.put("branding_image_file", "ceo-logo1.png");
         model.put("navlink", navlink);
         model.put("content_size", contentSize);
-        model.put("role", req.session().attribute("role"));
+        model.put("userid", req.session().attribute("userid"));
         model.put("username", req.session().attribute("username"));
+        model.put("role", req.session().attribute("role"));
         if (req.session().attribute("flash_messages") != null) {
             model.put("flash_messages", req.session().attribute("flash_messages"));
             req.session().removeAttribute("flash_messages");
@@ -29,63 +31,71 @@ public class Views {
     private static void authenticateOrRedirect(Request req, Response res, String[] requiredRoles) {
         String currentRole = req.session().attribute("role");
         if (! Arrays.asList(requiredRoles).contains(currentRole)) {
-            res.redirect("/home");
+            res.redirect(Server.documentRoot + "/home");
         }
     }
 
     public static ModelAndView home(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Home", "small"), "home.ftl");
+        return new ModelAndView(getBaseModel(req, "Home", "large"), "home.ftl");
     }
 
     public static ModelAndView about(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "About", "small"), "about.ftl");
     }
 
-    public static ModelAndView tutorials(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Tutorials", "small"), "tutorials.ftl");
-    }
-
-    public static ModelAndView demo(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Demo", "small"), "demo.ftl");
+    public static ModelAndView support(Request req, Response res) {
+        return new ModelAndView(getBaseModel(req, "Support", "large"), "support.ftl");
     }
 
     public static ModelAndView account(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
-        return new ModelAndView(getBaseModel(req, "Account", "small"), "account.ftl");
+        Map<String, Object> model = getBaseModel(req, "Account", "large");
+        model.put("account_id", req.params(":id"));
+        return new ModelAndView(model, "account.ftl");
+    }
+
+    public static ModelAndView institution(Request req, Response res) {
+        if (req.params(":id").equals("0")) {
+            authenticateOrRedirect(req, res, new String[]{"admin"});
+        }
+        Map<String, Object> model = getBaseModel(req, "Institution", "large");
+        model.put("institution_id", req.params(":id"));
+        return new ModelAndView(model, "institution.ftl");
     }
 
     public static ModelAndView dashboard(Request req, Response res) {
         Map<String, Object> model = getBaseModel(req, "Dashboard", "large");
-        model.put("project_id", req.queryParams("project"));
+        model.put("project_id", req.params(":id"));
         return new ModelAndView(model, "dashboard.ftl");
     }
 
-    public static ModelAndView admin(Request req, Response res) {
+    public static ModelAndView project(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"admin"});
-        return new ModelAndView(getBaseModel(req, "Admin", "large"), "admin.ftl");
+        Map<String, Object> model = getBaseModel(req, "Project", "huge");
+        model.put("project_id", req.params(":id"));
+        if (req.params(":id").equals("0")) {
+            model.put("institution_id", req.queryParams("institution"));
+        }
+        return new ModelAndView(model, "project.ftl");
     }
 
     public static ModelAndView login(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Login", "small"), "login.ftl");
+        return new ModelAndView(getBaseModel(req, "Login", "large"), "login.ftl");
     }
 
     public static ModelAndView register(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Register", "small"), "register.ftl");
+        return new ModelAndView(getBaseModel(req, "Register", "large"), "register.ftl");
     }
 
     public static ModelAndView password(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Password", "small"), "password.ftl");
+        return new ModelAndView(getBaseModel(req, "Password", "large"), "password.ftl");
     }
 
     public static ModelAndView passwordReset(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "Password-Reset", "small");
+        Map<String, Object> model = getBaseModel(req, "Password-Reset", "large");
         model.put("email", req.queryParams("email"));
         model.put("password_reset_key", req.queryParams("password-reset-key"));
         return new ModelAndView(model, "password-reset.ftl");
-    }
-
-    public static ModelAndView logout(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Logout", "small"), "logout.ftl");
     }
 
     public static ModelAndView geodash(Request req, Response res) {
@@ -93,7 +103,7 @@ public class Views {
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Page-Not-Found", "small"), "page-not-found.ftl");
+        return new ModelAndView(getBaseModel(req, "Page-Not-Found", "large"), "page-not-found.ftl");
     }
 
 }

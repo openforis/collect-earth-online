@@ -56,13 +56,15 @@ map_utils.map_ref = null;
 //                                   "zoom_level":    5});
 map_utils.digital_globe_base_map = function (map_config) {
     var digital_globe_access_token     = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYS" +
-                                         "I6ImNpcTJ3ZTlyZTAwOWNuam00ZWU3aTk" +
-                                         "xdWIifQ.9OFrmevVe0YB2dJokKhhdA";
+                                         "I6ImNqM2RuZTE3dTAwMncyd3Bwanh4MHJ" +
+                                         "1cmgifQ.LNrR2h_I0kz6fra93XGP2g";
     var recent_imagery_url             = "digitalglobe.nal0g75k";
     var recent_imagery_and_streets_url = "digitalglobe.nal0mpda";
     var bing_maps_access_token         = "AlQPbThspGcsiCnczC-2QVOYU9u_PrteL" +
                                          "w6dxNQls99dmLXcr9-qWCM5J4Y2G-pS";
     var sig_geoserver_url              = "http://pyrite.sig-gis.com/geoserver/wms";
+    var dg_geoserver_url               = "https://services.digitalglobe.com/mapservice/wmsaccess";
+    var dg_unauthenticated_connect_id  = "a797f723-f91f-40d7-8458-3669a830b6de";
 
     // Declare each of the layer sources that will be shown in the map
     var source1 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
@@ -90,13 +92,19 @@ map_utils.digital_globe_base_map = function (map_config) {
                                                   "TILED": true},
                                          serverType: "geoserver"});
 
+    var source6 = new ol.source.TileWMS({url: dg_geoserver_url,
+                                         params: {"VERSION": "1.1.1",
+                                                  "LAYERS": "DigitalGlobe:Imagery",
+                                                  "CONNECTID": dg_unauthenticated_connect_id},
+                                         serverType: "geoserver"});
+
     // Wrap each source in a layer object
     var layer1 = new ol.layer.Tile({title: "DigitalGlobeRecentImagery",
                                     visible: false,
                                     source: source1});
 
     var layer2 = new ol.layer.Tile({title: "DigitalGlobeRecentImagery+Streets",
-                                    visible: true,
+                                    visible: false,
                                     source: source2});
 
     var layer3 = new ol.layer.Tile({title: "BingAerial",
@@ -112,11 +120,15 @@ map_utils.digital_globe_base_map = function (map_config) {
                                     extent: [10298030, 898184, 12094575, 2697289],
                                     source: source5});
 
+    var layer6 = new ol.layer.Tile({title: "DigitalGlobeWMSImagery",
+                                    visible: true,
+                                    source: source6});
+
     // Add a scale line to the default map controls
     var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
 
     // Create the map view using the passed in center_coords and zoom_level
-    var view = new ol.View({projection: 'EPSG:3857',
+    var view = new ol.View({projection: "EPSG:3857",
                             center: ol.proj.fromLonLat(map_config.center_coords),
                             extent: map_utils.get_full_extent(),
                             zoom: map_config.zoom_level});
@@ -124,7 +136,7 @@ map_utils.digital_globe_base_map = function (map_config) {
     // Create the new OpenLayers map object
     var openlayers_map = new ol.Map({target: map_config.div_name,
                                      layers: [layer1, layer2, layer3,
-                                              layer4, layer5],
+                                              layer4, layer5, layer6],
                                      controls: controls,
                                      view: view});
 
@@ -139,7 +151,7 @@ map_utils.digital_globe_base_map = function (map_config) {
 ***
 *****************************************************************************/
 
-map_utils.current_imagery = "DigitalGlobeRecentImagery+Streets";
+map_utils.current_imagery = "DigitalGlobeWMSImagery";
 
 map_utils.set_current_imagery = function (new_imagery) {
     var layers = map_utils.map_ref.getLayers().getArray();
@@ -181,7 +193,7 @@ map_utils.zoom_and_recenter_map = function (longitude, latitude, zoom_level) {
 
 map_utils.styles =
     {"icon": new ol.style.Style(
-        {"image": new ol.style.Icon({"src": "/favicon.ico"})}),
+        {"image": new ol.style.Icon({"src": "favicon.ico"})}),
 
      "red_point": new ol.style.Style(
          {"image": new ol.style.Circle({"radius": 5,
@@ -345,13 +357,25 @@ map_utils.remove_sample_layer = function () {
     return null;
 };
 
+map_utils.draw_point = function (lon, lat) {
+    var coords = map_utils.reproject_to_map(lon, lat);
+    var geometry = new ol.geom.Point(coords);
+    var feature = new ol.Feature({geometry: geometry});
+    var vector_source = new ol.source.Vector({features: [feature]});
+    var style = map_utils.styles["red_point"];
+    var vector_layer = new ol.layer.Vector({source: vector_source,
+                                            style: style});
+    map_utils.map_ref.addLayer(vector_layer);
+    return map_utils.map_ref;
+};
+
 map_utils.draw_points = function (samples) {
     var features = [];
     for (i=0; i<samples.length; i++) {
         sample = samples[i];
         var format = new ol.format.GeoJSON();
         var latlon = format.readGeometry(sample.point);
-        var geometry = latlon.transform('EPSG:4326', 'EPSG:3857');
+        var geometry = latlon.transform("EPSG:4326", "EPSG:3857");
         var feature = new ol.Feature({geometry: geometry,
                                       sample_id: sample["id"]});
         features.push(feature);
@@ -421,7 +445,7 @@ map_utils.enable_dragbox_draw = function () {
                                   maxlon: extent[2],
                                   maxlat: extent[3]};
 
-        /* If Angular code defines this function, then, write values of extent to max-min lat-lon inputs. */
+        /* If Angular code defines this function, then write values of extent to max-min lat-lon inputs. */
         if (map_utils.set_bbox_coords) {
             map_utils.set_bbox_coords();
         }

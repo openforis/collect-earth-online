@@ -1,0 +1,262 @@
+angular.module("project", []).controller("ProjectController", ["$http", function ProjectController($http) {
+    this.root = "";
+    this.institution = "";
+    this.details = {};
+    this.lonMin = "";
+    this.latMin = "";
+    this.lonMax = "";
+    this.latMax = "";
+    this.valueName = "";
+    this.valueColor = "#000000";
+    this.valueImage = "";
+
+    // FIXME: Add these attributes to the JSON database
+    this.members = [];
+    this.contributors = [];
+    this.pointsClassified = 0;
+    this.badPlots = 0;
+    this.dateCreated = null;
+    this.datePublished = null;
+    this.dateClosed = null;
+
+    this.createProject = function () {
+        if (confirm("Do you REALLY want to create this project?")) {
+            utils.show_element("spinner");
+            this.newProject = this.details;
+            this.newProject.institution = this.institution;
+            this.newProject.lonMin = map_utils.current_bbox.minlon;
+            this.newProject.lonMax = map_utils.current_bbox.maxlon;
+            this.newProject.latMin = map_utils.current_bbox.minlat;
+            this.newProject.latMax = map_utils.current_bbox.maxlat;
+            $http.post(this.root + "/create-project", this.newProject)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "unpublished";
+                    utils.hide_element("spinner");
+                    var newProjectId = response.data;
+                    window.location = this.root + "/project/" + newProjectId;
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error creating project. See console for details.");
+                });
+        }
+    };
+
+    this.publishProject = function () {
+        if (confirm("Do you REALLY want to publish this project?")) {
+            utils.show_element("spinner");
+            $http.post(this.root + "/publish-project/" + this.details.id)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "published";
+                    utils.hide_element("spinner");
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error publishing project. See console for details.");
+                });
+        }
+    };
+
+    this.closeProject = function () {
+        if (confirm("Do you REALLY want to close this project?")) {
+            utils.show_element("spinner");
+            $http.post(this.root + "/close-project/" + this.details.id)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "closed";
+                    utils.hide_element("spinner");
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error closing project. See console for details.");
+                });
+        }
+    };
+
+    this.archiveProject = function () {
+        if (confirm("Do you REALLY want to archive this project?!")) {
+            utils.show_element("spinner");
+            $http.post(this.root + "/archive-project/" + this.details.id)
+                .then(angular.bind(this, function successCallback(response) {
+                    this.details.availability = "archived";
+                    utils.hide_element("spinner");
+                    alert("Project " + this.details.id + " has been archived.");
+                    window.location = this.root + "/home";
+                }), function errorCallback(response) {
+                    utils.hide_element("spinner");
+                    console.log(response);
+                    alert("Error archiving project. See console for details.");
+                });
+        }
+    };
+
+    this.stateTransitions = {
+        nonexistent: "Create",
+        unpublished: "Publish",
+        published: "Close",
+        closed: "Archive",
+        archived: "Archive"
+    };
+
+    this.changeAvailability = function () {
+        if (this.details.availability == "nonexistent") {
+            this.createProject();
+        } else if (this.details.availability == "unpublished") {
+            this.publishProject();
+        } else if (this.details.availability == "published") {
+            this.closeProject();
+        } else if (this.details.availability == "closed") {
+            this.archiveProject();
+        }
+    };
+
+    // FIXME: Update this backend function for the new project-list.json contents
+    this.downloadPlotData = function () {
+        $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
+            .then(function successCallback(response) {
+                window.open(response.data);
+            }, function errorCallback(response) {
+                console.log(response);
+                alert("Error downloading data for this project. See console for details.");
+            });
+    };
+
+    this.setPrivacyLevel = function (privacyLevel) {
+        this.details.privacy = privacyLevel;
+    };
+
+    this.setBaseMapSource = function () {
+        map_utils.set_current_imagery(this.details.baseMapSource);
+    };
+
+    // FIXME: Add a new TileWMS source to the map using this.details.imageryYear
+    this.setImageryYear = function () {
+        alert("This function has not yet been implemented.");
+    };
+
+    // FIXME: Add a new TileWMS source to the map using this.details.stackingProfile
+    this.setStackingProfile = function () {
+        alert("This function has not yet been implemented.");
+    };
+
+    this.setPlotDistribution = function (plotDistribution) {
+        this.details.plotDistribution = plotDistribution;
+        if (plotDistribution == "random") {
+            utils.enable_element("num-plots");
+            utils.disable_element("plot-spacing");
+        } else {
+            utils.disable_element("num-plots");
+            utils.enable_element("plot-spacing");
+        }
+    };
+
+    this.setPlotShape = function (plotShape) {
+        this.details.plotShape = plotShape;
+    };
+
+    this.setSampleDistribution = function (sampleDistribution) {
+        this.details.sampleDistribution = sampleDistribution;
+        if (sampleDistribution == "random") {
+            utils.enable_element("samples-per-plot");
+            utils.disable_element("sample-resolution");
+        } else {
+            utils.disable_element("samples-per-plot");
+            utils.enable_element("sample-resolution");
+        }
+    };
+
+    this.removeSampleValueRow = function (sampleValueName) {
+        this.details.sampleValues = this.details.sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.name != sampleValueName;
+            }
+        );
+    };
+
+    this.addSampleValueRow = function () {
+        var name = this.valueName;
+        var color = this.valueColor;
+        var image = this.valueImage;
+
+        if (name != "") {
+            this.details.sampleValues.push({name: name, color: color, image: image});
+            this.valueName = "";
+            this.valueColor = "#000000";
+            this.valueImage = "";
+        } else {
+            alert("A sample value must possess both a name and a color.");
+        }
+    };
+
+    this.getProjectById = function (projectId) {
+        $http.get(this.root + "/get-project-by-id/" + projectId)
+            .then(angular.bind(this, function successCallback(response) {
+                if (response.data == "") {
+                    alert("No project found with ID " + projectId + ".");
+                    window.location = this.root + "/home";
+                } else {
+                    this.details = response.data;
+                    this.initialize(this.root, projectId, this.institution);
+                }
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
+            });
+    };
+
+    this.initialize = function (documentRoot, projectId, institutionId) {
+        // Make the documentRoot and institutionId globally available
+        this.root = documentRoot;
+        this.institution = institutionId;
+
+        if (angular.equals(this.details, {})) {
+            // Load the current project details
+            this.getProjectById(projectId);
+        } else {
+            // Initialize the base map
+            map_utils.digital_globe_base_map({div_name: "project-map",
+                                              center_coords: [0.0, 0.0],
+                                              zoom_level: 1});
+            map_utils.set_current_imagery(this.details.baseMapSource);
+
+            if (this.details.id == 0) {
+                // Enable the dragbox interaction
+                map_utils.enable_dragbox_draw();
+
+                // Link the bounding box input fields to the map object
+                map_utils.set_bbox_coords = function () {
+                    document.getElementById("lat-max").value = map_utils.current_bbox.maxlat;
+                    document.getElementById("lon-max").value = map_utils.current_bbox.maxlon;
+                    document.getElementById("lat-min").value = map_utils.current_bbox.minlat;
+                    document.getElementById("lon-min").value = map_utils.current_bbox.minlon;
+                };
+            } else {
+                // Extract bounding box coordinates from the project boundary and show on the map
+                var boundaryExtent = map_utils.polygon_extent(this.details.boundary);
+                this.lonMin = boundaryExtent[0];
+                this.latMin = boundaryExtent[1];
+                this.lonMax = boundaryExtent[2];
+                this.latMax = boundaryExtent[3];
+                map_utils.draw_polygon(this.details.boundary);
+            }
+
+            // Ensure that imageryYear and stackingProfile are set to defaults if undefined
+            this.details.imageryYear = this.details.imageryYear || "2016";
+            this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
+
+            // Check the radio button values for this project
+            document.getElementById("privacy-" + this.details.privacy).checked = true;
+            document.getElementById("plot-distribution-" + this.details.plotDistribution).checked = true;
+            document.getElementById("plot-shape-" + this.details.plotShape).checked = true;
+            document.getElementById("sample-distribution-" + this.details.sampleDistribution).checked = true;
+
+            // Enable the input fields that are connected to the radio buttons if their values are not null
+            if (this.details.plotDistribution == "gridded") {
+                utils.enable_element("plot-spacing");
+            }
+            if (this.details.sampleDistribution == "gridded") {
+                utils.enable_element("sample-resolution");
+            }
+        }
+    };
+
+}]);

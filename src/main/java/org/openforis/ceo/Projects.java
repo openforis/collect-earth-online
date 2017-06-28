@@ -10,50 +10,77 @@ import java.io.File;
 import java.io.FileWriter;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.JsonUtils.*;
+import static org.openforis.ceo.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.getNextId;
+import static org.openforis.ceo.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.toStream;
+import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class Projects {
 
     public static String getAllProjects(Request req, Response res) {
+        String institutionId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
-        JsonArray visibleProjects = filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false);
-        return visibleProjects.toString();
+        if (institutionId.equals("ALL")) {
+            return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
+                                                        && project.get("privacy").getAsString().equals("public")).toString();
+        } else {
+            return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
+                                                        && project.get("institution").getAsString().equals(institutionId)).toString();
+        }
+    }
+
+    public static String getProjectById(Request req, Response res) {
+        String projectId = req.params(":id");
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
+        if (matchingProject.isPresent()) {
+            return matchingProject.get().toString();
+        } else {
+            return "";
+        }
     }
 
     public static String getProjectPlots(Request req, Response res) {
-        String projectId = req.body();
+        String projectId = req.params(":id");
         return readJsonFile("plot-data-" + projectId + ".json").toString();
     }
 
+    private static Collector<String, ?, Map<String, Long>> countDistinct =
+        Collectors.groupingBy(Function.identity(), Collectors.counting());
+
     private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueNames) {
-        Map<String, Long> valueCounts = StreamSupport.stream(samples.spliterator(), false)
-            .map(sample -> sample.getAsJsonObject())
+        Map<String, Long> valueCounts = toStream(samples)
             .map(sample -> sample.has("value") ? sample.get("value").getAsInt() : -1)
             .map(value -> sampleValueNames.getOrDefault(value, "NoValue"))
-            .collect(Collectors.groupingBy(Function.identity(),
-                                           Collectors.counting()));
+            .collect(countDistinct);
         JsonObject valueDistribution = new JsonObject();
         valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
         return valueDistribution;
     }
 
-    private static void writeCsvFile(String filename, String header, String[] rows) {
+    private static synchronized void writeCsvFile(String filename, String header, String[] rows) {
         String csvDataDir = expandResourcePath("/public/downloads/");
         try (FileWriter fileWriter = new FileWriter(new File(csvDataDir, filename))) {
             fileWriter.write(header + "\n");
@@ -64,16 +91,15 @@ public class Projects {
     }
 
     public static String dumpProjectAggregateData(Request req, Response res) {
-        String projectId = req.body();
+        String projectId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
-            JsonArray sampleValues = project.get("sample_values").getAsJsonArray();
+            JsonArray sampleValues = project.get("sampleValues").getAsJsonArray();
 
-            Map<Integer, String> sampleValueNames = StreamSupport.stream(sampleValues.spliterator(), false)
-                .map(sampleValue -> sampleValue.getAsJsonObject())
+            Map<Integer, String> sampleValueNames = toStream(sampleValues)
                 .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
                                           sampleValue -> sampleValue.get("name").getAsString(),
                                           (a, b) -> b));
@@ -102,8 +128,7 @@ public class Projects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            String[] csvRows = StreamSupport.stream(plotSummaries.spliterator(), false)
-                .map(plotSummary -> plotSummary.getAsJsonObject())
+            String[] csvRows = toStream(plotSummaries)
                 .map(plotSummary -> {
                         Stream<String> fieldStream = Arrays.stream(fields);
                         Stream<String> labelStream = Arrays.stream(labels);
@@ -120,29 +145,56 @@ public class Projects {
 
             writeCsvFile(outputFileName, csvHeader, csvRows);
 
-            return "/downloads/" + outputFileName;
+            return Server.documentRoot + "/downloads/" + outputFileName;
         } else {
-            return "/project-not-found";
+            return Server.documentRoot + "/project-not-found";
         }
     }
 
-    public static String archiveProject(Request req, Response res) {
-        String projectId = req.body();
-
+    public static synchronized String publishProject(Request req, Response res) {
+        String projectId = req.params(":id");
         mapJsonFile("project-list.json",
                     project -> {
                         if (project.get("id").getAsString().equals(projectId)) {
+                            project.addProperty("availability", "published");
+                            return project;
+                        } else {
+                            return project;
+                        }
+                    });
+        return "";
+    }
+
+    public static synchronized String closeProject(Request req, Response res) {
+        String projectId = req.params(":id");
+        mapJsonFile("project-list.json",
+                    project -> {
+                        if (project.get("id").getAsString().equals(projectId)) {
+                            project.addProperty("availability", "closed");
+                            return project;
+                        } else {
+                            return project;
+                        }
+                    });
+        return "";
+    }
+
+    public static synchronized String archiveProject(Request req, Response res) {
+        String projectId = req.params(":id");
+        mapJsonFile("project-list.json",
+                    project -> {
+                        if (project.get("id").getAsString().equals(projectId)) {
+                            project.addProperty("availability", "archived");
                             project.addProperty("archived", true);
                             return project;
                         } else {
                             return project;
                         }
                     });
-
         return "";
     }
 
-    public static String addUserSamples(Request req, Response res) {
+    public static synchronized String addUserSamples(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -174,7 +226,7 @@ public class Projects {
         return "";
     }
 
-    public static String flagPlot(Request req, Response res) {
+    public static synchronized String flagPlot(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -319,33 +371,30 @@ public class Projects {
             .toArray(Double[][]::new);
     }
 
-    public static Request createNewProject(Request req, Response res) {
+    public static synchronized String createProject(Request req, Response res) {
         try {
-            String projectName = req.queryParams("project-name");
-            String projectDescription = req.queryParams("project-description");
-            double lonMin = Double.parseDouble(req.queryParams("boundary-lon-min"));
-            double latMin = Double.parseDouble(req.queryParams("boundary-lat-min"));
-            double lonMax = Double.parseDouble(req.queryParams("boundary-lon-max"));
-            double latMax = Double.parseDouble(req.queryParams("boundary-lat-max"));
-            int numPlots = Integer.parseInt(req.queryParams("plots"));
-            double bufferRadius = Double.parseDouble(req.queryParams("buffer-radius"));
-            String sampleType = req.queryParams("sample-type");
-            int samplesPerPlot = req.queryParams("samples-per-plot") != null ? Integer.parseInt(req.queryParams("samples-per-plot")) : 0;
-            double sampleResolution = req.queryParams("sample-resolution") != null ? Double.parseDouble(req.queryParams("sample-resolution")) : 0.0;
-            String imagerySelector = req.queryParams("imagery-selector");
-            JsonArray sampleValues = parseJson(req.queryParams("sample-values")).getAsJsonArray();
-
-            // BEGIN: Add a new entry to project-list.json
+            // Read in the new project and the existing project list
+            JsonObject newProject = parseJson(req.body()).getAsJsonObject();
             JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
 
-            int newProjectId = StreamSupport.stream(projects.spliterator(), false)
-                .map(project -> project.getAsJsonObject())
-                .map(project -> project.get("id").getAsInt())
-                .max(Comparator.naturalOrder())
-                .get() + 1;
+            // Generate a new project id
+            int newProjectId = getNextId(projects);
+            newProject.addProperty("id", newProjectId);
 
+            // Convert the bounding box coordinates to GeoJSON
+            double lonMin = newProject.get("lonMin").getAsDouble();
+            double latMin = newProject.get("latMin").getAsDouble();
+            double lonMax = newProject.get("lonMax").getAsDouble();
+            double latMax = newProject.get("latMax").getAsDouble();
             JsonObject boundary = makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax);
+            newProject.remove("lonMin");
+            newProject.remove("latMin");
+            newProject.remove("lonMax");
+            newProject.remove("latMax");
+            newProject.addProperty("boundary", boundary.toString());
 
+            // Add ids to the sampleValues and clean up some of their unnecessary fields
+            JsonArray sampleValues = newProject.get("sampleValues").getAsJsonArray();
             IntSupplier sampleValueIndexer = makeCounter();
             JsonArray updatedSampleValues = mapJsonArray(sampleValues,
                                                          sampleValue -> {
@@ -357,40 +406,45 @@ public class Projects {
                                                              }
                                                              return sampleValue;
                                                          });
+            newProject.add("sampleValues", updatedSampleValues);
 
-            JsonObject newProject = new JsonObject();
-            newProject.addProperty("id", newProjectId);
-            newProject.addProperty("name", projectName);
-            newProject.addProperty("description", projectDescription);
-            newProject.addProperty("boundary", boundary.toString());
-            newProject.addProperty("sample_resolution", sampleResolution > 0.0 ? sampleResolution : null);
-            newProject.addProperty("imagery", imagerySelector);
-            newProject.addProperty("attribution", getImageryAttribution(imagerySelector));
-            newProject.add("sample_values", updatedSampleValues);
-            newProject.addProperty("archived", false);
+            // Add some missing fields that don't come from the web UI
+            newProject.addProperty("availability", "unpublished");
+            newProject.addProperty("attribution", getImageryAttribution(newProject.get("baseMapSource").getAsString()));
 
+            // Write the new entry to project-list.json
             projects.add(newProject);
             writeJsonFile("project-list.json", projects);
-            // END: Add a new entry to project-list.json
 
-            // BEGIN: Create a new plot-data-<newProjectId>.json file
+            // Store the parameters needed for plot generation in local variables with nulls set to 0
+            String plotDistribution = newProject.get("plotDistribution").getAsString();
+            int numPlots = newProject.get("numPlots").isJsonNull() ? 0 : newProject.get("numPlots").getAsInt();
+            double plotSpacing = newProject.get("plotSpacing").isJsonNull() ? 0.0 : newProject.get("plotSpacing").getAsDouble();
+            String plotShape = newProject.get("plotShape").getAsString();
+            double plotSize = newProject.get("plotSize").getAsDouble();
+            String sampleDistribution = newProject.get("sampleDistribution").getAsString();
+            int samplesPerPlot = newProject.get("samplesPerPlot").isJsonNull() ? 0 : newProject.get("samplesPerPlot").getAsInt();
+            double sampleResolution = newProject.get("sampleResolution").isJsonNull() ? 0.0 : newProject.get("sampleResolution").getAsDouble();
+
+            // Generate the plot objects and their associated sample points
+            // FIXME: No support for gridded plotDistributions or square plotShapes
+            // FIXME: Update numPlots and/or samplesPerPlot in newProject when they are auto-generated
+            // FIXME: Simplify the data stored in each plot
             Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
-
             IntSupplier plotIndexer = makeCounter();
             JsonArray newPlots = Arrays.stream(newPlotCenters)
                 .map(plotCenter -> {
                         JsonObject newPlotAttributes = new JsonObject();
                         newPlotAttributes.addProperty("id", plotIndexer.getAsInt());
                         newPlotAttributes.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                        newPlotAttributes.addProperty("radius", bufferRadius);
+                        newPlotAttributes.addProperty("radius", plotSize);
                         newPlotAttributes.addProperty("flagged", false);
                         newPlotAttributes.addProperty("analyses", 0);
                         newPlotAttributes.add("user", null);
 
-                        Double[][] newSamplePoints = sampleType.equals("gridded")
-                        ? createGriddedSampleSet(plotCenter, bufferRadius, sampleResolution)
-                        : createRandomSampleSet(plotCenter, bufferRadius, samplesPerPlot);
-
+                        Double[][] newSamplePoints = sampleDistribution.equals("gridded")
+                                                       ? createGriddedSampleSet(plotCenter, plotSize, sampleResolution)
+                                                       : createRandomSampleSet(plotCenter, plotSize, samplesPerPlot);
                         IntSupplier sampleIndexer = makeCounter();
                         JsonArray newSamples = Arrays.stream(newSamplePoints)
                         .map(point -> {
@@ -409,16 +463,14 @@ public class Projects {
                     })
                 .collect(intoJsonArray);
 
+            // Write the plot data to a new plot-data-<newProjectId>.json file
             writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
-            // END: Create a new plot-data-<newProjectId>.json file
 
             // Indicate that the project was created successfully
-            req.session().attribute("flash_messages", new String[]{"New project " + req.queryParams("project-name") + " created and launched!"});
-            return req;
+            return newProjectId + "";
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
-            req.session().attribute("flash_messages", new String[]{"Error with project creation!"});
-            return req;
+            throw new RuntimeException(e);
         }
     }
 
