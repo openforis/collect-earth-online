@@ -27,7 +27,7 @@
         <script type="text/javascript" src="${root}/js/project.js"></script>
         <script type="text/javascript" src="${root}/js/dashboard.js"></script>
         <script type="text/javascript" src="${root}/js/geo-dash.js"></script>
-        <script type="text/javascript" src="${root}js/geo-dash-admin.js"></script>
+        <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
         <script type="text/javascript" src="${root}/js/ceo.js"></script>
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
