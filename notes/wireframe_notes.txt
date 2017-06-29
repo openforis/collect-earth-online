@@ -31,9 +31,9 @@ Institution:
   - [ ] Each entry has an Enable button
 
 Admin:
-- [ ] Record institution # at project creation time
-- [ ] Rename to Project Management page
-- [ ] Include Public/Institution/Invite-Only radio button
+- [X] Rename to Project Management page
+- [X] Record institution # at project creation time
+- [X] Include Public/Institution/Invite-Only radio button
 - [ ] If Invite-Only is selected, provide a list of users who are members of this project with delete buttons next to them
 - [ ] Include an Add User button (must type in username)
 - [ ] Pop out to Collect for the Entity Design stage

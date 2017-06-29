@@ -1,44 +1,81 @@
 Collect Earth Online Desired Features List:
 
+Remove branding_banner from homepage and replace with the logo and text below the navbar.
+Move homepage text about Github to the about page.
+Get disclaimer text from Eric.
+Get tutorials and demo content from Karis.
+Replace with logos from the bottom of this page http://servir-rlcms.appspot.com/.
+Allow regular users to create institutions.
+Create a dummy tutorial institution and make all users institution-level admins for that institution at registration time.
+*Send Karis a link to the Stacking Profile docs*.
+Replace Imagery Year dropdown with multiple slider bars to select ranges within ranges from 2000-2016. (e.g., Summers from 2014-2016)
+Figure out how to store the search criteria or the dates associated with returned tiles.
+MAYBE? Create multiple query windows for a single project.
+Sort institution list by project activity.
+Add Affiliations to Operator page for each user (business, university, government, NGO).
+Show Gravatar (http://en.gravatar.com) on Operator page.
+Store user location (get it on Register or Operator page).
+Use a color or icon to distinguish privacy level of projects in the Project List.
+Highlight projects on the Project List with a color to distinguish whether they are active or completed.
+Move Contributors/Members stats to project list buttons.
+Add Membership request button to Institution page.
+Add a metadata field to the institution edit screen to provide a short URL (/institution/fao) to link to your institution page.
+Add WMS feed selection to the Institution creation page.
+Allow uploading AOI polygons or CSVs to the project management page.
+Add "Upload" after "Random" and "Gridded" under Plot Distribution. (Upload CSV with lat/lon coordinates for plot centers).
+Create Training System for plot QA/QC (include a button to erase all data from a particular user if their score is terrible).
+Add "Import template" button for uploading a CSV with sample values to the project management page.
+Include a link on the project management page for opening the GeoDash to configure its widgets for a project.
+Replace the User Id with the User Name in the Downloaded CSV data.
+Show colors (red, yellow, green) on the Project page's map when reviewing a project (colors correspond to number of plots completed per area).
+Add a Clone Project button to the Project Management Page.
+Add a Reopen Project button to the Project Management Page.
+Change text on Flag Plot button to say "No Imagery"
+Add a "Go Back" button to the Data Collection page. (add timestamps to each save assignments or flag plot click and sort your previous plots by timestamp to get the history)
+Add a "Skip Plot" button to the Data Collection page.
+Add a button for toggling imagery
+Put a timer that counts up on the screen when you are analyzing a plot. Reset this to 0 for each plot.
+Show the total number of plots that the user has completed on the Collection page (out of all the plots in the project) and their current accuracy score.
+
 * DOCUMENTATION (was README.org)
 
-  - Installation Instructions
-  - Configuration and Launching
-  - Developer Documentation
-  - Reporting Bugs and Requesting Features
-  - Tutorials and Demo
-  - Licenses
-  - Contacts
+  - [X] Installation Instructions
+  - [X] Configuration and Launching
+  - [ ] Developer Documentation
+  - [X] Reporting Bugs and Requesting Features
+  - [ ] Tutorials and Demo
+  - [X] Licenses
+  - [X] Contacts
 
 * INSTANCE LANDING PAGE (was Home + About)
 
-  - Logos
-  - Navbar
-  - Single Page Scrolling Style
-  - Description of CEO
-  - Featured Projects, Use Cases, and Past Applications
-  - Public List of Institutions Sorted by Activity (Site Statistics)
-  - Link to Tutorials (e.g., "Try Demo!")
-  - Disclaimers
+  - [ ] Logos (replace with logos from the bottom of this page http://servir-rlcms.appspot.com/)
+  - [X] Navbar
+  - [X] Single Page Scrolling Style
+  - [X] Description of CEO
+  - [ ] Featured Projects, Use Cases, and Past Applications
+  - [ ] Public List of Institutions Sorted by Activity (Site Statistics)
+  - [X] Link to Tutorials (e.g., "Try Demo!")
+  - [ ] Disclaimers (Eric)
 
 * LOGIN, REGISTER, FORGOT PASSWORD PAGES
 
-  - Facebook/Google/Linkedin Accounts
-  - Email
-  - Password
-  - Automatically Add User to the Public Institution on First Registration
-  - Affiliations (business, university, individual)
-  - Avatar (https://en.gravatar.com)
-  - Capture IP Address On First Registration
+  - [ ] Facebook/Google/Linkedin Accounts
+  - [X] Email
+  - [X] Password
+  - [X] Automatically Add User to the Public Institution on First Registration
+  - [ ] Affiliations (business, university, individual)
+  - [ ] Avatar (https://en.gravatar.com)
+  - [ ] Capture IP Address On First Registration
 
 * OPERATOR PAGE (was Account)
 
-  - Update Account Details:
+  - [ ] Update Account Details:
     - Facebook/Google/Linkedin Accounts
     - Email
     - Password
     - Avatar (https://en.gravatar.com/)
-  - Operator Summary Statistics:
+  - [ ] Operator Summary Statistics:
     - Projects Worked on So Far (latest and time graph)
     - Plots Completed per Project
     - Plots Completed Total (latest and time graph)
@@ -46,7 +83,7 @@ Collect Earth Online Desired Features List:
     - Speed Score Total (latest and time graph)
     - Accuracy Score per Project (based on the project's training data)
     - Accuracy Score Total (latest and time graph)
-  - Project List: (click entries to jump to collection page)
+  - [ ] Project List: (click entries to jump to collection page)
     - Public Projects (w/ featured projects highlighted)
     - Private Projects from Affiliated Institutions (label w/ institution)
     - Make New Project (redirect to project management page)
