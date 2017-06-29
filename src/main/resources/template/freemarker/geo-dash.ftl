@@ -3,12 +3,9 @@
 <#include "flash-messages.ftl">
 
 <#if role?? && role == "admin">
-    <div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
-
-
+<div id="geodash" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
 <#else>
-    <div id="geodash" ng-app="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize('${root}')">
-
+<div id="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize('${root}')">
 </#if>
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>

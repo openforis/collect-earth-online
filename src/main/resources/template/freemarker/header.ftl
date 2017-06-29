@@ -38,7 +38,6 @@
         <link rel="stylesheet" type="text/css" href="${root}/css/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="${root}/css/datepicker.css">
         <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
-        <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
         <script type="text/javascript" src="${root}/js/ie-emulation-modes-warning.js"></script>
         <!-- Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
