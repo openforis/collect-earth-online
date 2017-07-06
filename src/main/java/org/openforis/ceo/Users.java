@@ -128,7 +128,7 @@ public class Users {
     }
 
     // FIXME: stub
-    public static Request requestPasswordResetKey(Request req, Response res) {
+    public static Request getPasswordResetKey(Request req, Response res) {
         req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
         return req;
     }
