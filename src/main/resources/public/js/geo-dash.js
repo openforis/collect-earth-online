@@ -595,3 +595,4 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         });
     };
 }]);
+
