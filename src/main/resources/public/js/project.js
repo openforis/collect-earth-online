@@ -19,16 +19,21 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.datePublished = null;
     this.dateClosed = null;
 
+    this.logFormData = function (formData) {
+        console.log(new Map(formData.entries()));
+    };
+
     this.createProject = function () {
         if (confirm("Do you REALLY want to create this project?")) {
             utils.show_element("spinner");
-            this.newProject = this.details;
-            this.newProject.institution = this.institution;
-            this.newProject.lonMin = map_utils.current_bbox.minlon;
-            this.newProject.lonMax = map_utils.current_bbox.maxlon;
-            this.newProject.latMin = map_utils.current_bbox.minlat;
-            this.newProject.latMax = map_utils.current_bbox.maxlat;
-            $http.post(this.root + "/create-project", this.newProject)
+            var formData = new FormData(document.getElementById("project-design-form"));
+            formData.append("institution", this.institution);
+            formData.append("plot-distribution-csv-file", document.getElementById("plot-distribution-csv-file").files[0]);
+            formData.append("sample-values", JSON.stringify(this.details.sampleValues));
+            $http.post(this.root + "/create-project",
+                       formData,
+                       {transformRequest: angular.identity,
+                        headers: {"Content-Type": undefined}})
                 .then(angular.bind(this, function successCallback(response) {
                     this.details.availability = "unpublished";
                     utils.hide_element("spinner");
@@ -121,7 +126,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.setPrivacyLevel = function (privacyLevel) {
-        this.details.privacy = privacyLevel;
+        this.details.privacyLevel = privacyLevel;
     };
 
     this.setBaseMapSource = function () {
@@ -143,9 +148,12 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         if (plotDistribution == "random") {
             utils.enable_element("num-plots");
             utils.disable_element("plot-spacing");
-        } else {
+        } else if (plotDistribution == "gridded") {
             utils.disable_element("num-plots");
             utils.enable_element("plot-spacing");
+        } else {
+            utils.disable_element("num-plots");
+            utils.disable_element("plot-spacing");
         }
     };
 
@@ -244,7 +252,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
 
             // Check the radio button values for this project
-            document.getElementById("privacy-" + this.details.privacy).checked = true;
+            document.getElementById("privacy-" + this.details.privacyLevel).checked = true;
             document.getElementById("plot-distribution-" + this.details.plotDistribution).checked = true;
             document.getElementById("plot-shape-" + this.details.plotShape).checked = true;
             document.getElementById("sample-distribution-" + this.details.sampleDistribution).checked = true;

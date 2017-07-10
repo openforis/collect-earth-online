@@ -1105,6 +1105,18 @@ p.error-message {
     width: 48%;
 }
 
+#project #project-design #plot-design #custom-csv-upload {
+    display: inline-block;
+    margin-left: -4px;
+    padding: 4px;
+    cursor: pointer;
+    border: 1px solid darkgray;
+}
+
+#project #project-design #plot-design #custom-csv-upload input[type=file] {
+    display: none;
+}
+
 #project #project-design #sample-design {
     float: left;
     width: 45%;

@@ -19,12 +19,15 @@ import java.util.function.IntSupplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.servlet.MultipartConfigElement;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
+import static org.openforis.ceo.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.PartUtils.writeFilePart;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
@@ -44,7 +47,7 @@ public class Projects {
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         if (institutionId.equals("ALL")) {
             return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
-                                                        && project.get("privacy").getAsString().equals("public")).toString();
+                                                        && project.get("privacyLevel").getAsString().equals("public")).toString();
         } else {
             return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
                                                         && project.get("institution").getAsString().equals(institutionId)).toString();
@@ -297,14 +300,15 @@ public class Projects {
         return geoJsonPolygon;
     }
 
-    private static String getImageryAttribution(String imagerySelector) {
+    private static String getImageryAttribution(String baseMapSource, String imageryYear) {
         Map<String, String> imageryAttribution = new HashMap<String, String>();
+        imageryAttribution.put("DigitalGlobeWMSImagery",            "DigitalGlobe BaseMap | " + imageryYear + " | © DigitalGlobe, Inc");
         imageryAttribution.put("DigitalGlobeRecentImagery+Streets", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
         imageryAttribution.put("DigitalGlobeRecentImagery",         "DigitalGlobe Maps API: Recent Imagery | June 2015 | © DigitalGlobe, Inc");
         imageryAttribution.put("BingAerial",                        "Bing Maps API: Aerial | © Microsoft Corporation");
         imageryAttribution.put("BingAerialWithLabels",              "Bing Maps API: Aerial with Labels | © Microsoft Corporation");
         imageryAttribution.put("NASASERVIRChipset2002",             "June 2002 Imagery Data Courtesy of DigitalGlobe");
-        return imageryAttribution.get(imagerySelector);
+        return imageryAttribution.get(baseMapSource);
     }
 
     private static Double[][] createRandomPointsInBounds(double lonMin, double latMin, double lonMax, double latMax, int numPoints) {
@@ -373,25 +377,38 @@ public class Projects {
 
     public static synchronized String createProject(Request req, Response res) {
         try {
-            // Read in the new project and the existing project list
-            JsonObject newProject = parseJson(req.body()).getAsJsonObject();
+            // Create a new multipart config for the servlet and set the default output directory for uploaded files
+            // FIXME: Will this work with Tomcat?
+            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(expandResourcePath("/csv")));
+
+            // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
+            JsonObject newProject = partsToJsonObject(req,
+                                                      new String[]{"name", "description", "privacy-level", "lon-min", "lon-max", "lat-min", "lat-max",
+                                                                   "base-map-source", "imagery-year", "stacking-profile", "plot-distribution",
+                                                                   "num-plots", "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
+                                                                   "samples-per-plot", "sample-resolution", "sample-values", "institution"});
+
+            // Read in the existing project list
             JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
 
             // Generate a new project id
             int newProjectId = getNextId(projects);
             newProject.addProperty("id", newProjectId);
 
+            // Upload the plot-distribution-csv-file if one was provided
+            String csvFileName = writeFilePart(req, "plot-distribution-csv-file", "project-" + newProjectId);
+            newProject.addProperty("csv", csvFileName);
+
             // Convert the bounding box coordinates to GeoJSON
             double lonMin = newProject.get("lonMin").getAsDouble();
             double latMin = newProject.get("latMin").getAsDouble();
             double lonMax = newProject.get("lonMax").getAsDouble();
             double latMax = newProject.get("latMax").getAsDouble();
-            JsonObject boundary = makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax);
+            newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
             newProject.remove("lonMin");
             newProject.remove("latMin");
             newProject.remove("lonMax");
             newProject.remove("latMax");
-            newProject.addProperty("boundary", boundary.toString());
 
             // Add ids to the sampleValues and clean up some of their unnecessary fields
             JsonArray sampleValues = newProject.get("sampleValues").getAsJsonArray();
@@ -409,9 +426,12 @@ public class Projects {
             newProject.add("sampleValues", updatedSampleValues);
 
             // Add some missing fields that don't come from the web UI
+            newProject.addProperty("archived", false);
             newProject.addProperty("availability", "unpublished");
-            newProject.addProperty("attribution", getImageryAttribution(newProject.get("baseMapSource").getAsString()));
+            newProject.addProperty("attribution", getImageryAttribution(newProject.get("baseMapSource").getAsString(),
+                                                                        newProject.get("imageryYear").getAsString()));
 
+            /****************************************
             // Write the new entry to project-list.json
             projects.add(newProject);
             writeJsonFile("project-list.json", projects);
@@ -465,6 +485,8 @@ public class Projects {
 
             // Write the plot data to a new plot-data-<newProjectId>.json file
             writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
+
+            ****************************************/
 
             // Indicate that the project was created successfully
             return newProjectId + "";
