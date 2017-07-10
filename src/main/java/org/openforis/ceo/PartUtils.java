@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -17,6 +18,18 @@ public class PartUtils {
             .map(word -> word.substring(0,1).toUpperCase() + word.substring(1))
             .collect(Collectors.joining(""));
         return camelString.substring(0,1).toLowerCase() + camelString.substring(1);
+    }
+
+    public static String partToString(Part part) {
+        if (part == null) {
+            return null;
+        } else {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
+                return reader.lines().collect(Collectors.joining("\n"));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static JsonElement partToJson(Part part) {

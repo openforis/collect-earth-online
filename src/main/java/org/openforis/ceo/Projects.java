@@ -26,8 +26,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.PartUtils.partsToJsonObject;
-import static org.openforis.ceo.PartUtils.writeFilePart;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
@@ -39,6 +37,9 @@ import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
+import static org.openforis.ceo.PartUtils.partToString;
+import static org.openforis.ceo.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.PartUtils.writeFilePart;
 
 public class Projects {
 
@@ -383,10 +384,14 @@ public class Projects {
 
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             JsonObject newProject = partsToJsonObject(req,
-                                                      new String[]{"name", "description", "privacy-level", "lon-min", "lon-max", "lat-min", "lat-max",
+                                                      new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min", "lat-max",
                                                                    "base-map-source", "imagery-year", "stacking-profile", "plot-distribution",
                                                                    "num-plots", "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                                                                   "samples-per-plot", "sample-resolution", "sample-values", "institution"});
+                                                                   "samples-per-plot", "sample-resolution", "sample-values"});
+
+            // Manually add the name and description fields since they may be invalid JSON
+            newProject.addProperty("name", partToString(req.raw().getPart("name")));
+            newProject.addProperty("description", partToString(req.raw().getPart("description")));
 
             // Read in the existing project list
             JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
