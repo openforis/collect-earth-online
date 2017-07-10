@@ -376,6 +376,67 @@ public class Projects {
             .toArray(Double[][]::new);
     }
 
+    private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
+        // Store the parameters needed for plot generation in local variables with nulls set to 0
+        String plotDistribution = newProject.get("plotDistribution").getAsString();
+        int numPlots = newProject.get("numPlots").isJsonNull() ? 0 : newProject.get("numPlots").getAsInt();
+        double plotSpacing = newProject.get("plotSpacing").isJsonNull() ? 0.0 : newProject.get("plotSpacing").getAsDouble();
+        String plotShape = newProject.get("plotShape").getAsString();
+        double plotSize = newProject.get("plotSize").getAsDouble();
+        String sampleDistribution = newProject.get("sampleDistribution").getAsString();
+        int samplesPerPlot = newProject.get("samplesPerPlot").isJsonNull() ? 0 : newProject.get("samplesPerPlot").getAsInt();
+        double sampleResolution = newProject.get("sampleResolution").isJsonNull() ? 0.0 : newProject.get("sampleResolution").getAsDouble();
+        double lonMin = newProject.get("lonMin").getAsDouble();
+        double latMin = newProject.get("latMin").getAsDouble();
+        double lonMax = newProject.get("lonMax").getAsDouble();
+        double latMax = newProject.get("latMax").getAsDouble();
+
+        // Generate the plot objects and their associated sample points
+        // FIXME: No support for gridded or csv plotDistributions or square plotShapes
+        // FIXME: Update numPlots and/or samplesPerPlot in newProject when they are auto-generated
+        // FIXME: Simplify the data stored in each plot
+        // FIXME: Add additional fields to sample points if passed in CSV
+        Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
+        IntSupplier plotIndexer = makeCounter();
+        JsonArray newPlots = Arrays.stream(newPlotCenters)
+            .map(plotCenter -> {
+                    JsonObject newPlotAttributes = new JsonObject();
+                    newPlotAttributes.addProperty("id", plotIndexer.getAsInt());
+                    newPlotAttributes.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
+                    newPlotAttributes.addProperty("radius", plotSize);
+                    newPlotAttributes.addProperty("flagged", false);
+                    newPlotAttributes.addProperty("analyses", 0);
+                    newPlotAttributes.add("user", null);
+
+                    Double[][] newSamplePoints = sampleDistribution.equals("gridded")
+                    ? createGriddedSampleSet(plotCenter, plotSize, sampleResolution)
+                    : createRandomSampleSet(plotCenter, plotSize, samplesPerPlot);
+                    IntSupplier sampleIndexer = makeCounter();
+                    JsonArray newSamples = Arrays.stream(newSamplePoints)
+                    .map(point -> {
+                            JsonObject sample = new JsonObject();
+                            sample.addProperty("id", sampleIndexer.getAsInt());
+                            sample.addProperty("point", makeGeoJsonPoint(point[0], point[1]).toString());
+                            return sample;
+                        })
+                    .collect(intoJsonArray);
+
+                    JsonObject newPlot = new JsonObject();
+                    newPlot.add("plot", newPlotAttributes);
+                    newPlot.add("samples", newSamples);
+
+                    return newPlot;
+                })
+            .collect(intoJsonArray);
+
+        // Write the plot data to a new plot-data-<id>.json file
+        writeJsonFile("plot-data-" + newProject.get("id").getAsString() + ".json", newPlots);
+
+        // Return the updated project object
+        // FIXME: update its fields first
+        return newProject;
+    }
+
     public static synchronized String createProject(Request req, Response res) {
         try {
             // Create a new multipart config for the servlet and set the default output directory for uploaded files
@@ -414,10 +475,6 @@ public class Projects {
             double lonMax = newProject.get("lonMax").getAsDouble();
             double latMax = newProject.get("latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
-            newProject.remove("lonMin");
-            newProject.remove("latMin");
-            newProject.remove("lonMax");
-            newProject.remove("latMax");
 
             // Add ids to the sampleValues and clean up some of their unnecessary fields
             JsonArray sampleValues = newProject.get("sampleValues").getAsJsonArray();
@@ -440,62 +497,18 @@ public class Projects {
             newProject.addProperty("attribution", getImageryAttribution(newProject.get("baseMapSource").getAsString(),
                                                                         newProject.get("imageryYear").getAsString()));
 
-            /****************************************
+            // Create the requested plot set and write it to plot-data-<newProjectId>.json
+            JsonObject newProjectUpdated = createProjectPlots(newProject);
+
+            // Remove the lat/lon boundary fields
+            newProjectUpdated.remove("lonMin");
+            newProjectUpdated.remove("latMin");
+            newProjectUpdated.remove("lonMax");
+            newProjectUpdated.remove("latMax");
+
             // Write the new entry to project-list.json
-            projects.add(newProject);
+            projects.add(newProjectUpdated);
             writeJsonFile("project-list.json", projects);
-
-            // Store the parameters needed for plot generation in local variables with nulls set to 0
-            String plotDistribution = newProject.get("plotDistribution").getAsString();
-            int numPlots = newProject.get("numPlots").isJsonNull() ? 0 : newProject.get("numPlots").getAsInt();
-            double plotSpacing = newProject.get("plotSpacing").isJsonNull() ? 0.0 : newProject.get("plotSpacing").getAsDouble();
-            String plotShape = newProject.get("plotShape").getAsString();
-            double plotSize = newProject.get("plotSize").getAsDouble();
-            String sampleDistribution = newProject.get("sampleDistribution").getAsString();
-            int samplesPerPlot = newProject.get("samplesPerPlot").isJsonNull() ? 0 : newProject.get("samplesPerPlot").getAsInt();
-            double sampleResolution = newProject.get("sampleResolution").isJsonNull() ? 0.0 : newProject.get("sampleResolution").getAsDouble();
-
-            // Generate the plot objects and their associated sample points
-            // FIXME: No support for gridded plotDistributions or square plotShapes
-            // FIXME: Update numPlots and/or samplesPerPlot in newProject when they are auto-generated
-            // FIXME: Simplify the data stored in each plot
-            Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
-            IntSupplier plotIndexer = makeCounter();
-            JsonArray newPlots = Arrays.stream(newPlotCenters)
-                .map(plotCenter -> {
-                        JsonObject newPlotAttributes = new JsonObject();
-                        newPlotAttributes.addProperty("id", plotIndexer.getAsInt());
-                        newPlotAttributes.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                        newPlotAttributes.addProperty("radius", plotSize);
-                        newPlotAttributes.addProperty("flagged", false);
-                        newPlotAttributes.addProperty("analyses", 0);
-                        newPlotAttributes.add("user", null);
-
-                        Double[][] newSamplePoints = sampleDistribution.equals("gridded")
-                                                       ? createGriddedSampleSet(plotCenter, plotSize, sampleResolution)
-                                                       : createRandomSampleSet(plotCenter, plotSize, samplesPerPlot);
-                        IntSupplier sampleIndexer = makeCounter();
-                        JsonArray newSamples = Arrays.stream(newSamplePoints)
-                        .map(point -> {
-                                JsonObject sample = new JsonObject();
-                                sample.addProperty("id", sampleIndexer.getAsInt());
-                                sample.addProperty("point", makeGeoJsonPoint(point[0], point[1]).toString());
-                                return sample;
-                            })
-                        .collect(intoJsonArray);
-
-                        JsonObject newPlot = new JsonObject();
-                        newPlot.add("plot", newPlotAttributes);
-                        newPlot.add("samples", newSamples);
-
-                        return newPlot;
-                    })
-                .collect(intoJsonArray);
-
-            // Write the plot data to a new plot-data-<newProjectId>.json file
-            writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
-
-            ****************************************/
 
             // Indicate that the project was created successfully
             return newProjectId + "";
