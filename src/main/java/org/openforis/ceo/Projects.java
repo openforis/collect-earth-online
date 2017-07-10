@@ -401,8 +401,12 @@ public class Projects {
             newProject.addProperty("id", newProjectId);
 
             // Upload the plot-distribution-csv-file if one was provided
-            String csvFileName = writeFilePart(req, "plot-distribution-csv-file", "project-" + newProjectId);
-            newProject.addProperty("csv", csvFileName);
+            if (newProject.get("plotDistribution").equals("csv")) {
+                String csvFileName = writeFilePart(req, "plot-distribution-csv-file", "project-" + newProjectId);
+                newProject.addProperty("csv", csvFileName);
+            } else {
+                newProject.add("csv", null);
+            }
 
             // Convert the bounding box coordinates to GeoJSON
             double lonMin = newProject.get("lonMin").getAsDouble();
