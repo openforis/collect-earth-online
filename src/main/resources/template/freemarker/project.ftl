@@ -103,7 +103,7 @@
                     <option value="NASASERVIRChipset2002">NASA SERVIR Chipset 2002</option>
                 </select>
                 <label style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
-                <select id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" ng-change="project.setImageryYear()"
+                <select id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" convert-to-number ng-change="project.setImageryYear()"
                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                     <option value="2016">2016</option>
                     <option value="2015">2015</option>
