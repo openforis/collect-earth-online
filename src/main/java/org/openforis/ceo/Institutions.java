@@ -90,7 +90,7 @@ public class Institutions {
             boolean uploadedLogo = logo.getSubmittedFileName() != null;
 
             if (institutionId.equals("0")) {
-                // Create a new project
+                // Create a new institution
                 JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
                 String newInstitutionId = Integer.toString(getNextId(institutions));
                 String logoPath = uploadedLogo ? writeLogoImage(logo, newInstitutionId) : "";
@@ -109,7 +109,7 @@ public class Institutions {
 
                 return newInstitution.toString();
             } else {
-                // Edit an existing project
+                // Edit an existing institution
                 String logoPath = uploadedLogo ? writeLogoImage(logo, institutionId) : "";
 
                 mapJsonFile("institution-list.json", institution -> {
