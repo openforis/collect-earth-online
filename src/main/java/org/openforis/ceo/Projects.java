@@ -336,6 +336,25 @@ public class Projects {
         }
     }
 
+    private static Double[][] createGriddedPointsInBounds(double lonMin, double latMin, double lonMax, double latMax, double plotSpacing) {
+        Double[] lowerLeft = reprojectPoint(new Double[]{lonMin, latMin}, 4326, 3857);
+        Double[] upperRight = reprojectPoint(new Double[]{lonMax, latMax}, 4326, 3857);
+        double left = lowerLeft[0] + plotSpacing;
+        double right = upperRight[0] - plotSpacing;
+        double top = upperRight[1] - plotSpacing;
+        double bottom = lowerLeft[1] + plotSpacing;
+        long xSteps = (long) Math.floor((right - left) / plotSpacing);
+        long ySteps = (long) Math.floor((top - bottom) / plotSpacing);
+        return Stream.iterate(left, x -> x + plotSpacing)
+            .limit(xSteps)
+            .flatMap(x -> {
+                    return Stream.iterate(bottom, y -> y + plotSpacing)
+                        .limit(ySteps)
+                        .map(y -> { return reprojectPoint(new Double[]{x, y}, 3857, 4326); });
+                })
+            .toArray(Double[][]::new);
+    }
+
     private static double squareDistance(double x1, double y1, double x2, double y2) {
         return Math.pow(x2 - x1, 2.0) + Math.pow(y2 - y1, 2.0);
     }
@@ -393,10 +412,11 @@ public class Projects {
 
         // Generate the plot objects and their associated sample points
         // FIXME: No support for gridded or csv plotDistributions or square plotShapes
-        // FIXME: Update numPlots and/or samplesPerPlot in newProject when they are auto-generated
         // FIXME: Simplify the data stored in each plot
         // FIXME: Add additional fields to sample points if passed in CSV
-        Double[][] newPlotCenters = createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
+        Double[][] newPlotCenters = plotDistribution.equals("gridded")
+            ? createGriddedPointsInBounds(lonMin, latMin, lonMax, latMax, plotSpacing)
+            : createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
         IntSupplier plotIndexer = makeCounter();
         JsonArray newPlots = Arrays.stream(newPlotCenters)
             .map(plotCenter -> {
@@ -432,8 +452,11 @@ public class Projects {
         // Write the plot data to a new plot-data-<id>.json file
         writeJsonFile("plot-data-" + newProject.get("id").getAsString() + ".json", newPlots);
 
+        // FIXME: Update numPlots and samplesPerPlot when they are auto-generated
+        newProject.addProperty("numPlots", numPlots);
+        newProject.addProperty("samplesPerPlot", samplesPerPlot);
+
         // Return the updated project object
-        // FIXME: update its fields first
         return newProject;
     }
 
