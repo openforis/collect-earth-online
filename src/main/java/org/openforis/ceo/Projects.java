@@ -312,17 +312,6 @@ public class Projects {
         return imageryAttribution.get(baseMapSource);
     }
 
-    private static Double[][] createRandomPointsInBounds(double left, double bottom, double right, double top, int numPoints) {
-        double xRange = right - left;
-        double yRange = top - bottom;
-        return Stream.generate(() -> {
-                return new Double[]{left + Math.random() * xRange,
-                                    bottom + Math.random() * yRange};
-            })
-            .limit(numPoints)
-            .toArray(Double[][]::new);
-    }
-
     private static Double[] reprojectPoint(Double[] point, int fromEPSG, int toEPSG) {
         try {
             Point oldPoint = (new GeometryFactory(new PrecisionModel(), fromEPSG)).createPoint(new Coordinate(point[0], point[1]));
@@ -336,24 +325,61 @@ public class Projects {
         }
     }
 
-    private static Double[][] createGriddedPointsInBounds(double lonMin, double latMin, double lonMax, double latMax, double plotSpacing) {
+    private static Double[] reprojectBounds(double lonMin, double latMin, double lonMax, double latMax, double buffer) {
         Double[] lowerLeft = reprojectPoint(new Double[]{lonMin, latMin}, 4326, 3857);
         Double[] upperRight = reprojectPoint(new Double[]{lonMax, latMax}, 4326, 3857);
-        double padding = plotSpacing / 2.0;
-        double left = lowerLeft[0] + padding;
-        double right = upperRight[0] - padding;
-        double top = upperRight[1] - padding;
-        double bottom = lowerLeft[1] + padding;
-        long xSteps = (long) Math.floor((right - left) / plotSpacing);
-        long ySteps = (long) Math.floor((top - bottom) / plotSpacing);
-        return Stream.iterate(left, x -> x + plotSpacing)
-            .limit(xSteps)
-            .flatMap(x -> {
-                    return Stream.iterate(bottom, y -> y + plotSpacing)
-                        .limit(ySteps)
-                        .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326));
-                })
+        double left = lowerLeft[0] + buffer;
+        double right = upperRight[0] - buffer;
+        double top = upperRight[1] - buffer;
+        double bottom = lowerLeft[1] + buffer;
+        return new Double[]{left, bottom, right, top};
+    }
+
+    // NOTE: Inputs are in Web Mercator and outputs are in WGS84 lat/lon
+    private static Double[][] createRandomPointsInBounds(double left, double bottom, double right, double top, int numPoints) {
+        double xRange = right - left;
+        double yRange = top - bottom;
+        return Stream.generate(() -> new Double[]{left + Math.random() * xRange,
+                                                  bottom + Math.random() * yRange})
+            .limit(numPoints)
+            .map(point -> reprojectPoint(point, 3857, 4326))
             .toArray(Double[][]::new);
+    }
+
+    // NOTE: Inputs are in Web Mercator and outputs are in WGS84 lat/lon
+    private static Double[][] createGriddedPointsInBounds(double left, double bottom, double right, double top, double spacing) {
+        long xSteps = (long) Math.floor((right - left) / spacing);
+        long ySteps = (long) Math.floor((top - bottom) / spacing);
+        return Stream.iterate(left, x -> x + spacing)
+            .limit(xSteps)
+            .flatMap(x -> Stream.iterate(bottom, y -> y + spacing)
+                     .limit(ySteps)
+                     .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
+            .toArray(Double[][]::new);
+    }
+
+    private static Double[][] createRandomSampleSet(Double[] plotCenter, String plotShape, double plotSize, int samplesPerPlot) {
+        Double[] plotCenterWebMercator = reprojectPoint(plotCenter, 4326, 3857);
+        double plotX =  plotCenterWebMercator[0];
+        double plotY =  plotCenterWebMercator[1];
+        double radius = plotSize / 2.0;
+        double left =   plotX - radius;
+        double right =  plotX + radius;
+        double top =    plotY + radius;
+        double bottom = plotY - radius;
+        if (plotShape.equals("circle")) {
+            return Stream.generate(() -> 2.0 * Math.PI * Math.random())
+                .limit(samplesPerPlot)
+                .map(offsetAngle -> {
+                        double offsetMagnitude = radius * Math.random();
+                        double xOffset = offsetMagnitude * Math.cos(offsetAngle);
+                        double yOffset = offsetMagnitude * Math.sin(offsetAngle);
+                        return reprojectPoint(new Double[]{plotX + xOffset, plotY + yOffset}, 3857, 4326);
+                    })
+                .toArray(Double[][]::new);
+        } else {
+            return createRandomPointsInBounds(left, bottom, right, top, samplesPerPlot);
+        }
     }
 
     private static double squareDistance(double x1, double y1, double x2, double y2) {
@@ -373,37 +399,11 @@ public class Projects {
         long steps = (long) Math.floor(plotSize / sampleResolution);
         return Stream.iterate(left, x -> x + sampleResolution)
             .limit(steps)
-            .flatMap(x -> {
-                    return Stream.iterate(bottom, y -> y + sampleResolution)
-                        .limit(steps)
-                        .filter(y -> plotShape.equals("square") || squareDistance(x, y, plotX, plotY) < radiusSquared)
-                        .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326));
-                })
+            .flatMap(x -> Stream.iterate(bottom, y -> y + sampleResolution)
+                     .limit(steps)
+                     .filter(y -> plotShape.equals("square") || squareDistance(x, y, plotX, plotY) < radiusSquared)
+                     .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
             .toArray(Double[][]::new);
-    }
-
-    private static Double[][] createRandomSampleSet(Double[] plotCenter, String plotShape, double plotSize, int samplesPerPlot) {
-        Double[] plotCenterWebMercator = reprojectPoint(plotCenter, 4326, 3857);
-        double plotX =  plotCenterWebMercator[0];
-        double plotY =  plotCenterWebMercator[1];
-        double radius = plotSize / 2.0;
-        double left =   plotX - radius;
-        double right =  plotX + radius;
-        double top =    plotY + radius;
-        double bottom = plotY - radius;
-        if (plotShape.equals("circle")) {
-            return Stream.generate(() -> { return 2.0 * Math.PI * Math.random(); })
-                .limit(samplesPerPlot)
-                .map(offsetAngle -> {
-                        double offsetMagnitude = radius * Math.random();
-                        double xOffset = offsetMagnitude * Math.cos(offsetAngle);
-                        double yOffset = offsetMagnitude * Math.sin(offsetAngle);
-                        return reprojectPoint(new Double[]{plotX + xOffset, plotY + yOffset}, 3857, 4326);
-                    })
-                .toArray(Double[][]::new);
-        } else {
-            return createRandomPointsInBounds(left, bottom, right, top, samplesPerPlot);
-        }
     }
 
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
@@ -416,18 +416,26 @@ public class Projects {
         String sampleDistribution = newProject.get("sampleDistribution").getAsString();
         int samplesPerPlot = newProject.get("samplesPerPlot").isJsonNull() ? 0 : newProject.get("samplesPerPlot").getAsInt();
         double sampleResolution = newProject.get("sampleResolution").isJsonNull() ? 0.0 : newProject.get("sampleResolution").getAsDouble();
+
+        // Convert the lat/lon boundary coordinates to Web Mercator (units: meters) and apply an interior buffer of plotSize / 2
         double lonMin = newProject.get("lonMin").getAsDouble();
         double latMin = newProject.get("latMin").getAsDouble();
         double lonMax = newProject.get("lonMax").getAsDouble();
         double latMax = newProject.get("latMax").getAsDouble();
+        Double[] bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, plotSize / 2.0);
+        double left = bounds[0];
+        double bottom = bounds[1];
+        double right = bounds[2];
+        double top = bounds[3];
 
         // Generate the plot objects and their associated sample points
         // FIXME: No support for csv plotDistributions
         // FIXME: Add additional fields to sample points if passed in CSV
         // FIXME: Make sure the new plot schema is propagated throughout the code base
+        // FIXME: Remove radius fields in plot-data-#.json files
         Double[][] newPlotCenters = plotDistribution.equals("gridded")
-            ? createGriddedPointsInBounds(lonMin, latMin, lonMax, latMax, plotSpacing)
-            : createRandomPointsInBounds(lonMin, latMin, lonMax, latMax, numPlots);
+            ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
+            : createRandomPointsInBounds(left, bottom, right, top, numPlots);
         IntSupplier plotIndexer = makeCounter();
         JsonArray newPlots = Arrays.stream(newPlotCenters)
             .map(plotCenter -> {
@@ -452,7 +460,6 @@ public class Projects {
                     .collect(intoJsonArray);
 
                     newPlot.add("samples", newSamples);
-
                     return newPlot;
                 })
             .collect(intoJsonArray);
@@ -460,9 +467,9 @@ public class Projects {
         // Write the plot data to a new plot-data-<id>.json file
         writeJsonFile("plot-data-" + newProject.get("id").getAsString() + ".json", newPlots);
 
-        // FIXME: Update numPlots and samplesPerPlot when they are auto-generated
-        newProject.addProperty("numPlots", numPlots);
-        newProject.addProperty("samplesPerPlot", samplesPerPlot);
+        // Update numPlots and samplesPerPlot to match the numbers that were generated
+        newProject.addProperty("numPlots", newPlots.size());
+        newProject.addProperty("samplesPerPlot", newPlots.get(0).getAsJsonObject().getAsJsonArray("samples").size());
 
         // Return the updated project object
         return newProject;
