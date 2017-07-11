@@ -3,6 +3,7 @@ package org.openforis.ceo;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -457,7 +458,7 @@ public class Projects {
         double sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
 
         // If plotDistribution is csv, calculate the lat/lon bounds from the csv contents
-        Double[][] csvPoints;
+        Double[][] csvPoints = new Double[][]{};
         if (plotDistribution.equals("csv")) {
             csvPoints = loadCsvPoints(newProject.get("csv").getAsString());
             Double[] csvBounds = calculateBounds(csvPoints, plotSize / 2.0);
@@ -553,7 +554,7 @@ public class Projects {
             newProject.addProperty("id", newProjectId);
 
             // Upload the plot-distribution-csv-file if one was provided
-            if (newProject.get("plotDistribution").equals("csv")) {
+            if (newProject.get("plotDistribution").getAsString().equals("csv")) {
                 String csvFileName = writeFilePart(req, "plot-distribution-csv-file", "project-" + newProjectId);
                 newProject.addProperty("csv", csvFileName);
             } else {
