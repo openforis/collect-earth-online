@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -8,8 +9,11 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Map;
@@ -325,14 +329,14 @@ public class Projects {
         }
     }
 
-    private static Double[] reprojectBounds(double lonMin, double latMin, double lonMax, double latMax, double buffer) {
-        Double[] lowerLeft = reprojectPoint(new Double[]{lonMin, latMin}, 4326, 3857);
-        Double[] upperRight = reprojectPoint(new Double[]{lonMax, latMax}, 4326, 3857);
-        double left = lowerLeft[0] + buffer;
-        double right = upperRight[0] - buffer;
-        double top = upperRight[1] - buffer;
-        double bottom = lowerLeft[1] + buffer;
-        return new Double[]{left, bottom, right, top};
+    private static Double[] reprojectBounds(double left, double bottom, double right, double top, int fromEPSG, int toEPSG) {
+        Double[] lowerLeft = reprojectPoint(new Double[]{left, bottom}, fromEPSG, toEPSG);
+        Double[] upperRight = reprojectPoint(new Double[]{right, top}, fromEPSG, toEPSG);
+        return new Double[]{lowerLeft[0], lowerLeft[1], upperRight[0], upperRight[1]};
+    }
+
+    private static Double[] padBounds(double left, double bottom, double right, double top, double buffer) {
+        return new Double[]{left + buffer, bottom + buffer, right - buffer, top - buffer};
     }
 
     // NOTE: Inputs are in Web Mercator and outputs are in WGS84 lat/lon
@@ -406,27 +410,62 @@ public class Projects {
             .toArray(Double[][]::new);
     }
 
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: lon, lat, ...
+    private static Double[][] loadCsvPoints(String filename) {
+		try (Stream<String> lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+			return lines.skip(1)
+                .map(line -> {
+                        String[] fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
+                        return new Double[]{Double.parseDouble(fields[0]),
+                                            Double.parseDouble(fields[1])};
+                    })
+                .toArray(Double[][]::new);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Double[] calculateBounds(Double[][] points, double buffer) {
+        Double[] lons = Arrays.stream(points).map(point -> point[0]).toArray(Double[]::new);
+        Double[] lats = Arrays.stream(points).map(point -> point[1]).toArray(Double[]::new);
+        double lonMin = Arrays.stream(lons).min(Comparator.naturalOrder()).get();
+        double latMin = Arrays.stream(lats).min(Comparator.naturalOrder()).get();
+        double lonMax = Arrays.stream(lons).max(Comparator.naturalOrder()).get();
+        double latMax = Arrays.stream(lats).max(Comparator.naturalOrder()).get();
+        Double[] bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, 4326, 3857);
+        Double[] paddedBounds = padBounds(bounds[0], bounds[1], bounds[2], bounds[3], -buffer);
+        return reprojectBounds(paddedBounds[0], paddedBounds[1], paddedBounds[2], paddedBounds[3], 3857, 4326);
+    }
+
+    private static JsonElement getOrZero(JsonObject obj, String field) {
+        return obj.get(field).isJsonNull() ? new JsonPrimitive(0) : obj.get(field);
+    }
+
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
-        String plotDistribution = newProject.get("plotDistribution").getAsString();
-        int numPlots = newProject.get("numPlots").isJsonNull() ? 0 : newProject.get("numPlots").getAsInt();
-        double plotSpacing = newProject.get("plotSpacing").isJsonNull() ? 0.0 : newProject.get("plotSpacing").getAsDouble();
-        String plotShape = newProject.get("plotShape").getAsString();
-        double plotSize = newProject.get("plotSize").getAsDouble();
+        double lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
+        double latMin =             getOrZero(newProject,"latMin").getAsDouble();
+        double lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
+        double latMax =             getOrZero(newProject,"latMax").getAsDouble();
+        String plotDistribution =   newProject.get("plotDistribution").getAsString();
+        int numPlots =              getOrZero(newProject,"numPlots").getAsInt();
+        double plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
+        String plotShape =          newProject.get("plotShape").getAsString();
+        double plotSize =           newProject.get("plotSize").getAsDouble();
         String sampleDistribution = newProject.get("sampleDistribution").getAsString();
-        int samplesPerPlot = newProject.get("samplesPerPlot").isJsonNull() ? 0 : newProject.get("samplesPerPlot").getAsInt();
-        double sampleResolution = newProject.get("sampleResolution").isJsonNull() ? 0.0 : newProject.get("sampleResolution").getAsDouble();
+        int samplesPerPlot =        getOrZero(newProject,"samplesPerPlot").getAsInt();
+        double sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
 
-        // Convert the lat/lon boundary coordinates to Web Mercator (units: meters) and apply an interior buffer of plotSize / 2
-        double lonMin = newProject.get("lonMin").getAsDouble();
-        double latMin = newProject.get("latMin").getAsDouble();
-        double lonMax = newProject.get("lonMax").getAsDouble();
-        double latMax = newProject.get("latMax").getAsDouble();
-        Double[] bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, plotSize / 2.0);
-        double left = bounds[0];
-        double bottom = bounds[1];
-        double right = bounds[2];
-        double top = bounds[3];
+        // If plotDistribution is csv, calculate the lat/lon bounds from the csv contents
+        Double[][] csvPoints;
+        if (plotDistribution.equals("csv")) {
+            csvPoints = loadCsvPoints(newProject.get("csv").getAsString());
+            Double[] csvBounds = calculateBounds(csvPoints, plotSize / 2.0);
+            lonMin = csvBounds[0];
+            latMin = csvBounds[1];
+            lonMax = csvBounds[2];
+            latMax = csvBounds[3];
+        }
 
         // Store the lat/lon bounding box coordinates as GeoJSON and remove their original fields
         newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
@@ -435,14 +474,21 @@ public class Projects {
         newProject.remove("lonMax");
         newProject.remove("latMax");
 
+        // Convert the lat/lon boundary coordinates to Web Mercator (units: meters) and apply an interior buffer of plotSize / 2
+        Double[] bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, 4326, 3857);
+        Double[] paddedBounds = padBounds(bounds[0], bounds[1], bounds[2], bounds[3], plotSize / 2.0);
+        double left = paddedBounds[0];
+        double bottom = paddedBounds[1];
+        double right = paddedBounds[2];
+        double top = paddedBounds[3];
+
         // Generate the plot objects and their associated sample points
-        // FIXME: No support for csv plotDistributions
         // FIXME: Add additional fields to sample points if passed in CSV
         // FIXME: Make sure the new plot schema is propagated throughout the code base
         // FIXME: Remove radius fields in plot-data-#.json files
-        Double[][] newPlotCenters = plotDistribution.equals("gridded")
-            ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
-            : createRandomPointsInBounds(left, bottom, right, top, numPlots);
+        Double[][] newPlotCenters = plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
+                                  : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
+                                  : csvPoints;
         IntSupplier plotIndexer = makeCounter();
         JsonArray newPlots = Arrays.stream(newPlotCenters)
             .map(plotCenter -> {
