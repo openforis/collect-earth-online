@@ -428,6 +428,13 @@ public class Projects {
         double right = bounds[2];
         double top = bounds[3];
 
+        // Store the lat/lon bounding box coordinates as GeoJSON and remove their original fields
+        newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
+        newProject.remove("lonMin");
+        newProject.remove("latMin");
+        newProject.remove("lonMax");
+        newProject.remove("latMax");
+
         // Generate the plot objects and their associated sample points
         // FIXME: No support for csv plotDistributions
         // FIXME: Add additional fields to sample points if passed in CSV
@@ -507,13 +514,6 @@ public class Projects {
                 newProject.add("csv", null);
             }
 
-            // Convert the bounding box coordinates to GeoJSON
-            double lonMin = newProject.get("lonMin").getAsDouble();
-            double latMin = newProject.get("latMin").getAsDouble();
-            double lonMax = newProject.get("lonMax").getAsDouble();
-            double latMax = newProject.get("latMax").getAsDouble();
-            newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
-
             // Add ids to the sampleValues and clean up some of their unnecessary fields
             JsonArray sampleValues = newProject.get("sampleValues").getAsJsonArray();
             IntSupplier sampleValueIndexer = makeCounter();
@@ -537,12 +537,6 @@ public class Projects {
 
             // Create the requested plot set and write it to plot-data-<newProjectId>.json
             JsonObject newProjectUpdated = createProjectPlots(newProject);
-
-            // Remove the lat/lon boundary fields
-            newProjectUpdated.remove("lonMin");
-            newProjectUpdated.remove("latMin");
-            newProjectUpdated.remove("lonMax");
-            newProjectUpdated.remove("latMax");
 
             // Write the new entry to project-list.json
             projects.add(newProjectUpdated);
