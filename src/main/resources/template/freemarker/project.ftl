@@ -200,7 +200,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <label>Plot {{ project.details.plotShape == 'circle' ? 'Radius' : 'Width' }} (m)</label>
+                    <label>Plot {{ project.details.plotShape == 'circle' ? 'Diameter' : 'Width' }} (m)</label>
                     <input type="number" id="plot-size" name="plot-size" autocomplete="off" min="0.0" step="any" ng-model="project.details.plotSize">
                 </div>
             </fieldset>
