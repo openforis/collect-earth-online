@@ -349,12 +349,16 @@ public class Projects {
 
     // NOTE: Inputs are in Web Mercator and outputs are in WGS84 lat/lon
     private static Double[][] createGriddedPointsInBounds(double left, double bottom, double right, double top, double spacing) {
-        long xSteps = (long) Math.floor((right - left) / spacing);
-        long ySteps = (long) Math.floor((top - bottom) / spacing);
-        return Stream.iterate(left, x -> x + spacing)
-            .limit(xSteps)
-            .flatMap(x -> Stream.iterate(bottom, y -> y + spacing)
-                     .limit(ySteps)
+        double xRange = right - left;
+        double yRange = top - bottom;
+        long xSteps = (long) Math.floor(xRange / spacing);
+        long ySteps = (long) Math.floor(yRange / spacing);
+        double xPadding = (xRange - xSteps * spacing) / 2.0;
+        double yPadding = (yRange - ySteps * spacing) / 2.0;
+        return Stream.iterate(left + xPadding, x -> x + spacing)
+            .limit(xSteps + 1)
+            .flatMap(x -> Stream.iterate(bottom + yPadding, y -> y + spacing)
+                     .limit(ySteps + 1)
                      .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
             .toArray(Double[][]::new);
     }
@@ -389,20 +393,21 @@ public class Projects {
 
     private static Double[][] createGriddedSampleSet(Double[] plotCenter, String plotShape, double plotSize, double sampleResolution) {
         Double[] plotCenterWebMercator = reprojectPoint(plotCenter, 4326, 3857);
-        double plotX =  plotCenterWebMercator[0];
-        double plotY =  plotCenterWebMercator[1];
+        double centerX = plotCenterWebMercator[0];
+        double centerY = plotCenterWebMercator[1];
         double radius = plotSize / 2.0;
         double radiusSquared = radius * radius;
-        double left =   plotX - radius;
-        double right =  plotX + radius;
-        double top =    plotY + radius;
-        double bottom = plotY - radius;
+        double left = centerX - radius;
+        double bottom = centerY - radius;
+        double right = centerX + radius;
+        double top = centerY + radius;
         long steps = (long) Math.floor(plotSize / sampleResolution);
-        return Stream.iterate(left, x -> x + sampleResolution)
-            .limit(steps)
-            .flatMap(x -> Stream.iterate(bottom, y -> y + sampleResolution)
-                     .limit(steps)
-                     .filter(y -> plotShape.equals("square") || squareDistance(x, y, plotX, plotY) < radiusSquared)
+        double padding = (plotSize - steps * sampleResolution) / 2.0;
+        return Stream.iterate(left + padding, x -> x + sampleResolution)
+            .limit(steps + 1)
+            .flatMap(x -> Stream.iterate(bottom + padding, y -> y + sampleResolution)
+                     .limit(steps + 1)
+                     .filter(y -> plotShape.equals("square") || squareDistance(x, y, centerX, centerY) < radiusSquared)
                      .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
             .toArray(Double[][]::new);
     }
