@@ -88,22 +88,22 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             this.getPlotData(parseInt(this.currentProjectId));
         } else {
             var randomIndex = Math.floor(Math.random() * this.plotList.length);
-            var newPlot = this.plotList[randomIndex].plot;
-            var newSamples = this.plotList[randomIndex].samples;
+            var newPlot = this.plotList[randomIndex];
+            var newSamples = newPlot.samples;
             this.currentPlot = newPlot;
             this.currentSamples = newSamples;
             this.userSamples = {};
             utils.disable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
             utils.disable_element("save-values-button");
-            map_utils.draw_buffer(newPlot.center, newPlot.radius);
+            map_utils.draw_plot(newPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
             map_utils.draw_points(newSamples);
             window.open(this.root + "/geo-dash?"
                         + encodeURIComponent("title=" + this.currentProject.name
                                              + "&pid=" + this.currentProjectId
                                              + "&aoi=[" + map_utils.get_view_extent()
                                              + "]&daterange=&bcenter=" + newPlot.center
-                                             + "&bradius=" + newPlot.radius),
+                                             + "&bradius=" + this.currentProject.plotSize / 2),
                         "_geo-dash");
         }
     };
@@ -155,7 +155,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                    {projectId: projectId,
                     plotId:    plotId})
             .then(angular.bind(this, function successCallback(response) {
-                alert("Plot " + plotId + " has been flagged");
+                alert("Plot " + plotId + " has been flagged.");
                 this.loadRandomPlot();
             }), function errorCallback(response) {
                 console.log(response);

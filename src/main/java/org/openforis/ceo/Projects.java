@@ -212,13 +212,11 @@ public class Projects {
 
         mapJsonFile("plot-data-" + projectId + ".json",
                     plot -> {
-                        JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                        JsonArray samples = plot.get("samples").getAsJsonArray();
-                        if (plotAttributes.get("id").getAsString().equals(plotId)) {
-                            int currentAnalyses = plotAttributes.get("analyses").getAsInt();
-                            plotAttributes.addProperty("analyses", currentAnalyses + 1);
-                            plotAttributes.addProperty("user", userName);
-                            plot.add("plot", plotAttributes);
+                        if (plot.get("id").getAsString().equals(plotId)) {
+                            int currentAnalyses = plot.get("analyses").getAsInt();
+                            plot.addProperty("analyses", currentAnalyses + 1);
+                            plot.addProperty("user", userName);
+                            JsonArray samples = plot.get("samples").getAsJsonArray();
                             JsonArray updatedSamples = mapJsonArray(samples,
                                                                     sample -> {
                                                                         String sampleId = sample.get("id").getAsString();
@@ -242,10 +240,8 @@ public class Projects {
 
         mapJsonFile("plot-data-" + projectId + ".json",
                     plot -> {
-                        JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
-                        if (plotAttributes.get("id").getAsString().equals(plotId)) {
-                            plotAttributes.addProperty("flagged", true);
-                            plot.add("plot", plotAttributes);
+                        if (plot.get("id").getAsString().equals(plotId)) {
+                            plot.addProperty("flagged", true);
                             return plot;
                         } else {
                             return plot;
@@ -484,9 +480,6 @@ public class Projects {
         double top = paddedBounds[3];
 
         // Generate the plot objects and their associated sample points
-        // FIXME: Add additional fields to sample points if passed in CSV
-        // FIXME: Make sure the new plot schema is propagated throughout the code base
-        // FIXME: Remove radius fields in plot-data-#.json files
         Double[][] newPlotCenters = plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
                                   : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
                                   : csvPoints;
