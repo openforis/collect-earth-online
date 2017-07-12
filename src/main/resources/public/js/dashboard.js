@@ -3,9 +3,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.projectList = [];
     this.currentProjectId = "";
     this.currentProject = null;
-    this.plotList = [];
     this.currentPlot = null;
-    this.currentSamples = [];
     this.userSamples = {};
 
     this.getProjectList = function (institutionId) {
@@ -58,7 +56,6 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         if (newProject) {
             this.currentProject = newProject;
             this.currentPlot = null;
-            this.currentSamples = [];
             this.userSamples = {};
             map_utils.remove_plot_layer();
             map_utils.remove_sample_layer();
@@ -74,9 +71,13 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.getPlotData = function (projectId) {
         $http.get(this.root + "/get-project-plots/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
-                this.plotList = response.data;
-                this.loadRandomPlot();
-                this.plotList = [];
+                if (response.data == "done") {
+                    this.currentPlot = null;
+                    alert("All plots have been analyzed for this project.");
+                } else {
+                    this.currentPlot = response.data;
+                    this.loadRandomPlot();
+                }
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving plot data. See console for details.");
@@ -84,25 +85,20 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     };
 
     this.loadRandomPlot = function () {
-        if (this.plotList.length == 0) {
+        if (this.currentPlot == null) {
             this.getPlotData(parseInt(this.currentProjectId));
         } else {
-            var randomIndex = Math.floor(Math.random() * this.plotList.length);
-            var newPlot = this.plotList[randomIndex];
-            var newSamples = newPlot.samples;
-            this.currentPlot = newPlot;
-            this.currentSamples = newSamples;
             this.userSamples = {};
             utils.disable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
             utils.disable_element("save-values-button");
-            map_utils.draw_plot(newPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
-            map_utils.draw_points(newSamples);
+            map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
+            map_utils.draw_points(this.currentPlot.samples);
             window.open(this.root + "/geo-dash?"
                         + encodeURIComponent("title=" + this.currentProject.name
                                              + "&pid=" + this.currentProjectId
                                              + "&aoi=[" + map_utils.get_view_extent()
-                                             + "]&daterange=&bcenter=" + newPlot.center
+                                             + "]&daterange=&bcenter=" + this.currentPlot.center
                                              + "&bradius=" + this.currentProject.plotSize / 2),
                         "_geo-dash");
         }
@@ -120,7 +116,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             );
             selectedFeatures.clear();
             utils.blink_border(sampleValue.id);
-            if (Object.keys(this.userSamples).length == this.currentSamples.length) {
+            if (Object.keys(this.userSamples).length == this.currentPlot.samples.length) {
                 utils.enable_element("save-values-button");
             }
         } else {
@@ -139,8 +135,8 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                 utils.enable_element("new-plot-button");
                 utils.disable_element("flag-plot-button");
                 utils.disable_element("save-values-button");
-                this.currentPlot = null;
                 map_utils.disable_selection();
+                this.currentPlot = null;
                 this.loadRandomPlot();
             }), function errorCallback(response) {
                 console.log(response);
@@ -156,6 +152,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
                     plotId:    plotId})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Plot " + plotId + " has been flagged.");
+                this.currentPlot = null;
                 this.loadRandomPlot();
             }), function errorCallback(response) {
                 console.log(response);
