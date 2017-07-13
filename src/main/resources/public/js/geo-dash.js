@@ -1,5 +1,6 @@
 var gpid;
 var gurl;
+var gmodcdash;
 angular.module("geodash", []).controller("GeodashController", ["$http", function GeodashController($http) {
     this.debugme;
     this.theURL = "geo-dash/";
@@ -18,6 +19,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.maxHeight = 0;
     this.sHeight = 0;
     var geodash = this;
+    gmodcdash = this;
     this.initialize = function (documentRoot) {
         geodash = this;
         var pid = this.getParameterByName("pid");
@@ -533,8 +535,10 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     };
     this.makeAdjustable = function () {
         "use strict";
+        console.info(10);
         $(".panel-fullscreen").click(function (e) {
             e.preventDefault();
+            console.info(0);
             var $this = $(this);
             if ($this.children("i").hasClass("glyphicon-resize-full")) {
                 $this.children("i").removeClass("glyphicon-resize-full");
@@ -593,6 +597,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             }
 
         });
+        console.info(11);
     };
 }]);
 
