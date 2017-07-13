@@ -14,7 +14,7 @@
         <div class="row">
             <div id="dashHolder" class="col-sm-12 col-md-12 main">
                 <div>
-                    <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-primary" onclick="createNewWidget()" style="display:none; float:right;">
+                    <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-primary" ng-click="geodash.createNewWidget()" style="display:none; float:right;">
                     <h1 class="page-header">GEO-DASH</h1>
                 </div>
             </div>
