@@ -55,7 +55,6 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
                 console.warn("missing projAOI" + e.message);
             }
         }
-        console.info(200);
         this.ajaxurl = this.theURL + "id/" + pid;
         $.ajax({
             url: this.ajaxurl,
@@ -67,9 +66,7 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             success: function (response) {
                 debugme = response;
                 try {
-                console.info(12);
                     geodash.fillDashboard(response);
-                    console.info(13);
                 }
                 catch (e) {
                     console.debug(e.message);
@@ -96,9 +93,23 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
                 $("#mainform").show();
             }
         });
-    angular.element(document).ready(function () {
-        gmodcdash.setupDialog();
-    });
+        angular.element(document).ready(function () {
+            gmodcdash.setupDialog();
+        });
+        angular.element(document).ready(function () {
+            $(".input-daterange input").each(function () {
+                try {
+                    $(this).datepicker({
+                        changeMonth: true,
+                        changeYear: true,
+                        dateFormat: "yy-mm-dd"
+                    });
+                } catch (e) {
+                    console.warn(e.message);
+                }
+            });
+            $("#btnNewWidget").show();
+        });
         //window.setTimeout('gmodcdash.setupDialog()', 500);
     };
     this.completeGraph = function () {
@@ -114,32 +125,31 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             }
         });
     }
-    this.setupDialog = function(){
-    geodash.dialog = $("#dialog-form").dialog({
-                autoOpen: false,
-                height: 400,
-                width: 350,
-                modal: true,
-                buttons: [{
-                    text: "Create widget",
-                    "class": "btn btn-primary",
-                    click: geodash.createUserWidget
-                },
-                        {
-                            text: "Cancel",
-                            "class": "btn btn-primary",
-                            click: function () {
-                                geodash.dialog.dialog("close");
-                            }
-                        }],
-                close: function () {
-                    geodash.form[0].reset();
-                    $("#widgetType").trigger("change");
-                    //allFields.removeClass("ui-state-error");
-                }
-            });
-    console.info(15);
-            geodash.form = this.dialog.find("form");
+    this.setupDialog = function () {
+        geodash.dialog = $("#dialog-form").dialog({
+            autoOpen: false,
+            height: 400,
+            width: 350,
+            modal: true,
+            buttons: [{
+                text: "Create widget",
+                "class": "btn btn-primary",
+                click: geodash.createUserWidget
+            },
+                    {
+                        text: "Cancel",
+                        "class": "btn btn-primary",
+                        click: function () {
+                            geodash.dialog.dialog("close");
+                        }
+                    }],
+            close: function () {
+                geodash.form[0].reset();
+                $("#widgetType").trigger("change");
+                //allFields.removeClass("ui-state-error");
+            }
+        });
+        geodash.form = this.dialog.find("form");
 
     };
     this.addBuffer = function (whichMap) {
@@ -515,8 +525,10 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             }
         });
     }
+    this.debugwidget;
     this.initWidget = function (widget) {
         "use strict";
+        this.debugwidget = widget;
 
         var collectionName;
         var timeseriesData;
@@ -535,29 +547,29 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
         }
         if (widget.properties[0] === "addImageCollection") {
             this.enableMapWidget("widgetmap_" + widget.id);
-            if (this.projAOI === "") {
-                this.projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
+            if (gmodcdash.projAOI === "") {
+                gmodcdash.projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
             } else {
-                if (typeof this.projAOI === "string") {
-                    this.projAOI = $.parseJSON(this.projAOI);
+                if (typeof gmodcdash.projAOI === "string") {
+                    gmodcdash.projAOI = $.parseJSON(gmodcdash.projAOI);
                 }
             }
 
-            if (this.projAOI) {
-                this.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
-                    ol.proj.transform([this.projAOI[0], this.projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([this.projAOI[2], this.projAOI[3]], "EPSG:4326", "EPSG:3857")),
-                    this.mapWidgetArray["widgetmap_" + widget.id].getSize()
+            if (gmodcdash.projAOI) {
+                gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                    ol.proj.transform([gmodcdash.projAOI[0], gmodcdash.projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([gmodcdash.projAOI[2], gmodcdash.projAOI[3]], "EPSG:4326", "EPSG:3857")),
+                    gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getSize()
                 );
             } else {
-                this.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
-                    this.projAOI,
-                    this.mapWidgetArray["widgetmap_" + widget.id].getSize()
+                gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                    gmodcdash.projAOI,
+                    gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getSize()
                 );
             }
             collectionName = widget.properties[1];
             var dateFrom = widget.properties[2];
             var dateTo = widget.properties[3];
-            var url = this.gateway + "/imageByMosaicCollection";
+            var url = gmodcdash.gateway + "/imageByMosaicCollection";
             var bands = "";
             if (widget.properties.length === 5) {
                 bands = widget.properties[4];
@@ -565,17 +577,16 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             /********************/
             var min = "";
             var max = "0.3";
-            try{
-            if ($("#min_" + widgetID).val().length > 0) {
-                min = $("#min_" + widgetID).val();
-            }
+            try {
+                if ($("#min_" + widgetID).val().length > 0) {
+                    min = $("#min_" + widgetID).val();
+                }
 
-            if ($("#max_" + widgetID).val().length > 0) {
-                max = $("#max_" + widgetID).val();
+                if ($("#max_" + widgetID).val().length > 0) {
+                    max = $("#max_" + widgetID).val();
+                }
             }
-            }
-            catch(e){}
-            console.info('min: ' + min + " max: " + max);
+            catch (e) { }
             var visParams = {
                 min: min,
                 max: max,
@@ -879,6 +890,7 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
         this.pageWidgets.forEach(function (widget) {
             geodash.initWidget(widget);
         });
+
         $(".input-daterange input").each(function () {
             try {
                 $(this).datepicker({
@@ -891,9 +903,9 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             }
         });
         this.makeDragable();
-        if (this.isAdmin) {
-            $("#btnNewWidget").show();
-        }
+
+        $("#btnNewWidget").show();
+
     }
     this.updatewidget = function (which) {
         "use strict";
@@ -1012,93 +1024,87 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
         }
     }
     this.makeAdjustable = function () {
-            "use strict";
-            console.info(10);
-            $(".panel-fullscreen").click(function (e) {
-                e.preventDefault();
-                console.info(0);
-                var $this = $(this);
-                if ($this.children("i").hasClass("glyphicon-resize-full")) {
-                    $this.children("i").removeClass("glyphicon-resize-full");
-                    $this.children("i").addClass("glyphicon-resize-small");
-                } else if ($this.children("i").hasClass("glyphicon-resize-small")) {
-                    $this.children("i").removeClass("glyphicon-resize-small");
-                    $this.children("i").addClass("glyphicon-resize-full");
+        "use strict";
+        $(".panel-fullscreen").click(function (e) {
+            e.preventDefault();
+            var $this = $(this);
+            if ($this.children("i").hasClass("glyphicon-resize-full")) {
+                $this.children("i").removeClass("glyphicon-resize-full");
+                $this.children("i").addClass("glyphicon-resize-small");
+            } else if ($this.children("i").hasClass("glyphicon-resize-small")) {
+                $this.children("i").removeClass("glyphicon-resize-small");
+                $this.children("i").addClass("glyphicon-resize-full");
+            }
+            $this.closest(".panel").toggleClass("panel-fullscreen");
+            var theWidget = $this.parent().parent().parent().parent();
+            geodash.swapElements(theWidget, document.getElementById("fullholder"));
+            var width = 0;
+            var height = 0;
+            if (theWidget.children().children().children()[2].id.includes("widgetmap_")) {
+                var mapdivid = "widgetmap_" + $(theWidget).attr("id").substring(7);
+                if (geodash.wStateFull) {
+                    $(theWidget).css("height", "auto");
+                    $("#fulldiv").css("z-index", "0");
+                    $(theWidget).css("margin-bottom", "20px");
+                    $("#" + mapdivid).removeClass("fullmapwidget");
+                    $("#" + mapdivid).addClass("minmapwidget");
+                    $(theWidget.children()[1]).height("auto");
+                } else {
+                    $("#content").scrollTop(0);
+                    $("#fulldiv").css("z-index", "1031");
+                    $(theWidget).css("height", "100%");
+                    $(theWidget).css("margin-bottom", "0");
+                    $("#" + mapdivid).removeClass("minmapwidget");
+                    $("#" + mapdivid).addClass("fullmapwidget");
+                    $(theWidget.children()[1]).height("100%");
                 }
-                $this.closest(".panel").toggleClass("panel-fullscreen");
-                var theWidget = $this.parent().parent().parent().parent();
-                geodash.swapElements(theWidget, document.getElementById("fullholder"));
-                var width = 0;
-                var height = 0;
-                console.info(1);
-                if (theWidget.children().children().children()[2].id.includes("widgetmap_")) {
-                    var mapdivid = "widgetmap_" + $(theWidget).attr("id").substring(7);
-                    if (geodash.wStateFull) {
-                        $(theWidget).css("height", "auto");
-                        $("#fulldiv").css("z-index", "0");
-                        $(theWidget).css("margin-bottom", "20px");
-                        $("#" + mapdivid).removeClass("fullmapwidget");
-                        $("#" + mapdivid).addClass("minmapwidget");
-                        $(theWidget.children()[1]).height("auto");
-                    } else {
-                        $("#content").scrollTop(0);
-                        $("#fulldiv").css("z-index", "1031");
-                        $(theWidget).css("height", "100%");
-                        $(theWidget).css("margin-bottom", "0");
-                        $("#" + mapdivid).removeClass("minmapwidget");
-                        $("#" + mapdivid).addClass("fullmapwidget");
-                        $(theWidget.children()[1]).height("100%");
-                    }
-                    geodash.wStateFull = !geodash.wStateFull;
-                    geodash.mapWidgetArray[mapdivid].updateSize();
-                } else if (theWidget.children().children().children()[2].id.includes("widgetgraph_")) {
-                    var graphdivid = "widgetgraph_" + $(theWidget).attr("id").substring(7);
-                    if (geodash.wStateFull) {
-                        $(theWidget).css("height", "auto");
-                        $("#fulldiv").css("z-index", "0");
-                        $(theWidget).css("margin-bottom", "20px");
-                        $("#" + graphdivid).removeClass("fullmapwidget");
-                        $("#" + graphdivid).addClass("minmapwidget");
-                        $(theWidget.children()[1]).height("auto");
-                    } else {
-                        $("#content").scrollTop(0);
-                        $("#fulldiv").css("z-index", "1031");
-                        $(theWidget).css("height", "100%");
-                        $(theWidget).css("margin-bottom", "0");
-                        $("#" + graphdivid).removeClass("minmapwidget");
-                        $("#" + graphdivid).addClass("fullmapwidget");
-                        $(theWidget.children()[1]).height("100%");
-                    }
-                    width = $("#" + graphdivid).outerWidth();
-                    height = $("#" + graphdivid).outerHeight();
-                    geodash.wStateFull = !geodash.wStateFull;
-                    console.info("graphdivid: " + graphdivid);
-                    geodash.graphWidgetArray[graphdivid].setSize(width, height, true);
-                    geodash.completeGraph();
-                } else if (theWidget.children().children().children()[2].id.includes("widgetstats_")) {
-                    var statsdivid = "widgetstats_" + $(theWidget).attr("id").substring(7);
-                    if (geodash.wStateFull) {
-                        $(theWidget).css("height", "auto");
-                        $("#fulldiv").css("z-index", "0");
-                        $(theWidget).css("margin-bottom", "20px");
-                        $("#" + statsdivid).removeClass("fullmapwidget");
-                        $("#" + statsdivid).addClass("minmapwidget");
-                    } else {
-                        $("#content").scrollTop(0);
-                        $("#fulldiv").css("z-index", "1031");
-                        $(theWidget).css("height", "100%");
-                        $(theWidget).css("margin-bottom", "0");
-                        $("#" + statsdivid).removeClass("minmapwidget");
-                        $("#" + statsdivid).addClass("fullmapwidget");
-                    }
-                    width = $("#" + statsdivid).outerWidth();
-                    height = $("#" + statsdivid).outerHeight();
-                    geodash.wStateFull = !geodash.wStateFull;
+                geodash.wStateFull = !geodash.wStateFull;
+                geodash.mapWidgetArray[mapdivid].updateSize();
+            } else if (theWidget.children().children().children()[2].id.includes("widgetgraph_")) {
+                var graphdivid = "widgetgraph_" + $(theWidget).attr("id").substring(7);
+                if (geodash.wStateFull) {
+                    $(theWidget).css("height", "auto");
+                    $("#fulldiv").css("z-index", "0");
+                    $(theWidget).css("margin-bottom", "20px");
+                    $("#" + graphdivid).removeClass("fullmapwidget");
+                    $("#" + graphdivid).addClass("minmapwidget");
+                    $(theWidget.children()[1]).height("auto");
+                } else {
+                    $("#content").scrollTop(0);
+                    $("#fulldiv").css("z-index", "1031");
+                    $(theWidget).css("height", "100%");
+                    $(theWidget).css("margin-bottom", "0");
+                    $("#" + graphdivid).removeClass("minmapwidget");
+                    $("#" + graphdivid).addClass("fullmapwidget");
+                    $(theWidget.children()[1]).height("100%");
                 }
-    console.info(2);
-            });
-            console.info(11);
-        }
+                width = $("#" + graphdivid).outerWidth();
+                height = $("#" + graphdivid).outerHeight();
+                geodash.wStateFull = !geodash.wStateFull;
+                geodash.graphWidgetArray[graphdivid].setSize(width, height, true);
+                geodash.completeGraph();
+            } else if (theWidget.children().children().children()[2].id.includes("widgetstats_")) {
+                var statsdivid = "widgetstats_" + $(theWidget).attr("id").substring(7);
+                if (geodash.wStateFull) {
+                    $(theWidget).css("height", "auto");
+                    $("#fulldiv").css("z-index", "0");
+                    $(theWidget).css("margin-bottom", "20px");
+                    $("#" + statsdivid).removeClass("fullmapwidget");
+                    $("#" + statsdivid).addClass("minmapwidget");
+                } else {
+                    $("#content").scrollTop(0);
+                    $("#fulldiv").css("z-index", "1031");
+                    $(theWidget).css("height", "100%");
+                    $(theWidget).css("margin-bottom", "0");
+                    $("#" + statsdivid).removeClass("minmapwidget");
+                    $("#" + statsdivid).addClass("fullmapwidget");
+                }
+                width = $("#" + statsdivid).outerWidth();
+                height = $("#" + statsdivid).outerHeight();
+                geodash.wStateFull = !geodash.wStateFull;
+            }
+        });
+    }
     this.createWidget = function (which) {
         "use strict";
         this.ajaxurl = this.theURL + "createwidget/widget";
@@ -1113,10 +1119,26 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             },
             success: function () {
                 var myWidget = JSON.parse(this.widget);
-                $(".row.placeholders")[0].append(geodash.addWidget(myWidget)[0]);
+                superWidget = myWidget;
+                if ($(".row.placeholders").length > 0) {
+                    $(".row.placeholders")[0].append(geodash.addWidget(myWidget)[0]);
+                }
+                else {
+                    var rowDiv = $("<div/>", {
+                        "class": "row placeholders"
+                    });
+
+                    rowDiv.append(geodash.addWidget(myWidget));
+
+
+                    $("#dashHolder").append(rowDiv);
+                }
+
                 geodash.pageWidgets.push(myWidget);
+                //geodash.pageWidgets.push(myWidget);
                 geodash.initWidget(geodash.pageWidgets[geodash.pageWidgets.length - 1]);
                 geodash.makeAdjustable();
+                gmodcdash.makeDragable();
             },
             error: function (xhr) {
                 debugme = xhr;
@@ -1126,14 +1148,19 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
     this.createUserWidget = function () {
         "use strict";
         var newWidget = {};
-        geodash.pageWidgets.sort(function (a, b) {
-            return parseInt(a.id) - parseInt(b.id);
-        });
-        var newid = geodash.pageWidgets[geodash.pageWidgets.length - 1].id + 1;
-        geodash.pageWidgets.sort(function (a, b) {
-            return parseInt(a.position) - parseInt(b.position);
-        });
-        var newposition = geodash.pageWidgets[geodash.pageWidgets.length - 1].position + 1;
+        var newid = 0;
+        var newposition = 0;
+        if (geodash.pageWidgets.length > 0) {
+            geodash.pageWidgets.sort(function (a, b) {
+                return parseInt(a.id) - parseInt(b.id);
+            });
+            newid = geodash.pageWidgets[geodash.pageWidgets.length - 1].id + 1;
+
+            geodash.pageWidgets.sort(function (a, b) {
+                return parseInt(a.position) - parseInt(b.position);
+            });
+            var newposition = geodash.pageWidgets[geodash.pageWidgets.length - 1].position + 1;
+        }
         if ($("#mainform").is(":visible")) {
             newWidget.name = $("#title").val();
             newWidget.width = $("#columns").val();
@@ -1205,3 +1232,4 @@ Array.prototype.grabElement = function (name, value) {
     });
     return array[0];
 };
+var superWidget;

@@ -40,7 +40,7 @@ public class GeoDash {
             JsonObject newDashboard = new JsonObject();
             newDashboard.addProperty("projectID", req.params(":id"));
             newDashboard.addProperty("projectTitle", req.queryParams("title"));
-            newDashboard.addProperty("widgets", "[]");
+            newDashboard.add("widgets", new JsonArray());
             newDashboard.addProperty("dashboardID", newUUID);
 
             writeJsonFile("dash-" + newUUID + ".json", newDashboard);
@@ -62,7 +62,13 @@ public class GeoDash {
 
     public static synchronized String createDashBoardWidgetByID(Request req, Response res) {
         JsonObject dashboard = readJsonFile("dash-" + req.queryParams("dashID") + ".json").getAsJsonObject();
-        JsonArray widgets = dashboard.getAsJsonArray("widgets");
+        JsonArray widgets;
+        try {
+            widgets = dashboard.getAsJsonArray("widgets");
+        } catch (Exception e) {
+            String oWidgets = dashboard.get("widgets").getAsString();
+            widgets = (JsonArray) parseJson(oWidgets);
+        }
         try {
             JsonObject newWidget = parseJson(URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8")).getAsJsonObject();
             widgets.add(newWidget);
