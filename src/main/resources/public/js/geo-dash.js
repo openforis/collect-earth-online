@@ -16,7 +16,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.mapWidgetArray = {};
     this.graphWidgetArray = {};
     this.pageWidgets = [];
-    this.maxHeight = 0;
+    this.maxHeight = 284;
     this.sHeight = 0;
     var geodash = this;
     gmodcdash = this;
@@ -354,11 +354,23 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             if (widget.properties.length === 5) {
                 bands = widget.properties[4];
             }
-            var visParams = {
-                min: "",
-                max: "0.3",
-                bands: bands
-            };
+            var min = "";
+                        var max = "0.3";
+                        try {
+                            if (widget.min > 0) {
+                                min = widget.min;
+                            }
+
+                            if (widget.max > 0) {
+                                max = widget.max;
+                            }
+                        }
+                        catch (e) { alert(0);}
+                        var visParams = {
+                            min: min,
+                            max: max,
+                            bands: bands
+                        };
             this.makeAjax({
                 url: url,
                 type: "POST",
