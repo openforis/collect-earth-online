@@ -569,7 +569,7 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             collectionName = widget.properties[1];
             var dateFrom = widget.properties[2];
             var dateTo = widget.properties[3];
-            var url = gmodcdash.gateway + "/imageByMosaicCollection";
+            var url = gmodcdash.gateway + "/cloudMaskImageByMosaicCollection";
             var bands = "";
             if (widget.properties.length === 5) {
                 bands = widget.properties[4];
@@ -578,20 +578,21 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
             var min = "";
             var max = "0.3";
             try {
-                if ($("#min_" + widgetID).val().length > 0) {
-                    min = $("#min_" + widgetID).val();
+                if (widget.min > 0) {
+                    min = widget.min;
                 }
 
-                if ($("#max_" + widgetID).val().length > 0) {
-                    max = $("#max_" + widgetID).val();
+                if (widget.max > 0) {
+                    max = widget.max;
                 }
             }
-            catch (e) { }
+            catch (e) { alert(0);}
             var visParams = {
                 min: min,
                 max: max,
                 bands: bands
             };
+            alert(visParams.min + " - " + visParams.max);
             $.ajax({
                 url: url,
                 type: "POST",
