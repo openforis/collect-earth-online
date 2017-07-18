@@ -233,7 +233,7 @@ section#content a:hover, section#content a.active-link {
     list-style-type: none;
     padding: 0.5rem;
     height: calc(100% - 5.5rem);
-    overflow: scroll;
+    overflow: auto;
 }
 
 #institution-list ul li {
@@ -276,7 +276,7 @@ section#content a:hover, section#content a.active-link {
     list-style-type: none;
     padding: 0.5rem;
     height: calc(100% - 5.5rem);
-    overflow: scroll;
+    overflow: auto;
 }
 
 #project-list ul li {
@@ -340,7 +340,7 @@ section#content a:hover, section#content a.active-link {
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     border-bottom: 2px solid darkgray;
-    overflow: scroll;
+    overflow: auto;
 }
 
 #home #ceo-description img#ceo-logo {
@@ -433,7 +433,7 @@ section#content a:hover, section#content a.active-link {
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* border: 1px solid darkgray; */
-    overflow: scroll;
+    overflow: auto;
 }
 
 #about h1 {
@@ -466,7 +466,7 @@ section#content a:hover, section#content a.active-link {
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* border: 1px solid darkgray; */
-    overflow: scroll;
+    overflow: auto;
 }
 
 #support h1 {
@@ -492,7 +492,7 @@ section#content a:hover, section#content a.active-link {
     height: calc(80% - 4rem);
     width: 25vw;
     padding: 2rem;
-    overflow: scroll;
+    overflow: auto;
     /* background: rgba(255,255,255,0.8); */
     /* filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
     /* -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF,endColorstr=#CCFFFFFF); */
@@ -608,7 +608,7 @@ p.error-message {
     width: calc(34vw - 2rem);
     padding: 1rem;
     border:0px;
-    overflow: scroll;
+    overflow: auto;
 }
 
 #institution #institution-details #institution-view {
@@ -737,7 +737,7 @@ p.error-message {
     list-style-type: none;
     padding: 0.5rem;
     height: calc(100% - 5.5rem);
-    overflow: scroll;
+    overflow: auto;
 }
 
 #institution #user-list ul li a {
@@ -801,7 +801,7 @@ p.error-message {
     height: 100%;
     width: 30%;
     padding: 0rem;
-    overflow: scroll;
+    overflow: auto;
 }
 
 #dashboard #sidebar #sidebar-contents {
