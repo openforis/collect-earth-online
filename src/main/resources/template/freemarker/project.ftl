@@ -11,13 +11,30 @@
             <h2>Project Stats</h2>
             <table>
                 <tbody>
-                    <tr><td>Members</td><td>{{ project.members.length }}</td></tr>
-                    <tr><td>Contributors</td><td>{{ project.contributors.length }}</td></tr>
-                    <tr><td>Points Classified</td><td>{{ project.pointsClassified }}</td></tr>
-                    <tr><td>Bad Plots</td><td>{{ project.badPlots }}</td></tr>
-                    <tr><td>Date Created</td><td>{{ project.dateCreated }}</td></tr>
-                    <tr><td>Date Published</td><td>{{ project.datePublished }}</td></tr>
-                    <tr><td>Date Closed</td><td>{{ project.dateClosed }}</td></tr>
+                    <tr>
+                        <td>Members</td>
+                        <td>{{ project.members.length }}</td>
+                        <td>Date Created</td>
+                        <td>{{ project.dateCreated }}</td>
+                    </tr>
+                    <tr>
+                        <td>Contributors</td>
+                        <td>{{ project.contributors.length }}</td>
+                        <td>Date Published</td>
+                        <td>{{ project.datePublished }}</td>
+                    </tr>
+                    <tr>
+                        <td>Points Classified</td>
+                        <td>{{ project.pointsClassified }}</td>
+                        <td>Date Closed</td>
+                        <td>{{ project.dateClosed }}</td>
+                    </tr>
+                    <tr>
+                        <td>Bad Plots</td>
+                        <td>{{ project.badPlots }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
