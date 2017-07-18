@@ -40,10 +40,18 @@ nav {
     /* border: 1px solid orange; */
 }
 
+nav img#ceo-site-logo {
+    position: absolute;
+    top: 0px;
+    left: 10px;
+    height: 2rem;
+    padding:0.25rem;
+}
+
 nav ul {
     position: absolute;
     top: 0px;
-    left: 40px;
+    left: 150px;
     padding: 0.5rem;
     /* border: 1px solid red; */
 }
