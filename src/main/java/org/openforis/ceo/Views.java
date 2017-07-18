@@ -13,7 +13,6 @@ public class Views {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("root", Server.documentRoot);
         model.put("background_image", "linear-gradient(to bottom right, rgba(63,171,198,0.35), rgba(63,171,198,0.05), rgba(63,171,198,0.35))");
-        model.put("branding_image_file", "ceo-logo1.png");
         model.put("navlink", navlink);
         model.put("content_size", contentSize);
         model.put("userid", req.session().attribute("userid"));

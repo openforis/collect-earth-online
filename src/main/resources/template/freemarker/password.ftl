@@ -1,5 +1,4 @@
 <#include "header.ftl">
-<#include "branding-banner.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <#include "flash-messages.ftl">

@@ -54,5 +54,4 @@
 </div>
 
 <#include "end-content.ftl">
-<#include "branding-banner.ftl">
 <#include "footer.ftl">

@@ -83,26 +83,6 @@ nav a:hover, nav a.active-link {
     text-shadow: 0px 0px 4px #fff;
 }
 
-/*******************/
-/* Branding Banner */
-/*******************/
-
-#branding-banner {
-    position: relative;
-    height: 80px;
-    width: 100%;
-    background-color: #fff;
-    /* border: 1px solid red; */
-}
-
-#branding-image {
-    display: block;
-    height: 80px;
-    margin-left: auto;
-    margin-right: auto;
-    /* border: 1px solid orange; */
-}
-
 /**********************/
 /* Logo Banner */
 /**********************/
