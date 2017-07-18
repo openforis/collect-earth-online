@@ -124,6 +124,13 @@ nav a:hover, nav a.active-link {
     width: 80px;
 }
 
+#logo-banner img#sig {
+    position: absolute;
+    top: 0px;
+    left: 410px;
+    width: 230px;
+}
+
 #logo-banner img#servir {
     position: absolute;
     top: 12px;
@@ -433,10 +440,6 @@ section#content a:hover, section#content a.active-link {
 
 #about p {
     padding: 0.5rem;
-}
-
-#about img {
-    padding: 0rem 0.5rem;
 }
 
 /****************/

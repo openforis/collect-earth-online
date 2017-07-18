@@ -18,9 +18,6 @@
         implemented online so there is no need for desktop
         installation.
     </p>
-    <a href="http://www.sig-gis.com"><img src="${root}/img/sig-logo.png"></a>
-    <p>Copyright © <a href="http://www.sig-gis.com">SIG-GIS</a> 2016-2017</p>
-    <hr>
     <h1>Disclaimers</h1>
     <p>
         The SERVIR Project, NASA, and USAID, make no express or
@@ -42,6 +39,7 @@
         provided. Users are, however, kindly asked to report any
         errors or deficiencies in this product.
     </p>
+    <p>Copyright © <a href="http://openforis.org">OpenForis</a> 2016-2017</p>
 </div>
 
 <#include "end-content.ftl">

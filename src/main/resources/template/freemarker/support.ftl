@@ -9,7 +9,6 @@
         This content is currently under development. Please check back
         later for updates.
     </p>
-    <hr>
     <h1>Collect Earth Online Demo</h1>
     <p>
         This content is currently under development. Please check back
