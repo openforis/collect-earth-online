@@ -759,16 +759,15 @@ p.error-message {
 }
 
 #dashboard #quit-button {
-    width: 5rem;
-    height: 40px;
-    border: none;
-    text-align: center;
     position: absolute;
-    margin-top: 0rem;
-    z-index: 500;
+    right: 30%;
+    height: 40px;
+    width: 5rem;
+    text-align: center;
     background-color: #3FABC6;
-    display: inline-block;
-    left: calc(70vw - 5rem);
+    z-index: 500;
+    box-shadow: none;
+    border: none;
 }
 
 #dashboard #image-analysis-pane {
@@ -878,16 +877,16 @@ p.error-message {
 }
 
 #dashboard #imagery-info {
+    position: absolute;
+    bottom: 0;
+    left: 18%;
     width: 40%;
-    top: -1.5rem;
+    line-height: 1rem;
     padding: 0.25rem;
     text-align: center;
-    position: relative;
     font-size: 0.8rem;
-    background-color: rgba(75,75,150,0.6);
-    clear: both;
     color: white;
-    left: 18%;
+    background-color: rgba(75,75,150,0.6);
 }
 
 /***************************/
