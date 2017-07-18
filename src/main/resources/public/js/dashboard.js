@@ -57,7 +57,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             this.currentProject = newProject;
             this.currentPlot = null;
             this.userSamples = {};
-            map_utils.remove_plot_layer();
+            // map_utils.remove_plot_layer();
             map_utils.remove_sample_layer();
             map_utils.disable_selection();
             utils.enable_element("new-plot-button");
@@ -92,7 +92,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
             utils.disable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
             utils.disable_element("save-values-button");
-            map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
+            // map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
             map_utils.draw_points(this.currentPlot.samples);
             window.open(this.root + "/geo-dash?"
                         + encodeURIComponent("title=" + this.currentProject.name

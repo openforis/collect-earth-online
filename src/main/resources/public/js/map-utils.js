@@ -398,6 +398,7 @@ map_utils.draw_points = function (samples) {
     map_utils.disable_selection();
     map_utils.map_ref.addLayer(vector_layer);
     map_utils.enable_selection(vector_layer);
+    map_utils.zoom_map_to_layer(vector_layer);
     return map_utils.map_ref;
 };
 
