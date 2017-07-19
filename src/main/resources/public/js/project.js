@@ -9,6 +9,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.valueName = "";
     this.valueColor = "#000000";
     this.valueImage = "";
+    this.plotList = [];
 
     // FIXME: Add these attributes to the JSON database
     this.members = [];
@@ -211,6 +212,27 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             });
     };
 
+    this.getPlotList = function (projectId, maxPlots) {
+        $http.get(this.root + "/get-project-plots/" + projectId + "/" + maxPlots)
+            .then(angular.bind(this, function successCallback(response) {
+                this.plotList = response.data;
+                this.showPlotCenters(projectId, maxPlots);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving plot list. See console for details.");
+            });
+    };
+
+    this.showPlotCenters = function (projectId, maxPlots) {
+        if (angular.equals(this.plotList, [])) {
+            // Load the current project plots
+            this.getPlotList(projectId, maxPlots);
+        } else {
+            // Draw the plot centers on the map
+            map_utils.draw_plot_centers(this.plotList);
+        }
+    };
+
     this.initialize = function (documentRoot, projectId, institutionId) {
         // Make the documentRoot and institutionId globally available
         this.root = documentRoot;
@@ -245,6 +267,9 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 this.lonMax = boundaryExtent[2];
                 this.latMax = boundaryExtent[3];
                 map_utils.draw_polygon(this.details.boundary);
+
+                // Show the plot centers on the map (but constrain to <= 100 points)
+                this.showPlotCenters(projectId, 100);
             }
 
             // Ensure that imageryYear and stackingProfile are set to defaults if undefined

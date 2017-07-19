@@ -381,7 +381,7 @@ map_utils.draw_point = function (lon, lat) {
 map_utils.draw_points = function (samples) {
     var features = [];
     for (i=0; i<samples.length; i++) {
-        sample = samples[i];
+        var sample = samples[i];
         var format = new ol.format.GeoJSON();
         var latlon = format.readGeometry(sample.point);
         var geometry = latlon.transform("EPSG:4326", "EPSG:3857");
@@ -399,6 +399,21 @@ map_utils.draw_points = function (samples) {
     map_utils.map_ref.addLayer(vector_layer);
     map_utils.enable_selection(vector_layer);
     map_utils.zoom_map_to_layer(vector_layer);
+    return map_utils.map_ref;
+};
+
+map_utils.draw_plot_centers = function (plots) {
+    var format = new ol.format.GeoJSON();
+    var features = plots.map(
+        function (plot) {
+            var geometry = format.readGeometry(plot.center).transform("EPSG:4326", "EPSG:3857");
+            return new ol.Feature({plot_id: plot.id, geometry: geometry});
+        }
+    );
+    var vector_source = new ol.source.Vector({features: features});
+    var style = map_utils.styles["red_point"];
+    var vector_layer = new ol.layer.Vector({source: vector_source, style: style});
+    map_utils.map_ref.addLayer(vector_layer);
     return map_utils.map_ref;
 };
 

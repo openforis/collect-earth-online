@@ -73,6 +73,23 @@ public class Projects {
 
     public static String getProjectPlots(Request req, Response res) {
         String projectId = req.params(":id");
+        int maxPlots = Integer.parseInt(req.params(":max"));
+        JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        int numPlots = plots.size();
+        if (numPlots > maxPlots) {
+            double stepSize = 1.0 * numPlots / maxPlots;
+            return Stream.iterate(0.0, i -> i + stepSize)
+                .limit(maxPlots)
+                .map(i -> plots.get(Math.toIntExact(Math.round(i))))
+                .collect(intoJsonArray)
+                .toString();
+        } else {
+            return plots.toString();
+        }
+    }
+
+    public static String getUnanalyzedPlot(Request req, Response res) {
+        String projectId = req.params(":id");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
         JsonArray unanalyzedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == false
                                                                    && plot.get("analyses").getAsInt() == 0);

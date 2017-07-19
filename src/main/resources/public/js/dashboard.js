@@ -69,7 +69,7 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     };
 
     this.getPlotData = function (projectId) {
-        $http.get(this.root + "/get-project-plots/" + projectId)
+        $http.get(this.root + "/get-unanalyzed-plot/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
                 if (response.data == "done") {
                     this.currentPlot = null;

@@ -68,7 +68,8 @@ public class Server implements SparkApplication {
         // Routing Table: Projects API
         get("/get-all-projects/:id",            (req, res) -> { return Projects.getAllProjects(req, res); });
         get("/get-project-by-id/:id",           (req, res) -> { return Projects.getProjectById(req, res); });
-        get("/get-project-plots/:id",           (req, res) -> { return Projects.getProjectPlots(req, res); });
+        get("/get-project-plots/:id/:max",      (req, res) -> { return Projects.getProjectPlots(req, res); });
+        get("/get-unanalyzed-plot/:id",         (req, res) -> { return Projects.getUnanalyzedPlot(req, res); });
         get("/dump-project-aggregate-data/:id", (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
         post("/create-project",                 (req, res) -> { return Projects.createProject(req, res); });
         post("/publish-project/:id",            (req, res) -> { return Projects.publishProject(req, res); });
