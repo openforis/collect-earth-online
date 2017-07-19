@@ -209,19 +209,49 @@ map_utils.styles =
                                             {"color": "#23238b",
                                              "width": 2})})}),
 
-     "gray_circle": new ol.style.Style(
+     "red_circle": new ol.style.Style(
          {"image": new ol.style.Circle({"radius": 5,
                                         "fill": null,
                                         "stroke": new ol.style.Stroke(
-                                            {"color": "#999999",
+                                            {"color": "red",
                                              "width": 2})})}),
 
-     "gray_square": new ol.style.Style(
+     "red_square": new ol.style.Style(
          {"image": new ol.style.RegularShape({"radius": 5,
                                               "points": 4,
                                               "fill": null,
                                               "stroke": new ol.style.Stroke(
-                                                  {"color": "#999999",
+                                                  {"color": "red",
+                                                   "width": 2})})}),
+
+     "green_circle": new ol.style.Style(
+         {"image": new ol.style.Circle({"radius": 5,
+                                        "fill": null,
+                                        "stroke": new ol.style.Stroke(
+                                            {"color": "green",
+                                             "width": 2})})}),
+
+     "green_square": new ol.style.Style(
+         {"image": new ol.style.RegularShape({"radius": 5,
+                                              "points": 4,
+                                              "fill": null,
+                                              "stroke": new ol.style.Stroke(
+                                                  {"color": "green",
+                                                   "width": 2})})}),
+
+     "yellow_circle": new ol.style.Style(
+         {"image": new ol.style.Circle({"radius": 5,
+                                        "fill": null,
+                                        "stroke": new ol.style.Stroke(
+                                            {"color": "yellow",
+                                             "width": 2})})}),
+
+     "yellow_square": new ol.style.Style(
+         {"image": new ol.style.RegularShape({"radius": 5,
+                                              "points": 4,
+                                              "fill": null,
+                                              "stroke": new ol.style.Stroke(
+                                                  {"color": "yellow",
                                                    "width": 2})})}),
 
      "polygon": new ol.style.Style(
@@ -418,17 +448,35 @@ map_utils.draw_points = function (samples) {
 };
 
 map_utils.draw_plots = function (plots, shape) {
+    var flagged_plots = [];
+    var analyzed_plots = [];
+    var unanalyzed_plots = [];
     var format = new ol.format.GeoJSON();
-    var features = plots.map(
+    plots.forEach(
         function (plot) {
             var geometry = format.readGeometry(plot.center).transform("EPSG:4326", "EPSG:3857");
-            return new ol.Feature({plot_id: plot.id, geometry: geometry});
+            var feature = new ol.Feature({plot_id: plot.id, geometry: geometry});
+            if (plot.flagged == true) {
+                flagged_plots.push(feature);
+            } else if (plot.analyses > 0) {
+                analyzed_plots.push(feature);
+            } else {
+                unanalyzed_plots.push(feature);
+            }
         }
     );
-    var vector_source = new ol.source.Vector({features: features});
-    var style = shape == "circle" ? map_utils.styles["gray_circle"] : map_utils.styles["gray_square"];
-    var vector_layer = new ol.layer.Vector({source: vector_source, style: style});
-    map_utils.map_ref.addLayer(vector_layer);
+    var flagged_source = new ol.source.Vector({features: flagged_plots});
+    var analyzed_source = new ol.source.Vector({features: analyzed_plots});
+    var unanalyzed_source = new ol.source.Vector({features: unanalyzed_plots});
+    var flagged_style = shape == "circle" ? map_utils.styles["red_circle"] : map_utils.styles["red_square"];
+    var analyzed_style = shape == "circle" ? map_utils.styles["green_circle"] : map_utils.styles["green_square"];
+    var unanalyzed_style = shape == "circle" ? map_utils.styles["yellow_circle"] : map_utils.styles["yellow_square"];
+    var flagged_layer = new ol.layer.Vector({source: flagged_source, style: flagged_style});
+    var analyzed_layer = new ol.layer.Vector({source: analyzed_source, style: analyzed_style});
+    var unanalyzed_layer = new ol.layer.Vector({source: unanalyzed_source, style: unanalyzed_style});
+    map_utils.map_ref.addLayer(flagged_layer);
+    map_utils.map_ref.addLayer(analyzed_layer);
+    map_utils.map_ref.addLayer(unanalyzed_layer);
     return map_utils.map_ref;
 };
 
