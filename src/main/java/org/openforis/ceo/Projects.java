@@ -88,6 +88,18 @@ public class Projects {
         }
     }
 
+    public static String getProjectStats(Request req, Response res) {
+        String projectId = req.params(":id");
+        JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        JsonArray flaggedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == true);
+        JsonArray analyzedPlots = filterJsonArray(plots, plot -> plot.get("analyses").getAsInt() > 0);
+        JsonObject stats = new JsonObject();
+        stats.addProperty("flaggedPlots", flaggedPlots.size());
+        stats.addProperty("analyzedPlots", analyzedPlots.size());
+        stats.addProperty("unanalyzedPlots", Math.max(0, plots.size() - flaggedPlots.size() - analyzedPlots.size()));
+        return stats.toString();
+    }
+
     public static String getUnanalyzedPlot(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();

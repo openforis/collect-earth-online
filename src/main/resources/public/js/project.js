@@ -14,11 +14,13 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     // FIXME: Add these attributes to the JSON database
     this.members = [];
     this.contributors = [];
-    this.pointsClassified = 0;
-    this.badPlots = 0;
+    this.flaggedPlots = 0;
+    this.analyzedPlots = 0;
+    this.unanalyzedPlots = 0;
     this.dateCreated = null;
     this.datePublished = null;
     this.dateClosed = null;
+    this.dateArchived = null;
 
     this.logFormData = function (formData) {
         console.log(new Map(formData.entries()));
@@ -233,6 +235,18 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
+    this.getProjectStats = function (projectId) {
+        $http.get(this.root + "/get-project-stats/" + projectId)
+            .then(angular.bind(this, function successCallback(response) {
+                this.flaggedPlots = response.data.flaggedPlots;
+                this.analyzedPlots = response.data.analyzedPlots;
+                this.unanalyzedPlots = response.data.unanalyzedPlots;
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving project stats. See console for details.");
+            });
+    };
+
     this.initialize = function (documentRoot, projectId, institutionId) {
         // Make the documentRoot and institutionId globally available
         this.root = documentRoot;
@@ -271,6 +285,9 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 // Show the plot centers on the map (but constrain to <= 100 points)
                 this.showPlotCenters(projectId, 100);
             }
+
+            // Load the project stats
+            this.getProjectStats(projectId);
 
             // Ensure that imageryYear and stackingProfile are set to defaults if undefined
             this.details.imageryYear = this.details.imageryYear || "2016";
