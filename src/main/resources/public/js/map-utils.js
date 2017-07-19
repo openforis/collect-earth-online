@@ -320,6 +320,39 @@ map_utils.draw_plot = function (center, size, shape) {
     return map_utils.map_ref;
 };
 
+map_utils.draw_plots = function (plots, shape) {
+    var flagged_plots = [];
+    var analyzed_plots = [];
+    var unanalyzed_plots = [];
+    var format = new ol.format.GeoJSON();
+    plots.forEach(
+        function (plot) {
+            var geometry = format.readGeometry(plot.center).transform("EPSG:4326", "EPSG:3857");
+            var feature = new ol.Feature({plot_id: plot.id, geometry: geometry});
+            if (plot.flagged == true) {
+                flagged_plots.push(feature);
+            } else if (plot.analyses > 0) {
+                analyzed_plots.push(feature);
+            } else {
+                unanalyzed_plots.push(feature);
+            }
+        }
+    );
+    var flagged_source = new ol.source.Vector({features: flagged_plots});
+    var analyzed_source = new ol.source.Vector({features: analyzed_plots});
+    var unanalyzed_source = new ol.source.Vector({features: unanalyzed_plots});
+    var flagged_style = shape == "circle" ? map_utils.styles["red_circle"] : map_utils.styles["red_square"];
+    var analyzed_style = shape == "circle" ? map_utils.styles["green_circle"] : map_utils.styles["green_square"];
+    var unanalyzed_style = shape == "circle" ? map_utils.styles["yellow_circle"] : map_utils.styles["yellow_square"];
+    var flagged_layer = new ol.layer.Vector({source: flagged_source, style: flagged_style});
+    var analyzed_layer = new ol.layer.Vector({source: analyzed_source, style: analyzed_style});
+    var unanalyzed_layer = new ol.layer.Vector({source: unanalyzed_source, style: unanalyzed_style});
+    map_utils.map_ref.addLayer(flagged_layer);
+    map_utils.map_ref.addLayer(analyzed_layer);
+    map_utils.map_ref.addLayer(unanalyzed_layer);
+    return map_utils.map_ref;
+};
+
 /*****************************************************************************
 ***
 *** Functions to setup select interactions for click and click-and-drag events
@@ -444,39 +477,6 @@ map_utils.draw_points = function (samples) {
     map_utils.map_ref.addLayer(vector_layer);
     map_utils.enable_selection(vector_layer);
     map_utils.zoom_map_to_layer(vector_layer);
-    return map_utils.map_ref;
-};
-
-map_utils.draw_plots = function (plots, shape) {
-    var flagged_plots = [];
-    var analyzed_plots = [];
-    var unanalyzed_plots = [];
-    var format = new ol.format.GeoJSON();
-    plots.forEach(
-        function (plot) {
-            var geometry = format.readGeometry(plot.center).transform("EPSG:4326", "EPSG:3857");
-            var feature = new ol.Feature({plot_id: plot.id, geometry: geometry});
-            if (plot.flagged == true) {
-                flagged_plots.push(feature);
-            } else if (plot.analyses > 0) {
-                analyzed_plots.push(feature);
-            } else {
-                unanalyzed_plots.push(feature);
-            }
-        }
-    );
-    var flagged_source = new ol.source.Vector({features: flagged_plots});
-    var analyzed_source = new ol.source.Vector({features: analyzed_plots});
-    var unanalyzed_source = new ol.source.Vector({features: unanalyzed_plots});
-    var flagged_style = shape == "circle" ? map_utils.styles["red_circle"] : map_utils.styles["red_square"];
-    var analyzed_style = shape == "circle" ? map_utils.styles["green_circle"] : map_utils.styles["green_square"];
-    var unanalyzed_style = shape == "circle" ? map_utils.styles["yellow_circle"] : map_utils.styles["yellow_square"];
-    var flagged_layer = new ol.layer.Vector({source: flagged_source, style: flagged_style});
-    var analyzed_layer = new ol.layer.Vector({source: analyzed_source, style: analyzed_style});
-    var unanalyzed_layer = new ol.layer.Vector({source: unanalyzed_source, style: unanalyzed_style});
-    map_utils.map_ref.addLayer(flagged_layer);
-    map_utils.map_ref.addLayer(analyzed_layer);
-    map_utils.map_ref.addLayer(unanalyzed_layer);
     return map_utils.map_ref;
 };
 
