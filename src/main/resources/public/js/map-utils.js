@@ -209,6 +209,21 @@ map_utils.styles =
                                             {"color": "#23238b",
                                              "width": 2})})}),
 
+     "gray_circle": new ol.style.Style(
+         {"image": new ol.style.Circle({"radius": 5,
+                                        "fill": null,
+                                        "stroke": new ol.style.Stroke(
+                                            {"color": "#999999",
+                                             "width": 2})})}),
+
+     "gray_square": new ol.style.Style(
+         {"image": new ol.style.RegularShape({"radius": 5,
+                                              "points": 4,
+                                              "fill": null,
+                                              "stroke": new ol.style.Stroke(
+                                                  {"color": "#999999",
+                                                   "width": 2})})}),
+
      "polygon": new ol.style.Style(
          {"fill": null,
           "stroke": new ol.style.Stroke(
@@ -402,7 +417,7 @@ map_utils.draw_points = function (samples) {
     return map_utils.map_ref;
 };
 
-map_utils.draw_plot_centers = function (plots) {
+map_utils.draw_plots = function (plots, shape) {
     var format = new ol.format.GeoJSON();
     var features = plots.map(
         function (plot) {
@@ -411,7 +426,7 @@ map_utils.draw_plot_centers = function (plots) {
         }
     );
     var vector_source = new ol.source.Vector({features: features});
-    var style = map_utils.styles["red_point"];
+    var style = shape == "circle" ? map_utils.styles["gray_circle"] : map_utils.styles["gray_square"];
     var vector_layer = new ol.layer.Vector({source: vector_source, style: style});
     map_utils.map_ref.addLayer(vector_layer);
     return map_utils.map_ref;

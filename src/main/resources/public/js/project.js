@@ -228,8 +228,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             // Load the current project plots
             this.getPlotList(projectId, maxPlots);
         } else {
-            // Draw the plot centers on the map
-            map_utils.draw_plot_centers(this.plotList);
+            // Draw the plot shapes on the map
+            map_utils.draw_plots(this.plotList, this.details.plotShape);
         }
     };
 
