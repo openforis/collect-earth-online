@@ -44,8 +44,9 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
 
             // Initialize the base map and show the selected project's boundary
             map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
-                                              center_coords: [102.0, 17.0],
-                                              zoom_level: 5});
+                                              center_coords: [0.0, 0.0],
+                                              zoom_level: 1});
+            map_utils.set_dg_wms_layer_params(this.currentProject.imageryYear, this.currentProject.stackingProfile);
             map_utils.set_current_imagery(this.currentProject.baseMapSource);
             map_utils.draw_polygon(this.currentProject.boundary);
         }
