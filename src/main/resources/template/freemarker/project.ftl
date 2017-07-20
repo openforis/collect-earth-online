@@ -49,10 +49,14 @@
             <input type="button" id="change-availability" class="button"
                    name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
                    ng-click="project.changeAvailability()">
+            <input type="button" id="configure-geo-dash" class="button"
+                   name="configure-geo-dash" value="Configure Geo-Dash"
+                   ng-click="project.configureGeoDash()"
+                   style="display: {{ project.details.availability == 'unpublished' ? 'block' : 'none' }}">
             <input type="button" id="download-plot-data" class="button"
                    name="download-plot-data" value="Download Plot Data"
                    ng-click="project.downloadPlotData()"
-                   style="visibility: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'visible' : 'hidden' }}">
+                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
         </div>
     </div>
     <div id="project-design">

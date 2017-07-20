@@ -315,6 +315,20 @@ map_utils.remove_plot_layer = function () {
     return null;
 };
 
+map_utils.get_plot_extent = function (center, size) {
+    var format = new ol.format.GeoJSON();
+    var geometry = format.readGeometry(center).transform("EPSG:4326", "EPSG:3857");
+    var coords = geometry.getCoordinates();
+    var centerX = coords[0];
+    var centerY = coords[1];
+    var radius = size / 2;
+    var extent = [centerX - radius,
+                  centerY - radius,
+                  centerX + radius,
+                  centerY + radius];
+    return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+};
+
 map_utils.draw_plot = function (center, size, shape) {
     var format = new ol.format.GeoJSON();
     var geometry = format.readGeometry(center).transform("EPSG:4326", "EPSG:3857");

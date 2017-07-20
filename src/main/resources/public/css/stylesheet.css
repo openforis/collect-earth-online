@@ -996,6 +996,13 @@ p.error-message {
     margin-bottom: 5px;
 }
 
+#project #project-dashboard #project-management #configure-geo-dash {
+    display: block;
+    width: 15rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 #project #project-dashboard #project-management #download-plot-data {
     display: block;
     width: 15rem;

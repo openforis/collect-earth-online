@@ -117,6 +117,16 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
+    this.configureGeoDash = function () {
+        window.open(this.root + "/geo-dash?"
+                    + encodeURIComponent("title=" + this.details.name
+                                         + "&pid=" + this.details.id
+                                         + "&aoi=[" + map_utils.get_plot_extent(this.plotList[0].center, this.details.plotSize)
+                                         + "]&daterange=&bcenter=" + this.plotList[0].center
+                                         + "&bradius=" + this.details.plotSize / 2),
+                    "_geo-dash");
+    };
+
     // FIXME: Update this backend function for the new project-list.json contents
     this.downloadPlotData = function () {
         $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
