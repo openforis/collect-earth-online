@@ -19,7 +19,7 @@
                     </tr>
                     <tr>
                         <td>Total Plots</td>
-                        <td>{{ project.details.numPlots }}</td>
+                        <td>{{ project.details.numPlots || 0 }}</td>
                         <td>Date Created</td>
                         <td>{{ project.dateCreated }}</td>
                     </tr>
@@ -125,7 +125,7 @@
                     <option value="NASASERVIRChipset2002">NASA SERVIR Chipset 2002</option>
                 </select>
                 <label style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
-                <select id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" convert-to-number ng-change="project.setImageryYear()"
+                <select id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                     <option value="2016">2016</option>
                     <option value="2015">2015</option>
@@ -146,7 +146,7 @@
                     <option value="2000">2000</option>
                 </select>
                 <label style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
-                <select id="stacking-profile" name="stacking-profile" size="1" ng-model="project.details.stackingProfile" ng-change="project.setStackingProfile()"
+                <select id="stacking-profile" name="stacking-profile" size="1" ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                     <option value="Accuracy_Profile">Accuracy Profile</option>
                     <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>

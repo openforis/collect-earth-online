@@ -95,7 +95,8 @@ map_utils.digital_globe_base_map = function (map_config) {
     var source6 = new ol.source.TileWMS({url: dg_geoserver_url,
                                          params: {"VERSION": "1.1.1",
                                                   "LAYERS": "DigitalGlobe:Imagery",
-                                                  "CONNECTID": dg_unauthenticated_connect_id},
+                                                  "CONNECTID": dg_unauthenticated_connect_id,
+                                                  "FEATUREPROFILE": "Accuracy_Profile"},
                                          serverType: "geoserver"});
 
     // Wrap each source in a layer object
@@ -154,21 +155,40 @@ map_utils.digital_globe_base_map = function (map_config) {
 map_utils.current_imagery = "DigitalGlobeWMSImagery";
 
 map_utils.set_current_imagery = function (new_imagery) {
-    var layers = map_utils.map_ref.getLayers().getArray();
-
-    for (i=0; i<layers.length; i++) {
-        var layer = layers[i];
-        var title = layer.get("title");
-        if (title == map_utils.current_imagery) {
-            layer.set("visible", false);
+    map_utils.map_ref.getLayers().forEach(
+        function (layer) {
+            var title = layer.get("title");
+            if (title == map_utils.current_imagery) {
+                layer.set("visible", false);
+            }
+            if (title == new_imagery ) {
+                layer.set("visible", true);
+            }
         }
-        if (title == new_imagery ) {
-            layer.set("visible", true);
-        }
-    }
-
+    );
     map_utils.current_imagery = new_imagery;
     return new_imagery;
+};
+
+map_utils.get_layer_by_name = function (name) {
+    return map_utils.map_ref.getLayers().getArray().find(
+        function (layer) {
+            return layer.get("title") == name;
+        }
+    );
+};
+
+map_utils.set_dg_wms_layer_params = function (imagery_year, stacking_profile) {
+    map_utils.get_layer_by_name("DigitalGlobeWMSImagery")
+        .setSource(new ol.source.TileWMS({serverType: "geoserver",
+                                          url: "https://services.digitalglobe.com/mapservice/wmsaccess",
+                                          params: {"VERSION": "1.1.1",
+                                                   "LAYERS": "DigitalGlobe:Imagery",
+                                                   "CONNECTID": "a797f723-f91f-40d7-8458-3669a830b6de",
+                                                   "FEATUREPROFILE": stacking_profile}
+                                                   // "COVERAGE_CQL_FILTER": "(acquisition_date>1/1/" + imagery_year
+                                                   //                      + ")AND(acquisition_date<12/31/" + imagery_year + ")"}
+                                         }));
 };
 
 map_utils.zoom_map_to_layer = function (layer) {

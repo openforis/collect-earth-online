@@ -136,14 +136,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         map_utils.set_current_imagery(this.details.baseMapSource);
     };
 
-    // FIXME: Add a new TileWMS source to the map using this.details.imageryYear
-    this.setImageryYear = function () {
-        alert("This function has not yet been implemented.");
-    };
-
-    // FIXME: Add a new TileWMS source to the map using this.details.stackingProfile
-    this.setStackingProfile = function () {
-        alert("This function has not yet been implemented.");
+    this.updateDGWMSLayer = function () {
+        map_utils.set_dg_wms_layer_params(this.details.imageryYear, this.details.stackingProfile);
     };
 
     this.setPlotDistribution = function (plotDistribution) {
@@ -284,10 +278,10 @@ angular.module("project", []).controller("ProjectController", ["$http", function
 
                 // Show the plot centers on the map (but constrain to <= 100 points)
                 this.showPlotCenters(projectId, 100);
-            }
 
-            // Load the project stats
-            this.getProjectStats(projectId);
+                // Load the project stats
+                this.getProjectStats(projectId);
+            }
 
             // Ensure that imageryYear and stackingProfile are set to defaults if undefined
             this.details.imageryYear = this.details.imageryYear || "2016";
