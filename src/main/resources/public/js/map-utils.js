@@ -185,8 +185,9 @@ map_utils.set_dg_wms_layer_params = function (imagery_year, stacking_profile) {
                                                    "LAYERS": "DigitalGlobe:Imagery",
                                                    "CONNECTID": "a797f723-f91f-40d7-8458-3669a830b6de",
                                                    "FEATUREPROFILE": stacking_profile,
-                                                   "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
-                                                                        + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
+                                                   // "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
+                                                   //                      + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
+                                                   "COVERAGE_CQL_FILTER": "(acquisition_date<'" + imagery_year + "-12-31')"}
                                          }));
 };
 
