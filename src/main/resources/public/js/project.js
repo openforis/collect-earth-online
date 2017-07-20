@@ -254,6 +254,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             map_utils.digital_globe_base_map({div_name: "project-map",
                                               center_coords: [0.0, 0.0],
                                               zoom_level: 1});
+            map_utils.set_dg_wms_layer_params(this.details.imageryYear, this.details.stackingProfile);
             map_utils.set_current_imagery(this.details.baseMapSource);
 
             if (this.details.id == 0) {
@@ -282,10 +283,6 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 // Load the project stats
                 this.getProjectStats(projectId);
             }
-
-            // Ensure that imageryYear and stackingProfile are set to defaults if undefined
-            this.details.imageryYear = this.details.imageryYear || "2016";
-            this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
 
             // Check the radio button values for this project
             document.getElementById("privacy-" + this.details.privacyLevel).checked = true;

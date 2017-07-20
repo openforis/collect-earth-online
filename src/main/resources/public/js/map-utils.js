@@ -95,8 +95,7 @@ map_utils.digital_globe_base_map = function (map_config) {
     var source6 = new ol.source.TileWMS({url: dg_geoserver_url,
                                          params: {"VERSION": "1.1.1",
                                                   "LAYERS": "DigitalGlobe:Imagery",
-                                                  "CONNECTID": dg_unauthenticated_connect_id,
-                                                  "FEATUREPROFILE": "Accuracy_Profile"},
+                                                  "CONNECTID": dg_unauthenticated_connect_id},
                                          serverType: "geoserver"});
 
     // Wrap each source in a layer object
@@ -185,9 +184,9 @@ map_utils.set_dg_wms_layer_params = function (imagery_year, stacking_profile) {
                                           params: {"VERSION": "1.1.1",
                                                    "LAYERS": "DigitalGlobe:Imagery",
                                                    "CONNECTID": "a797f723-f91f-40d7-8458-3669a830b6de",
-                                                   "FEATUREPROFILE": stacking_profile}
-                                                   // "COVERAGE_CQL_FILTER": "(acquisition_date>1/1/" + imagery_year
-                                                   //                      + ")AND(acquisition_date<12/31/" + imagery_year + ")"}
+                                                   "FEATUREPROFILE": stacking_profile,
+                                                   "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
+                                                                        + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
                                          }));
 };
 
