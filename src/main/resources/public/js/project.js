@@ -10,13 +10,13 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.valueColor = "#000000";
     this.valueImage = "";
     this.plotList = [];
+    this.flaggedPlots = 0;
+    this.analyzedPlots = 0;
+    this.unanalyzedPlots = 0;
 
     // FIXME: Add these attributes to the JSON database
     this.members = [];
     this.contributors = [];
-    this.flaggedPlots = 0;
-    this.analyzedPlots = 0;
-    this.unanalyzedPlots = 0;
     this.dateCreated = null;
     this.datePublished = null;
     this.dateClosed = null;
@@ -127,7 +127,6 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                     "_geo-dash");
     };
 
-    // FIXME: Update this backend function for the new project-list.json contents
     this.downloadPlotData = function () {
         $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
             .then(function successCallback(response) {

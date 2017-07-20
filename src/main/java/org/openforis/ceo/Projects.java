@@ -154,23 +154,23 @@ public class Projects {
             JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             JsonArray plotSummaries = mapJsonArray(plots,
                                                    plot -> {
-                                                       JsonObject plotAttributes = plot.get("plot").getAsJsonObject();
                                                        JsonArray samples = plot.get("samples").getAsJsonArray();
-                                                       JsonObject plotCenter = parseJson(plotAttributes.get("center").getAsString()).getAsJsonObject();
+                                                       JsonObject plotCenter = parseJson(plot.get("center").getAsString()).getAsJsonObject();
                                                        JsonObject plotSummary = new JsonObject();
-                                                       plotSummary.addProperty("plot_id", plotAttributes.get("id").getAsInt());
+                                                       plotSummary.addProperty("plot_id", plot.get("id").getAsInt());
                                                        plotSummary.addProperty("center_lon", plotCenter.get("coordinates").getAsJsonArray().get(0).getAsDouble());
                                                        plotSummary.addProperty("center_lat", plotCenter.get("coordinates").getAsJsonArray().get(1).getAsDouble());
-                                                       plotSummary.addProperty("radius_m", plotAttributes.get("radius").getAsInt());
-                                                       plotSummary.addProperty("flagged", plotAttributes.get("flagged").getAsBoolean());
-                                                       plotSummary.addProperty("analyses", plotAttributes.get("analyses").getAsInt());
+                                                       plotSummary.addProperty("size_m", project.get("plotSize").getAsDouble());
+                                                       plotSummary.addProperty("shape", project.get("plotShape").getAsString());
+                                                       plotSummary.addProperty("flagged", plot.get("flagged").getAsBoolean());
+                                                       plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                                                        plotSummary.addProperty("sample_points", samples.size());
-                                                       plotSummary.add("user_id", plotAttributes.get("user"));
+                                                       plotSummary.add("user_id", plot.get("user"));
                                                        plotSummary.add("distribution", getValueDistribution(samples, sampleValueNames));
                                                        return plotSummary;
                                                    });
 
-            String[] fields = {"plot_id", "center_lon", "center_lat", "radius_m", "flagged", "analyses", "sample_points", "user_id"};
+            String[] fields = {"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"};
             String[] labels = sampleValueNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
