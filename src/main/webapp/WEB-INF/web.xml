@@ -8,6 +8,23 @@
   <display-name>Open Foris Collect Earth Online Web Application</display-name>
 
   <filter>
+	<filter-name>javamelody</filter-name>
+	<filter-class>net.bull.javamelody.MonitoringFilter</filter-class>
+	<async-supported>true</async-supported>
+  </filter>
+
+  <filter-mapping>
+	<filter-name>javamelody</filter-name>
+	<url-pattern>/*</url-pattern>
+	<dispatcher>REQUEST</dispatcher>
+	<dispatcher>ASYNC</dispatcher>
+  </filter-mapping>
+
+  <listener>
+	<listener-class>net.bull.javamelody.SessionListener</listener-class>
+  </listener>
+
+  <filter>
     <filter-name>SparkFilter</filter-name>
     <filter-class>spark.servlet.SparkFilter</filter-class>
     <init-param>

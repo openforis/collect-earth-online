@@ -17,6 +17,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
     compile 'org.geotools:gt-shapefile:15.1'
     compile 'org.geotools:gt-epsg-hsql:15.1'
+    compile 'net.bull.javamelody:javamelody-core:1.68.1'
+    compile 'com.lowagie:itext:2.1.7'
     testCompile 'junit:junit:4.12'
 }
 
