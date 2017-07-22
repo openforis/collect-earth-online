@@ -55,7 +55,7 @@ public class Views {
 
     public static ModelAndView institution(Request req, Response res) {
         if (req.params(":id").equals("0")) {
-            authenticateOrRedirect(req, res, new String[]{"admin"});
+            authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         }
         Map<String, Object> model = getBaseModel(req, "Institution", "large");
         model.put("institution_id", req.params(":id"));

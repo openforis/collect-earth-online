@@ -7,7 +7,8 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         name: "",
         logo: "",
         url: "",
-        description: ""
+        description: "",
+        admins: []
     };
 
     this.getInstitutionDetails = function (institutionId) {
@@ -34,6 +35,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
     this.updateInstitution = function () {
         var formData = new FormData();
+        formData.append("userid", document.getElementById("userid"));
         formData.append("institution-name", this.details.name);
         formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
         formData.append("institution-url", this.details.url);
@@ -44,6 +46,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     headers: {"Content-Type": undefined}})
             .then(angular.bind(this, function successCallback(response) {
                 this.details.id = response.data.id;
+                this.details.admins = response.data.admins;
                 if (response.data.logo != "") {
                     this.details.logo = response.data.logo;
                 }
@@ -73,6 +76,10 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     alert("Error deleting institution. See console for details.");
                 });
         }
+    };
+
+    this.isAdmin = function (userid) {
+        return this.details.admins.includes(userid);
     };
 
 }]);

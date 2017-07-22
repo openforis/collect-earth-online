@@ -82,11 +82,13 @@ public class Institutions {
                                        new MultipartConfigElement(expandResourcePath("/public/img/institution-logos/")));
             }
 
+            Part userid = req.raw().getPart("userid");
             Part name = req.raw().getPart("institution-name");
             Part logo = req.raw().getPart("institution-logo");
             Part url = req.raw().getPart("institution-url");
             Part description = req.raw().getPart("institution-description");
 
+            int userid = Integer.parseInt(partToString(userid));
             boolean uploadedLogo = logo.getSubmittedFileName() != null;
 
             if (institutionId.equals("0")) {
@@ -95,6 +97,11 @@ public class Institutions {
                 String newInstitutionId = Integer.toString(getNextId(institutions));
                 String logoPath = uploadedLogo ? writeLogoImage(logo, newInstitutionId) : "";
 
+                JsonArray members = new JsonArray();
+                JsonArray admins = new JsonArray();
+                members.add(userid);
+                admins.add(userid);
+
                 JsonObject newInstitution = new JsonObject();
                 newInstitution.addProperty("id", newInstitutionId);
                 newInstitution.addProperty("name", partToString(name));
@@ -102,7 +109,8 @@ public class Institutions {
                 newInstitution.addProperty("url", partToString(url));
                 newInstitution.addProperty("description", partToString(description));
                 newInstitution.addProperty("archived", false);
-                newInstitution.add("members", new JsonArray());
+                newInstitution.add("members", members);
+                newInstitution.add("admins", admins);
 
                 institutions.add(newInstitution);
                 writeJsonFile("institution-list.json", institutions);
@@ -126,9 +134,13 @@ public class Institutions {
                         }
                     });
 
+                JsonArray admins = new JsonArray();
+                admins.add(userid);
+
                 JsonObject updatedInstitution = new JsonObject();
                 updatedInstitution.addProperty("id", institutionId);
                 updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
+                updatedInstitution.add("admins", admins);
                 return updatedInstitution.toString();
             }
         } catch (Exception e) {

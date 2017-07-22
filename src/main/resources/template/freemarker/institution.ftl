@@ -21,14 +21,15 @@
             <label>Description</label>
             <textarea id="institution-description" ng-model="institution.details.description"></textarea>
         </div>
-        <#if role?? && role == "admin">
+        <#if role??>
             <input id="create-institution" type="button" value="Create Institution"
                    ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
             <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit Institution' : 'Save Changes' }}"
-                   ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0">
+                   ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin(${userid})">
             <input id="delete-institution" type="button" value="Delete Institution"
-                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0">
+                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin(${userid})">
         </#if>
+        <input id="userid" type="hidden" name="userid" value=${userid!"-1"}>
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
         <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>
