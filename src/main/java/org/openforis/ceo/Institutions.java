@@ -82,24 +82,26 @@ public class Institutions {
                                        new MultipartConfigElement(expandResourcePath("/public/img/institution-logos/")));
             }
 
-            Part userid = req.raw().getPart("userid");
+            Part useridPart = req.raw().getPart("userid");
             Part name = req.raw().getPart("institution-name");
             Part logo = req.raw().getPart("institution-logo");
             Part url = req.raw().getPart("institution-url");
             Part description = req.raw().getPart("institution-description");
 
-            int userid = Integer.parseInt(partToString(userid));
+            int userid = Integer.parseInt(partToString(useridPart));
             boolean uploadedLogo = logo.getSubmittedFileName() != null;
 
             if (institutionId.equals("0")) {
                 // Create a new institution
                 JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-                String newInstitutionId = Integer.toString(getNextId(institutions));
-                String logoPath = uploadedLogo ? writeLogoImage(logo, newInstitutionId) : "";
+                int newInstitutionId = getNextId(institutions);
+                String logoPath = uploadedLogo ? writeLogoImage(logo, Integer.toString(newInstitutionId)) : "";
 
                 JsonArray members = new JsonArray();
                 JsonArray admins = new JsonArray();
+                members.add(1); // adding the admin user by default
                 members.add(userid);
+                admins.add(1); // adding the admin user by default
                 admins.add(userid);
 
                 JsonObject newInstitution = new JsonObject();

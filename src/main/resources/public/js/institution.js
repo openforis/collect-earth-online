@@ -35,7 +35,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
     this.updateInstitution = function () {
         var formData = new FormData();
-        formData.append("userid", document.getElementById("userid"));
+        formData.append("userid", document.getElementById("userid").value);
         formData.append("institution-name", this.details.name);
         formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
         formData.append("institution-url", this.details.url);
