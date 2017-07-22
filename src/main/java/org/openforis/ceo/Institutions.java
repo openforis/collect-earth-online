@@ -136,13 +136,9 @@ public class Institutions {
                         }
                     });
 
-                JsonArray admins = new JsonArray();
-                admins.add(userid);
-
                 JsonObject updatedInstitution = new JsonObject();
                 updatedInstitution.addProperty("id", institutionId);
                 updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
-                updatedInstitution.add("admins", admins);
                 return updatedInstitution.toString();
             }
         } catch (Exception e) {

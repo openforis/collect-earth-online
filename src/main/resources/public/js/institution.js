@@ -1,7 +1,7 @@
 angular.module("institution", []).controller("InstitutionController", ["$http", function InstitutionController($http) {
     this.root = "";
     this.pageMode = "view";
-
+    this.isAdmin = false;
     this.details = {
         id: "-1",
         name: "",
@@ -15,6 +15,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         $http.get(this.root + "/get-institution-details/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.details = response.data;
+                this.isAdmin = this.details.admins.includes(document.getElementById("userid").value);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the institution details. See console for details.");
@@ -46,7 +47,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     headers: {"Content-Type": undefined}})
             .then(angular.bind(this, function successCallback(response) {
                 this.details.id = response.data.id;
-                this.details.admins = response.data.admins;
+                this.isAdmin = true;
                 if (response.data.logo != "") {
                     this.details.logo = response.data.logo;
                 }
@@ -76,10 +77,6 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     alert("Error deleting institution. See console for details.");
                 });
         }
-    };
-
-    this.isAdmin = function (userid) {
-        return this.details.admins.includes(userid);
     };
 
 }]);

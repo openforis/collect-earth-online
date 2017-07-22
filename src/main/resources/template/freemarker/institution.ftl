@@ -25,11 +25,12 @@
             <input id="create-institution" type="button" value="Create Institution"
                    ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
             <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit Institution' : 'Save Changes' }}"
-                   ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin(${userid})">
+                   ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin">
             <input id="delete-institution" type="button" value="Delete Institution"
-                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin(${userid})">
+                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
         </#if>
         <input id="userid" type="hidden" name="userid" value=${userid!"-1"}>
+        <input id="institution-admin" type="hidden" name="institution-admin" value={{ institution.isAdmin }}>
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
         <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>
