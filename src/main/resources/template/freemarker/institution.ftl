@@ -30,7 +30,7 @@
                    ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
         </#if>
         <input id="userid" type="hidden" name="userid" value=${userid!"-1"}>
-        <input id="institution-admin" type="hidden" name="institution-admin" value={{ institution.isAdmin }}>
+        <input id="institution-admin" type="hidden" name="institution-admin" value="{{ institution.isAdmin }}">
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
         <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>

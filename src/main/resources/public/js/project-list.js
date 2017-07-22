@@ -19,6 +19,10 @@ angular.module("projectList", []).controller("ProjectListController", ["$http", 
         this.getProjectList(document.getElementById("initial-institution-id") ? document.getElementById("initial-institution-id").value : "ALL");
     };
 
+    this.isInstitutionAdmin = function () {
+        return document.getElementById("institution-admin").value == "true";
+    };
+
     this.createProject = function () {
         var institutionId = document.getElementById("current-institution-id").value;
         if (institutionId == 0) {
