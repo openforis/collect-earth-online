@@ -58,7 +58,11 @@ public class Projects {
             Stream<JsonObject> filteredProjects = toStream(projects)
                 .filter(project -> project.get("archived").getAsBoolean() == false
                                    && project.get("privacyLevel").getAsString().equals("public")
-                                   && project.get("availability").getAsString().equals("published"));
+                                   && project.get("availability").getAsString().equals("published"))
+                .map(project -> {
+                        project.addProperty("editable", false);
+                        return project;
+                    });
             if (institutionId.equals("")) {
                 return filteredProjects.collect(intoJsonArray).toString();
             } else {
@@ -83,6 +87,15 @@ public class Projects {
                         } else {
                             return privacyLevel.equals("public") && availability.equals("published");
                         }
+                    })
+                .map(project -> {
+                        String role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+                        if (role.equals("admin")) {
+                            project.addProperty("editable", true);
+                        } else {
+                            project.addProperty("editable", false);
+                        }
+                        return project;
                     });
             if (institutionId.equals("")) {
                 return filteredProjects.collect(intoJsonArray).toString();

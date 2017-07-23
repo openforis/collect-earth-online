@@ -29,17 +29,11 @@
     <div id="project-list">
         <h1>Projects [{{ home.projectList.length }}]</h1>
         <ul>
-            <#if role??>
-                <!-- FIXME: Show the View and Edit buttons if project.editable == true, only the View button otherwise -->
-                <li ng-repeat="project in home.projectList">
-                    <a class="view-project" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
-                    <a class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
-                </li>
-            <#else>
-                <li ng-repeat="project in home.projectList">
-                    <a href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
-                </li>
-            </#if>
+            <li ng-repeat="project in home.projectList">
+                <a ng-if="project.editable == true" class="view-project" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                <a ng-if="project.editable == true" class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
+                <a ng-if="project.editable == false" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+            </li>
         </ul>
     </div>
     <div id="user-list">
