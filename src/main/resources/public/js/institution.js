@@ -18,7 +18,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         $http.get(this.root + "/get-institution-details/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.details = response.data;
-                this.isAdmin = this.details.admins.includes(parseInt(this.userId));
+                if (this.userId != "") {
+                    this.isAdmin = this.details.admins.includes(parseInt(this.userId));
+                }
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the institution details. See console for details.");
