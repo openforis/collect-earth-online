@@ -84,6 +84,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                 if (response.data.logo != "") {
                     this.details.logo = response.data.logo;
                 }
+                this.getUserList(this.details.id);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error updating institution details. See console for details.");
