@@ -121,4 +121,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         }
     };
 
+    // FIXME: stub
+    this.updateUserInstitutionRole = function () {
+        alert("in updateUserInstitutionRole()");
+    };
+
 }]);

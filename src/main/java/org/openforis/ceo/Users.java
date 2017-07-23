@@ -160,7 +160,10 @@ public class Users {
                     .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
                     .filter(user -> members.contains(user.get("id")))
                     .map(user -> {
-                            user.addProperty("institutionAdmin", admins.contains(user.get("id")));
+                            user.addProperty("institutionRole",
+                                             admins.contains(user.get("id")) ? "admin"
+                                             : members.contains(user.get("id")) ? "member"
+                                             : "not-member");
                             return user;
                         })
                     .collect(intoJsonArray)
@@ -186,7 +189,7 @@ public class Users {
                                           } else if (members.contains(userIdJson)) {
                                               return "member";
                                           } else {
-                                              return "";
+                                              return "not-member";
                                           }
                                       },
                                       (a, b) -> b));

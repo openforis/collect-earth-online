@@ -57,6 +57,12 @@
         <ul>
             <li ng-repeat="user in institution.userList">
                 <a href="${root}/account/{{ user.id }}">{{ user.email }}</a>
+                <select name="user-institution-role" size="1" ng-model="user.institutionRole"
+                        ng-change="institution.updateUserInstitutionRole()">
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                    <option value="not-member">Remove</option>
+                </select>
             </li>
         </ul>
     </div>
