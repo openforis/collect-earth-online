@@ -1,7 +1,6 @@
 angular.module("institution", []).controller("InstitutionController", ["$http", function InstitutionController($http) {
     this.root = "";
     this.pageMode = "view";
-    this.isAdmin = false;
     this.details = {
         id: "-1",
         name: "",
@@ -10,6 +9,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         description: "",
         admins: []
     };
+    this.isAdmin = false;
+    this.projectList = [];
+    this.userList = [];
 
     this.getInstitutionDetails = function (institutionId) {
         $http.get(this.root + "/get-institution-details/" + institutionId)
@@ -22,15 +24,42 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
+    this.getProjectList = function (institutionId) {
+        $http.get(this.root + "/get-all-projects/" + institutionId)
+            .then(angular.bind(this, function successCallback(response) {
+                this.projectList = response.data;
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the project list. See console for details.");
+            });
+    };
+
+    this.getUserList = function () {
+        $http.get(this.root + "/get-all-users")
+            .then(angular.bind(this, function successCallback(response) {
+                this.userList = response.data;
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the user list. See console for details.");
+            });
+    };
+
     this.initialize = function (documentRoot) {
         // Make the current documentRoot globally available
         this.root = documentRoot;
 
+        // If in Create Institution mode, show the institution editing view. Otherwise, load and show the institution details
         this.details.id = document.getElementById("initial-institution-id").value;
         if (this.details.id == "0") {
             this.pageMode = "edit";
         } else {
             this.getInstitutionDetails(this.details.id);
+
+            // Load the projectList
+            this.getProjectList(this.details.id);
+
+            // Load the userList
+            this.getUserList();
         }
     };
 
@@ -76,6 +105,17 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     console.log(response);
                     alert("Error deleting institution. See console for details.");
                 });
+        }
+    };
+
+    this.createProject = function () {
+        var institutionId = document.getElementById("current-institution-id").value;
+        if (institutionId == 0) {
+            alert("Please finish creating the institution before adding projects to it.");
+        } else if (institutionId == -1) {
+            alert("Projects cannot be created without first selecting an institution.");
+        } else {
+            window.location = this.root + "/project/0?institution=" + institutionId;
         }
     };
 

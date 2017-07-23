@@ -2,8 +2,8 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 
-<div id="institution">
-    <div id="institution-details" ng-controller="InstitutionController as institution" ng-init="institution.initialize('${root}')">
+<div id="institution" ng-controller="InstitutionController as institution" ng-init="institution.initialize('${root}')">
+    <div id="institution-details">
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <h1>{{ institution.details.name }}</h1>
             <img src="${root}/{{ institution.details.logo }}">
@@ -29,42 +29,37 @@
                    ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
         </#if>
         <input id="userid" type="hidden" name="userid" value=${userid!"-1"}>
-        <input id="institution-admin" type="hidden" name="institution-admin" value="{{ institution.isAdmin }}">
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
         <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>
-    <div id="project-list" ng-controller="ProjectListController as projectList" ng-init="projectList.initialize('${root}')">
-        <h1>Projects [{{ projectList.projectList.length }}]</h1>
+    <div id="project-list">
+        <h1>Projects [{{ institution.projectList.length }}]</h1>
         <ul>
             <#if role??>
-                <#if navlink == "Institution">
-                    <li><input id="create-project" type="button" value="Create New Project"
-                               ng-click="projectList.createProject()" ng-show="projectList.isInstitutionAdmin()">
-                    </li>
-                </#if>
-                <!-- FIXME: Show the View and Edit buttons if project.editable == true, only the View button otherwise -->
-                <li ng-repeat="project in projectList.projectList">
+                <li><input id="create-project" type="button" value="Create New Project"
+                           ng-click="institution.createProject()" ng-if="institution.isAdmin == true">
+                </li>
+                <li ng-if="institution.isAdmin == true" ng-repeat="project in institution.projectList">
                     <a class="view-project" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
                     <a class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
                 </li>
+                <li ng-if="institution.isAdmin == false" ng-repeat="project in institution.projectList">
+                    <a href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                </li>
             <#else>
-                <li ng-repeat="project in projectList.projectList">
+                <li ng-repeat="project in institution.projectList">
                     <a href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
                 </li>
             </#if>
         </ul>
     </div>
-    <div id="user-list" ng-controller="UserListController as userList" ng-init="userList.initialize('${root}', ${(navlink == 'Home')?c})">
-        <h1>Users [{{ userList.userList.length }}]</h1>
-        <#if navlink == "Home">
-            <div id="user-map"></div>
-        <#else>
-            <ul>
-                <li ng-repeat="user in userList.userList">
-                    <a href="${root}/account/{{ user.id }}">{{ user.email }}</a>
-                </li>
-            </ul>
-        </#if>
+    <div id="user-list">
+        <h1>Users [{{ institution.userList.length }}]</h1>
+        <ul>
+            <li ng-repeat="user in institution.userList">
+                <a href="${root}/account/{{ user.id }}">{{ user.email }}</a>
+            </li>
+        </ul>
     </div>
 </div>
 

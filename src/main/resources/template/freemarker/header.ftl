@@ -21,8 +21,6 @@
         <script type="text/javascript" src="${root}/js/map-utils.js"></script>
         <script type="text/javascript" src="${root}/js/utils.js"></script>
         <script type="text/javascript" src="${root}/js/home.js"></script>
-        <script type="text/javascript" src="${root}/js/project-list.js"></script>
-        <script type="text/javascript" src="${root}/js/user-list.js"></script>
         <script type="text/javascript" src="${root}/js/institution.js"></script>
         <script type="text/javascript" src="${root}/js/project.js"></script>
         <script type="text/javascript" src="${root}/js/dashboard.js"></script>
