@@ -1,7 +1,6 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<#include "flash-messages.ftl">
 
 <div id="project" ng-controller="ProjectController as project" ng-init="project.initialize('${root}', '${project_id!0}', '${institution_id!0}')">
     <div id="project-dashboard">

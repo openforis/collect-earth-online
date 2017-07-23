@@ -1,7 +1,6 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<#include "flash-messages.ftl">
 
 <div id="password-form">
     <h1>Enter your login email</h1>

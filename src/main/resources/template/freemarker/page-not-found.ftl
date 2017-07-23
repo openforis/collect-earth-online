@@ -1,7 +1,6 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<#include "flash-messages.ftl">
 
 <div id="page-not-found">
     <h3>Page Not Found</h3>

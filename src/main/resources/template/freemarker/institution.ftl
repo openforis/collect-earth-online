@@ -1,7 +1,6 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<#include "flash-messages.ftl">
 
 <div id="institution">
     <div id="institution-details" ng-controller="InstitutionController as institution" ng-init="institution.initialize('${root}')">
@@ -34,8 +33,39 @@
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
         <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>
-    <#include "project-list.ftl">
-    <#include "user-list.ftl">
+    <div id="project-list" ng-controller="ProjectListController as projectList" ng-init="projectList.initialize('${root}')">
+        <h1>Projects [{{ projectList.projectList.length }}]</h1>
+        <ul>
+            <#if role??>
+                <#if navlink == "Institution">
+                    <li><input id="create-project" type="button" value="Create New Project"
+                               ng-click="projectList.createProject()" ng-show="projectList.isInstitutionAdmin()">
+                    </li>
+                </#if>
+                <!-- FIXME: Show the View and Edit buttons if project.editable == true, only the View button otherwise -->
+                <li ng-repeat="project in projectList.projectList">
+                    <a class="view-project" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                    <a class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
+                </li>
+            <#else>
+                <li ng-repeat="project in projectList.projectList">
+                    <a href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                </li>
+            </#if>
+        </ul>
+    </div>
+    <div id="user-list" ng-controller="UserListController as userList" ng-init="userList.initialize('${root}', ${(navlink == 'Home')?c})">
+        <h1>Users [{{ userList.userList.length }}]</h1>
+        <#if navlink == "Home">
+            <div id="user-map"></div>
+        <#else>
+            <ul>
+                <li ng-repeat="user in userList.userList">
+                    <a href="${root}/account/{{ user.id }}">{{ user.email }}</a>
+                </li>
+            </ul>
+        </#if>
+    </div>
 </div>
 
 <#include "end-content.ftl">

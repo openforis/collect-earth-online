@@ -1,6 +1,5 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
-<#include "flash-messages.ftl">
 
 <#if role?? && role == "admin">
 <div id="geodash" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">

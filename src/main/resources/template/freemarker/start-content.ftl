@@ -5,3 +5,10 @@
 <#else>
     <section id="content" style="background-image:${background_image};height:calc(100vh - 2px)">
 </#if>
+<#list flash_messages>
+    <div class="alert">
+        <#items as flash_message>
+            <p>${flash_message}</p>
+        </#items>
+    </div>
+</#list>

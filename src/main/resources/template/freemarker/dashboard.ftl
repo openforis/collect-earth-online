@@ -1,7 +1,6 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<#include "flash-messages.ftl">
 
 <div id="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize('${root}')">
     <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='${root}/home'">
