@@ -2,7 +2,7 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 
-<div id="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize('${root}')">
+<div id="dashboard" ng-controller="DashboardController as dashboard" ng-init="dashboard.initialize('${root}', '${userid!""}')">
     <input id="quit-button" class="button" type="button" name="dashboard-quit" value="Quit" onclick="window.location='${root}/home'">
     <div id="image-analysis-pane"></div>
     <div id="sidebar">

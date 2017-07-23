@@ -6,11 +6,11 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
     this.currentPlot = null;
     this.userSamples = {};
 
-    this.getProjectList = function (institutionId) {
-        $http.get(this.root + "/get-all-projects/" + institutionId)
+    this.getProjectList = function (userId) {
+        $http.get(this.root + "/get-all-projects?userId=" + userId + "&institutionId=")
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
-                this.initialize(this.root);
+                this.initialize(this.root, userId);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
@@ -25,13 +25,13 @@ angular.module("dashboard", []).controller("DashboardController", ["$http", func
         );
     };
 
-    this.initialize = function (documentRoot) {
+    this.initialize = function (documentRoot, userId) {
         // Make the current documentRoot globally available
         this.root = documentRoot;
 
         if (this.projectList.length == 0) {
             // Load the projectList
-            this.getProjectList("ALL");
+            this.getProjectList(userId);
         } else {
             // Load the currentProject
             var initialProjectId = document.getElementById("initial-project-id").value;

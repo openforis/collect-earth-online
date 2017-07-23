@@ -1,5 +1,6 @@
 angular.module("institution", []).controller("InstitutionController", ["$http", function InstitutionController($http) {
     this.root = "";
+    this.userId = "";
     this.pageMode = "view";
     this.details = {
         id: "-1",
@@ -17,15 +18,15 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         $http.get(this.root + "/get-institution-details/" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.details = response.data;
-                this.isAdmin = this.details.admins.includes(parseInt(document.getElementById("userid").value));
+                this.isAdmin = this.details.admins.includes(parseInt(this.userId));
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the institution details. See console for details.");
             });
     };
 
-    this.getProjectList = function (institutionId) {
-        $http.get(this.root + "/get-all-projects/" + institutionId)
+    this.getProjectList = function (userId, institutionId) {
+        $http.get(this.root + "/get-all-projects?userId=" + userId + "&institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
             }), function errorCallback(response) {
@@ -44,9 +45,10 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
-    this.initialize = function (documentRoot) {
-        // Make the current documentRoot globally available
+    this.initialize = function (documentRoot, userId) {
+        // Make the current documentRoot and userId globally available
         this.root = documentRoot;
+        this.userId = userId;
 
         // If in Create Institution mode, show the institution editing view. Otherwise, load and show the institution details
         this.details.id = document.getElementById("initial-institution-id").value;
@@ -56,7 +58,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             this.getInstitutionDetails(this.details.id);
 
             // Load the projectList
-            this.getProjectList(this.details.id);
+            this.getProjectList(this.userId, this.details.id);
 
             // Load the userList
             this.getUserList();
@@ -65,7 +67,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
     this.updateInstitution = function () {
         var formData = new FormData();
-        formData.append("userid", document.getElementById("userid").value);
+        formData.append("userid", this.userId);
         formData.append("institution-name", this.details.name);
         formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
         formData.append("institution-url", this.details.url);

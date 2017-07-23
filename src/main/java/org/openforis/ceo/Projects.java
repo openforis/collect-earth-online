@@ -49,14 +49,49 @@ import static org.openforis.ceo.PartUtils.writeFilePart;
 public class Projects {
 
     public static String getAllProjects(Request req, Response res) {
-        String institutionId = req.params(":id");
+        String userId = req.queryParams("userId");
+        String institutionId = req.queryParams("institutionId");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
-        if (institutionId.equals("ALL")) {
-            return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
-                                                        && project.get("privacyLevel").getAsString().equals("public")).toString();
+
+        if (userId.equals("")) {
+            // Not logged in
+            Stream<JsonObject> filteredProjects = toStream(projects)
+                .filter(project -> project.get("archived").getAsBoolean() == false
+                                   && project.get("privacyLevel").getAsString().equals("public")
+                                   && project.get("availability").getAsString().equals("published"));
+            if (institutionId.equals("")) {
+                return filteredProjects.collect(intoJsonArray).toString();
+            } else {
+                return filteredProjects
+                    .filter(project -> project.get("institution").getAsString().equals(institutionId))
+                    .collect(intoJsonArray)
+                    .toString();
+            }
         } else {
-            return filterJsonArray(projects, project -> project.get("archived").getAsBoolean() == false
-                                                        && project.get("institution").getAsString().equals(institutionId)).toString();
+            Map<Integer, String> institutionRoles = Users.getInstitutionRoles(Integer.parseInt(userId));
+            Stream<JsonObject> filteredProjects = toStream(projects)
+                .filter(project -> project.get("archived").getAsBoolean() == false)
+                .filter(project -> {
+                        String role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+                        String privacyLevel = project.get("privacyLevel").getAsString();
+                        String availability = project.get("availability").getAsString();
+                        if (role.equals("admin")) {
+                            return (privacyLevel.equals("public") || privacyLevel.equals("private") || privacyLevel.equals("institution"))
+                                && (availability.equals("unpublished") || availability.equals("published") || availability.equals("closed"));
+                        } else if (role.equals("member")) {
+                            return (privacyLevel.equals("public") || privacyLevel.equals("institution")) && availability.equals("published");
+                        } else {
+                            return privacyLevel.equals("public") && availability.equals("published");
+                        }
+                    });
+            if (institutionId.equals("")) {
+                return filteredProjects.collect(intoJsonArray).toString();
+            } else {
+                return filteredProjects
+                    .filter(project -> project.get("institution").getAsString().equals(institutionId))
+                    .collect(intoJsonArray)
+                    .toString();
+            }
         }
     }
 

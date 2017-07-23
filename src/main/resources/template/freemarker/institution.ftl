@@ -2,7 +2,7 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 
-<div id="institution" ng-controller="InstitutionController as institution" ng-init="institution.initialize('${root}')">
+<div id="institution" ng-controller="InstitutionController as institution" ng-init="institution.initialize('${root}', '${userid!""}')">
     <div id="institution-details">
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <h1>{{ institution.details.name }}</h1>
@@ -28,7 +28,6 @@
             <input id="delete-institution" type="button" value="Delete Institution"
                    ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
         </#if>
-        <input id="userid" type="hidden" name="userid" value=${userid!"-1"}>
         <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
         <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>

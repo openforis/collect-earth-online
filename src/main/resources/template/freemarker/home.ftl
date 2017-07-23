@@ -2,7 +2,7 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 
-<div id="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}')">
+<div id="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid!""}')">
     <div id="ceo-description">
         <img id="ceo-logo" src="${root}/img/ceo-logo1.png">
         <h1>Earth Image Identification</h1>

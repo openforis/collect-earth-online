@@ -66,7 +66,7 @@ public class Server implements SparkApplication {
         get("/logout",          (req, res) -> { return freemarker.render(Views.home(Users.logout(req), res)); });
 
         // Routing Table: Projects API
-        get("/get-all-projects/:id",            (req, res) -> { return Projects.getAllProjects(req, res); });
+        get("/get-all-projects",                (req, res) -> { return Projects.getAllProjects(req, res); });
         get("/get-project-by-id/:id",           (req, res) -> { return Projects.getProjectById(req, res); });
         get("/get-project-plots/:id/:max",      (req, res) -> { return Projects.getProjectPlots(req, res); });
         get("/get-project-stats/:id",           (req, res) -> { return Projects.getProjectStats(req, res); });

@@ -2,8 +2,11 @@ package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import spark.Request;
 import spark.Response;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
@@ -11,6 +14,7 @@ import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.getNextId;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.toStream;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class Users {
@@ -143,6 +147,25 @@ public class Users {
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
         JsonArray visibleUsers = filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com"));
         return visibleUsers.toString();
+    }
+
+    public static Map<Integer, String> getInstitutionRoles(int userId) {
+        JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        JsonPrimitive userIdJson = new JsonPrimitive(userId);
+        return toStream(institutions)
+            .collect(Collectors.toMap(institution -> institution.get("id").getAsInt(),
+                                      institution -> {
+                                          JsonArray members = institution.getAsJsonArray("members");
+                                          JsonArray admins = institution.getAsJsonArray("admins");
+                                          if (admins.contains(userIdJson)) {
+                                              return "admin";
+                                          } else if (members.contains(userIdJson)) {
+                                              return "member";
+                                          } else {
+                                              return "";
+                                          }
+                                      },
+                                      (a, b) -> b));
     }
 
 }

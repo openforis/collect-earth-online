@@ -14,8 +14,8 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
             });
     };
 
-    this.getProjectList = function (institutionId) {
-        $http.get(this.root + "/get-all-projects/" + institutionId)
+    this.getProjectList = function (userId) {
+        $http.get(this.root + "/get-all-projects?userId=" + userId + "&institutionId=")
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
             }), function errorCallback(response) {
@@ -36,15 +36,15 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
             });
     };
 
-    this.initialize = function (documentRoot) {
+    this.initialize = function (documentRoot, userId) {
         // Make the current documentRoot globally available
         this.root = documentRoot;
 
         // Load the institutionList
         this.getInstitutionList();
 
-        // Load the projectList
-        this.getProjectList("ALL");
+        // Load the projectList for this userId
+        this.getProjectList(userId);
 
         // Load the userList
         this.getUserList();
