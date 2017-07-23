@@ -35,8 +35,8 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
-    this.getUserList = function () {
-        $http.get(this.root + "/get-all-users")
+    this.getUserList = function (institutionId) {
+        $http.get(this.root + "/get-all-users?institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.userList = response.data;
             }), function errorCallback(response) {
@@ -46,12 +46,12 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     };
 
     this.initialize = function (documentRoot, userId) {
-        // Make the current documentRoot and userId globally available
+        // Make the current documentRoot, userId, and institution id globally available
         this.root = documentRoot;
         this.userId = userId;
+        this.details.id = document.getElementById("initial-institution-id").value;
 
         // If in Create Institution mode, show the institution editing view. Otherwise, load and show the institution details
-        this.details.id = document.getElementById("initial-institution-id").value;
         if (this.details.id == "0") {
             this.pageMode = "edit";
         } else {
@@ -61,7 +61,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             this.getProjectList(this.userId, this.details.id);
 
             // Load the userList
-            this.getUserList();
+            this.getUserList(this.details.id);
         }
     };
 

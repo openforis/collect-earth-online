@@ -12,6 +12,7 @@ import spark.Response;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.getNextId;
+import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
@@ -144,9 +145,32 @@ public class Users {
     }
 
     public static String getAllUsers(Request req, Response res) {
+        String institutionId = req.queryParams("institutionId");
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-        JsonArray visibleUsers = filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com"));
-        return visibleUsers.toString();
+
+        if (institutionId != null) {
+            JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
+            Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
+                                                                       institution -> institution.get("id").getAsString().equals(institutionId));
+            if (matchingInstitution.isPresent()) {
+                JsonObject institution = matchingInstitution.get();
+                JsonArray members = institution.getAsJsonArray("members");
+                JsonArray admins = institution.getAsJsonArray("admins");
+                return toStream(users)
+                    .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
+                    .filter(user -> members.contains(user.get("id")))
+                    .map(user -> {
+                            user.addProperty("institutionAdmin", admins.contains(user.get("id")));
+                            return user;
+                        })
+                    .collect(intoJsonArray)
+                    .toString();
+            } else {
+                return (new JsonArray()).toString();
+            }
+        } else {
+            return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com")).toString();
+        }
     }
 
     public static Map<Integer, String> getInstitutionRoles(int userId) {
