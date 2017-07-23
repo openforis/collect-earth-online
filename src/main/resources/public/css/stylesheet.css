@@ -413,6 +413,29 @@ section#content a:hover, section#content a.active-link {
     padding: 0.5rem;
 }
 
+#home #user-list ul {
+    list-style-type: none;
+    padding: 0.5rem;
+    height: calc(100% - 5.5rem);
+    overflow: auto;
+}
+
+#home #user-list ul li {
+    margin-bottom: 0.5rem;
+}
+
+#home #user-list ul li a {
+    display: inline-block;
+    width: calc(97% - 0.5rem - 2px);
+    padding: 0.25rem;
+    text-align: center;
+    color: #3C948B;
+    font-size: 1rem;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    border: 1px solid blue;
+}
+
 /**************/
 /* About Page */
 /**************/
