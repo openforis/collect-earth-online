@@ -124,9 +124,20 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         }
     };
 
-    // FIXME: stub
-    this.updateUserInstitutionRole = function () {
-        alert("in updateUserInstitutionRole()");
+    this.updateUserInstitutionRole = function (userId, email, role) {
+        $http.post(this.root + "/update-user-institution-role",
+                   {userId: userId, institutionId: this.details.id, role: role})
+            .then(angular.bind(this, function successCallback(response) {
+                alert("User " + email + " has been given role '" + role + "'.");
+                if (userId == this.userId && role != "admin") {
+                    this.pageMode = "view";
+                    this.isAdmin = false;
+                }
+                this.getUserList(this.details.id);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error updating user institution role. See console for details.");
+            });
     };
 
 }]);

@@ -55,7 +55,8 @@
                 <a ng-if="institution.isAdmin == true" class="narrow-user-entry"
                    href="${root}/account/{{ user.id }}">{{ user.email }}</a>
                 <select ng-if="institution.isAdmin == true" name="user-institution-role" size="1"
-                        ng-model="user.institutionRole" ng-change="institution.updateUserInstitutionRole()">
+                        ng-model="user.institutionRole"
+                        ng-change="institution.updateUserInstitutionRole(user.id, user.email, user.institutionRole)">
                     <option value="member">Member</option>
                     <option value="admin">Admin</option>
                     <option value="not-member">Remove</option>

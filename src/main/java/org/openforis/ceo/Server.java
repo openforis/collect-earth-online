@@ -80,7 +80,8 @@ public class Server implements SparkApplication {
         post("/flag-plot",                      (req, res) -> { return Projects.flagPlot(req, res); });
 
         // Routing Table: Users API
-        get("/get-all-users", (req, res) -> { return Users.getAllUsers(req, res); });
+        get("/get-all-users",                 (req, res) -> { return Users.getAllUsers(req, res); });
+        post("/update-user-institution-role", (req, res) -> { return Users.updateInstitutionRole(req, res); });
 
         // Routing Table: Institutions API
         get("/get-all-institutions",        (req, res) -> { return Institutions.getAllInstitutions(req, res); });

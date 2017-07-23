@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.Map;
@@ -14,6 +15,7 @@ import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.getNextId;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
@@ -193,6 +195,46 @@ public class Users {
                                           }
                                       },
                                       (a, b) -> b));
+    }
+
+    public static String updateInstitutionRole(Request req, Response res) {
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+        JsonElement userId = jsonInputs.get("userId");
+        String institutionId = jsonInputs.get("institutionId").getAsString();
+        String role = jsonInputs.get("role").getAsString();
+
+        mapJsonFile("institution-list.json",
+                    institution -> {
+                        if (institution.get("id").getAsString().equals(institutionId)) {
+                            JsonArray members = institution.getAsJsonArray("members");
+                            JsonArray admins = institution.getAsJsonArray("admins");
+                            if (role.equals("member")) {
+                                if (!members.contains(userId)) {
+                                    members.add(userId);
+                                }
+                                if (admins.contains(userId)) {
+                                    admins.remove(userId);
+                                }
+                            } else if (role.equals("admin")) {
+                                if (!members.contains(userId)) {
+                                    members.add(userId);
+                                }
+                                if (!admins.contains(userId)) {
+                                    admins.add(userId);
+                                }
+                            } else {
+                                members.remove(userId);
+                                admins.remove(userId);
+                            }
+                            institution.add("members", members);
+                            institution.add("admins", admins);
+                            return institution;
+                        } else {
+                            return institution;
+                        }
+                    });
+
+        return "";
     }
 
 }
