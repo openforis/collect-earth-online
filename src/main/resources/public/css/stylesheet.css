@@ -760,7 +760,6 @@ p.error-message {
 
 #institution #user-list ul li a {
     display: inline-block;
-    width: calc(67% - 0.5rem - 2px);
     padding: 0.25rem;
     text-align: center;
     color: #3C948B;
@@ -768,6 +767,14 @@ p.error-message {
     text-decoration: none;
     text-overflow: ellipsis;
     border: 1px solid blue;
+}
+
+#institution #user-list ul li a.wide-user-entry {
+    width: calc(97% - 0.5rem - 2px);
+}
+
+#institution #user-list ul li a.narrow-user-entry {
+    width: calc(67% - 0.5rem - 2px);
 }
 
 #institution #user-list ul li select {
