@@ -69,7 +69,8 @@ public class Views {
     }
 
     public static ModelAndView project(Request req, Response res) {
-        authenticateOrRedirect(req, res, new String[]{"admin"});
+        // FIXME: Make this test more robust
+        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         Map<String, Object> model = getBaseModel(req, "Project", "large");
         model.put("project_id", req.params(":id"));
         if (req.params(":id").equals("0")) {
