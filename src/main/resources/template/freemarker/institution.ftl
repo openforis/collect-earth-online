@@ -62,6 +62,11 @@
                     <option value="not-member">Remove</option>
                 </select>
             </li>
+            <li ng-if="institution.isAdmin == true">
+                <input type="text" name="new-institution-user" autocomplete="off" placeholder="Email"
+                       ng-model="institution.newUserEmail">
+                <input type="button" class="button" name="add-institution-user" value="Add User" ng-click="institution.addUser()">
+            </li>
         </ul>
     </div>
 </div>

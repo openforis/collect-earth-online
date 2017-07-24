@@ -13,6 +13,8 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     this.isAdmin = false;
     this.projectList = [];
     this.userList = [];
+    this.userListComplete = [];
+    this.newUserEmail = "";
 
     this.getInstitutionDetails = function (institutionId) {
         $http.get(this.root + "/get-institution-details/" + institutionId)
@@ -47,6 +49,16 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
+    this.getUserListComplete = function () {
+        $http.get(this.root + "/get-all-users")
+            .then(angular.bind(this, function successCallback(response) {
+                this.userListComplete = response.data;
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the complete user list. See console for details.");
+            });
+    };
+
     this.initialize = function (documentRoot, userId) {
         // Make the current documentRoot, userId, and institution id globally available
         this.root = documentRoot;
@@ -64,6 +76,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
             // Load the userList
             this.getUserList(this.details.id);
+
+            // Load the complete userList
+            this.getUserListComplete();
         }
     };
 
@@ -138,6 +153,30 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                 console.log(response);
                 alert("Error updating user institution role. See console for details.");
             });
+    };
+
+    this.findUserByEmail = function (userList, email) {
+        return userList.find(
+            function (user) {
+                return user.email == email;
+            }
+        );
+    };
+
+    this.addUser = function () {
+        if (this.newUserEmail == "") {
+            alert("Please enter an existing user's email address.");
+        } else if (this.findUserByEmail(this.userList, this.newUserEmail)) {
+            alert(this.newUserEmail + " is already a member of this institution.");
+        } else {
+            var newUser = this.findUserByEmail(this.userListComplete, this.newUserEmail);
+            if (newUser) {
+                this.updateUserInstitutionRole(newUser.id, newUser.email, "member");
+                this.newUserEmail = "";
+            } else {
+                alert(this.newUserEmail + " is not an existing user's email address.");
+            }
+        }
     };
 
 }]);
