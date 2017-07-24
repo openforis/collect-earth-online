@@ -100,9 +100,11 @@ public class Institutions {
                 JsonArray members = new JsonArray();
                 JsonArray admins = new JsonArray();
                 members.add(1); // adding the admin user by default
-                members.add(userid);
                 admins.add(1); // adding the admin user by default
-                admins.add(userid);
+                if (userid != 1) {
+                    members.add(userid);
+                    admins.add(userid);
+                }
 
                 JsonObject newInstitution = new JsonObject();
                 newInstitution.addProperty("id", newInstitutionId);
