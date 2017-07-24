@@ -100,6 +100,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     this.details.logo = response.data.logo;
                 }
                 this.getUserList(this.details.id);
+                this.getUserListComplete();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error updating institution details. See console for details.");
