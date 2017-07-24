@@ -40,7 +40,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             url: this.theURL + "id/" + pid,
             type: "get",
             dataType: "jsonp",
-            data: encodeURIComponent({title: title})
+            data: encodeURIComponent({ title: title })
         }, function (response) {
             try {
                 geodash.fillDashboard(response);
@@ -355,22 +355,41 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 bands = widget.properties[4];
             }
             var min = "";
-                        var max = "0.3";
-                        try {
-                            if (widget.min > 0) {
-                                min = widget.min;
-                            }
+            var max = "0.3";
+            try {
+                if (widget.min > 0) {
+                    min = widget.min;
+                }
 
-                            if (widget.max > 0) {
-                                max = widget.max;
-                            }
-                        }
-                        catch (e) { alert(0);}
-                        var visParams = {
-                            min: min,
-                            max: max,
-                            bands: bands
-                        };
+                if (widget.max > 0) {
+                    max = widget.max;
+                }
+            }
+            catch (e) { alert(0); }
+            var visParams;
+            /************testing palette param
+            if( widget.id == 19)
+            {
+             visParams = {
+                                        min: min,
+                                        max: max,
+                                        bands: bands,
+                                        palette: ['red', 'yellow', 'blue', 'blue']
+                                    };
+            }
+            else{
+             visParams = {
+                min: min,
+                max: max,
+                bands: bands
+            };
+            }
+            *************************/
+            visParams = {
+                min: min,
+                max: max,
+                bands: bands
+            };
             this.makeAjax({
                 url: url,
                 type: "POST",
@@ -423,7 +442,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                         timeseriesData = [];
                         $.each(data.timeseries, function (ignore, value) {
                             if (value[0] !== null) {
-                                timeseriesData.push([value[1], value[0]]);
+                                timeseriesData.push([value[0], value[1]]);
                             }
                         });
                         var $this = this;
