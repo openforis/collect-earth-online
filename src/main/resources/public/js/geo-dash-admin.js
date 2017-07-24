@@ -655,7 +655,7 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
                         timeseriesData = [];
                         $.each(data.timeseries, function (ignore, value) {
                             if (value[0] !== null) {
-                                timeseriesData.push([value[1], value[0]]);
+                                timeseriesData.push([value[0], value[1]]);
                             }
                         });
                         var $this = this;
