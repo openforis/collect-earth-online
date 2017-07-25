@@ -839,15 +839,11 @@ p.error-message {
     overflow: auto;
 }
 
-#dashboard #sidebar #sidebar-contents {
-    height: 100%;
-}
-
-#dashboard #sidebar #sidebar-contents fieldset {
+#dashboard #sidebar fieldset {
     margin-top: 0px;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset legend {
+#dashboard #sidebar fieldset legend {
     margin-top: -5px;
     padding: 10px 0px;
     color: #3FABC6;
@@ -858,7 +854,7 @@ p.error-message {
     text-indent: 10px;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset select#project-id {
+#dashboard #sidebar fieldset select#project-id {
     line-height: 90%;
     width: 100%;
     text-indent: 5px;
@@ -872,24 +868,24 @@ p.error-message {
     color: #3D3B39;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset option {
+#dashboard #sidebar fieldset option {
     color: #3D3B39;
     text-indent: 5px;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset input#new-plot-button {
+#dashboard #sidebar fieldset input#new-plot-button {
     margin: 10px 5px 5px 5px;
     padding: 8px 0px;
     font-size: 1.2rem;
     text-align: left;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset ul li {
+#dashboard #sidebar fieldset ul li {
     float: left;
     width: 50%;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset ul li input {
+#dashboard #sidebar fieldset ul li input {
     height: 40px;
     width: 100%;
     font-family: Verdana,Geneva,sans-serif;
@@ -900,13 +896,13 @@ p.error-message {
     cursor: pointer;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset #final-plot-options {
+#dashboard #sidebar fieldset #final-plot-options {
     clear: left;
     float: left;
     margin-left: 5px;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset #final-plot-options td {
+#dashboard #sidebar fieldset #final-plot-options td {
     padding: 5px;
     color: #3FABC6;
     font-size: 1.2rem;
@@ -916,7 +912,7 @@ p.error-message {
     text-align: center;
 }
 
-#dashboard #sidebar #sidebar-contents fieldset #final-plot-options td input#save-values-button, #dashboard #sidebar #sidebar-contents fieldset #final-plot-options td input#flag-plot-button {
+#dashboard #sidebar fieldset #final-plot-options td input#save-values-button, #dashboard #sidebar fieldset #final-plot-options td input#flag-plot-button {
     padding: 8px 0px;
     font-size: 1.2rem;
 }
