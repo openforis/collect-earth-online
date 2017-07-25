@@ -120,7 +120,8 @@ public class Server implements SparkApplication {
     // Tomcat entry point
     public void init() {
         // Store the current document root for dynamic link resolution
-        documentRoot = "/ceo";
+        // documentRoot = "/ceo";
+        documentRoot = "";
 
         // Set up the routing table
         declareRoutes();
