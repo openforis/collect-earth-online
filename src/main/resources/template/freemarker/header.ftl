@@ -20,13 +20,6 @@
         <script type="text/javascript" src="${root}/js/openlayers-3.13.0.js"></script>
         <script type="text/javascript" src="${root}/js/map-utils.js"></script>
         <script type="text/javascript" src="${root}/js/utils.js"></script>
-        <script type="text/javascript" src="${root}/js/home.js"></script>
-        <script type="text/javascript" src="${root}/js/institution.js"></script>
-        <script type="text/javascript" src="${root}/js/project.js"></script>
-        <script type="text/javascript" src="${root}/js/dashboard.js"></script>
-        <script type="text/javascript" src="${root}/js/geo-dash.js"></script>
-        <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
-        <script type="text/javascript" src="${root}/js/ceo.js"></script>
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
         <!-- BEGIN: Billy's GEODASH libraries -->
@@ -52,4 +45,4 @@
         <!--------------------------------------------------------------->
         </#if>
     </head>
-    <body ng-app="ceo">
+    <body>

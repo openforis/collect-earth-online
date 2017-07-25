@@ -2,7 +2,10 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 
-<div id="institution" ng-controller="InstitutionController as institution" ng-init="institution.initialize('${root}', '${userid!""}')">
+<script type="text/javascript" src="${root}/js/institution.js"></script>
+
+<div id="institution" ng-app="institution" ng-controller="InstitutionController as institution"
+     ng-init="institution.initialize('${root}', '${userid!""}')">
     <div id="institution-details">
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <h1>{{ institution.details.name }}</h1>

@@ -2,9 +2,11 @@
 <#include "start-content.ftl">
 
 <#if role?? && role == "admin">
-<div id="geodash" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
+<script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
+<div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
 <#else>
-<div id="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize('${root}')">
+<script type="text/javascript" src="${root}/js/geo-dash.js"></script>
+<div id="geodash" ng-app="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize('${root}')">
 </#if>
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>

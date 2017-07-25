@@ -2,7 +2,10 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 
-<div id="project" ng-controller="ProjectController as project" ng-init="project.initialize('${root}', '${project_id!0}', '${institution_id!0}')">
+<script type="text/javascript" src="${root}/js/project.js"></script>
+
+<div id="project" ng-app="project" ng-controller="ProjectController as project"
+     ng-init="project.initialize('${root}', '${project_id!0}', '${institution_id!0}')">
     <div id="project-dashboard">
         <h1>Project Dashboard</h1>
         <div id="project-map"></div>
