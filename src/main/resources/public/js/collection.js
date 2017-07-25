@@ -1,4 +1,4 @@
-angular.module("dashboard", []).controller("DashboardController", ["$http", function DashboardController($http) {
+angular.module("collection", []).controller("CollectionController", ["$http", function CollectionController($http) {
     this.root = "";
     this.projectList = [];
     this.currentProjectId = "";

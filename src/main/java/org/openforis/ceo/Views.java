@@ -62,10 +62,10 @@ public class Views {
         return new ModelAndView(model, "institution.ftl");
     }
 
-    public static ModelAndView dashboard(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "Dashboard", "large");
+    public static ModelAndView collection(Request req, Response res) {
+        Map<String, Object> model = getBaseModel(req, "Collection", "large");
         model.put("project_id", req.params(":id"));
-        return new ModelAndView(model, "dashboard.ftl");
+        return new ModelAndView(model, "collection.ftl");
     }
 
     public static ModelAndView project(Request req, Response res) {

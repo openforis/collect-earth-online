@@ -41,11 +41,11 @@
                        ng-click="institution.createProject()" ng-if="institution.isAdmin == true">
             </li>
             <li ng-if="institution.isAdmin == true" ng-repeat="project in institution.projectList">
-                <a class="view-project" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                <a class="view-project" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
                 <a class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
             </li>
             <li ng-if="institution.isAdmin == false" ng-repeat="project in institution.projectList">
-                <a href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                <a href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
             </li>
         </ul>
     </div>

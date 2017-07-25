@@ -32,9 +32,9 @@
         <h1>Projects [{{ home.projectList.length }}]</h1>
         <ul>
             <li ng-repeat="project in home.projectList">
-                <a ng-if="project.editable == true" class="view-project" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                <a ng-if="project.editable == true" class="view-project" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
                 <a ng-if="project.editable == true" class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
-                <a ng-if="project.editable == false" href="${root}/dashboard/{{ project.id }}">{{ project.name }}</a>
+                <a ng-if="project.editable == false" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
             </li>
         </ul>
     </div>

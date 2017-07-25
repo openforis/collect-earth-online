@@ -793,17 +793,17 @@ p.error-message {
     padding: 0.5rem;
 }
 
-/******************/
-/* Dashboard Page */
-/******************/
+/*******************/
+/* Collection Page */
+/*******************/
 
-#dashboard {
+#collection {
     height: 100%;
     padding: 0rem;
     background: rgba(255,255,255,0.8);
 }
 
-#dashboard #quit-button {
+#collection #quit-button {
     position: absolute;
     right: 30%;
     height: 40px;
@@ -815,23 +815,23 @@ p.error-message {
     border: none;
 }
 
-#dashboard #image-analysis-pane {
+#collection #image-analysis-pane {
     float: left;
     height: 100%;
     width: 70%;
     background-color: darkgray;
 }
 
-#dashboard .ol-dragbox {
+#collection .ol-dragbox {
     background-color: rgba(255,255,255,0.4);
     border-color: rgba(100,150,0,1);
 }
 
-#dashboard .ol-rotate {
+#collection .ol-rotate {
     top: 4rem;
 }
 
-#dashboard #sidebar {
+#collection #sidebar {
     float: right;
     height: 100%;
     width: 30%;
@@ -839,11 +839,11 @@ p.error-message {
     overflow: auto;
 }
 
-#dashboard #sidebar fieldset {
+#collection #sidebar fieldset {
     margin-top: 0px;
 }
 
-#dashboard #sidebar fieldset legend {
+#collection #sidebar fieldset legend {
     margin-top: -5px;
     padding: 10px 0px;
     color: #3FABC6;
@@ -854,7 +854,7 @@ p.error-message {
     text-indent: 10px;
 }
 
-#dashboard #sidebar fieldset select#project-id {
+#collection #sidebar fieldset select#project-id {
     line-height: 90%;
     width: 100%;
     text-indent: 5px;
@@ -868,24 +868,24 @@ p.error-message {
     color: #3D3B39;
 }
 
-#dashboard #sidebar fieldset option {
+#collection #sidebar fieldset option {
     color: #3D3B39;
     text-indent: 5px;
 }
 
-#dashboard #sidebar fieldset input#new-plot-button {
+#collection #sidebar fieldset input#new-plot-button {
     margin: 10px 5px 5px 5px;
     padding: 8px 0px;
     font-size: 1.2rem;
     text-align: left;
 }
 
-#dashboard #sidebar fieldset ul li {
+#collection #sidebar fieldset ul li {
     float: left;
     width: 50%;
 }
 
-#dashboard #sidebar fieldset ul li input {
+#collection #sidebar fieldset ul li input {
     height: 40px;
     width: 100%;
     font-family: Verdana,Geneva,sans-serif;
@@ -896,13 +896,13 @@ p.error-message {
     cursor: pointer;
 }
 
-#dashboard #sidebar fieldset #final-plot-options {
+#collection #sidebar fieldset #final-plot-options {
     clear: left;
     float: left;
     margin-left: 5px;
 }
 
-#dashboard #sidebar fieldset #final-plot-options td {
+#collection #sidebar fieldset #final-plot-options td {
     padding: 5px;
     color: #3FABC6;
     font-size: 1.2rem;
@@ -912,12 +912,13 @@ p.error-message {
     text-align: center;
 }
 
-#dashboard #sidebar fieldset #final-plot-options td input#save-values-button, #dashboard #sidebar fieldset #final-plot-options td input#flag-plot-button {
+#collection #sidebar fieldset #final-plot-options td input#save-values-button,
+#collection #sidebar fieldset #final-plot-options td input#flag-plot-button {
     padding: 8px 0px;
     font-size: 1.2rem;
 }
 
-#dashboard #imagery-info {
+#collection #imagery-info {
     position: absolute;
     bottom: 0;
     left: 18%;
