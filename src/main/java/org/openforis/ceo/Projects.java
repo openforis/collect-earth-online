@@ -615,9 +615,9 @@ public class Projects {
 
     public static synchronized String createProject(Request req, Response res) {
         try {
-            // Create a new multipart config for the servlet and set the default output directory for uploaded files
-            // FIXME: Will this work with Tomcat?
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(expandResourcePath("/csv")));
+            // Create a new multipart config for the servlet
+            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
+            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
 
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             JsonObject newProject = partsToJsonObject(req,
@@ -639,7 +639,7 @@ public class Projects {
 
             // Upload the plot-distribution-csv-file if one was provided
             if (newProject.get("plotDistribution").getAsString().equals("csv")) {
-                String csvFileName = writeFilePart(req, "plot-distribution-csv-file", "project-" + newProjectId);
+                String csvFileName = writeFilePart(req, "plot-distribution-csv-file", expandResourcePath("/csv"), "project-" + newProjectId);
                 newProject.addProperty("csv", csvFileName);
             } else {
                 newProject.add("csv", null);

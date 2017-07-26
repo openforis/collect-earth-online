@@ -5,7 +5,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import javax.servlet.http.Part;
@@ -56,7 +60,7 @@ public class PartUtils {
         return obj;
     }
 
-    public static String writeFilePart(Request req, String partName, String outputFilePrefix) {
+    public static String writeFilePart(Request req, String partName, String outputDirectory, String outputFilePrefix) {
         try {
             // Extract the part from the request
             Part part = req.raw().getPart(partName);
@@ -69,17 +73,15 @@ public class PartUtils {
                 String inputFileType = inputFileName.substring(inputFileName.lastIndexOf(".") + 1);
                 String outputFileName = outputFilePrefix + "." + inputFileType;
 
-                // Write the file to the current multipart config directory and return the filename
-                part.write(outputFileName);
+                // Write the file to outputDirectory and return the filename
+                try (InputStream input = part.getInputStream()) {
+                    Files.copy(input, (new File(outputDirectory, outputFileName)).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
                 return outputFileName;
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
-    // public static String[][] parseCSV(String filePath) {
-    //     return new String[][]{};
-    // }
 
 }
