@@ -6,7 +6,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.currentProject = null;
     this.currentPlot = null;
     this.userSamples = {};
-    this.plotsCompleted = 0;
+    this.plotsAssigned = 0;
+    this.plotsFlagged = 0;
 
     this.getProjectById = function (projectId, userId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
@@ -114,7 +115,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 utils.disable_element("save-values-button");
                 map_utils.disable_selection();
                 this.currentPlot = null;
-                this.plotsCompleted++;
+                this.plotsAssigned++;
                 this.loadRandomPlot();
             }), function errorCallback(response) {
                 console.log(response);
@@ -129,7 +130,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             .then(angular.bind(this, function successCallback(response) {
                 alert("Plot " + this.currentPlot.id + " has been flagged.");
                 this.currentPlot = null;
-                this.plotsCompleted++;
+                this.plotsFlagged++;
                 this.loadRandomPlot();
             }), function errorCallback(response) {
                 console.log(response);

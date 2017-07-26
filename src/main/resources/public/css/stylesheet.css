@@ -840,44 +840,37 @@ p.error-message {
 }
 
 #collection #sidebar fieldset {
-    margin-top: 0px;
+    margin-bottom: 10px;
 }
 
 #collection #sidebar fieldset legend {
-    margin-top: -5px;
-    padding: 10px 0px;
     color: #3FABC6;
     font-size: 1.2rem;
     font-family: Oswald;
-    font-weight: 400;
     text-transform: uppercase;
     text-indent: 10px;
 }
 
-#collection #sidebar fieldset select#project-id {
-    line-height: 90%;
-    width: 100%;
-    text-indent: 5px;
-    font-family: Verdana,Geneva,sans-serif;
-    height: 1.8rem;
-    border: none;
-    padding: 0rem;
-    outline: none;
-    font-weight: 200;
+#collection #sidebar fieldset table {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#collection #sidebar fieldset table td {
     font-size: 0.9rem;
-    color: #3D3B39;
+    padding: 0rem 0.5rem;
+    border: 2px solid darkgray;
 }
 
-#collection #sidebar fieldset option {
-    color: #3D3B39;
-    text-indent: 5px;
+#collection #sidebar fieldset table td:first-child {
+    font-weight: bold;
+    color: #3FABC6;
 }
 
-#collection #sidebar fieldset input#new-plot-button {
-    margin: 10px 5px 5px 5px;
-    padding: 8px 0px;
-    font-size: 1.2rem;
-    text-align: left;
+#collection #sidebar fieldset input#new-plot-button,
+#collection #sidebar fieldset input#save-values-button,
+#collection #sidebar fieldset input#flag-plot-button {
+    margin-left: 10px;
 }
 
 #collection #sidebar fieldset ul li {
@@ -894,28 +887,6 @@ p.error-message {
     text-align: left;
     text-indent: 10px;
     cursor: pointer;
-}
-
-#collection #sidebar fieldset #final-plot-options {
-    clear: left;
-    float: left;
-    margin-left: 5px;
-}
-
-#collection #sidebar fieldset #final-plot-options td {
-    padding: 5px;
-    color: #3FABC6;
-    font-size: 1.2rem;
-    font-family: Oswald;
-    font-weight: 400;
-    text-transform: uppercase;
-    text-align: center;
-}
-
-#collection #sidebar fieldset #final-plot-options td input#save-values-button,
-#collection #sidebar fieldset #final-plot-options td input#flag-plot-button {
-    padding: 8px 0px;
-    font-size: 1.2rem;
 }
 
 #collection #imagery-info {
