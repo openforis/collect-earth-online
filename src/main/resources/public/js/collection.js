@@ -1,47 +1,40 @@
 angular.module("collection", []).controller("CollectionController", ["$http", function CollectionController($http) {
     this.root = "";
-    this.projectList = [];
-    this.currentProjectId = "";
+    this.userId = "";
+    this.userName = "";
+    this.projectId = "";
     this.currentProject = null;
     this.currentPlot = null;
     this.userSamples = {};
+    this.plotsCompleted = 0;
 
-    this.getProjectList = function (userId) {
-        $http.get(this.root + "/get-all-projects?userId=" + userId + "&institutionId=")
+    this.getProjectById = function (projectId, userId) {
+        $http.get(this.root + "/get-project-by-id/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
-                this.projectList = response.data;
-                this.initialize(this.root, userId);
+                if (response.data == "") {
+                    alert("No project found with ID " + projectId + ".");
+                    window.location = this.root + "/home";
+                } else {
+                    this.currentProject = response.data;
+                    this.initialize(this.root, userId, this.userName, projectId);
+                }
             }), function errorCallback(response) {
                 console.log(response);
-                alert("Error retrieving the project list. See console for details.");
+                alert("Error retrieving the project info. See console for details.");
             });
     };
 
-    this.getProjectById = function (projectId) {
-        return this.projectList.find(
-            function (project) {
-                return project.id == projectId;
-            }
-        );
-    };
-
-    this.initialize = function (documentRoot, userId) {
-        // Make the current documentRoot globally available
+    this.initialize = function (documentRoot, userId, userName, projectId) {
+        // Make the current documentRoot, userId, userName, and projectId globally available
         this.root = documentRoot;
+        this.userId = userId;
+        this.userName = userName;
+        this.projectId = projectId;
 
-        if (this.projectList.length == 0) {
-            // Load the projectList
-            this.getProjectList(userId);
+        if (this.currentProject == null) {
+            // Load the project details
+            this.getProjectById(projectId, userId);
         } else {
-            // Load the currentProject
-            var initialProjectId = document.getElementById("initial-project-id").value;
-            if (initialProjectId == "-1") {
-                this.currentProjectId = this.projectList[0].id.toString();
-            } else {
-                this.currentProjectId = initialProjectId;
-            }
-            this.currentProject = this.getProjectById(parseInt(this.currentProjectId));
-
             // Initialize the base map and show the selected project's boundary
             map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
                                               center_coords: [0.0, 0.0],
@@ -49,23 +42,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             map_utils.set_dg_wms_layer_params(this.currentProject.imageryYear, this.currentProject.stackingProfile);
             map_utils.set_current_imagery(this.currentProject.baseMapSource);
             map_utils.draw_polygon(this.currentProject.boundary);
-        }
-    };
-
-    this.switchProject = function () {
-        var newProject = this.getProjectById(parseInt(this.currentProjectId));
-        if (newProject) {
-            this.currentProject = newProject;
-            this.currentPlot = null;
-            this.userSamples = {};
-            // map_utils.remove_plot_layer();
-            map_utils.remove_sample_layer();
-            map_utils.disable_selection();
-            utils.enable_element("new-plot-button");
-            utils.disable_element("flag-plot-button");
-            utils.disable_element("save-values-button");
-            map_utils.set_current_imagery(newProject.baseMapSource);
-            map_utils.draw_polygon(newProject.boundary);
         }
     };
 
@@ -87,7 +63,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
 
     this.loadRandomPlot = function () {
         if (this.currentPlot == null) {
-            this.getPlotData(parseInt(this.currentProjectId));
+            this.getPlotData(this.projectId);
         } else {
             this.userSamples = {};
             utils.disable_element("new-plot-button");
@@ -97,7 +73,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             map_utils.draw_points(this.currentPlot.samples);
             window.open(this.root + "/geo-dash?"
                         + encodeURIComponent("title=" + this.currentProject.name
-                                             + "&pid=" + this.currentProjectId
+                                             + "&pid=" + this.projectId
                                              + "&aoi=[" + map_utils.get_view_extent()
                                              + "]&daterange=&bcenter=" + this.currentPlot.center
                                              + "&bradius=" + this.currentProject.plotSize / 2),
@@ -127,9 +103,9 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
 
     this.saveValues = function () {
         $http.post(this.root + "/add-user-samples",
-                   {projectId: this.currentProjectId,
+                   {projectId: this.projectId,
                     plotId: this.currentPlot.id,
-                    userId: document.getElementById("user-id").value,
+                    userId: this.userName,
                     userSamples: this.userSamples})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Your assignments have been saved to the database.");
@@ -138,6 +114,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 utils.disable_element("save-values-button");
                 map_utils.disable_selection();
                 this.currentPlot = null;
+                this.plotsCompleted++;
                 this.loadRandomPlot();
             }), function errorCallback(response) {
                 console.log(response);
@@ -146,14 +123,13 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     };
 
     this.flagPlot = function () {
-        var projectId = this.currentProjectId;
-        var plotId = this.currentPlot.id;
         $http.post(this.root + "/flag-plot",
-                   {projectId: projectId,
-                    plotId:    plotId})
+                   {projectId: this.projectId,
+                    plotId:    this.currentPlot.id})
             .then(angular.bind(this, function successCallback(response) {
-                alert("Plot " + plotId + " has been flagged.");
+                alert("Plot " + this.currentPlot.id + " has been flagged.");
                 this.currentPlot = null;
+                this.plotsCompleted++;
                 this.loadRandomPlot();
             }), function errorCallback(response) {
                 console.log(response);
