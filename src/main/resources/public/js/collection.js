@@ -66,10 +66,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         if (this.currentPlot == null) {
             this.getPlotData(this.projectId);
         } else {
-            this.userSamples = {};
-            utils.disable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
-            utils.disable_element("save-values-button");
             // map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
             map_utils.draw_points(this.currentPlot.samples);
             window.open(this.root + "/geo-dash?"
@@ -80,6 +77,14 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                                              + "&bradius=" + this.currentProject.plotSize / 2),
                         "_geo-dash");
         }
+    };
+
+    this.nextPlot = function () {
+        this.currentPlot = null;
+        this.userSamples = {};
+        utils.disable_element("flag-plot-button");
+        utils.disable_element("save-values-button");
+        this.loadRandomPlot();
     };
 
     this.setCurrentValue = function (sampleValue) {
@@ -110,13 +115,9 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     userSamples: this.userSamples})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Your assignments have been saved to the database.");
-                utils.enable_element("new-plot-button");
-                utils.disable_element("flag-plot-button");
-                utils.disable_element("save-values-button");
                 map_utils.disable_selection();
-                this.currentPlot = null;
                 this.plotsAssigned++;
-                this.loadRandomPlot();
+                this.nextPlot();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error saving your assignments to the database. See console for details.");
@@ -129,9 +130,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     plotId:    this.currentPlot.id})
             .then(angular.bind(this, function successCallback(response) {
                 alert("Plot " + this.currentPlot.id + " has been flagged.");
-                this.currentPlot = null;
                 this.plotsFlagged++;
-                this.loadRandomPlot();
+                this.nextPlot();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error flagging plot as bad. See console for details.");

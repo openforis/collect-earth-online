@@ -38,7 +38,7 @@
         </fieldset>
         <fieldset>
             <legend>Plot Navigation</legend>
-            <input id="new-plot-button" class="button" type="button" name="new-plot" value="Next Plot" ng-click="collection.loadRandomPlot()">
+            <input id="new-plot-button" class="button" type="button" name="new-plot" value="Next Plot" ng-click="collection.nextPlot()">
             <input id="save-values-button" class="button" type="button" name="save-values" value="Save Assignments" ng-click="collection.saveValues()"
                    style="opacity:0.5" disabled>
             <input id="flag-plot-button" class="button" type="button" name="flag-plot" value="Flag Plot as Bad" ng-click="collection.flagPlot()"
