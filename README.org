@@ -179,3 +179,16 @@ mkdir /your/home/directory/.openforis
 #+begin_src sh
 sudo $TOMCAT_HOME/bin/startup.sh
 #+end_src
+
+** Contact
+
+*Authors:*
+- Gary W. Johnson (SIG)
+- David S. Saah (SIG)
+- Billy Ashmall (NASA)
+
+*Emails:*
+
+- gjohnson@sig-gis.com
+- dsaah@sig-gis.com
+- billy.ashmall@nasa.gov
