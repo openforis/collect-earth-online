@@ -59,11 +59,11 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
-    this.initialize = function (documentRoot, userId) {
+    this.initialize = function (documentRoot, userId, institutionId) {
         // Make the current documentRoot, userId, and institution id globally available
         this.root = documentRoot;
         this.userId = userId;
-        this.details.id = document.getElementById("initial-institution-id").value;
+        this.details.id = institutionId;
 
         // If in Create Institution mode, show the institution editing view. Otherwise, load and show the institution details
         if (this.details.id == "0") {
@@ -130,13 +130,12 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     };
 
     this.createProject = function () {
-        var institutionId = document.getElementById("current-institution-id").value;
-        if (institutionId == 0) {
+        if (this.details.id == 0) {
             alert("Please finish creating the institution before adding projects to it.");
-        } else if (institutionId == -1) {
+        } else if (this.details.id == -1) {
             alert("Projects cannot be created without first selecting an institution.");
         } else {
-            window.location = this.root + "/project/0?institution=" + institutionId;
+            window.location = this.root + "/project/0?institution=" + this.details.id;
         }
     };
 

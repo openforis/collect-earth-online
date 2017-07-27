@@ -40,6 +40,7 @@ import static org.openforis.ceo.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.toElementStream;
 import static org.openforis.ceo.JsonUtils.toStream;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.PartUtils.partToString;
@@ -136,15 +137,76 @@ public class Projects {
         }
     }
 
+    private static String[] getProjectUsers(String projectId) {
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
+        if (matchingProject.isPresent()) {
+            JsonObject project = matchingProject.get();
+            boolean archived = project.get("archived").getAsBoolean();
+            String privacyLevel = project.get("privacyLevel").getAsString();
+            String availability = project.get("availability").getAsString();
+            String institutionId = project.get("institution").getAsString();
+            if (archived == true) {
+                // return no users
+                return new String[]{};
+            } else if (privacyLevel.equals("public")) {
+                // return all users
+                JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+                return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
+            } else {
+                JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
+                Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
+                                                                           institution ->
+                                                                           institution.get("id").getAsString().equals(institutionId));
+                if (matchingInstitution.isPresent()) {
+                    JsonObject institution = matchingInstitution.get();
+                    JsonArray admins = institution.getAsJsonArray("admins");
+                    JsonArray members = institution.getAsJsonArray("members");
+                    if (privacyLevel.equals("private")) {
+                        // return all institution admins
+                        return toElementStream(admins).map(element -> element.getAsString()).toArray(String[]::new);
+                    } else if (privacyLevel.equals("institution")) {
+                        if (availability.equals("published")) {
+                            // return all institution members
+                            return toElementStream(members).map(element -> element.getAsString()).toArray(String[]::new);
+                        } else {
+                            // return all institution admins
+                            return toElementStream(admins).map(element -> element.getAsString()).toArray(String[]::new);
+                        }
+                    } else {
+                        // FIXME: Implement this branch when privacyLevel.equals("invitation") is possible
+                        // return no users
+                        return new String[]{};
+                    }
+                } else {
+                    // return no users
+                    return new String[]{};
+                }
+            }
+        } else {
+            // return no users
+            return new String[]{};
+        }
+    }
+
     public static String getProjectStats(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
         JsonArray flaggedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == true);
         JsonArray analyzedPlots = filterJsonArray(plots, plot -> plot.get("analyses").getAsInt() > 0);
+        String[] members = getProjectUsers(projectId);
+        String[] contributors = toStream(plots)
+            .filter(plot -> !plot.get("user").isJsonNull())
+            .map(plot -> plot.get("user").getAsString())
+            .distinct()
+            .toArray(String[]::new);
+
         JsonObject stats = new JsonObject();
         stats.addProperty("flaggedPlots", flaggedPlots.size());
         stats.addProperty("analyzedPlots", analyzedPlots.size());
         stats.addProperty("unanalyzedPlots", Math.max(0, plots.size() - flaggedPlots.size() - analyzedPlots.size()));
+        stats.addProperty("members", members.length);
+        stats.addProperty("contributors", contributors.length);
         return stats.toString();
     }
 
@@ -615,9 +677,9 @@ public class Projects {
 
     public static synchronized String createProject(Request req, Response res) {
         try {
-            // Create a new multipart config for the servlet and set the default output directory for uploaded files
-            // FIXME: Will this work with Tomcat?
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(expandResourcePath("/csv")));
+            // Create a new multipart config for the servlet
+            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
+            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
 
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             JsonObject newProject = partsToJsonObject(req,
@@ -639,7 +701,7 @@ public class Projects {
 
             // Upload the plot-distribution-csv-file if one was provided
             if (newProject.get("plotDistribution").getAsString().equals("csv")) {
-                String csvFileName = writeFilePart(req, "plot-distribution-csv-file", "project-" + newProjectId);
+                String csvFileName = writeFilePart(req, "plot-distribution-csv-file", expandResourcePath("/csv"), "project-" + newProjectId);
                 newProject.addProperty("csv", csvFileName);
             } else {
                 newProject.add("csv", null);

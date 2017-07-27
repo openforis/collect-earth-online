@@ -2,14 +2,10 @@ package org.openforis.ceo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.servlet.MultipartConfigElement;
-import javax.servlet.http.Part;
 import spark.Request;
 import spark.Response;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
@@ -19,6 +15,8 @@ import static org.openforis.ceo.JsonUtils.getNextId;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
+import static org.openforis.ceo.PartUtils.partToString;
+import static org.openforis.ceo.PartUtils.writeFilePart;
 
 public class Institutions {
 
@@ -52,50 +50,31 @@ public class Institutions {
         }
     }
 
-    private static String partToString(Part part) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
-            return reader.lines().collect(Collectors.joining("\n"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static String writeLogoImage(Part logo, String institutionId) {
-        try {
-            String logoFileName = logo.getSubmittedFileName();
-            String logoFileType = logoFileName.substring(logoFileName.lastIndexOf(".") + 1);
-            String logoFileNameFinal = "institution-" + institutionId + "." + logoFileType;
-            logo.write(logoFileNameFinal);
-            return "img/institution-logos/" + logoFileNameFinal;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static synchronized String updateInstitution(Request req, Response res) {
         try {
             String institutionId = req.params(":id");
 
-            // FIXME: Will this work with Tomcat?
-            if (req.raw().getAttribute("org.eclipse.jetty.multipartConfig") == null) {
-                req.raw().setAttribute("org.eclipse.jetty.multipartConfig",
-                                       new MultipartConfigElement(expandResourcePath("/public/img/institution-logos/")));
-            }
+            // Create a new multipart config for the servlet
+            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
+            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
 
-            Part useridPart = req.raw().getPart("userid");
-            Part name = req.raw().getPart("institution-name");
-            Part logo = req.raw().getPart("institution-logo");
-            Part url = req.raw().getPart("institution-url");
-            Part description = req.raw().getPart("institution-description");
-
-            int userid = Integer.parseInt(partToString(useridPart));
-            boolean uploadedLogo = logo.getSubmittedFileName() != null;
+            int userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
+            String name = partToString(req.raw().getPart("institution-name"));
+            String url = partToString(req.raw().getPart("institution-url"));
+            String description = partToString(req.raw().getPart("institution-description"));
 
             if (institutionId.equals("0")) {
-                // Create a new institution
+                // NOTE: This branch creates a new institution
+
+                // Read in the existing institution list
                 JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
+
+                // Generate a new institution id
                 int newInstitutionId = getNextId(institutions);
-                String logoPath = uploadedLogo ? writeLogoImage(logo, Integer.toString(newInstitutionId)) : "";
+
+                // Upload the logo image if one was provided
+                String logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
+                String logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
                 JsonArray members = new JsonArray();
                 JsonArray admins = new JsonArray();
@@ -108,10 +87,10 @@ public class Institutions {
 
                 JsonObject newInstitution = new JsonObject();
                 newInstitution.addProperty("id", newInstitutionId);
-                newInstitution.addProperty("name", partToString(name));
+                newInstitution.addProperty("name", name);
                 newInstitution.addProperty("logo", logoPath);
-                newInstitution.addProperty("url", partToString(url));
-                newInstitution.addProperty("description", partToString(description));
+                newInstitution.addProperty("url", url);
+                newInstitution.addProperty("description", description);
                 newInstitution.addProperty("archived", false);
                 newInstitution.add("members", members);
                 newInstitution.add("admins", admins);
@@ -121,15 +100,18 @@ public class Institutions {
 
                 return newInstitution.toString();
             } else {
-                // Edit an existing institution
-                String logoPath = uploadedLogo ? writeLogoImage(logo, institutionId) : "";
+                // NOTE: This branch edits an existing institution
+
+                // Upload the logo image if one was provided
+                String logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + institutionId);
+                String logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
                 mapJsonFile("institution-list.json", institution -> {
                         if (institution.get("id").getAsString().equals(institutionId)) {
-                            institution.addProperty("name", partToString(name));
-                            institution.addProperty("url", partToString(url));
-                            institution.addProperty("description", partToString(description));
-                            if (uploadedLogo) {
+                            institution.addProperty("name", name);
+                            institution.addProperty("url", url);
+                            institution.addProperty("description", description);
+                            if (logoFileName != null) {
                                 institution.addProperty("logo", logoPath);
                             }
                             return institution;

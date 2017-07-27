@@ -13,10 +13,10 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.flaggedPlots = 0;
     this.analyzedPlots = 0;
     this.unanalyzedPlots = 0;
+    this.members = 0;
+    this.contributors = 0;
 
     // FIXME: Add these attributes to the JSON database
-    this.members = [];
-    this.contributors = [];
     this.dateCreated = null;
     this.datePublished = null;
     this.dateClosed = null;
@@ -244,6 +244,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 this.flaggedPlots = response.data.flaggedPlots;
                 this.analyzedPlots = response.data.analyzedPlots;
                 this.unanalyzedPlots = response.data.unanalyzedPlots;
+                this.members = response.data.members;
+                this.contributors = response.data.contributors;
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving project stats. See console for details.");

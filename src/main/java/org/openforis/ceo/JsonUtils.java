@@ -53,10 +53,14 @@ public class JsonUtils {
         }
     }
 
+    // Note: The JSON array may contain elements of any type.
+    public static Stream<JsonElement> toElementStream(JsonArray array) {
+        return StreamSupport.stream(array.spliterator(), false);
+    }
+
     // Note: The JSON array must only contain JSON objects.
     public static Stream<JsonObject> toStream(JsonArray array) {
-        return StreamSupport.stream(array.spliterator(), false)
-            .map(element -> element.getAsJsonObject());
+        return toElementStream(array).map(element -> element.getAsJsonObject());
     }
 
     public static Collector<JsonElement, ?, JsonArray> intoJsonArray =

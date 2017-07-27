@@ -5,7 +5,7 @@
 <script type="text/javascript" src="${root}/js/institution.js"></script>
 
 <div id="institution" ng-app="institution" ng-controller="InstitutionController as institution"
-     ng-init="institution.initialize('${root}', '${userid!""}')">
+     ng-init="institution.initialize('${root}', '${userid!""}', '${institution_id}')">
     <div id="institution-details">
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <h1>{{ institution.details.name }}</h1>
@@ -31,8 +31,6 @@
             <input id="delete-institution" type="button" value="Delete Institution"
                    ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
         </#if>
-        <input id="initial-institution-id" type="hidden" name="initial-institution-id" value=${institution_id!"0"}>
-        <input id="current-institution-id" type="hidden" name="current-institution-id" value="{{ institution.details.id }}">
     </div>
     <div id="project-list">
         <h1>Projects [{{ institution.projectList.length }}]</h1>
