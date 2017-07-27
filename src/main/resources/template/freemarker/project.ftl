@@ -15,9 +15,9 @@
                 <tbody>
                     <tr>
                         <td>Members</td>
-                        <td>{{ project.members.length }}</td>
+                        <td>{{ project.members }}</td>
                         <td>Contributors</td>
-                        <td>{{ project.contributors.length }}</td>
+                        <td>{{ project.contributors }}</td>
                     </tr>
                     <tr>
                         <td>Total Plots</td>
