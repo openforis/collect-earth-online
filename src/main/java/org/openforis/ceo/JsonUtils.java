@@ -7,6 +7,9 @@ import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -19,7 +22,13 @@ import java.util.stream.StreamSupport;
 public class JsonUtils {
 
     public static String expandResourcePath(String filename) {
-        return JsonUtils.class.getResource(filename).getFile();
+    	URI uri;
+		try {
+			uri = JsonUtils.class.getResource(filename).toURI();
+			return Paths.get( uri ).toFile().getAbsolutePath() ;
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
     }
 
     public static JsonElement parseJson(String jsonString) {
@@ -28,7 +37,7 @@ public class JsonUtils {
 
     public static JsonElement readJsonFile(String filename) {
         String jsonDataDir = expandResourcePath("/json/");
-        try (FileReader fileReader = new FileReader(new File(jsonDataDir, filename))) {
+        try (FileReader fileReader = new FileReader(new File( jsonDataDir, filename))) {
             return (new JsonParser()).parse(fileReader);
         } catch (Exception e) {
             throw new RuntimeException(e);
