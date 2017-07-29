@@ -179,4 +179,17 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         }
     };
 
+    this.isInstitutionMember = function (userId) {
+        return userId == 1
+            || this.userList.some(
+                function (user) {
+                    return user.id == userId;
+                }
+            );
+    };
+
+    this.requestMembership = function () {
+        alert("Membership requested for user " + this.userId);
+    };
+
 }]);

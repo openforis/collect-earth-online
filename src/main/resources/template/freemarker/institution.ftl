@@ -68,6 +68,9 @@
                        ng-model="institution.newUserEmail">
                 <input type="button" class="button" name="add-institution-user" value="Add User" ng-click="institution.addUser()">
             </li>
+            <li ng-if="institution.userId != '' && !institution.isInstitutionMember(institution.userId)">
+                <input type="button" class="button" name="request-institution-membership" value="Request Membership" ng-click="institution.requestMembership()">
+            </li>
         </ul>
     </div>
 </div>
