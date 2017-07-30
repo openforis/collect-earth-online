@@ -600,8 +600,14 @@ p.error-message {
     border-bottom: 2px solid darkgray;
 }
 
-#institution #institution-details #institution-view #institution-logo-container {
+#institution #institution-details #institution-view {
     position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+#institution #institution-details #institution-view #institution-logo-container {
+    position: absolute;
     top: 0px;
     left: 0px;
     height: 140px;
@@ -640,6 +646,7 @@ p.error-message {
 }
 
 #institution #institution-details #institution-edit {
+    position: relative;
     height: 100%;
     width: 100%;
     overflow: auto;
@@ -813,6 +820,14 @@ p.error-message {
     height: calc(100% - 142px - 3rem);
     width: calc(33vw - 2rem);
     padding: 1rem;
+}
+
+#institution #imagery-list h1 {
+    font-size: 1.5rem;
+    font-weight: 100;
+    padding: 0.5rem;
+    color: gray;
+    text-align: center;
 }
 
 /*******************/

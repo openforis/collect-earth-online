@@ -78,7 +78,12 @@
         </ul>
     </div>
     <div id="imagery-list">
-        <h1>Imagery</h1>
+        <h1>Imagery [{{ institution.imageryList.length }}]</h1>
+        <ul>
+            <li ng-repeat="imagery in institution.imageryList">
+                {{ imagery.name }}
+            </li>
+        </ul>
     </div>
 </div>
 

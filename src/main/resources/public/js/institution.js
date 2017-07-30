@@ -14,6 +14,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     this.projectList = [];
     this.userList = [];
     this.userListComplete = [];
+    this.imageryList = [];
     this.newUserEmail = "";
     this.nonPendingUsers = 0;
 
