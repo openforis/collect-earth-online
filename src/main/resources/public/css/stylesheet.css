@@ -788,6 +788,12 @@ p.error-message {
     border: 1px solid blue;
 }
 
+#institution #user-list ul li #request-membership-button {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 #institution #user-list #user-map {
     height: calc(100% - 5.5rem);
     padding: 0.5rem;

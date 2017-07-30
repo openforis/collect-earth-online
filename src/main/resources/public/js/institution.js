@@ -189,7 +189,15 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     };
 
     this.requestMembership = function () {
-        alert("Membership requested for user " + this.userId);
+        $http.post(this.root + "/request-institution-membership",
+                   {institutionId: this.details.id, userId: parseInt(this.userId)})
+            .then(angular.bind(this, function successCallback(response) {
+                alert("Membership requested for user " + this.userId + ".");
+                utils.disable_element("request-membership-button");
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error requesting institution membership. See console for details.");
+            });
     };
 
 }]);

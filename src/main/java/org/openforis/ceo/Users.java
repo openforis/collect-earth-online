@@ -197,7 +197,7 @@ public class Users {
                                       (a, b) -> b));
     }
 
-    public static String updateInstitutionRole(Request req, Response res) {
+    public static synchronized String updateInstitutionRole(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         JsonElement userId = jsonInputs.get("userId");
         String institutionId = jsonInputs.get("institutionId").getAsString();
@@ -228,6 +228,28 @@ public class Users {
                             }
                             institution.add("members", members);
                             institution.add("admins", admins);
+                            return institution;
+                        } else {
+                            return institution;
+                        }
+                    });
+
+        return "";
+    }
+
+    public static synchronized String requestInstitutionMembership(Request req, Response res) {
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+        JsonElement userId = jsonInputs.get("userId");
+        String institutionId = jsonInputs.get("institutionId").getAsString();
+
+        mapJsonFile("institution-list.json",
+                    institution -> {
+                        if (institution.get("id").getAsString().equals(institutionId)) {
+                            JsonArray pending = institution.getAsJsonArray("pending");
+                            if (!pending.contains(userId)) {
+                                pending.add(userId);
+                            }
+                            institution.add("pending", pending);
                             return institution;
                         } else {
                             return institution;

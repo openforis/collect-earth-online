@@ -78,6 +78,7 @@ public class Institutions {
 
                 JsonArray members = new JsonArray();
                 JsonArray admins = new JsonArray();
+                JsonArray pending = new JsonArray();
                 members.add(1); // adding the admin user by default
                 admins.add(1); // adding the admin user by default
                 if (userid != 1) {
@@ -94,6 +95,7 @@ public class Institutions {
                 newInstitution.addProperty("archived", false);
                 newInstitution.add("members", members);
                 newInstitution.add("admins", admins);
+                newInstitution.add("pending", pending);
 
                 institutions.add(newInstitution);
                 writeJsonFile("institution-list.json", institutions);
