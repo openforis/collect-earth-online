@@ -66,6 +66,16 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
+    this.getImageryList = function (institutionId) {
+        $http.get(this.root + "/get-all-imagery?institutionId=" + institutionId)
+            .then(angular.bind(this, function successCallback(response) {
+                this.imageryList = response.data;
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
+            });
+    };
+
     this.initialize = function (documentRoot, userId, institutionId) {
         // Make the current documentRoot, userId, and institution id globally available
         this.root = documentRoot;
@@ -86,6 +96,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
 
             // Load the complete userList
             this.getUserListComplete();
+
+            // Load the imageryList
+            this.getImageryList(this.details.id);
         }
     };
 
