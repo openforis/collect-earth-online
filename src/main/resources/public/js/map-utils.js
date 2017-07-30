@@ -50,79 +50,63 @@ map_utils.get_view_extent = function () {
 // This reference will hold the current page's OpenLayers map object
 map_utils.map_ref = null;
 
+map_utils.create_source = function (source_config) {
+    if (source_config.type == "DigitalGlobe") {
+        return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + source_config.imagery_id
+                                       + "/{z}/{x}/{y}.png?access_token=" + source_config.access_token,
+                                  attribution: "© DigitalGlobe, Inc"});
+    } else if (source_config.type == "BingMaps") {
+        return new ol.source.BingMaps({imagerySet: source_config.imagery_id,
+                                       key: source_config.access_token,
+                                       maxZoom: 19});
+    } else if (source_config.type == "GeoServer") {
+        return new ol.source.TileWMS({serverType: "geoserver",
+                                      url: source_config.geoserver_url,
+                                      params: source_config.geoserver_params});
+    } else {
+        alert("Cannot create layer with source type " + source_config.type + ".");
+        return null;
+    }
+};
+
+map_utils.create_layer = function (layer_config, visible) {
+    var source = map_utils.create_source(layer_config.source_config);
+    if (source) {
+        if (layer_config.extent != null) {
+            return new ol.layer.Tile({title: layer_config.title,
+                                      visible: visible,
+                                      extent: layer_config.extent,
+                                      source: source});
+        } else {
+            return new ol.layer.Tile({title: layer_config.title,
+                                      visible: visible,
+                                      source: source});
+        }
+    } else {
+        return null;
+    }
+};
+
 // Example call:
 // map_utils.digital_globe_base_map({"div_name":      "image-analysis-pane",
 //                                   "center_coords": [102.0, 17.0],
-//                                   "zoom_level":    5});
-map_utils.digital_globe_base_map = function (map_config) {
-    var digital_globe_access_token     = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYS" +
-                                         "I6ImNqM2RuZTE3dTAwMncyd3Bwanh4MHJ" +
-                                         "1cmgifQ.LNrR2h_I0kz6fra93XGP2g";
-    var recent_imagery_url             = "digitalglobe.nal0g75k";
-    var recent_imagery_and_streets_url = "digitalglobe.nal0mpda";
-    var bing_maps_access_token         = "AlQPbThspGcsiCnczC-2QVOYU9u_PrteL" +
-                                         "w6dxNQls99dmLXcr9-qWCM5J4Y2G-pS";
-    var sig_geoserver_url              = "http://pyrite.sig-gis.com/geoserver/wms";
-    var dg_geoserver_url               = "https://services.digitalglobe.com/mapservice/wmsaccess";
-    var dg_unauthenticated_connect_id  = "a797f723-f91f-40d7-8458-3669a830b6de";
-
-    // Declare each of the layer sources that will be shown in the map
-    var source1 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
-                                          recent_imagery_url +
-                                          "/{z}/{x}/{y}.png?access_token=" +
-                                          digital_globe_access_token,
-                                     attribution: "© DigitalGlobe, Inc"});
-
-    var source2 = new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" +
-                                          recent_imagery_and_streets_url +
-                                          "/{z}/{x}/{y}.png?access_token=" +
-                                          digital_globe_access_token,
-                                     attribution: "© DigitalGlobe, Inc"});
-
-    var source3 = new ol.source.BingMaps({key: bing_maps_access_token,
-                                          imagerySet: "Aerial",
-                                          maxZoom: 19});
-
-    var source4 = new ol.source.BingMaps({key: bing_maps_access_token,
-                                          imagerySet: "AerialWithLabels",
-                                          maxZoom: 19});
-
-    var source5 = new ol.source.TileWMS({url: sig_geoserver_url,
-                                         params: {"LAYERS": "servir:yr2002",
-                                                  "TILED": true},
-                                         serverType: "geoserver"});
-
-    var source6 = new ol.source.TileWMS({url: dg_geoserver_url,
-                                         params: {"VERSION": "1.1.1",
-                                                  "LAYERS": "DigitalGlobe:Imagery",
-                                                  "CONNECTID": dg_unauthenticated_connect_id},
-                                         serverType: "geoserver"});
-
-    // Wrap each source in a layer object
-    var layer1 = new ol.layer.Tile({title: "DigitalGlobeRecentImagery",
-                                    visible: false,
-                                    source: source1});
-
-    var layer2 = new ol.layer.Tile({title: "DigitalGlobeRecentImagery+Streets",
-                                    visible: false,
-                                    source: source2});
-
-    var layer3 = new ol.layer.Tile({title: "BingAerial",
-                                    visible: false,
-                                    source: source3});
-
-    var layer4 = new ol.layer.Tile({title: "BingAerialWithLabels",
-                                    visible: false,
-                                    source: source4});
-
-    var layer5 = new ol.layer.Tile({title: "NASASERVIRChipset2002",
-                                    visible: false,
-                                    extent: [10298030, 898184, 12094575, 2697289],
-                                    source: source5});
-
-    var layer6 = new ol.layer.Tile({title: "DigitalGlobeWMSImagery",
-                                    visible: true,
-                                    source: source6});
+//                                   "zoom_level":    5},
+//                                  {see imagery-list.json});
+map_utils.digital_globe_base_map = function (map_config, layer_configs) {
+    // Create each of the layers that will be shown in the map from layer_configs
+    var layers = layer_configs.map(
+        function (layer_config) {
+            if (layer_config.title == "DigitalGlobeWMSImagery") {
+                return map_utils.create_layer(layer_config, true);
+            } else {
+                return map_utils.create_layer(layer_config, false);
+            }
+        }
+    ).filter(
+        function (layer) {
+            return layer != null;
+        }
+    );
 
     // Add a scale line to the default map controls
     var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
@@ -135,8 +119,7 @@ map_utils.digital_globe_base_map = function (map_config) {
 
     // Create the new OpenLayers map object
     var openlayers_map = new ol.Map({target: map_config.div_name,
-                                     layers: [layer1, layer2, layer3,
-                                              layer4, layer5, layer6],
+                                     layers: layers,
                                      controls: controls,
                                      view: view});
 
@@ -160,7 +143,7 @@ map_utils.set_current_imagery = function (new_imagery) {
             if (title == map_utils.current_imagery) {
                 layer.set("visible", false);
             }
-            if (title == new_imagery ) {
+            if (title == new_imagery) {
                 layer.set("visible", true);
             }
         }
@@ -178,17 +161,19 @@ map_utils.get_layer_by_name = function (name) {
 };
 
 map_utils.set_dg_wms_layer_params = function (imagery_year, stacking_profile) {
-    map_utils.get_layer_by_name("DigitalGlobeWMSImagery")
-        .setSource(new ol.source.TileWMS({serverType: "geoserver",
-                                          url: "https://services.digitalglobe.com/mapservice/wmsaccess",
-                                          params: {"VERSION": "1.1.1",
-                                                   "LAYERS": "DigitalGlobe:Imagery",
-                                                   "CONNECTID": "a797f723-f91f-40d7-8458-3669a830b6de",
-                                                   "FEATUREPROFILE": stacking_profile,
-                                                   // "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
-                                                   //                      + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
-                                                   "COVERAGE_CQL_FILTER": "(acquisition_date<'" + imagery_year + "-12-31')"}
-                                         }));
+    var dg_layer = map_utils.get_layer_by_name("DigitalGlobeWMSImagery");
+    if (dg_layer) {
+        dg_layer.setSource(new ol.source.TileWMS({serverType: "geoserver",
+                                                  url: "https://services.digitalglobe.com/mapservice/wmsaccess",
+                                                  params: {"VERSION": "1.1.1",
+                                                           "LAYERS": "DigitalGlobe:Imagery",
+                                                           "CONNECTID": "a797f723-f91f-40d7-8458-3669a830b6de",
+                                                           "FEATUREPROFILE": stacking_profile,
+                                                           // "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
+                                                           //                      + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
+                                                           "COVERAGE_CQL_FILTER": "(acquisition_date<'" + imagery_year + "-12-31')"}
+                                                 }));
+    }
 };
 
 map_utils.zoom_map_to_layer = function (layer) {

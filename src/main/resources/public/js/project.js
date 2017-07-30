@@ -15,6 +15,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.unanalyzedPlots = 0;
     this.members = 0;
     this.contributors = 0;
+    this.imageryList = [];
 
     // FIXME: Add these attributes to the JSON database
     this.dateCreated = null;
@@ -217,6 +218,17 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             });
     };
 
+    this.getImageryList = function () {
+        $http.get(this.root + "/get-all-imagery?institutionId=")
+            .then(angular.bind(this, function successCallback(response) {
+                this.imageryList = response.data;
+                this.initialize(this.root, this.details.id, this.institution);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
+            });
+    };
+
     this.getPlotList = function (projectId, maxPlots) {
         $http.get(this.root + "/get-project-plots/" + projectId + "/" + maxPlots)
             .then(angular.bind(this, function successCallback(response) {
@@ -260,11 +272,15 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         if (angular.equals(this.details, {})) {
             // Load the current project details
             this.getProjectById(projectId);
+        } else if (angular.equals(this.imageryList, [])) {
+            // Load the imageryList
+            this.getImageryList();
         } else {
             // Initialize the base map
             map_utils.digital_globe_base_map({div_name: "project-map",
                                               center_coords: [0.0, 0.0],
-                                              zoom_level: 1});
+                                              zoom_level: 1},
+                                             this.imageryList);
             map_utils.set_dg_wms_layer_params(this.details.imageryYear, this.details.stackingProfile);
             map_utils.set_current_imagery(this.details.baseMapSource);
 

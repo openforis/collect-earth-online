@@ -52,7 +52,8 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
         // FIXME: Show a map of users (their points will be drawn by the getUserList callback)
         // map_utils.digital_globe_base_map({div_name: "user-map",
         //                                   center_coords: [-72.5498326, 44.3736678],
-        //                                   zoom_level: 5});
+        //                                   zoom_level: 5},
+        //                                   this.imageryList); // FIXME: load this
     };
 
 }]);

@@ -8,6 +8,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.userSamples = {};
     this.plotsAssigned = 0;
     this.plotsFlagged = 0;
+    this.imageryList = [];
 
     this.getProjectById = function (projectId, userId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
@@ -25,6 +26,17 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             });
     };
 
+    this.getImageryList = function () {
+        $http.get(this.root + "/get-all-imagery?institutionId=")
+            .then(angular.bind(this, function successCallback(response) {
+                this.imageryList = response.data;
+                this.initialize(this.root, this.userId, this.userName, this.projectId);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
+            });
+    };
+
     this.initialize = function (documentRoot, userId, userName, projectId) {
         // Make the current documentRoot, userId, userName, and projectId globally available
         this.root = documentRoot;
@@ -35,11 +47,15 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         if (this.currentProject == null) {
             // Load the project details
             this.getProjectById(projectId, userId);
+        } else if (angular.equals(this.imageryList, [])) {
+            // Load the imageryList
+            this.getImageryList();
         } else {
             // Initialize the base map and show the selected project's boundary
             map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
                                               center_coords: [0.0, 0.0],
-                                              zoom_level: 1});
+                                              zoom_level: 1},
+                                             this.imageryList);
             map_utils.set_dg_wms_layer_params(this.currentProject.imageryYear, this.currentProject.stackingProfile);
             map_utils.set_current_imagery(this.currentProject.baseMapSource);
             map_utils.draw_polygon(this.currentProject.boundary);
