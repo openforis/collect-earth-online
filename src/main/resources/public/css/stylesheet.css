@@ -43,7 +43,6 @@ nav {
     width: 100%;
     color: #eee;
     background-color: #3a3a3a;
-    /* border: 1px solid orange; */
 }
 
 nav img#ceo-site-logo {
@@ -59,7 +58,6 @@ nav ul {
     top: 0px;
     left: 150px;
     padding: 0.5rem;
-    /* border: 1px solid red; */
 }
 
 nav ul li {
@@ -67,7 +65,6 @@ nav ul li {
     list-style-type: none;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
-    /* border: 1px solid white; */
 }
 
 nav #login-info {
@@ -76,7 +73,6 @@ nav #login-info {
     right: 40px;
     padding: 0.7rem;
     font-size: 0.8rem;
-    /* border: 1px solid white; */
 }
 
 nav #login-info a {
@@ -106,7 +102,6 @@ nav a:hover, nav a.active-link {
     height: 55px;
     width: 100%;
     background-color: #fff;
-    /* border: 1px solid purple; */
 }
 
 #logo-banner img#usaid {
@@ -214,15 +209,14 @@ section#content a:hover, section#content a.active-link {
     100% { opacity: 0; }
 }
 
-/********************/
-/* Institution List */
-/********************/
+/*************************************************/
+/* Institution, Project, User, and Imagery Lists */
+/*************************************************/
 
-#institution-list {
-    padding: 1rem;
-}
-
-#institution-list h1 {
+#institution-list h1,
+#project-list h1,
+#user-list h1,
+#imagery-list h1 {
     font-size: 1.5rem;
     font-weight: 100;
     padding: 0.5rem;
@@ -230,18 +224,27 @@ section#content a:hover, section#content a.active-link {
     text-align: center;
 }
 
-#institution-list ul {
+#institution-list ul,
+#project-list ul,
+#user-list ul,
+#imagery-list ul {
     list-style-type: none;
     padding: 0.5rem;
-    height: calc(100% - 5.5rem);
+    height: calc(100% - 4.5rem);
     overflow: auto;
 }
 
-#institution-list ul li {
+#institution-list ul li,
+#project-list ul li,
+#user-list ul li,
+#imagery-list ul li {
     margin-bottom: 0.5rem;
 }
 
-#institution-list ul li a {
+#institution-list ul li a,
+#project-list ul li a,
+#user-list ul li a,
+#imagery-list ul li a {
     display: inline-block;
     width: calc(97% - 0.5rem - 2px);
     padding: 0.25rem;
@@ -257,33 +260,6 @@ section#content a:hover, section#content a.active-link {
     font-weight: 700;
 }
 
-/****************/
-/* Project List */
-/****************/
-
-#project-list {
-    padding: 1rem;
-}
-
-#project-list h1 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-    text-align: center;
-}
-
-#project-list ul {
-    list-style-type: none;
-    padding: 0.5rem;
-    height: calc(100% - 5.5rem);
-    overflow: auto;
-}
-
-#project-list ul li {
-    margin-bottom: 0.5rem;
-}
-
 #project-list ul li input#create-project {
     display: inline-block;
     width: calc(99.5% - 0.5rem - 2px);
@@ -297,10 +273,25 @@ section#content a:hover, section#content a.active-link {
     border: 1px solid blue;
 }
 
-#project-list ul li a {
-    display: inline-block;
+#project-list ul li a.view-project {
+    width: calc(76% - 0.5rem - 2px);
+}
+
+#project-list ul li a.edit-project {
+    width: calc(20% - 0.5rem - 2px);
+}
+
+#user-list ul li a.wide-user-entry {
     width: calc(97% - 0.5rem - 2px);
-    padding: 0.25rem;
+}
+
+#user-list ul li a.narrow-user-entry {
+    width: calc(67% - 0.5rem - 2px);
+}
+
+#user-list ul li select {
+    display: inline-block;
+    width: calc(30% - 2px);
     text-align: center;
     color: #3C948B;
     font-size: 1rem;
@@ -309,12 +300,10 @@ section#content a:hover, section#content a.active-link {
     border: 1px solid blue;
 }
 
-#project-list ul li a.view-project {
-    width: calc(76% - 0.5rem - 2px);
-}
-
-#project-list ul li a.edit-project {
-    width: calc(20% - 0.5rem - 2px);
+#user-list ul li #request-membership-button {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /*************/
@@ -379,7 +368,7 @@ section#content a:hover, section#content a.active-link {
     top: calc(142px + 1rem);
     left: 33vw;
     height: calc(100% - 142px - 3rem);
-    width: calc(34vw - 2rem - 2px);
+    width: calc(33vw - 2rem - 2px);
     padding: 1rem;
     border-right: 2px solid darkgray;
 }
@@ -387,46 +376,15 @@ section#content a:hover, section#content a.active-link {
 #home #user-list {
     position: absolute;
     top: calc(142px + 1rem);
-    left: 67vw;
+    left: 66vw;
     height: calc(100% - 142px - 3rem);
     width: calc(33vw - 2rem);
     padding: 1rem;
 }
 
-#home #user-list h1 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-    text-align: center;
-}
-
 #home #user-list #user-map {
     height: calc(100% - 5.5rem);
     padding: 0.5rem;
-}
-
-#home #user-list ul {
-    list-style-type: none;
-    padding: 0.5rem;
-    height: calc(100% - 5.5rem);
-    overflow: auto;
-}
-
-#home #user-list ul li {
-    margin-bottom: 0.5rem;
-}
-
-#home #user-list ul li a {
-    display: inline-block;
-    width: calc(97% - 0.5rem - 2px);
-    padding: 0.25rem;
-    text-align: center;
-    color: #3C948B;
-    font-size: 1rem;
-    text-decoration: none;
-    text-overflow: ellipsis;
-    border: 1px solid blue;
 }
 
 /**************/
@@ -748,86 +706,18 @@ p.error-message {
     top: calc(142px + 1rem);
     left: 33vw;
     height: calc(100% - 142px - 3rem);
-    width: calc(34vw - 2rem - 2px);
+    width: calc(33vw - 2rem - 2px);
     padding: 1rem;
     border-right: 2px solid darkgray;
-}
-
-#institution #user-list h1 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-    text-align: center;
-}
-
-#institution #user-list ul {
-    list-style-type: none;
-    padding: 0.5rem;
-    height: calc(100% - 5.5rem);
-    overflow: auto;
-}
-
-#institution #user-list ul li {
-    margin-bottom: 0.5rem;
-}
-
-#institution #user-list ul li a {
-    display: inline-block;
-    padding: 0.25rem;
-    text-align: center;
-    color: #3C948B;
-    font-size: 1rem;
-    text-decoration: none;
-    text-overflow: ellipsis;
-    border: 1px solid blue;
-}
-
-#institution #user-list ul li a.wide-user-entry {
-    width: calc(97% - 0.5rem - 2px);
-}
-
-#institution #user-list ul li a.narrow-user-entry {
-    width: calc(67% - 0.5rem - 2px);
-}
-
-#institution #user-list ul li select {
-    display: inline-block;
-    width: calc(30% - 2px);
-    text-align: center;
-    color: #3C948B;
-    font-size: 1rem;
-    text-decoration: none;
-    text-overflow: ellipsis;
-    border: 1px solid blue;
-}
-
-#institution #user-list ul li #request-membership-button {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-#institution #user-list #user-map {
-    height: calc(100% - 5.5rem);
-    padding: 0.5rem;
 }
 
 #institution #imagery-list {
     position: absolute;
     top: calc(142px + 1rem);
-    left: 67vw;
+    left: 66vw;
     height: calc(100% - 142px - 3rem);
     width: calc(33vw - 2rem);
     padding: 1rem;
-}
-
-#institution #imagery-list h1 {
-    font-size: 1.5rem;
-    font-weight: 100;
-    padding: 0.5rem;
-    color: gray;
-    text-align: center;
 }
 
 /*******************/
