@@ -213,6 +213,33 @@ section#content a:hover, section#content a.active-link {
 /* Institution, Project, User, and Imagery Lists */
 /*************************************************/
 
+#institution-list,
+#project-list,
+#user-list,
+#imagery-list {
+    position: absolute;
+    top: calc(142px + 1rem);
+    height: calc(100% - 142px - 3rem);
+    width: calc(33vw - 2rem - 2px);
+    padding: 1rem;
+}
+
+#institution-list,
+#imagery-list {
+    left: 0vw;
+    border-right: 2px solid darkgray;
+}
+
+#project-list {
+    left: 33vw;
+    border-right: 2px solid darkgray;
+}
+
+#user-list {
+    left: 66vw;
+    width: calc(33vw - 2rem);
+}
+
 #institution-list h1,
 #project-list h1,
 #user-list h1,
@@ -306,6 +333,11 @@ section#content a:hover, section#content a.active-link {
     margin-right: auto;
 }
 
+#user-list #user-map {
+    height: calc(100% - 5.5rem);
+    padding: 0.5rem;
+}
+
 /*************/
 /* Home Page */
 /*************/
@@ -351,40 +383,6 @@ section#content a:hover, section#content a.active-link {
 #home #ceo-description p {
     padding: 0.5rem;
     text-align: center;
-}
-
-#home #institution-list {
-    position: absolute;
-    top: calc(142px + 1rem);
-    left: 0vw;
-    height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem - 2px);
-    padding: 1rem;
-    border-right: 2px solid darkgray;
-}
-
-#home #project-list {
-    position: absolute;
-    top: calc(142px + 1rem);
-    left: 33vw;
-    height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem - 2px);
-    padding: 1rem;
-    border-right: 2px solid darkgray;
-}
-
-#home #user-list {
-    position: absolute;
-    top: calc(142px + 1rem);
-    left: 66vw;
-    height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem);
-    padding: 1rem;
-}
-
-#home #user-list #user-map {
-    height: calc(100% - 5.5rem);
-    padding: 0.5rem;
 }
 
 /**************/
@@ -689,35 +687,6 @@ p.error-message {
 #institution #institution-details #institution-controls input#create-institution {
     display: block;
     width: calc(12rem - 0.5rem - 2px);
-}
-
-#institution #project-list {
-    position: absolute;
-    top: calc(142px + 1rem);
-    left: 0vw;
-    height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem - 2px);
-    padding: 1rem;
-    border-right: 2px solid darkgray;
-}
-
-#institution #user-list {
-    position: absolute;
-    top: calc(142px + 1rem);
-    left: 33vw;
-    height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem - 2px);
-    padding: 1rem;
-    border-right: 2px solid darkgray;
-}
-
-#institution #imagery-list {
-    position: absolute;
-    top: calc(142px + 1rem);
-    left: 66vw;
-    height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem);
-    padding: 1rem;
 }
 
 /*******************/

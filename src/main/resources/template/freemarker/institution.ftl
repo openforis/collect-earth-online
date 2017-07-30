@@ -33,6 +33,14 @@
             </div>
         </#if>
     </div>
+    <div id="imagery-list">
+        <h1>Imagery [{{ institution.imageryList.length }}]</h1>
+        <ul>
+            <li ng-repeat="imagery in institution.imageryList">
+                {{ imagery.name }}
+            </li>
+        </ul>
+    </div>
     <div id="project-list">
         <h1>Projects [{{ institution.projectList.length }}]</h1>
         <ul>
@@ -74,14 +82,6 @@
             <li ng-if="institution.userId != '' && institution.details.id > 0 && !institution.isInstitutionMember(institution.userId)">
                 <input type="button" class="button" id="request-membership-button" name="request-membership-button"
                        value="Request Membership" ng-click="institution.requestMembership()">
-            </li>
-        </ul>
-    </div>
-    <div id="imagery-list">
-        <h1>Imagery [{{ institution.imageryList.length }}]</h1>
-        <ul>
-            <li ng-repeat="imagery in institution.imageryList">
-                {{ imagery.name }}
             </li>
         </ul>
     </div>
