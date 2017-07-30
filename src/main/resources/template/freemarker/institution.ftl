@@ -8,28 +8,29 @@
      ng-init="institution.initialize('${root}', '${userid!""}', '${institution_id}')">
     <div id="institution-details">
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
-            <h1>{{ institution.details.name }}</h1>
-            <img src="${root}/{{ institution.details.logo }}">
-            <a href="{{ institution.details.url }}">{{ institution.details.url }}</a>
+            <div id="institution-logo-container">
+                <a href="{{ institution.details.url }}">
+                    <img src="${root}/{{ institution.details.logo }}">
+                </a>
+            </div>
+            <h1><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>
             <p>{{ institution.details.description }}</p>
         </div>
         <div id="institution-edit" ng-show="institution.pageMode == 'edit'">
-            <label>Name</label>
-            <input id="institution-name" type="text" ng-model="institution.details.name">
-            <label>Logo</label>
-            <input id="institution-logo" type="file" accept="image/*">
-            <label>URL</label>
-            <input id="institution-url" type="text" ng-model="institution.details.url">
-            <label>Description</label>
-            <textarea id="institution-description" ng-model="institution.details.description"></textarea>
+            <label id="institution-name" >Name <input type="text" ng-model="institution.details.name"></label>
+            <label id="institution-url">URL <input type="text" ng-model="institution.details.url"></label>
+            <label id="institution-logo-selector">Logo <input id="institution-logo" type="file" accept="image/*"></label>
+            <label id="institution-description">Description<br><textarea ng-model="institution.details.description"></textarea></label>
         </div>
         <#if role??>
-            <input id="create-institution" type="button" value="Create Institution"
-                   ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
-            <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit Institution' : 'Save Changes' }}"
-                   ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin">
-            <input id="delete-institution" type="button" value="Delete Institution"
-                   ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
+            <div id="institution-controls">
+                <input id="create-institution" type="button" value="Create Institution"
+                       ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
+                <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit' : 'Save' }}"
+                       ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin">
+                <input id="delete-institution" type="button" value="Delete"
+                       ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
+            </div>
         </#if>
     </div>
     <div id="project-list">
@@ -75,6 +76,9 @@
                        value="Request Membership" ng-click="institution.requestMembership()">
             </li>
         </ul>
+    </div>
+    <div id="imagery-list">
+        <h1>Imagery</h1>
     </div>
 </div>
 
