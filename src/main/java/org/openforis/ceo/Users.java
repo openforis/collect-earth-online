@@ -158,13 +158,15 @@ public class Users {
                 JsonObject institution = matchingInstitution.get();
                 JsonArray members = institution.getAsJsonArray("members");
                 JsonArray admins = institution.getAsJsonArray("admins");
+                JsonArray pending = institution.getAsJsonArray("pending");
                 return toStream(users)
                     .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
-                    .filter(user -> members.contains(user.get("id")))
+                    .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
                     .map(user -> {
                             user.addProperty("institutionRole",
                                              admins.contains(user.get("id")) ? "admin"
                                              : members.contains(user.get("id")) ? "member"
+                                             : pending.contains(user.get("id")) ? "pending"
                                              : "not-member");
                             return user;
                         })
@@ -208,12 +210,16 @@ public class Users {
                         if (institution.get("id").getAsString().equals(institutionId)) {
                             JsonArray members = institution.getAsJsonArray("members");
                             JsonArray admins = institution.getAsJsonArray("admins");
+                            JsonArray pending = institution.getAsJsonArray("pending");
                             if (role.equals("member")) {
                                 if (!members.contains(userId)) {
                                     members.add(userId);
                                 }
                                 if (admins.contains(userId)) {
                                     admins.remove(userId);
+                                }
+                                if (pending.contains(userId)) {
+                                    pending.remove(userId);
                                 }
                             } else if (role.equals("admin")) {
                                 if (!members.contains(userId)) {
@@ -222,12 +228,17 @@ public class Users {
                                 if (!admins.contains(userId)) {
                                     admins.add(userId);
                                 }
+                                if (pending.contains(userId)) {
+                                    pending.remove(userId);
+                                }
                             } else {
                                 members.remove(userId);
                                 admins.remove(userId);
+                                pending.remove(userId);
                             }
                             institution.add("members", members);
                             institution.add("admins", admins);
+                            institution.add("pending", pending);
                             return institution;
                         } else {
                             return institution;
@@ -245,8 +256,9 @@ public class Users {
         mapJsonFile("institution-list.json",
                     institution -> {
                         if (institution.get("id").getAsString().equals(institutionId)) {
+                            JsonArray members = institution.getAsJsonArray("members");
                             JsonArray pending = institution.getAsJsonArray("pending");
-                            if (!pending.contains(userId)) {
+                            if (!members.contains(userId) && !pending.contains(userId)) {
                                 pending.add(userId);
                             }
                             institution.add("pending", pending);

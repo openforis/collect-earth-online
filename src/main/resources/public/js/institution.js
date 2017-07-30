@@ -15,6 +15,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     this.userList = [];
     this.userListComplete = [];
     this.newUserEmail = "";
+    this.nonPendingUsers = 0;
 
     this.getInstitutionDetails = function (institutionId) {
         $http.get(this.root + "/get-institution-details/" + institutionId)
@@ -43,6 +44,11 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         $http.get(this.root + "/get-all-users?institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.userList = response.data;
+                this.nonPendingUsers = this.userList.filter(
+                    function (user) {
+                        return user.institutionRole != "pending";
+                    }
+                ).length;
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the user list. See console for details.");
