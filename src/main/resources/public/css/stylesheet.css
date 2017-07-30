@@ -596,6 +596,7 @@ p.error-message {
     left: 0;
     height: 140px;
     width: 100%;
+    padding: 0.5rem 0rem;
     border-bottom: 2px solid darkgray;
 }
 
