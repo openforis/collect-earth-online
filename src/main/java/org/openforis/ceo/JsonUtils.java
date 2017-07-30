@@ -22,10 +22,9 @@ import java.util.stream.StreamSupport;
 public class JsonUtils {
 
     public static String expandResourcePath(String filename) {
-    	URI uri;
 		try {
-			uri = JsonUtils.class.getResource(filename).toURI();
-			return Paths.get( uri ).toFile().getAbsolutePath() ;
+			URI uri = JsonUtils.class.getResource(filename).toURI();
+			return Paths.get(uri).toFile().getAbsolutePath();
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
@@ -37,7 +36,7 @@ public class JsonUtils {
 
     public static JsonElement readJsonFile(String filename) {
         String jsonDataDir = expandResourcePath("/json/");
-        try (FileReader fileReader = new FileReader(new File( jsonDataDir, filename))) {
+        try (FileReader fileReader = new FileReader(new File(jsonDataDir, filename))) {
             return (new JsonParser()).parse(fileReader);
         } catch (Exception e) {
             throw new RuntimeException(e);
