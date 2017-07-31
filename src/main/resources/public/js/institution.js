@@ -221,4 +221,18 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
+    this.deleteImagery = function (imageryId) {
+        if (confirm("Do you REALLY want to delete this imagery?!")) {
+            $http.post(this.root + "/delete-institution-imagery",
+                       {institutionId: this.details.id, imageryId: imageryId})
+                .then(angular.bind(this, function successCallback(response) {
+                    alert("Imagery " + imageryId + " has been deleted from institution " + this.details.name + ".");
+                    this.getImageryList(this.details.id);
+                }), function errorCallback(response) {
+                    console.log(response);
+                    alert("Error deleting imagery from institution. See console for details.");
+                });
+        }
+    };
+
 }]);

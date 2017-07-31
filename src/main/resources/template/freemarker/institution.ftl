@@ -37,7 +37,9 @@
         <h1>Imagery [{{ institution.imageryList.length }}]</h1>
         <ul>
             <li ng-repeat="imagery in institution.imageryList">
-                {{ imagery.title }}
+                <a ng-if="institution.isAdmin == false" class="wide-entry">{{ imagery.title }}</a>
+                <a ng-if="institution.isAdmin == true" class="narrow-entry">{{ imagery.title }}</a>
+                <input ng-if="institution.isAdmin == true" id="delete-imagery" type="button" value="Delete" ng-click="institution.deleteImagery(imagery.id)">
             </li>
         </ul>
     </div>
@@ -61,9 +63,9 @@
         <h1 ng-if="institution.isAdmin == false">Users [{{ institution.nonPendingUsers }}]</h1>
         <ul>
             <li ng-repeat="user in institution.userList">
-                <a ng-if="institution.isAdmin == false && user.institutionRole != 'pending'" class="wide-user-entry"
+                <a ng-if="institution.isAdmin == false && user.institutionRole != 'pending'" class="wide-entry"
                    href="${root}/account/{{ user.id }}">{{ user.email }}</a>
-                <a ng-if="institution.isAdmin == true" class="narrow-user-entry"
+                <a ng-if="institution.isAdmin == true" class="narrow-entry"
                    href="${root}/account/{{ user.id }}">{{ user.email }}</a>
                 <select ng-if="institution.isAdmin == true" name="user-institution-role" size="1"
                         ng-model="user.institutionRole"

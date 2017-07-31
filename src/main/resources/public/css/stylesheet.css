@@ -287,9 +287,9 @@ section#content a:hover, section#content a.active-link {
     font-weight: 700;
 }
 
+#imagery-list ul li input#delete-imagery,
 #project-list ul li input#create-project {
     display: inline-block;
-    width: calc(99.5% - 0.5rem - 2px);
     cursor: pointer;
     background: rgba(255, 255, 255, 0.0);
     padding: 0.25rem;
@@ -300,6 +300,14 @@ section#content a:hover, section#content a.active-link {
     border: 1px solid blue;
 }
 
+#project-list ul li input#create-project {
+    width: calc(99.5% - 0.5rem - 2px);
+}
+
+#imagery-list ul li input#delete-imagery {
+    width: calc(25% - 0.5rem - 2px);
+}
+
 #project-list ul li a.view-project {
     width: calc(76% - 0.5rem - 2px);
 }
@@ -308,17 +316,19 @@ section#content a:hover, section#content a.active-link {
     width: calc(20% - 0.5rem - 2px);
 }
 
-#user-list ul li a.wide-user-entry {
+#imagery-list ul li a.wide-entry,
+#user-list ul li a.wide-entry {
     width: calc(97% - 0.5rem - 2px);
 }
 
-#user-list ul li a.narrow-user-entry {
-    width: calc(67% - 0.5rem - 2px);
+#imagery-list ul li a.narrow-entry,
+#user-list ul li a.narrow-entry {
+    width: calc(70% - 0.5rem - 2px);
 }
 
 #user-list ul li select {
     display: inline-block;
-    width: calc(30% - 2px);
+    width: calc(25% - 0.5rem - 2px);
     text-align: center;
     color: #3C948B;
     font-size: 1rem;
