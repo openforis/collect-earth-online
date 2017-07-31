@@ -79,12 +79,20 @@ public class Institutions {
                 JsonArray members = new JsonArray();
                 JsonArray admins = new JsonArray();
                 JsonArray pending = new JsonArray();
+                JsonArray imagery = new JsonArray();
                 members.add(1); // adding the admin user by default
                 admins.add(1); // adding the admin user by default
                 if (userid != 1) {
                     members.add(userid);
                     admins.add(userid);
                 }
+                // FIXME: Remove this code once the Institution page supports adding new imagery entries
+                imagery.add(1);
+                imagery.add(2);
+                imagery.add(3);
+                imagery.add(4);
+                imagery.add(5);
+                imagery.add(6);
 
                 JsonObject newInstitution = new JsonObject();
                 newInstitution.addProperty("id", newInstitutionId);
@@ -96,6 +104,7 @@ public class Institutions {
                 newInstitution.add("members", members);
                 newInstitution.add("admins", admins);
                 newInstitution.add("pending", pending);
+                newInstitution.add("imagery", imagery);
 
                 institutions.add(newInstitution);
                 writeJsonFile("institution-list.json", institutions);
