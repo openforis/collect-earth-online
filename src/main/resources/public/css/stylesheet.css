@@ -1,8 +1,17 @@
 /*****************/
 /* Global Styles */
 /*****************/
-
+*
+{
+    margin: 0;
+    padding: 0;
+}
+html{
+    height:100%;
+    overflow:hidden;
+}
 body {
+    height:100%;
     font-family: Open Sans;
     font-size: 16px;
 }
@@ -56,7 +65,7 @@ nav img#ceo-site-logo {
 nav ul {
     position: absolute;
     top: 0px;
-    left: 150px;
+    left: 10px;
     padding: 0.5rem;
 }
 
@@ -82,7 +91,7 @@ nav #login-info a {
 }
 
 nav a {
-    color: #eee;
+    color: #FFCF06!important;
 }
 
 nav a:link, nav a:visited, nav a:active {
@@ -217,27 +226,28 @@ section#content a:hover, section#content a.active-link {
 #project-list,
 #user-list,
 #imagery-list {
-    position: absolute;
-    top: calc(142px + 1rem);
+   /*  position: relative;
+   top: calc(142px + 1rem);
     height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem - 2px);
+    width: calc(33vw - 2rem - 2px);*/
     padding: 1rem;
+
 }
 
 #institution-list,
 #imagery-list {
-    left: 0vw;
+    /*left: 0vw;*/
     border-right: 2px solid darkgray;
 }
 
 #project-list {
-    left: 33vw;
+    /*left: 33vw;*/
     border-right: 2px solid darkgray;
 }
 
 #user-list {
-    left: 66vw;
-    width: calc(33vw - 2rem);
+    /*left: 66vw;*/
+    width: calc(33vw - 4rem);
 }
 
 #institution-list h1,
@@ -357,12 +367,117 @@ section#content a:hover, section#content a.active-link {
     height: 100%;
     width: 100%;
 }
+div#home:before {
+    content: '';
+    height: 100%;
+    float: left;
+}
+div#bcontainer {
+    position: relative;
+    z-index: 1;
+}
+div#bcontainer:after {
+    content: '';
+    clear: both;
+    display: block;
+}
+.Table
+{
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+.Column
+{
+    display: block;
+    vertical-align: top;
+}
+
+.Wrapper
+{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+
+#home-map-pane {
+        height: 100%;
+        width: 100%;
+        display: block;
+      /*  position: fixed;
+    background-color: darkgray;*/
+}
+#home-map-pane .ol-viewport{
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+#mapPanel{
+/* Firefox */
+width: 75%;
+float:right;
+height:100%;
+}
+#lPanel{
+float:left;
+height:100%;
+width:100%;
+   background-color: #fff;
+}
+h1#panelTitle {
+    background-color: #3C948B;
+    height: 112px;
+    color: #fff;
+    font-size: 1.25rem;
+    text-align: center;
+    line-height: 3.0em;
+    font-weight: 500;
+}
+#lPanel ul li a:visited {
+    color: #3C948B;
+}
+
+#lPanel ul li a:link {
+    color: #3C948B;
+}
+#togglePanel-button{
+z-index: 100;
+    position: absolute;
+}
+div#btnHolder {
+    height: 100%;
+    width: 25%;
+    overflow: visible;
+    float: left;
+}
+#home-quit-button{
+position: absolute;
+    right: 6px;
+        z-index: 100;
+}
+#home .ol-viewport .ol-zoom.ol-unselectable {
+    right: 5px;
+    left: auto;
+    top: 50px;
+}
+#collection .ol-dragbox {
+    background-color: rgba(255,255,255,0.4);
+    border-color: rgba(100,150,0,1);
+}
+
+#collection .ol-rotate {
+    top: 4rem;
+}
 
 #home #ceo-description {
-    position: absolute;
+    position: relative;
     top: 0;
     left: 0;
-    height: 140px;
+   /* height: 140px;*/
     width: 100%;
     padding: 0.5rem 0rem;
     border-bottom: 2px solid darkgray;
@@ -370,13 +485,17 @@ section#content a:hover, section#content a.active-link {
 }
 
 #home #ceo-description img#ceo-logo {
-    float: left;
+    /*float: left;*/
+    display:block;
+    margin:auto;
+    max-width:100%;
+    max-height:94px;
 }
 
 #home #ceo-description h1 {
     margin-bottom: 0.5rem;
-    font-size: 1.6rem;
-    font-weight: 400;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: gray;
     text-align: center;
 }
@@ -384,7 +503,7 @@ section#content a:hover, section#content a.active-link {
 #home #ceo-description h2 {
     font-family: Open Sans;
     font-style: normal;
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     font-weight: 400;
     color: #3C948B;
     text-align: center;
@@ -393,6 +512,7 @@ section#content a:hover, section#content a.active-link {
 #home #ceo-description p {
     padding: 0.5rem;
     text-align: center;
+     color: #8B8B8B;
 }
 
 /**************/
@@ -549,7 +669,11 @@ p.error-message {
 /********************/
 /* Institution Page */
 /********************/
-
+div#institution:before {
+    content: '';
+    height: 100%;
+    float: left;
+}
 #institution {
     position: relative;
     height: 100%;
@@ -557,7 +681,7 @@ p.error-message {
 }
 
 #institution #institution-details {
-    position: absolute;
+   /* position: absolute;*/
     top: 0;
     left: 0;
     height: 140px;

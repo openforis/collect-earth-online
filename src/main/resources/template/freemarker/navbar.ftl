@@ -1,5 +1,5 @@
 <nav>
-    <img id="ceo-site-logo" src="${root}/img/ceo-logo1.png">
+
     <ul>
         <#list ["Home", "About", "Support"] as url>
             <#if navlink == url>
