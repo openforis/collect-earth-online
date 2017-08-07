@@ -367,40 +367,41 @@ section#content a:hover, section#content a.active-link {
     height: 100%;
     width: 100%;
 }
-div#home:before {
+
+#home:before {
     content: '';
     height: 100%;
     float: left;
 }
-div#bcontainer {
+
+#home #bcontainer {
     position: relative;
     z-index: 1;
 }
-div#bcontainer:after {
+
+#home #bcontainer:after {
     content: '';
     clear: both;
     display: block;
 }
-.Table
-{
+
+.Table {
     display: block;
     height: 100%;
     width: 100%;
 }
-.Column
-{
+
+.Column {
     display: block;
     vertical-align: top;
 }
 
-.Wrapper
-{
+.Wrapper {
     position: absolute;
     width: 100%;
     height: 100%;
     overflow: auto;
 }
-
 
 #home-map-pane {
         height: 100%;
@@ -409,6 +410,7 @@ div#bcontainer:after {
       /*  position: fixed;
     background-color: darkgray;*/
 }
+
 #home-map-pane .ol-viewport{
     position: relative;
     overflow: hidden;
@@ -416,18 +418,21 @@ div#bcontainer:after {
     height: 100%;
     touch-action: none;
 }
-#mapPanel{
-/* Firefox */
-width: 75%;
-float:right;
-height:100%;
+
+#mapPanel {
+    /* Firefox */
+    width: 75%;
+    float:right;
+    height:100%;
 }
-#lPanel{
-float:left;
-height:100%;
-width:100%;
+
+#lPanel {
+    float:left;
+    height:100%;
+    width:100%;
    background-color: #fff;
 }
+
 h1#panelTitle {
     background-color: #3C948B;
     height: 112px;

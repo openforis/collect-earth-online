@@ -463,6 +463,42 @@ map_utils.remove_sample_layer = function () {
     return null;
 };
 
+map_utils.draw_project_markers = function (project_list) {
+    var format = new ol.format.GeoJSON();
+    var features = project_list.map(
+        function (project) {
+            var coords = format.readGeometry(project.boundary).getCoordinates();
+            // [[x,y],[x,y],...,[x,y]] -> {minX: ?, minY: ?, maxX: ?, maxY: ?}
+            var bounds = coords[0].reduce(
+                function (acc, coord) {
+                    var x = coord[0];
+                    var y = coord[1];
+                    acc.minX = Math.min(acc.minX, x);
+                    acc.maxX = Math.max(acc.maxX, x);
+                    acc.minY = Math.min(acc.minY, y);
+                    acc.maxY = Math.max(acc.maxY, y);
+                    return acc;
+                },
+                {minX: 181.0, maxX: -181.0, minY: 91.0, maxY: -91.0}
+            );
+            var centerX = (bounds.minX + bounds.maxX) / 2;
+            var centerY = (bounds.minY + bounds.maxY) / 2;
+            var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
+            return new ol.Feature({"geometry":    geometry,
+                                   "name":        project.name,
+                                   "description": project.description,
+                                   "numPlots":    project.numPlots});
+        }
+    );
+    var vector_source = new ol.source.Vector({"features": features});
+    var vector_style = map_utils.styles["icon"];
+    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
+                                            "source": vector_source,
+                                            "style":  vector_style});
+    map_utils.map_ref.addLayer(vector_layer);
+    return map_utils.map_ref;
+};
+
 map_utils.draw_point = function (lon, lat) {
     var coords = map_utils.reproject_to_map(lon, lat);
     var geometry = new ol.geom.Point(coords);
