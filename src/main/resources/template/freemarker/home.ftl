@@ -6,7 +6,9 @@
 }
 </style>
 
+
 <script type="text/javascript" src="${root}/js/home.js"></script>
+
 
 <div id="home" ng-app="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid!""}')">
     <div id="ceo-description">

@@ -199,6 +199,8 @@ map_utils.zoom_and_recenter_map = function (longitude, latitude, zoom_level) {
 map_utils.styles =
     {"icon": new ol.style.Style(
         {"image": new ol.style.Icon({"src": "favicon.ico"})}),
+    "ceoicon": new ol.style.Style(
+            {"image": new ol.style.Icon({"src": "ceoicon.png"})}),
 
      "red_point": new ol.style.Style(
          {"image": new ol.style.Circle({"radius": 5,
@@ -464,6 +466,8 @@ map_utils.remove_sample_layer = function () {
 };
 
 map_utils.draw_project_markers = function (project_list) {
+    gPopup = new ol.Overlay.Popup();
+    map_utils.map_ref.addOverlay(gPopup);
     var format = new ol.format.GeoJSON();
     var features = project_list.map(
         function (project) {
@@ -491,14 +495,28 @@ map_utils.draw_project_markers = function (project_list) {
         }
     );
     var vector_source = new ol.source.Vector({"features": features});
-    var vector_style = map_utils.styles["icon"];
+    var vector_style = map_utils.styles["ceoicon"];
     var vector_layer = new ol.layer.Vector({"title": "Project Markers",
                                             "source": vector_source,
                                             "style":  vector_style});
+    layerRef = vector_layer;
     map_utils.map_ref.addLayer(vector_layer);
+    var extent = vector_layer.getSource().getExtent();
+    map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
+
+    map_utils.map_ref.getViewport().addEventListener("click", function(e) {
+        map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
+            console.log(feature);
+            gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</div>');
+
+
+        });
+    });
+
     return map_utils.map_ref;
 };
-
+var layerRef;
+var gPopup;
 map_utils.draw_point = function (lon, lat) {
     var coords = map_utils.reproject_to_map(lon, lat);
     var geometry = new ol.geom.Point(coords);
