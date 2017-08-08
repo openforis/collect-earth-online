@@ -230,8 +230,16 @@ section#content a:hover, section#content a.active-link {
    top: calc(142px + 1rem);
     height: calc(100% - 142px - 3rem);
     width: calc(33vw - 2rem - 2px);*/
-    padding: 1rem;
+   /* padding: 1rem;*/
 
+}
+#institution .Column{
+    float: left;
+    width: 33%;
+    height: 100%;
+}
+#institution-list ul, #project-list ul, #user-list ul, #imagery-list ul{
+    padding: 20px;
 }
 
 #institution-list,
@@ -367,41 +375,40 @@ section#content a:hover, section#content a.active-link {
     height: 100%;
     width: 100%;
 }
-
-#home:before {
+div#home:before {
     content: '';
     height: 100%;
     float: left;
 }
-
-#home #bcontainer {
+div#bcontainer {
     position: relative;
     z-index: 1;
 }
-
-#home #bcontainer:after {
+div#bcontainer:after {
     content: '';
     clear: both;
     display: block;
 }
-
-.Table {
+.Table
+{
     display: block;
     height: 100%;
     width: 100%;
 }
-
-.Column {
+.Column
+{
     display: block;
     vertical-align: top;
 }
 
-.Wrapper {
+.Wrapper
+{
     position: absolute;
     width: 100%;
     height: 100%;
     overflow: auto;
 }
+
 
 #home-map-pane {
         height: 100%;
@@ -410,7 +417,6 @@ section#content a:hover, section#content a.active-link {
       /*  position: fixed;
     background-color: darkgray;*/
 }
-
 #home-map-pane .ol-viewport{
     position: relative;
     overflow: hidden;
@@ -418,21 +424,18 @@ section#content a:hover, section#content a.active-link {
     height: 100%;
     touch-action: none;
 }
-
-#mapPanel {
-    /* Firefox */
-    width: 75%;
-    float:right;
-    height:100%;
+#mapPanel{
+/* Firefox */
+width: 75%;
+float:right;
+height:100%;
 }
-
-#lPanel {
-    float:left;
-    height:100%;
-    width:100%;
+#lPanel{
+float:left;
+height:100%;
+width:100%;
    background-color: #fff;
 }
-
 h1#panelTitle {
     background-color: #3C948B;
     height: 112px;
@@ -456,7 +459,7 @@ z-index: 100;
 div#btnHolder {
     height: 100%;
     width: 25%;
-    overflow: visible;
+    overflow: auto;
     float: left;
 }
 #home-quit-button{

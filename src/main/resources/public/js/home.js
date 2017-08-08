@@ -5,6 +5,10 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
     this.projectList = [];
     this.userList = [];
     this.imageryList = [];
+    this.showPanel = true;
+    this.mapWidth = "75%";
+    this.toggleValue = "<<";
+    this.btnHolderWidth = "25%";
 
     this.getInstitutionList = function () {
         $http.get(this.root + "/get-all-institutions")
@@ -49,28 +53,26 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
     };
 
     this.togglePanel = function () {
-        var el2 = document.getElementById("lPanel");
-        var el = document.getElementById("mapPanel");
-        var el3 = document.getElementById("togglePanel-button");
         var el4 = document.getElementById("btnHolder");
-        if(el2.style.display == 'none')
+        if(this.showPanel == true)
         {
-        el2.style.display = "block";
-                el.style.width = "75%";
-                el3.value = "<<";
-                el4.style.width = "25%";
+                this.showPanel = false;
+                this.mapWidth = "100%";
+                this.toggleValue = ">>";
+                this.btnHolderWidth = "0%";
         }
         else{
-        el2.style.display = "none";
-        el.style.width = "100%";
-        el3.value = ">>";
-        el4.style.width = "0%";
+            this.showPanel = true;
+            this.mapWidth = "75%";
+            this.toggleValue = "<<";
+            this.btnHolderWidth = "25%";
         }
-        map_utils.map_ref.updateSize();
+        //this didn't work without the timeout
+        //Maybe there is a better way to update after the variable changes the targeted element
+        setTimeout(this.updateMapSize, 50);
     };
 
     this.updateMapSize = function () {
-        console.info("resize");
         map_utils.map_ref.updateSize();
     };
 

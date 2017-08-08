@@ -1,5 +1,10 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
+<style>
+#content{
+    height: calc(100vh - 2px)!important;
+}
+</style>
 
 <script type="text/javascript" src="${root}/js/home.js"></script>
 
@@ -21,8 +26,8 @@
 
             <div class="Wrapper">
                 <div class="Table">
-                    <div id="btnHolder">
-                        <div id="lPanel" class="Column">
+                    <div id="btnHolder" style="width: {{ home.btnHolderWidth }}">
+                        <div id="lPanel" class="Column" ng-show="home.showPanel">
                             <h1 id="panelTitle">Institutions [{{ home.institutionList.length }}]</h1>
                             <ul>
                                 <#if role??>
@@ -33,9 +38,9 @@
                                 </li>
                             </ul>
                         </div>
-                        <input id="togglePanel-button" class="button" type="button" name="togglePanel" style="float:left; z-index:100;" value="<<" ng-click="home.togglePanel()">
+                        <input id="togglePanel-button" class="button" type="button" name="togglePanel" style="float:left; z-index:100;" value="{{ home.toggleValue }}" ng-click="home.togglePanel(); home.updateMapSize();">
                     </div>
-                    <div id="mapPanel" class="Column">
+                    <div id="mapPanel" class="Column" style="width: {{ home.mapWidth }}" onresize="alert(0); home.updateMapSize();">
 
                         <input id="home-quit-button" class="button" type="button" name="collection-quit" style="float:right;" value="Quit" onclick="window.location='${root}/home'">
                         <div id="home-map-pane" ></div>
