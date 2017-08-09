@@ -122,12 +122,7 @@
                 <legend>Project Imagery</legend>
                 <label>Basemap Source</label>
                 <select id="base-map-source" name="base-map-source" size="1" ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
-                    <option value="DigitalGlobeWMSImagery">DigitalGlobe: WMS Imagery</option>
-                    <option value="DigitalGlobeRecentImagery">DigitalGlobe: Recent Imagery</option>
-                    <option value="DigitalGlobeRecentImagery+Streets">DigitalGlobe: Recent Imagery+Streets</option>
-                    <option value="BingAerial">Bing Maps: Aerial</option>
-                    <option value="BingAerialWithLabels">Bing Maps: Aerial with Labels</option>
-                    <option value="NASASERVIRChipset2002">NASA SERVIR Chipset 2002</option>
+                    <option ng-repeat="imagery in project.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
                 </select>
                 <label style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
                 <select id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"

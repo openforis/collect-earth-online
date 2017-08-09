@@ -210,7 +210,11 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                     window.location = this.root + "/home";
                 } else {
                     this.details = response.data;
-                    this.initialize(this.root, projectId, this.institution);
+                    if (this.details.id == 0) {
+                        this.initialize(this.root, projectId, this.institution);
+                    } else {
+                        this.initialize(this.root, projectId, this.details.institution);
+                    }
                 }
             }), function errorCallback(response) {
                 console.log(response);
@@ -218,8 +222,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             });
     };
 
-    this.getImageryList = function () {
-        $http.get(this.root + "/get-all-imagery?institutionId=")
+    this.getImageryList = function (institutionId) {
+        $http.get(this.root + "/get-all-imagery?institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.imageryList = response.data;
                 this.initialize(this.root, this.details.id, this.institution);
@@ -274,7 +278,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             this.getProjectById(projectId);
         } else if (angular.equals(this.imageryList, [])) {
             // Load the imageryList
-            this.getImageryList();
+            this.getImageryList(this.institution);
         } else {
             // Initialize the base map
             map_utils.digital_globe_base_map({div_name: "project-map",
