@@ -53,8 +53,7 @@
                    ng-click="project.changeAvailability()">
             <input type="button" id="configure-geo-dash" class="button"
                    name="configure-geo-dash" value="Configure Geo-Dash"
-                   ng-click="project.configureGeoDash()"
-                   style="display: {{ project.details.availability == 'unpublished' ? 'block' : 'none' }}">
+                   ng-click="project.configureGeoDash()">
             <input type="button" id="download-plot-data" class="button"
                    name="download-plot-data" value="Download Plot Data"
                    ng-click="project.downloadPlotData()"
