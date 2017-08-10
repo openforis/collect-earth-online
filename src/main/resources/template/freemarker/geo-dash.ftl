@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
 
-<#if role?? && role == "admin">
+<#if role?? && editable == "true">
 <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
 <div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
 <#else>
@@ -21,7 +21,7 @@
             </div>
         </div>
     </div>
-    <#if role?? && role == "admin">
+    <#if role?? && editable == "true">
         <div id="dialog-form" title="Create new widget">
             <p class="validateTips">All form fields are required.</p>
 

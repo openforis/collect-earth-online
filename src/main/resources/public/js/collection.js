@@ -100,7 +100,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             utils.enable_element("flag-plot-button");
             // map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
             map_utils.draw_points(this.currentPlot.samples);
-            window.open(this.root + "/geo-dash?"
+            window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
                                              + "&pid=" + this.projectId
                                              + "&aoi=[" + map_utils.get_view_extent()

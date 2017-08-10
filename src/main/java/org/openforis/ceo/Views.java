@@ -99,7 +99,9 @@ public class Views {
     }
 
     public static ModelAndView geodash(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Geo-Dash", "full"), "geo-dash.ftl");
+        Map<String, Object> model = getBaseModel(req, "Geo-Dash", "full");
+        model.put("editable", req.queryParams("editable"));
+        return new ModelAndView(model, "geo-dash.ftl");
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {
