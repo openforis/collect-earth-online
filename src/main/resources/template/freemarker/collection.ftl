@@ -45,6 +45,12 @@
                    style="opacity:0.5" disabled>
         </fieldset>
         <fieldset>
+            <legend>Imagery Options</legend>
+            <select id="base-map-source" name="base-map-source" size="1" ng-model="collection.currentProject.baseMapSource" ng-change="collection.setBaseMapSource()">
+                <option ng-repeat="imagery in collection.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
+            </select>
+        </fieldset>
+        <fieldset>
             <legend>Sample Values</legend>
             <ul>
                 <li ng-repeat="sample in collection.currentProject.sampleValues">

@@ -779,6 +779,14 @@ p.error-message {
     margin-left: 10px;
 }
 
+#collection #sidebar fieldset select#base-map-source {
+    height: 1.8rem;
+    width: calc(90% - 10px);
+    font-size: 0.9rem;
+    margin-left: 10px;
+    border: 1px solid darkgray;
+}
+
 #collection #sidebar fieldset ul li {
     float: left;
     width: 50%;

@@ -26,8 +26,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             });
     };
 
-    this.getImageryList = function () {
-        $http.get(this.root + "/get-all-imagery?institutionId=")
+    this.getImageryList = function (institutionId) {
+        $http.get(this.root + "/get-all-imagery?institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.imageryList = response.data;
                 this.initialize(this.root, this.userId, this.userName, this.projectId);
@@ -35,6 +35,21 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
             });
+    };
+
+    this.setBaseMapSource = function () {
+        map_utils.set_current_imagery(this.currentProject.baseMapSource);
+        var attribution = this.imageryList.find(
+            function (imagery) {
+                return imagery.title == this.currentProject.baseMapSource;
+            },
+            this
+        ).attribution;
+        if (this.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
+            this.currentProject.attribution = attribution + " | " + this.currentProject.imageryYear + " (" + this.currentProject.stackingProfile + ")";
+        } else {
+            this.currentProject.attribution = attribution;
+        }
     };
 
     this.initialize = function (documentRoot, userId, userName, projectId) {
@@ -49,7 +64,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             this.getProjectById(projectId, userId);
         } else if (angular.equals(this.imageryList, [])) {
             // Load the imageryList
-            this.getImageryList();
+            this.getImageryList(this.currentProject.institution);
         } else {
             // Initialize the base map and show the selected project's boundary
             map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
@@ -57,7 +72,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                                               zoom_level: 1},
                                              this.imageryList);
             map_utils.set_dg_wms_layer_params(this.currentProject.imageryYear, this.currentProject.stackingProfile);
-            map_utils.set_current_imagery(this.currentProject.baseMapSource);
+            this.setBaseMapSource();
             map_utils.draw_polygon(this.currentProject.boundary);
         }
     };
