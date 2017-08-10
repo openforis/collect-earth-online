@@ -101,7 +101,7 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
                                              this.imageryList);
 
             // Draw markers on the map for each project
-            map_utils.draw_project_markers(this.projectList);
+            map_utils.draw_project_markers(this.projectList, this.root);
 
             // Set onresize event handler for different browsers
             window.onresize = this.updateMapSize;

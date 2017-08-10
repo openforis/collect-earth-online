@@ -464,8 +464,9 @@ map_utils.remove_sample_layer = function () {
     }
     return null;
 };
-
-map_utils.draw_project_markers = function (project_list) {
+var pList;
+map_utils.draw_project_markers = function (project_list, dRoot) {
+    pList = project_list;
     gPopup = new ol.Overlay.Popup();
     map_utils.map_ref.addOverlay(gPopup);
     var format = new ol.format.GeoJSON();
@@ -491,7 +492,8 @@ map_utils.draw_project_markers = function (project_list) {
             return new ol.Feature({"geometry":    geometry,
                                    "name":        project.name,
                                    "description": project.description,
-                                   "numPlots":    project.numPlots});
+                                   "numPlots":    project.numPlots,
+                                   "pID": project.id});
         }
     );
     var vector_source = new ol.source.Vector({"features": features});
@@ -506,8 +508,14 @@ map_utils.draw_project_markers = function (project_list) {
 
     map_utils.map_ref.getViewport().addEventListener("click", function(e) {
         map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
-            console.log(feature);
-            gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</div>');
+            var description = feature.get("description") == "" ? "N/A" : feature.get("description");
+            var html = '<div class="cTitle" >';
+            html += '<h1 >' + feature.get("name") +'</h1> </div>';
+            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
+            html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
+            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+            gPopup.show(feature.getGeometry().getCoordinates(),html);
+            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
 
 
         });
