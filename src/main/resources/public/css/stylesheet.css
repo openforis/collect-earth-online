@@ -375,34 +375,40 @@ section#content a:hover, section#content a.active-link {
     height: 100%;
     width: 100%;
 }
+
 div#home:before {
     content: '';
     height: 100%;
     float: left;
 }
-div#bcontainer {
+
+#content.home {
+    height: calc(100vh - 2px) !important;
+}
+
+#home div#bcontainer {
     position: relative;
     z-index: 1;
 }
-div#bcontainer:after {
+
+#home div#bcontainer:after {
     content: '';
     clear: both;
     display: block;
 }
-.Table
-{
+
+#home .Table {
     display: block;
     height: 100%;
     width: 100%;
 }
-.Column
-{
+
+#home .Column {
     display: block;
     vertical-align: top;
 }
 
-.Wrapper
-{
+#home .Wrapper {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -410,33 +416,35 @@ div#bcontainer:after {
 }
 
 
-#home-map-pane {
-        height: 100%;
-        width: 100%;
-        display: block;
-      /*  position: fixed;
-    background-color: darkgray;*/
+#home #home-map-pane {
+    height: 100%;
+    width: 100%;
+    display: block;
 }
-#home-map-pane .ol-viewport{
+
+#home #home-map-pane .ol-viewport {
     position: relative;
     overflow: hidden;
     width: 100%;
     height: 100%;
     touch-action: none;
 }
-#mapPanel{
-/* Firefox */
-width: 75%;
-float:right;
-height:100%;
+
+#home #mapPanel {
+    /* Firefox */
+    width: 75%;
+    float: right;
+    height: 100%;
 }
-#lPanel{
-float:left;
-height:100%;
-width:100%;
-   background-color: #fff;
+
+#home #lPanel {
+    float: left;
+    height: 100%;
+    width: 100%;
+    background-color: #fff;
 }
-h1#panelTitle {
+
+#home h1#panelTitle {
     background-color: #3C948B;
     height: 112px;
     color: #fff;
@@ -445,47 +453,43 @@ h1#panelTitle {
     line-height: 3.0em;
     font-weight: 500;
 }
-#lPanel ul li a:visited {
+
+#home #lPanel ul li a:visited {
     color: #3C948B;
 }
 
-#lPanel ul li a:link {
+#home #lPanel ul li a:link {
     color: #3C948B;
 }
-#togglePanel-button{
-z-index: 100;
+
+#home #togglePanel-button {
+    z-index: 100;
     position: absolute;
 }
-div#btnHolder {
+
+#home div#btnHolder {
     height: 100%;
     width: 25%;
     overflow: auto;
     float: left;
 }
-#home-quit-button{
-position: absolute;
+
+#home #home-quit-button {
+    position: absolute;
     right: 6px;
-        z-index: 100;
+    z-index: 100;
 }
+
 #home .ol-viewport .ol-zoom.ol-unselectable {
     right: 5px;
     left: auto;
     top: 50px;
-}
-#collection .ol-dragbox {
-    background-color: rgba(255,255,255,0.4);
-    border-color: rgba(100,150,0,1);
-}
-
-#collection .ol-rotate {
-    top: 4rem;
 }
 
 #home #ceo-description {
     position: relative;
     top: 0;
     left: 0;
-   /* height: 140px;*/
     width: 100%;
     padding: 0.5rem 0rem;
     border-bottom: 2px solid darkgray;
@@ -493,11 +497,10 @@ position: absolute;
 }
 
 #home #ceo-description img#ceo-logo {
-    /*float: left;*/
-    display:block;
-    margin:auto;
-    max-width:100%;
-    max-height:94px;
+    display: block;
+    margin: auto;
+    max-width: 100%;
+    max-height: 94px;
 }
 
 #home #ceo-description h1 {
@@ -520,8 +523,145 @@ position: absolute;
 #home #ceo-description p {
     padding: 0.5rem;
     text-align: center;
-     color: #8B8B8B;
+    color: #8B8B8B;
 }
+
+#home .edit-project {
+    border: 1px solid #FFCF06;
+    float: right;
+    padding: 0px 10px;
+}
+/* ————————————————————–
+  Tree core styles
+*/
+#home .tree {
+    margin: 1em;
+}
+
+#home .tree input {
+    position: absolute;
+    clip: rect(0, 0, 0, 0);
+}
+
+#home .tree input ~ ul {
+    display: none;
+}
+
+#home .tree input:checked ~ ul {
+    display: block;
+}
+
+/* ————————————————————–
+Tree rows
+*/
+#home .tree li {
+    line-height: 1.2;
+    position: relative;
+    padding: 0 0 1em 1em;
+}
+
+#home .tree ul li {
+    padding: 1em 0 0 1em;
+}
+
+#home .tree > li:last-child {
+    padding-bottom: 0;
+}
+
+/* ————————————————————–
+  Tree labels
+*/
+#home .tree_label {
+    position: relative;
+    display: inline-block;
+    background: #fff;
+    width: 100%;
+}
+
+#home label.tree_label {
+    cursor: pointer;
+    color: #3C948B;
+    font-weight: 600;
+}
+
+#home label.tree_label:hover {
+    color: #666;
+}
+
+/* ————————————————————–
+Tree expanded icon
+*/
+#home label.tree_label:before {
+    width: 17px;
+    height: 19px;
+    color: #fff;
+    position: relative;
+    z-index: 1;
+    float: left;
+    margin: 0 1em 0 -2em;
+    content: " ";
+    text-align: center;
+    line-height: .9em;
+}
+
+#home :checked ~ label.tree_label:before {
+    width: 19px;
+    height: 17px;
+    content: ' ';
+}
+
+/* ————————————————————–
+  Tree branches
+*/
+#home .tree li:before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -.5em;
+    display: block;
+    width: 0;
+    content: "";
+}
+
+#home .tree_label:after {
+    position: absolute;
+    top: 0;
+    left: -1.5em;
+    display: block;
+    height: 0.5em;
+    width: 1em;
+    content: '';
+}
+
+#home label.tree_label:after {
+    border-bottom: 0;
+}
+
+#home :checked ~ label.tree_label:after {
+    bottom: 0;
+    top: 0.5em;
+    height: auto;
+}
+
+#home .tree li:last-child:before {
+    height: 1em;
+    bottom: auto;
+}
+
+#home .tree > li:last-child:before {
+    display: none;
+}
+
+#collection .ol-dragbox {
+    background-color: rgba(255,255,255,0.4);
+    border-color: rgba(100,150,0,1);
+}
+
+#collection .ol-rotate {
+    top: 4rem;
+}
+
+
 
 /**************/
 /* About Page */
