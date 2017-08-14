@@ -29,6 +29,7 @@
     </div>
     <#include "navbar.ftl">
         <div id="bcontainer">
+        <span id="mobilespan" ></span>
             <div class="Wrapper">
                 <div class="Table">
                     <div id="btnHolder" style="width: {{ home.btnHolderWidth }}">
@@ -53,15 +54,19 @@
                                 </li>
                             </ul>
                         </div>
-                        <input id="togglePanel-button" class="button" type="button" name="togglePanel" style="float:left; z-index:100;" value="{{ home.toggleValue }}" ng-click="home.togglePanel(); home.updateMapSize();">
+                        <input id="togglePanel-button" class="button" type="button" name="togglePanel" style="float:left; z-index:100; right: {{ home.togglebtn }};" value="{{ home.toggleValue }}" ng-click="home.togglePanel(); home.updateMapSize();">
                     </div>
                     <div id="mapPanel" class="Column" style="width: {{ home.mapWidth }}" onresize="alert(0); home.updateMapSize();">
-                        <input id="home-quit-button" class="button" type="button" name="collection-quit" style="float:right;" value="Quit" onclick="window.location='${root}/home'">
+                    <div class="buttonHolder">
+                        <input id="home-quit-button" class="button" type="button" name="collection-quit" style="float:right; display: {{ home.mobileDisplay }}" value="Quit" onclick="window.location='${root}/home'">
+                        <input id="action-button" class="button" type="button" name="collection-quit" value="Choose a project to get started" onclick="" disabled>
+                    </div>
                         <div id="home-map-pane" ></div>
                     </div>
                 </div>
             </div>
         </div>
+
 </div>
 
 <#include "end-content.ftl">

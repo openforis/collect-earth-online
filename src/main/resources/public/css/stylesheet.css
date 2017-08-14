@@ -385,7 +385,14 @@ div#home:before {
 #content.home {
     height: calc(100vh - 2px) !important;
 }
-
+#home #mobilespan{
+    position:absolute;
+    top:-1;
+    left:-200;
+    height:00px;
+    width:0px;
+    display:none;
+}
 #home div#bcontainer {
     position: relative;
     z-index: 1;
@@ -420,6 +427,7 @@ div#home:before {
     height: 100%;
     width: 100%;
     display: block;
+    background-color: #041a24;
 }
 
 #home #home-map-pane .ol-viewport {
@@ -435,6 +443,7 @@ div#home:before {
     width: 75%;
     float: right;
     height: 100%;
+    position:relative;
 }
 
 #home #lPanel {
@@ -442,6 +451,7 @@ div#home:before {
     height: 100%;
     width: 100%;
     background-color: #fff;
+    position:relative;
 }
 
 #home h1#panelTitle {
@@ -472,12 +482,20 @@ div#home:before {
     width: 25%;
     overflow: auto;
     float: left;
+    background-color: white;
 }
 
 #home #home-quit-button {
     position: absolute;
     right: 6px;
     z-index: 100;
+}
+#home #action-button {
+    position: absolute;
+    z-index: 100;
+    left: 50%;
+    margin-left: -108px;
+    cursor: initial;
 }
 
 #home .ol-viewport .ol-zoom.ol-unselectable {
@@ -1374,3 +1392,14 @@ div#institution:before {
 @-o-keyframes      sweep { to { -o-transform:rotate(360deg); } }
 
 @keyframes         sweep { to { transform:rotate(360deg); } }
+
+
+@media screen and (max-width: 600px) {
+/************Todo--- Deal with side panel *******************/
+    #action-button{
+        display:none;
+    }
+    #home #mobilespan{
+        display:block;
+    }
+}

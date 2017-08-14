@@ -27,15 +27,14 @@
   display: none;
 }
 
+
+
 @media screen and (max-width: 600px) {
-  .topnav li:not(:first-child) {display: none;}
+.topnav li:not(:first-child) {display: none;}
   .topnav .icon {
     float: right;
     display: block!important;
   }
-}
-
-@media screen and (max-width: 600px) {
   .topnav.responsive {
   position: relative;
       z-index: 200;
