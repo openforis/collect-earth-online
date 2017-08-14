@@ -84,15 +84,19 @@ nav #login-info {
     font-size: 0.8rem;
 }
 
-nav #login-info a {
-    margin-left: 0.2rem;
-    padding: 0.3rem;
-    border: 1px solid #999;
-}
-
 nav a {
     color: #FFCF06!important;
 }
+
+
+nav #login-info a {
+    margin-left: 0.2rem;
+    padding: 0.3rem;
+    border: 1px solid #FFCF06;
+    background-color: #e8f5f9;
+    color: #3c948b!important;
+}
+
 
 nav a:link, nav a:visited, nav a:active {
     text-decoration: none;
