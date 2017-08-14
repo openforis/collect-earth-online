@@ -4,6 +4,8 @@
   overflow: hidden;
   padding:0px;
   line-height: 14px;
+  position:relative;
+  display: inline-block;
 }
 .mobileLogin{
   display:none!important;
@@ -65,7 +67,7 @@
 }
 </style>
 <nav>
-
+<img id="ceo-site-logo" src="${root}/img/ceo-logo1.png">
     <ul class="topnav" id="myTopnav">
         <#list ["Home", "About", "Support"] as url>
             <#if navlink == url>

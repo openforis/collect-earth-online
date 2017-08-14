@@ -55,7 +55,7 @@ nav {
 }
 
 nav img#ceo-site-logo {
-    position: absolute;
+    position: relative;
     top: 0px;
     left: 10px;
     height: 2rem;
@@ -850,6 +850,35 @@ div#institution:before {
     width: 100%;
 }
 
+#institution div#bcontainer {
+    position: relative;
+    z-index: 1;
+}
+
+#institution div#bcontainer:after {
+    content: '';
+    clear: both;
+    display: block;
+}
+
+#institution .Table {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+#institution .Column {
+    display: block;
+    vertical-align: top;
+}
+
+#institution .Wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
 #institution #institution-details {
    /* position: absolute;*/
     top: 0;
@@ -1411,7 +1440,12 @@ div#institution:before {
     #action-button{
         display:none;
     }
-    #home #mobilespan{
+    #mobilespan{
         display:block;
+    }
+    nav img#ceo-site-logo{
+        left: auto;
+        right: 10px;
+        float: right;
     }
 }
