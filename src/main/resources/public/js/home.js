@@ -56,11 +56,8 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
     };
 
     this.togglePanel = function () {
-         console.info("this width: " + this.windowWidth);
-          console.info("scope" + $scope.home.windowWidth);
         if($scope.home.windowWidth <= 600)
         {
-        console.info("toggle mobile");
             if(this.showPanel == true)
             {
                     this.showPanel = false;
@@ -80,7 +77,6 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             }
         }
         else{
-        console.info("toggle reg");
             this.mobileDisplay = "block";
             this.togglebtn = "auto;"
             if(this.showPanel == true)
@@ -109,8 +105,6 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
     this.checkResizing = function () {
         if($window.innerWidth <= 600)
         {
-            console.info("i am mobile: checkresizing " + $scope.home.windowWidth);
-            console.info("this.windowWidth " + this.windowWidth);
             if(this.showPanel == false)
             {
                     this.mapWidth = "100%";
@@ -129,7 +123,6 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             }
         }
         else{
-            console.info("not a mobile device");
             this.mobileDisplay = "block";
             this.togglebtn = "auto;"
             if(this.showPanel == false)
@@ -187,10 +180,9 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
         }
         whatami = this;
         if($window.innerWidth <= 600){
-        console.info("setting");
             this.showPanel = false;
             try{
-            this.checkResizing();
+                this.checkResizing();
             }
             catch(e){}
         }
