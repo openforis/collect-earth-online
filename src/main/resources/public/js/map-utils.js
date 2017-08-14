@@ -199,6 +199,8 @@ map_utils.zoom_and_recenter_map = function (longitude, latitude, zoom_level) {
 map_utils.styles =
     {"icon": new ol.style.Style(
         {"image": new ol.style.Icon({"src": "favicon.ico"})}),
+    "ceoicon": new ol.style.Style(
+            {"image": new ol.style.Icon({"src": "ceoicon.png"})}),
 
      "red_point": new ol.style.Style(
          {"image": new ol.style.Circle({"radius": 5,
@@ -462,7 +464,67 @@ map_utils.remove_sample_layer = function () {
     }
     return null;
 };
+var pList;
+map_utils.draw_project_markers = function (project_list, dRoot) {
+    pList = project_list;
+    gPopup = new ol.Overlay.Popup();
+    map_utils.map_ref.addOverlay(gPopup);
+    var format = new ol.format.GeoJSON();
+    var features = project_list.map(
+        function (project) {
+            var coords = format.readGeometry(project.boundary).getCoordinates();
+            // [[x,y],[x,y],...,[x,y]] -> {minX: ?, minY: ?, maxX: ?, maxY: ?}
+            var bounds = coords[0].reduce(
+                function (acc, coord) {
+                    var x = coord[0];
+                    var y = coord[1];
+                    acc.minX = Math.min(acc.minX, x);
+                    acc.maxX = Math.max(acc.maxX, x);
+                    acc.minY = Math.min(acc.minY, y);
+                    acc.maxY = Math.max(acc.maxY, y);
+                    return acc;
+                },
+                {minX: 181.0, maxX: -181.0, minY: 91.0, maxY: -91.0}
+            );
+            var centerX = (bounds.minX + bounds.maxX) / 2;
+            var centerY = (bounds.minY + bounds.maxY) / 2;
+            var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
+            return new ol.Feature({"geometry":    geometry,
+                                   "name":        project.name,
+                                   "description": project.description,
+                                   "numPlots":    project.numPlots,
+                                   "pID": project.id});
+        }
+    );
+    var vector_source = new ol.source.Vector({"features": features});
+    var vector_style = map_utils.styles["ceoicon"];
+    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
+                                            "source": vector_source,
+                                            "style":  vector_style});
+    layerRef = vector_layer;
+    map_utils.map_ref.addLayer(vector_layer);
+    var extent = vector_layer.getSource().getExtent();
+    map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
 
+    map_utils.map_ref.getViewport().addEventListener("click", function(e) {
+        map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
+            var description = feature.get("description") == "" ? "N/A" : feature.get("description");
+            var html = '<div class="cTitle" >';
+            html += '<h1 >' + feature.get("name") +'</h1> </div>';
+            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
+            html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
+            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+            gPopup.show(feature.getGeometry().getCoordinates(),html);
+            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
+
+
+        });
+    });
+
+    return map_utils.map_ref;
+};
+var layerRef;
+var gPopup;
 map_utils.draw_point = function (lon, lat) {
     var coords = map_utils.reproject_to_map(lon, lat);
     var geometry = new ol.geom.Point(coords);

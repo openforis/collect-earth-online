@@ -33,7 +33,10 @@
             </div>
         </#if>
     </div>
-    <div id="imagery-list">
+        <div id="bcontainer">
+        <div class="Wrapper">
+        <div class="Table">
+    <div id="imagery-list" class="Column">
         <h1>Imagery [{{ institution.imageryList.length }}]</h1>
         <ul>
             <li ng-repeat="imagery in institution.imageryList">
@@ -43,7 +46,7 @@
             </li>
         </ul>
     </div>
-    <div id="project-list">
+    <div id="project-list" class="Column">
         <h1>Projects [{{ institution.projectList.length }}]</h1>
         <ul>
             <li><input id="create-project" type="button" value="Create New Project"
@@ -58,7 +61,7 @@
             </li>
         </ul>
     </div>
-    <div id="user-list">
+    <div id="user-list" class="Column">
         <h1 ng-if="institution.isAdmin == true">Users [{{ institution.userList.length }}]</h1>
         <h1 ng-if="institution.isAdmin == false">Users [{{ institution.nonPendingUsers }}]</h1>
         <ul>
@@ -86,6 +89,9 @@
                        value="Request Membership" ng-click="institution.requestMembership()">
             </li>
         </ul>
+    </div>
+    </div>
+    </div>
     </div>
 </div>
 

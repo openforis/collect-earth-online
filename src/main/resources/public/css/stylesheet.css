@@ -1,8 +1,17 @@
 /*****************/
 /* Global Styles */
 /*****************/
-
+*
+{
+    margin: 0;
+    padding: 0;
+}
+html{
+    height:100%;
+    overflow:hidden;
+}
 body {
+    height:100%;
     font-family: Open Sans;
     font-size: 16px;
 }
@@ -56,7 +65,7 @@ nav img#ceo-site-logo {
 nav ul {
     position: absolute;
     top: 0px;
-    left: 150px;
+    left: 10px;
     padding: 0.5rem;
 }
 
@@ -82,7 +91,7 @@ nav #login-info a {
 }
 
 nav a {
-    color: #eee;
+    color: #FFCF06!important;
 }
 
 nav a:link, nav a:visited, nav a:active {
@@ -217,27 +226,36 @@ section#content a:hover, section#content a.active-link {
 #project-list,
 #user-list,
 #imagery-list {
-    position: absolute;
-    top: calc(142px + 1rem);
+   /*  position: relative;
+   top: calc(142px + 1rem);
     height: calc(100% - 142px - 3rem);
-    width: calc(33vw - 2rem - 2px);
-    padding: 1rem;
+    width: calc(33vw - 2rem - 2px);*/
+   /* padding: 1rem;*/
+
+}
+#institution .Column{
+    float: left;
+    width: 33%;
+    height: 100%;
+}
+#institution-list ul, #project-list ul, #user-list ul, #imagery-list ul{
+    padding: 20px;
 }
 
 #institution-list,
 #imagery-list {
-    left: 0vw;
+    /*left: 0vw;*/
     border-right: 2px solid darkgray;
 }
 
 #project-list {
-    left: 33vw;
+    /*left: 33vw;*/
     border-right: 2px solid darkgray;
 }
 
 #user-list {
-    left: 66vw;
-    width: calc(33vw - 2rem);
+    /*left: 66vw;*/
+    width: calc(33vw - 4rem);
 }
 
 #institution-list h1,
@@ -358,11 +376,138 @@ section#content a:hover, section#content a.active-link {
     width: 100%;
 }
 
-#home #ceo-description {
+div#home:before {
+    content: '';
+    height: 100%;
+    float: left;
+}
+
+#content.home {
+    height: calc(100vh - 2px) !important;
+}
+#home #mobilespan{
+    position:absolute;
+    top:-1;
+    left:-200;
+    height:00px;
+    width:0px;
+    display:none;
+}
+#home div#bcontainer {
+    position: relative;
+    z-index: 1;
+}
+
+#home div#bcontainer:after {
+    content: '';
+    clear: both;
+    display: block;
+}
+
+#home .Table {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+#home .Column {
+    display: block;
+    vertical-align: top;
+}
+
+#home .Wrapper {
     position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+
+#home #home-map-pane {
+    height: 100%;
+    width: 100%;
+    display: block;
+    background-color: #041a24;
+}
+
+#home #home-map-pane .ol-viewport {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+#home #mapPanel {
+    /* Firefox */
+    width: 75%;
+    float: right;
+    height: 100%;
+    position:relative;
+}
+
+#home #lPanel {
+    float: left;
+    height: 100%;
+    width: 100%;
+    background-color: #fff;
+    position:relative;
+}
+
+#home h1#panelTitle {
+    background-color: #3C948B;
+    height: 112px;
+    color: #fff;
+    font-size: 1.25rem;
+    text-align: center;
+    line-height: 3.0em;
+    font-weight: 500;
+}
+
+#home #lPanel ul li a:visited {
+    color: #3C948B;
+}
+
+#home #lPanel ul li a:link {
+    color: #3C948B;
+}
+
+#home #togglePanel-button {
+    z-index: 100;
+    position: absolute;
+}
+
+#home div#btnHolder {
+    height: 100%;
+    width: 25%;
+    overflow: auto;
+    float: left;
+    background-color: white;
+}
+
+#home #home-quit-button {
+    position: absolute;
+    right: 6px;
+    z-index: 100;
+}
+#home #action-button {
+    position: absolute;
+    z-index: 100;
+    left: 50%;
+    margin-left: -108px;
+    cursor: initial;
+}
+
+#home .ol-viewport .ol-zoom.ol-unselectable {
+    right: 5px;
+    left: auto;
+    top: 50px;
+}
+
+#home #ceo-description {
+    position: relative;
     top: 0;
     left: 0;
-    height: 140px;
     width: 100%;
     padding: 0.5rem 0rem;
     border-bottom: 2px solid darkgray;
@@ -370,13 +515,16 @@ section#content a:hover, section#content a.active-link {
 }
 
 #home #ceo-description img#ceo-logo {
-    float: left;
+    display: block;
+    margin: auto;
+    max-width: 100%;
+    max-height: 94px;
 }
 
 #home #ceo-description h1 {
     margin-bottom: 0.5rem;
-    font-size: 1.6rem;
-    font-weight: 400;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: gray;
     text-align: center;
 }
@@ -384,7 +532,7 @@ section#content a:hover, section#content a.active-link {
 #home #ceo-description h2 {
     font-family: Open Sans;
     font-style: normal;
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     font-weight: 400;
     color: #3C948B;
     text-align: center;
@@ -393,7 +541,145 @@ section#content a:hover, section#content a.active-link {
 #home #ceo-description p {
     padding: 0.5rem;
     text-align: center;
+    color: #8B8B8B;
 }
+
+#home .edit-project {
+    border: 1px solid #FFCF06;
+    float: right;
+    padding: 0px 10px;
+}
+/* ————————————————————–
+  Tree core styles
+*/
+#home .tree {
+    margin: 1em;
+}
+
+#home .tree input {
+    position: absolute;
+    clip: rect(0, 0, 0, 0);
+}
+
+#home .tree input ~ ul {
+    display: none;
+}
+
+#home .tree input:checked ~ ul {
+    display: block;
+}
+
+/* ————————————————————–
+Tree rows
+*/
+#home .tree li {
+    line-height: 1.2;
+    position: relative;
+    padding: 0 0 1em 1em;
+}
+
+#home .tree ul li {
+    padding: 1em 0 0 1em;
+}
+
+#home .tree > li:last-child {
+    padding-bottom: 0;
+}
+
+/* ————————————————————–
+  Tree labels
+*/
+#home .tree_label {
+    position: relative;
+    display: inline-block;
+    background: #fff;
+    width: 100%;
+}
+
+#home label.tree_label {
+    cursor: pointer;
+    color: #3C948B;
+    font-weight: 600;
+}
+
+#home label.tree_label:hover {
+    color: #666;
+}
+
+/* ————————————————————–
+Tree expanded icon
+*/
+#home label.tree_label:before {
+    width: 17px;
+    height: 19px;
+    color: #fff;
+    position: relative;
+    z-index: 1;
+    float: left;
+    margin: 0 1em 0 -2em;
+    content: " ";
+    text-align: center;
+    line-height: .9em;
+}
+
+#home :checked ~ label.tree_label:before {
+    width: 19px;
+    height: 17px;
+    content: ' ';
+}
+
+/* ————————————————————–
+  Tree branches
+*/
+#home .tree li:before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -.5em;
+    display: block;
+    width: 0;
+    content: "";
+}
+
+#home .tree_label:after {
+    position: absolute;
+    top: 0;
+    left: -1.5em;
+    display: block;
+    height: 0.5em;
+    width: 1em;
+    content: '';
+}
+
+#home label.tree_label:after {
+    border-bottom: 0;
+}
+
+#home :checked ~ label.tree_label:after {
+    bottom: 0;
+    top: 0.5em;
+    height: auto;
+}
+
+#home .tree li:last-child:before {
+    height: 1em;
+    bottom: auto;
+}
+
+#home .tree > li:last-child:before {
+    display: none;
+}
+
+#collection .ol-dragbox {
+    background-color: rgba(255,255,255,0.4);
+    border-color: rgba(100,150,0,1);
+}
+
+#collection .ol-rotate {
+    top: 4rem;
+}
+
+
 
 /**************/
 /* About Page */
@@ -549,7 +835,11 @@ p.error-message {
 /********************/
 /* Institution Page */
 /********************/
-
+div#institution:before {
+    content: '';
+    height: 100%;
+    float: left;
+}
 #institution {
     position: relative;
     height: 100%;
@@ -557,7 +847,7 @@ p.error-message {
 }
 
 #institution #institution-details {
-    position: absolute;
+   /* position: absolute;*/
     top: 0;
     left: 0;
     height: 140px;
@@ -1110,3 +1400,14 @@ p.error-message {
 @-o-keyframes      sweep { to { -o-transform:rotate(360deg); } }
 
 @keyframes         sweep { to { transform:rotate(360deg); } }
+
+
+@media screen and (max-width: 600px) {
+/************Todo--- Deal with side panel *******************/
+    #action-button{
+        display:none;
+    }
+    #home #mobilespan{
+        display:block;
+    }
+}

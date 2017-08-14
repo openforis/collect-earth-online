@@ -12,12 +12,14 @@
         <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css">
         <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-oswald.css">
         <link rel="stylesheet" type="text/css" href="${root}/css/openlayers-3.13.0.css">
+        <link rel="stylesheet" type="text/css" href="${root}/css/ol3-popup.css" />
         <link rel="stylesheet" type="text/css" href="${root}/css/stylesheet.css">
         <!--[if lt IE 9]>
           <script type="text/javascript" src="${root}/js/html5shiv.js"></script>
         <![endif]-->
         <script type="text/javascript" src="${root}/js/angular.min.js"></script>
         <script type="text/javascript" src="${root}/js/openlayers-3.13.0.js"></script>
+        <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
         <script type="text/javascript" src="${root}/js/map-utils.js"></script>
         <script type="text/javascript" src="${root}/js/utils.js"></script>
         <#if navlink == "Geo-Dash">

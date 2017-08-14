@@ -1,8 +1,17 @@
-angular.module("home", []).controller("HomeController", ["$http", function HomeController($http) {
+angular.module("home", []).controller("HomeController", ["$scope", "$http", "$window", function HomeController($scope, $http, $window) {
     this.root = "";
+    this.userId = "";
     this.institutionList = [];
     this.projectList = [];
     this.userList = [];
+    this.imageryList = [];
+    this.showPanel = true;
+    this.mapWidth = "75%";
+    this.toggleValue = "<<";
+    this.btnHolderWidth = "25%";
+    this.windowWidth;
+    this.mobileDisplay = "block";
+    this.togglebtn = "auto";
 
     this.getInstitutionList = function () {
         $http.get(this.root + "/get-all-institutions")
@@ -18,6 +27,7 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
         $http.get(this.root + "/get-all-projects?userId=" + userId + "&institutionId=")
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
+                this.initialize(this.root, this.userId);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
@@ -28,32 +38,156 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
         $http.get(this.root + "/get-all-users")
             .then(angular.bind(this, function successCallback(response) {
                 this.userList = response.data;
-                // FIXME: Repeat this for each user dynamically based on their location attribute
-                // map_utils.draw_point(-72.5498326, 44.3736678); // Worcester, VT
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the user list. See console for details.");
             });
     };
 
+    this.getImageryList = function () {
+        $http.get(this.root + "/get-all-imagery?institutionId=")
+            .then(angular.bind(this, function successCallback(response) {
+                this.imageryList = response.data;
+                this.initialize(this.root, this.userId);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
+            });
+    };
+
+    this.togglePanel = function () {
+        if($scope.home.windowWidth <= 600)
+        {
+            if(this.showPanel == true)
+            {
+                    this.showPanel = false;
+                    this.mapWidth = "100%";
+                    this.toggleValue = ">>";
+                    this.btnHolderWidth = "0%";
+                    this.mobileDisplay = "block";
+                    this.togglebtn = "auto;"
+            }
+            else{
+                this.showPanel = true;
+                this.mapWidth = "0%";
+                this.toggleValue = "<<";
+                this.btnHolderWidth = "100%";
+                this.mobileDisplay = "none";
+                this.togglebtn = "0px;"
+            }
+        }
+        else{
+            this.mobileDisplay = "block";
+            this.togglebtn = "auto;"
+            if(this.showPanel == true)
+            {
+                    this.showPanel = false;
+                    this.mapWidth = "100%";
+                    this.toggleValue = ">>";
+                    this.btnHolderWidth = "0%";
+            }
+            else{
+                this.showPanel = true;
+                this.mapWidth = "75%";
+                this.toggleValue = "<<";
+                this.btnHolderWidth = "25%";
+            }
+        }
+        $scope.$$postDigest(function() {
+            map_utils.map_ref.updateSize();
+        });
+    };
+
+    this.updateMapSize = function () {
+        map_utils.map_ref.updateSize();
+    };
+
+    this.checkResizing = function () {
+        if($window.innerWidth <= 600)
+        {
+            if(this.showPanel == false)
+            {
+                    this.mapWidth = "100%";
+                    this.toggleValue = ">>";
+                    this.btnHolderWidth = "0%";
+                    this.mobileDisplay = "block";
+                    this.togglebtn = "auto;"
+
+            }
+            else{
+                this.mapWidth = "0%";
+                this.toggleValue = "<<";
+                this.btnHolderWidth = "100%";
+                this.mobileDisplay = "none";
+                this.togglebtn = "0px;"
+            }
+        }
+        else{
+            this.mobileDisplay = "block";
+            this.togglebtn = "auto;"
+            if(this.showPanel == false)
+            {
+                    this.mapWidth = "100%";
+                    this.toggleValue = ">>";
+                    this.btnHolderWidth = "0%";
+            }
+            else{
+            whatami = this;
+                this.mapWidth = "75%";
+                this.toggleValue = "<<";
+                this.btnHolderWidth = "25%";
+            }
+        }
+        if(!$scope.$$phase)
+        {
+            $scope.$apply();
+        }
+        $scope.home.updateMapSize();
+    };
+
     this.initialize = function (documentRoot, userId) {
         // Make the current documentRoot globally available
         this.root = documentRoot;
+        this.userId = userId;
+        this.windowWidth = $window.innerWidth;
+        angular.element($window).bind('resize', function(){
+                   $scope.home.windowWidth = $window.innerWidth;
+                   $scope.home.checkResizing()
+         });
+        if (angular.equals(this.imageryList, [])) {
+            // Load the imageryList
+            this.getImageryList();
+        } else if (angular.equals(this.projectList, [])) {
+            // Load the projectList for this userId
+            this.getProjectList(userId);
+        } else {
+            // Load the institutionList
+            this.getInstitutionList();
 
-        // Load the institutionList
-        this.getInstitutionList();
+            // Load the userList
+            this.getUserList();
 
-        // Load the projectList for this userId
-        this.getProjectList(userId);
+            // Display the project map
+            map_utils.digital_globe_base_map({div_name: "home-map-pane",
+                                              center_coords: [0.0, 0.0],
+                                              zoom_level: 1},
+                                             this.imageryList);
 
-        // Load the userList
-        this.getUserList();
+            // Draw markers on the map for each project
+            map_utils.draw_project_markers(this.projectList, this.root);
 
-        // FIXME: Show a map of users (their points will be drawn by the getUserList callback)
-        // map_utils.digital_globe_base_map({div_name: "user-map",
-        //                                   center_coords: [-72.5498326, 44.3736678],
-        //                                   zoom_level: 5},
-        //                                   this.imageryList); // FIXME: load this
+
+        }
+        whatami = this;
+        if($window.innerWidth <= 600){
+            this.showPanel = false;
+            try{
+                this.checkResizing();
+            }
+            catch(e){}
+        }
     };
 
 }]);
+
+var whatami;
