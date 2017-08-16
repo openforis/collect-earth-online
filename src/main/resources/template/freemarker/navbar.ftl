@@ -1,68 +1,11 @@
 <style>
 
-.topnav {
-  overflow: hidden;
-  padding:0px;
-  line-height: 14px;
-  position:relative;
-  display: inline-block;
-}
-.mobileLogin{
-  display:none!important;
-  }
-.topnav li {
-  float: left;
-  display: block;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 17px;
-}
 
-.topnav a:hover {
-
-  color: black;
-}
-
-.topnav .icon {
-  display: none;
-}
 
 
 
 @media screen and (max-width: 600px) {
-.topnav li:not(:first-child) {display: none;}
-  .topnav .icon {
-    float: right;
-    display: block!important;
-  }
-  .topnav.responsive {
-  position: relative;
-      z-index: 200;
-      background-color: #3a3a3a;
-          left: 0px;
 
-  }
-  .topnav.responsive .icon {
-    position: absolute;
-    right: 0;
-    top: 0;
-  }
-  .topnav.responsive li {
-    float: none;
-    display: block;
-    text-align: left;
-  }
-  .mobileLogin{
-  display:block;
-  }
-  .mobileLogin.responsive{
-    display:block!important;
-    }
-  #login-info{
-  display:none;
-  }
 
 }
 </style>
