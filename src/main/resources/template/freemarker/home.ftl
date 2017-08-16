@@ -34,14 +34,19 @@
                 <div class="Table">
                     <div id="btnHolder" style="width: {{ home.btnHolderWidth }}">
                         <div id="lPanel" class="Column" ng-show="home.showPanel">
-                            <h1 id="panelTitle">Institutions [{{ home.institutionList.length }}]</h1>
+                            <h1 id="panelTitle">Institutions <!--[{{ home.institutionList.length }}]--></h1>
                             <ul class="tree">
                                 <#if role??>
                                     <li><a class="create-institution" href="${root}/institution/0">Create New Institution</a></li>
                                 </#if>
                                 <li ng-repeat="institution in home.institutionList">
                                     <input type="checkbox"  id="c{{ institution.id }}" />
-                                    <label class="tree_label" for="c{{ institution.id }}">{{ institution.name }}</label>
+                                    <span class="tree_label" >
+                                    <label class="tree_label" for="c{{ institution.id }}">{{ institution.name }}
+                                    <a class="institution_info" href="${root}/institution//{{ institution.id }}"><img src="${root}/img/institution_info.png" alt="Institution info" title="Institution info"></a>
+                                    </label>
+
+                                    </span>
                                     <ul>
                                         <li ng-repeat="project in home.projectList | filter : {institution: institution.id }">
                                             <span class="tree_label">
@@ -58,8 +63,8 @@
                     </div>
                     <div id="mapPanel" class="Column" style="width: {{ home.mapWidth }}" onresize="alert(0); home.updateMapSize();">
                     <div class="buttonHolder">
-                        <input id="home-quit-button" class="button" type="button" name="collection-quit" style="float:right; display: {{ home.mobileDisplay }}" value="Quit" onclick="window.location='${root}/home'">
-                        <input id="action-button" class="button" type="button" name="collection-quit" value="Choose a project to get started" onclick="" disabled>
+
+                        <span id="action-button" name="collection-quit" title="Navigate on map or use the Institutions tree" alt="Navigate on map or use the Institutions tree">Choose a project to get started</span>
                     </div>
                         <div id="home-map-pane" ></div>
                     </div>

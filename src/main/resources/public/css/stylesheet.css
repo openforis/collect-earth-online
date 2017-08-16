@@ -34,6 +34,9 @@ h1, h2, h3, h4, h5, h6, h7, p, label {
     -o-border-radius: 0px;
     box-shadow: 0.25rem 0.25rem 0.5rem rgba(21,21,153,0.6);
 }
+.button:hover {
+    background-color: #3C948B;
+}
 
 .translucent {
     background: rgba(255,255,255,0.8);
@@ -104,6 +107,34 @@ nav a:link, nav a:visited, nav a:active {
 
 nav a:hover, nav a.active-link {
     text-shadow: 0px 0px 4px #fff;
+}
+.topnav {
+  overflow: hidden;
+  padding:0px;
+  line-height: 14px;
+  position:relative;
+  display: inline-block;
+}
+.mobileLogin{
+  display:none!important;
+  }
+.topnav li {
+  float: left;
+  display: block;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.topnav a:hover {
+
+  color: black;
+}
+
+.topnav .icon {
+  display: none;
 }
 
 /**********************/
@@ -460,14 +491,20 @@ div#home:before {
 
 #home h1#panelTitle {
     background-color: #3C948B;
-    height: 112px;
+    /*height: 112px;*/
     color: #fff;
     font-size: 1.25rem;
     text-align: center;
     line-height: 3.0em;
     font-weight: 500;
 }
-
+#home .institution_info{
+    float:right;
+}
+#home .institution_info img{
+    width:16px;
+    height:16px;
+}
 #home #lPanel ul li a:visited {
     color: #3C948B;
 }
@@ -495,6 +532,17 @@ div#home:before {
     z-index: 100;
 }
 #home #action-button {
+    line-height: 100%;
+    cursor: pointer;
+    background-color: #3C948B;
+    color: white;
+    font-family: Oswald;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    padding: 0.5rem;
+    border-radius: 0px;
+    -webkit-border-radius: 0px;
+    -o-border-radius: 0px;
     position: absolute;
     z-index: 100;
     left: 50%;
@@ -505,9 +553,20 @@ div#home:before {
 #home .ol-viewport .ol-zoom.ol-unselectable {
     right: 5px;
     left: auto;
-    top: 50px;
+    border-top: darkgray solid 2px;
+    border-left: darkgray solid 2px;
+    padding: 0px;
+    box-shadow:0.25rem 0.25rem 0.5rem rgba(21,21,153,0.6);
 }
-
+.ol-control {
+    background-color: darkgray;
+}
+.ol-control button{
+    background-color: rgb(63, 171, 198);
+}
+.ol-control button:focus, .ol-control button:hover{
+    background-color: #3C948B;
+}
 #home #ceo-description {
     position: relative;
     top: 0;
@@ -1428,7 +1487,37 @@ div#institution:before {
 
 
 @media screen and (max-width: 600px) {
-/************Todo--- Deal with side panel *******************/
+    .topnav li:not(:first-child) {display: none;}
+    .topnav .icon {
+    float: right;
+    display: block!important;
+    }
+    .topnav.responsive {
+    position: relative;
+      z-index: 200;
+      background-color: #3a3a3a;
+          left: 0px;
+
+    }
+    .topnav.responsive .icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+    }
+    .topnav.responsive li {
+    float: none;
+    display: block;
+    text-align: left;
+    }
+    .mobileLogin{
+    display:block;
+    }
+    .mobileLogin.responsive{
+    display:block!important;
+    }
+    #login-info{
+    display:none;
+    }
     #action-button{
         display:none;
     }
@@ -1439,5 +1528,15 @@ div#institution:before {
         left: auto;
         right: 10px;
         float: right;
+    }
+    #login-form, #register-form, #password-form, #account-form{
+        width: 100%;
+        text-align: center;
+    }
+    #home #ceo-description p{
+        display:none;
+    }
+    #home #ceo-description h1{
+        display:none;
     }
 }
