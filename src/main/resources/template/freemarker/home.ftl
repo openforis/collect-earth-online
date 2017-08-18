@@ -43,7 +43,7 @@
                                     <input type="checkbox"  id="c{{ institution.id }}" />
                                     <span class="tree_label" >
                                     <label class="tree_label" for="c{{ institution.id }}">{{ institution.name }}
-                                    <a class="institution_info" href="${root}/institution//{{ institution.id }}"><img src="${root}/img/institution_info.png" alt="Institution info" title="Institution info"></a>
+                                    <a class="institution_info" href="${root}/institution/{{ institution.id }}"><img src="${root}/img/institution_info.png" alt="Institution info" title="Institution info"></a>
                                     </label>
 
                                     </span>
