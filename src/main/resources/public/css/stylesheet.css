@@ -176,6 +176,13 @@ nav a:hover, nav a.active-link {
     width: 230px;
 }
 
+#logo-banner img#google {
+    position: absolute;
+    top: 5px;
+    left: 670px;
+    width: 150px;
+}
+
 #logo-banner img#servir {
     position: absolute;
     top: 12px;
