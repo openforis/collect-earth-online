@@ -4,7 +4,8 @@ var gmodcdash;
 angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http", function GeodashController($http, $compile) {
 
     this.theURL = "geo-dash/";
-    this.gateway = "http://gateway.servirglobal.net:8888";
+    // this.gateway = "http://gateway.servirglobal.net:8888";
+    this.gateway = "http://localhost:8888";
     //this.wCount = 0;
     //this.wLoaded = 0;
     this.projAOI;
