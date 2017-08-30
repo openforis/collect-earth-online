@@ -135,7 +135,7 @@ public class Server implements SparkApplication {
         get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",          (req, res) -> { return freemarker.render(Views.login(OfUsers.login(req, res), res)); });
         get("/register",        (req, res) -> { return freemarker.render(Views.register(req, res)); });
-        post("/register",       (req, res) -> { return freemarker.render(Views.register(Users.register(req, res), res)); });
+        post("/register",       (req, res) -> { return freemarker.render(Views.register(OfUsers.register(req, res), res)); });
         get("/password",        (req, res) -> { return freemarker.render(Views.password(req, res)); });
         post("/password",       (req, res) -> { return freemarker.render(Views.password(Users.getPasswordResetKey(req, res), res)); });
         get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
