@@ -8,8 +8,8 @@ import spark.servlet.SparkFilter;
 public class CeoSparkFilter extends SparkFilter {
 
 	public void init(FilterConfig filterConfig) throws ServletException {
-		String collectApiSurveyUrl = filterConfig.getServletContext().getInitParameter("collectApiSurveyUrl");
-		CeoConfig.collectApiSurveyUrl = collectApiSurveyUrl;
+		CeoConfig.collectApiUrl = filterConfig.getServletContext().getInitParameter("collectApiUrl");
+		CeoConfig.ofUsersApiUrl = filterConfig.getServletContext().getInitParameter("ofUsersApiUrl");
 		super.init(filterConfig);
 	}
 

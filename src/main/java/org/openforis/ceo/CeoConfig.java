@@ -2,6 +2,7 @@ package org.openforis.ceo;
 
 public class CeoConfig {
 
-	static String collectApiSurveyUrl = "";
+	static String collectApiUrl = "";
+	static String ofUsersApiUrl = "";
 
 }

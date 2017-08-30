@@ -60,7 +60,7 @@ import static org.openforis.ceo.PartUtils.writeFilePart;
 
 public class CollectProjects {
 
-    static final String COLLECT_API_SURVEY_URL = CeoConfig.collectApiSurveyUrl;
+    static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
@@ -80,12 +80,12 @@ public class CollectProjects {
      * @return the JSON array of JSON objects (one per project) that match the relevant query filters
      */
     public static String getAllProjects(Request req, Response res) {
+        String projects = "[]";
         String userId = req.queryParams("userId");
         String institutionId = req.queryParams("institutionId");
-        String projects = "[]";
         try {
             HttpRequestFactory requestFactory = createRequestFactory(HTTP_TRANSPORT);
-            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_SURVEY_URL + "survey"));
+            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey"));
             request.getUrl().put("userId", userId);
             request.getUrl().put("full", true);
             request.getUrl().put("includeCodeListValues", false);
@@ -96,16 +96,24 @@ public class CollectProjects {
         return projects;
     }
 
-    // Call Collect's REST API to QUERY the database.
-    //
-    // Return JSON object for project with matching id or an empty
-    // string.
-    //
-    // ==> "{}" | ""
+    /**
+     * Call Collect's REST API to QUERY the database.
+     * @param req
+     * @param res
+     * @return the JSON object for project with matching id or an empty
+     */
     public static String getProjectById(Request req, Response res) {
+    	String project = "";
         String projectId = req.params(":id");
         // ...
-        return "";
+        try {
+            HttpRequestFactory requestFactory = createRequestFactory(HTTP_TRANSPORT);
+            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey/" + projectId));
+            project = request.execute().parseAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return project;
     }
 
     // Call Collect's REST API to QUERY the database.
