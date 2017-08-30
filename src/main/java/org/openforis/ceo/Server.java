@@ -133,7 +133,7 @@ public class Server implements SparkApplication {
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
         get("/project/:id",     (req, res) -> { return freemarker.render(Views.project(req, res)); });
         get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
-        post("/login",          (req, res) -> { return freemarker.render(Views.login(Users.login(req, res), res)); });
+        post("/login",          (req, res) -> { return freemarker.render(Views.login(OfUsers.login(req, res), res)); });
         get("/register",        (req, res) -> { return freemarker.render(Views.register(req, res)); });
         post("/register",       (req, res) -> { return freemarker.render(Views.register(Users.register(req, res), res)); });
         get("/password",        (req, res) -> { return freemarker.render(Views.password(req, res)); });
