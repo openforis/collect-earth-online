@@ -1,5 +1,14 @@
 package org.openforis.ceo;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -10,6 +19,8 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.net.ConnectException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -49,17 +60,40 @@ import static org.openforis.ceo.PartUtils.writeFilePart;
 
 public class CollectProjects {
 
-    // Call Collect's REST API to QUERY the database.
-    //
-    // Return JSON array of JSON objects (one per project) that
-    // match the relevant query filters.
-    //
-    // ==> "[{},{},{}]"
+    static final String COLLECT_API_SURVEY_URL = CeoConfig.collectApiSurveyUrl;
+    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    static final JsonFactory JSON_FACTORY = new JacksonFactory();
+
+    public static HttpRequestFactory createRequestFactory(HttpTransport httpTransport) {
+        return httpTransport.createRequestFactory(new HttpRequestInitializer() {
+            @Override
+            public void initialize(HttpRequest request) throws IOException {
+                request.setParser(new JsonObjectParser(JSON_FACTORY));
+            }
+        });
+    }
+
+    /**
+     * Call Collect's REST API to QUERY the database.
+     * @param req
+     * @param res
+     * @return the JSON array of JSON objects (one per project) that match the relevant query filters
+     */
     public static String getAllProjects(Request req, Response res) {
         String userId = req.queryParams("userId");
         String institutionId = req.queryParams("institutionId");
-        // ...
-        return "[]";
+        String projects = "[]";
+        try {
+            HttpRequestFactory requestFactory = createRequestFactory(HTTP_TRANSPORT);
+            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_SURVEY_URL + "survey"));
+            request.getUrl().put("userId", userId);
+            request.getUrl().put("full", true);
+            request.getUrl().put("includeCodeListValues", false);
+            projects = request.execute().parseAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return projects;
     }
 
     // Call Collect's REST API to QUERY the database.
