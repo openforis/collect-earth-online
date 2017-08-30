@@ -64,12 +64,9 @@ public class CollectProjects {
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
-    public static HttpRequestFactory createRequestFactory(HttpTransport httpTransport) {
-        return httpTransport.createRequestFactory(new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
-                request.setParser(new JsonObjectParser(JSON_FACTORY));
-            }
+    public static HttpRequestFactory createRequestFactory() {
+        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
+            request.setParser(new JsonObjectParser(JSON_FACTORY));
         });
     }
 
@@ -84,9 +81,10 @@ public class CollectProjects {
         String userId = req.queryParams("userId");
         String institutionId = req.queryParams("institutionId");
         try {
-            HttpRequestFactory requestFactory = createRequestFactory(HTTP_TRANSPORT);
+            HttpRequestFactory requestFactory = createRequestFactory();
             HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey"));
             request.getUrl().put("userId", userId);
+            request.getUrl().put("groupId", institutionId);
             request.getUrl().put("full", true);
             request.getUrl().put("includeCodeListValues", false);
             projects = request.execute().parseAsString();
@@ -107,7 +105,7 @@ public class CollectProjects {
         String projectId = req.params(":id");
         // ...
         try {
-            HttpRequestFactory requestFactory = createRequestFactory(HTTP_TRANSPORT);
+            HttpRequestFactory requestFactory = createRequestFactory();
             HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey/" + projectId));
             project = request.execute().parseAsString();
         } catch (IOException e) {
