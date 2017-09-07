@@ -14,18 +14,16 @@ import static spark.Spark.staticFileLocation;
 
 public class Server implements SparkApplication {
 
-    // Returns a FreeMarkerEngine object configured to read *.ftl
-    // files from src/main/resources/template/freemarker/
-    private static FreeMarkerEngine getTemplateRenderer() {
+    // Returns a FreeMarker Configuration object configured to read
+    // *.ftl files from src/main/resources/template/freemarker/
+    private static Configuration getConfiguration() {
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_23);
-            URL templateDirectory = Server.class.getResource("/template/freemarker");
-            cfg.setDirectoryForTemplateLoading(new File(templateDirectory.toURI()));
+            cfg.setDirectoryForTemplateLoading(new File(Server.class.getResource("/template/freemarker").toURI()));
             cfg.setDefaultEncoding("UTF-8");
-            cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
-            // cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+            cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER); // or RETHROW_HANDLER
             cfg.setLogTemplateExceptions(false);
-            return new FreeMarkerEngine(cfg);
+            return cfg;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -34,7 +32,7 @@ public class Server implements SparkApplication {
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes() {
         // Create a configured FreeMarker renderer
-        FreeMarkerEngine freemarker = getTemplateRenderer();
+        FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
 
         // FIXME: Get deploy/clientkeystore signed by a certificate authority.
         // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
@@ -109,10 +107,10 @@ public class Server implements SparkApplication {
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
     }
 
-    // Sets up Spark's routing table and exception handling rules
+    // Sets up Spark's routing table and exception handling rules for use with Collect and Of-Users
     private static void declareRoutesForCollect() {
         // Create a configured FreeMarker renderer
-        FreeMarkerEngine freemarker = getTemplateRenderer();
+        FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
 
         // FIXME: Get deploy/clientkeystore signed by a certificate authority.
         // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
@@ -193,7 +191,7 @@ public class Server implements SparkApplication {
         // Store the current document root for dynamic link resolution
         documentRoot = "";
 
-        // Set the webserver port
+        // Start the Jetty webserver on port 8080
         port(8080);
 
         // Set up the routing table
