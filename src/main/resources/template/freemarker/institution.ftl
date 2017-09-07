@@ -38,13 +38,38 @@
         <div class="Table">
     <div id="imagery-list" class="Column">
         <h1>Imagery [{{ institution.imageryList.length }}]</h1>
-        <ul>
+        <ul ng-if="institution.imageryMode == 'view'">
             <li ng-repeat="imagery in institution.imageryList">
                 <a ng-if="institution.isAdmin == false" class="wide-entry">{{ imagery.title }}</a>
                 <a ng-if="institution.isAdmin == true" class="narrow-entry">{{ imagery.title }}</a>
                 <input ng-if="institution.isAdmin == true" id="delete-imagery" type="button" value="Delete" ng-click="institution.deleteImagery(imagery.id)">
             </li>
         </ul>
+        <table id="add-imagery" ng-if="institution.isAdmin == true && institution.imageryMode == 'edit'">
+            <tr>
+                <td>Title</td>
+                <td><input type="text" name="imagery-title" autocomplete="off" ng-model="institution.newImageryTitle"></td>
+            </tr>
+            <tr>
+                <td>Attribution</td>
+                <td><input type="text" name="imagery-attribution" autocomplete="off" ng-model="institution.newImageryAttribution"></td>
+            </tr>
+            <tr>
+                <td>GeoServer URL</td>
+                <td><input type="text" name="imagery-geoserver-url" autocomplete="off" ng-model="institution.newGeoServerURL"></td>
+            </tr>
+            <tr>
+                <td>GeoServer Layer Name</td>
+                <td><input type="text" name="imagery-layer-name" autocomplete="off" ng-model="institution.newLayerName"></td>
+            </tr>
+            <tr>
+                <td>GeoServer Params<br>(as JSON string)</td>
+                <td><input type="text" name="imagery-geoserver-params" autocomplete="off" ng-model="institution.newGeoServerParams"></td>
+            </tr>
+        </table>
+        <input ng-if="institution.isAdmin == true" type="button" id="add-imagery-button"
+               class="button" ng-click="institution.toggleImageryMode()"
+               value="{{ institution.imageryMode == 'view' ? 'Add Imagery' : 'Save Changes' }}">
     </div>
     <div id="project-list" class="Column">
         <h1>Projects [{{ institution.projectList.length }}]</h1>

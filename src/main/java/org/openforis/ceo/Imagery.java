@@ -8,9 +8,11 @@ import spark.Request;
 import spark.Response;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.getNextId;
 import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.writeJsonFile;
 
 public class Imagery {
 
@@ -48,10 +50,68 @@ public class Imagery {
                         } else {
                             return institution;
                         }
-
                     });
 
         return "";
+    }
+
+    public static synchronized String addInstitutionImagery(Request req, Response res) {
+        try {
+            JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+            String institutionId = jsonInputs.get("institutionId").getAsString();
+            String imageryTitle = jsonInputs.get("imageryTitle").getAsString();
+            String imageryAttribution = jsonInputs.get("imageryAttribution").getAsString();
+            String geoserverURL = jsonInputs.get("geoserverURL").getAsString();
+            String layerName = jsonInputs.get("layerName").getAsString();
+            String geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
+            JsonObject geoserverParams = geoserverParamsString.equals("")
+                                         ? new JsonObject()
+                                         : parseJson(geoserverParamsString).getAsJsonObject();
+
+            // Add layerName to geoserverParams
+            geoserverParams.addProperty("LAYERS", layerName);
+
+            // Read in the existing imagery list
+            JsonArray imagery = readJsonFile("imagery-list.json").getAsJsonArray();
+
+            // Generate a new imagery id
+            int newImageryId = getNextId(imagery);
+
+            // Create a new source configuration for this imagery
+            JsonObject sourceConfig = new JsonObject();
+            sourceConfig.addProperty("type", "GeoServer");
+            sourceConfig.addProperty("geoserver_url", geoserverURL);
+            sourceConfig.add("geoserver_params", geoserverParams);
+
+            // Create a new imagery object
+            JsonObject newImagery = new JsonObject();
+            newImagery.addProperty("id", newImageryId);
+            newImagery.addProperty("title", imageryTitle);
+            newImagery.addProperty("attribution", imageryAttribution);
+            newImagery.add("extent", null);
+            newImagery.add("source_config", sourceConfig);
+
+            // Write the new entry to imagery-list.json
+            imagery.add(newImagery);
+            writeJsonFile("imagery-list.json", imagery);
+
+            // Add newImageryId to the selected institution's imagery list
+            mapJsonFile("institution-list.json",
+                        institution -> {
+                            if (institution.get("id").getAsString().equals(institutionId)) {
+                                JsonArray imageryList = institution.getAsJsonArray("imagery");
+                                imageryList.add(newImageryId);
+                                return institution;
+                            } else {
+                                return institution;
+                            }
+                        });
+
+            return "";
+        } catch (Exception e) {
+            // Indicate that an error occurred with imagery creation
+            throw new RuntimeException(e);
+        }
     }
 
 }
