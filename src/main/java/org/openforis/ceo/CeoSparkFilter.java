@@ -2,7 +2,6 @@ package org.openforis.ceo;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-
 import spark.servlet.SparkFilter;
 
 public class CeoSparkFilter extends SparkFilter {
