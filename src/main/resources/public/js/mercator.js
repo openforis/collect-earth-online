@@ -14,7 +14,7 @@
 *****************************************************************************/
 /*****************************************************************************
 ***
-*** Create the mercator object to act as a namespace for this file
+*** Toplevel namespace object
 ***
 *****************************************************************************/
 
@@ -22,21 +22,122 @@ var mercator = {};
 
 /*****************************************************************************
 ***
-*** Selecting an Implementation (default: OpenLayers3)
+*** Create map source and layer objects from JSON descriptions
+***
+*** FIXME: Implement Google Maps API versions
 ***
 *****************************************************************************/
 
-mercator.supportedImplementations = ["OpenLayers3", "GoogleMapsAPI"];
-
-mercator.implementation = "OpenLayers3";
-
-mercator.setImplementation = function (implementationName) {
-    if (supportedImplementations.includes(implementationName)) {
-        mercator.implementation = implementationName;
+// Pure - Returns a new ol.source.* object or an error message if the
+// sourceConfig is invalid.
+mercator.createSource = function (sourceConfig) {
+    if (sourceConfig.type == "DigitalGlobe") {
+        return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
+                                  + "/{z}/{x}/{y}.png?access_token=" + sourceConfig.accessToken,
+                                  attribution: "© DigitalGlobe, Inc"});
+    } else if (sourceConfig.type == "BingMaps") {
+        return new ol.source.BingMaps({imagerySet: sourceConfig.imageryId,
+                                       key: sourceConfig.accessToken,
+                                       maxZoom: 19});
+    } else if (sourceConfig.type == "GeoServer") {
+        return new ol.source.TileWMS({serverType: "geoserver",
+                                      url: sourceConfig.geoserverUrl,
+                                      params: sourceConfig.geoserverParams});
     } else {
-        console.error("The selected map-utils implementation ("
-                      + implementationName + ") is not supported."
-                      + " Falling back to OpenLayers3.");
+        return "Cannot create layer with source type " + sourceConfig.type + ".";
+    }
+};
+
+// Pure - Returns a new ol.layer.* object or an error message if the
+// sourceConfig is invalid.
+mercator.createLayer = function (layerConfig) {
+    var source = mercator.createSource(layerConfig.sourceConfig);
+    if (typeof(source) == "string") {
+        // source contains an error message
+        return source;
+    } else if (layerConfig.extent != null) {
+        return new ol.layer.Tile({title: layerConfig.title,
+                                  visible: false,
+                                  extent: layerConfig.extent,
+                                  source: source});
+    } else {
+        return new ol.layer.Tile({title: layerConfig.title,
+                                  visible: false,
+                                  source: source});
+    }
+};
+
+/*****************************************************************************
+***
+*** Create a new map instance
+***
+*****************************************************************************/
+
+// Constants
+mercator.supportedImplementations = ["OpenLayers3", "GoogleMapsAPI"];
+mercator.minZoomLevel = 0;
+mercator.maxZoomLevel = 20;
+
+// Pure - Predicate
+mercator.verifyImplementation = function (implementation) {
+    return mercator.supportedImplementations.includes(implementation);
+};
+
+// Pure - Predicate
+mercator.verifyDivName = function (divName) {
+    return document.getElementById(divName) != null;
+};
+
+// Pure - Predicate
+mercator.verifyCenterCoords = function (centerCoords) {
+    var lon = centerCoords[0];
+    var lat = centerCoords[1];
+    return lon >= -180 && lon <= 180 && lat >= -90 && lat <= 90;
+};
+
+// Pure - Predicate
+mercator.verifyZoomLevel = function (zoomLevel) {
+    return zoomLevel >= mercator.minZoomLevel && zoomLevel <= mercator.maxZoomLevel;
+};
+
+// Pure - Predicate
+mercator.verifyLayerConfig = function (layerConfig) {
+    var layerKeys = Object.keys(layerConfig);
+    return layerKeys.includes("title")
+        && layerKeys.includes("extent")
+        && layerKeys.includes("sourceConfig")
+        && typeof(mercator.createSource(layerConfig.sourceConfig)) != "string";
+};
+
+// Pure - Predicate
+mercator.verifyLayerConfigs = function (layerConfigs) {
+    return layerConfigs.every(mercator.verifyLayerConfig);
+};
+
+// Idempotent - Logs an error message and returns null or displays a
+// map in the named div and returns its configuration object.
+mercator.createMap = function (implementation, divName, centerCoords, zoomLevel, layerConfigs) {
+    if (! mercator.verifyImplementation(implementation)) {
+        console.error("mercator.createMap: invalid implementation -> " + implementation);
+        return null;
+    } else if (! mercator.verifyDivName(divName)) {
+        console.error("mercator.createMap: invalid divName -> " + divName);
+        return null;
+    } else if (! mercator.verifyCenterCoords(centerCoords)) {
+        console.error("mercator.createMap: invalid centerCoords -> " + centerCoords);
+        return null;
+    } else if (! mercator.verifyZoomLevel(zoomLevel)) {
+        console.error("mercator.createMap: invalid zoomLevel -> " + zoomLevel);
+        return null;
+    } else if (! mercator.verifyLayerConfigs(layerConfigs)) {
+        console.error("mercator.createMap: invalid layerConfigs -> " + layerConfigs);
+        return null;
+    } else {
+        return {implementation: implementation,
+                divName: divName,
+                centerCoords: centerCoords,
+                zoomLevel: zoomLevel,
+                layerConfigs: layerConfigs};
     }
 };
 
