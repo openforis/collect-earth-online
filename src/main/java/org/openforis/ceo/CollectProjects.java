@@ -1,77 +1,87 @@
 package org.openforis.ceo;
 
+import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.PartUtils.partToString;
+import static org.openforis.ceo.PartUtils.partsToJsonObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.servlet.MultipartConfigElement;
+
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.http.json.JsonHttpContent;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.PrecisionModel;
-import java.io.File;
-import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.IntSupplier;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.servlet.MultipartConfigElement;
-import org.geotools.geometry.jts.JTS;
-import org.geotools.referencing.CRS;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
+
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.JsonUtils.expandResourcePath;
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.getNextId;
-import static org.openforis.ceo.JsonUtils.intoJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonFile;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
-import static org.openforis.ceo.JsonUtils.toElementStream;
-import static org.openforis.ceo.JsonUtils.toStream;
-import static org.openforis.ceo.JsonUtils.writeJsonFile;
-import static org.openforis.ceo.PartUtils.partToString;
-import static org.openforis.ceo.PartUtils.partsToJsonObject;
-import static org.openforis.ceo.PartUtils.writeFilePart;
 
 public class CollectProjects {
 
-    // Call Collect's REST API to QUERY the database.
-    //
-    // Return JSON array of JSON objects (one per project) that
-    // match the relevant query filters.
-    //
-    // ==> "[{},{},{}]"
-    public static String getAllProjects(Request req, Response res) {
-        String userId = req.queryParams("userId");
-        String institutionId = req.queryParams("institutionId");
-        // ...
-        return "[]";
+    static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
+    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    static final JsonFactory JSON_FACTORY = new JacksonFactory();
+
+    public static HttpRequestFactory createRequestFactory() {
+        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
+            request.setParser(new JsonObjectParser(JSON_FACTORY));
+        });
     }
 
-    // Call Collect's REST API to QUERY the database.
-    //
-    // Return JSON object for project with matching id or an empty
-    // string.
-    //
-    // ==> "{}" | ""
+    /**
+     * Call Collect's REST API to QUERY the database.
+     * @param req
+     * @param res
+     * @return the JSON array of JSON objects (one per project) that match the relevant query filters
+     */
+    public static String getAllProjects(Request req, Response res) {
+        String projects = "[]";
+        String userId = req.queryParams("userId");
+        String institutionId = req.queryParams("institutionId");
+        try {
+            HttpRequestFactory requestFactory = createRequestFactory();
+            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey"));
+            request.getUrl().put("userId", userId);
+            request.getUrl().put("groupId", institutionId);
+            request.getUrl().put("full", true);
+            request.getUrl().put("includeCodeListValues", false);
+            projects = request.execute().parseAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return projects;
+    }
+
+    /**
+     * Call Collect's REST API to QUERY the database.
+     * @param req
+     * @param res
+     * @return the JSON object for project with matching id or an empty
+     */
     public static String getProjectById(Request req, Response res) {
+    	String project = "";
         String projectId = req.params(":id");
         // ...
-        return "";
+        try {
+            HttpRequestFactory requestFactory = createRequestFactory();
+            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey/" + projectId));
+            project = request.execute().parseAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return project;
     }
 
     // Call Collect's REST API to QUERY the database.
@@ -222,15 +232,78 @@ public class CollectProjects {
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
 
-            // ...
-            // LOTS AND LOTS OF CODE
-            // ...
-
-            return "1000";
+            
+            GenericData data = convertToCollectProjectParameters(newProject);
+			
+            HttpRequest collectRequest = createRequestFactory().buildPostRequest(new GenericUrl(COLLECT_API_URL + "survey/simple"), 
+					new JsonHttpContent(JSON_FACTORY, data));
+			return collectRequest.execute().parseAsString();
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
             throw new RuntimeException(e);
         }
     }
+
+	private static GenericData convertToCollectProjectParameters(JsonObject newProject) {
+		GenericData data = new GenericData();
+		data.put("name", newProject.get("name").getAsString());
+		data.put("description", newProject.get("description").getAsString());
+		data.put("userGroupId", newProject.get("institution").getAsLong());
+		GenericData samplingPointGenerationData = new GenericData();
+		data.put("samplingPointGenerationSettings", samplingPointGenerationData);
+		
+		List<GenericData> aoiBoundary = extractAoiBoundaryData(newProject);
+		samplingPointGenerationData.put("aoiBoundary", aoiBoundary);
+		
+		List<GenericData> samplingPointSettings = new ArrayList<GenericData>(2);
+		GenericData plotLevelSettings = new GenericData();
+		plotLevelSettings.put("numPoints", newProject.get("num-plots").getAsInt());
+		plotLevelSettings.put("shape", newProject.get("plot-shape").getAsString().toUpperCase());
+		plotLevelSettings.put("distribution", newProject.get("plot-distribution").getAsString().toUpperCase());
+		plotLevelSettings.put("resolution", newProject.get("plot-spacing").getAsDouble());
+		plotLevelSettings.put("pointWidth", newProject.get("plot-size").getAsDouble());
+		samplingPointSettings.add(plotLevelSettings);
+		
+		GenericData sampleLevelSettings = new GenericData();
+		sampleLevelSettings.put("numPoints", newProject.get("samples-per-plot").getAsInt());
+		sampleLevelSettings.put("shape", "CIRCLE");
+		sampleLevelSettings.put("distribution", newProject.get("sample-distribution").getAsString().toUpperCase());
+		sampleLevelSettings.put("resolution", newProject.get("sample-resolution").getAsDouble());
+		sampleLevelSettings.put("pointWidth", 10.0d);
+		samplingPointSettings.add(sampleLevelSettings);
+		
+		List<GenericData> valueItems = new ArrayList<GenericData>();
+		JsonArray values = newProject.get("sample-values").getAsJsonArray();
+		for (JsonElement valEl: values) {
+			valueItems.add(convertToCodeItemData((JsonObject) valEl));
+		}
+		data.put("values", valueItems);
+		return data;
+	}
+
+	private static GenericData convertToCodeItemData(JsonObject valEl) {
+		GenericData codeItem = new GenericData();
+		codeItem.put("code", valEl.get("id").getAsString());
+		codeItem.put("label", valEl.get("name").getAsString());
+		codeItem.put("color", valEl.get("color").getAsString());
+		return codeItem;
+	}
+
+	private static List<GenericData> extractAoiBoundaryData(JsonObject jsonObj) {
+		return Arrays.asList(
+				extractCoordinateData(jsonObj, "lat-min", "lon-min"),
+				extractCoordinateData(jsonObj, "lat-min", "lon-max"),
+				extractCoordinateData(jsonObj, "lat-max", "lon-min"),
+				extractCoordinateData(jsonObj, "lat-max", "lon-max")
+		);
+	}
+
+	private static GenericData extractCoordinateData(JsonObject jsonObj, String latMember, String lonMember) {
+		GenericData data = new GenericData();
+		data.put("x", jsonObj.get(latMember).getAsDouble());
+		data.put("y", jsonObj.get(lonMember).getAsDouble());
+		data.put("srsId", "EPSG:4326");
+		return data;
+	}
 
 }

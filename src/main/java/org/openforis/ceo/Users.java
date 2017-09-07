@@ -50,7 +50,7 @@ public class Users {
         return req;
     }
 
-    private static boolean isEmail(String email) {
+    protected static boolean isEmail(String email) {
         String emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
             "(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*" +
             "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+" +
