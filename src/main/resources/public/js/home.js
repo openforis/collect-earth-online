@@ -173,10 +173,11 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
                                               zoom_level: 1},
                                              this.imageryList);
 
+            // Show the DigitalGlobe RecentImagery layer
+            map_utils.set_current_imagery("DigitalGlobeRecentImagery");
+
             // Draw markers on the map for each project
             map_utils.draw_project_markers(this.projectList, this.root);
-
-
         }
         whatami = this;
         if($window.innerWidth <= 600){

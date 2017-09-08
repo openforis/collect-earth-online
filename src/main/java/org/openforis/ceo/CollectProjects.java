@@ -258,79 +258,78 @@ public class CollectProjects {
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
 
-            
             GenericData data = convertToCollectProjectParameters(newProject);
-			
-            HttpRequest collectRequest = createRequestFactory().buildPostRequest(new GenericUrl(COLLECT_API_URL + "survey/simple"), 
-					new JsonHttpContent(JSON_FACTORY, data));
-			return collectRequest.execute().parseAsString();
+
+            HttpRequest collectRequest = createRequestFactory().buildPostRequest(new GenericUrl(COLLECT_API_URL + "survey/simple"),
+                                                                                 new JsonHttpContent(JSON_FACTORY, data));
+            return collectRequest.execute().parseAsString();
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
             throw new RuntimeException(e);
         }
     }
 
-	private static GenericData convertToCollectProjectParameters(JsonObject newProject) {
-		GenericData data = new GenericData();
-		data.put("name", newProject.get("name").getAsString());
-		data.put("description", newProject.get("description").getAsString());
-		data.put("userGroupId", newProject.get("institution").getAsLong());
-		GenericData samplingPointGenerationData = new GenericData();
-		data.put("samplingPointGenerationSettings", samplingPointGenerationData);
-		
-		List<GenericData> aoiBoundary = extractAoiBoundaryData(newProject);
-		samplingPointGenerationData.put("aoiBoundary", aoiBoundary);
-		
-		List<GenericData> samplingPointSettings = new ArrayList<GenericData>(2);
-		GenericData plotLevelSettings = new GenericData();
-		plotLevelSettings.put("numPoints", newProject.get("num-plots").getAsInt());
-		plotLevelSettings.put("shape", newProject.get("plot-shape").getAsString().toUpperCase());
-		plotLevelSettings.put("distribution", newProject.get("plot-distribution").getAsString().toUpperCase());
-		plotLevelSettings.put("resolution", newProject.get("plot-spacing").getAsDouble());
-		plotLevelSettings.put("pointWidth", newProject.get("plot-size").getAsDouble());
-		samplingPointSettings.add(plotLevelSettings);
-		
-		GenericData sampleLevelSettings = new GenericData();
-		sampleLevelSettings.put("numPoints", newProject.get("samples-per-plot").getAsInt());
-		sampleLevelSettings.put("shape", "CIRCLE");
-		sampleLevelSettings.put("distribution", newProject.get("sample-distribution").getAsString().toUpperCase());
-		sampleLevelSettings.put("resolution", newProject.get("sample-resolution").getAsDouble());
-		sampleLevelSettings.put("pointWidth", 10.0d);
-		samplingPointSettings.add(sampleLevelSettings);
-		
-		List<GenericData> valueItems = new ArrayList<GenericData>();
-		JsonArray values = newProject.get("sample-values").getAsJsonArray();
-		for (JsonElement valEl: values) {
-			valueItems.add(convertToCodeItemData((JsonObject) valEl));
-		}
-		data.put("values", valueItems);
-		return data;
-	}
+    private static GenericData convertToCollectProjectParameters(JsonObject newProject) {
+        GenericData data = new GenericData();
+        data.put("name", newProject.get("name").getAsString());
+        data.put("description", newProject.get("description").getAsString());
+        data.put("userGroupId", newProject.get("institution").getAsLong());
+        GenericData samplingPointGenerationData = new GenericData();
+        data.put("samplingPointGenerationSettings", samplingPointGenerationData);
 
-	private static GenericData convertToCodeItemData(JsonObject valEl) {
-		GenericData codeItem = new GenericData();
-		codeItem.put("code", valEl.get("id").getAsString());
-		codeItem.put("label", valEl.get("name").getAsString());
-		codeItem.put("color", valEl.get("color").getAsString());
-		return codeItem;
-	}
+        List<GenericData> aoiBoundary = extractAoiBoundaryData(newProject);
+        samplingPointGenerationData.put("aoiBoundary", aoiBoundary);
 
-	private static List<GenericData> extractAoiBoundaryData(JsonObject jsonObj) {
-		return Arrays.asList(
-				extractCoordinateData(jsonObj, "lat-min", "lon-min"),
-				extractCoordinateData(jsonObj, "lat-min", "lon-max"),
-				extractCoordinateData(jsonObj, "lat-max", "lon-min"),
-				extractCoordinateData(jsonObj, "lat-max", "lon-max")
-		);
-	}
+        List<GenericData> samplingPointSettings = new ArrayList<GenericData>(2);
+        GenericData plotLevelSettings = new GenericData();
+        plotLevelSettings.put("numPoints", newProject.get("num-plots").getAsInt());
+        plotLevelSettings.put("shape", newProject.get("plot-shape").getAsString().toUpperCase());
+        plotLevelSettings.put("distribution", newProject.get("plot-distribution").getAsString().toUpperCase());
+        plotLevelSettings.put("resolution", newProject.get("plot-spacing").getAsDouble());
+        plotLevelSettings.put("pointWidth", newProject.get("plot-size").getAsDouble());
+        samplingPointSettings.add(plotLevelSettings);
 
-	private static GenericData extractCoordinateData(JsonObject jsonObj, String latMember, String lonMember) {
-		GenericData data = new GenericData();
-		data.put("x", jsonObj.get(latMember).getAsDouble());
-		data.put("y", jsonObj.get(lonMember).getAsDouble());
-		data.put("srsId", "EPSG:4326");
-		return data;
-	}
+        GenericData sampleLevelSettings = new GenericData();
+        sampleLevelSettings.put("numPoints", newProject.get("samples-per-plot").getAsInt());
+        sampleLevelSettings.put("shape", "CIRCLE");
+        sampleLevelSettings.put("distribution", newProject.get("sample-distribution").getAsString().toUpperCase());
+        sampleLevelSettings.put("resolution", newProject.get("sample-resolution").getAsDouble());
+        sampleLevelSettings.put("pointWidth", 10.0d);
+        samplingPointSettings.add(sampleLevelSettings);
+
+        List<GenericData> valueItems = new ArrayList<GenericData>();
+        JsonArray values = newProject.get("sample-values").getAsJsonArray();
+        for (JsonElement valEl: values) {
+            valueItems.add(convertToCodeItemData((JsonObject) valEl));
+        }
+        data.put("values", valueItems);
+        return data;
+    }
+
+    private static GenericData convertToCodeItemData(JsonObject valEl) {
+        GenericData codeItem = new GenericData();
+        codeItem.put("code", valEl.get("id").getAsString());
+        codeItem.put("label", valEl.get("name").getAsString());
+        codeItem.put("color", valEl.get("color").getAsString());
+        return codeItem;
+    }
+
+    private static List<GenericData> extractAoiBoundaryData(JsonObject jsonObj) {
+        return Arrays.asList(
+                             extractCoordinateData(jsonObj, "lat-min", "lon-min"),
+                             extractCoordinateData(jsonObj, "lat-min", "lon-max"),
+                             extractCoordinateData(jsonObj, "lat-max", "lon-min"),
+                             extractCoordinateData(jsonObj, "lat-max", "lon-max")
+                             );
+    }
+
+    private static GenericData extractCoordinateData(JsonObject jsonObj, String latMember, String lonMember) {
+        GenericData data = new GenericData();
+        data.put("x", jsonObj.get(latMember).getAsDouble());
+        data.put("y", jsonObj.get(lonMember).getAsDouble());
+        data.put("srsId", "EPSG:4326");
+        return data;
+    }
 
 	private static String getFromCollect(String url) {
 		return getFromCollect(url, null);
@@ -347,7 +346,6 @@ public class CollectProjects {
             return "";
         }
 	}
-
 
     private static String patchToCollect(String url) {
     	return patchToCollect(url, null);

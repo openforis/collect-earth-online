@@ -275,11 +275,13 @@ section#content a:hover, section#content a.active-link {
    /* padding: 1rem;*/
 
 }
+
 #institution .Column{
     float: left;
     width: 33%;
     height: 100%;
 }
+
 #institution-list ul, #project-list ul, #user-list ul, #imagery-list ul{
     padding: 20px;
 }
@@ -313,12 +315,36 @@ section#content a:hover, section#content a.active-link {
 
 #institution-list ul,
 #project-list ul,
-#user-list ul,
-#imagery-list ul {
+#user-list ul {
     list-style-type: none;
     padding: 0.5rem;
     height: calc(100% - 4.5rem);
     overflow: auto;
+}
+
+#imagery-list ul {
+    list-style-type: none;
+    padding: 0.5rem;
+    height: calc(100% - 4.5rem - 3rem);
+    overflow: auto;
+}
+
+#imagery-list #add-imagery {
+    margin: 0.5rem;
+    height: calc(100% - 4.5rem - 3rem);
+    overflow: auto;
+}
+
+#imagery-list #add-imagery td {
+    padding:0.5rem;
+    text-align: right;
+}
+
+#imagery-list #add-imagery-button {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
 }
 
 #institution-list ul li,
