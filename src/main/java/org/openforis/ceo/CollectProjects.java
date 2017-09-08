@@ -1,5 +1,6 @@
 package org.openforis.ceo;
 
+import static org.openforis.ceo.JsonUtils.*;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.PartUtils.partToString;
 import static org.openforis.ceo.PartUtils.partsToJsonObject;
@@ -7,11 +8,17 @@ import static org.openforis.ceo.PartUtils.partsToJsonObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.MultipartConfigElement;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
@@ -21,9 +28,11 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.GenericData;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import spark.Request;
 import spark.Response;
@@ -47,41 +56,27 @@ public class CollectProjects {
      * @return the JSON array of JSON objects (one per project) that match the relevant query filters
      */
     public static String getAllProjects(Request req, Response res) {
-        String projects = "[]";
         String userId = req.queryParams("userId");
         String institutionId = req.queryParams("institutionId");
-        try {
-            HttpRequestFactory requestFactory = createRequestFactory();
-            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey"));
-            request.getUrl().put("userId", userId);
-            request.getUrl().put("groupId", institutionId);
-            request.getUrl().put("full", true);
-            request.getUrl().put("includeCodeListValues", false);
-            projects = request.execute().parseAsString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return projects;
+        String url = COLLECT_API_URL + "survey";
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", userId);
+        params.put("groupId", institutionId);
+        params.put("full", true);
+        params.put("includeCodeListValues", true);
+        return getFromCollect(url, params);
     }
 
-    /**
+	/**
      * Call Collect's REST API to QUERY the database.
      * @param req
      * @param res
      * @return the JSON object for project with matching id or an empty
      */
     public static String getProjectById(Request req, Response res) {
-    	String project = "";
         String projectId = req.params(":id");
-        // ...
-        try {
-            HttpRequestFactory requestFactory = createRequestFactory();
-            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + "survey/" + projectId));
-            project = request.execute().parseAsString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return project;
+		String url = "survey/" + projectId;
+        return getFromCollect(url);
     }
 
     // Call Collect's REST API to QUERY the database.
@@ -94,8 +89,40 @@ public class CollectProjects {
     public static String getProjectPlots(Request req, Response res) {
         String projectId = req.params(":id");
         int maxPlots = Integer.parseInt(req.params(":max"));
-        // ...
-        return "[]";
+        String samplingPointItemsJson = getFromCollect("survey/" + projectId + "/sampling_point_data.json");
+        JsonArray samplingPointItems = parseJson(samplingPointItemsJson).getAsJsonArray();
+        int numPlots = samplingPointItems.size();
+        
+        JsonArray filteredSamplingPointItems;
+        if (numPlots > maxPlots) {
+            double stepSize = 1.0 * numPlots / maxPlots;
+            filteredSamplingPointItems = 
+        		Stream.iterate(0.0, i -> i + stepSize)
+		            .limit(maxPlots)
+		            .map(i -> (JsonObject) samplingPointItems.get(Math.toIntExact(Math.round(i))))
+		            .collect(intoJsonArray);
+        } else {
+        	filteredSamplingPointItems = samplingPointItems;
+        }
+        //convert Collect SamplingPointItems into CEO plots
+        JsonArray convertedItems = toElementStream(filteredSamplingPointItems).map(el -> {
+        	JsonObject samplingItemObj = (JsonObject) el;
+        	JsonObject centerObj = new JsonObject();
+        	centerObj.add("type", new JsonPrimitive("Point"));
+        	centerObj.add("coordinates", Arrays.asList(samplingItemObj.get("y"), samplingItemObj.get("x")).stream().collect(intoJsonArray));
+        	JsonObject obj = new JsonObject();
+        	obj.add("center", centerObj);
+        	obj.add("id", samplingItemObj.get("levelCodes").getAsJsonArray().get(0));
+            
+        	//TODO load records from Collect to extract this information
+        	obj.add("flagged", new JsonPrimitive("false"));
+        	obj.add("analyses", new JsonPrimitive(0));
+        	obj.add("user", null);
+        	return obj;
+        }).collect(intoJsonArray);
+
+        return convertedItems.toString();
+        //[{center: "{\"type\":\"Point\",\"coordinates\":[102.999640127073,22.0468074686287]}", id: 4289, flagged: false, analyses: 0, user: null,
     }
 
     // Call Collect's REST API to QUERY the database.
@@ -145,11 +172,10 @@ public class CollectProjects {
     // ==> ""
     public static synchronized String publishProject(Request req, Response res) {
         String projectId = req.params(":id");
-        // ...
-        return "";
+        return patchToCollect("survey/publish/" + projectId);
     }
 
-    // Call Collect's REST API to MODIFY the database.
+	// Call Collect's REST API to MODIFY the database.
     //
     // Change the availability attribute to "closed" for the
     // project with matching id. Return the empty string.
@@ -304,6 +330,39 @@ public class CollectProjects {
 		data.put("y", jsonObj.get(lonMember).getAsDouble());
 		data.put("srsId", "EPSG:4326");
 		return data;
+	}
+
+	private static String getFromCollect(String url) {
+		return getFromCollect(url, null);
+	}
+
+	private static String getFromCollect(String url, Map<String, Object> params) {
+        try {
+            HttpRequestFactory requestFactory = createRequestFactory();
+			HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + url));
+			request.getUrl().putAll(params);
+            return request.execute().parseAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+	}
+
+
+    private static String patchToCollect(String url) {
+    	return patchToCollect(url, null);
+    }
+    
+	private static String patchToCollect(String url, Object data) {
+    	try {
+            HttpRequestFactory requestFactory = createRequestFactory();
+			HttpContent content = data == null ? null : new JsonHttpContent(JSON_FACTORY, data);
+			HttpRequest request = requestFactory.buildPatchRequest(new GenericUrl(COLLECT_API_URL + url), content);
+            return request.execute().parseAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
 	}
 
 }
