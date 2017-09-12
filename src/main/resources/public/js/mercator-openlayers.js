@@ -231,48 +231,51 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
 ***
 *****************************************************************************/
 
-mercator.current_imagery = "DigitalGlobeWMSImagery";
-
-mercator.set_current_imagery = function (new_imagery) {
-    mercator.map_ref.getLayers().forEach(
+// [Side Effects] Hides all map layers in mapConfig except that with
+// title == layerTitle.
+mercator.setVisibleLayer = function (mapConfig, layerTitle) {
+    mapConfig.layers.forEach(
         function (layer) {
-            var title = layer.get("title");
-            if (title == mercator.current_imagery) {
-                layer.set("visible", false);
+            if (layer.getVisible() == true) {
+                layer.setVisible(false);
             }
-            if (title == new_imagery) {
-                layer.set("visible", true);
+            if (layer.get("title") == layerTitle) {
+                layer.setVisible(true);
             }
         }
     );
-    mercator.current_imagery = new_imagery;
-    return new_imagery;
+    return mapConfig;
 };
 
-mercator.get_layer_by_name = function (name) {
-    return mercator.map_ref.getLayers().getArray().find(
+// [Pure] Returns the map layer with title == layerTitle or null if no
+// such layer exists.
+mercator.getLayerByTitle = function (mapConfig, layerTitle) {
+    return mapConfig.layers.getArray().find(
         function (layer) {
-            return layer.get("title") == name;
+            return layer.get("title") == layerTitle;
         }
     );
 };
 
-mercator.set_dg_wms_layer_params = function (imagery_year, stacking_profile) {
-    var dg_layer = mercator.get_layer_by_name("DigitalGlobeWMSImagery");
-    if (dg_layer) {
-        dg_layer.setSource(new ol.source.TileWMS({serverType: "geoserver",
-                                                  url: "https://services.digitalglobe.com/mapservice/wmsaccess",
-                                                  params: {"VERSION": "1.1.1",
-                                                           "LAYERS": "DigitalGlobe:Imagery",
-                                                           "CONNECTID": "63f634af-fc31-4d81-9505-b62b4701f8a9",
-                                                           "FEATUREPROFILE": stacking_profile,
-                                                           // "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
-                                                           //                      + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
-                                                           "COVERAGE_CQL_FILTER": "(acquisition_date<'" + imagery_year + "-12-31')"}
-                                                 }));
+// var mapConfig = mercator.setLayerWmsParams(mapConfig,
+//                                            "DigitalGlobeWMSImagery",
+//                                            {COVERAGE_CQL_FILTER: "(acquisition_date<'" + imageryYear + "-12-31')",
+//                                          // COVERAGE_CQL_FILTER: "(acquisition_date>'" + imageryYear + "-01-01')AND(acquisition_date<'" + imageryYear + "-12-31')",
+//                                             FEATUREPROFILE: stackingProfile});
+//
+// [Side Effects] Finds the map layer with title == layerTitle and
+// appends newParams to its source's WMS params object.
+mercator.setLayerWmsParams = function (mapConfig, layerTitle, newParams) {
+    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer) {
+        layer.getSource().updateParams(
+            Object.assign({}, layer.getSource().getParams(), newParams);
+        );
     }
+    return mapConfig;
 };
 
+// FIXME: RESUME HERE
 mercator.zoom_map_to_layer = function (layer) {
     var view = mercator.map_ref.getView();
     var size = mercator.map_ref.getSize();
