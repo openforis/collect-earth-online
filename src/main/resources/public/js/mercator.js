@@ -7,9 +7,8 @@
 *** License: LGPLv3
 ***
 *** Description: This library provides a set of functions for
-*** interacting with embedded web maps in an API agnostic manner.
-*** Currently supported implementations have been built for OpenLayers
-*** 3 and the Google Maps API.
+*** interacting with embedded web maps in an API agnostic manner. This
+*** file contains the OpenLayers 3 implementation.
 ***
 *****************************************************************************/
 /*****************************************************************************
@@ -22,13 +21,53 @@ var mercator = {};
 
 /*****************************************************************************
 ***
-*** Create map source and layer objects from JSON descriptions
+*** Lon/Lat Reprojection
 ***
-*** FIXME: Implement Google Maps API versions
+*** The default map projection for most web maps (e.g., OpenLayers,
+*** OpenStreetMap, Google Maps, MapQuest, and Bing Maps) is "Web
+*** Mercator" (EPSG:3857).
 ***
 *****************************************************************************/
 
-// Pure - Returns a new ol.source.* object or an error message if the
+// [Pure] Returns the passed in [longitude, latitude] values
+// reprojected to Web Mercator as [x, y].
+mercator.reprojectToMap = function (longitude, latitude) {
+    return ol.proj.transform([Number(longitude), Number(latitude)],
+                             "EPSG:4326",
+                             "EPSG:3857");
+};
+
+// [Pure] Returns the passed in [x, y] values reprojected to WGS84 as
+// [longitude, latitude].
+mercator.reprojectFromMap = function (x, y) {
+    return ol.proj.transform([Number(x), Number(y)],
+                             "EPSG:3857",
+                             "EPSG:4326");
+};
+
+// [Pure] Returns a bounding box for the globe in Web Mercator as
+// [llx, lly, urx, ury].
+mercator.getFullExtent = function () {
+    var llxy = mercator.reprojectToMap(-180.0, -89.999999);
+    var urxy = mercator.reprojectToMap(180.0, 90.0);
+    return [llxy[0], llxy[1], urxy[0], urxy[1]];
+};
+
+// [Pure] Returns a bounding box for the current map view in Web
+// Mercator as [llx, lly, urx, ury].
+mercator.getViewExtent = function (mapConfig) {
+    var size = mapConfig.map.getSize();
+    var extent = mapConfig.view.calculateExtent(size);
+    return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+};
+
+/*****************************************************************************
+***
+*** Create map source and layer objects from JSON descriptions
+***
+*****************************************************************************/
+
+// [Pure] Returns a new ol.source.* object or an error message if the
 // sourceConfig is invalid.
 mercator.createSource = function (sourceConfig) {
     if (sourceConfig.type == "DigitalGlobe") {
@@ -48,7 +87,7 @@ mercator.createSource = function (sourceConfig) {
     }
 };
 
-// Pure - Returns a new ol.layer.* object or an error message if the
+// [Pure] Returns a new ol.layer.* object or an error message if the
 // sourceConfig is invalid.
 mercator.createLayer = function (layerConfig) {
     var source = mercator.createSource(layerConfig.sourceConfig);
@@ -69,38 +108,28 @@ mercator.createLayer = function (layerConfig) {
 
 /*****************************************************************************
 ***
-*** Create a new map instance
+*** Functions to verify map input arguments
 ***
 *****************************************************************************/
 
-// Constants
-mercator.supportedImplementations = ["OpenLayers3", "GoogleMapsAPI"];
-mercator.minZoomLevel = 0;
-mercator.maxZoomLevel = 20;
-
-// Pure - Predicate
-mercator.verifyImplementation = function (implementation) {
-    return mercator.supportedImplementations.includes(implementation);
-};
-
-// Pure - Predicate
+// [Pure] Predicate
 mercator.verifyDivName = function (divName) {
     return document.getElementById(divName) != null;
 };
 
-// Pure - Predicate
+// [Pure] Predicate
 mercator.verifyCenterCoords = function (centerCoords) {
     var lon = centerCoords[0];
     var lat = centerCoords[1];
     return lon >= -180 && lon <= 180 && lat >= -90 && lat <= 90;
 };
 
-// Pure - Predicate
+// [Pure] Predicate
 mercator.verifyZoomLevel = function (zoomLevel) {
-    return zoomLevel >= mercator.minZoomLevel && zoomLevel <= mercator.maxZoomLevel;
+    return zoomLevel >= 0 && zoomLevel <= 20;
 };
 
-// Pure - Predicate
+// [Pure] Predicate
 mercator.verifyLayerConfig = function (layerConfig) {
     var layerKeys = Object.keys(layerConfig);
     return layerKeys.includes("title")
@@ -109,71 +138,71 @@ mercator.verifyLayerConfig = function (layerConfig) {
         && typeof(mercator.createSource(layerConfig.sourceConfig)) != "string";
 };
 
-// Pure - Predicate
+// [Pure] Predicate
 mercator.verifyLayerConfigs = function (layerConfigs) {
     return layerConfigs.every(mercator.verifyLayerConfig);
 };
 
-// Idempotent - Logs an error message and returns null or displays a
-// map in the named div and returns its configuration object.
-mercator.createMap = function (implementation, divName, centerCoords, zoomLevel, layerConfigs) {
-    if (! mercator.verifyImplementation(implementation)) {
-        console.error("mercator.createMap: invalid implementation -> " + implementation);
-        return null;
-    } else if (! mercator.verifyDivName(divName)) {
-        console.error("mercator.createMap: invalid divName -> " + divName);
-        return null;
+// [Pure] Returns the first error message generated while testing the
+// input arguments or null if all tests pass.
+mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConfigs) {
+    if (! mercator.verifyDivName(divName)) {
+        return "Invalid divName -> " + divName;
     } else if (! mercator.verifyCenterCoords(centerCoords)) {
-        console.error("mercator.createMap: invalid centerCoords -> " + centerCoords);
-        return null;
+        return "Invalid centerCoords -> " + centerCoords;
     } else if (! mercator.verifyZoomLevel(zoomLevel)) {
-        console.error("mercator.createMap: invalid zoomLevel -> " + zoomLevel);
-        return null;
+        return "Invalid zoomLevel -> " + zoomLevel;
     } else if (! mercator.verifyLayerConfigs(layerConfigs)) {
-        console.error("mercator.createMap: invalid layerConfigs -> " + layerConfigs);
-        return null;
+        return "Invalid layerConfigs -> " + layerConfigs;
     } else {
-        return {implementation: implementation,
-                divName: divName,
-                centerCoords: centerCoords,
-                zoomLevel: zoomLevel,
-                layerConfigs: layerConfigs};
+        return null;
     }
 };
 
 /*****************************************************************************
 ***
-*** Lon/Lat Reprojection
-***
-*** The default map projection for most web maps (e.g., OpenLayers,
-*** OpenStreetMap, Google Maps, MapQuest, and Bing Maps) is "Web
-*** Mercator" (EPSG:3857).
+*** Create a new map instance
 ***
 *****************************************************************************/
 
-mercator.reproject_to_map = function (longitude, latitude) {
-    return ol.proj.transform([Number(longitude), Number(latitude)],
-                             "EPSG:4326",
-                             "EPSG:3857");
-};
+// [Idempotent] Logs an error message and returns null if the inputs
+// are invalid. Otherwise, displays a map in the named div and returns
+// its configuration object.
+mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
+    var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
 
-mercator.reproject_from_map = function (x, y) {
-    return ol.proj.transform([Number(x), Number(y)],
-                             "EPSG:3857",
-                             "EPSG:4326");
-};
+    if (errorMsg) {
+        console.error(errorMsg);
+        return null;
+    } else {
+        // Create each of the layers that will be shown in the map from layerConfigs
+        var layers = layerConfigs.map(mercator.createLayer);
 
-mercator.get_full_extent = function () {
-    var llxy = mercator.reproject_to_map(-180.0, -89.999999);
-    var urxy = mercator.reproject_to_map(180.0, 90.0);
-    return [llxy[0], llxy[1], urxy[0], urxy[1]];
-};
+        // Add a scale line to the default map controls
+        var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
 
-mercator.get_view_extent = function () {
-    var view = mercator.map_ref.getView();
-    var size = mercator.map_ref.getSize();
-    var extent = view.calculateExtent(size);
-    return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+        // Create the map view using the passed in centerCoords and zoomLevel
+        var view = new ol.View({projection: "EPSG:3857",
+                                center: ol.proj.fromLonLat(centerCoords),
+                                extent: mercator.getFullExtent(),
+                                zoom: zoomLevel});
+
+        // Create the new map object
+        var map = new ol.Map({target: divName,
+                              layers: layers,
+                              controls: controls,
+                              view: view});
+
+        // Return the map configuration object
+        return {init: {divName: divName,
+                       centerCoords: centerCoords,
+                       zoomLevel: zoomLevel,
+                       layerConfigs: layerConfigs},
+                layers: layers,
+                controls: controls,
+                view: view,
+                map: map};
+    }
 };
 
 /*****************************************************************************
