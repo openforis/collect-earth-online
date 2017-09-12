@@ -1,6 +1,6 @@
 /*****************************************************************************
 ***
-*** Mercator.js
+*** Mercator-OpenLayers.js
 ***
 *** Author: Gary W. Johnson
 *** Copyright: 2017 Spatial Informatics Group, LLC
