@@ -164,9 +164,30 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 ***
 *****************************************************************************/
 
-// [Idempotent] Logs an error message and returns null if the inputs
-// are invalid. Otherwise, displays a map in the named div and returns
-// its configuration object.
+// [Side Effects] Logs an error message to the console and returns
+// null if the inputs are invalid. Otherwise, displays a map in the
+// named div and returns its configuration object.
+//
+// Example call:
+// var mapConfig = mercator.createMap("some-div-id", [102.0, 17.0], 5,
+//                                    [{title: "DigitalGlobeRecentImagery",
+//                                      extent: null,
+//                                      sourceConfig: {type: "DigitalGlobe",
+//                                                     imageryId: "digitalglobe.nal0g75k",
+//                                                     accessToken: "your-digital-globe-access-token-here"}},
+//                                     {title: "BingAerial",
+//                                      extent: null,
+//                                      sourceConfig: {type: "BingMaps",
+//                                                     imageryId: "Aerial",
+//                                                     accessToken: "your-bing-maps-access-token-here"}},
+//                                     {title: "DigitalGlobeWMSImagery",
+//                                      extent: null,
+//                                      sourceConfig: {type: "GeoServer",
+//                                                     geoserverUrl: "https://services.digitalglobe.com/mapservice/wmsaccess",
+//                                                     geoserverParams: {"VERSION": "1.1.1",
+//                                                                       "LAYERS": "DigitalGlobe:Imagery",
+//                                                                       "CONNECTID": "your-digital-globe-connect-id-here"}}}]);
+//
 mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
     var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
 
@@ -202,93 +223,6 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
                 view: view,
                 map: map};
     }
-};
-
-/*****************************************************************************
-***
-*** Create the default OpenLayers Map Object used on all pages
-***
-*****************************************************************************/
-
-// This reference will hold the current page's OpenLayers map object
-mercator.map_ref = null;
-
-mercator.create_source = function (source_config) {
-    if (source_config.type == "DigitalGlobe") {
-        return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + source_config.imagery_id
-                                  + "/{z}/{x}/{y}.png?access_token=" + source_config.access_token,
-                                  attribution: "© DigitalGlobe, Inc"});
-    } else if (source_config.type == "BingMaps") {
-        return new ol.source.BingMaps({imagerySet: source_config.imagery_id,
-                                       key: source_config.access_token,
-                                       maxZoom: 19});
-    } else if (source_config.type == "GeoServer") {
-        return new ol.source.TileWMS({serverType: "geoserver",
-                                      url: source_config.geoserver_url,
-                                      params: source_config.geoserver_params});
-    } else {
-        alert("Cannot create layer with source type " + source_config.type + ".");
-        return null;
-    }
-};
-
-mercator.create_layer = function (layer_config, visible) {
-    var source = mercator.create_source(layer_config.source_config);
-    if (source) {
-        if (layer_config.extent != null) {
-            return new ol.layer.Tile({title: layer_config.title,
-                                      visible: visible,
-                                      extent: layer_config.extent,
-                                      source: source});
-        } else {
-            return new ol.layer.Tile({title: layer_config.title,
-                                      visible: visible,
-                                      source: source});
-        }
-    } else {
-        return null;
-    }
-};
-
-// Example call:
-// mercator.digital_globe_base_map({"div_name":      "image-analysis-pane",
-//                                   "center_coords": [102.0, 17.0],
-//                                   "zoom_level":    5},
-//                                  {see imagery-list.json});
-mercator.digital_globe_base_map = function (map_config, layer_configs) {
-    // Create each of the layers that will be shown in the map from layer_configs
-    var layers = layer_configs.map(
-        function (layer_config) {
-            if (layer_config.title == "DigitalGlobeWMSImagery") {
-                return mercator.create_layer(layer_config, true);
-            } else {
-                return mercator.create_layer(layer_config, false);
-            }
-        }
-    ).filter(
-        function (layer) {
-            return layer != null;
-        }
-    );
-
-    // Add a scale line to the default map controls
-    var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
-
-    // Create the map view using the passed in center_coords and zoom_level
-    var view = new ol.View({projection: "EPSG:3857",
-                            center: ol.proj.fromLonLat(map_config.center_coords),
-                            extent: mercator.get_full_extent(),
-                            zoom: map_config.zoom_level});
-
-    // Create the new OpenLayers map object
-    var openlayers_map = new ol.Map({target: map_config.div_name,
-                                     layers: layers,
-                                     controls: controls,
-                                     view: view});
-
-    // Store the new OpenLayers map object in mercator.map_ref and return it
-    mercator.map_ref = openlayers_map;
-    return openlayers_map;
 };
 
 /*****************************************************************************
