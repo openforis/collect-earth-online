@@ -67,8 +67,8 @@ mercator.getViewExtent = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Pure] Returns a new ol.source.* object or an error message if the
-// sourceConfig is invalid.
+// [Pure] Returns a new ol.source.* object or null if the sourceConfig
+// is invalid.
 mercator.createSource = function (sourceConfig) {
     if (sourceConfig.type == "DigitalGlobe") {
         return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
@@ -83,17 +83,16 @@ mercator.createSource = function (sourceConfig) {
                                       url: sourceConfig.geoserverUrl,
                                       params: sourceConfig.geoserverParams});
     } else {
-        return "Cannot create layer with source type " + sourceConfig.type + ".";
+        return null;
     }
 };
 
-// [Pure] Returns a new ol.layer.* object or an error message if the
-// sourceConfig is invalid.
+// [Pure] Returns a new ol.layer.* object or null if the layerConfig
+// is invalid.
 mercator.createLayer = function (layerConfig) {
     var source = mercator.createSource(layerConfig.sourceConfig);
-    if (typeof(source) == "string") {
-        // source contains an error message
-        return source;
+    if (source == null) {
+        return null;
     } else if (layerConfig.extent != null) {
         return new ol.layer.Tile({title: layerConfig.title,
                                   visible: false,
@@ -135,7 +134,7 @@ mercator.verifyLayerConfig = function (layerConfig) {
     return layerKeys.includes("title")
         && layerKeys.includes("extent")
         && layerKeys.includes("sourceConfig")
-        && typeof(mercator.createSource(layerConfig.sourceConfig)) != "string";
+        && mercator.createSource(layerConfig.sourceConfig) != null;
 };
 
 // [Pure] Predicate
