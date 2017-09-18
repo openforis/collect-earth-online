@@ -34,6 +34,7 @@ import spark.Response;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
 import static org.openforis.ceo.JsonUtils.getNextId;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonArray;
@@ -315,14 +316,56 @@ public class Projects {
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
+            JsonArray sampleValues = project.get("sampleValues").getAsJsonArray();
 
-            // TODO: Calculate csvHeader and csvRows
+            Map<Integer, String> sampleValueNames = toStream(sampleValues)
+                .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
+                                          sampleValue -> sampleValue.get("name").getAsString(),
+                                          (a, b) -> b));
+
+            JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+            JsonArray sampleSummaries = flatMapJsonArray(plots,
+                                                         plot -> {
+                                                             Integer plotId = plot.get("id").getAsInt();
+                                                             Boolean flagged = plot.get("flagged").getAsBoolean();
+                                                             Integer analyses = plot.get("analyses").getAsInt();
+                                                             JsonElement userId = plot.get("user");
+                                                             JsonArray samples = plot.get("samples").getAsJsonArray();
+                                                             return toStream(samples).map(sample -> {
+                                                                     JsonObject center = parseJson(sample.get("point").getAsString()).getAsJsonObject();
+                                                                     JsonArray coords = center.get("coordinates").getAsJsonArray();
+                                                                     String value = sample.has("value")
+                                                                         ? sampleValueNames.get(sample.get("value").getAsInt())
+                                                                         : "NoValue";
+                                                                     JsonObject sampleSummary = new JsonObject();
+                                                                     sampleSummary.addProperty("plot_id", plotId);
+                                                                     sampleSummary.addProperty("sample_id", sample.get("id").getAsInt());
+                                                                     sampleSummary.addProperty("lon", coords.get(0).getAsDouble());
+                                                                     sampleSummary.addProperty("lat", coords.get(1).getAsDouble());
+                                                                     sampleSummary.addProperty("flagged", flagged);
+                                                                     sampleSummary.addProperty("analyses", analyses);
+                                                                     sampleSummary.add("user_id", userId);
+                                                                     sampleSummary.addProperty("value", value);
+                                                                     return sampleSummary;
+                                                                 });
+                                                         });
+
+            String[] fields = {"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "value"};
+            String csvHeader = Arrays.stream(fields).map(String::toUpperCase).collect(Collectors.joining(","));
+
+            String[] csvRows = toStream(sampleSummaries)
+                .map(sampleSummary -> {
+                        return Arrays.stream(fields)
+                          .map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString())
+                          .collect(Collectors.joining(","));
+                    })
+                .toArray(String[]::new);
 
             String projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
             String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
 
-            // writeCsvFile(outputFileName, csvHeader, csvRows);
+            writeCsvFile(outputFileName, csvHeader, csvRows);
 
             return Server.documentRoot + "/downloads/" + outputFileName;
         } else {
