@@ -25,6 +25,7 @@ import javax.servlet.MultipartConfigElement;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpMethods;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
@@ -340,8 +341,7 @@ public class CollectProjects {
 
             GenericData data = convertToCollectProjectParameters(newProject);
             
-            String newSurveyStr = patchToCollect("survey/simple", data);
-            JsonObject newSurvey = parseJson(newSurveyStr).getAsJsonObject();
+            JsonObject newSurvey = patchToCollect("survey/simple", data).getAsJsonObject();
             return newSurvey.get("id").getAsString();
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
@@ -516,32 +516,29 @@ public class CollectProjects {
     }
     
     private static JsonElement postToCollect(String url, Object data) {
+        return sendToCollect(HttpMethods.POST, url, data);
+    }
+
+    private static JsonElement patchToCollect(String url) {
+        return patchToCollect(url, null);
+    }
+    
+    private static JsonElement patchToCollect(String url, Object data) {
+        return sendToCollect(HttpMethods.PATCH, url, data);
+    }
+    
+    private static JsonElement sendToCollect(String method, String url, Object data) {
         try {
             HttpRequestFactory requestFactory = createRequestFactory();
             HttpContent content = data == null ? null : new JsonHttpContent(JSON_FACTORY, data);
-            HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(COLLECT_API_URL + url), content);
+            HttpRequest request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
             String result = request.execute().parseAsString();
             return parseJson(result);
         } catch (IOException e) {
             throw new RuntimeException("Error communicating with Collect", e);
         }
     }
-
-    private static String patchToCollect(String url) {
-        return patchToCollect(url, null);
-    }
     
-    private static String patchToCollect(String url, Object data) {
-        try {
-            HttpRequestFactory requestFactory = createRequestFactory();
-            HttpContent content = data == null ? null : new JsonHttpContent(JSON_FACTORY, data);
-            HttpRequest request = requestFactory.buildPatchRequest(new GenericUrl(COLLECT_API_URL + url), content);
-            return request.execute().parseAsString();
-        } catch (IOException e) {
-            throw new RuntimeException("Error communicating with Collect", e);
-        }
-    }
-
     private static JsonObject getCollectSurvey(int surveyId) {
         String url = "survey/" + surveyId;
         return getFromCollect(url).getAsJsonObject();
