@@ -63,14 +63,13 @@ public class CollectProjects {
     public static String getAllProjects(Request req, Response res) {
         String userId = req.queryParams("userId");
         String institutionId = req.queryParams("institutionId");
-        String url = COLLECT_API_URL + "survey";
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("userId", userId);
         params.put("groupId", institutionId);
         params.put("full", true);
         params.put("includeCodeListValues", true);
         
-        JsonArray allSurveys = getFromCollect(url, params).getAsJsonArray();
+        JsonArray allSurveys = getFromCollect("survey", params).getAsJsonArray();
         return toElementStream(allSurveys)
             .map(s -> convertToCEOProject((JsonObject) s))
             .collect(intoJsonArray)
