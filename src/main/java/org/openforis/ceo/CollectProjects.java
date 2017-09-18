@@ -267,11 +267,11 @@ public class CollectProjects {
         newRecordParams.put("recordKey[0]", plotId);
         newRecordParams.put("recordKey[1]", currentAnalyses+1);
         newRecordParams.put("addSecondLevelEntities", true);
-		JsonObject newRecord = postToCollect(String.format("survey/%s/data/records", projectId), newRecordParams).getAsJsonObject();
+        JsonObject newRecord = postToCollect(String.format("survey/%s/data/records", projectId), newRecordParams).getAsJsonObject();
         int recordId = newRecord.get("id").getAsInt();
         
         JsonObject survey = getCollectSurvey(projectId);
-		
+        
         userSamples.entrySet().forEach(e -> {
             String key = e.getKey();
             String value = e.getValue().getAsString();
@@ -281,15 +281,15 @@ public class CollectProjects {
                     format("rootEntity.childrenByDefinitionId.%d[0]", subplotNodeDefId)).getAsJsonArray();
             
             JsonObject subplot = toElementStream(subplots).filter(s -> {
-            	int subplotKeyDefId = getCollectSurveyNodeDefinitionId(survey, "subplot/subplot_id");
+                int subplotKeyDefId = getCollectSurveyNodeDefinitionId(survey, "subplot/subplot_id");
                 String subplotKey = findElement((JsonObject) s,
                         format("childrenByDefinitionId.%d[0].fields[0].value", subplotKeyDefId)).getAsString();
                 return subplotKey.equals(key);
             }).collect(intoJsonArray).get(0).getAsJsonObject();
 
-			JsonObject command = createAttributeUpdateCommand(projectId, survey, recordId, subplot,
-					"subplot/value", value, userName);
-			
+            JsonObject command = createAttributeUpdateCommand(projectId, survey, recordId, subplot,
+                    "subplot/value", value, userName);
+            
             patchToCollect("record/attribute", command);
         });
         return "";
@@ -622,22 +622,22 @@ public class CollectProjects {
     }
     
     private static JsonObject createAttributeUpdateCommand(int projectId, JsonObject survey, int recordId,
-			JsonObject parentEntity, String attributeDefPath, String value, String userName) {
-    	JsonObject command = new JsonObject();
-    	
-		int valueAttrDefId = getCollectSurveyNodeDefinitionId(survey, attributeDefPath);
-		JsonObject valueAttr = findElement(parentEntity, format("childrenByDefinitionId.%d[0]", valueAttrDefId))
-		        .getAsJsonObject();
-		command.addProperty("username", userName);
-		command.addProperty("surveyId", projectId);
-		command.addProperty("recordId", recordId);
-		command.addProperty("nodeDefId", valueAttrDefId);
-		command.addProperty("nodeId", valueAttr.get("id").getAsInt());
-		command.addProperty("parentEntityId", parentEntity.get("id").getAsInt());
-		command.addProperty("attributeType", "CODE");
-		JsonObject valueByField = new JsonObject();
-		valueByField.addProperty("code", value);
-		command.add("valueByField", valueByField);
-		return command;
-	}
+            JsonObject parentEntity, String attributeDefPath, String value, String userName) {
+        JsonObject command = new JsonObject();
+        
+        int valueAttrDefId = getCollectSurveyNodeDefinitionId(survey, attributeDefPath);
+        JsonObject valueAttr = findElement(parentEntity, format("childrenByDefinitionId.%d[0]", valueAttrDefId))
+                .getAsJsonObject();
+        command.addProperty("username", userName);
+        command.addProperty("surveyId", projectId);
+        command.addProperty("recordId", recordId);
+        command.addProperty("nodeDefId", valueAttrDefId);
+        command.addProperty("nodeId", valueAttr.get("id").getAsInt());
+        command.addProperty("parentEntityId", parentEntity.get("id").getAsInt());
+        command.addProperty("attributeType", "CODE");
+        JsonObject valueByField = new JsonObject();
+        valueByField.addProperty("code", value);
+        command.add("valueByField", valueByField);
+        return command;
+    }
 }
