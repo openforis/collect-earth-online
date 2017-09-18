@@ -1312,7 +1312,7 @@ div#institution:before {
 
 #project #project-dashboard #project-stats {
     float: left;
-    width: calc(50% - 5px);
+    width: calc(45% - 5px);
 }
 
 #project #project-dashboard #project-stats table {
@@ -1327,29 +1327,18 @@ div#institution:before {
 #project #project-dashboard #project-management{
     float: right;
     margin-right: 10px;
-    width: calc(50% - 5px);
+    width: calc(55% - 5px);
 }
 
-#project #project-dashboard #project-management #change-availability {
+#project #project-dashboard #project-management #change-availability,
+#project #project-dashboard #project-management #configure-geo-dash,
+#project #project-dashboard #project-management #download-plot-data,
+#project #project-dashboard #project-management #download-sample-data {
     display: block;
-    width: 15rem;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 5px;
-}
-
-#project #project-dashboard #project-management #configure-geo-dash {
-    display: block;
-    width: 15rem;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-#project #project-dashboard #project-management #download-plot-data {
-    display: block;
-    width: 15rem;
-    margin-left: auto;
-    margin-right: auto;
+    width: 11rem;
+    font-size: 1rem;
+    float:left;
+    margin-left: 5px;
 }
 
 #project #project-design {

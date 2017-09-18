@@ -58,6 +58,10 @@
                    name="download-plot-data" value="Download Plot Data"
                    ng-click="project.downloadPlotData()"
                    style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
+            <input type="button" id="download-sample-data" class="button"
+                   name="download-sample-data" value="Download Sample Data"
+                   ng-click="project.downloadSampleData()"
+                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
         </div>
     </div>
     <div id="project-design">

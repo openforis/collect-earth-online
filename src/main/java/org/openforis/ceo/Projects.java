@@ -308,6 +308,28 @@ public class Projects {
         }
     }
 
+    public static String dumpProjectRawData(Request req, Response res) {
+        String projectId = req.params(":id");
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
+
+        if (matchingProject.isPresent()) {
+            JsonObject project = matchingProject.get();
+
+            // TODO: Calculate csvHeader and csvRows
+
+            String projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
+            String currentDate = LocalDate.now().toString();
+            String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
+
+            // writeCsvFile(outputFileName, csvHeader, csvRows);
+
+            return Server.documentRoot + "/downloads/" + outputFileName;
+        } else {
+            return Server.documentRoot + "/project-not-found";
+        }
+    }
+
     public static synchronized String publishProject(Request req, Response res) {
         String projectId = req.params(":id");
         mapJsonFile("project-list.json",
