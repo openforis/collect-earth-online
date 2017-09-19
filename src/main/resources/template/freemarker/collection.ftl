@@ -56,7 +56,7 @@
                 <li ng-repeat="sampleValue in sampleValueGroup.values">
                     <input type="button" id="{{ sampleValue.name + '_' + sampleValue.id }}" name="{{ sampleValue.name + '_' + sampleValue.id }}"
                            value="{{ sampleValue.name }}" style="border-left:1.5rem solid {{ sampleValue.color }}"
-                           ng-click="collection.setCurrentValue(sampleValueGroup.name, sampleValue)">
+                           ng-click="collection.setCurrentValue(sampleValueGroup, sampleValue)">
                 </li>
             </ul>
         </fieldset>

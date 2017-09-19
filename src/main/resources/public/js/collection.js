@@ -118,17 +118,17 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         this.loadRandomPlot();
     };
 
-    this.setCurrentValue = function (sampleValueGroupName, sampleValue) {
+    this.setCurrentValue = function (sampleValueGroup, sampleValue) {
         var selectedFeatures = map_utils.get_selected_samples();
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
             selectedFeatures.forEach(
                 function (sample) {
                     var pointAssignments = this.userSamples[sample.get("sample_id")];
                     if (pointAssignments) {
-                        pointAssignments[sampleValueGroupName] = sampleValue.id;
+                        pointAssignments[sampleValueGroup.id] = sampleValue.id;
                     } else {
                         pointAssignments = {};
-                        pointAssignments[sampleValueGroupName] = sampleValue.id;
+                        pointAssignments[sampleValueGroup.id] = sampleValue.id;
                     }
                     this.userSamples[sample.get("sample_id")] = pointAssignments;
                     map_utils.highlight_sample(sample, sampleValue.color);

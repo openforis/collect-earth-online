@@ -433,7 +433,7 @@ public class Projects {
                             JsonArray updatedSamples = mapJsonArray(samples,
                                                                     sample -> {
                                                                         String sampleId = sample.get("id").getAsString();
-                                                                        sample.addProperty("value", userSamples.get(sampleId).getAsInt());
+                                                                        sample.add("value", userSamples.get(sampleId));
                                                                         return sample;
                                                                     });
                             plot.add("samples", updatedSamples);
