@@ -228,6 +228,26 @@ public class Projects {
     private static Collector<String, ?, Map<String, Long>> countDistinct =
         Collectors.groupingBy(Function.identity(), Collectors.counting());
 
+    private static String[] getValueDistributionLabels(JsonObject project) {
+        JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+        return toStream(sampleValueGroups)
+            .flatMap(group -> {
+                    JsonArray sampleValues = group.get("values").getAsJsonArray();
+                    return toStream(sampleValues).map(sampleValue -> group.get("name").getAsString() + ":" + sampleValue.get("name").getAsString());
+                })
+            .toArray(String[]::new);
+    }
+
+    private static Map<Integer, String> getSampleValueTranslations(JsonObject project) {
+        JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+        JsonObject firstGroup = sampleValueGroups.get(0).getAsJsonObject();
+        String firstGroupName = firstGroup.get("name").getAsString();
+        return toStream(firstGroup.get("values").getAsJsonArray())
+            .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
+                                      sampleValue -> firstGroupName + ":" + sampleValue.get("name").getAsString(),
+                                      (a, b) -> b));
+    }
+
     // Returns a JsonObject like this:
     // {"Land Use:Timber" 10.0,
     //  "Land Use:Agriculture": 20.0,
@@ -235,8 +255,19 @@ public class Projects {
     //  "Land Cover:Forest": 10.0,
     //  "Land Cover:Grassland": 40.0,
     //  "Land Cover:Impervious": 50.0}
-    private static JsonObject getValueDistribution(JsonArray samples) {
-        if (samples.get(0).getAsJsonObject().has("value")) {
+    private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueTranslations) {
+        JsonObject firstSample = samples.get(0).getAsJsonObject();
+        if (! firstSample.has("value")) {
+            return new JsonObject();
+        } else if (firstSample.get("value").isJsonPrimitive()) {
+            Map<String, Long> valueCounts = toStream(samples)
+                .map(sample -> sample.get("value").getAsInt())
+                .map(value -> sampleValueTranslations.getOrDefault(value, "NoValue"))
+                .collect(countDistinct);
+            JsonObject valueDistribution = new JsonObject();
+            valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
+            return valueDistribution;
+        } else {
             Map<String, Map<String, Long>> valueCounts = toStream(samples)
                 .flatMap(sample -> sample.get("value").getAsJsonObject().entrySet().stream())
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
@@ -247,8 +278,6 @@ public class Projects {
                     frequencies.forEach((name, count) -> valueDistribution.addProperty(group + ":" + name, 100.0 * count / samples.size()));
                 });
             return valueDistribution;
-        } else {
-            return new JsonObject();
         }
     }
 
@@ -269,6 +298,7 @@ public class Projects {
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
+            Map<Integer, String> sampleValueTranslations = getSampleValueTranslations(project);
             JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             JsonArray plotSummaries = mapJsonArray(plots,
                                                    plot -> {
@@ -285,19 +315,12 @@ public class Projects {
                                                        plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                                                        plotSummary.addProperty("sample_points", samples.size());
                                                        plotSummary.add("user_id", plot.get("user"));
-                                                       plotSummary.add("distribution", getValueDistribution(samples));
+                                                       plotSummary.add("distribution", getValueDistribution(samples, sampleValueTranslations));
                                                        return plotSummary;
                                                    });
 
             String[] fields = {"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"};
-
-            JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
-            String[] labels = toStream(sampleValueGroups)
-                .flatMap(group -> {
-                        JsonArray sampleValues = group.get("values").getAsJsonArray();
-                        return toStream(sampleValues).map(sampleValue -> group.get("name").getAsString() + ":" + sampleValue.get("name").getAsString());
-                    })
-                .toArray(String[]::new);
+            String[] labels = getValueDistributionLabels(project);
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
@@ -331,6 +354,7 @@ public class Projects {
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
+            Map<Integer, String> sampleValueTranslations = getSampleValueTranslations(project);
             JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             JsonArray sampleSummaries = flatMapJsonArray(plots,
                                                          plot -> {
@@ -371,9 +395,15 @@ public class Projects {
                         Stream<String> fieldStream = Arrays.stream(fields);
                         Stream<String> labelStream = Arrays.stream(labels);
                         return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
-                                             labelStream.map(label -> sampleSummary.get("value").isJsonNull()
-                                                             ? ""
-                                                             : sampleSummary.get("value").getAsJsonObject().get(label).getAsString()))
+                                             labelStream.map(label -> {
+                                                     JsonElement value = sampleSummary.get("value");
+                                                     if (value.isJsonNull()) {
+                                                         return "";
+                                                     } else if (value.isJsonPrimitive()) {
+                                                         return sampleValueTranslations.getOrDefault(value.getAsInt(), "LULC:NoValue").split(":")[1];
+                                                     } else {
+                                                         return value.getAsJsonObject().get(label).getAsString();
+                                                     }}))
                                      .collect(Collectors.joining(","));
                     })
                 .toArray(String[]::new);
