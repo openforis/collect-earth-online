@@ -772,20 +772,31 @@ public class Projects {
                 newProject.add("csv", null);
             }
 
-            // Add ids to the sampleValues and clean up some of their unnecessary fields
-            JsonArray sampleValues = newProject.get("sampleValues").getAsJsonArray();
-            IntSupplier sampleValueIndexer = makeCounter();
-            JsonArray updatedSampleValues = mapJsonArray(sampleValues,
-                                                         sampleValue -> {
-                                                             sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
-                                                             sampleValue.remove("$$hashKey");
-                                                             sampleValue.remove("object");
-                                                             if (sampleValue.get("image").getAsString().equals("")) {
-                                                                 sampleValue.add("image", null);
-                                                             }
-                                                             return sampleValue;
-                                                         });
-            newProject.add("sampleValues", updatedSampleValues);
+            // Add ids to the sampleValueGroups and sampleValues and clean up some of their unnecessary fields
+            JsonArray sampleValueGroups = newProject.get("sampleValues").getAsJsonArray();
+            IntSupplier sampleValueGroupIndexer = makeCounter();
+            JsonArray updatedSampleValueGroups = mapJsonArray(sampleValueGroups,
+                                                              sampleValueGroup -> {
+                                                                  sampleValueGroup.addProperty("id", sampleValueGroupIndexer.getAsInt());
+                                                                  sampleValueGroup.remove("$$hashKey");
+                                                                  sampleValueGroup.remove("object");
+                                                                  JsonArray sampleValues = sampleValueGroup.get("values").getAsJsonArray();
+                                                                  IntSupplier sampleValueIndexer = makeCounter();
+                                                                  JsonArray updatedSampleValues = mapJsonArray(sampleValues,
+                                                                                                               sampleValue -> {
+                                                                                                                   sampleValue.addProperty("id",
+                                                                                                                                           sampleValueIndexer.getAsInt());
+                                                                                                                   sampleValue.remove("$$hashKey");
+                                                                                                                   sampleValue.remove("object");
+                                                                                                                   if (sampleValue.get("image").getAsString().equals("")) {
+                                                                                                                       sampleValue.add("image", null);
+                                                                                                                   }
+                                                                                                                   return sampleValue;
+                                                                                                               });
+                                                                  sampleValueGroup.add("values", updatedSampleValues);
+                                                                  return sampleValueGroup;
+                                                              });
+            newProject.add("sampleValues", updatedSampleValueGroups);
 
             // Add some missing fields that don't come from the web UI
             newProject.addProperty("archived", false);
