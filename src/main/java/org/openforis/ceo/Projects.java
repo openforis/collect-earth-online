@@ -316,13 +316,6 @@ public class Projects {
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
-            JsonArray sampleValues = project.get("sampleValues").getAsJsonArray();
-
-            Map<Integer, String> sampleValueNames = toStream(sampleValues)
-                .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
-                                          sampleValue -> sampleValue.get("name").getAsString(),
-                                          (a, b) -> b));
-
             JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             JsonArray sampleSummaries = flatMapJsonArray(plots,
                                                          plot -> {
@@ -334,9 +327,6 @@ public class Projects {
                                                              return toStream(samples).map(sample -> {
                                                                      JsonObject center = parseJson(sample.get("point").getAsString()).getAsJsonObject();
                                                                      JsonArray coords = center.get("coordinates").getAsJsonArray();
-                                                                     String value = sample.has("value")
-                                                                         ? sampleValueNames.get(sample.get("value").getAsInt())
-                                                                         : "NoValue";
                                                                      JsonObject sampleSummary = new JsonObject();
                                                                      sampleSummary.addProperty("plot_id", plotId);
                                                                      sampleSummary.addProperty("sample_id", sample.get("id").getAsInt());
@@ -345,19 +335,31 @@ public class Projects {
                                                                      sampleSummary.addProperty("flagged", flagged);
                                                                      sampleSummary.addProperty("analyses", analyses);
                                                                      sampleSummary.add("user_id", userId);
-                                                                     sampleSummary.addProperty("value", value);
+                                                                     sampleSummary.add("value", sample.get("value"));
                                                                      return sampleSummary;
                                                                  });
                                                          });
 
-            String[] fields = {"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "value"};
-            String csvHeader = Arrays.stream(fields).map(String::toUpperCase).collect(Collectors.joining(","));
+            JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+            Map<Integer, String> sampleValueGroupNames = toStream(sampleValueGroups)
+                .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
+                                          sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
+                                          (a, b) -> b));
+
+            String[] fields = {"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"};
+            String[] labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+
+            String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
             String[] csvRows = toStream(sampleSummaries)
                 .map(sampleSummary -> {
-                        return Arrays.stream(fields)
-                          .map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString())
-                          .collect(Collectors.joining(","));
+                        Stream<String> fieldStream = Arrays.stream(fields);
+                        Stream<String> labelStream = Arrays.stream(labels);
+                        return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
+                                             labelStream.map(label -> sampleSummary.get("value").isJsonNull()
+                                                             ? ""
+                                                             : sampleSummary.get("value").getAsJsonObject().get(label).getAsString()))
+                                     .collect(Collectors.joining(","));
                     })
                 .toArray(String[]::new);
 

@@ -125,10 +125,10 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 function (sample) {
                     var pointAssignments = this.userSamples[sample.get("sample_id")];
                     if (pointAssignments) {
-                        pointAssignments[sampleValueGroup.id] = sampleValue.id;
+                        pointAssignments[sampleValueGroup.name] = sampleValue.name;
                     } else {
                         pointAssignments = {};
-                        pointAssignments[sampleValueGroup.id] = sampleValue.id;
+                        pointAssignments[sampleValueGroup.name] = sampleValue.name;
                     }
                     this.userSamples[sample.get("sample_id")] = pointAssignments;
                     map_utils.highlight_sample(sample, sampleValue.color);
