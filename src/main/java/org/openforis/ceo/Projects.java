@@ -228,14 +228,28 @@ public class Projects {
     private static Collector<String, ?, Map<String, Long>> countDistinct =
         Collectors.groupingBy(Function.identity(), Collectors.counting());
 
-    private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueNames) {
-        Map<String, Long> valueCounts = toStream(samples)
-            .map(sample -> sample.has("value") ? sample.get("value").getAsInt() : -1)
-            .map(value -> sampleValueNames.getOrDefault(value, "NoValue"))
-            .collect(countDistinct);
-        JsonObject valueDistribution = new JsonObject();
-        valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
-        return valueDistribution;
+    // Returns a JsonObject like this:
+    // {"Land Use:Timber" 10.0,
+    //  "Land Use:Agriculture": 20.0,
+    //  "Land Use:Urban": 70.0,
+    //  "Land Cover:Forest": 10.0,
+    //  "Land Cover:Grassland": 40.0,
+    //  "Land Cover:Impervious": 50.0}
+    private static JsonObject getValueDistribution(JsonArray samples) {
+        if (samples.get(0).getAsJsonObject().has("value")) {
+            Map<String, Map<String, Long>> valueCounts = toStream(samples)
+                .flatMap(sample -> sample.get("value").getAsJsonObject().entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey,
+                                               Collectors.mapping(entry -> entry.getValue().getAsString(),
+                                                                  countDistinct)));
+            JsonObject valueDistribution = new JsonObject();
+            valueCounts.forEach((group, frequencies) -> {
+                    frequencies.forEach((name, count) -> valueDistribution.addProperty(group + ":" + name, 100.0 * count / samples.size()));
+                });
+            return valueDistribution;
+        } else {
+            return new JsonObject();
+        }
     }
 
     private static synchronized void writeCsvFile(String filename, String header, String[] rows) {
@@ -255,34 +269,35 @@ public class Projects {
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
-            JsonArray sampleValues = project.get("sampleValues").getAsJsonArray();
-
-            Map<Integer, String> sampleValueNames = toStream(sampleValues)
-                .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
-                                          sampleValue -> sampleValue.get("name").getAsString(),
-                                          (a, b) -> b));
-
             JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             JsonArray plotSummaries = mapJsonArray(plots,
                                                    plot -> {
                                                        JsonArray samples = plot.get("samples").getAsJsonArray();
-                                                       JsonObject plotCenter = parseJson(plot.get("center").getAsString()).getAsJsonObject();
+                                                       JsonObject center = parseJson(plot.get("center").getAsString()).getAsJsonObject();
+                                                       JsonArray coords = center.get("coordinates").getAsJsonArray();
                                                        JsonObject plotSummary = new JsonObject();
                                                        plotSummary.addProperty("plot_id", plot.get("id").getAsInt());
-                                                       plotSummary.addProperty("center_lon", plotCenter.get("coordinates").getAsJsonArray().get(0).getAsDouble());
-                                                       plotSummary.addProperty("center_lat", plotCenter.get("coordinates").getAsJsonArray().get(1).getAsDouble());
+                                                       plotSummary.addProperty("center_lon", coords.get(0).getAsDouble());
+                                                       plotSummary.addProperty("center_lat", coords.get(1).getAsDouble());
                                                        plotSummary.addProperty("size_m", project.get("plotSize").getAsDouble());
                                                        plotSummary.addProperty("shape", project.get("plotShape").getAsString());
                                                        plotSummary.addProperty("flagged", plot.get("flagged").getAsBoolean());
                                                        plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                                                        plotSummary.addProperty("sample_points", samples.size());
                                                        plotSummary.add("user_id", plot.get("user"));
-                                                       plotSummary.add("distribution", getValueDistribution(samples, sampleValueNames));
+                                                       plotSummary.add("distribution", getValueDistribution(samples));
                                                        return plotSummary;
                                                    });
 
             String[] fields = {"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"};
-            String[] labels = sampleValueNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+
+            JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+            String[] labels = toStream(sampleValueGroups)
+                .flatMap(group -> {
+                        JsonArray sampleValues = group.get("values").getAsJsonArray();
+                        return toStream(sampleValues).map(sampleValue -> group.get("name").getAsString() + ":" + sampleValue.get("name").getAsString());
+                    })
+                .toArray(String[]::new);
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
