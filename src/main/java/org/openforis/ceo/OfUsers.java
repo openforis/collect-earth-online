@@ -1,6 +1,9 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.JsonUtils.toStream;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -124,6 +127,78 @@ public class OfUsers {
             req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
         }
         return req;
+    }
+
+    public static String getAllUsers(Request req, Response res) {
+        String institutionId = req.queryParams("institutionId");
+        try {
+            if (institutionId != null) {
+                String url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
+                HttpResponse response = prepareGetRequest(url).execute(); // get group's users
+                if (response.isSuccessStatusCode()) {
+                    JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
+                    String stringGroupUsers = toStream(groupUsers).map(groupUser -> {
+                                                                            groupUser.getAsJsonObject("user").addProperty("institutionRole",
+                                                                            groupUser.get("roleCode").getAsString().equals("ADM") ? "admin"
+                                                                            : groupUser.get("roleCode").getAsString().equals("OWN") ? "admin"
+                                                                            : groupUser.get("roleCode").getAsString().equals("OPR") ? "member"
+                                                                            : groupUser.get("roleCode").getAsString().equals("VWR") ? "member"
+                                                                            : groupUser.get("statusCode").getAsString().equals("P") ? "pending"
+                                                                            : "not-member");
+                        return groupUser.get("user");
+                    }).map(user -> {
+                        user.getAsJsonObject().addProperty("email", user.getAsJsonObject().get("username").getAsString());
+                        return user;
+                    }).collect(intoJsonArray).toString();
+                    return stringGroupUsers;
+                }
+            } else {
+                HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
+                if (response.isSuccessStatusCode()) {
+                    String jsonUsers = response.parseAsString();
+                    JsonArray users = JsonUtils.parseJson(jsonUsers).getAsJsonArray();
+                    return users.toString();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); //TODO
+        }
+        return (new JsonArray()).toString();
+    }
+
+    public static synchronized String requestInstitutionMembership(Request req, Response res) {
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+        JsonElement userId = jsonInputs.get("userId");
+        String institutionId = jsonInputs.get("institutionId").getAsString();
+        String url = String.format(OF_USERS_API_URL + "group/%s/user/%s", institutionId, userId);
+        try {
+            HttpResponse response = preparePostRequest(url, new GenericData()).execute(); // add user in a group
+            if (response.isSuccessStatusCode()) {
+                //
+                url = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
+                response = prepareGetRequest(url).execute(); // get group's users
+                JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
+                JsonArray members = new JsonArray();
+                JsonArray admins = new JsonArray();
+                JsonArray pending = new JsonArray();
+                toStream(groupUsers).forEach(groupUser -> {
+                                                if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
+                                                else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
+                                                else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
+                                                else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
+                                                else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
+                });
+                JsonObject group = groupUsers.get(0).getAsJsonObject();
+                group.add("admins", admins);
+                group.add("members", members);
+                group.add("pending", pending);
+                //
+                return group.toString();
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); //TODO
+        }
+        return "";
     }
 
 }
