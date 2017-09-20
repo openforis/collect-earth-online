@@ -2,7 +2,7 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
     this.root = "";
     this.userId = "";
     this.institutionList = [];
-    this.projectList = [];
+    this.projectList = undefined;
     this.userList = [];
     this.imageryList = [];
     this.showPanel = true;
@@ -157,7 +157,7 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
         if (angular.equals(this.imageryList, [])) {
             // Load the imageryList
             this.getImageryList();
-        } else if (angular.equals(this.projectList, [])) {
+        } else if (this.projectList === undefined) {
             // Load the projectList for this userId
             this.getProjectList(userId);
         } else {

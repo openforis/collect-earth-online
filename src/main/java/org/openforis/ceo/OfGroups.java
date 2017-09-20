@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 
 import java.io.IOException;
@@ -39,6 +40,12 @@ public class OfGroups {
 
     private static HttpRequest prepareGetRequest(String url) throws IOException {
         return createRequestFactory().buildGetRequest(new GenericUrl(url));
+    }
+
+    private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
+        return createRequestFactory()
+             .buildPatchRequest(new GenericUrl(url),
+                        new JsonHttpContent(new JacksonFactory(), data));
     }
 
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
@@ -114,6 +121,19 @@ public class OfGroups {
             noInstitutionFound.addProperty("description", "");
             return noInstitutionFound.toString();
         }
+    }
+
+    public static synchronized String archiveInstitution(Request req, Response res) {
+        String institutionId = req.params(":id");
+        GenericData data = new GenericData();
+        data.put("enabled", false);
+        String url = String.format(OF_USERS_API_URL + "group/%d", institutionId);
+        try {
+            preparePatchRequest(url, data).execute(); // change group
+        } catch (IOException e) {
+            e.printStackTrace(); // TODO
+        }
+        return "";
     }
 
 }

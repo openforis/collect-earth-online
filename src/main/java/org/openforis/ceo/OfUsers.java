@@ -3,10 +3,14 @@ package org.openforis.ceo;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -22,6 +26,7 @@ import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import spark.Request;
 import spark.Response;
@@ -99,7 +104,7 @@ public class OfUsers {
             } else if (! inputPassword.equals(inputPasswordConfirmation)) {
                 req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
             } else {
-                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user request
+                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
                 JsonArray users = getResponseAsJson(userRequest.execute()).getAsJsonArray();
                 Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("username").getAsString().equals(inputEmail));
@@ -110,7 +115,7 @@ public class OfUsers {
                     GenericData data = new GenericData();
                     data.put("username", inputEmail);
                     data.put("rawPassword", inputPassword);
-                    HttpResponse response = preparePostRequest(OF_USERS_API_URL + "user", data).execute(); // login request;
+                    HttpResponse response = preparePostRequest(OF_USERS_API_URL + "user", data).execute(); // login
                     if (response.isSuccessStatusCode()) {
                         String newUserId = getResponseAsJson(response).getAsJsonObject().get("id").getAsString();
                         // Assign the username and role session attributes
@@ -164,6 +169,29 @@ public class OfUsers {
             e.printStackTrace(); //TODO
         }
         return (new JsonArray()).toString();
+    }
+
+    public static Map<Integer, String> getInstitutionRoles(int userId) {
+        try {
+            String url = String.format(OF_USERS_API_URL + "user/%d/groups", userId);
+            HttpResponse response = prepareGetRequest(url).execute(); // get user's groups
+            if (response.isSuccessStatusCode()) {
+                JsonArray userGroups = getResponseAsJson(response).getAsJsonArray();
+                return toStream(userGroups)
+                        .collect(Collectors.toMap(userGroup -> userGroup.get("groupId").getAsInt(),
+                                                  userGroup -> {
+                                                      if (userGroup.get("roleCode").getAsString().equals("ADM")) return "admin";
+                                                      else if (userGroup.get("roleCode").getAsString().equals("OWN")) return "admin";
+                                                      else if (userGroup.get("roleCode").getAsString().equals("OPR")) return "member";
+                                                      else if (userGroup.get("roleCode").getAsString().equals("VWR")) return "member";
+                                                      return "not-member";
+                                                  },
+                                                  (a, b) -> b));
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); //TODO
+        }
+        return new HashMap<Integer, String>();
     }
 
     public static synchronized String requestInstitutionMembership(Request req, Response res) {
