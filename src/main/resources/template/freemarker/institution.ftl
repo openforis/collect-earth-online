@@ -10,7 +10,7 @@
         <div id="institution-view" ng-show="institution.pageMode == 'view'">
             <div id="institution-logo-container">
                 <a href="{{ institution.details.url }}">
-                    <img src="${root}/{{ institution.details.logo }}">
+                    
                 </a>
             </div>
             <h1><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>

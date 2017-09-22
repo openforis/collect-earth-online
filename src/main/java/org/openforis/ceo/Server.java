@@ -163,7 +163,7 @@ public class Server implements SparkApplication {
         // Routing Table: Institutions API
         get("/get-all-institutions",        (req, res) -> { return OfGroups.getAllInstitutions(req, res); });
         get("/get-institution-details/:id", (req, res) -> { return OfGroups.getInstitutionDetails(req, res); });
-        post("/update-institution/:id",     (req, res) -> { return Institutions.updateInstitution(req, res); });
+        post("/update-institution/:id",     (req, res) -> { return OfGroups.updateInstitution(req, res); });
         post("/archive-institution/:id",    (req, res) -> { return OfGroups.archiveInstitution(req, res); });
 
         // Routing Table: Imagery API
