@@ -1,7 +1,6 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 
 import java.io.IOException;
@@ -9,6 +8,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -38,13 +38,20 @@ public class OfGroups {
         });
     }
 
+    private static HttpRequestFactory createPatchRequestFactory() {
+        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
+            request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
+            request.setParser(new JsonObjectParser(JSON_FACTORY));
+        });
+    }
+
     private static HttpRequest prepareGetRequest(String url) throws IOException {
         return createRequestFactory().buildGetRequest(new GenericUrl(url));
     }
 
     private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
-        return createRequestFactory()
-             .buildPatchRequest(new GenericUrl(url),
+        return createPatchRequestFactory()
+             .buildPostRequest(new GenericUrl(url),
                         new JsonHttpContent(new JacksonFactory(), data));
     }
 
@@ -65,7 +72,7 @@ public class OfGroups {
                 JsonArray groups = getResponseAsJson(response).getAsJsonArray();
                 String[] hiddenInstitutions = new String[]{"All Users", "Administrators"};
                 JsonArray visibleGroups = filterJsonArray(groups, group ->
-                                                          group.get("enabled").getAsBoolean() == false
+                                                          group.get("enabled").getAsBoolean() == true
                                                           && !Arrays.asList(hiddenInstitutions).contains(group.get("name").getAsString()));
                 return visibleGroups.toString();
             }
@@ -127,7 +134,7 @@ public class OfGroups {
         String institutionId = req.params(":id");
         GenericData data = new GenericData();
         data.put("enabled", false);
-        String url = String.format(OF_USERS_API_URL + "group/%d", institutionId);
+        String url = String.format(OF_USERS_API_URL + "group/%s", institutionId);
         try {
             preparePatchRequest(url, data).execute(); // change group
         } catch (IOException e) {
