@@ -184,13 +184,11 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                      extent: null,
 //                                      sourceConfig: {type: "GeoServer",
 //                                                     geoserverUrl: "https://services.digitalglobe.com/mapservice/wmsaccess",
-//                                                     geoserverParams: {"VERSION": "1.1.1",
-//                                                                       "LAYERS": "DigitalGlobe:Imagery",
-//                                                                       "CONNECTID": "your-digital-globe-connect-id-here"}}}]);
-//
+//                                                     geoserverParams: {VERSION: "1.1.1",
+//                                                                       LAYERS: "DigitalGlobe:Imagery",
+//                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
 mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
     var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
-
     if (errorMsg) {
         console.error(errorMsg);
         return null;
@@ -227,6 +225,25 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
 
 /*****************************************************************************
 ***
+*** Reset a map instance to its initial state
+***
+*****************************************************************************/
+
+// [Side Effects] Resets all of the map parameters to their
+// initialization-time values. Returns a new mapConfig object, and
+// does not modify its inputs.
+//
+// Example call:
+// var newMapConfig = mercator.resetMap(mapConfig);
+mercator.resetMap = function (mapConfig) {
+    return mercator.createMap(mapConfig.init.divName,
+                              mapConfig.init.centerCoords,
+                              mapConfig.init.zoomLevel,
+                              mapConfig.init.layerConfigs);
+};
+
+/*****************************************************************************
+***
 *** Functions to switch the visible basemap imagery and zoom to a layer
 ***
 *****************************************************************************/
@@ -257,15 +274,16 @@ mercator.getLayerByTitle = function (mapConfig, layerTitle) {
     );
 };
 
-// var mapConfig = mercator.setLayerWmsParams(mapConfig,
-//                                            "DigitalGlobeWMSImagery",
-//                                            {COVERAGE_CQL_FILTER: "(acquisition_date<'" + imageryYear + "-12-31')",
-//                                          // COVERAGE_CQL_FILTER: "(acquisition_date>'" + imageryYear + "-01-01')AND(acquisition_date<'" + imageryYear + "-12-31')",
-//                                             FEATUREPROFILE: stackingProfile});
-//
 // [Side Effects] Finds the map layer with title == layerTitle and
 // appends newParams to its source's WMS params object.
-mercator.setLayerWmsParams = function (mapConfig, layerTitle, newParams) {
+//
+// Example call:
+// var mapConfig2 = mercator.updateLayerWmsParams(mapConfig,
+//                                                "DigitalGlobeWMSImagery",
+//                                                {COVERAGE_CQL_FILTER: "(acquisition_date<'" + imageryYear + "-12-31')",
+//                                              // COVERAGE_CQL_FILTER: "(acquisition_date>'" + imageryYear + "-01-01')AND(acquisition_date<'" + imageryYear + "-12-31')",
+//                                                 FEATUREPROFILE: stackingProfile});
+mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     if (layer) {
         layer.getSource().updateParams(
@@ -275,101 +293,79 @@ mercator.setLayerWmsParams = function (mapConfig, layerTitle, newParams) {
     return mapConfig;
 };
 
-// FIXME: RESUME HERE
-mercator.zoom_map_to_layer = function (layer) {
-    var view = mercator.map_ref.getView();
-    var size = mercator.map_ref.getSize();
-    var extent = layer.getSource().getExtent();
-    return view.fit(extent, size);
+// [Side Effects] Zooms the map view to contain the layer with
+// title == layerTitle.
+mercator.zoomMapToLayer = function (mapConfig, layerTitle) {
+    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer) {
+        mapConfig.view.fit(layer.getSource().getExtent(),
+                           mapconfig.map.getSize());
+    }
+    return mapConfig;
 };
 
-mercator.zoom_and_recenter_map = function (longitude, latitude, zoom_level) {
-    var view = mercator.map_ref.getView();
-    view.setCenter(mercator.reproject_to_map(longitude, latitude));
-    view.setZoom(zoom_level);
-    return view;
+/*****************************************************************************
+***
+*** Functions to create map styles
+***
+*****************************************************************************/
+
+// [Pure] Returns a style object that displays the image at imageSrc.
+mercator.getIconStyle = function (imageSrc) {
+    return new ol.style.Style({image: new ol.style.Icon({src: imageSrc})});
 };
+
+// [Pure] Returns a style object that displays a circle with the
+// specified radius, color, and borderWidth.
+mercator.getCircleStyle = function (radius, color, borderWidth) {
+    return new ol.style.Style({image: new ol.style.Circle({radius: radius,
+                                                           fill: null,
+                                                           stroke: new ol.style.Stroke({color: color,
+                                                                                        width: borderWidth})})});
+};
+
+// [Pure] Returns a style object that displays a shape with the
+// specified number of points, radius, color, and borderWidth. A
+// triangle has 3 points. A square has 4 points. A star has 5 points.
+mercator.getRegularShapeStyle = function (radius, points, color, borderWidth) {
+    return new ol.style.Style({image: new ol.style.RegularShape({radius: radius,
+                                                                 points: points,
+                                                                 fill: null,
+                                                                 stroke: new ol.style.Stroke({color: color,
+                                                                                              width: borderWidth})})});
+};
+
+// [Pure] Returns a style object that displays the outline of any
+// shape to which it is applied in the specified color and
+// borderWidth.
+mercator.getPolygonStyle = function (color, borderWidth) {
+    return new ol.style.Style({fill: null,
+                               stroke: new ol.style.Stroke({color: color,
+                                                            width: borderWidth})});
+};
+
+// FIXME: Move this code out of Mercator.js
+var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
+                    ceoIcon:      mercator.getIconStyle("ceoicon.png"),
+                    redPoint:     mercator.getCircleStyle(5, "#8b2323", 2),
+                    bluePoint:    mercator.getCircleStyle(5, "#23238b", 2),
+                    redCircle:    mercator.getCircleStyle(5, "red", 2),
+                    yellowCircle: mercator.getCircleStyle(5, "yellow", 2),
+                    greenCircle:  mercator.getCircleStyle(5, "green", 2),
+                    redSquare:    mercator.getRegularShapeStyle(5, 4, "red", 2),
+                    yellowSquare: mercator.getRegularShapeStyle(5, 4, "yellow", 2),
+                    greenSquare:  mercator.getRegularShapeStyle(5, 4, "green", 2),
+                    polygon:      mercator.getPolygonStyle("#8b2323", 3)};
 
 /*****************************************************************************
 ***
 *** Functions to draw project boundaries and plot buffers
 ***
 *****************************************************************************/
-
-mercator.styles =
-    {"icon": new ol.style.Style(
-        {"image": new ol.style.Icon({"src": "favicon.ico"})}),
-     "ceoicon": new ol.style.Style(
-         {"image": new ol.style.Icon({"src": "ceoicon.png"})}),
-
-     "red_point": new ol.style.Style(
-         {"image": new ol.style.Circle({"radius": 5,
-                                        "fill": null,
-                                        "stroke": new ol.style.Stroke(
-                                            {"color": "#8b2323",
-                                             "width": 2})})}),
-
-     "blue_point": new ol.style.Style(
-         {"image": new ol.style.Circle({"radius": 5,
-                                        "fill": null,
-                                        "stroke": new ol.style.Stroke(
-                                            {"color": "#23238b",
-                                             "width": 2})})}),
-
-     "red_circle": new ol.style.Style(
-         {"image": new ol.style.Circle({"radius": 5,
-                                        "fill": null,
-                                        "stroke": new ol.style.Stroke(
-                                            {"color": "red",
-                                             "width": 2})})}),
-
-     "red_square": new ol.style.Style(
-         {"image": new ol.style.RegularShape({"radius": 5,
-                                              "points": 4,
-                                              "fill": null,
-                                              "stroke": new ol.style.Stroke(
-                                                  {"color": "red",
-                                                   "width": 2})})}),
-
-     "green_circle": new ol.style.Style(
-         {"image": new ol.style.Circle({"radius": 5,
-                                        "fill": null,
-                                        "stroke": new ol.style.Stroke(
-                                            {"color": "green",
-                                             "width": 2})})}),
-
-     "green_square": new ol.style.Style(
-         {"image": new ol.style.RegularShape({"radius": 5,
-                                              "points": 4,
-                                              "fill": null,
-                                              "stroke": new ol.style.Stroke(
-                                                  {"color": "green",
-                                                   "width": 2})})}),
-
-     "yellow_circle": new ol.style.Style(
-         {"image": new ol.style.Circle({"radius": 5,
-                                        "fill": null,
-                                        "stroke": new ol.style.Stroke(
-                                            {"color": "yellow",
-                                             "width": 2})})}),
-
-     "yellow_square": new ol.style.Style(
-         {"image": new ol.style.RegularShape({"radius": 5,
-                                              "points": 4,
-                                              "fill": null,
-                                              "stroke": new ol.style.Stroke(
-                                                  {"color": "yellow",
-                                                   "width": 2})})}),
-
-     "polygon": new ol.style.Style(
-         {"fill": null,
-          "stroke": new ol.style.Stroke(
-              {"color": "#8b2323",
-               "width": 3})})};
-
+// RESUME HERE
 mercator.current_boundary = null;
 
-mercator.draw_polygon = function (polygon) {
+mercator.draw_polygon = function (mapConfig, polygon) {
     var format = new ol.format.GeoJSON();
     var geometry = format.readGeometry(polygon).transform("EPSG:4326", "EPSG:3857");
     var feature = new ol.Feature({"geometry": geometry});
@@ -382,7 +378,7 @@ mercator.draw_polygon = function (polygon) {
     }
     mercator.current_boundary = vector_layer;
     mercator.map_ref.addLayer(vector_layer);
-    mercator.zoom_map_to_layer(vector_layer);
+    mercator.zoomMapToLayer(mapConfig, vector_layer);
     return mercator.map_ref;
 };
 
@@ -416,7 +412,7 @@ mercator.get_plot_extent = function (center, size) {
     return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
 };
 
-mercator.draw_plot = function (center, size, shape) {
+mercator.draw_plot = function (mapConfig, center, size, shape) {
     var format = new ol.format.GeoJSON();
     var geometry = format.readGeometry(center).transform("EPSG:4326", "EPSG:3857");
     var coords = geometry.getCoordinates();
@@ -437,7 +433,7 @@ mercator.draw_plot = function (center, size, shape) {
     mercator.remove_plot_layer();
     mercator.current_buffer = vector_layer;
     mercator.map_ref.addLayer(vector_layer);
-    mercator.zoom_map_to_layer(vector_layer);
+    mercator.zoomMapToLayer(mapConfig, vector_layer);
     return mercator.map_ref;
 };
 
@@ -637,7 +633,7 @@ mercator.draw_point = function (lon, lat) {
     return mercator.map_ref;
 };
 
-mercator.draw_points = function (samples) {
+mercator.draw_points = function (mapConfig, samples) {
     var features = [];
     for (i=0; i<samples.length; i++) {
         var sample = samples[i];
@@ -657,7 +653,7 @@ mercator.draw_points = function (samples) {
     mercator.disable_selection();
     mercator.map_ref.addLayer(vector_layer);
     mercator.enable_selection(vector_layer);
-    mercator.zoom_map_to_layer(vector_layer);
+    mercator.zoomMapToLayer(mapConfig, vector_layer);
     return mercator.map_ref;
 };
 
