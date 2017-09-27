@@ -1,5 +1,22 @@
 package org.openforis.ceo;
 
+import static org.openforis.ceo.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
+import static org.openforis.ceo.JsonUtils.getNextId;
+import static org.openforis.ceo.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.JsonUtils.toElementStream;
+import static org.openforis.ceo.JsonUtils.toStream;
+import static org.openforis.ceo.JsonUtils.writeJsonFile;
+import static org.openforis.ceo.PartUtils.partToString;
+import static org.openforis.ceo.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.PartUtils.writeFilePart;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -31,22 +48,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
-import static org.openforis.ceo.JsonUtils.expandResourcePath;
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
-import static org.openforis.ceo.JsonUtils.getNextId;
-import static org.openforis.ceo.JsonUtils.intoJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonFile;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
-import static org.openforis.ceo.JsonUtils.toElementStream;
-import static org.openforis.ceo.JsonUtils.toStream;
-import static org.openforis.ceo.JsonUtils.writeJsonFile;
-import static org.openforis.ceo.PartUtils.partToString;
-import static org.openforis.ceo.PartUtils.partsToJsonObject;
-import static org.openforis.ceo.PartUtils.writeFilePart;
 
 public class Projects {
 

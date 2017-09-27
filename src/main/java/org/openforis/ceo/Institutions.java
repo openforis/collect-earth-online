@@ -1,13 +1,5 @@
 package org.openforis.ceo;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Optional;
-import javax.servlet.MultipartConfigElement;
-import spark.Request;
-import spark.Response;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
@@ -17,6 +9,15 @@ import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.PartUtils.partToString;
 import static org.openforis.ceo.PartUtils.writeFilePart;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Optional;
+import javax.servlet.MultipartConfigElement;
+import spark.Request;
+import spark.Response;
 
 public class Institutions {
 

@@ -1,16 +1,17 @@
 package org.openforis.ceo;
 
+import static spark.Spark.exception;
+import static spark.Spark.get;
+import static spark.Spark.port;
+import static spark.Spark.post;
+import static spark.Spark.staticFileLocation;
+
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
 import java.net.URL;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
-import static spark.Spark.exception;
-import static spark.Spark.get;
-import static spark.Spark.port;
-import static spark.Spark.post;
-import static spark.Spark.staticFileLocation;
 
 public class Server implements SparkApplication {
 

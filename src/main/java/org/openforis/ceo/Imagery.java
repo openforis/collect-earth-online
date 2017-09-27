@@ -1,11 +1,5 @@
 package org.openforis.ceo;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import java.util.Optional;
-import spark.Request;
-import spark.Response;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.getNextId;
@@ -13,6 +7,13 @@ import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.util.Optional;
+import spark.Request;
+import spark.Response;
 
 public class Imagery {
 
