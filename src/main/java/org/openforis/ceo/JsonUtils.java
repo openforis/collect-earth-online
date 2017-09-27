@@ -76,6 +76,12 @@ public class JsonUtils {
             .collect(intoJsonArray);
     }
 
+    public static JsonArray flatMapJsonArray(JsonArray array, Function<JsonObject, Stream<JsonObject>> mapper) {
+        return toStream(array)
+            .flatMap(mapper)
+            .collect(intoJsonArray);
+    }
+
     public static JsonArray filterJsonArray(JsonArray array, Predicate<JsonObject> predicate) {
         return toStream(array)
             .filter(predicate)
