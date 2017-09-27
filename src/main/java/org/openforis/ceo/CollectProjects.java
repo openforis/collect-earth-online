@@ -401,10 +401,8 @@ public class CollectProjects {
         return p;
     }
     
-    private static JsonObject convertToCeoRecord(int projectId, JsonObject collectRecord, JsonObject plotSamplingItem, 
-            JsonArray sampleItems) {
-        JsonObject samplingItemObj = (JsonObject) plotSamplingItem;
-        String plotId = findElement(samplingItemObj, "levelCodes[0]").getAsString();
+    private static JsonObject convertToCeoRecord(int projectId, JsonObject collectRecord, JsonObject plotSamplingItem, JsonArray sampleItems) {
+        String plotId = findElement(plotSamplingItem, "levelCodes[0]").getAsString();
         JsonObject obj = new JsonObject();
         obj.addProperty("id", plotId);
         obj.add("center", createPointObject(plotSamplingItem.get("x").getAsDouble(), plotSamplingItem.get("y").getAsDouble()));
