@@ -10,8 +10,7 @@
 *** interacting with embedded web maps in an API agnostic manner. This
 *** file contains the OpenLayers 3 implementation.
 ***
-*****************************************************************************/
-/*****************************************************************************
+******************************************************************************
 ***
 *** Toplevel namespace object
 ***
@@ -286,9 +285,8 @@ mercator.getLayerByTitle = function (mapConfig, layerTitle) {
 mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     if (layer) {
-        layer.getSource().updateParams(
-            Object.assign({}, layer.getSource().getParams(), newParams);
-        );
+        var mergedParams = Object.assign({}, layer.getSource().getParams(), newParams);
+        layer.getSource().updateParams(mergedParams);
     }
     return mapConfig;
 };
@@ -299,7 +297,7 @@ mercator.zoomMapToLayer = function (mapConfig, layerTitle) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     if (layer) {
         mapConfig.view.fit(layer.getSource().getExtent(),
-                           mapconfig.map.getSize());
+                           mapConfig.map.getSize());
     }
     return mapConfig;
 };
@@ -344,7 +342,6 @@ mercator.getPolygonStyle = function (color, borderWidth) {
                                                             width: borderWidth})});
 };
 
-// FIXME: Move this code out of Mercator.js
 var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     ceoIcon:      mercator.getIconStyle("ceoicon.png"),
                     redPoint:     mercator.getCircleStyle(5, "#8b2323", 2),
@@ -736,3 +733,28 @@ mercator.disable_dragbox_draw = function () {
     }
     return null;
 };
+
+/*****************************************************************************
+***
+*** FIXMEs
+***
+*****************************************************************************/
+//
+// FIXME: Move ceoMapStyles out of Mercator.js
+// FIXME: change calls from remove_plot_layer to removeLayerByTitle(mapConfig, layerTitle)
+// FIXME: change calls from draw_polygon to:
+//        mercator.removeLayerByTitle(mapConfig, "currentAOI");
+//        mercator.addVectorLayer(mapConfig,
+//                                "currentAOI",
+//                                mercator.parseGeoJson(polygon, true),
+//                                ceoMapStyles.polygon);
+//        mercator.zoomMapToLayer(mapConfig, "currentAOI");
+// FIXME: change calls from polygon_extent to mercator.parseGeoJson(polygon, false).getExtent()
+// FIXME: change calls from get_plot_extent to getPlotExtent
+// FIXME: change calls from draw_plot to:
+//        mercator.removeLayerByTitle(mapConfig, "currentPlot");
+//        mercator.addVectorLayer(mapConfig,
+//                                "currentPlot",
+//                                mercator.getPlotPolygon(center, size, shape),
+//                                ceoMapStyles.polygon);
+//        mercator.zoomMapToLayer(mapConfig, "currentPlot");
