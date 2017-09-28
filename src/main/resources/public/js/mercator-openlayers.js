@@ -359,111 +359,99 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
 *** Functions to draw project boundaries and plot buffers
 ***
 *****************************************************************************/
-// RESUME HERE
-mercator.current_boundary = null;
 
-mercator.draw_polygon = function (mapConfig, polygon) {
-    var format = new ol.format.GeoJSON();
-    var geometry = format.readGeometry(polygon).transform("EPSG:4326", "EPSG:3857");
-    var feature = new ol.Feature({"geometry": geometry});
-    var vector_source = new ol.source.Vector({"features": [feature]});
-    var style = mercator.styles["polygon"];
-    var vector_layer = new ol.layer.Vector({source: vector_source,
-                                            "style": style});
-    if (mercator.current_boundary != null) {
-        mercator.map_ref.removeLayer(mercator.current_boundary);
+// [Side Effects] Adds a new polygon layer to the mapConfig's map object.
+mercator.addVectorLayer = function (mapConfig, layerTitle, geometry, style) {
+    var feature = new ol.Feature({geometry: geometry});
+    var vectorSource = new ol.source.Vector({features: [feature]});
+    var vectorLayer = new ol.layer.Vector({title: layerTitle,
+                                           source: vectorSource,
+                                           style: style});
+    mapConfig.map.addLayer(vectorLayer);
+    return mapConfig;
+};
+
+// [Side Effects] Removes the layer with title == layerTitle from
+// mapConfig's map object.
+mercator.removeLayerByTitle = function (mapConfig, layerTitle) {
+    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer) {
+        mapConfig.map.removeLayer(layer);
     }
-    mercator.current_boundary = vector_layer;
-    mercator.map_ref.addLayer(vector_layer);
-    mercator.zoomMapToLayer(mapConfig, vector_layer);
-    return mercator.map_ref;
+    return mapConfig;
 };
 
-mercator.polygon_extent = function (polygon) {
+// [Pure] Returns a geometry object representing the shape described
+// in the passed in GeoJSON string. If reprojectToMap is true,
+// reproject the created geometry from WGS84 to Web Mercator before
+// returning.
+mercator.parseGeoJson = function (geoJson, reprojectToMap) {
     var format = new ol.format.GeoJSON();
-    var geometry = format.readGeometry(polygon);
-    return geometry.getExtent();
-};
-
-mercator.current_buffer = null;
-
-mercator.remove_plot_layer = function () {
-    if (mercator.current_buffer != null) {
-        mercator.map_ref.removeLayer(mercator.current_buffer);
-        mercator.current_buffer = null;
+    var geometry = format.readGeometry(geoJson);
+    if (reprojectToMap) {
+        return geometry.transform("EPSG:4326", "EPSG:3857");
+    } else {
+        return geometry;
     }
-    return null;
 };
 
-mercator.get_plot_extent = function (center, size) {
-    var format = new ol.format.GeoJSON();
-    var geometry = format.readGeometry(center).transform("EPSG:4326", "EPSG:3857");
-    var coords = geometry.getCoordinates();
+// [Pure] Returns a polygon geometry matching the passed in
+// parameters.
+mercator.getPlotPolygon = function (center, size, shape) {
+    var coords = mercator.parseGeoJson(center, true).getCoordinates();
     var centerX = coords[0];
     var centerY = coords[1];
     var radius = size / 2;
-    var extent = [centerX - radius,
-                  centerY - radius,
-                  centerX + radius,
-                  centerY + radius];
-    return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+    if (shape == "circle") {
+        return new ol.geom.Circle([centerX, centerY], radius);
+    } else {
+        return ol.geom.Polygon.fromExtent([centerX - radius,
+                                           centerY - radius,
+                                           centerX + radius,
+                                           centerY + radius]);
+    }
 };
 
-mercator.draw_plot = function (mapConfig, center, size, shape) {
-    var format = new ol.format.GeoJSON();
-    var geometry = format.readGeometry(center).transform("EPSG:4326", "EPSG:3857");
-    var coords = geometry.getCoordinates();
-    var centerX = coords[0];
-    var centerY = coords[1];
-    var radius = size / 2;
-    var buffer = shape == "circle"
-        ? new ol.geom.Circle([centerX, centerY], radius)
-        : ol.geom.Polygon.fromExtent([centerX - radius,
-                                      centerY - radius,
-                                      centerX + radius,
-                                      centerY + radius]);
-    var feature = new ol.Feature({"geometry": buffer});
-    var vector_source = new ol.source.Vector({"features": [feature]});
-    var style = mercator.styles["polygon"];
-    var vector_layer = new ol.layer.Vector({source: vector_source,
-                                            "style": style});
-    mercator.remove_plot_layer();
-    mercator.current_buffer = vector_layer;
-    mercator.map_ref.addLayer(vector_layer);
-    mercator.zoomMapToLayer(mapConfig, vector_layer);
-    return mercator.map_ref;
+// [Pure] Returns a bounding box for the plot in Web Mercator as [llx,
+// lly, urx, ury].
+mercator.getPlotExtent = function (center, size, shape) {
+    var geometry = mercator.getPlotPolygon(center, size, shape);
+    return ol.proj.transformExtent(geometry.getExtent(), "EPSG:3857", "EPSG:4326");
 };
 
-mercator.draw_plots = function (plots, shape) {
-    var flagged_plots = [];
-    var analyzed_plots = [];
-    var unanalyzed_plots = [];
-    var format = new ol.format.GeoJSON();
-    plots.forEach(
+// [Pure] Returns a feature array of all plots for which the predicate
+// function returns true using the plots' id and center fields.
+mercator.plotsToFeatures = function (plots, predicate) {
+    return plots.filter(predicate).map(
         function (plot) {
-            var geometry = format.readGeometry(plot.center).transform("EPSG:4326", "EPSG:3857");
-            var feature = new ol.Feature({plot_id: plot.id, geometry: geometry});
-            if (plot.flagged == true) {
-                flagged_plots.push(feature);
-            } else if (plot.analyses > 0) {
-                analyzed_plots.push(feature);
-            } else {
-                unanalyzed_plots.push(feature);
-            }
+            var geometry = mercator.parseGeoJson(plot.center, true);
+            return new ol.Feature({plotId: plot.id, geometry: geometry});
         }
     );
-    var flagged_source = new ol.source.Vector({features: flagged_plots});
-    var analyzed_source = new ol.source.Vector({features: analyzed_plots});
-    var unanalyzed_source = new ol.source.Vector({features: unanalyzed_plots});
-    var flagged_style = shape == "circle" ? mercator.styles["red_circle"] : mercator.styles["red_square"];
-    var analyzed_style = shape == "circle" ? mercator.styles["green_circle"] : mercator.styles["green_square"];
-    var unanalyzed_style = shape == "circle" ? mercator.styles["yellow_circle"] : mercator.styles["yellow_square"];
-    var flagged_layer = new ol.layer.Vector({source: flagged_source, style: flagged_style});
-    var analyzed_layer = new ol.layer.Vector({source: analyzed_source, style: analyzed_style});
-    var unanalyzed_layer = new ol.layer.Vector({source: unanalyzed_source, style: unanalyzed_style});
-    mercator.map_ref.addLayer(flagged_layer);
-    mercator.map_ref.addLayer(analyzed_layer);
-    mercator.map_ref.addLayer(unanalyzed_layer);
+};
+
+// RESUME HERE
+// FIXME: change calls from draw_plots to drawPlots
+// FIXME: change queries for the plot_id field in the plots features list to plotId
+// FIXME: change addVectorLayer to accept features instead of a single geometry and then rewrite this function body to use it
+mercator.drawPlots = function (plots, shape) {
+    var flaggedPlots = mercator.plotsToFeatures(plots, function (plot) { return plot.flagged == true; });
+    var analyzedPlots = mercator.plotsToFeatures(plots, function (plot) { return plot.analyses > 0 && plot.flagged == false; });
+    var unanalyzedPlots = mercator.plotsToFeatures(plots, function (plot) { return plot.analyses == 0 && plot.flagged == false; });
+
+    var flaggedSource = new ol.source.Vector({features: flaggedPlots});
+    var analyzedSource = new ol.source.Vector({features: analyzedPlots});
+    var unanalyzedSource = new ol.source.Vector({features: unanalyzedPlots});
+
+    var flaggedStyle = shape == "circle" ? mercator.styles["redCircle"] : mercator.styles["redSquare"];
+    var analyzedStyle = shape == "circle" ? mercator.styles["greenCircle"] : mercator.styles["greenSquare"];
+    var unanalyzedStyle = shape == "circle" ? mercator.styles["yellowCircle"] : mercator.styles["yellowSquare"];
+    var flaggedLayer = new ol.layer.Vector({source: flaggedSource, style: flaggedStyle});
+    var analyzedLayer = new ol.layer.Vector({source: analyzedSource, style: analyzedStyle});
+    var unanalyzedLayer = new ol.layer.Vector({source: unanalyzedSource, style: unanalyzedStyle});
+    mercator.map_ref.addLayer(flaggedLayer);
+    mercator.map_ref.addLayer(analyzedLayer);
+    mercator.map_ref.addLayer(unanalyzedLayer);
     return mercator.map_ref;
 };
 
