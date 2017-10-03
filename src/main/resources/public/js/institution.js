@@ -17,6 +17,12 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     this.imageryList = [];
     this.newUserEmail = "";
     this.nonPendingUsers = 0;
+    this.imageryMode = "view";
+    this.newImageryTitle = "";
+    this.newImageryAttribution = "";
+    this.newGeoServerURL = "";
+    this.newLayerName = "";
+    this.newGeoServerParams = "";
 
     this.getInstitutionDetails = function (institutionId) {
         $http.get(this.root + "/get-institution-details/" + institutionId)
@@ -232,6 +238,37 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     console.log(response);
                     alert("Error deleting imagery from institution. See console for details.");
                 });
+        }
+    };
+
+    this.addCustomImagery = function () {
+        $http.post(this.root + "/add-institution-imagery",
+                   {institutionId: this.details.id,
+                    imageryTitle: this.newImageryTitle,
+                    imageryAttribution: this.newImageryAttribution,
+                    geoserverURL: this.newGeoServerURL,
+                    layerName: this.newLayerName,
+                    geoserverParams: this.newGeoServerParams})
+            .then(angular.bind(this, function successCallback(response) {
+                alert("Imagery " + this.newImageryTitle + " has been added to institution " + this.details.name + ".");
+                this.newImageryTitle = "";
+                this.newImageryAttribution = "";
+                this.newGeoServerURL = "";
+                this.newLayerName = "";
+                this.newGeoServerParams = "";
+                this.getImageryList(this.details.id);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error adding custom imagery to institution. See console for details.");
+            });
+    };
+
+    this.toggleImageryMode = function () {
+        if (this.imageryMode == "view") {
+            this.imageryMode = "edit";
+        } else {
+            this.addCustomImagery();
+            this.imageryMode = "view";
         }
     };
 

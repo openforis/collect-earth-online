@@ -176,6 +176,13 @@ nav a:hover, nav a.active-link {
     width: 230px;
 }
 
+#logo-banner img#google {
+    position: absolute;
+    top: 5px;
+    left: 670px;
+    width: 150px;
+}
+
 #logo-banner img#servir {
     position: absolute;
     top: 12px;
@@ -268,11 +275,13 @@ section#content a:hover, section#content a.active-link {
    /* padding: 1rem;*/
 
 }
+
 #institution .Column{
     float: left;
     width: 33%;
     height: 100%;
 }
+
 #institution-list ul, #project-list ul, #user-list ul, #imagery-list ul{
     padding: 20px;
 }
@@ -306,12 +315,36 @@ section#content a:hover, section#content a.active-link {
 
 #institution-list ul,
 #project-list ul,
-#user-list ul,
-#imagery-list ul {
+#user-list ul {
     list-style-type: none;
     padding: 0.5rem;
     height: calc(100% - 4.5rem);
     overflow: auto;
+}
+
+#imagery-list ul {
+    list-style-type: none;
+    padding: 0.5rem;
+    height: calc(100% - 4.5rem - 3rem);
+    overflow: auto;
+}
+
+#imagery-list #add-imagery {
+    margin: 0.5rem;
+    height: calc(100% - 4.5rem - 3rem);
+    overflow: auto;
+}
+
+#imagery-list #add-imagery td {
+    padding:0.5rem;
+    text-align: right;
+}
+
+#imagery-list #add-imagery-button {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
 }
 
 #institution-list ul li,
@@ -1279,7 +1312,7 @@ div#institution:before {
 
 #project #project-dashboard #project-stats {
     float: left;
-    width: calc(50% - 5px);
+    width: calc(45% - 5px);
 }
 
 #project #project-dashboard #project-stats table {
@@ -1294,29 +1327,18 @@ div#institution:before {
 #project #project-dashboard #project-management{
     float: right;
     margin-right: 10px;
-    width: calc(50% - 5px);
+    width: calc(55% - 5px);
 }
 
-#project #project-dashboard #project-management #change-availability {
+#project #project-dashboard #project-management #change-availability,
+#project #project-dashboard #project-management #configure-geo-dash,
+#project #project-dashboard #project-management #download-plot-data,
+#project #project-dashboard #project-management #download-sample-data {
     display: block;
-    width: 15rem;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 5px;
-}
-
-#project #project-dashboard #project-management #configure-geo-dash {
-    display: block;
-    width: 15rem;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-#project #project-dashboard #project-management #download-plot-data {
-    display: block;
-    width: 15rem;
-    margin-left: auto;
-    margin-right: auto;
+    width: 11rem;
+    font-size: 1rem;
+    float:left;
+    margin-left: 5px;
 }
 
 #project #project-design {
@@ -1434,19 +1456,44 @@ div#institution:before {
     width: 80%;
 }
 
-#project #project-design #sample-value-info {
+#project hr {
+    float: left;
+    width: 95%;
+    height: 4px;
+    border: 0;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 4px 4px -4px rgba(0, 0, 0, 0.5);
+}
+
+#project #project-design #add-sample-value-group {
+    float: left;
+    width: 70%;
+    margin-left: 15%;
+}
+
+#project #project-design #add-sample-value-group input[type=button] {
+    width: 45%;
+    font-size: 1rem;
+}
+
+#project #project-design #add-sample-value-group input[type=text] {
+    width: 45%;
+}
+
+#project #project-design .sample-value-info {
     float: left;
     margin-bottom: 20px;
 }
 
-#project #project-design #sample-value-info th,
-#project #project-design #sample-value-info td {
+#project #project-design .sample-value-info th,
+#project #project-design .sample-value-info td {
     text-align: center;
     font-size: 0.8rem;
     padding: 0.25rem;
 }
 
-#project #project-design #sample-value-info .button {
+#project #project-design .sample-value-info .button {
     min-width: 1.5rem;
     min-height: 1.5rem;
     padding: 0.25rem;
@@ -1454,16 +1501,16 @@ div#institution:before {
     font-size: 1.2rem;
 }
 
-#project #project-design #sample-value-info .circle {
+#project #project-design .sample-value-info .circle {
     width: 1rem;
     height: 1rem;
     border-radius: 0.5rem;
     margin: 0rem auto;
 }
 
-#project #project-design #sample-value-info #value-name,
-#project #project-design #sample-value-info #value-color,
-#project #project-design #sample-value-info #value-image {
+#project #project-design .sample-value-info .value-name,
+#project #project-design .sample-value-info .value-color,
+#project #project-design .sample-value-info .value-image {
     height: 2rem;
     font-size: 0.8rem;
     padding: 0.1rem;

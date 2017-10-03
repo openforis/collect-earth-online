@@ -72,6 +72,7 @@ public class Server implements SparkApplication {
         get("/get-project-stats/:id",           (req, res) -> { return Projects.getProjectStats(req, res); });
         get("/get-unanalyzed-plot/:id",         (req, res) -> { return Projects.getUnanalyzedPlot(req, res); });
         get("/dump-project-aggregate-data/:id", (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
+        get("/dump-project-raw-data/:id",       (req, res) -> { return Projects.dumpProjectRawData(req, res); });
         post("/create-project",                 (req, res) -> { return Projects.createProject(req, res); });
         post("/publish-project/:id",            (req, res) -> { return Projects.publishProject(req, res); });
         post("/close-project/:id",              (req, res) -> { return Projects.closeProject(req, res); });
@@ -93,6 +94,7 @@ public class Server implements SparkApplication {
         // Routing Table: Imagery API
         get("/get-all-imagery",             (req, res) -> { return Imagery.getAllImagery(req, res); });
         post("/delete-institution-imagery", (req, res) -> { return Imagery.deleteInstitutionImagery(req, res); });
+        post("/add-institution-imagery",    (req, res) -> { return Imagery.addInstitutionImagery(req, res); });
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });

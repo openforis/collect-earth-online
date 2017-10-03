@@ -34,6 +34,7 @@ import spark.Response;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
 import static org.openforis.ceo.JsonUtils.getNextId;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonArray;
@@ -227,14 +228,57 @@ public class Projects {
     private static Collector<String, ?, Map<String, Long>> countDistinct =
         Collectors.groupingBy(Function.identity(), Collectors.counting());
 
-    private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueNames) {
-        Map<String, Long> valueCounts = toStream(samples)
-            .map(sample -> sample.has("value") ? sample.get("value").getAsInt() : -1)
-            .map(value -> sampleValueNames.getOrDefault(value, "NoValue"))
-            .collect(countDistinct);
-        JsonObject valueDistribution = new JsonObject();
-        valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
-        return valueDistribution;
+    private static String[] getValueDistributionLabels(JsonObject project) {
+        JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+        return toStream(sampleValueGroups)
+            .flatMap(group -> {
+                    JsonArray sampleValues = group.get("values").getAsJsonArray();
+                    return toStream(sampleValues).map(sampleValue -> group.get("name").getAsString() + ":" + sampleValue.get("name").getAsString());
+                })
+            .toArray(String[]::new);
+    }
+
+    private static Map<Integer, String> getSampleValueTranslations(JsonObject project) {
+        JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+        JsonObject firstGroup = sampleValueGroups.get(0).getAsJsonObject();
+        String firstGroupName = firstGroup.get("name").getAsString();
+        return toStream(firstGroup.get("values").getAsJsonArray())
+            .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
+                                      sampleValue -> firstGroupName + ":" + sampleValue.get("name").getAsString(),
+                                      (a, b) -> b));
+    }
+
+    // Returns a JsonObject like this:
+    // {"Land Use:Timber" 10.0,
+    //  "Land Use:Agriculture": 20.0,
+    //  "Land Use:Urban": 70.0,
+    //  "Land Cover:Forest": 10.0,
+    //  "Land Cover:Grassland": 40.0,
+    //  "Land Cover:Impervious": 50.0}
+    private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueTranslations) {
+        JsonObject firstSample = samples.get(0).getAsJsonObject();
+        if (! firstSample.has("value")) {
+            return new JsonObject();
+        } else if (firstSample.get("value").isJsonPrimitive()) {
+            Map<String, Long> valueCounts = toStream(samples)
+                .map(sample -> sample.get("value").getAsInt())
+                .map(value -> sampleValueTranslations.getOrDefault(value, "NoValue"))
+                .collect(countDistinct);
+            JsonObject valueDistribution = new JsonObject();
+            valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
+            return valueDistribution;
+        } else {
+            Map<String, Map<String, Long>> valueCounts = toStream(samples)
+                .flatMap(sample -> sample.get("value").getAsJsonObject().entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey,
+                                               Collectors.mapping(entry -> entry.getValue().getAsString(),
+                                                                  countDistinct)));
+            JsonObject valueDistribution = new JsonObject();
+            valueCounts.forEach((group, frequencies) -> {
+                    frequencies.forEach((name, count) -> valueDistribution.addProperty(group + ":" + name, 100.0 * count / samples.size()));
+                });
+            return valueDistribution;
+        }
     }
 
     private static synchronized void writeCsvFile(String filename, String header, String[] rows) {
@@ -254,34 +298,29 @@ public class Projects {
 
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
-            JsonArray sampleValues = project.get("sampleValues").getAsJsonArray();
-
-            Map<Integer, String> sampleValueNames = toStream(sampleValues)
-                .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
-                                          sampleValue -> sampleValue.get("name").getAsString(),
-                                          (a, b) -> b));
-
+            Map<Integer, String> sampleValueTranslations = getSampleValueTranslations(project);
             JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             JsonArray plotSummaries = mapJsonArray(plots,
                                                    plot -> {
                                                        JsonArray samples = plot.get("samples").getAsJsonArray();
-                                                       JsonObject plotCenter = parseJson(plot.get("center").getAsString()).getAsJsonObject();
+                                                       JsonObject center = parseJson(plot.get("center").getAsString()).getAsJsonObject();
+                                                       JsonArray coords = center.get("coordinates").getAsJsonArray();
                                                        JsonObject plotSummary = new JsonObject();
                                                        plotSummary.addProperty("plot_id", plot.get("id").getAsInt());
-                                                       plotSummary.addProperty("center_lon", plotCenter.get("coordinates").getAsJsonArray().get(0).getAsDouble());
-                                                       plotSummary.addProperty("center_lat", plotCenter.get("coordinates").getAsJsonArray().get(1).getAsDouble());
+                                                       plotSummary.addProperty("center_lon", coords.get(0).getAsDouble());
+                                                       plotSummary.addProperty("center_lat", coords.get(1).getAsDouble());
                                                        plotSummary.addProperty("size_m", project.get("plotSize").getAsDouble());
                                                        plotSummary.addProperty("shape", project.get("plotShape").getAsString());
                                                        plotSummary.addProperty("flagged", plot.get("flagged").getAsBoolean());
                                                        plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                                                        plotSummary.addProperty("sample_points", samples.size());
                                                        plotSummary.add("user_id", plot.get("user"));
-                                                       plotSummary.add("distribution", getValueDistribution(samples, sampleValueNames));
+                                                       plotSummary.add("distribution", getValueDistribution(samples, sampleValueTranslations));
                                                        return plotSummary;
                                                    });
 
             String[] fields = {"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"};
-            String[] labels = sampleValueNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+            String[] labels = getValueDistributionLabels(project);
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
@@ -299,6 +338,79 @@ public class Projects {
             String projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
             String outputFileName = "ceo-" + projectName + "-" + currentDate + ".csv";
+
+            writeCsvFile(outputFileName, csvHeader, csvRows);
+
+            return Server.documentRoot + "/downloads/" + outputFileName;
+        } else {
+            return Server.documentRoot + "/project-not-found";
+        }
+    }
+
+    public static String dumpProjectRawData(Request req, Response res) {
+        String projectId = req.params(":id");
+        JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
+        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
+
+        if (matchingProject.isPresent()) {
+            JsonObject project = matchingProject.get();
+            Map<Integer, String> sampleValueTranslations = getSampleValueTranslations(project);
+            JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+            JsonArray sampleSummaries = flatMapJsonArray(plots,
+                                                         plot -> {
+                                                             Integer plotId = plot.get("id").getAsInt();
+                                                             Boolean flagged = plot.get("flagged").getAsBoolean();
+                                                             Integer analyses = plot.get("analyses").getAsInt();
+                                                             JsonElement userId = plot.get("user");
+                                                             JsonArray samples = plot.get("samples").getAsJsonArray();
+                                                             return toStream(samples).map(sample -> {
+                                                                     JsonObject center = parseJson(sample.get("point").getAsString()).getAsJsonObject();
+                                                                     JsonArray coords = center.get("coordinates").getAsJsonArray();
+                                                                     JsonObject sampleSummary = new JsonObject();
+                                                                     sampleSummary.addProperty("plot_id", plotId);
+                                                                     sampleSummary.addProperty("sample_id", sample.get("id").getAsInt());
+                                                                     sampleSummary.addProperty("lon", coords.get(0).getAsDouble());
+                                                                     sampleSummary.addProperty("lat", coords.get(1).getAsDouble());
+                                                                     sampleSummary.addProperty("flagged", flagged);
+                                                                     sampleSummary.addProperty("analyses", analyses);
+                                                                     sampleSummary.add("user_id", userId);
+                                                                     sampleSummary.add("value", sample.get("value"));
+                                                                     return sampleSummary;
+                                                                 });
+                                                         });
+
+            JsonArray sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+            Map<Integer, String> sampleValueGroupNames = toStream(sampleValueGroups)
+                .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
+                                          sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
+                                          (a, b) -> b));
+
+            String[] fields = {"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"};
+            String[] labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+
+            String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+
+            String[] csvRows = toStream(sampleSummaries)
+                .map(sampleSummary -> {
+                        Stream<String> fieldStream = Arrays.stream(fields);
+                        Stream<String> labelStream = Arrays.stream(labels);
+                        return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
+                                             labelStream.map(label -> {
+                                                     JsonElement value = sampleSummary.get("value");
+                                                     if (value.isJsonNull()) {
+                                                         return "";
+                                                     } else if (value.isJsonPrimitive()) {
+                                                         return sampleValueTranslations.getOrDefault(value.getAsInt(), "LULC:NoValue").split(":")[1];
+                                                     } else {
+                                                         return value.getAsJsonObject().get(label).getAsString();
+                                                     }}))
+                                     .collect(Collectors.joining(","));
+                    })
+                .toArray(String[]::new);
+
+            String projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
+            String currentDate = LocalDate.now().toString();
+            String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
 
             writeCsvFile(outputFileName, csvHeader, csvRows);
 
@@ -368,7 +480,7 @@ public class Projects {
                             JsonArray updatedSamples = mapJsonArray(samples,
                                                                     sample -> {
                                                                         String sampleId = sample.get("id").getAsString();
-                                                                        sample.addProperty("value", userSamples.get(sampleId).getAsInt());
+                                                                        sample.add("value", userSamples.get(sampleId));
                                                                         return sample;
                                                                     });
                             plot.add("samples", updatedSamples);
@@ -707,20 +819,31 @@ public class Projects {
                 newProject.add("csv", null);
             }
 
-            // Add ids to the sampleValues and clean up some of their unnecessary fields
-            JsonArray sampleValues = newProject.get("sampleValues").getAsJsonArray();
-            IntSupplier sampleValueIndexer = makeCounter();
-            JsonArray updatedSampleValues = mapJsonArray(sampleValues,
-                                                         sampleValue -> {
-                                                             sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
-                                                             sampleValue.remove("$$hashKey");
-                                                             sampleValue.remove("object");
-                                                             if (sampleValue.get("image").getAsString().equals("")) {
-                                                                 sampleValue.add("image", null);
-                                                             }
-                                                             return sampleValue;
-                                                         });
-            newProject.add("sampleValues", updatedSampleValues);
+            // Add ids to the sampleValueGroups and sampleValues and clean up some of their unnecessary fields
+            JsonArray sampleValueGroups = newProject.get("sampleValues").getAsJsonArray();
+            IntSupplier sampleValueGroupIndexer = makeCounter();
+            JsonArray updatedSampleValueGroups = mapJsonArray(sampleValueGroups,
+                                                              sampleValueGroup -> {
+                                                                  sampleValueGroup.addProperty("id", sampleValueGroupIndexer.getAsInt());
+                                                                  sampleValueGroup.remove("$$hashKey");
+                                                                  sampleValueGroup.remove("object");
+                                                                  JsonArray sampleValues = sampleValueGroup.get("values").getAsJsonArray();
+                                                                  IntSupplier sampleValueIndexer = makeCounter();
+                                                                  JsonArray updatedSampleValues = mapJsonArray(sampleValues,
+                                                                                                               sampleValue -> {
+                                                                                                                   sampleValue.addProperty("id",
+                                                                                                                                           sampleValueIndexer.getAsInt());
+                                                                                                                   sampleValue.remove("$$hashKey");
+                                                                                                                   sampleValue.remove("object");
+                                                                                                                   if (sampleValue.get("image").getAsString().equals("")) {
+                                                                                                                       sampleValue.add("image", null);
+                                                                                                                   }
+                                                                                                                   return sampleValue;
+                                                                                                               });
+                                                                  sampleValueGroup.add("values", updatedSampleValues);
+                                                                  return sampleValueGroup;
+                                                              });
+            newProject.add("sampleValues", updatedSampleValueGroups);
 
             // Add some missing fields that don't come from the web UI
             newProject.addProperty("archived", false);
