@@ -172,7 +172,7 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
                                               center_coords: [0.0, 0.0],
                                               zoom_level: 1},
                                              this.imageryList);
-
+            map_utils.set_current_imagery("DigitalGlobeRecentImagery");
             // Draw markers on the map for each project
             map_utils.draw_project_markers(this.projectList, this.root);
 

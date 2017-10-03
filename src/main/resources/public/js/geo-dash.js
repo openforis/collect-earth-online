@@ -227,7 +227,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 "id": "widgettitle_" + widget.id
             }).html(widget.name);
             var sub = $("<br />");
-            if (wtext === "addImageCollection") {
+            if (wtext === "addImageCollection" || wtext === "ndviImageCollection") {
                 var maddiv = $("<div/>", {
                     "id": "widgetmap_" + widget.id,
                     "class": "minmapwidget"
@@ -302,10 +302,22 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         var googleLayer = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
-            })
+            }),
+            id: mapdiv
         });
+       // googleLayer.id = mapdiv;
         this.mapWidgetArray[mapdiv].addLayer(googleLayer);
         this.addBuffer(this.mapWidgetArray[mapdiv]);
+    };
+    this.setOpacity = function(value, layerID)
+    {
+        //var layer;
+        var id = layerID; //"widgetmap_2";
+        var theLayers = this.mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
+        if (id == lyr.get('id')) {
+                lyr.setOpacity(value);
+            }
+        });
     };
     this.makeAjax = function (parameters, donefunction) {
         "use strict";
@@ -477,6 +489,53 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
 
                 }
             });
+        } else if (widget.properties[0] === "ndviImageCollection") {
+                this.enableMapWidget("widgetmap_" + widget.id);
+                if (this.projAOI === "") {
+                    this.projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
+                } else {
+                    if (typeof this.projAOI === "string") {
+                        this.projAOI = $.parseJSON(this.projAOI);
+                    }
+                }
+                if (this.projAOI) {
+                    this.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                        ol.proj.transform([this.projAOI[0], this.projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([this.projAOI[2], this.projAOI[3]], "EPSG:4326", "EPSG:3857")),
+                        this.mapWidgetArray["widgetmap_" + widget.id].getSize()
+                    );
+                } else {
+                    this.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                        this.projAOI,
+                        this.mapWidgetArray["widgetmap_" + widget.id].getSize()
+                    );
+                }
+                var dateFrom = widget.properties[2];
+                    var dateTo = widget.properties[3];
+            this.makeAjax({
+                        url: this.gateway + "/ndviImageCollection",
+                        type: "POST",
+                        async: true,
+                        indexVal: widget.id,
+                        crossDomain: true,
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            dateFrom: dateFrom,
+                            dateTo: dateTo
+                        })
+                    }, function (data, _textStatus, _jqXHR) {
+                        if (data.errMsg) {
+                            console.warn(data.errMsg + " " + _textStatus + _jqXHR);
+                        } else {
+                           if (data.hasOwnProperty("mapid")) {
+                               var mapId = data.mapid;
+                               var token = data.token;
+                               var $this = this;
+                               geodash.addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
+                           } else {
+                               console.warn("Wrong Data Returned");
+                           }
+                        }
+                    });
         }
     };
     this.fillDashboard = function (dashboard) {
