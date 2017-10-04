@@ -27,7 +27,8 @@ public class GeoDash {
             } else {
                 return dashboardJson;
             }
-        } else if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
+        //} else if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
+        } else {// if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
             String newUUID = UUID.randomUUID().toString();
 
             JsonObject newProject = new JsonObject();
@@ -50,9 +51,9 @@ public class GeoDash {
             } else {
                 return newDashboard.toString();
             }
-        } else {
+        }/* else {
             return "No project exists with ID: " + req.params(":id") + ".";
-        }
+        }*/
     }
 
     public static synchronized String updateDashBoardByID(Request req, Response res) {
