@@ -148,38 +148,46 @@ nav a:hover, nav a.active-link {
     background-color: #fff;
 }
 
+#logo-banner img#fao {
+    position: absolute;
+    top: 5px;
+    left: 20px;
+    width: 150px;
+    padding-right:5px;
+}
+
 #logo-banner img#usaid {
     position: absolute;
     top: 5px;
-    left: 30px;
+    left: 180px;
     width: 150px;
 }
 
 #logo-banner img#nasa {
     position: absolute;
     top: 0px;
-    left: 210px;
+    left: 360px;
     width: 60px;
 }
 
 #logo-banner img#adpc {
     position: absolute;
     top: 9px;
-    left: 300px;
+    left: 450px;
     width: 80px;
 }
 
 #logo-banner img#sig {
     position: absolute;
     top: 0px;
-    left: 410px;
+    left: 560px;
     width: 230px;
 }
 
 #logo-banner img#google {
     position: absolute;
     top: 5px;
-    left: 670px;
+    left: 800px;
     width: 150px;
 }
 
