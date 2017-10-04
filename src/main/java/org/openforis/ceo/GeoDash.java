@@ -21,11 +21,37 @@ public class GeoDash {
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("projectID").getAsString().equals(req.params(":id")));
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
-            String dashboardJson = readJsonFile("dash-" + project.get("dashboard").getAsString() + ".json").toString();
-            if (req.queryParams("callback") != null) {
-                return req.queryParams("callback") + "(" + dashboardJson + ")";
-            } else {
-                return dashboardJson;
+            try{
+                String dashboardJson = readJsonFile("dash-" + project.get("dashboard").getAsString() + ".json").toString();
+                if (req.queryParams("callback") != null) {
+                    return req.queryParams("callback") + "(" + dashboardJson + ")";
+                } else {
+                    return dashboardJson;
+                }
+            }
+            catch(Exception e)
+            {
+                String newUUID = project.get("dashboard").getAsString();
+                JsonObject newProject = new JsonObject();
+                newProject.addProperty("projectID", req.params(":id"));
+                newProject.addProperty("dashboard", newUUID);
+                projects.add(newProject);
+
+                writeJsonFile("proj.json", projects);
+
+                JsonObject newDashboard = new JsonObject();
+                newDashboard.addProperty("projectID", req.params(":id"));
+                newDashboard.addProperty("projectTitle", req.queryParams("title"));
+                newDashboard.add("widgets", new JsonArray());
+                newDashboard.addProperty("dashboardID", newUUID);
+
+                writeJsonFile("dash-" + newUUID + ".json", newDashboard);
+
+                if (req.queryParams("callback") != null) {
+                    return req.queryParams("callback") + "(" + newDashboard.toString() + ")";
+                } else {
+                    return newDashboard.toString();
+                }
             }
         //} else if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
         } else {// if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
