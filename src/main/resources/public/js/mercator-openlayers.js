@@ -585,24 +585,23 @@ mercator.samplesToVectorSource = function (samples) {
     return new ol.source.Vector({features: features});
 };
 
-mercator.get_selected_samples = function () {
-    if (mercator.select_interaction != null) {
-        return mercator.select_interaction.getFeatures();
+// [Pure] Returns an ol.Collection containing the features selected by
+// the currently enabled click select and dragBox select interactions.
+mercator.getSelectedSamples = function (mapConfig) {
+    var clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
+    if (clickSelect) {
+        return clickSelect.getFeatures();
     } else {
         return null;
     }
 };
 
-mercator.highlight_sample = function (sample, color) {
-    var fill = new ol.style.Fill({"color": color || "#999999"});
-    var stroke = new ol.style.Stroke({"color": "#000000",
-                                      "width": 2});
-    var circle = new ol.style.Circle({"radius": 5,
-                                      "fill": fill,
-                                      "stroke": stroke});
-    var style = new ol.style.Style({"image": circle});
-    sample.setStyle(style);
-    return null;
+// [Side Effects] Sets the sample's style to be a circle with a black
+// border and filled with the passed in color. If color is null, the
+// circle will be filled with gray.
+mercator.highlightSamplePoint = function (sample, color) {
+    sample.setStyle(mercator.getCircleStyle(5, color || "#999999", "#000000", 2));
+    return sample;
 };
 
 /*****************************************************************************
@@ -768,3 +767,5 @@ mercator.draw_project_markers = function (project_list, dRoot) {
 //        mercator.enableSelection(mapConfig, "currentSamples");
 //        mercator.zoomMapToLayer(mapConfig, "currentSamples");
 // FIXME: change references for points created with draw_points from sample_id to sampleId
+// FIXME: change calls from get_selected_samples to mercator.getSelectedSamples
+// FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
