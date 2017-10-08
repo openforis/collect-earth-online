@@ -314,45 +314,46 @@ mercator.getIconStyle = function (imageSrc) {
 };
 
 // [Pure] Returns a style object that displays a circle with the
-// specified radius, color, and borderWidth.
-mercator.getCircleStyle = function (radius, color, borderWidth) {
+// specified radius, fillColor, borderColor, and borderWidth.
+mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth) {
     return new ol.style.Style({image: new ol.style.Circle({radius: radius,
-                                                           fill: null,
-                                                           stroke: new ol.style.Stroke({color: color,
+                                                           fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
+                                                           stroke: new ol.style.Stroke({color: borderColor,
                                                                                         width: borderWidth})})});
 };
 
 // [Pure] Returns a style object that displays a shape with the
-// specified number of points, radius, color, and borderWidth. A
-// triangle has 3 points. A square has 4 points. A star has 5 points.
-mercator.getRegularShapeStyle = function (radius, points, color, borderWidth) {
+// specified number of points, radius, fillColor, borderColor, and
+// borderWidth. A triangle has 3 points. A square has 4 points. A star
+// has 5 points.
+mercator.getRegularShapeStyle = function (radius, points, fillColor, borderColor, borderWidth) {
     return new ol.style.Style({image: new ol.style.RegularShape({radius: radius,
                                                                  points: points,
-                                                                 fill: null,
-                                                                 stroke: new ol.style.Stroke({color: color,
+                                                                 fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
+                                                                 stroke: new ol.style.Stroke({color: borderColor,
                                                                                               width: borderWidth})})});
 };
 
-// [Pure] Returns a style object that displays the outline of any
-// shape to which it is applied in the specified color and
+// [Pure] Returns a style object that displays any shape to which it
+// is applied wth the specified fillColor, borderColor, and
 // borderWidth.
-mercator.getPolygonStyle = function (color, borderWidth) {
-    return new ol.style.Style({fill: null,
-                               stroke: new ol.style.Stroke({color: color,
+mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
+    return new ol.style.Style({fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
+                               stroke: new ol.style.Stroke({color: borderColor,
                                                             width: borderWidth})});
 };
 
 var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     ceoIcon:      mercator.getIconStyle("ceoicon.png"),
-                    redPoint:     mercator.getCircleStyle(5, "#8b2323", 2),
-                    bluePoint:    mercator.getCircleStyle(5, "#23238b", 2),
-                    redCircle:    mercator.getCircleStyle(5, "red", 2),
-                    yellowCircle: mercator.getCircleStyle(5, "yellow", 2),
-                    greenCircle:  mercator.getCircleStyle(5, "green", 2),
-                    redSquare:    mercator.getRegularShapeStyle(5, 4, "red", 2),
-                    yellowSquare: mercator.getRegularShapeStyle(5, 4, "yellow", 2),
-                    greenSquare:  mercator.getRegularShapeStyle(5, 4, "green", 2),
-                    polygon:      mercator.getPolygonStyle("#8b2323", 3)};
+                    redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
+                    bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
+                    redCircle:    mercator.getCircleStyle(5, null, "red", 2),
+                    yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
+                    greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
+                    redSquare:    mercator.getRegularShapeStyle(5, 4, null, "red", 2),
+                    yellowSquare: mercator.getRegularShapeStyle(5, 4, null, "yellow", 2),
+                    greenSquare:  mercator.getRegularShapeStyle(5, 4, null, "green", 2),
+                    polygon:      mercator.getPolygonStyle(null, "#8b2323", 3)};
 
 /*****************************************************************************
 ***
