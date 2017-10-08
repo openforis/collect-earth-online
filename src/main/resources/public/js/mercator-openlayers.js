@@ -424,40 +424,36 @@ mercator.getPlotExtent = function (center, size, shape) {
     return ol.proj.transformExtent(geometry.getExtent(), "EPSG:3857", "EPSG:4326");
 };
 
-// [Pure] Returns a feature array of all plots for which the predicate
-// function returns true using the plots' id and center fields.
-mercator.plotsToFeatures = function (plots, predicate) {
-    return plots.filter(predicate).map(
+// [Pure] Returns a new vector source containing the passed in plots.
+// Features are constructed from each plot using its id and center
+// fields.
+mercator.plotsToVectorSource = function (plots) {
+    var features = plots.map(
         function (plot) {
             var geometry = mercator.parseGeoJson(plot.center, true);
             return new ol.Feature({plotId: plot.id, geometry: geometry});
         }
     );
+    return new ol.source.Vector({features: features});
 };
 
-// RESUME HERE
-// FIXME: change calls from draw_plots to drawPlots
-// FIXME: change queries for the plot_id field in the plots features list to plotId
-// FIXME: change addVectorLayer to accept features instead of a single geometry and then rewrite this function body to use it
-mercator.drawPlots = function (plots, shape) {
-    var flaggedPlots = mercator.plotsToFeatures(plots, function (plot) { return plot.flagged == true; });
-    var analyzedPlots = mercator.plotsToFeatures(plots, function (plot) { return plot.analyses > 0 && plot.flagged == false; });
-    var unanalyzedPlots = mercator.plotsToFeatures(plots, function (plot) { return plot.analyses == 0 && plot.flagged == false; });
-
-    var flaggedSource = new ol.source.Vector({features: flaggedPlots});
-    var analyzedSource = new ol.source.Vector({features: analyzedPlots});
-    var unanalyzedSource = new ol.source.Vector({features: unanalyzedPlots});
-
-    var flaggedStyle = shape == "circle" ? mercator.styles["redCircle"] : mercator.styles["redSquare"];
-    var analyzedStyle = shape == "circle" ? mercator.styles["greenCircle"] : mercator.styles["greenSquare"];
-    var unanalyzedStyle = shape == "circle" ? mercator.styles["yellowCircle"] : mercator.styles["yellowSquare"];
-    var flaggedLayer = new ol.layer.Vector({source: flaggedSource, style: flaggedStyle});
-    var analyzedLayer = new ol.layer.Vector({source: analyzedSource, style: analyzedStyle});
-    var unanalyzedLayer = new ol.layer.Vector({source: unanalyzedSource, style: unanalyzedStyle});
-    mercator.map_ref.addLayer(flaggedLayer);
-    mercator.map_ref.addLayer(analyzedLayer);
-    mercator.map_ref.addLayer(unanalyzedLayer);
-    return mercator.map_ref;
+// [Side Effects] Adds three vector layers to the mapConfig's map
+// object: "flaggedPlots" in red, "analyzedPlots" in green, and
+// "unanalyzedPlots" in yellow.
+mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
+    mercator.addVectorLayer(mapConfig,
+                            "flaggedPlots",
+                            mercator.plotsToVectorSource(plots.filter(function (plot) { return plot.flagged == true; })),
+                            shape == "circle" ? mercator.styles["redCircle"] : mercator.styles["redSquare"]);
+    mercator.addVectorLayer(mapConfig,
+                            "analyzedPlots",
+                            mercator.plotsToVectorSource(plots.filter(function (plot) { return plot.analyses > 0 && plot.flagged == false; })),
+                            shape == "circle" ? mercator.styles["greenCircle"] : mercator.styles["greenSquare"]);
+    mercator.addVectorLayer(mapConfig,
+                            "unanalyzedPlots",
+                            mercator.plotsToVectorSource(plots.filter(function (plot) { return plot.analyses == 0 && plot.flagged == false; })),
+                            shape == "circle" ? mercator.styles["yellowCircle"] : mercator.styles["yellowSquare"]);
+    return mapConfig;
 };
 
 /*****************************************************************************
