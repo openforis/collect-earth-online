@@ -444,15 +444,15 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
     mercator.addVectorLayer(mapConfig,
                             "flaggedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) { return plot.flagged == true; })),
-                            shape == "circle" ? mercator.styles["redCircle"] : mercator.styles["redSquare"]);
+                            shape == "circle" ? ceoMapStyles.redCircle : ceoMapStyles.redSquare);
     mercator.addVectorLayer(mapConfig,
                             "analyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) { return plot.analyses > 0 && plot.flagged == false; })),
-                            shape == "circle" ? mercator.styles["greenCircle"] : mercator.styles["greenSquare"]);
+                            shape == "circle" ? ceoMapStyles.greenCircle : ceoMapStyles.greenSquare);
     mercator.addVectorLayer(mapConfig,
                             "unanalyzedPlots",
                             mercator.plotsToVectorSource(plots.filter(function (plot) { return plot.analyses == 0 && plot.flagged == false; })),
-                            shape == "circle" ? mercator.styles["yellowCircle"] : mercator.styles["yellowSquare"]);
+                            shape == "circle" ? ceoMapStyles.yellowCircle : ceoMapStyles.yellowSquare);
     return mapConfig;
 };
 
@@ -633,7 +633,7 @@ mercator.set_bbox_coords = null;
 
 mercator.enable_dragBox_draw = function () {
     var source = new ol.source.Vector({"features": []});
-    var style = mercator.styles["polygon"];
+    var style = ceoMapStyles.polygon;
     var draw_layer = new ol.layer.Vector({title: "ProjectBoundingBox",
                                           source: source,
                                           "style": style});
@@ -714,7 +714,7 @@ mercator.draw_project_markers = function (project_list, dRoot) {
         }
     );
     var vector_source = new ol.source.Vector({"features": features});
-    var vector_style = mercator.styles["ceoicon"];
+    var vector_style = ceoMapStyles.ceoicon;
     var vector_layer = new ol.layer.Vector({"title": "Project Markers",
                                             "source": vector_source,
                                             "style":  vector_style});
