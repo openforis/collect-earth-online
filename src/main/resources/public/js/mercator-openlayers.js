@@ -360,10 +360,8 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
 ***
 *****************************************************************************/
 
-// [Side Effects] Adds a new polygon layer to the mapConfig's map object.
-mercator.addVectorLayer = function (mapConfig, layerTitle, geometry, style) {
-    var feature = new ol.Feature({geometry: geometry});
-    var vectorSource = new ol.source.Vector({features: [feature]});
+// [Side Effects] Adds a new vector layer to the mapConfig's map object.
+mercator.addVectorLayer = function (mapConfig, layerTitle, vectorSource, style) {
     var vectorLayer = new ol.layer.Vector({title: layerTitle,
                                            source: vectorSource,
                                            style: style});
@@ -393,6 +391,13 @@ mercator.parseGeoJson = function (geoJson, reprojectToMap) {
     } else {
         return geometry;
     }
+};
+
+// [Pure] Returns a new vector source containing the passed in geometry.
+mercator.geometryToVectorSource = function (geometry) {
+    return new ol.source.Vector({features: [
+        new ol.Feature({geometry: geometry})
+    ]});
 };
 
 // [Pure] Returns a polygon geometry matching the passed in
@@ -734,7 +739,7 @@ mercator.disable_dragbox_draw = function () {
 //        mercator.removeLayerByTitle(mapConfig, "currentAOI");
 //        mercator.addVectorLayer(mapConfig,
 //                                "currentAOI",
-//                                mercator.parseGeoJson(polygon, true),
+//                                mercator.geometryToVectorSource(mercator.parseGeoJson(polygon, true)),
 //                                ceoMapStyles.polygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentAOI");
 // FIXME: change calls from polygon_extent to mercator.parseGeoJson(polygon, false).getExtent()
@@ -743,6 +748,6 @@ mercator.disable_dragbox_draw = function () {
 //        mercator.removeLayerByTitle(mapConfig, "currentPlot");
 //        mercator.addVectorLayer(mapConfig,
 //                                "currentPlot",
-//                                mercator.getPlotPolygon(center, size, shape),
+//                                mercator.geometryToVectorSource(mercator.getPlotPolygon(center, size, shape)),
 //                                ceoMapStyles.polygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentPlot");
