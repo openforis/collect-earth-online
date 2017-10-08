@@ -462,21 +462,43 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
 ***
 *****************************************************************************/
 
-mercator.feature_styles = {};
+// [Pure] Returns the map interaction with title == interactionTitle
+// or null if no such interaction exists.
+mercator.getInteractionByTitle = function (mapConfig, interactionTitle) {
+    return mapConfig.map.getInteractions().getArray().find(
+        function (interaction) {
+            return interaction.get("title") == interactionTitle;
+        }
+    );
+};
 
-mercator.select_interaction = null;
+// [Side Effects] Removes the interaction with title == interactionTitle from
+// mapConfig's map object.
+mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
+    var interaction = mercator.getInteractionByTitle(mapConfig, interactionTitle);
+    if (interaction) {
+        mapConfig.map.removeInteraction(interaction);
+    }
+    return mapConfig;
+};
 
-mercator.make_click_select = function (layer) {
-    var select = new ol.interaction.Select({layers: [layer]});
+// [Pure] Returns a new click select interaction with title =
+// interactionTitle that is associated with the passed in layer. When
+// a feature is selected, its style is stored in featureStyles and
+// then cleared on the map. When a feature is deselected, its saved
+// style is restored on the map.
+mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
+    var select = new ol.interaction.Select({title: interactionTitle,
+                                            layers: [layer]});
     var action = function (event) {
         event.selected.forEach(function (feature) {
-            mercator.feature_styles[feature] = feature.getStyle();
+            featureStyles[feature] = feature.getStyle();
             feature.setStyle(null);
         });
         event.deselected.forEach(function (feature) {
-            var saved_style = mercator.feature_styles[feature];
-            if (saved_style != null) {
-                feature.setStyle(saved_style);
+            var savedStyle = featureStyles[feature];
+            if (savedStyle != null) {
+                feature.setStyle(savedStyle);
             }
         });
     };
@@ -484,51 +506,52 @@ mercator.make_click_select = function (layer) {
     return select;
 };
 
-mercator.dragbox_interaction = null;
-
-mercator.make_dragbox_select = function (layer, selected_features) {
-    var condition = ol.events.condition.platformModifierKeyOnly;
-    var dragbox = new ol.interaction.DragBox({"condition": condition});
-    var source = layer.getSource();
-    var boxstart_action = function (event) {
-        selected_features.clear();
+// [Pure] Returns a new dragBox select interaction with title =
+// interactionTitle that is associated with the passed in layer. When
+// a feature is selected, its style is stored in featureStyles and
+// then cleared on the map. When a feature is deselected, its saved
+// style is restored on the map.
+mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures) {
+    var dragBox = new ol.interaction.DragBox({title: interactionTitle,
+                                              condition: ol.events.condition.platformModifierKeyOnly});
+    var boxstartAction = function () {
+        selectedFeatures.clear();
     };
-    var boxend_action = function (event) {
-        var extent = dragbox.getGeometry().getExtent();
-        var save_style = function (feature) {
-            selected_features.push(feature);
-            mercator.feature_styles[feature] = feature.getStyle();
+    var boxendAction = function () {
+        var extent = dragBox.getGeometry().getExtent();
+        var saveStyle = function (feature) {
+            selectedFeatures.push(feature);
+            featureStyles[feature] = feature.getStyle();
             feature.setStyle(null);
             return false;
         };
-        source.forEachFeatureIntersectingExtent(extent, save_style);
+        layer.getSource().forEachFeatureIntersectingExtent(extent, saveStyle);
     };
-    dragbox.on("boxstart", boxstart_action);
-    dragbox.on("boxend", boxend_action);
-    return dragbox;
+    dragBox.on("boxstart", boxstartAction);
+    dragBox.on("boxend", boxendAction);
+    return dragBox;
 };
 
-mercator.enable_selection = function (layer) {
-    var click_select = mercator.make_click_select(layer);
-    var selected_features = click_select.getFeatures();
-    var dragbox_select = mercator.make_dragbox_select(layer, selected_features);
-    mercator.map_ref.addInteraction(click_select);
-    mercator.map_ref.addInteraction(dragbox_select);
-    mercator.select_interaction = click_select;
-    mercator.dragbox_interaction = dragbox_select;
-    return null;
+// [Side Effects] Adds a click select interaction and a dragBox select
+// interaction to mapConfig's map object associated with the layer
+// with title == layerTitle.
+mercator.enableSelection = function (mapConfig, layerTitle) {
+    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    var featureStyles = {}; // holds saved styles for features selected by either interaction
+    var clickSelect = mercator.makeClickSelect("clickSelect", layer, featureStyles);
+    var selectedFeatures = clickSelect.getFeatures();
+    var dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, featureStyles, selectedFeatures);
+    mapConfig.map.addInteraction(clickSelect);
+    mapConfig.map.addInteraction(dragBoxSelect);
+    return mapConfig;
 };
 
-mercator.disable_selection = function () {
-    if (mercator.select_interaction != null) {
-        mercator.map_ref.removeInteraction(mercator.select_interaction);
-        mercator.select_interaction = null;
-    }
-    if (mercator.dragbox_interaction != null) {
-        mercator.map_ref.removeInteraction(mercator.dragbox_interaction);
-        mercator.dragbox_interaction = null;
-    }
-    return null;
+// [Side Effects] Removes the click select and dragBox select
+// interactions from mapConfig's map object.
+mercator.disableSelection = function (mapConfig) {
+    mercator.removeInteractionByTitle(mapConfig, "clickSelect");
+    mercator.removeInteractionByTitle(mapConfig, "dragBoxSelect");
+    return mapConfig;
 };
 
 /*****************************************************************************
@@ -747,3 +770,7 @@ mercator.disable_dragbox_draw = function () {
 //                                mercator.geometryToVectorSource(mercator.getPlotPolygon(center, size, shape)),
 //                                ceoMapStyles.polygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentPlot");
+// FIXME: change calls from draw_plots to addPlotOverviewLayers
+// FIXME: for plots shown with draw_plots, change references to their plot_id field to plotId
+// FIXME: change calls from enable_selection to enableSelection
+// FIXME: change calls from disable_selection to disableSelection
