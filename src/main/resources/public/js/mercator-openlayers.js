@@ -560,76 +560,7 @@ mercator.disableSelection = function (mapConfig) {
 ***
 *****************************************************************************/
 
-mercator.current_samples = null;
-
-mercator.remove_sample_layer = function () {
-    if (mercator.current_samples != null) {
-        mercator.map_ref.removeLayer(mercator.current_samples);
-        mercator.current_samples = null;
-    }
-    return null;
-};
-var pList;
-mercator.draw_project_markers = function (project_list, dRoot) {
-    pList = project_list;
-    gPopup = new ol.Overlay.Popup();
-    mercator.map_ref.addOverlay(gPopup);
-    var format = new ol.format.GeoJSON();
-    var features = project_list.map(
-        function (project) {
-            var coords = format.readGeometry(project.boundary).getCoordinates();
-            // [[x,y],[x,y],...,[x,y]] -> {minX: ?, minY: ?, maxX: ?, maxY: ?}
-            var bounds = coords[0].reduce(
-                function (acc, coord) {
-                    var x = coord[0];
-                    var y = coord[1];
-                    acc.minX = Math.min(acc.minX, x);
-                    acc.maxX = Math.max(acc.maxX, x);
-                    acc.minY = Math.min(acc.minY, y);
-                    acc.maxY = Math.max(acc.maxY, y);
-                    return acc;
-                },
-                {minX: 181.0, maxX: -181.0, minY: 91.0, maxY: -91.0}
-            );
-            var centerX = (bounds.minX + bounds.maxX) / 2;
-            var centerY = (bounds.minY + bounds.maxY) / 2;
-            var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
-            return new ol.Feature({"geometry":    geometry,
-                                   "name":        project.name,
-                                   "description": project.description,
-                                   "numPlots":    project.numPlots,
-                                   "pID": project.id});
-        }
-    );
-    var vector_source = new ol.source.Vector({"features": features});
-    var vector_style = mercator.styles["ceoicon"];
-    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
-                                            "source": vector_source,
-                                            "style":  vector_style});
-    layerRef = vector_layer;
-    mercator.map_ref.addLayer(vector_layer);
-    var extent = vector_layer.getSource().getExtent();
-    mercator.map_ref.getView().fit(extent, mercator.map_ref.getSize());
-
-    mercator.map_ref.getViewport().addEventListener("click", function(e) {
-        mercator.map_ref.forEachFeatureAtPixel(mercator.map_ref.getEventPixel(e), function (feature, layer) {
-            var description = feature.get("description") == "" ? "N/A" : feature.get("description");
-            var html = '<div class="cTitle" >';
-            html += '<h1 >' + feature.get("name") +'</h1> </div>';
-            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
-            html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
-            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
-            gPopup.show(feature.getGeometry().getCoordinates(),html);
-            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
-
-
-        });
-    });
-
-    return mercator.map_ref;
-};
-var layerRef;
-var gPopup;
+// RESUME HERE
 mercator.draw_point = function (lon, lat) {
     var coords = mercator.reproject_to_map(lon, lat);
     var geometry = new ol.geom.Point(coords);
@@ -692,24 +623,24 @@ mercator.highlight_sample = function (sample, color) {
 ***
 *****************************************************************************/
 
-mercator.dragbox_draw_layer = null;
+mercator.dragBox_draw_layer = null;
 
-mercator.dragbox_draw_interaction = null;
+mercator.dragBox_draw_interaction = null;
 
 mercator.current_bbox = null;
 
 mercator.set_bbox_coords = null;
 
-mercator.enable_dragbox_draw = function () {
+mercator.enable_dragBox_draw = function () {
     var source = new ol.source.Vector({"features": []});
     var style = mercator.styles["polygon"];
     var draw_layer = new ol.layer.Vector({title: "ProjectBoundingBox",
                                           source: source,
                                           "style": style});
     var condition = ol.events.condition.platformModifierKeyOnly;
-    var dragbox = new ol.interaction.DragBox({"condition": condition});
+    var dragBox = new ol.interaction.DragBox({"condition": condition});
     var boxend_action = function (event) {
-        var geom = dragbox.getGeometry();
+        var geom = dragBox.getGeometry();
         var feature = new ol.Feature({"geometry": geom});
         var extent = geom.clone().transform("EPSG:3857", "EPSG:4326").getExtent();
         source.clear();
@@ -726,24 +657,88 @@ mercator.enable_dragbox_draw = function () {
 
     };
 
-    dragbox.on("boxend", boxend_action);
+    dragBox.on("boxend", boxend_action);
     mercator.map_ref.addLayer(draw_layer);
-    mercator.map_ref.addInteraction(dragbox);
-    mercator.dragbox_draw_layer = draw_layer;
-    mercator.dragbox_draw_interaction = dragbox;
+    mercator.map_ref.addInteraction(dragBox);
+    mercator.dragBox_draw_layer = draw_layer;
+    mercator.dragBox_draw_interaction = dragBox;
     return null;
 };
 
-mercator.disable_dragbox_draw = function () {
-    if (mercator.dragbox_draw_layer != null) {
-        mercator.map_ref.removeLayer(mercator.dragbox_draw_layer);
-        mercator.dragbox_draw_layer = null;
+mercator.disable_dragBox_draw = function () {
+    if (mercator.dragBox_draw_layer != null) {
+        mercator.map_ref.removeLayer(mercator.dragBox_draw_layer);
+        mercator.dragBox_draw_layer = null;
     }
-    if (mercator.dragbox_draw_interaction != null) {
-        mercator.map_ref.removeInteraction(mercator.dragbox_draw_interaction);
-        mercator.dragbox_draw_interaction = null;
+    if (mercator.dragBox_draw_interaction != null) {
+        mercator.map_ref.removeInteraction(mercator.dragBox_draw_interaction);
+        mercator.dragBox_draw_interaction = null;
     }
     return null;
+};
+
+/*****************************************************************************
+***
+*** Functions to draw project markers on an overview map
+***
+*****************************************************************************/
+
+mercator.draw_project_markers = function (project_list, dRoot) {
+    gPopup = new ol.Overlay.Popup();
+    mercator.map_ref.addOverlay(gPopup);
+    var format = new ol.format.GeoJSON();
+    var features = project_list.map(
+        function (project) {
+            var coords = format.readGeometry(project.boundary).getCoordinates();
+            // [[x,y],[x,y],...,[x,y]] -> {minX: ?, minY: ?, maxX: ?, maxY: ?}
+            var bounds = coords[0].reduce(
+                function (acc, coord) {
+                    var x = coord[0];
+                    var y = coord[1];
+                    acc.minX = Math.min(acc.minX, x);
+                    acc.maxX = Math.max(acc.maxX, x);
+                    acc.minY = Math.min(acc.minY, y);
+                    acc.maxY = Math.max(acc.maxY, y);
+                    return acc;
+                },
+                {minX: 181.0, maxX: -181.0, minY: 91.0, maxY: -91.0}
+            );
+            var centerX = (bounds.minX + bounds.maxX) / 2;
+            var centerY = (bounds.minY + bounds.maxY) / 2;
+            var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
+            return new ol.Feature({"geometry":    geometry,
+                                   "name":        project.name,
+                                   "description": project.description,
+                                   "numPlots":    project.numPlots,
+                                   "pID": project.id});
+        }
+    );
+    var vector_source = new ol.source.Vector({"features": features});
+    var vector_style = mercator.styles["ceoicon"];
+    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
+                                            "source": vector_source,
+                                            "style":  vector_style});
+    layerRef = vector_layer;
+    mercator.map_ref.addLayer(vector_layer);
+    var extent = vector_layer.getSource().getExtent();
+    mercator.map_ref.getView().fit(extent, mercator.map_ref.getSize());
+
+    mercator.map_ref.getViewport().addEventListener("click", function(e) {
+        mercator.map_ref.forEachFeatureAtPixel(mercator.map_ref.getEventPixel(e), function (feature, layer) {
+            var description = feature.get("description") == "" ? "N/A" : feature.get("description");
+            var html = '<div class="cTitle" >';
+            html += '<h1 >' + feature.get("name") +'</h1> </div>';
+            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
+            html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
+            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+            gPopup.show(feature.getGeometry().getCoordinates(),html);
+            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
+
+
+        });
+    });
+
+    return mercator.map_ref;
 };
 
 /*****************************************************************************
@@ -753,7 +748,7 @@ mercator.disable_dragbox_draw = function () {
 *****************************************************************************/
 //
 // FIXME: Move ceoMapStyles out of Mercator.js
-// FIXME: change calls from remove_plot_layer to removeLayerByTitle(mapConfig, layerTitle)
+// FIXME: change calls from remove_plot_layer to mercator.removeLayerByTitle(mapConfig, layerTitle)
 // FIXME: change calls from draw_polygon to:
 //        mercator.removeLayerByTitle(mapConfig, "currentAOI");
 //        mercator.addVectorLayer(mapConfig,
@@ -762,7 +757,7 @@ mercator.disable_dragbox_draw = function () {
 //                                ceoMapStyles.polygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentAOI");
 // FIXME: change calls from polygon_extent to mercator.parseGeoJson(polygon, false).getExtent()
-// FIXME: change calls from get_plot_extent to getPlotExtent
+// FIXME: change calls from get_plot_extent to mercator.getPlotExtent
 // FIXME: change calls from draw_plot to:
 //        mercator.removeLayerByTitle(mapConfig, "currentPlot");
 //        mercator.addVectorLayer(mapConfig,
@@ -770,7 +765,8 @@ mercator.disable_dragbox_draw = function () {
 //                                mercator.geometryToVectorSource(mercator.getPlotPolygon(center, size, shape)),
 //                                ceoMapStyles.polygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentPlot");
-// FIXME: change calls from draw_plots to addPlotOverviewLayers
+// FIXME: change calls from draw_plots to mercator.addPlotOverviewLayers
 // FIXME: for plots shown with draw_plots, change references to their plot_id field to plotId
-// FIXME: change calls from enable_selection to enableSelection
-// FIXME: change calls from disable_selection to disableSelection
+// FIXME: change calls from enable_selection to mercator.enableSelection
+// FIXME: change calls from disable_selection to mercator.disableSelection
+// FIXME: change calls from remove_sample_layer to mercator.removeLayerByTitle(mapConfig, "currentSamples");
