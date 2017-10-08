@@ -560,41 +560,28 @@ mercator.disableSelection = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// RESUME HERE
-mercator.draw_point = function (lon, lat) {
-    var coords = mercator.reproject_to_map(lon, lat);
-    var geometry = new ol.geom.Point(coords);
-    var feature = new ol.Feature({geometry: geometry});
-    var vector_source = new ol.source.Vector({features: [feature]});
-    var style = mercator.styles["red_point"];
-    var vector_layer = new ol.layer.Vector({source: vector_source,
-                                            style: style});
-    mercator.map_ref.addLayer(vector_layer);
-    return mercator.map_ref;
+// [Side Effects] Adds a new vector layer called
+// point:<longitude>:<latitude> to mapConfig's map object containing a
+// single point geometry feature at the passed in coordinates.
+mercator.drawPoint = function (mapConfig, longitude, latitude) {
+    mercator.addVectorLayer(mapConfig,
+                            "point:" + longitude + ":" + latitude,
+                            mercator.geometryToVectorSource(new ol.geom.Point(mercator.reprojectToMap(longitude, latitude))),
+                            ceoMapStyles.redPoint);
+    return mapConfig;
 };
 
-mercator.draw_points = function (mapConfig, samples) {
-    var features = [];
-    for (i=0; i<samples.length; i++) {
-        var sample = samples[i];
-        var format = new ol.format.GeoJSON();
-        var latlon = format.readGeometry(sample.point);
-        var geometry = latlon.transform("EPSG:4326", "EPSG:3857");
-        var feature = new ol.Feature({geometry: geometry,
-                                      sample_id: sample["id"]});
-        features.push(feature);
-    }
-    var vector_source = new ol.source.Vector({features: features});
-    var style = mercator.styles["red_point"];
-    var vector_layer = new ol.layer.Vector({source: vector_source,
-                                            style: style});
-    mercator.remove_sample_layer();
-    mercator.current_samples = vector_layer;
-    mercator.disable_selection();
-    mercator.map_ref.addLayer(vector_layer);
-    mercator.enable_selection(vector_layer);
-    mercator.zoomMapToLayer(mapConfig, vector_layer);
-    return mercator.map_ref;
+// [Pure] Returns a new vector source containing the passed in
+// samples. Features are constructed from each sample using its id and
+// point fields.
+mercator.samplesToVectorSource = function (samples) {
+    var features = samples.map(
+        function (sample) {
+            return new ol.Feature({sampleId: sample.id,
+                                   geometry: mercator.parseGeoJson(sample.point, true)});
+        }
+    );
+    return new ol.source.Vector({features: features});
 };
 
 mercator.get_selected_samples = function () {
@@ -770,3 +757,13 @@ mercator.draw_project_markers = function (project_list, dRoot) {
 // FIXME: change calls from enable_selection to mercator.enableSelection
 // FIXME: change calls from disable_selection to mercator.disableSelection
 // FIXME: change calls from remove_sample_layer to mercator.removeLayerByTitle(mapConfig, "currentSamples");
+// FIXME: change calls from draw_points to:
+//        mercator.disableSelection(mapConfig);
+//        mercator.removeLayerByTitle(mapConfig, "currentSamples");
+//        mercator.addVectorLayer(mapConfig,
+//                                "currentSamples",
+//                                mercator.samplesToVectorSource(samples),
+//                                ceoMapStyles.redPoint);
+//        mercator.enableSelection(mapConfig, "currentSamples");
+//        mercator.zoomMapToLayer(mapConfig, "currentSamples");
+// FIXME: change references for points created with draw_points from sample_id to sampleId
