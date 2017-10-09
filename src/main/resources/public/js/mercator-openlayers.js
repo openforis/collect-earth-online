@@ -694,26 +694,16 @@ mercator.showProjectPopup = function (overlay, documentRoot, feature) {
 // the centers of the passed in projects. Features are constructed
 // from each project using its id, name, description, and numPlots
 // fields.
-// FIXME: Can this be done more efficiently with geometry.getExtent()?
 mercator.projectsToVectorSource = function (projects) {
     var features = projects.map(
         function (project) {
-            var coords = mercator.parseGeoJson(project.boundary, false).getCoordinates();
-            // [[[x,y],[x,y],...,[x,y]]] -> {minX: ?, minY: ?, maxX: ?, maxY: ?}
-            var bounds = coords[0].reduce(
-                function (acc, coord) {
-                    var x = coord[0];
-                    var y = coord[1];
-                    acc.minX = Math.min(acc.minX, x);
-                    acc.maxX = Math.max(acc.maxX, x);
-                    acc.minY = Math.min(acc.minY, y);
-                    acc.maxY = Math.max(acc.maxY, y);
-                    return acc;
-                },
-                {minX: 181.0, maxX: -181.0, minY: 91.0, maxY: -91.0}
-            );
-            var centerX = (bounds.minX + bounds.maxX) / 2;
-            var centerY = (bounds.minY + bounds.maxY) / 2;
+            var bounds = mercator.parseGeoJson(project.boundary, false).getExtent();
+            var minX = bounds[0];
+            var minY = bounds[1];
+            var maxX = bounds[2];
+            var maxY = bounds[3];
+            var centerX = (minX + maxX) / 2;
+            var centerY = (minY + maxY) / 2;
             var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
             return new ol.Feature({geometry:    geometry,
                                    projectId:   project.id,
