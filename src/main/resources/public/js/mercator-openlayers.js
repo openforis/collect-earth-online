@@ -657,14 +657,49 @@ mercator.disableDragBoxDraw = function (mapConfig) {
 ***
 *****************************************************************************/
 
-mercator.draw_project_markers = function (project_list, dRoot) {
-    gPopup = new ol.Overlay.Popup();
-    mercator.map_ref.addOverlay(gPopup);
-    var format = new ol.format.GeoJSON();
-    var features = project_list.map(
+// [Side Effects] Adds a new empty overlay to mapConfig's map object
+// with title set to overlayTitle.
+mercator.addOverlay = function (mapConfig, overlayTitle) {
+    var overlay = new ol.Overlay({title: overlayTitle,
+                                  element: document.createElement("div")});
+    mapConfig.map.addOverlay(overlay);
+    return mapConfig;
+};
+
+// [Pure] Returns the map overlay with title == overlayTitle or null
+// if no such overlay exists.
+mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
+    return mapConfig.map.getOverLays().getArray().find(
+        function (overlay) {
+            return overlay.get("title") == overlayTitle;
+        }
+    );
+};
+
+// [Side Effects] Updates the overlay element's innerHTML with fields
+// containing the feature's name, description, and numPlots fields as
+// well as a link to its data collection page and then displays the
+// overlay on the map at the feature's coordinates.
+mercator.showProjectPopup = function (overlay, documentRoot, feature) {
+    var description = feature.get("description") == "" ? "N/A" : feature.get("description");
+    var html = "<div class=\"cTitle\"><h1>" + feature.get("name") + "</h1></div>";
+    html += "<div class=\"cContent\"><p><span class=\"pField\">Description: </span>" + description + "</p>";
+    html += "<p><span class=\"pField\">Number of plots: </span>" + feature.get("numPlots")  + "</p>";
+    html += "<a href=\"" + documentRoot + "/collection/" + feature.get("projectId") + "\" class=\"lnkStart\">Get Started</a></div>";
+    overlay.getElement().innerHTML = html;
+    overlay.setPosition(feature.getGeometry().getCoordinates());
+};
+
+// [Pure] Returns a new vector source containing points for each of
+// the centers of the passed in projects. Features are constructed
+// from each project using its id, name, description, and numPlots
+// fields.
+// FIXME: Can this be done more efficiently with geometry.getExtent()?
+mercator.projectsToVectorSource = function (projects) {
+    var features = projects.map(
         function (project) {
-            var coords = format.readGeometry(project.boundary).getCoordinates();
-            // [[x,y],[x,y],...,[x,y]] -> {minX: ?, minY: ?, maxX: ?, maxY: ?}
+            var coords = mercator.parseGeoJson(project.boundary, false).getCoordinates();
+            // [[[x,y],[x,y],...,[x,y]]] -> {minX: ?, minY: ?, maxX: ?, maxY: ?}
             var bounds = coords[0].reduce(
                 function (acc, coord) {
                     var x = coord[0];
@@ -680,39 +715,30 @@ mercator.draw_project_markers = function (project_list, dRoot) {
             var centerX = (bounds.minX + bounds.maxX) / 2;
             var centerY = (bounds.minY + bounds.maxY) / 2;
             var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
-            return new ol.Feature({"geometry":    geometry,
-                                   "name":        project.name,
-                                   "description": project.description,
-                                   "numPlots":    project.numPlots,
-                                   "pID": project.id});
+            return new ol.Feature({geometry:    geometry,
+                                   projectId:   project.id,
+                                   name:        project.name,
+                                   description: project.description,
+                                   numPlots:    project.numPlots});
         }
     );
-    var vector_source = new ol.source.Vector({"features": features});
-    var vector_style = ceoMapStyles.ceoicon;
-    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
-                                            "source": vector_source,
-                                            "style":  vector_style});
-    layerRef = vector_layer;
-    mercator.map_ref.addLayer(vector_layer);
-    var extent = vector_layer.getSource().getExtent();
-    mercator.map_ref.getView().fit(extent, mercator.map_ref.getSize());
+    return new ol.source.Vector({features: features});
+};
 
-    mercator.map_ref.getViewport().addEventListener("click", function(e) {
-        mercator.map_ref.forEachFeatureAtPixel(mercator.map_ref.getEventPixel(e), function (feature, layer) {
-            var description = feature.get("description") == "" ? "N/A" : feature.get("description");
-            var html = '<div class="cTitle" >';
-            html += '<h1 >' + feature.get("name") +'</h1> </div>';
-            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
-            html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
-            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
-            gPopup.show(feature.getGeometry().getCoordinates(),html);
-            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
-
-
-        });
-    });
-
-    return mercator.map_ref;
+// [Side Effects] Adds a new vector layer called "projectMarkers" to
+// mapConfig's map object containing icons at each of the project's
+// AOI centers. Also adds a dynamic overlay popup to the map which
+// shows a brief project description whenever a project icon is
+// clicked.
+mercator.addProjectMarkers = function (mapConfig, projects, documentRoot) {
+    mercator.addVectorLayer(mapConfig,
+                            "projectMarkers",
+                            mercator.projectsToVectorSource(projects),
+                            ceoMapStyles.ceoicon);
+    mercator.addOverlay(mapConfig, "projectPopup");
+    var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
+    mapConfig.map.on("click", function (event) { mapConfig.map.forEachFeatureAtPixel(event.pixel, mercator.showProjectPopup.bind(null, overlay, documentRoot)); });
+    return mapConfig;
 };
 
 /*****************************************************************************
@@ -758,3 +784,7 @@ mercator.draw_project_markers = function (project_list, dRoot) {
 // FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
+// FIXME: change references to pID in home.js to projectId
+// FIXME: change calls from draw_project_markers to:
+//        mercator.addProjectMarkers(mapConfig, projects, documentRoot);
+//        mercator.zoomMapToLayer(mapConfig, "projectMarkers");
