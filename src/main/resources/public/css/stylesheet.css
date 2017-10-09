@@ -835,6 +835,14 @@ Tree expanded icon
     padding: 0.5rem;
 }
 
+#support ul {
+    margin-left: 0.5rem;
+}
+
+#support ul li {
+    padding: 0.5rem;
+}
+
 /*****************************************************/
 /* Login / Register / Password Reset / Account Pages */
 /*****************************************************/
