@@ -58,6 +58,10 @@
                    name="download-plot-data" value="Download Plot Data"
                    ng-click="project.downloadPlotData()"
                    style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
+            <input type="button" id="download-sample-data" class="button"
+                   name="download-sample-data" value="Download Sample Data"
+                   ng-click="project.downloadSampleData()"
+                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
         </div>
     </div>
     <div id="project-design">
@@ -254,10 +258,12 @@
                 <label>Samples per plot</label>
                 <input type="number" id="samples-per-plot" name="samples-per-plot" autocomplete="off" min="0" step="1" ng-model="project.details.samplesPerPlot">
                 <label>Sample resolution (m)</label>
-                <input type="number" id="sample-resolution" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="project.details.sampleResolution" disabled>
+                <input type="number" id="sample-resolution" name="sample-resolution" autocomplete="off" min="0.0" step="any"
+                       ng-model="project.details.sampleResolution" disabled>
             </fieldset>
-            <fieldset id="sample-value-info">
-                <legend>Sample Values</legend>
+            <hr>
+            <fieldset class="sample-value-info" ng-repeat="sampleValueGroup in project.details.sampleValues">
+                <legend>Sample Value: {{ sampleValueGroup.name }}</legend>
                 <table>
                     <thead>
                         <tr>
@@ -268,9 +274,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="sampleValue in project.details.sampleValues">
+                        <tr ng-repeat="sampleValue in sampleValueGroup.values">
                             <td>
-                                <input type="button" class="button" value="-" ng-click="project.removeSampleValueRow(sampleValue.name)"
+                                <input type="button" class="button" value="-" ng-click="project.removeSampleValueRow(sampleValueGroup.name, sampleValue.name)"
                                        style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                             </td>
                             <td>
@@ -283,27 +289,27 @@
                                 {{ sampleValue.image }}
                             </td>
                         </tr>
-                        <tr>
+                        <tr style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                             <td>
-                                <input type="button" class="button" name="add-sample-value" value="+" ng-click="project.addSampleValueRow()"
-                                       style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                                <input type="button" class="button" value="+" ng-click="project.addSampleValueRow(sampleValueGroup.name)">
                             </td>
                             <td>
-                                <input type="text" id="value-name" name="value-name" autocomplete="off" ng-model="project.valueName"
-                                       style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                                <input type="text" class="value-name" autocomplete="off" ng-model="project.newValueEntry[sampleValueGroup.name].name">
                             </td>
                             <td>
-                                <input type="color" id="value-color" name="value-color" ng-model="project.valueColor"
-                                       style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                                <input type="color" class="value-color" ng-model="project.newValueEntry[sampleValueGroup.name].color">
                             </td>
                             <td>
-                                <input type="file" id="value-image" name="value-image" accept="image/*" ng-model="project.valueImage"
-                                       style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                                <input type="file" class="value-image" accept="image/*" ng-model="project.newValueEntry[sampleValueGroup.name].image">
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </fieldset>
+            <div id="add-sample-value-group" style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                <input type="button" class="button" value="Add Sample Value Group" ng-click="project.addSampleValueGroup()">
+                <input type="text" autocomplete="off" ng-model="project.newSampleValueGroupName">
+            </div>
         </form>
     </div>
     <div id="spinner"></div>

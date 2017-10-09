@@ -50,12 +50,13 @@
                 <option ng-repeat="imagery in collection.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
             </select>
         </fieldset>
-        <fieldset>
-            <legend>Sample Values</legend>
+        <fieldset ng-repeat="sampleValueGroup in collection.currentProject.sampleValues">
+            <legend>Sample Value: {{ sampleValueGroup.name }}</legend>
             <ul>
-                <li ng-repeat="sample in collection.currentProject.sampleValues">
-                    <input type="button" id="{{ sample.id }}" name="{{ sample.name + '_' + sample.id }}" value="{{ sample.name }}"
-                           style="border-left:1.5rem solid {{ sample.color }}" ng-click="collection.setCurrentValue(sample)">
+                <li ng-repeat="sampleValue in sampleValueGroup.values">
+                    <input type="button" id="{{ sampleValue.name + '_' + sampleValue.id }}" name="{{ sampleValue.name + '_' + sampleValue.id }}"
+                           value="{{ sampleValue.name }}" style="border-left:1.5rem solid {{ sampleValue.color }}"
+                           ng-click="collection.setCurrentValue(sampleValueGroup, sampleValue)">
                 </li>
             </ul>
         </fieldset>

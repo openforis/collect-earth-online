@@ -6,9 +6,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.latMin = "";
     this.lonMax = "";
     this.latMax = "";
-    this.valueName = "";
-    this.valueColor = "#000000";
-    this.valueImage = "";
+    this.newSampleValueGroupName = "";
+    this.newValueEntry = {};
     this.plotList = [];
     this.flaggedPlots = 0;
     this.analyzedPlots = 0;
@@ -134,7 +133,17 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 window.open(response.data);
             }, function errorCallback(response) {
                 console.log(response);
-                alert("Error downloading data for this project. See console for details.");
+                alert("Error downloading plot data for this project. See console for details.");
+            });
+    };
+
+    this.downloadSampleData = function () {
+        $http.get(this.root + "/dump-project-raw-data/" + this.details.id)
+            .then(function successCallback(response) {
+                window.open(response.data);
+            }, function errorCallback(response) {
+                console.log(response);
+                alert("Error downloading sample data for this project. See console for details.");
             });
     };
 
@@ -179,24 +188,42 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
-    this.removeSampleValueRow = function (sampleValueName) {
-        this.details.sampleValues = this.details.sampleValues.filter(
+    this.addSampleValueGroup = function () {
+        var groupName = this.newSampleValueGroupName;
+        if (groupName != "") {
+            this.newValueEntry[groupName] = {name: "", color: "#000000", image: ""};
+            this.details.sampleValues.push({name: groupName, values: []});
+            this.newSampleValueGroupName = "";
+        } else {
+            alert("Please enter a sample value group name first.");
+        }
+    };
+
+    this.getSampleValueGroupByName = function (sampleValueGroupName) {
+        return this.details.sampleValues.find(
+            function (sampleValueGroup) {
+                return sampleValueGroup.name == sampleValueGroupName;
+            }
+        );
+    };
+
+    this.removeSampleValueRow = function (sampleValueGroupName, sampleValueName) {
+        var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
+        sampleValueGroup.values = sampleValueGroup.values.filter(
             function (sampleValue) {
                 return sampleValue.name != sampleValueName;
             }
         );
     };
 
-    this.addSampleValueRow = function () {
-        var name = this.valueName;
-        var color = this.valueColor;
-        var image = this.valueImage;
-
-        if (name != "") {
-            this.details.sampleValues.push({name: name, color: color, image: image});
-            this.valueName = "";
-            this.valueColor = "#000000";
-            this.valueImage = "";
+    this.addSampleValueRow = function (sampleValueGroupName) {
+        var entry = this.newValueEntry[sampleValueGroupName];
+        if (entry.name != "") {
+            var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
+            sampleValueGroup.values.push({name: entry.name, color: entry.color, image: entry.image});
+            entry.name = "";
+            entry.color = "#000000";
+            entry.image = "";
         } else {
             alert("A sample value must possess both a name and a color.");
         }
