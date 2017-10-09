@@ -564,7 +564,7 @@ mercator.disableSelection = function (mapConfig) {
 // [Side Effects] Adds a new vector layer called
 // point:<longitude>:<latitude> to mapConfig's map object containing a
 // single point geometry feature at the passed in coordinates.
-mercator.drawPoint = function (mapConfig, longitude, latitude) {
+mercator.addPointLayer = function (mapConfig, longitude, latitude) {
     mercator.addVectorLayer(mapConfig,
                             "point:" + longitude + ":" + latitude,
                             mercator.geometryToVectorSource(new ol.geom.Point(mercator.reprojectToMap(longitude, latitude))),
