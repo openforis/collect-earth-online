@@ -610,58 +610,45 @@ mercator.highlightSamplePoint = function (sample, color) {
 ***
 *****************************************************************************/
 
-mercator.dragBox_draw_layer = null;
-
-mercator.dragBox_draw_interaction = null;
-
-mercator.current_bbox = null;
-
-mercator.set_bbox_coords = null;
-
-mercator.enable_dragBox_draw = function () {
-    var source = new ol.source.Vector({"features": []});
-    var style = ceoMapStyles.polygon;
-    var draw_layer = new ol.layer.Vector({title: "ProjectBoundingBox",
-                                          source: source,
-                                          "style": style});
-    var condition = ol.events.condition.platformModifierKeyOnly;
-    var dragBox = new ol.interaction.DragBox({"condition": condition});
-    var boxend_action = function (event) {
-        var geom = dragBox.getGeometry();
-        var feature = new ol.Feature({"geometry": geom});
-        var extent = geom.clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-        source.clear();
-        source.addFeature(feature);
-        mercator.current_bbox = {minlon: extent[0],
-                                 minlat: extent[1],
-                                 maxlon: extent[2],
-                                 maxlat: extent[3]};
-
-        /* If Angular code defines this function, then write values of extent to max-min lat-lon inputs. */
-        if (mercator.set_bbox_coords) {
-            mercator.set_bbox_coords();
+// [Pure] Returns a new dragBox draw interaction with title =
+// interactionTitle that is associated with the passed in layer. When
+// a new box is dragged on the map, any previous dragBox polygons are
+// removed, and the current box is added to the map layer as a new
+// feature. If a callBack function is provided, it will be called
+// after the new box is added to the map layer.
+mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
+    var dragBox = new ol.interaction.DragBox({title: interactionTitle,
+                                              condition: ol.events.condition.platformModifierKeyOnly});
+    var boxendAction = function () {
+        layer.getSource().clear();
+        layer.getSource().addFeature(new ol.Feature({geometry: dragBox.getGeometry()}));
+        if (callBack != null) {
+            callBack.call(null, dragBox);
         }
-
     };
-
-    dragBox.on("boxend", boxend_action);
-    mercator.map_ref.addLayer(draw_layer);
-    mercator.map_ref.addInteraction(dragBox);
-    mercator.dragBox_draw_layer = draw_layer;
-    mercator.dragBox_draw_interaction = dragBox;
-    return null;
+    dragBox.on("boxend", boxendAction);
+    return dragBox;
 };
 
-mercator.disable_dragBox_draw = function () {
-    if (mercator.dragBox_draw_layer != null) {
-        mercator.map_ref.removeLayer(mercator.dragBox_draw_layer);
-        mercator.dragBox_draw_layer = null;
-    }
-    if (mercator.dragBox_draw_interaction != null) {
-        mercator.map_ref.removeInteraction(mercator.dragBox_draw_interaction);
-        mercator.dragBox_draw_interaction = null;
-    }
-    return null;
+// [Side Effects] Adds a dragBox draw interaction to mapConfig's map
+// object associated with a newly created empty vector layer called
+// "dragBoxLayer".
+mercator.enableDragBoxDraw = function (mapConfig, callBack) {
+    var drawLayer = new ol.layer.Vector({title: "dragBoxLayer",
+                                         source: new ol.source.Vector({features: []}),
+                                         style: ceoMapStyles.polygon});
+    var dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
+    mapConfig.map.addLayer(drawLayer);
+    mapConfig.map.addInteraction(dragBox);
+    return mapConfig;
+};
+
+// [Side Effects] Removes the dragBox draw interaction and its
+// associated layer from mapConfig's map object.
+mercator.disableDragBoxDraw = function (mapConfig) {
+    mercator.removeInteractionByTitle(mapConfig, "dragBoxDraw");
+    mercator.removeLayerByTitle(mapConfig, "dragBoxLayer");
+    return mapConfig;
 };
 
 /*****************************************************************************
@@ -769,3 +756,5 @@ mercator.draw_project_markers = function (project_list, dRoot) {
 // FIXME: change references for points created with draw_points from sample_id to sampleId
 // FIXME: change calls from get_selected_samples to mercator.getSelectedSamples
 // FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
+// FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
+// FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
