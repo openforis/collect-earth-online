@@ -74,6 +74,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             map_utils.set_dg_wms_layer_params(this.currentProject.imageryYear, this.currentProject.stackingProfile);
             this.setBaseMapSource();
             map_utils.draw_polygon(this.currentProject.boundary);
+            this.loadProjectPlots();
         }
     };
 
@@ -179,4 +180,20 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             });
     };
 
+    this.loadProjectPlots = function(){
+        $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
+                .then(angular.bind(this, function successCallback(response) {
+                    //alert("Plot " + this.currentPlot.id + " has been flagged.");
+                    mreturn = response;
+                    response.data.forEach(function(plot){
+                        map_utils.draw_point(JSON.parse(plot.center).coordinates[0], JSON.parse(plot.center).coordinates[1])
+                    });
+
+                }), function errorCallback(response) {
+                    console.log(response);
+                    alert("Error flagging plot as bad. See console for details.");
+                });
+    }
+
 }]);
+var mreturn;

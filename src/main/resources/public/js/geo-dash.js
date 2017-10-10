@@ -4,8 +4,8 @@ var gmodcdash;
 angular.module("geodash", []).controller("GeodashController", ["$http", function GeodashController($http) {
     this.debugme;
     this.theURL = "geo-dash/";
-    // this.gateway = "http://gateway.servirglobal.net:8888";
-    this.gateway = "http://ceo.sig-gis.com:8888";
+    //this.gateway = "http://gateway.servirglobal.net:8888";
+	this.gateway = "http://ceo.sig-gis.com:8888";
     this.wCount = 0;
     this.wLoaded = 0;
     this.projAOI;
@@ -21,6 +21,20 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.sHeight = 0;
     var geodash = this;
     gmodcdash = this;
+    this.mainWidgetTypes = [{ id: "ImageCollectionNDVI", name: "NDVI Image Collection" },
+                                        { id: "NDVItimeSeriesGraph", name: "NDVI Graph" },
+                                        { id: "ImageCollectionEVI", name: "EVI Image Collection" },
+                                        { id: "EVItimeSeriesGraph", name: "EVI Graph" },
+                                        { id: "ImageCollectionEVI2", name: "EVI2 Image Collection" },
+                                        { id: "EVI2timeSeriesGraph", name: "EVI2 Graph" },
+                                        { id: "ImageCollectionNDMI", name: "NDMI Image Collection" },
+                                        { id: "NDMItimeSeriesGraph", name: "NDMI Graph" },
+                                        { id: "ImageCollectionNDWI", name: "NDWI Image Collection" },
+                                        { id: "NDWItimeSeriesGraph", name: "NDWI Graph" },
+                                        { id: "getStats", name: "Statistics" },
+                                        { id: "custom", name: "Custom widget" }];
+    this.imageCollectionList = ["addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI"];
+    this.graphCollectionList = ["timeSeriesGraph", "ndviTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries", "ndwiTimeSeries"];
     this.initialize = function (documentRoot) {
         geodash = this;
         var pid = this.getParameterByName("pid");
@@ -29,14 +43,18 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         this.projAOI = this.getParameterByName("aoi");
         this.bradius = this.getParameterByName("bradius");
         this.bcenter = this.getParameterByName("bcenter");
-        if (this.projAOI) {
+        console.info('top');
+        if (geodash.projAOI) {
             try {
+            console.info('inside');
                 var theSplit = decodeURI(this.projAOI).replace("[", "").replace("]", "").split(",");
-                projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
+                console.info('split: ' + theSplit);
+                this.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
             } catch (e) {
                 console.warn("missing projAOI" + e.message);
             }
         }
+        console.info('out');
         this.makeAjax({
             url: this.theURL + "id/" + pid,
             type: "get",
@@ -228,23 +246,36 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 "id": "widgettitle_" + widget.id
             }).html(widget.name);
             var sub = $("<br />");
-            if (wtext === "addImageCollection") {
+            if (this.imageCollectionList.includes(wtext)) {
                 var maddiv = $("<div/>", {
                     "id": "widgetmap_" + widget.id,
                     "class": "minmapwidget"
                 });
+                var opacityControl = $('<input />',
+                {
+                    "type":"range",
+                    "class":"mapRange",
+                    "id":"rangeWidget_" + widget.id,
+                    "value": ".9",
+                    "min":"0",
+                    "max":"1",
+                    "step":".01",
+                    "onchange":"gmodcdash.setOpacity(this.value, 'widgetmap_" +widget.id+"')",
+                    "oninput":"gmodcdash.setOpacity(this.value, 'widgetmap_" +widget.id+"')"
+                }
+                );
                 maddiv.attr("style", "width:100%; min-height:200px;");
-                front.append(maddiv).append(widgettitle).append(sub);
+                front.append(maddiv).append(widgettitle).append(opacityControl).append(sub);
                 widgetcontainer.append(front);
                 panel.append(widgetcontainer);
-            } else if (wtext === "timeSeriesGraph") {
+            } else if (wtext === "timeSeriesGraph" || wtext === "ndviTimeSeries" || wtext === "ndwiTimeSeries" || wtext === "eviTimeSeries" || wtext === "evi2TimeSeries" || wtext === "ndmiTimeSeries") {
                 var graphdiv = $("<div/>", {
                     "id": "widgetgraph_" + widget.id,
                     "class": "minmapwidget"
                 });
                 var graphcontainer = $("<div/>", {
                     "id": "graphcontainer_" + widget.id,
-                    "class": "minmapwidget"
+                    "class": "minmapwidget graphwidget"
                 });
                 graphdiv.append(graphcontainer);
                 graphdiv.append(widgettitle).append(sub);
@@ -303,13 +334,25 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         var googleLayer = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
-            })
+            }),
+            id: mapdiv
         });
+        // googleLayer.id = mapdiv;
         this.mapWidgetArray[mapdiv].addLayer(googleLayer);
         this.addBuffer(this.mapWidgetArray[mapdiv]);
     };
+    this.setOpacity = function (value, layerID) {
+        //var layer;
+        var id = layerID; //"widgetmap_2";
+        var theLayers = this.mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
+            if (id == lyr.get('id')) {
+                lyr.setOpacity(value);
+            }
+        });
+    };
     this.makeAjax = function (parameters, donefunction) {
         "use strict";
+        console.info('parameters: ' + parameters);
         $.ajax(parameters).fail(function (jqXHR, textStatus, errorThrown) {
             console.warn("error from ajax call: " + jqXHR + textStatus + errorThrown);
         }).done(donefunction);
@@ -327,6 +370,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         var collectionName;
         var timeseriesData;
         var text;
+        console.info('widget.properties[0]' + widget.properties[0]);
         if (widget.properties[0] === "addImageCollection") {
             this.enableMapWidget("widgetmap_" + widget.id);
             if (this.projAOI === "") {
@@ -368,24 +412,6 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             }
             catch (e) { alert(0); }
             var visParams;
-            /************testing palette param
-            if( widget.id == 19)
-            {
-             visParams = {
-                                        min: min,
-                                        max: max,
-                                        bands: bands,
-                                        palette: ['red', 'yellow', 'blue', 'blue']
-                                    };
-            }
-            else{
-             visParams = {
-                min: min,
-                max: max,
-                bands: bands
-            };
-            }
-            *************************/
             visParams = {
                 min: min,
                 max: max,
@@ -421,64 +447,294 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         } else if (widget.properties[0] === "timeSeriesGraph") {
             collectionName = widget.properties[1];
             var indexName = widget.properties[4];
-            this.makeAjax({
-                url: this.gateway + "/timeSeriesIndex",
-                type: "POST",
-                async: true,
-                indexVal: widget.id,
-                crossDomain: true,
-                contentType: "application/json",
-                data: JSON.stringify({
-                    collectionNameTimeSeries: widget.properties[1],
-                    polygon: $.parseJSON(projPairAOI),
-                    indexName: widget.properties[4],
-                    dateFromTimeSeries: widget.properties[2],
-                    dateToTimeSeries: widget.properties[3]
-                })
-            }, function (data) {
-                if (data.errMsg) {
-                    console.warn(data.errMsg);
-                } else {
-                    if (data.hasOwnProperty("timeseries")) {
-                        timeseriesData = [];
-                        $.each(data.timeseries, function (ignore, value) {
-                            if (value[0] !== null) {
-                                timeseriesData.push([value[0], value[1]]);
+            $.ajax({
+                            url: this.gateway + "/timeSeriesIndex",
+                            type: "POST",
+                            async: true,
+                            indexVal: widget.id,
+                            crossDomain: true,
+                            contentType: "application/json",
+                            data: JSON.stringify({
+                                collectionNameTimeSeries: widget.properties[1],
+                                polygon: $.parseJSON(this.projPairAOI),
+                                indexName: widget.properties[4],
+                                dateFromTimeSeries: widget.properties[2],
+                                dateToTimeSeries: widget.properties[3]
+                            })
+                        }).fail(function (jqXHR, textStatus, errorThrown) {
+                            console.warn(jqXHR + textStatus + errorThrown);
+                        }).done(function (data, _textStatus, _jqXHR) {
+                            if (data.errMsg) {
+                                console.warn(data.errMsg);
+                            } else {
+                                if (data.hasOwnProperty("timeseries")) {
+                                    geodash.icameback = data;
+                                    geodash.textStatus = _textStatus;
+                                    geodash.jqXHR = _jqXHR;
+                                    timeseriesData = [];
+                                    $.each(data.timeseries, function (ignore, value) {
+                                        if (value[0] !== null) {
+                                            timeseriesData.push([value[0], value[1]]);
+                                        }
+                                    });
+                                    var $this = this;
+                                    text = indexName;
+                                    geodash.graphWidgetArray["widgetgraph_" + $this.indexVal] = geodash.createChart($this.indexVal, text, timeseriesData);
+                                } else {
+                                    console.warn("Wrong Data Returned");
+                                }
                             }
                         });
-                        var $this = this;
-                        text = indexName;
-                        geodash.graphWidgetArray["widgetgraph_" + $this.indexVal] = geodash.createChart($this.indexVal, text, timeseriesData);
-                    } else {
-                        console.warn("Wrong Data Returned");
-                    }
-                }
-            });
         } else if (widget.properties[0] === "getStats") {
+        $.ajax({
+                        url: this.gateway + "/getStats",
+                        type: "POST",
+                        async: true,
+                        indexVal: widget.id,
+                        polyVal: $.parseJSON(this.projPairAOI),
+                        crossDomain: true,
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            paramType: collectionName,
+                            paramValue: $.parseJSON(this.projPairAOI)
+                        })
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        console.warn(jqXHR + textStatus + errorThrown);
+                    }).done(function (data, _textStatus, _jqXHR) {
+                        geodash.statcameback = data;
+                        if (data.errMsg) {
+                            console.warn(e.message + _textStatus + _jqXHR);
+                        } else {
+                            var $this = this;
+                            $("#totalPop_" + $this.indexVal).text(geodash.numberWithCommas(data.pop));
+                            $("#totalArea_" + $this.indexVal).text(geodash.calculateArea($this.polyVal) + " ha");
+                            $("#elevationRange_" + $this.indexVal).text(geodash.numberWithCommas(data.minElev) + " - " + geodash.numberWithCommas(data.maxElev) + " m");
+
+                        }
+                    });
+        } else if (widget.properties[0] === "ndviImageCollection") {
+            this.enableMapWidget("widgetmap_" + widget.id);
+            if (this.projAOI === "") {
+                this.projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
+            } else {
+                if (typeof this.projAOI === "string") {
+                    this.projAOI = $.parseJSON(this.projAOI);
+                }
+            }
+            if (this.projAOI) {
+                this.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                    ol.proj.transform([this.projAOI[0], this.projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([this.projAOI[2], this.projAOI[3]], "EPSG:4326", "EPSG:3857")),
+                    this.mapWidgetArray["widgetmap_" + widget.id].getSize()
+                );
+            } else {
+                this.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                    this.projAOI,
+                    this.mapWidgetArray["widgetmap_" + widget.id].getSize()
+                );
+            }
+            var dateFrom = widget.properties[2];
+            var dateTo = widget.properties[3];
             this.makeAjax({
-                url: this.gateway + "/getStats",
+                url: this.gateway + "/ndviImageCollection",
                 type: "POST",
                 async: true,
                 indexVal: widget.id,
-                polyVal: $.parseJSON(projPairAOI),
                 crossDomain: true,
                 contentType: "application/json",
                 data: JSON.stringify({
-                    paramType: collectionName,
-                    paramValue: $.parseJSON(projPairAOI)
+                    dateFrom: dateFrom,
+                    dateTo: dateTo
                 })
             }, function (data, _textStatus, _jqXHR) {
                 if (data.errMsg) {
                     console.warn(data.errMsg + " " + _textStatus + _jqXHR);
                 } else {
-                    var $this = this;
-                    $("#totalPop_" + $this.indexVal).text(geodash.numberWithCommas(data.pop));
-                    $("#totalArea_" + $this.indexVal).text(geodash.calculateArea($this.polyVal) + " ha");
-                    $("#elevationRange_" + $this.indexVal).text(geodash.numberWithCommas(data.minElev) + " - " + geodash.numberWithCommas(data.maxElev) + " m");
-
+                    if (data.hasOwnProperty("mapid")) {
+                        var mapId = data.mapid;
+                        var token = data.token;
+                        var $this = this;
+                        geodash.addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
+                    } else {
+                        console.warn("Wrong Data Returned");
+                    }
                 }
             });
         }
+        else if(widget.properties[0] === "ndviTimeSeries"){
+            this.getTimeSeriesByIndex('NDVI', widget);
+        }
+        else if(widget.properties[0] === "eviTimeSeries"){
+            this.getTimeSeriesByIndex('EVI', widget);
+        }
+        else if(widget.properties[0] === "evi2TimeSeries"){
+            this.getTimeSeriesByIndex('EVI2', widget);
+        }
+        else if(widget.properties[0] === "ndmiTimeSeries"){
+            this.getTimeSeriesByIndex('NDMI', widget);
+        }else if(widget.properties[0] === "ndwiTimeSeries"){
+            this.getTimeSeriesByIndex('NDWI', widget);
+        }
+        else if (widget.properties[0] === "ImageCollectionNDVI") {
+            this.getImageCollectionByIndex('ndvi', widget);
+        }
+        else if (widget.properties[0] === "ImageCollectionEVI") {
+            this.getImageCollectionByIndex('evi', widget);
+        }
+        else if (widget.properties[0] === "ImageCollectionEVI2") {
+            this.getImageCollectionByIndex('evi2', widget);
+        }
+        else if (widget.properties[0] === "ImageCollectionNDMI") {
+            this.getImageCollectionByIndex('ndmi', widget);
+        }
+        else if (widget.properties[0] === "ImageCollectionNDWI") {
+            this.getImageCollectionByIndex('ndwi', widget);
+        }
+    };
+    this.getImageCollectionByIndex = function(which, widget){
+        this.enableMapWidget("widgetmap_" + widget.id);
+                 if (gmodcdash.projAOI === "") {
+                     gmodcdash.projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
+                 } else {
+                     if (typeof gmodcdash.projAOI === "string") {
+                         gmodcdash.projAOI = $.parseJSON(gmodcdash.projAOI);
+                     }
+                 }
+
+                 if (gmodcdash.projAOI) {
+                     gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                         ol.proj.transform([gmodcdash.projAOI[0], gmodcdash.projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([gmodcdash.projAOI[2], gmodcdash.projAOI[3]], "EPSG:4326", "EPSG:3857")),
+                         gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getSize()
+                     );
+                 } else {
+                     gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+                         gmodcdash.projAOI,
+                         gmodcdash.mapWidgetArray["widgetmap_" + widget.id].getSize()
+                     );
+                 }
+                 collectionName = widget.properties[1];
+                 var dateFrom = widget.properties[2];
+                 var dateTo = widget.properties[3];
+                 //var url = gmodcdash.gateway + "/"+which+"ImageCollection";
+                 var url = gmodcdash.gateway + "/ImageCollectionbyIndex";
+                 var bands = "";
+                 if (widget.properties.length === 5) {
+                     bands = widget.properties[4];
+                 }
+                 /********************/
+                 var min = "";
+                 var max = "0.3";
+                 try {
+                     if (widget.min > 0) {
+                         min = widget.min;
+                     }
+
+                     if (widget.max > 0) {
+                         max = widget.max;
+                     }
+                 }
+                 catch (e) { alert(0);}
+                 var visParams = {
+                     min: min,
+                     max: max,
+                     bands: bands
+                 };
+                 //alert(visParams.min + " - " + visParams.max);
+                 var theGeometry = []
+
+                 for(var p = 0; p < gmodcdash.projAOI.length; p++)
+                 {
+
+                    var nextIndex = 0;
+                    if(p < gmodcdash.projAOI.length -1)
+                    {
+                        nextIndex = p + 1;
+                    }
+                    var aPoint = []
+                    aPoint.push(gmodcdash.projAOI[p])
+                    aPoint.push(gmodcdash.projAOI[nextIndex])
+                    theGeometry.push(aPoint)
+                 }
+                 var fPoint = [];
+                 fPoint.push(gmodcdash.projAOI[0]);
+                 fPoint.push(gmodcdash.projAOI[1]);
+                 theGeometry.push(fPoint);
+
+                 $.ajax({
+                     url: url,
+                     type: "POST",
+                     async: true,
+                     indexVal: widget.id,
+                     crossDomain: true,
+                     contentType: "application/json",
+                     data: JSON.stringify({
+                         collectionName: collectionName,
+                         visParams: visParams,
+                         dateFrom: dateFrom,
+                         dateTo: dateTo,
+                         index: which,
+                         geometry: theGeometry
+                     })
+                 }).fail(function (jqXHR, textStatus, errorThrown) {
+                     console.info(jqXHR + textStatus + errorThrown);
+                 }).done(function (data, _textStatus, _jqXHR) {
+                     if (data.errMsg) {
+                         console.info(data.errMsg);
+                     } else {
+                         if (data.hasOwnProperty("mapid")) {
+                             geodash.icameback = data;
+                             geodash.textStatus = _textStatus;
+                             geodash.jqXHR = _jqXHR;
+                             var mapId = data.mapid;
+                             var token = data.token;
+                             var $this = this;
+                             geodash.addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
+                         } else {
+                             console.warn("Wrong Data Returned");
+                         }
+                     }
+                 });
+
+    };
+    this.getTimeSeriesByIndex = function(which, widget)
+    {
+        $.ajax({
+            url: this.gateway + "/timeSeriesIndex2",
+            type: "POST",
+            async: true,
+            indexVal: widget.id,
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify({
+                collectionNameTimeSeries: widget.properties[1],
+                geometry: $.parseJSON(this.projPairAOI),
+                indexName: which,
+                dateFromTimeSeries: widget.properties[2],
+                dateToTimeSeries: widget.properties[3]
+            })
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.warn(jqXHR + textStatus + errorThrown);
+        }).done(function (data, _textStatus, _jqXHR) {
+            if (data.errMsg) {
+                console.warn(data.errMsg);
+            } else {
+                if (data.hasOwnProperty("timeseries")) {
+                    geodash.icameback = data;
+                    geodash.textStatus = _textStatus;
+                    geodash.jqXHR = _jqXHR;
+                    timeseriesData = [];
+                    $.each(data.timeseries, function (ignore, value) {
+                        if (value[0] !== null) {
+                            timeseriesData.push([value[0], value[1]]);
+                        }
+                    });
+                    var $this = this;
+                    text = which;
+                    geodash.graphWidgetArray["widgetgraph_" + $this.indexVal] = geodash.createChart($this.indexVal, text, timeseriesData);
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }
+        });
     };
     this.fillDashboard = function (dashboard) {
         "use strict";
@@ -584,6 +840,12 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             geodash.swapElements(theWidget, document.getElementById("fullholder"));
             var width = 0;
             var height = 0;
+            if (geodash.wStateFull) {
+                $("section#content").css('overflow', 'auto')
+            }
+            else{
+                $("section#content").css('overflow', 'hidden')
+            }
             var widID;
             var refreshType = null;
             if (theWidget.children().children().children()[2].id.includes("widgetmap_")) {
@@ -622,8 +884,17 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                         geodash.mapWidgetArray[widID].updateSize();
                         break;
                     case "graph":
+                        if(geodash.wStateFull)
+                        {
+                            $('#' + widID).removeClass("graphwidget");
+                        }
+                        else
+                        {
+                            $('#' + widID).addClass("graphwidget");
+                        }
                         geodash.graphWidgetArray[widID].setSize(width, height, true);
-                        geodash.completeGraph();
+                        //geodash.completeGraph();
+                        window.setTimeout('gmodcdash.fixGraphSize('+widID+')', 550);
                         break;
                 }
             }
@@ -631,5 +902,12 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         });
         console.info(11);
     };
+    this.fixGraphSize = function(which)
+    {
+        width = $(which).outerWidth();
+        height = $(which).outerHeight();
+        console.info(width);
+        geodash.graphWidgetArray[which.id].setSize(width, height, true)
+    }
 }]);
 

@@ -1,4 +1,5 @@
 <div id="logo-banner">
+    <img id="fao" src="${root}/img/fao.png">
     <img id="usaid" src="${root}/img/usaid.png">
     <img id="nasa" src="${root}/img/nasa.png">
     <img id="adpc" src="${root}/img/adpc.jpg">

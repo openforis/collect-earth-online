@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Mercator Test</title>
+        <link rel="stylesheet" type="text/css" href="css/openlayers-3.13.0.css">
+        <script type="text/javascript" src="js/openlayers-3.13.0.js"></script>
+        <script type="text/javascript" src="js/mercator-openlayers.js"></script>
+    </head>
+    <body>
+        <h1>Mercator Test</h1>
+        <div id="my-map" style="height:300px;border:1px solid black"></div>
+        <script type="text/javascript">
+         var mapConfig = mercator.createMap("my-map", [102.0, 17.0], 5,
+                                            [{title: "DigitalGlobeRecentImagery",
+                                              extent: null,
+                                              sourceConfig: {type: "DigitalGlobe",
+                                                             imageryId: "digitalglobe.nal0g75k",
+                                                             accessToken: "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNqM2RuZTE3dTAwMncyd3Bwanh4MHJ1cmgifQ.LNrR2h_I0kz6fra93XGP2g"}},
+                                             {title: "BingAerial",
+                                              extent: null,
+                                              sourceConfig: {type: "BingMaps",
+                                                             imageryId: "Aerial",
+                                                             accessToken: "AlQPbThspGcsiCnczC-2QVOYU9u_PrteLw6dxNQls99dmLXcr9-qWCM5J4Y2G-pS"}},
+                                             {title: "DigitalGlobeWMSImagery",
+                                              extent: null,
+                                              sourceConfig: {type: "GeoServer",
+                                                             geoserverUrl: "https://services.digitalglobe.com/mapservice/wmsaccess",
+                                                             geoserverParams: {"VERSION": "1.1.1",
+                                                                               "LAYERS": "DigitalGlobe:Imagery",
+                                                                               "CONNECTID": "63f634af-fc31-4d81-9505-b62b4701f8a9"}}}]);
+         console.log(mapConfig);
+        </script>
+    </body>
+</html>
