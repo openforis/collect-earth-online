@@ -18,107 +18,108 @@ import spark.Response;
 public class GeoDash {
 
     public static synchronized String geodashId(Request req, Response res) {
+        String projectId = req.params(":id");
+        String projectTitle = req.queryParams("title");
+        String callback = req.queryParams("callback");
+
         JsonArray projects = readJsonFile("proj.json").getAsJsonArray();
-        Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("projectID").getAsString().equals(req.params(":id")));
+        Optional<JsonObject> matchingProject = findInJsonArray(projects,
+                                                               project -> project.get("projectID").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
-            try{
-                String dashboardJson = readJsonFile("dash-" + project.get("dashboard").getAsString() + ".json").toString();
-                if (req.queryParams("callback") != null) {
-                    return req.queryParams("callback") + "(" + dashboardJson + ")";
+            String dashboardId = project.get("dashboard").getAsString();
+            try {
+                String dashboardJson = readJsonFile("dash-" + dashboardId + ".json").toString();
+                if (callback != null) {
+                    return callback + "(" + dashboardJson + ")";
                 } else {
                     return dashboardJson;
                 }
-            }
-            catch(Exception e)
-            {
-                String newUUID = project.get("dashboard").getAsString();
-                JsonObject newProject = new JsonObject();
-                newProject.addProperty("projectID", req.params(":id"));
-                newProject.addProperty("dashboard", newUUID);
-                projects.add(newProject);
-
-                writeJsonFile("proj.json", projects);
-
+            } catch (Exception e) {
+                // The dash-<dashboardId>.json file doesn't exist, so we need to create a blank one.
                 JsonObject newDashboard = new JsonObject();
-                newDashboard.addProperty("projectID", req.params(":id"));
-                newDashboard.addProperty("projectTitle", req.queryParams("title"));
+                newDashboard.addProperty("projectID", projectId);
+                newDashboard.addProperty("projectTitle", projectTitle);
                 newDashboard.add("widgets", new JsonArray());
-                newDashboard.addProperty("dashboardID", newUUID);
+                newDashboard.addProperty("dashboardID", dashboardId);
 
-                writeJsonFile("dash-" + newUUID + ".json", newDashboard);
+                writeJsonFile("dash-" + dashboardId + ".json", newDashboard);
 
-                if (req.queryParams("callback") != null) {
-                    return req.queryParams("callback") + "(" + newDashboard.toString() + ")";
+                if (callback != null) {
+                    return callback + "(" + newDashboard.toString() + ")";
                 } else {
                     return newDashboard.toString();
                 }
             }
-        //} else if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
-        } else {// if (req.session().attribute("role") != null && req.session().attribute("role").equals("admin")) {
-            String newUUID = UUID.randomUUID().toString();
+        } else {
+            String newDashboardId = UUID.randomUUID().toString();
 
             JsonObject newProject = new JsonObject();
-            newProject.addProperty("projectID", req.params(":id"));
-            newProject.addProperty("dashboard", newUUID);
+            newProject.addProperty("projectID", projectId);
+            newProject.addProperty("dashboard", newDashboardId);
             projects.add(newProject);
 
             writeJsonFile("proj.json", projects);
 
             JsonObject newDashboard = new JsonObject();
-            newDashboard.addProperty("projectID", req.params(":id"));
-            newDashboard.addProperty("projectTitle", req.queryParams("title"));
+            newDashboard.addProperty("projectID", projectId);
+            newDashboard.addProperty("projectTitle", projectTitle);
             newDashboard.add("widgets", new JsonArray());
-            newDashboard.addProperty("dashboardID", newUUID);
+            newDashboard.addProperty("dashboardID", newDashboardId);
 
-            writeJsonFile("dash-" + newUUID + ".json", newDashboard);
+            writeJsonFile("dash-" + newDashboardId + ".json", newDashboard);
 
-            if (req.queryParams("callback") != null) {
-                return req.queryParams("callback") + "(" + newDashboard.toString() + ")";
+            if (callback != null) {
+                return callback + "(" + newDashboard.toString() + ")";
             } else {
                 return newDashboard.toString();
             }
-        }/* else {
-            return "No project exists with ID: " + req.params(":id") + ".";
-        }*/
+        }
     }
 
     public static synchronized String updateDashBoardByID(Request req, Response res) {
         /* Code will go here to update dashboard*/
-        return  "";
+        return "";
     }
 
     public static synchronized String createDashBoardWidgetByID(Request req, Response res) {
-        JsonObject dashboard = readJsonFile("dash-" + req.queryParams("dashID") + ".json").getAsJsonObject();
-        JsonArray widgets;
+        String dashboardId = req.queryParams("dashID");
+        String widgetJson = req.queryParams("widgetJSON");
+        String callback = req.queryParams("callback");
+
+        JsonObject dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
+        JsonArray widgets = dashboard.getAsJsonArray("widgets");
+
         try {
-            widgets = dashboard.getAsJsonArray("widgets");
-        } catch (Exception e) {
-            String oWidgets = dashboard.get("widgets").getAsString();
-            widgets = (JsonArray) parseJson(oWidgets);
-        }
-        try {
-            JsonObject newWidget = parseJson(URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8")).getAsJsonObject();
+            JsonObject newWidget = parseJson(URLDecoder.decode(widgetJson, "UTF-8")).getAsJsonObject();
             widgets.add(newWidget);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
         dashboard.add("widgets", widgets);
-        writeJsonFile("dash-" + req.queryParams("dashID") + ".json", dashboard);
-        if (req.queryParams("callback") != null) {
-            return req.queryParams("callback") + "()";
+        writeJsonFile("dash-" + dashboardId + ".json", dashboard);
+
+        if (callback != null) {
+            return callback + "()";
         } else {
             return "";
         }
     }
 
     public static synchronized String updateDashBoardWidgetByID(Request req, Response res) {
-        JsonObject dashboard = readJsonFile("dash-" + req.queryParams("dashID") + ".json").getAsJsonObject();
+        String dashboardId = req.queryParams("dashID");
+        String widgetId = req.params(":id");
+        String widgetJson = req.queryParams("widgetJSON");
+        String callback = req.queryParams("callback");
+
+        JsonObject dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         JsonArray widgets = dashboard.getAsJsonArray("widgets");
+
         JsonArray updatedWidgets = mapJsonArray(widgets, widget -> {
-                if (widget.get("id").getAsString().equals(req.params(":id"))) {
+                if (widget.get("id").getAsString().equals(widgetId)) {
                     try {
-                        return parseJson(URLDecoder.decode(req.queryParams("widgetJSON"), "UTF-8")).getAsJsonObject();
+                        return parseJson(URLDecoder.decode(widgetJson, "UTF-8")).getAsJsonObject();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -126,23 +127,32 @@ public class GeoDash {
                     return widget;
                 }
             });
+
         dashboard.add("widgets", updatedWidgets);
-        writeJsonFile("dash-" + req.queryParams("dashID") + ".json", dashboard);
-        if (req.queryParams("callback") != null) {
-            return req.queryParams("callback") + "()";
+        writeJsonFile("dash-" + dashboardId + ".json", dashboard);
+
+        if (callback != null) {
+            return callback + "()";
         } else {
             return "";
         }
     }
 
     public static synchronized String deleteDashBoardWidgetByID(Request req, Response res) {
-        JsonObject dashboard = readJsonFile("dash-" + req.queryParams("dashID") + ".json").getAsJsonObject();
+        String dashboardId = req.queryParams("dashID");
+        String widgetId = req.params(":id");
+        String callback = req.queryParams("callback");
+
+        JsonObject dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         JsonArray widgets = dashboard.getAsJsonArray("widgets");
-        JsonArray updatedWidgets = filterJsonArray(widgets, widget -> !widget.get("id").getAsString().equals(req.params(":id")));
+
+        JsonArray updatedWidgets = filterJsonArray(widgets, widget -> !widget.get("id").getAsString().equals(widgetId));
+
         dashboard.add("widgets", updatedWidgets);
-        writeJsonFile("dash-" + req.queryParams("dashID") + ".json", dashboard);
-        if (req.queryParams("callback") != null) {
-            return req.queryParams("callback") + "()";
+        writeJsonFile("dash-" + dashboardId + ".json", dashboard);
+
+        if (callback != null) {
+            return callback + "()";
         } else {
             return "";
         }
