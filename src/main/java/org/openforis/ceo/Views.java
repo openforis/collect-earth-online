@@ -27,6 +27,7 @@ public class Views {
         return model;
     }
 
+    // FIXME: Make this test more robust
     private static void authenticateOrRedirect(Request req, Response res, String[] requiredRoles) {
         String currentRole = req.session().attribute("role");
         if (! Arrays.asList(requiredRoles).contains(currentRole)) {
@@ -69,7 +70,6 @@ public class Views {
     }
 
     public static ModelAndView project(Request req, Response res) {
-        // FIXME: Make this test more robust
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         Map<String, Object> model = getBaseModel(req, "Project", "large");
         model.put("project_id", req.params(":id"));
