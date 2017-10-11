@@ -608,6 +608,7 @@ div#home:before {
 .ol-control button:focus, .ol-control button:hover{
     background-color: #3C948B;
 }
+
 #home #ceo-description {
     position: relative;
     top: 0;
@@ -616,6 +617,7 @@ div#home:before {
     padding: 0.5rem 0rem;
     border-bottom: 2px solid darkgray;
     overflow: auto;
+    display: none;
 }
 
 #home #ceo-description img#ceo-logo {
