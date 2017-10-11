@@ -616,6 +616,7 @@ div#home:before {
     padding: 0.5rem 0rem;
     border-bottom: 2px solid darkgray;
     overflow: auto;
+    display: none;
 }
 
 #home #ceo-description img#ceo-logo {

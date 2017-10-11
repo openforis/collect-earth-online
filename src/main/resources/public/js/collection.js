@@ -100,6 +100,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         } else {
             utils.enable_element("flag-plot-button");
             // map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
+            console.info('currentPlot.samples: ' + this.currentPlot.samples);
             map_utils.draw_points(this.currentPlot.samples);
             window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
@@ -185,9 +186,10 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 .then(angular.bind(this, function successCallback(response) {
                     //alert("Plot " + this.currentPlot.id + " has been flagged.");
                     mreturn = response;
-                    response.data.forEach(function(plot){
+                    /*response.data.forEach(function(plot){
                         map_utils.draw_point(JSON.parse(plot.center).coordinates[0], JSON.parse(plot.center).coordinates[1])
-                    });
+                    });*/
+                    map_utils.draw_projects(response.data, this.root);
 
                 }), function errorCallback(response) {
                     console.log(response);

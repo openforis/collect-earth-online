@@ -464,7 +464,67 @@ map_utils.remove_sample_layer = function () {
     }
     return null;
 };
+
+map_utils.draw_projects = function (project_list, dRoot) {
+
+pList = project_list;
+    gPopup = new ol.Overlay.Popup();
+    map_utils.map_ref.addOverlay(gPopup);
+    var format = new ol.format.GeoJSON();
+    goem = "change me";
+    /*var features = project_list.map(
+        function (plot) {
+
+            var geometry = new ol.geom.Point([JSON.parse(plot.center).coordinates[0], JSON.parse(plot.center).coordinates[1]]).transform("EPSG:4326", "EPSG:3857");
+            pGeom = geometry;
+            return new ol.Feature({"geometry":    geometry,
+
+                                   "pID": plot.id});
+        }
+    );*/
+    var features = project_list.map(function(plot){
+    console.info(0);
+    var lat = JSON.parse(plot.center).coordinates[0];
+    var lng = JSON.parse(plot.center).coordinates[1];
+    latLng.push(lat);
+    latLng.push(lng);
+                            var geometry = new ol.geom.Point([lat, lng]).transform("EPSG:4326", "EPSG:3857");
+                                        pGeom = geometry;
+                                        return new ol.Feature({"geometry":    geometry,
+
+                                                               "pID": plot.id});
+    });
+    gFeatures = features;
+    var vector_source = new ol.source.Vector({"features": features});
+    var vector_style = map_utils.styles["ceoicon"];
+    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
+                                            "source": vector_source,
+                                            "style":  vector_style});
+    layerRef = vector_layer;
+    map_utils.map_ref.addLayer(vector_layer);
+    var extent = vector_layer.getSource().getExtent();
+    map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
+
+    map_utils.map_ref.getViewport().addEventListener("click", function(e) {
+        map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
+            var description = "this click will start the analysis instead";
+            var html = '<div class="cTitle" >';
+            html += '<h1 >' + feature.get("pID") +'</h1> </div>';
+            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
+            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+            gPopup.show(feature.getGeometry().getCoordinates(),html);
+            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
+
+
+        });
+    });
+
+    return map_utils.map_ref;
+}
+var pGeom;
+var latLng = []
 var pList;
+var gFeatures;
 map_utils.draw_project_markers = function (project_list, dRoot) {
     pList = project_list;
     gPopup = new ol.Overlay.Popup();
@@ -498,7 +558,7 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
     );
     var vector_source = new ol.source.Vector({"features": features});
     var vector_style = map_utils.styles["ceoicon"];
-    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
+    var vector_layer = new ol.layer.Vector({"title": "Project Plot Markers",
                                             "source": vector_source,
                                             "style":  vector_style});
     layerRef = vector_layer;
