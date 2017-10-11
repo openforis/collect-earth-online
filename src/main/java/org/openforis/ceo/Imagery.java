@@ -34,27 +34,6 @@ public class Imagery {
         }
     }
 
-    public static synchronized String deleteInstitutionImagery(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        String institutionId = jsonInputs.get("institutionId").getAsString();
-        JsonElement imageryId = jsonInputs.get("imageryId");
-
-        mapJsonFile("institution-list.json",
-                    institution -> {
-                        if (institution.get("id").getAsString().equals(institutionId)) {
-                            JsonArray imagery = institution.getAsJsonArray("imagery");
-                            if (imagery.contains(imageryId)) {
-                                imagery.remove(imageryId);
-                            }
-                            return institution;
-                        } else {
-                            return institution;
-                        }
-                    });
-
-        return "";
-    }
-
     public static synchronized String addInstitutionImagery(Request req, Response res) {
         try {
             JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
@@ -80,8 +59,8 @@ public class Imagery {
             // Create a new source configuration for this imagery
             JsonObject sourceConfig = new JsonObject();
             sourceConfig.addProperty("type", "GeoServer");
-            sourceConfig.addProperty("geoserver_url", geoserverURL);
-            sourceConfig.add("geoserver_params", geoserverParams);
+            sourceConfig.addProperty("geoserverUrl", geoserverURL);
+            sourceConfig.add("geoserverParams", geoserverParams);
 
             // Create a new imagery object
             JsonObject newImagery = new JsonObject();
@@ -89,7 +68,7 @@ public class Imagery {
             newImagery.addProperty("title", imageryTitle);
             newImagery.addProperty("attribution", imageryAttribution);
             newImagery.add("extent", null);
-            newImagery.add("source_config", sourceConfig);
+            newImagery.add("sourceConfig", sourceConfig);
 
             // Write the new entry to imagery-list.json
             imagery.add(newImagery);
@@ -112,6 +91,28 @@ public class Imagery {
             // Indicate that an error occurred with imagery creation
             throw new RuntimeException(e);
         }
+    }
+
+    // FIXME: Delete imagery entries from imagery-list.json once they are no longer referenced by any institution
+    public static synchronized String deleteInstitutionImagery(Request req, Response res) {
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+        String institutionId = jsonInputs.get("institutionId").getAsString();
+        JsonElement imageryId = jsonInputs.get("imageryId");
+
+        mapJsonFile("institution-list.json",
+                    institution -> {
+                        if (institution.get("id").getAsString().equals(institutionId)) {
+                            JsonArray imagery = institution.getAsJsonArray("imagery");
+                            if (imagery.contains(imageryId)) {
+                                imagery.remove(imageryId);
+                            }
+                            return institution;
+                        } else {
+                            return institution;
+                        }
+                    });
+
+        return "";
     }
 
 }
