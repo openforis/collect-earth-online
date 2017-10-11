@@ -128,7 +128,7 @@ public class Server implements SparkApplication {
         get("/about",           (req, res) -> { return freemarker.render(Views.about(req, res)); });
         get("/support",         (req, res) -> { return freemarker.render(Views.support(req, res)); });
         get("/account/:id",     (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        post("/account/:id",    (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
+        post("/account/:id",    (req, res) -> { return freemarker.render(Views.account(OfUsers.updateAccount(req, res), res)); });
         get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res)); });
         get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
@@ -138,10 +138,10 @@ public class Server implements SparkApplication {
         get("/register",        (req, res) -> { return freemarker.render(Views.register(req, res)); });
         post("/register",       (req, res) -> { return freemarker.render(Views.register(OfUsers.register(req, res), res)); });
         get("/password",        (req, res) -> { return freemarker.render(Views.password(req, res)); });
-        post("/password",       (req, res) -> { return freemarker.render(Views.password(Users.getPasswordResetKey(req, res), res)); });
+        post("/password",       (req, res) -> { return freemarker.render(Views.password(OfUsers.getPasswordResetKey(req, res), res)); });
         get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
-        post("/password-reset", (req, res) -> { return freemarker.render(Views.passwordReset(Users.resetPassword(req, res), res)); });
-        get("/logout",          (req, res) -> { return freemarker.render(Views.home(Users.logout(req), res)); });
+        post("/password-reset", (req, res) -> { return freemarker.render(Views.passwordReset(OfUsers.resetPassword(req, res), res)); });
+        get("/logout",          (req, res) -> { return freemarker.render(Views.home(OfUsers.logout(req), res)); });
 
         // Routing Table: Projects API
         get("/get-all-projects",                (req, res) -> { return CollectProjects.getAllProjects(req, res); });
@@ -150,6 +150,7 @@ public class Server implements SparkApplication {
         get("/get-project-stats/:id",           (req, res) -> { return CollectProjects.getProjectStats(req, res); });
         get("/get-unanalyzed-plot/:id",         (req, res) -> { return CollectProjects.getUnanalyzedPlot(req, res); });
         get("/dump-project-aggregate-data/:id", (req, res) -> { return CollectProjects.dumpProjectAggregateData(req, res); });
+        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
         post("/create-project",                 (req, res) -> { return CollectProjects.createProject(req, res); });
         post("/publish-project/:id",            (req, res) -> { return CollectProjects.publishProject(req, res); });
         post("/close-project/:id",              (req, res) -> { return CollectProjects.closeProject(req, res); });
@@ -159,7 +160,7 @@ public class Server implements SparkApplication {
 
         // Routing Table: Users API
         get("/get-all-users",                   (req, res) -> { return OfUsers.getAllUsers(req, res); });
-        post("/update-user-institution-role",   (req, res) -> { return Users.updateInstitutionRole(req, res); });
+        post("/update-user-institution-role",   (req, res) -> { return OfUsers.updateInstitutionRole(req, res); });
         post("/request-institution-membership", (req, res) -> { return OfUsers.requestInstitutionMembership(req, res); });
 
         // Routing Table: Institutions API
@@ -169,8 +170,9 @@ public class Server implements SparkApplication {
         post("/archive-institution/:id",    (req, res) -> { return OfGroups.archiveInstitution(req, res); });
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",             (req, res) -> { return Imagery.getAllImagery(req, res); });
-        post("/delete-institution-imagery", (req, res) -> { return Imagery.deleteInstitutionImagery(req, res); });
+        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
+        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
+        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
