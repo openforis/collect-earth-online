@@ -36,8 +36,8 @@ public class OfUsers {
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-            request.setParser(new JsonObjectParser(JSON_FACTORY));
-        });
+                request.setParser(new JsonObjectParser(JSON_FACTORY));
+            });
     }
 
     private static HttpRequest prepareGetRequest(String url) throws IOException {
@@ -51,7 +51,7 @@ public class OfUsers {
     }
 
     private static JsonElement getResponseAsJson(HttpResponse response) throws IOException {
-        return JsonUtils.parseJson(response.parseAsString());
+        return parseJson(response.parseAsString());
     }
 
     /**
@@ -69,22 +69,25 @@ public class OfUsers {
             data.put("rawPassword", inputPassword);
             HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request;
             if (response.isSuccessStatusCode()) {
+                // Authentication successful
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user request
                 userRequest.getUrl().put("username", inputEmail);
                 String userId = getResponseAsJson(userRequest.execute()).getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
                 HttpRequest roleRequest = prepareGetRequest(OF_USERS_API_URL + "user/" + userId + "/groups"); // get roles
                 JsonArray jsonRoles = getResponseAsJson(roleRequest.execute()).getAsJsonArray();
-                Optional<JsonObject> matchingUser = findInJsonArray(jsonRoles, jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
-                String role = matchingUser.isPresent() ? "admin" : "user";
-                // Authentication successful
+                Optional<JsonObject> matchingRole = findInJsonArray(jsonRoles, jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
+                String role = matchingRole.isPresent() ? "admin" : "user";
                 req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", role);
                 res.redirect(Server.documentRoot + "/home");
+            } else {
+                // Authentication failed
+                req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
+            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
         }
         return req;
     }
@@ -94,6 +97,7 @@ public class OfUsers {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         try {
+            // Validate input params and assign flash_messages if invalid
             if (! Users.isEmail(inputEmail)) {
                 req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
             } else if (inputPassword.length() < 8) {
@@ -112,7 +116,7 @@ public class OfUsers {
                     GenericData data = new GenericData();
                     data.put("username", inputEmail);
                     data.put("rawPassword", inputPassword);
-                    HttpResponse response = preparePostRequest(OF_USERS_API_URL + "user", data).execute(); // login
+                    HttpResponse response = preparePostRequest(OF_USERS_API_URL + "user", data).execute(); // register
                     if (response.isSuccessStatusCode()) {
                         String newUserId = getResponseAsJson(response).getAsJsonObject().get("id").getAsString();
                         // Assign the username and role session attributes
@@ -126,8 +130,34 @@ public class OfUsers {
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
+            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
         }
+        return req;
+    }
+
+    public static Request logout(Request req) {
+        req.session().removeAttribute("userid");
+        req.session().removeAttribute("username");
+        req.session().removeAttribute("role");
+        return req;
+    }
+
+    // FIXME: stub
+    public static Request updateAccount(Request req, Response res) {
+        String accountId = req.params(":id"); // FIXME: Use this
+        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        return req;
+    }
+
+    // FIXME: stub
+    public static Request getPasswordResetKey(Request req, Response res) {
+        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        return req;
+    }
+
+    // FIXME: stub
+    public static Request resetPassword(Request req, Response res) {
+        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
         return req;
     }
 
@@ -139,33 +169,45 @@ public class OfUsers {
                 HttpResponse response = prepareGetRequest(url).execute(); // get group's users
                 if (response.isSuccessStatusCode()) {
                     JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
-                    String stringGroupUsers = toStream(groupUsers).map(groupUser -> {
-                                                                            groupUser.getAsJsonObject("user").addProperty("institutionRole",
-                                                                            groupUser.get("roleCode").getAsString().equals("ADM") ? "admin"
-                                                                            : groupUser.get("roleCode").getAsString().equals("OWN") ? "admin"
-                                                                            : groupUser.get("roleCode").getAsString().equals("OPR") ? "member"
-                                                                            : groupUser.get("roleCode").getAsString().equals("VWR") ? "member"
-                                                                            : groupUser.get("statusCode").getAsString().equals("P") ? "pending"
-                                                                            : "not-member");
-                        return groupUser.get("user");
-                    }).map(user -> {
-                        user.getAsJsonObject().addProperty("email", user.getAsJsonObject().get("username").getAsString());
-                        return user;
-                    }).collect(intoJsonArray).toString();
-                    return stringGroupUsers;
+                    // FIXME: Exclude the superuser account (admin@sig-gis.com) from the returned list of users
+                    return toStream(groupUsers)
+                        .map(groupUser -> {
+                                groupUser.getAsJsonObject("user").addProperty("institutionRole",
+                                                                              groupUser.get("roleCode").getAsString().equals("ADM") ? "admin"
+                                                                              : groupUser.get("roleCode").getAsString().equals("OWN") ? "admin"
+                                                                              : groupUser.get("roleCode").getAsString().equals("OPR") ? "member"
+                                                                              : groupUser.get("roleCode").getAsString().equals("VWR") ? "member"
+                                                                              : groupUser.get("statusCode").getAsString().equals("P") ? "pending"
+                                                                              : "not-member");
+                                return groupUser.getAsJsonObject("user");
+                            })
+                        .map(user -> {
+                                user.addProperty("email", user.get("username").getAsString());
+                                return user;
+                            })
+                        .collect(intoJsonArray)
+                        .toString();
+                } else {
+                    // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                    return (new JsonArray()).toString();
                 }
             } else {
                 HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
                 if (response.isSuccessStatusCode()) {
-                    String jsonUsers = response.parseAsString();
-                    JsonArray users = JsonUtils.parseJson(jsonUsers).getAsJsonArray();
+                    JsonArray users = getResponseAsJson(response).getAsJsonArray();
+                    // FIXME: Exclude the superuser account (admin@sig-gis.com) from the returned list of users
+                    // return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com")).toString();
                     return users.toString();
+                } else {
+                    // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                    return (new JsonArray()).toString();
                 }
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
+            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            return (new JsonArray()).toString();
         }
-        return (new JsonArray()).toString();
     }
 
     public static Map<Integer, String> getInstitutionRoles(int userId) {
@@ -175,55 +217,71 @@ public class OfUsers {
             if (response.isSuccessStatusCode()) {
                 JsonArray userGroups = getResponseAsJson(response).getAsJsonArray();
                 return toStream(userGroups)
-                        .collect(Collectors.toMap(userGroup -> userGroup.get("groupId").getAsInt(),
-                                                  userGroup -> {
-                                                      if (userGroup.get("roleCode").getAsString().equals("ADM")) return "admin";
-                                                      else if (userGroup.get("roleCode").getAsString().equals("OWN")) return "admin";
-                                                      else if (userGroup.get("roleCode").getAsString().equals("OPR")) return "member";
-                                                      else if (userGroup.get("roleCode").getAsString().equals("VWR")) return "member";
-                                                      return "not-member";
-                                                  },
-                                                  (a, b) -> b));
+                    .collect(Collectors.toMap(userGroup -> userGroup.get("groupId").getAsInt(),
+                                              userGroup -> userGroup.get("roleCode").getAsString().equals("ADM") ? "admin"
+                                              : userGroup.get("roleCode").getAsString().equals("OWN") ? "admin"
+                                              : userGroup.get("roleCode").getAsString().equals("OPR") ? "member"
+                                              : userGroup.get("roleCode").getAsString().equals("VWR") ? "member"
+                                              : "not-member",
+                                              (a, b) -> b));
+            } else {
+                // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                return new HashMap<Integer, String>();
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
+            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            return new HashMap<Integer, String>();
         }
-        return new HashMap<Integer, String>();
     }
 
-    public static synchronized String requestInstitutionMembership(Request req, Response res) {
+    // FIXME: stub
+    public static String updateInstitutionRole(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         JsonElement userId = jsonInputs.get("userId");
         String institutionId = jsonInputs.get("institutionId").getAsString();
-        String url = String.format(OF_USERS_API_URL + "group/%s/user/%s", institutionId, userId);
+        String role = jsonInputs.get("role").getAsString();
+
+        return "";
+    }
+
+    public static String requestInstitutionMembership(Request req, Response res) {
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+        String userId = jsonInputs.get("userId").getAsString();
+        String institutionId = jsonInputs.get("institutionId").getAsString();
         try {
-            HttpResponse response = preparePostRequest(url, new GenericData()).execute(); // add user in a group
-            if (response.isSuccessStatusCode()) {
-                //
-                url = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
-                response = prepareGetRequest(url).execute(); // get group's users
-                JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
+            String postUrl = String.format(OF_USERS_API_URL + "group/%s/user/%s", institutionId, userId);
+            // FIXME: Does this add the user to the pending queue for this userGroup?
+            HttpResponse postResponse = preparePostRequest(postUrl, new GenericData()).execute(); // add user in a group
+            if (postResponse.isSuccessStatusCode()) {
+                // FIXME: This branch doesn't do anything useful. Remove it.
+                String getUrl = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
+                HttpResponse getResponse = prepareGetRequest(getUrl).execute(); // get group's users
+                JsonArray groupUsers = getResponseAsJson(getResponse).getAsJsonArray();
                 JsonArray members = new JsonArray();
                 JsonArray admins = new JsonArray();
                 JsonArray pending = new JsonArray();
                 toStream(groupUsers).forEach(groupUser -> {
-                                                if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
-                });
+                        if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
+                        else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
+                        else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
+                        else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
+                        else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
+                    });
                 JsonObject group = groupUsers.get(0).getAsJsonObject();
                 group.add("admins", admins);
                 group.add("members", members);
                 group.add("pending", pending);
-                //
                 return group.toString();
+            } else {
+                // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                return "";
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
+            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            return "";
         }
-        return "";
     }
 
 }
