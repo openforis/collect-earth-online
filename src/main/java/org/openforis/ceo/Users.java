@@ -32,14 +32,14 @@ public class Users {
         if (matchingUser.isPresent()) {
             // Check if password matches
             JsonObject user = matchingUser.get();
-            String userId = user.get("id").getAsString();
-            String userPassword = user.get("password").getAsString();
-            String userRole = user.get("role").getAsString();
-            if (inputPassword.equals(userPassword)) {
+            String storedId = user.get("id").getAsString();
+            String storedPassword = user.get("password").getAsString();
+            String storedRole = user.get("role").getAsString();
+            if (inputPassword.equals(storedPassword)) {
                 // Authentication successful
-                req.session().attribute("userid", userId);
+                req.session().attribute("userid", storedId);
                 req.session().attribute("username", inputEmail);
-                req.session().attribute("role", userRole);
+                req.session().attribute("role", storedRole);
                 res.redirect(Server.documentRoot + "/home");
             } else {
                 // Authentication failed
@@ -64,59 +64,55 @@ public class Users {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         // Validate input params and assign flash_messages if invalid
-        if (isEmail(inputEmail)) {
-            if (inputPassword.length() >= 8) {
-                if (inputPassword.equals(inputPasswordConfirmation)) {
-                    JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-                    Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
-
-                    if (matchingUser.isPresent()) {
-                        req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
-                    } else {
-                        // Add a new user to user-list.json
-                        int newUserId = getNextId(users);
-                        String newUserRole = "user";
-
-                        JsonObject newUser = new JsonObject();
-                        newUser.addProperty("id", newUserId);
-                        newUser.addProperty("email", inputEmail);
-                        newUser.addProperty("password", inputPassword);
-                        newUser.addProperty("role", newUserRole);
-                        newUser.add("reset_key", null);
-                        newUser.add("ip_addr", null);
-
-                        users.add(newUser);
-                        writeJsonFile("user-list.json", users);
-
-                        // Update institution-list.json
-                        mapJsonFile("institution-list.json",
-                                    institution -> {
-                                        if (institution.get("name").getAsString().equals("All Users")) {
-                                            JsonArray members = institution.get("members").getAsJsonArray();
-                                            members.add(newUserId);
-                                            institution.add("members", members);
-                                            return institution;
-                                        } else {
-                                            return institution;
-                                        }
-                                    });
-
-                        // Assign the username and role session attributes
-                        req.session().attribute("userid", newUserId);
-                        req.session().attribute("username", inputEmail);
-                        req.session().attribute("role", newUserRole);
-
-                        // Redirect to the Home page
-                        res.redirect(Server.documentRoot + "/home");
-                    }
-                } else {
-                    req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
-                }
-            } else {
-                req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
-            }
-        } else {
+        if (! isEmail(inputEmail)) {
             req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+        } else if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (! inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else {
+            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+            if (matchingUser.isPresent()) {
+                req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
+            } else {
+                // Add a new user to user-list.json
+                int newUserId = getNextId(users);
+                String newUserRole = "user";
+
+                JsonObject newUser = new JsonObject();
+                newUser.addProperty("id", newUserId);
+                newUser.addProperty("email", inputEmail);
+                newUser.addProperty("password", inputPassword);
+                newUser.addProperty("role", newUserRole);
+                newUser.add("resetKey", null);
+                newUser.add("ipAddr", null);
+
+                users.add(newUser);
+                writeJsonFile("user-list.json", users);
+
+                // Update institution-list.json
+                // FIXME: Remove this code block since the "All Users" institution isn't used anywhere
+                mapJsonFile("institution-list.json",
+                            institution -> {
+                                if (institution.get("name").getAsString().equals("All Users")) {
+                                    JsonArray members = institution.get("members").getAsJsonArray();
+                                    members.add(newUserId);
+                                    institution.add("members", members);
+                                    return institution;
+                                } else {
+                                    return institution;
+                                }
+                            });
+
+                // Assign the username and role session attributes
+                req.session().attribute("userid", newUserId);
+                req.session().attribute("username", inputEmail);
+                req.session().attribute("role", newUserRole);
+
+                // Redirect to the Home page
+                res.redirect(Server.documentRoot + "/home");
+            }
         }
         return req;
     }
