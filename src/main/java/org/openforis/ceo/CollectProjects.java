@@ -1,14 +1,29 @@
 package org.openforis.ceo;
 
 import static java.lang.String.format;
+import static java.math.BigInteger.ONE;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
 import static org.openforis.ceo.JsonUtils.forEachInJsonArray;
+import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.toElementStream;
 import static org.openforis.ceo.PartUtils.partToString;
 import static org.openforis.ceo.PartUtils.partsToJsonObject;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import javax.servlet.MultipartConfigElement;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -26,17 +41,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
-import javax.servlet.MultipartConfigElement;
+
 import spark.Request;
 import spark.Response;
 
@@ -68,10 +73,10 @@ public class CollectProjects {
         params.put("includeCodeListValues", true);
         
         JsonArray allSurveys = getFromCollect("survey", params).getAsJsonArray();
-        return toElementStream(allSurveys)
+        JsonArray result = toElementStream(allSurveys)
             .map(s -> convertToCEOProject((JsonObject) s))
-            .collect(intoJsonArray)
-            .toString();
+            .collect(intoJsonArray);
+		return result.toString();
     }
 
     /**
@@ -141,14 +146,14 @@ public class CollectProjects {
                 JsonObject itemObj = (JsonObject) item;
                 boolean flagged = isFlagged(itemObj);
                 if (flagged) {
-                    totalFlagged.add(BigInteger.ONE);
+                    totalFlagged.add(ONE);
                 }
                 String plotId = itemObj.get("id").getAsString();
                 JsonArray recordSummaries = getCollectRecordSummariesByPlotId(projectId, plotId);
                 if (recordSummaries.size() == 0) {
-                    unanalyzedPlots.add(BigInteger.ONE);
+                    unanalyzedPlots.add(ONE);
                 } else {
-                    analyzedPlots.add(BigInteger.ONE);
+                    analyzedPlots.add(ONE);
                     totalMeasurements.add(BigInteger.valueOf(recordSummaries.size()));
                     
                     toElementStream(recordSummaries).forEach(summary -> {
@@ -351,7 +356,7 @@ public class CollectProjects {
         p.addProperty("id", collectSurvey.get("id").getAsInt());
         p.addProperty("name", collectSurvey.get("name").getAsString());
         p.addProperty("availability", collectSurvey.get("availability").getAsString().toLowerCase());
-        p.addProperty("description", collectSurvey.get("description").getAsString());
+        p.addProperty("description", getMemberValue(collectSurvey, "description", String.class));
         p.addProperty("privacyLevel","public"); //TODO
         JsonObject boundary = new JsonObject();
         boundary.addProperty("type", "Polygon");
@@ -382,9 +387,6 @@ public class CollectProjects {
         p.addProperty("sampleResolution", (String) null); //TODO
         
         JsonArray codeListItems = findElement(collectSurvey, "codeLists[1].items").getAsJsonArray();
-        forEachInJsonArray(codeListItems, item -> {
-            
-        });
         JsonArray sampleValues = toElementStream(codeListItems).map(el -> {
             JsonObject obj = (JsonObject) el;
             JsonObject sampleValue = new JsonObject();
