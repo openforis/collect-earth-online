@@ -123,15 +123,21 @@
 }
 
 .fullmapwidget {
-    height: -webkit-calc(100% - 94px);
-    height: -moz-calc(100% - 94px);
-    height: calc(100% - 94px);
+    height: -webkit-calc(100% - 124px);
+    height: -moz-calc(100% - 124px);
+    height: calc(100% - 124px);
+}
+.highcharts-credits{
+display:none;
 }
 
 .minmapwidget {
     height: 200px;
 }
 
+.graphwidget{
+    height: 250px;
+}
 .statsWidget {
     padding: 5px;
 }
