@@ -316,6 +316,15 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             map_utils.set_current_imagery(this.details.baseMapSource);
 
             if (this.details.id == 0) {
+                // var displayDragBoxBounds = function (dragBox) {
+                //     var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+                //     document.getElementById("lon-min").value = extent[0];
+                //     document.getElementById("lat-min").value = extent[1];
+                //     document.getElementById("lon-max").value = extent[2];
+                //     document.getElementById("lat-max").value = extent[3];
+                // };
+                // mercator.enableDragBoxDraw(mapConfig, displayDragBoxBounds);
+
                 // Enable the dragbox interaction
                 map_utils.enable_dragbox_draw();
 

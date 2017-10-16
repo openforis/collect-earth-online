@@ -160,7 +160,7 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             // Display the project map
             map_utils.digital_globe_base_map({div_name: "home-map-pane",
                                               center_coords: [0.0, 0.0],
-                                              zoom_level: 2},
+                                              zoom_level: 1},
                                              this.imageryList);
 
             // Show the DigitalGlobe RecentImagery layer

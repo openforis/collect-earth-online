@@ -186,9 +186,15 @@ sudo $TOMCAT_HOME/bin/startup.sh
 - Gary W. Johnson (SIG)
 - David S. Saah (SIG)
 - Billy Ashmall (NASA)
+- Stefano Ricci (FAO)
+- Roberto Fontanarosa (FAO)
+- Alfonso SanchezPausDiaz (FAO)
 
 *Emails:*
 
 - gjohnson@sig-gis.com
 - dsaah@sig-gis.com
 - billy.ashmall@nasa.gov
+- stefano.ricci@fao.org
+- roberto.fontanarosa@fao.org
+- alfonso.sanchezpausdiaz@fao.org

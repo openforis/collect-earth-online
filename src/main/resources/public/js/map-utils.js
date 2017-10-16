@@ -52,17 +52,17 @@ map_utils.map_ref = null;
 
 map_utils.create_source = function (source_config) {
     if (source_config.type == "DigitalGlobe") {
-        return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + source_config.imagery_id
-                                       + "/{z}/{x}/{y}.png?access_token=" + source_config.access_token,
+        return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + source_config.imageryId
+                                       + "/{z}/{x}/{y}.png?access_token=" + source_config.accessToken,
                                   attribution: "© DigitalGlobe, Inc"});
     } else if (source_config.type == "BingMaps") {
-        return new ol.source.BingMaps({imagerySet: source_config.imagery_id,
-                                       key: source_config.access_token,
+        return new ol.source.BingMaps({imagerySet: source_config.imageryId,
+                                       key: source_config.accessToken,
                                        maxZoom: 19});
     } else if (source_config.type == "GeoServer") {
         return new ol.source.TileWMS({serverType: "geoserver",
-                                      url: source_config.geoserver_url,
-                                      params: source_config.geoserver_params});
+                                      url: source_config.geoserverUrl,
+                                      params: source_config.geoserverParams});
     } else {
         alert("Cannot create layer with source type " + source_config.type + ".");
         return null;
@@ -70,7 +70,7 @@ map_utils.create_source = function (source_config) {
 };
 
 map_utils.create_layer = function (layer_config, visible) {
-    var source = map_utils.create_source(layer_config.source_config);
+    var source = map_utils.create_source(layer_config.sourceConfig);
     if (source) {
         if (layer_config.extent != null) {
             return new ol.layer.Tile({title: layer_config.title,

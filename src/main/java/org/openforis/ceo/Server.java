@@ -93,8 +93,8 @@ public class Server implements SparkApplication {
 
         // Routing Table: Imagery API
         get("/get-all-imagery",             (req, res) -> { return Imagery.getAllImagery(req, res); });
-        post("/delete-institution-imagery", (req, res) -> { return Imagery.deleteInstitutionImagery(req, res); });
         post("/add-institution-imagery",    (req, res) -> { return Imagery.addInstitutionImagery(req, res); });
+        post("/delete-institution-imagery", (req, res) -> { return Imagery.deleteInstitutionImagery(req, res); });
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });

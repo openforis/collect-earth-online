@@ -608,6 +608,7 @@ div#home:before {
 .ol-control button:focus, .ol-control button:hover{
     background-color: #3C948B;
 }
+
 #home #ceo-description {
     position: relative;
     top: 0;
@@ -833,6 +834,14 @@ Tree expanded icon
 }
 
 #support p {
+    padding: 0.5rem;
+}
+
+#support ul {
+    margin-left: 0.5rem;
+}
+
+#support ul li {
     padding: 0.5rem;
 }
 
