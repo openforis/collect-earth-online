@@ -150,7 +150,7 @@ public class Server implements SparkApplication {
         get("/get-project-stats/:id",           (req, res) -> { return CollectProjects.getProjectStats(req, res); });
         get("/get-unanalyzed-plot/:id",         (req, res) -> { return CollectProjects.getUnanalyzedPlot(req, res); });
         get("/dump-project-aggregate-data/:id", (req, res) -> { return CollectProjects.dumpProjectAggregateData(req, res); });
-        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
+//        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
         post("/create-project",                 (req, res) -> { return CollectProjects.createProject(req, res); });
         post("/publish-project/:id",            (req, res) -> { return CollectProjects.publishProject(req, res); });
         post("/close-project/:id",              (req, res) -> { return CollectProjects.closeProject(req, res); });
@@ -170,9 +170,9 @@ public class Server implements SparkApplication {
         post("/archive-institution/:id",    (req, res) -> { return OfGroups.archiveInstitution(req, res); });
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
-        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
-        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
+//        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
+//        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
+//        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
