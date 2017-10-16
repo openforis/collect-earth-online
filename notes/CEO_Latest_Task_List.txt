@@ -1,0 +1,139 @@
+* Master Feature Request List
+ Phase 1:
+ - About Page :: Move the logos out of the logo-banner and onto the page and add more of them (see the servir.adpc.net landcover tool site)
+ - Support Page :: Put some content here
+ - Register Page :: Add Location and Affiliation fields
+ - Forgot Password Page :: Implement this functionality
+ - Account Page :: Rename to Operator page
+ - Operator Page :: Implement updating the user account details
+ - Operator Page :: Add a table of user statistics
+ - Collection Page :: Make project stats start with the current number assessed or flagged rather than 0
+ - Project Page :: Add dates to project-list.json and project stats table (RLCMS projects = 2017-07-12 for creation and publication)
+ - Project Page :: Allow selecting multiple imagery layers for the map (and parameterizing them with years and stacking profiles)
+ - Project Page :: Add other overview map overlay options
+ - Project Page :: Add additional fields to sample points if passed in CSV and include them in the download data outputs
+ - Project Page :: Hide Configure Geodash button until project has been created
+ - Project Page :: Rewrite gridded plot layout logic in web mercator to remove diagonal lines
+ - Project Page :: Add time sliders (or date pickers) to the DG basemap imagery
+ - GeoDash Page :: Fix admin permissions to satisfy Billy
+
+ Phase 2:
+ - Map-utils.js :: integrate [[https://github.com/camptocamp/ngeo][ngeo]] or [[http://tombatossals.github.io/angular-openlayers-directive][angular-openlayers-directive]] into CEO 
+ - Map-utils.js :: Reimplement map-utils.js around Google Maps API
+ - Collection Page :: Add a Back button
+ - Project + Collection Page :: Enable drawing point, line, and polygon features
+ - Case :: Change snake_case to camelCase in all JS files (i.e., map-utils.js, utils.js, and all JS files that reference their functions)
+ - License :: Ask FAO about changing MIT to AGPL
+ - Code.gov :: Ask about listing CEO under NASA's code.gov entry https://code.gov/#/explore-code/agencies/NASA
+ - Login/Register/Password(-Reset)/Account/Institution Pages :: Reprogram these pages to use the Users REST API (docs on #rfontanarosa)
+ - Project & Dashboard Pages :: Reprogram these pages to use the Collect REST API (docs and examples on #fefrain)
+ - Project Page :: Add a Re-Open Project button
+ - Project Page :: Implement Invitation-only privacy
+ - Project Page :: Create projects for each of Kel's chipsets 2002-2008 (get sample values from Karis) [[mu4e:msgid:AA01E563-4781-42FE-9FDD-8E9FF4B1DB3C@nasa.gov][email]]
+ - Project Page :: Add Karis' CSV calculations to the import/export process
+ - Map-utils.js :: Replace loops in map-utils.js with stream constructs
+ - Docker :: Update the Docker image (maybe use https://github.com/iron-io/dockers?)
+ - Cross-browser Testing :: Test CEO website with Browserstack
+ - Issue Tracking :: Move Github tasks from Mapcha and CEO into Trello or consolidate everything under CEO
+
+ Randy Hamilton/Costa Rica:
+ - Collection Page :: Clear first attribute's colors before assigning second attribute (this week)
+ - Project Page :: Allow downloading raw (non-aggregated) samples (by Tuesday)
+ - Project Page :: Allow assigning multiple attributes to each sample point (by Friday)
+ - Institution Page :: Add support for WMTS imagery sources (by Friday)
+ - Project Page :: Enable loading larger CSV-based projects (e.g., 10,000+ plots) (by Friday)
+ - Project Page :: Enable uploading the classification scheme in a CSV
+ - Project Page :: Enable organizing categories hierarchically
+
+ Ethiopia Requests:
+ - The ability to count elements within a plot
+ - The option to export/download data in various formats (e.g., xml, csv, Fusion table)
+ - Integration with SAIKU
+
+ Collect Integration:
+ - Replace Stefano's for loops in CollectProjects.java with recursions or stream operations
+ - Proofread CollectProjects.java
+ - Look at Stefano's Collect code:
+   - org.openforis.collect.metamodel.SimpleSurveyCreationParameters
+   - org.openforis.collect.metamodel.SurveyCreator
+   - org.openforis.collect.io.metadata.samplingpointdata.SamplingPointDataGenerator
+ - Respond to Alfonso's github tickets
+
+ Database Improvements:
+ - Move attribution field from project-list.json to imagery-list.json (set in Projects.java, used in collection.ftl and collection.js)
+ - Eliminate projects with no data
+
+ DigitalGlobe:
+ - Follow up with mike.quinene@digitalglobe.com about DG WFS timestamp examples
+
+ Kel, Dave, and Karis:
+ - review Billy's code changes:
+   - stylesheet.css
+   - home.js
+   - collection.js
+ - hide Basemap WMS from non-SERVIR institutions
+ - remove Recent Imagery* layers from CEO
+ - rebuild Docker image
+ - integrate mercator-openlayers.js
+
+ Style Rewrite:
+ - Clean up Billy's latest homepage rewrite updates
+   - stylesheet.css
+   - home.js
+   - home.ftl
+   - institution.ftl
+   - navbar.ftl
+   - start-content.ftl
+   - public/ceoicon.png
+   - public/img/institution_info.png
+   - public/css/ol3-popup.css
+   - public/js/map-utils.js
+   - public/js/ol3-popup.js
+   - header.ftl
+   - public/css/images/closedTree.png
+   - public/css/images/openTree.png
+ - Chat with Billy about next steps, merging pull requests, and coding style
+
+ - DG Docs:
+   - CQL :: https://dgcsportal.readme.io/docs/4-common-query-language-wms
+   - Stacking Profiles :: https://dgcsportal.readme.io/docs/11-existing-stacking-profiles and [[file:~/sig/projects/collect-earth-online/notes/Stacking_Profile_Samples.docx][Stacking_Profile_Samples.docx]]
+* Backend Code Sprint
+** Server.java
+*** TODO Enable HTTPS site-wide: [expand]
+    1. Get deploy/clientkeystore signed by a certificate authority.
+    2. Include this in declareRoutes and declareRoutesForCollect: secure("deploy/clientkeystore", "ceocert", null, null);
+    Resources:
+    - https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
+    - https://spark.apache.org/docs/latest/security.html
+** Views.java
+*** TODO Make authenticateOrRedirect a more robust function not based on deprecated user roles
+** Imagery.java
+*** TODO In deleteInstitutionImagery, delete imagery entries from imagery-list.json once they are no longer referenced by any institution
+** CollectImagery.java
+*** TODO Implement getAllImagery, addInstitutionImagery, and deleteInstitutionImagery
+** Users.java
+*** TODO Phase out role attributes
+*** TODO Stop adding new users to the "All Users" institution (delete this institution since it isn't used)
+*** TODO Implement updateAccount, getPasswordResetKey, and resetPassword
+** OfUsers.java
+*** TODO Implement updateAccount, getPasswordResetKey, resetPassword, and updateInstitutionRole
+*** TODO CamelCase all references to reset_key and ip_addr fields in the of-users database
+*** TODO Exclude the superuser account (admin@sig-gis.com) from the list of users returned by getAllUsers
+*** TODO Raise a red flag when an error occurs in communicating with the database in getAllUsers, getInstitutionRoles, and requestInstitutionMembership
+*** TODO Reimplement requestInstitutionMembership to add the user to the selected userGroup's pending queue
+** Institutions.java
+** OfGroups.java
+*** TODO Replace for loops
+** Projects.java
+** CollectProjects.java
+*** TODO Implement dumpProjectRawData
+*** TODO Replace for loops
+** imagery-list.json
+*** TODO Make sure all fields are camelCased
+** user-list.json
+*** TODO Make sure all fields are camelCased
+** proj.json
+*** TODO Make sure no repeated project entries exist in proj.json
+** dash-*.json
+*** TODO Make sure all widgets fields are JSON arrays (not strings)
+*** TODO Delete all dash-*.json files that are not referenced in proj.json
