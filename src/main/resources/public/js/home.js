@@ -55,91 +55,78 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             });
     };
 
-    this.togglePanel = function () {
-        if($scope.home.windowWidth <= 600)
-        {
-            if(this.showPanel == true)
-            {
-                    this.showPanel = false;
-                    this.mapWidth = "100%";
-                    this.toggleValue = ">>";
-                    this.btnHolderWidth = "0%";
-                    this.mobileDisplay = "block";
-                    this.togglebtn = "auto;"
-            }
-            else{
-                this.showPanel = true;
-                this.mapWidth = "0%";
-                this.toggleValue = "<<";
-                this.btnHolderWidth = "100%";
-                this.mobileDisplay = "none";
-                this.togglebtn = "0px;"
-            }
-        }
-        else{
-            this.mobileDisplay = "block";
-            this.togglebtn = "auto;"
-            if(this.showPanel == true)
-            {
-                    this.showPanel = false;
-                    this.mapWidth = "100%";
-                    this.toggleValue = ">>";
-                    this.btnHolderWidth = "0%";
-            }
-            else{
-                this.showPanel = true;
-                this.mapWidth = "75%";
-                this.toggleValue = "<<";
-                this.btnHolderWidth = "25%";
-            }
-        }
-        $scope.$$postDigest(function() {
-            map_utils.map_ref.updateSize();
-        });
-    };
-
     this.updateMapSize = function () {
         map_utils.map_ref.updateSize();
     };
 
-    this.checkResizing = function () {
-        if($window.innerWidth <= 600)
-        {
-            if(this.showPanel == false)
-            {
-                    this.mapWidth = "100%";
-                    this.toggleValue = ">>";
-                    this.btnHolderWidth = "0%";
-                    this.mobileDisplay = "block";
-                    this.togglebtn = "auto;"
-
-            }
-            else{
+    // FIXME: why is $scope here?
+    this.togglePanel = function () {
+        if ($scope.home.windowWidth <= 600) {
+            if (this.showPanel == true) {
+                this.showPanel = false;
+                this.mapWidth = "100%";
+                this.toggleValue = ">>";
+                this.btnHolderWidth = "0%";
+                this.mobileDisplay = "block";
+                this.togglebtn = "auto";
+            } else {
+                this.showPanel = true;
                 this.mapWidth = "0%";
                 this.toggleValue = "<<";
                 this.btnHolderWidth = "100%";
                 this.mobileDisplay = "none";
-                this.togglebtn = "0px;"
+                this.togglebtn = "0px";
             }
-        }
-        else{
+        } else {
             this.mobileDisplay = "block";
-            this.togglebtn = "auto;"
-            if(this.showPanel == false)
-            {
-                    this.mapWidth = "100%";
-                    this.toggleValue = ">>";
-                    this.btnHolderWidth = "0%";
-            }
-            else{
-            whatami = this;
+            this.togglebtn = "auto";
+            if (this.showPanel == true) {
+                this.showPanel = false;
+                this.mapWidth = "100%";
+                this.toggleValue = ">>";
+                this.btnHolderWidth = "0%";
+            } else {
+                this.showPanel = true;
                 this.mapWidth = "75%";
                 this.toggleValue = "<<";
                 this.btnHolderWidth = "25%";
             }
         }
-        if(!$scope.$$phase)
-        {
+        // FIXME: use this.updateMapSize()
+        $scope.$$postDigest(function () {
+            map_utils.map_ref.updateSize();
+        });
+    };
+
+    this.checkResizing = function () {
+        if ($window.innerWidth <= 600) {
+            if(this.showPanel == false) {
+                this.mapWidth = "100%";
+                this.toggleValue = ">>";
+                this.btnHolderWidth = "0%";
+                this.mobileDisplay = "block";
+                this.togglebtn = "auto";
+            } else {
+                this.mapWidth = "0%";
+                this.toggleValue = "<<";
+                this.btnHolderWidth = "100%";
+                this.mobileDisplay = "none";
+                this.togglebtn = "0px";
+            }
+        } else {
+            this.mobileDisplay = "block";
+            this.togglebtn = "auto";
+            if (this.showPanel == false) {
+                this.mapWidth = "100%";
+                this.toggleValue = ">>";
+                this.btnHolderWidth = "0%";
+            } else {
+                this.mapWidth = "75%";
+                this.toggleValue = "<<";
+                this.btnHolderWidth = "25%";
+            }
+        }
+        if (!$scope.$$phase) {
             $scope.$apply();
         }
         $scope.home.updateMapSize();
@@ -150,10 +137,13 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
         this.root = documentRoot;
         this.userId = userId;
         this.windowWidth = $window.innerWidth;
-        angular.element($window).bind('resize', function(){
-                   $scope.home.windowWidth = $window.innerWidth;
-                   $scope.home.checkResizing()
-         });
+
+        // FIXME: What is this?
+        angular.element($window).bind("resize", function () {
+            $scope.home.windowWidth = $window.innerWidth;
+            $scope.home.checkResizing();
+        });
+
         if (angular.equals(this.imageryList, [])) {
             // Load the imageryList
             this.getImageryList();
@@ -170,7 +160,7 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             // Display the project map
             map_utils.digital_globe_base_map({div_name: "home-map-pane",
                                               center_coords: [0.0, 0.0],
-                                              zoom_level: 1},
+                                              zoom_level: 2},
                                              this.imageryList);
 
             // Show the DigitalGlobe RecentImagery layer
@@ -179,16 +169,15 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             // Draw markers on the map for each project
             map_utils.draw_project_markers(this.projectList, this.root);
         }
-        whatami = this;
-        if($window.innerWidth <= 600){
+
+        if ($window.innerWidth <= 600) {
             this.showPanel = false;
-            try{
+            try {
                 this.checkResizing();
+            } catch (e) {
+                console.error("Call to checkResizing() failed.");
             }
-            catch(e){}
         }
     };
 
 }]);
-
-var whatami;
