@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.toStream;
 import static org.openforis.ceo.PartUtils.partToString;
 
@@ -43,15 +44,15 @@ public class OfGroups {
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-            request.setParser(new JsonObjectParser(JSON_FACTORY));
-        });
+                request.setParser(new JsonObjectParser(JSON_FACTORY));
+            });
     }
 
     private static HttpRequestFactory createPatchRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-            request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
-            request.setParser(new JsonObjectParser(JSON_FACTORY));
-        });
+                request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
+                request.setParser(new JsonObjectParser(JSON_FACTORY));
+            });
     }
 
     private static HttpRequest prepareGetRequest(String url) throws IOException {
@@ -60,8 +61,8 @@ public class OfGroups {
 
     private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
         return createPatchRequestFactory()
-             .buildPostRequest(new GenericUrl(url),
-                        new JsonHttpContent(new JacksonFactory(), data));
+            .buildPostRequest(new GenericUrl(url),
+                              new JsonHttpContent(new JacksonFactory(), data));
     }
 
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
@@ -71,12 +72,13 @@ public class OfGroups {
     }
 
     private static JsonElement getResponseAsJson(HttpResponse response) throws IOException {
-        return JsonUtils.parseJson(response.parseAsString());
+        return parseJson(response.parseAsString());
     }
 
     public static String getAllInstitutions(Request req, Response res) {
         try {
-            HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "group").execute(); // get all groups
+            String url = OF_USERS_API_URL + "group";
+            HttpResponse response = prepareGetRequest(url).execute(); // get all groups
             if (response.isSuccessStatusCode()) {
                 JsonArray groups = getResponseAsJson(response).getAsJsonArray();
                 String[] hiddenInstitutions = new String[]{"All Users", "Administrators"};
@@ -84,46 +86,69 @@ public class OfGroups {
                                                           group.get("enabled").getAsBoolean() == true
                                                           && !Arrays.asList(hiddenInstitutions).contains(group.get("name").getAsString()));
                 return visibleGroups.toString();
+            } else {
+                // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                return (new JsonArray()).toString();
             }
         } catch (IOException e) {
-            e.printStackTrace(); //TODO
+            e.printStackTrace(); // TODO
+            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            return (new JsonArray()).toString();
         }
-        return "[]";
     }
 
     private static Optional<JsonObject> getInstitutionById(int institutionId) {
         try {
-            String url = String.format(OF_USERS_API_URL + "group/%d", institutionId);
-            HttpResponse response = prepareGetRequest(url).execute(); // get group
-            if (response.isSuccessStatusCode()) {
-                JsonObject group = getResponseAsJson(response).getAsJsonObject();
-                //
-                url = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
-                response = prepareGetRequest(url).execute(); // get group's users
-                JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
+            String groupUrl = String.format(OF_USERS_API_URL + "group/%d", institutionId);
+            HttpResponse groupResponse = prepareGetRequest(groupUrl).execute(); // get group
+            if (groupResponse.isSuccessStatusCode()) {
+                JsonObject group = getResponseAsJson(groupResponse).getAsJsonObject();
+                String groupUsersUrl = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
+                HttpResponse groupUsersResponse = prepareGetRequest(groupUsersUrl).execute(); // get group's users
+                JsonArray groupUsers = getResponseAsJson(groupUsersResponse).getAsJsonArray();
                 JsonArray members = new JsonArray();
                 JsonArray admins = new JsonArray();
                 JsonArray pending = new JsonArray();
-                toStream(groupUsers).forEach(groupUser -> {
-                                                if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
-                                                else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
-                });
+                toStream(groupUsers)
+                    .forEach(groupUser -> {
+                            if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
+                            else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
+                            else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
+                            else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
+                            else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
+                        });
                 group.add("admins", admins);
                 group.add("members", members);
                 group.add("pending", pending);
-                //
                 return Optional.ofNullable(group);
+            } else {
+                // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                return Optional.empty();
             }
         } catch (IOException e) {
-            e.printStackTrace(); //TODO
+            e.printStackTrace(); // TODO
+            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
-    public static synchronized String updateInstitution(Request req, Response res) {
+    public static String getInstitutionDetails(Request req, Response res) {
+        int institutionId = Integer.parseInt(req.params(":id"));
+        Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
+        if (matchingInstitution.isPresent()) {
+            return matchingInstitution.get().toString();
+        } else {
+            JsonObject noInstitutionFound = new JsonObject();
+            noInstitutionFound.addProperty("id", "-1");
+            noInstitutionFound.addProperty("name", "No institution with ID=" + institutionId);
+            noInstitutionFound.addProperty("logo", "");
+            noInstitutionFound.addProperty("url", "");
+            noInstitutionFound.addProperty("description", "");
+            return noInstitutionFound.toString();
+        }
+    }
+
+    public static String updateInstitution(Request req, Response res) {
         try {
             String institutionId = req.params(":id");
 
@@ -158,8 +183,6 @@ public class OfGroups {
                 imagery.add(5);
                 imagery.add(6);
 
-
-
                 // Add parameters
                 Map<String, String> parameters = Maps.newHashMap();
                 parameters.put("userid", "" + userid);
@@ -185,8 +208,6 @@ public class OfGroups {
                 if (response.isSuccessStatusCode()) {
                     JsonObject group = getResponseAsJson(response).getAsJsonObject();
 
-
-
                     JsonObject newInstitution = new JsonObject();
                     newInstitution.addProperty("id", group.get("id").getAsString());
                     newInstitution.addProperty("name", name);
@@ -209,33 +230,19 @@ public class OfGroups {
         return "";
     }
 
-    public static String getInstitutionDetails(Request req, Response res) {
-        int institutionId = Integer.parseInt(req.params(":id"));
-        Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
-        if (matchingInstitution.isPresent()) {
-            return matchingInstitution.get().toString();
-        } else {
-            JsonObject noInstitutionFound = new JsonObject();
-            noInstitutionFound.addProperty("id", "-1");
-            noInstitutionFound.addProperty("name", "No institution with ID=" + institutionId);
-            noInstitutionFound.addProperty("logo", "");
-            noInstitutionFound.addProperty("url", "");
-            noInstitutionFound.addProperty("description", "");
-            return noInstitutionFound.toString();
-        }
-    }
-
-    public static synchronized String archiveInstitution(Request req, Response res) {
+    public static String archiveInstitution(Request req, Response res) {
         String institutionId = req.params(":id");
+        String url = String.format(OF_USERS_API_URL + "group/%s", institutionId);
         GenericData data = new GenericData();
         data.put("enabled", false);
-        String url = String.format(OF_USERS_API_URL + "group/%s", institutionId);
         try {
             preparePatchRequest(url, data).execute(); // change group
+            return "";
         } catch (IOException e) {
             e.printStackTrace(); // TODO
+            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            return "";
         }
-        return "";
     }
 
 }
