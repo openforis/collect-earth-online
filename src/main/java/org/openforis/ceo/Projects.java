@@ -214,9 +214,11 @@ public class Projects {
 
     public static String getUnanalyzedPlot(Request req, Response res) {
         String projectId = req.params(":id");
+        String currentPlotId = req.queryParams("currentPlotId");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
         JsonArray unanalyzedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == false
-                                                                   && plot.get("analyses").getAsInt() == 0);
+                                                                   && plot.get("analyses").getAsInt() == 0
+                                                                   && !plot.get("id").getAsString().equals(currentPlotId));
         int numPlots = unanalyzedPlots.size();
         if (numPlots > 0) {
             int randomIndex = (int) Math.floor(numPlots * Math.random());
