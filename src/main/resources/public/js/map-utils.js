@@ -209,6 +209,13 @@ map_utils.styles =
                                             {"color": "#8b2323",
                                              "width": 2})})}),
 
+     "red_fill": new ol.style.Style(
+         {"image": new ol.style.Circle({"radius": 5,
+                                        "fill": new ol.style.Fill({"color": "#8b2323"}),
+                                        "stroke": new ol.style.Stroke(
+                                            {"color": "#ffffff",
+                                             "width": 1})})}),
+
      "blue_point": new ol.style.Style(
          {"image": new ol.style.Circle({"radius": 5,
                                         "fill": null,
@@ -525,12 +532,15 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
 };
 var layerRef;
 var gPopup;
-map_utils.draw_point = function (lon, lat) {
+map_utils.draw_point = function (lon, lat, style) {
+    if(style === null){
+        style = "red_point";
+    }
     var coords = map_utils.reproject_to_map(lon, lat);
     var geometry = new ol.geom.Point(coords);
     var feature = new ol.Feature({geometry: geometry});
     var vector_source = new ol.source.Vector({features: [feature]});
-    var style = map_utils.styles["red_point"];
+    var style = map_utils.styles[style];
     var vector_layer = new ol.layer.Vector({source: vector_source,
                                             style: style});
     map_utils.map_ref.addLayer(vector_layer);

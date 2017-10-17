@@ -183,7 +183,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.loadProjectPlots = function(){
         $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
                 .then(angular.bind(this, function successCallback(response) {
-                    //alert("Plot " + this.currentPlot.id + " has been flagged.");
+                    alert("Plot " + this.currentPlot.id + " has been flagged.");
                     mreturn = response;
                     response.data.forEach(function(plot){
                         map_utils.draw_point(JSON.parse(plot.center).coordinates[0], JSON.parse(plot.center).coordinates[1])
