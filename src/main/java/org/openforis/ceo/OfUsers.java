@@ -67,7 +67,7 @@ public class OfUsers {
             GenericData data = new GenericData();
             data.put("username", inputEmail);
             data.put("rawPassword", inputPassword);
-            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request;
+            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request
             if (response.isSuccessStatusCode()) {
                 // Authentication successful
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user request
@@ -146,22 +146,61 @@ public class OfUsers {
         return req;
     }
 
-    // FIXME: stub
     public static Request updateAccount(Request req, Response res) {
-        String accountId = req.params(":id"); // FIXME: Use this
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String accountId = req.session().attribute("userid");
+        String inputEmail = req.queryParams("email");
+        String inputPassword = req.queryParams("password");
+        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        String inputCurrentPassword = req.queryParams("current-password");
+        if (!inputPassword.equals(inputPasswordConfirmation)) {
+            //TODO
+        } else {
+            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
+        }
         return req;
     }
 
-    // FIXME: stub
     public static Request getPasswordResetKey(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String inputEmail = req.queryParams("email");
+        try {
+            GenericData data = new GenericData();
+            data.put("username", inputEmail);
+            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password key request
+            if (response.isSuccessStatusCode()) {
+                JsonObject user = getResponseAsJson(response).getAsJsonObject();
+                //Mail.sendMail("collectearth.mail@gmail.com", inputEmail, "smtp.gmail.com", "SUBJECT", user.get("resetKey").getAsString());
+                req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); //TODO
+            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+        }
         return req;
     }
 
     // FIXME: stub
     public static Request resetPassword(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String inputEmail = req.queryParams("email");
+        String inputResetKey = req.queryParams("password-reset-key");
+        String inputPassword = req.queryParams("password");
+        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        if (!inputPassword.equals(inputPasswordConfirmation)) {
+            try {
+                GenericData data = new GenericData();
+                data.put("username", inputEmail);
+                data.put("resetKey", inputResetKey);
+                data.put("newPassword", inputPassword);
+                HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password request
+                if (response.isSuccessStatusCode()) {
+                    req.session().attribute("flash_messages", new String[]{"The password has been changed."});
+                }
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO
+                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            }
+        } else {
+            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
+        }
         return req;
     }
 
