@@ -7,6 +7,7 @@ import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -36,12 +37,25 @@ public class OfUsers {
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-                request.setParser(new JsonObjectParser(JSON_FACTORY));
-            });
+            request.setParser(new JsonObjectParser(JSON_FACTORY));
+        });
+    }
+
+    private static HttpRequestFactory createPatchRequestFactory() {
+        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
+            request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
+            request.setParser(new JsonObjectParser(JSON_FACTORY));
+        });
     }
 
     private static HttpRequest prepareGetRequest(String url) throws IOException {
         return createRequestFactory().buildGetRequest(new GenericUrl(url));
+    }
+
+    private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
+        return createPatchRequestFactory()
+             .buildPostRequest(new GenericUrl(url),
+                               new JsonHttpContent(new JacksonFactory(), data));
     }
 
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
@@ -147,13 +161,34 @@ public class OfUsers {
     }
 
     public static Request updateAccount(Request req, Response res) {
-        String accountId = req.session().attribute("userid");
+        String userId = req.session().attribute("userid");
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         String inputCurrentPassword = req.queryParams("current-password");
-        if (!inputPassword.equals(inputPasswordConfirmation)) {
-            //TODO
+        if (inputPassword.equals(inputPasswordConfirmation)) {
+            try {
+                GenericData data = new GenericData();
+                data.put("username", inputEmail);
+                data.put("rawPassword", inputCurrentPassword);
+                HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute();
+                if (response.isSuccessStatusCode()) {
+                    data = new GenericData();
+                    data.put("username", inputEmail);
+                    String url = String.format(OF_USERS_API_URL + "user/%s", userId);
+                    preparePatchRequest(url, data).execute();
+                    data = new GenericData();
+                    data.put("username", inputEmail);
+                    data.put("newPassword", inputPassword);
+                    preparePostRequest(OF_USERS_API_URL + "change-password", data).execute();
+                    req.session().attribute("username", inputEmail);
+                } else {
+                    req.session().attribute("flash_messages", new String[]{"Invalid password."});
+                }
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO
+                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            }
         } else {
             req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
         }
@@ -168,7 +203,7 @@ public class OfUsers {
             HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password key request
             if (response.isSuccessStatusCode()) {
                 JsonObject user = getResponseAsJson(response).getAsJsonObject();
-                //Mail.sendMail("collectearth.mail@gmail.com", inputEmail, "smtp.gmail.com", "SUBJECT", user.get("resetKey").getAsString());
+                Mail.sendMail("collectearth.mail@gmail.com", inputEmail, "smtp.gmail.com", "587", "PASSWORD", "SUBJECT", user.get("resetKey").getAsString());
                 req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
             }
         } catch (IOException e) {
@@ -178,13 +213,12 @@ public class OfUsers {
         return req;
     }
 
-    // FIXME: stub
     public static Request resetPassword(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputResetKey = req.queryParams("password-reset-key");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
-        if (!inputPassword.equals(inputPasswordConfirmation)) {
+        if (inputPassword.equals(inputPasswordConfirmation)) {
             try {
                 GenericData data = new GenericData();
                 data.put("username", inputEmail);

@@ -61,7 +61,7 @@ public class OfGroups {
     private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
         return createPatchRequestFactory()
              .buildPostRequest(new GenericUrl(url),
-                        new JsonHttpContent(new JacksonFactory(), data));
+                               new JsonHttpContent(new JacksonFactory(), data));
     }
 
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
