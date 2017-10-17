@@ -122,42 +122,43 @@ public class JsonUtils {
         writeJsonFile(filename, updatedArray);
     }
 
-   private static JsonElement walkJsonPath(JsonElement currentEl, String path, LinkedList<String> pathParts) {
-       if (pathParts.peekFirst() != null) {
-           String pathPart = pathParts.removeFirst();
-           if (currentEl instanceof JsonObject) {
-               JsonObject currentObj = (JsonObject) currentEl;
-               Pattern arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
-               Matcher arrayIndexMatcher = arrayIndexPattern.matcher(pathPart);
-               if (arrayIndexMatcher.matches()) {
-                   String arrayObjName = arrayIndexMatcher.group(1);
-                   String arrayIdxStr = arrayIndexMatcher.group(2);
-                   JsonArray array = currentObj.get(arrayObjName).getAsJsonArray();
-                   JsonElement nextEl = array.get(Integer.parseInt(arrayIdxStr));
-                   return walkJsonPath(nextEl, path, pathParts);
-               } else {
-                   Pattern propertyNamePattern = Pattern.compile("\\w+");
-                   Matcher propertyNameMatcher = propertyNamePattern.matcher(pathPart);
-                   if (propertyNameMatcher.matches()) {
-                       String propertyName = propertyNameMatcher.group();
-                       JsonElement nextEl = currentObj.get(propertyName);
-                       return walkJsonPath(nextEl, path, pathParts);
-                   } else {
-                       throw new IllegalArgumentException("Unexpected path part for a JSON object : " + pathPart);
-                   }
-               }
-           } else {
-               throw new IllegalArgumentException("Invalid path for JSON object : " + path);
-           }
-       } else {
-           return currentEl;
-       }
-   }
+    private static JsonElement walkJsonPath(JsonElement currentEl, String path, LinkedList<String> pathParts) {
+        if (pathParts.peekFirst() == null) {
+            return currentEl;
+        } else {
+            String pathPart = pathParts.removeFirst();
+            if (currentEl instanceof JsonObject) {
+                JsonObject currentObj = (JsonObject) currentEl;
+                Pattern arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
+                Matcher arrayIndexMatcher = arrayIndexPattern.matcher(pathPart);
+                if (arrayIndexMatcher.matches()) {
+                    String arrayObjName = arrayIndexMatcher.group(1);
+                    String arrayIdxStr = arrayIndexMatcher.group(2);
+                    JsonArray array = currentObj.get(arrayObjName).getAsJsonArray();
+                    JsonElement nextEl = array.get(Integer.parseInt(arrayIdxStr));
+                    return walkJsonPath(nextEl, path, pathParts);
+                } else {
+                    Pattern propertyNamePattern = Pattern.compile("\\w+");
+                    Matcher propertyNameMatcher = propertyNamePattern.matcher(pathPart);
+                    if (propertyNameMatcher.matches()) {
+                        String propertyName = propertyNameMatcher.group();
+                        JsonElement nextEl = currentObj.get(propertyName);
+                        return walkJsonPath(nextEl, path, pathParts);
+                    } else {
+                        throw new IllegalArgumentException("Unexpected path part for a JSON object : " + pathPart);
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("Invalid path for JSON object: " + path);
+            }
+        }
+    }
 
-   public static JsonElement findElement(JsonObject jsonObj, String path) {
-       return walkJsonPath(jsonObj, path, new LinkedList<String>(Arrays.asList(path.split("\\."))));
-   }
-    
+    public static JsonElement findElement(JsonObject jsonObj, String path) {
+        LinkedList<String> pathParts = new LinkedList<String>(Arrays.asList(path.split("\\.")));
+        return walkJsonPath(jsonObj, path, pathParts);
+    }
+
     // public static JsonElement findElement(JsonObject jsonObj, String path) {
     //     String[] pathParts = path.split("\\.");
     //     JsonElement currentEl = jsonObj;
@@ -182,24 +183,24 @@ public class JsonUtils {
     //                 }
     //             }
     //         } else if (currentEl instanceof JsonNull) {
-    //         	return currentEl;
+    //             return currentEl;
     //         } else {
     //             throw new IllegalArgumentException("Invalid path for JSON object : " + path);
     //         }
     //     }
     //     return currentEl;
     // }
-    
+
     @SuppressWarnings("unchecked")
-	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
-    	JsonElement el = obj.get(property);
-    	if (el == null) {
-    		return null;
-    	} else if (type == String.class) {
-    		return (T) el.getAsString();
-    	} else {
-    		throw new IllegalArgumentException("Unsupported type: " + type);
-    	}
+    public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
+        JsonElement el = obj.get(property);
+        if (el == null) {
+            return null;
+        } else if (type == String.class) {
+            return (T) el.getAsString();
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
     }
 
 }
