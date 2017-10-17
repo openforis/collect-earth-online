@@ -22,6 +22,7 @@ dependencies {
     compile 'org.geotools:gt-epsg-hsql:15.1'
     compile 'net.bull.javamelody:javamelody-core:1.68.1'
     compile 'com.lowagie:itext:2.1.7'
+    compile 'javax.mail:mail:1.4'
     testCompile 'junit:junit:4.12'
 }
 
