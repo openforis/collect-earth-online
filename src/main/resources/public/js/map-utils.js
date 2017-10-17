@@ -463,11 +463,19 @@ map_utils.disable_selection = function () {
 *****************************************************************************/
 
 map_utils.current_samples = null;
+map_utils.current_plots = null;
 
 map_utils.remove_sample_layer = function () {
     if (map_utils.current_samples != null) {
         map_utils.map_ref.removeLayer(map_utils.current_samples);
         map_utils.current_samples = null;
+    }
+    return null;
+};
+map_utils.remove_plots_layer = function () {
+    if (map_utils.current_plots != null) {
+        map_utils.map_ref.removeLayer(map_utils.current_plots);
+        map_utils.current_plots = null;
     }
     return null;
 };
@@ -532,22 +540,50 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
 };
 var layerRef;
 var gPopup;
-map_utils.draw_point = function (lon, lat, style) {
+map_utils.draw_point = function (lon, lat, style, plotid, collectionRef) {
     if(style === null){
         style = "red_point";
     }
     var coords = map_utils.reproject_to_map(lon, lat);
     var geometry = new ol.geom.Point(coords);
-    var feature = new ol.Feature({geometry: geometry});
+    var feature = new ol.Feature({geometry: geometry, id: plotid});
     var vector_source = new ol.source.Vector({features: [feature]});
     var style = map_utils.styles[style];
     var vector_layer = new ol.layer.Vector({source: vector_source,
                                             style: style});
     map_utils.map_ref.addLayer(vector_layer);
+
     return map_utils.map_ref;
 };
+map_utils.draw_project_points = function (samples, customStyle) {
+    if(customStyle === null){
+            customStyle = "red_point";
+    }
+    mgpass = samples;
+    var features = [];
+    for (i=0; i<samples.length; i++) {
+        var sample = samples[i];
+        var format = new ol.format.GeoJSON();
+        var latlon = format.readGeometry(sample.center);
+        var geometry = latlon.transform("EPSG:4326", "EPSG:3857");
+        var feature = new ol.Feature({geometry: geometry,
+                                      id: sample["id"]});
+        features.push(feature);
+    }
+    var vector_source = new ol.source.Vector({features: features});
+    var style = map_utils.styles[customStyle];
+    var vector_layer = new ol.layer.Vector({source: vector_source,
+                                            style: style});
+    map_utils.remove_plots_layer();
+    map_utils.current_plots = vector_layer;
+    map_utils.map_ref.addLayer(vector_layer);
+    return map_utils.map_ref;
+}
 
-map_utils.draw_points = function (samples) {
+map_utils.draw_points = function (samples, customStyle) {
+    if(customStyle === null){
+        customStyle = "red_point";
+    }
     var features = [];
     for (i=0; i<samples.length; i++) {
         var sample = samples[i];
@@ -559,7 +595,7 @@ map_utils.draw_points = function (samples) {
         features.push(feature);
     }
     var vector_source = new ol.source.Vector({features: features});
-    var style = map_utils.styles["red_point"];
+    var style = map_utils.styles[customStyle];
     var vector_layer = new ol.layer.Vector({source: vector_source,
                                             style: style});
     map_utils.remove_sample_layer();
@@ -650,3 +686,4 @@ map_utils.disable_dragbox_draw = function () {
     }
     return null;
 };
+var mgpass;
