@@ -3,7 +3,6 @@ package org.openforis.ceo;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 
 import com.google.api.client.http.GenericUrl;
@@ -32,6 +31,10 @@ import spark.Response;
 public class OfUsers {
 
     static String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    static final String SMTP_USER = CeoConfig.smtpUser;
+    static final String SMTP_SERVER = CeoConfig.smtpServer;
+    static final String SMTP_PORT = CeoConfig.smtpPort;
+    static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
@@ -112,7 +115,7 @@ public class OfUsers {
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         try {
             // Validate input params and assign flash_messages if invalid
-            if (! Users.isEmail(inputEmail)) {
+            if (!Users.isEmail(inputEmail)) {
                 req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
             } else if (inputPassword.length() < 8) {
                 req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
@@ -166,7 +169,16 @@ public class OfUsers {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         String inputCurrentPassword = req.queryParams("current-password");
-        if (inputPassword.equals(inputPasswordConfirmation)) {
+        // Validate input params and assign flash_messages if invalid
+        if (!Users.isEmail(inputEmail)) {
+            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+        } else if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
+        } else {
             try {
                 GenericData data = new GenericData();
                 data.put("username", inputEmail);
@@ -182,6 +194,7 @@ public class OfUsers {
                     data.put("newPassword", inputPassword);
                     preparePostRequest(OF_USERS_API_URL + "change-password", data).execute();
                     req.session().attribute("username", inputEmail);
+                    req.session().attribute("flash_messages", new String[]{"The user has been updated."});
                 } else {
                     req.session().attribute("flash_messages", new String[]{"Invalid password."});
                 }
@@ -189,8 +202,6 @@ public class OfUsers {
                 e.printStackTrace(); //TODO
                 req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
             }
-        } else {
-            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
         }
         return req;
     }
@@ -203,7 +214,15 @@ public class OfUsers {
             HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password key request
             if (response.isSuccessStatusCode()) {
                 JsonObject user = getResponseAsJson(response).getAsJsonObject();
-                Mail.sendMail("collectearth.mail@gmail.com", inputEmail, "smtp.gmail.com", "587", "PASSWORD", "SUBJECT", user.get("resetKey").getAsString());
+                String body = "Hi "
+                    + inputEmail
+                    + ",\n\n"
+                    + "  To reset your password, simply click the following link:\n\n"
+                    + "  http://ceo.sig-gis.com/password-reset?email="
+                    + inputEmail
+                    + "&password-reset-key="
+                    + user.get("resetKey").getAsString();
+                Mail.sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
                 req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
             }
         } catch (IOException e) {
@@ -218,7 +237,14 @@ public class OfUsers {
         String inputResetKey = req.queryParams("password-reset-key");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
-        if (inputPassword.equals(inputPasswordConfirmation)) {
+        // Validate input params and assign flash_messages if invalid
+        if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
+        } else {
             try {
                 GenericData data = new GenericData();
                 data.put("username", inputEmail);
@@ -232,8 +258,6 @@ public class OfUsers {
                 e.printStackTrace(); //TODO
                 req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
             }
-        } else {
-            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
         }
         return req;
     }
