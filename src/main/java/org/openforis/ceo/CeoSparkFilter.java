@@ -14,6 +14,6 @@ public class CeoSparkFilter extends SparkFilter {
         CeoConfig.smtpPort = filterConfig.getServletContext().getInitParameter("smtpPort");
         CeoConfig.smtpPassword = filterConfig.getServletContext().getInitParameter("smtpPassword");
         super.init(filterConfig);
-        }
+    }
 
 }

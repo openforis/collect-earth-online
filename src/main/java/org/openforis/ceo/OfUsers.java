@@ -40,15 +40,15 @@ public class OfUsers {
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-            request.setParser(new JsonObjectParser(JSON_FACTORY));
-        });
+                request.setParser(new JsonObjectParser(JSON_FACTORY));
+            });
     }
 
     private static HttpRequestFactory createPatchRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-            request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
-            request.setParser(new JsonObjectParser(JSON_FACTORY));
-        });
+                request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
+                request.setParser(new JsonObjectParser(JSON_FACTORY));
+            });
     }
 
     private static HttpRequest prepareGetRequest(String url) throws IOException {
@@ -57,8 +57,8 @@ public class OfUsers {
 
     private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
         return createPatchRequestFactory()
-             .buildPostRequest(new GenericUrl(url),
-                               new JsonHttpContent(new JacksonFactory(), data));
+            .buildPostRequest(new GenericUrl(url),
+                              new JsonHttpContent(new JacksonFactory(), data));
     }
 
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
@@ -119,7 +119,7 @@ public class OfUsers {
                 req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
             } else if (inputPassword.length() < 8) {
                 req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
-            } else if (! inputPassword.equals(inputPasswordConfirmation)) {
+            } else if (!inputPassword.equals(inputPasswordConfirmation)) {
                 req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
             } else {
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
