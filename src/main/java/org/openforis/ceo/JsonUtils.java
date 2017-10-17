@@ -194,7 +194,7 @@ public class JsonUtils {
 	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
     	JsonElement el = obj.get(property);
     	if (el.isJsonNull()) {
-    		return (T) el;
+    		return (T) null;
     	} else if (type == String.class) {
     		return (T) el.getAsString();
     	} else if (type == Double.class) {
