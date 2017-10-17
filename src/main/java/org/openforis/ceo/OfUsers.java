@@ -3,10 +3,10 @@ package org.openforis.ceo;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.toStream;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -31,17 +31,34 @@ import spark.Response;
 public class OfUsers {
 
     static String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    static final String SMTP_USER = CeoConfig.smtpUser;
+    static final String SMTP_SERVER = CeoConfig.smtpServer;
+    static final String SMTP_PORT = CeoConfig.smtpPort;
+    static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-                request.setParser(new JsonObjectParser(JSON_FACTORY));
-            });
+            request.setParser(new JsonObjectParser(JSON_FACTORY));
+        });
+    }
+
+    private static HttpRequestFactory createPatchRequestFactory() {
+        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
+            request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
+            request.setParser(new JsonObjectParser(JSON_FACTORY));
+        });
     }
 
     private static HttpRequest prepareGetRequest(String url) throws IOException {
         return createRequestFactory().buildGetRequest(new GenericUrl(url));
+    }
+
+    private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
+        return createPatchRequestFactory()
+             .buildPostRequest(new GenericUrl(url),
+                               new JsonHttpContent(new JacksonFactory(), data));
     }
 
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
@@ -67,7 +84,7 @@ public class OfUsers {
             GenericData data = new GenericData();
             data.put("username", inputEmail);
             data.put("rawPassword", inputPassword);
-            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request;
+            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request
             if (response.isSuccessStatusCode()) {
                 // Authentication successful
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user request
@@ -98,7 +115,7 @@ public class OfUsers {
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         try {
             // Validate input params and assign flash_messages if invalid
-            if (! Users.isEmail(inputEmail)) {
+            if (!Users.isEmail(inputEmail)) {
                 req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
             } else if (inputPassword.length() < 8) {
                 req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
@@ -146,22 +163,102 @@ public class OfUsers {
         return req;
     }
 
-    // FIXME: stub
     public static Request updateAccount(Request req, Response res) {
-        String accountId = req.params(":id"); // FIXME: Use this
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String userId = req.session().attribute("userid");
+        String inputEmail = req.queryParams("email");
+        String inputPassword = req.queryParams("password");
+        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        String inputCurrentPassword = req.queryParams("current-password");
+        // Validate input params and assign flash_messages if invalid
+        if (!Users.isEmail(inputEmail)) {
+            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+        } else if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
+        } else {
+            try {
+                GenericData data = new GenericData();
+                data.put("username", inputEmail);
+                data.put("rawPassword", inputCurrentPassword);
+                HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute();
+                if (response.isSuccessStatusCode()) {
+                    data = new GenericData();
+                    data.put("username", inputEmail);
+                    String url = String.format(OF_USERS_API_URL + "user/%s", userId);
+                    preparePatchRequest(url, data).execute();
+                    data = new GenericData();
+                    data.put("username", inputEmail);
+                    data.put("newPassword", inputPassword);
+                    preparePostRequest(OF_USERS_API_URL + "change-password", data).execute();
+                    req.session().attribute("username", inputEmail);
+                    req.session().attribute("flash_messages", new String[]{"The user has been updated."});
+                } else {
+                    req.session().attribute("flash_messages", new String[]{"Invalid password."});
+                }
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO
+                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            }
+        }
         return req;
     }
 
-    // FIXME: stub
     public static Request getPasswordResetKey(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String inputEmail = req.queryParams("email");
+        try {
+            GenericData data = new GenericData();
+            data.put("username", inputEmail);
+            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password key request
+            if (response.isSuccessStatusCode()) {
+                JsonObject user = getResponseAsJson(response).getAsJsonObject();
+                String body = "Hi "
+                    + inputEmail
+                    + ",\n\n"
+                    + "  To reset your password, simply click the following link:\n\n"
+                    + "  http://ceo.sig-gis.com/password-reset?email="
+                    + inputEmail
+                    + "&password-reset-key="
+                    + user.get("resetKey").getAsString();
+                Mail.sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); //TODO
+            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+        }
         return req;
     }
 
-    // FIXME: stub
     public static Request resetPassword(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String inputEmail = req.queryParams("email");
+        String inputResetKey = req.queryParams("password-reset-key");
+        String inputPassword = req.queryParams("password");
+        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        // Validate input params and assign flash_messages if invalid
+        if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
+        } else {
+            try {
+                GenericData data = new GenericData();
+                data.put("username", inputEmail);
+                data.put("resetKey", inputResetKey);
+                data.put("newPassword", inputPassword);
+                HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password request
+                if (response.isSuccessStatusCode()) {
+                    req.session().attribute("flash_messages", new String[]{"The password has been changed."});
+                }
+            } catch (IOException e) {
+                e.printStackTrace(); //TODO
+                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            }
+        }
         return req;
     }
 
