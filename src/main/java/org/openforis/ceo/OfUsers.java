@@ -107,25 +107,29 @@ public class OfUsers {
             } else {
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
-                JsonArray users = getResponseAsJson(userRequest.execute()).getAsJsonArray();
-                Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("username").getAsString().equals(inputEmail));
-                if (matchingUser.isPresent()) {
-                    req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
-                } else {
-                    // Add a new user to the database
-                    GenericData data = new GenericData();
-                    data.put("username", inputEmail);
-                    data.put("rawPassword", inputPassword);
-                    HttpResponse response = preparePostRequest(OF_USERS_API_URL + "user", data).execute(); // register
-                    if (response.isSuccessStatusCode()) {
-                        String newUserId = getResponseAsJson(response).getAsJsonObject().get("id").getAsString();
-                        // Assign the username and role session attributes
-                        req.session().attribute("userid", newUserId);
-                        req.session().attribute("username", inputEmail);
-                        req.session().attribute("role", "user");
-                        // Redirect to the Home page
-                        res.redirect(Server.documentRoot + "/home");
+                HttpResponse response = userRequest.execute();
+                if (response.isSuccessStatusCode()) {
+                    JsonArray users = getResponseAsJson(response).getAsJsonArray();
+                    if (users.size() > 0) {
+                        req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
+                    } else {
+                        // Add a new user to the database
+                        GenericData data = new GenericData();
+                        data.put("username", inputEmail);
+                        data.put("rawPassword", inputPassword);
+                        response = preparePostRequest(OF_USERS_API_URL + "user", data).execute(); // register
+                        if (response.isSuccessStatusCode()) {
+                            String newUserId = getResponseAsJson(response).getAsJsonObject().get("id").getAsString();
+                            // Assign the username and role session attributes
+                            req.session().attribute("userid", newUserId);
+                            req.session().attribute("username", inputEmail);
+                            req.session().attribute("role", "user");
+                            // Redirect to the Home page
+                            res.redirect(Server.documentRoot + "/home");
+                        }
                     }
+                } else {
+                    throw new IOException();
                 }
             }
         } catch (IOException e) {
