@@ -1,30 +1,34 @@
 package org.openforis.ceo;
 
-// import javax.mail.Properties;
-// import javax.mail.Session;
-// import javax.mail.MimeMessage;
-// import javax.mail.Message;
-// import javax.mail.InternetAddress;
-// import javax.mail.Transport;
-// import javax.mail.MessagingException;
-
-import java.util.*;
-import javax.mail.*;
-import javax.mail.internet.*;
-import javax.activation.*;
+import java.util.Properties;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 public class Mail {
 
-    public static void sendMail(String from, String to, String smtpServer, String subject, String body) {
+    public static void sendMail(String from, String to, String smtpServer, String smtpPort, String smtpPassword, String subject, String body) {
         try {
             // Get system properties
-            Properties properties = System.getProperties();
+            Properties properties = new Properties();
 
             // Setup mail server
+            properties.setProperty("mail.smtp.auth", "true");
+            properties.setProperty("mail.smtp.starttls.enable", "true");
             properties.setProperty("mail.smtp.host", smtpServer);
+            properties.setProperty("mail.smtp.port", smtpPort);
 
             // Get the default Session object.
-            Session session = Session.getDefaultInstance(properties);
+            Session session = Session.getInstance(properties,
+                                                  new javax.mail.Authenticator() {
+                                                      protected PasswordAuthentication getPasswordAuthentication() {
+                                                          return new PasswordAuthentication(from, smtpPassword);
+                                                      }
+                                                  });
 
             // Create a default MimeMessage object.
             MimeMessage message = new MimeMessage(session);
