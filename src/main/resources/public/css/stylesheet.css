@@ -207,7 +207,7 @@ section#content {
     position: relative;
     width: calc(100% - 2px);
     color: #222;
-    border: 1px solid darkgray;
+    /*border: 1px solid darkgray;*/
 }
 
 section#content a {
@@ -784,7 +784,34 @@ Tree expanded icon
 #collection .ol-rotate {
     top: 4rem;
 }
-
+#collection .fullmap{
+    width:100%;
+}
+#collection .sidemap{
+    width:70%;
+}
+#collection #action-button {
+    line-height: 100%;
+    cursor: pointer;
+    background-color: #3C948B;
+    color: white;
+    font-family: Oswald;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    padding: 0.5rem;
+    border-radius: 0px;
+    -webkit-border-radius: 0px;
+    -o-border-radius: 0px;
+    position: absolute;
+    z-index: 100;
+    left: 50%;
+    margin-left: -108px;
+    cursor: initial;
+    right: 50%;
+    white-space: nowrap;
+    width: fit-content;
+    text-align: center;
+}
 
 
 /**************/
@@ -1141,10 +1168,46 @@ div#institution:before {
     padding: 0rem;
     background: rgba(255,255,255,0.8);
 }
+#collection #hamburger{
+    float:right;
+    cursor:pointer;
+}
+#collection #spacer{
+    content: ' ';
+      display: block;
+      height: 20px;
+}
+#collection #hamburger div{
+   /* width: 35px;
+    height: 5px;
+    background-color: #3fabc6;
+    margin: 6px 0;
+    */
+}
+#collection .projNoStats{
+    display:none;
+}
+#collection .projStats{
+    display:block;
+}
+#collection .arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #3FABC6;
+}
 
+#collection .arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #3FABC6;
+}
 #collection #quit-button {
     position: absolute;
-    right: 30%;
+    /*right: 30%;*/
     height: 40px;
     width: 5rem;
     text-align: center;
@@ -1153,11 +1216,16 @@ div#institution:before {
     box-shadow: none;
     border: none;
 }
-
+#collection .quit-side{
+     right:30%;
+}
+#collection .quit-full{
+    right:0%;
+}
 #collection #image-analysis-pane {
     float: left;
     height: 100%;
-    width: 70%;
+    /*width: 70%;*/
     background-color: darkgray;
 }
 
