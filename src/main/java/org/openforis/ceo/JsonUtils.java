@@ -6,7 +6,9 @@ import java.io.FileWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -19,7 +21,6 @@ import java.util.stream.StreamSupport;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -121,47 +122,11 @@ public class JsonUtils {
         writeJsonFile(filename, updatedArray);
     }
 
-//    private static JsonElement walkJsonPath(JsonElement currentEl, String path, Stream<String> pathParts) {
-//        Optional<String> maybePathPart = pathParts.findFirst();
-//        if (maybePathPart.isPresent()) {
-//            String pathPart = maybePathPart.get();
-//            if (currentEl instanceof JsonObject) {
-//                JsonObject currentObj = (JsonObject) currentEl;
-//                Pattern arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
-//                Matcher arrayIndexMatcher = arrayIndexPattern.matcher(pathPart);
-//                if (arrayIndexMatcher.matches()) {
-//                    String arrayObjName = arrayIndexMatcher.group(1);
-//                    String arrayIdxStr = arrayIndexMatcher.group(2);
-//                    JsonArray array = currentObj.get(arrayObjName).getAsJsonArray();
-//                    JsonElement nextEl = array.get(Integer.parseInt(arrayIdxStr));
-//                    return walkJsonPath(nextEl, path, pathParts.skip(1));
-//                } else {
-//                    Pattern propertyNamePattern = Pattern.compile("\\w+");
-//                    Matcher propertyNameMatcher = propertyNamePattern.matcher(pathPart);
-//                    if (propertyNameMatcher.matches()) {
-//                        String propertyName = propertyNameMatcher.group();
-//                        JsonElement nextEl = currentObj.get(propertyName);
-//                        return walkJsonPath(nextEl, path, pathParts.skip(1));
-//                    } else {
-//                        throw new IllegalArgumentException("Unexpected path part for a JSON object : " + pathPart);
-//                    }
-//                }
-//            } else {
-//                throw new IllegalArgumentException("Invalid path for JSON object : " + path);
-//            }
-//        } else {
-//            return currentEl;
-//        }
-//    }
-//
-//    public static JsonElement findElement(JsonObject jsonObj, String path) {
-//        return walkJsonPath(jsonObj, path, Arrays.stream(path.split("\\.")));
-//    }
-    
-    public static JsonElement findElement(JsonObject jsonObj, String path) {
-        String[] pathParts = path.split("\\.");
-        JsonElement currentEl = jsonObj;
-        for (String pathPart : pathParts) {
+    private static JsonElement walkJsonPath(JsonElement currentEl, String path, LinkedList<String> pathParts) {
+        if (pathParts.peekFirst() == null) {
+            return currentEl;
+        } else {
+            String pathPart = pathParts.removeFirst();
             if (currentEl instanceof JsonObject) {
                 JsonObject currentObj = (JsonObject) currentEl;
                 Pattern arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
@@ -170,26 +135,62 @@ public class JsonUtils {
                     String arrayObjName = arrayIndexMatcher.group(1);
                     String arrayIdxStr = arrayIndexMatcher.group(2);
                     JsonArray array = currentObj.get(arrayObjName).getAsJsonArray();
-                    currentEl = array.get(Integer.parseInt(arrayIdxStr));
+                    JsonElement nextEl = array.get(Integer.parseInt(arrayIdxStr));
+                    return walkJsonPath(nextEl, path, pathParts);
                 } else {
                     Pattern propertyNamePattern = Pattern.compile("\\w+");
                     Matcher propertyNameMatcher = propertyNamePattern.matcher(pathPart);
                     if (propertyNameMatcher.matches()) {
                         String propertyName = propertyNameMatcher.group();
-                        currentEl = currentObj.get(propertyName);
+                        JsonElement nextEl = currentObj.get(propertyName);
+                        return walkJsonPath(nextEl, path, pathParts);
                     } else {
-                        throw new IllegalArgumentException("Unexpected path parth for a JSON object : " + pathPart);
+                        throw new IllegalArgumentException("Unexpected path part for a JSON object : " + pathPart);
                     }
                 }
-            } else if (currentEl instanceof JsonNull) {
-            	return currentEl;
             } else {
-                throw new IllegalArgumentException("Invalid path for JSON object : " + path);
+                throw new IllegalArgumentException("Invalid path for JSON object: " + path);
             }
         }
-        return currentEl;
     }
-    
+
+    public static JsonElement findElement(JsonObject jsonObj, String path) {
+        LinkedList<String> pathParts = new LinkedList<String>(Arrays.asList(path.split("\\.")));
+        return walkJsonPath(jsonObj, path, pathParts);
+    }
+
+    // public static JsonElement findElement(JsonObject jsonObj, String path) {
+    //     String[] pathParts = path.split("\\.");
+    //     JsonElement currentEl = jsonObj;
+    //     for (String pathPart : pathParts) {
+    //         if (currentEl instanceof JsonObject) {
+    //             JsonObject currentObj = (JsonObject) currentEl;
+    //             Pattern arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
+    //             Matcher arrayIndexMatcher = arrayIndexPattern.matcher(pathPart);
+    //             if (arrayIndexMatcher.matches()) {
+    //                 String arrayObjName = arrayIndexMatcher.group(1);
+    //                 String arrayIdxStr = arrayIndexMatcher.group(2);
+    //                 JsonArray array = currentObj.get(arrayObjName).getAsJsonArray();
+    //                 currentEl = array.get(Integer.parseInt(arrayIdxStr));
+    //             } else {
+    //                 Pattern propertyNamePattern = Pattern.compile("\\w+");
+    //                 Matcher propertyNameMatcher = propertyNamePattern.matcher(pathPart);
+    //                 if (propertyNameMatcher.matches()) {
+    //                     String propertyName = propertyNameMatcher.group();
+    //                     currentEl = currentObj.get(propertyName);
+    //                 } else {
+    //                     throw new IllegalArgumentException("Unexpected path parth for a JSON object : " + pathPart);
+    //                 }
+    //             }
+    //         } else if (currentEl instanceof JsonNull) {
+    //             return currentEl;
+    //         } else {
+    //             throw new IllegalArgumentException("Invalid path for JSON object : " + path);
+    //         }
+    //     }
+    //     return currentEl;
+    // }
+
     @SuppressWarnings("unchecked")
 	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
     	JsonElement el = obj.get(property);
