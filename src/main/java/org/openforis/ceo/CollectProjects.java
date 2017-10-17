@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static java.math.BigInteger.ONE;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
-import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.toElementStream;
@@ -13,11 +12,8 @@ import static org.openforis.ceo.PartUtils.partsToJsonObject;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -35,7 +31,7 @@ import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.GenericData;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -68,12 +64,13 @@ public class CollectProjects {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("userId", userId);
         params.put("groupId", institutionId);
+        params.put("includeTemporary", true);
         params.put("full", true);
         params.put("includeCodeListValues", true);
         
         JsonArray allSurveys = getFromCollect("survey", params).getAsJsonArray();
         JsonArray result = toElementStream(allSurveys)
-            .map(s -> convertToCEOProject((JsonObject) s))
+            .map(s -> convertToCeoProject((JsonObject) s))
             .collect(intoJsonArray);
         return result.toString();
     }
@@ -91,7 +88,7 @@ public class CollectProjects {
             return el.toString();
         } else {
             JsonElement collectSurvey = getCollectSurvey(Integer.parseInt(projectId));
-            return convertToCEOProject(collectSurvey.getAsJsonObject()).getAsString();
+            return convertToCeoProject(collectSurvey.getAsJsonObject()).toString();
         }
     }
 
@@ -345,9 +342,10 @@ public class CollectProjects {
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
 
-            GenericData data = convertToCollectProjectParameters(newProject);
+            JsonObject data = convertToCollectProjectParameters(newProject);
             
             JsonObject newSurvey = postToCollect("survey/simple", data).getAsJsonObject();
+            
             return newSurvey.get("id").getAsString();
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
@@ -355,12 +353,12 @@ public class CollectProjects {
         }
     }
     
-    private static JsonObject convertToCEOProject(JsonObject collectSurvey) {
+    private static JsonObject convertToCeoProject(JsonObject collectSurvey) {
         JsonObject p = new JsonObject();
         p.addProperty("id", collectSurvey.get("id").getAsInt());
-        p.addProperty("name", collectSurvey.get("title").getAsString());
+        p.add("name", collectSurvey.get("projectName"));
+        p.add("description", collectSurvey.get("description"));
         p.addProperty("availability", collectSurvey.get("availability").getAsString().toLowerCase());
-        p.addProperty("description", getMemberValue(collectSurvey, "description", String.class));
         p.addProperty("privacyLevel","public"); //TODO
         JsonObject boundary = new JsonObject();
         boundary.addProperty("type", "Polygon");
@@ -371,37 +369,50 @@ public class CollectProjects {
                 coordinate.add(findElement(collectSurvey, format("ceoApplicationOptions.samplingPointDataConfiguration.aoiBoundary[%d].x", i)));
                 return coordinate;
             }).collect(intoJsonArray);
-        JsonArray coordinatesWrapper1 = new JsonArray();
-        coordinatesWrapper1.add(coordinates);
-        JsonArray coordinatesWrapper2 = new JsonArray();
-        coordinatesWrapper2.add(coordinatesWrapper1);
-        boundary.add("coordinates", coordinatesWrapper2);
-        p.add("boundary", boundary);
+        JsonArray coordinatesWrapper = new JsonArray();
+        coordinatesWrapper.add(coordinates);
+        boundary.add("coordinates", coordinatesWrapper);
+        p.addProperty("boundary", boundary.toString());
         p.addProperty("baseMapSource", "DigitalGlobeRecentImagery+Streets"); //TODO
         p.addProperty("imageryYear", 2016); //TODO
         p.addProperty("stackingProfile", "Accuracy_Profile"); //TODO
-        p.addProperty("plotDistribution", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].distribution").getAsString().toLowerCase());
-        p.addProperty("numPlots", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].numPoints").getAsInt());
-        p.addProperty("plotSpacing", (String) null);
-        p.addProperty("plotShape", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].shape").getAsString().toLowerCase());
-        p.addProperty("plotSize", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].pointWidth").getAsInt());
+        if (! collectSurvey.get("ceoApplicationOptions").isJsonNull()) {
+	        p.addProperty("plotDistribution", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].distribution").getAsString().toLowerCase());
+	        p.addProperty("numPlots", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].numPoints").getAsInt());
+	        p.addProperty("plotSpacing", (String) null);
+	        p.addProperty("plotShape", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].shape").getAsString().toLowerCase());
+	        p.addProperty("plotSize", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].pointWidth").getAsInt());
+	        
+	        p.addProperty("sampleDistribution", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[1].distribution").getAsString().toLowerCase());
+	        p.addProperty("samplesPerPlot", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[1].numPoints").getAsInt());
+	        p.addProperty("sampleResolution", (String) null); //TODO
+        }
         
-        p.addProperty("sampleDistribution", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[1].distribution").getAsString().toLowerCase());
-        p.addProperty("samplesPerPlot", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[1].numPoints").getAsInt());
-        p.addProperty("sampleResolution", (String) null); //TODO
+        JsonArray codeLists = collectSurvey.get("codeLists").getAsJsonArray();
+        JsonArray sampleValuesList = toElementStream(codeLists)
+        	.filter(codeListEl -> ((JsonObject) codeListEl).get("name").getAsString().startsWith("values_"))
+        	.map(codeListEl -> {
+        		JsonObject codeListObj = (JsonObject) codeListEl;
+        		
+        		JsonObject result = new JsonObject();
+        		result.add("id", codeListObj.get("id"));
+        		result.add("name", codeListObj.get("label"));
+        		
+        		JsonArray sampleValues = toElementStream(codeListObj.get("items").getAsJsonArray()).map(item -> {
+        			JsonObject obj = (JsonObject) item;
+        			JsonObject sampleValue = new JsonObject();
+					sampleValue.add("id", obj.get("id"));
+                    sampleValue.add("code", obj.get("code"));
+                    sampleValue.add("name", obj.get("label"));
+                    sampleValue.add("color", obj.get("color"));
+                    return sampleValue;
+        		}).collect(intoJsonArray);
+        		
+        		result.add("values", sampleValues);
+        		return result;
+        	}).collect(intoJsonArray);
         
-        JsonArray codeListItems = findElement(collectSurvey, "codeLists[1].items").getAsJsonArray();
-        JsonArray sampleValues = toElementStream(codeListItems).map(el -> {
-            JsonObject obj = (JsonObject) el;
-            JsonObject sampleValue = new JsonObject();
-            sampleValue.addProperty("id", obj.get("id").getAsInt());
-            sampleValue.addProperty("code", obj.get("code").getAsString());
-            sampleValue.addProperty("name", obj.get("label").getAsString());
-            sampleValue.addProperty("color", obj.get("color") == null ? (String) null: obj.get("color").getAsString());
-            return sampleValue;
-        }).collect(intoJsonArray);
-        
-        p.add("sampleValues", sampleValues);
+        p.add("sampleValues", sampleValuesList);
         p.addProperty("attribution", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
         p.addProperty("archived", "archived".equalsIgnoreCase(collectSurvey.get("availability").getAsString()));
         return p;
@@ -433,36 +444,36 @@ public class CollectProjects {
         return obj;
     }
 
-    private static GenericData convertToCollectProjectParameters(JsonObject ceoProject) {
-        GenericData data = new GenericData();
-        data.put("name", ceoProject.get("name").getAsString());
-        data.put("description", ceoProject.get("description").getAsString());
-        data.put("userGroupId", ceoProject.get("institution").getAsLong());
-        GenericData samplingPointGenerationData = new GenericData();
+    private static JsonObject convertToCollectProjectParameters(JsonObject ceoProject) {
+        JsonObject data = new JsonObject();
+        data.addProperty("projectName", ceoProject.get("name").getAsString());
+        data.add("description", ceoProject.get("description"));
+        data.addProperty("userGroupId", ceoProject.get("institution").getAsLong());
+        JsonObject samplingPointGenerationData = new JsonObject();
 
-        List<GenericData> aoiBoundary = extractAoiBoundaryData(ceoProject);
-        samplingPointGenerationData.put("aoiBoundary", aoiBoundary);
+        JsonArray aoiBoundary = extractAoiBoundaryData(ceoProject);
+        samplingPointGenerationData.add("aoiBoundary", aoiBoundary);
 
-        List<GenericData> samplingPointSettings = new ArrayList<GenericData>(2);
-        GenericData plotLevelSettings = new GenericData();
-        plotLevelSettings.put("numPoints", ceoProject.get("numPlots").getAsInt());
-        plotLevelSettings.put("shape", ceoProject.get("plotShape").getAsString().toUpperCase());
-        plotLevelSettings.put("distribution", ceoProject.get("plotDistribution").getAsString().toUpperCase());
-        plotLevelSettings.put("resolution", getMemberValue(ceoProject, "plotSpacing", Double.class));
-        plotLevelSettings.put("pointWidth", getMemberValue(ceoProject, "plotSize", Double.class));
+        JsonArray samplingPointSettings = new JsonArray();
+        JsonObject plotLevelSettings = new JsonObject();
+        plotLevelSettings.addProperty("numPoints", ceoProject.get("numPlots").getAsInt());
+        plotLevelSettings.addProperty("shape", ceoProject.get("plotShape").getAsString().toUpperCase());
+        plotLevelSettings.addProperty("distribution", ceoProject.get("plotDistribution").getAsString().toUpperCase());
+        plotLevelSettings.add("resolution", ceoProject.get("plotSpacing"));
+        plotLevelSettings.add("pointWidth", ceoProject.get("plotSize"));
         samplingPointSettings.add(plotLevelSettings);
 
-        GenericData sampleLevelSettings = new GenericData();
-        sampleLevelSettings.put("numPoints", ceoProject.get("samplesPerPlot").getAsInt());
-        sampleLevelSettings.put("shape", "CIRCLE");
-        sampleLevelSettings.put("distribution", ceoProject.get("sampleDistribution").getAsString().toUpperCase());
-        sampleLevelSettings.put("resolution", getMemberValue(ceoProject, "sampleResolution", Double.class));
-        sampleLevelSettings.put("pointWidth", 10.0d);
+        JsonObject sampleLevelSettings = new JsonObject();
+        sampleLevelSettings.addProperty("numPoints", ceoProject.get("samplesPerPlot").getAsInt());
+        sampleLevelSettings.addProperty("shape", "CIRCLE");
+        sampleLevelSettings.addProperty("distribution", ceoProject.get("sampleDistribution").getAsString().toUpperCase());
+        sampleLevelSettings.add("resolution", ceoProject.get("sampleResolution"));
+        sampleLevelSettings.addProperty("pointWidth", 10.0d);
         samplingPointSettings.add(sampleLevelSettings);
         
-        samplingPointGenerationData.put("levelsSettings", samplingPointSettings);
+        samplingPointGenerationData.add("levelsSettings", samplingPointSettings);
 
-        data.put("samplingPointGenerationSettings", samplingPointGenerationData);
+        data.add("samplingPointGenerationSettings", samplingPointGenerationData);
 
         JsonArray sampleValueLists = ceoProject.get("sampleValues").getAsJsonArray();
         JsonArray codeLists = toElementStream(sampleValueLists).map(sampleValueList -> {
@@ -483,24 +494,24 @@ public class CollectProjects {
         	return codeList;
         }).collect(intoJsonArray);
         
-        data.put("codeLists", codeLists);
+        data.add("codeLists", codeLists);
         return data;
     }
 
-    private static List<GenericData> extractAoiBoundaryData(JsonObject jsonObj) {
-        return Arrays.asList(
-                             extractCoordinateData(jsonObj, "latMin", "lonMin"),
-                             extractCoordinateData(jsonObj, "latMin", "lonMax"),
-                             extractCoordinateData(jsonObj, "latMax", "lonMin"),
-                             extractCoordinateData(jsonObj, "latMax", "lonMax")
-                             );
+    private static JsonArray extractAoiBoundaryData(JsonObject jsonObj) {
+    	JsonArray result = new JsonArray();
+    	result.add(extractCoordinateData(jsonObj, "latMin", "lonMin"));
+    	result.add(extractCoordinateData(jsonObj, "latMin", "lonMax"));
+		result.add(extractCoordinateData(jsonObj, "latMax", "lonMin"));
+		result.add(extractCoordinateData(jsonObj, "latMax", "lonMax"));
+		return result;
     }
 
-    private static GenericData extractCoordinateData(JsonObject jsonObj, String latMember, String lonMember) {
-        GenericData data = new GenericData();
-        data.put("x", jsonObj.get(latMember).getAsDouble());
-        data.put("y", jsonObj.get(lonMember).getAsDouble());
-        data.put("srsId", "EPSG:4326");
+    private static JsonObject extractCoordinateData(JsonObject jsonObj, String latMember, String lonMember) {
+    	JsonObject data = new JsonObject();
+        data.addProperty("x", jsonObj.get(latMember).getAsDouble());
+        data.addProperty("y", jsonObj.get(lonMember).getAsDouble());
+        data.addProperty("srsId", "EPSG:4326");
         return data;
     }
     
@@ -539,10 +550,18 @@ public class CollectProjects {
         return sendToCollect(HttpMethods.PATCH, url, data);
     }
     
-    private static JsonElement sendToCollect(String method, String url, Object data) {
+    private static JsonElement sendToCollect(String method, String url, Object params) {
         try {
             HttpRequestFactory requestFactory = createRequestFactory();
-            HttpContent content = data == null ? null : new JsonHttpContent(JSON_FACTORY, data);
+            HttpContent content;
+            if (params == null) {
+            	content = null;
+            } else if (params instanceof JsonObject) {
+	            Map mapData = new Gson().fromJson((JsonObject) params, Map.class);
+	            content = new JsonHttpContent(JSON_FACTORY, mapData);
+            } else {
+	            content = new JsonHttpContent(JSON_FACTORY, params);
+            }
             HttpRequest request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
             String result = request.execute().parseAsString();
             return parseJson(result);
