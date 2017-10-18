@@ -31,7 +31,7 @@ import spark.Response;
 
 public class OfUsers {
 
-    static String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
     static final String SMTP_USER = CeoConfig.smtpUser;
     static final String SMTP_SERVER = CeoConfig.smtpServer;
     static final String SMTP_PORT = CeoConfig.smtpPort;
@@ -275,7 +275,6 @@ public class OfUsers {
                 HttpResponse response = prepareGetRequest(url).execute(); // get group's users
                 if (response.isSuccessStatusCode()) {
                     JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
-                    // FIXME: Exclude the superuser account (admin@sig-gis.com) from the returned list of users
                     return toStream(groupUsers)
                         .map(groupUser -> {
                                 groupUser.getAsJsonObject("user").addProperty("institutionRole",
@@ -291,27 +290,27 @@ public class OfUsers {
                                 user.addProperty("email", user.get("username").getAsString());
                                 return user;
                             })
+                        .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
                         .collect(intoJsonArray)
                         .toString();
                 } else {
-                    // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
                     return (new JsonArray()).toString();
                 }
             } else {
                 HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
                 if (response.isSuccessStatusCode()) {
                     JsonArray users = getResponseAsJson(response).getAsJsonArray();
-                    // FIXME: Exclude the superuser account (admin@sig-gis.com) from the returned list of users
-                    // return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com")).toString();
                     return toStream(users)
                             .map(user -> {
-                                user.addProperty("email", user.get("username").getAsString());
-                                return user;
+                                    user.addProperty("email", user.get("username").getAsString());
+                                    return user;
                             })
+                            .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
                             .collect(intoJsonArray)
                             .toString();
                 } else {
-                    // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
                     return (new JsonArray()).toString();
                 }
             }
@@ -406,11 +405,9 @@ public class OfUsers {
             } catch (HttpResponseException e) {
                 if (e.getStatusCode() == 404) {
                     GenericData data = new GenericData();
-                    data.put("userId", userId);
-                    data.put("groupId", groupId);
                     data.put("roleCode", "OPR");
                     data.put("statusCode", "A");
-                    preparePostRequest(url, data).execute();
+                    preparePostRequest(url, data).execute(); // add user to a group (as accepted)
                 } else {
                     e.printStackTrace(); //TODO
                     req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
@@ -430,13 +427,11 @@ public class OfUsers {
         String groupId = jsonInputs.get("institutionId").getAsString();
         try {
             String url = String.format(OF_USERS_API_URL + "group/%s/user/%s", groupId, userId);
-            HttpResponse response = preparePostRequest(url, new GenericData()).execute(); // add user to a group
-            if (!response.isSuccessStatusCode()) {
-                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
-                return "";
-            } else {
-                return "";
-            }
+            GenericData data = new GenericData();
+            data.put("roleCode", "OPR");
+            data.put("statusCode", "P");
+            preparePostRequest(url, data).execute(); // add user to a group (as pending)
+            return "";
         } catch (IOException e) {
             e.printStackTrace(); //TODO
             req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
