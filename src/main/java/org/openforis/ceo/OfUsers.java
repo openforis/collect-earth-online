@@ -176,8 +176,6 @@ public class OfUsers {
             req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
             req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
-        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_messages", new String[]{"The passwords don't match."});
         } else {
             try {
                 GenericData data = new GenericData();

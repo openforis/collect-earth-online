@@ -64,11 +64,11 @@ public class Users {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         // Validate input params and assign flash_messages if invalid
-        if (! isEmail(inputEmail)) {
+        if (!isEmail(inputEmail)) {
             req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
         } else if (inputPassword.length() < 8) {
             req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
-        } else if (! inputPassword.equals(inputPasswordConfirmation)) {
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
             req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
         } else {
             JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
@@ -124,10 +124,44 @@ public class Users {
         return req;
     }
 
-    // FIXME: stub
     public static Request updateAccount(Request req, Response res) {
-        String accountId = req.params(":id"); // FIXME: Use this
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String userId = req.session().attribute("userid");
+        String inputEmail = req.queryParams("email");
+        String inputPassword = req.queryParams("password");
+        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        String inputCurrentPassword = req.queryParams("current-password");
+        // Validate input params and assign flash_messages if invalid
+        if (!isEmail(inputEmail)) {
+            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+        } else if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else {
+            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
+            if (!matchingUser.isPresent()) {
+                req.session().attribute("flash_messages", new String[]{"The requested user account does not exist."});
+            } else {
+                JsonObject foundUser = matchingUser.get();
+                if (!foundUser.get("password").getAsString().equals(inputCurrentPassword)) {
+                    req.session().attribute("flash_messages", new String[]{"Invalid password."});
+                } else {
+                    mapJsonFile("user-list.json",
+                                user -> {
+                                    if (user.get("id").getAsString().equals(userId)) {
+                                        user.addProperty("email", inputEmail);
+                                        user.addProperty("password", inputPassword);
+                                        return user;
+                                    } else {
+                                        return user;
+                                    }
+                                });
+                    req.session().attribute("username", inputEmail);
+                    req.session().attribute("flash_messages", new String[]{"The user has been updated."});
+                }
+            }
+        }
         return req;
     }
 
