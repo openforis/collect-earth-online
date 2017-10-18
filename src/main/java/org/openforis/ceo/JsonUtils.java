@@ -1,5 +1,9 @@
 package org.openforis.ceo;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -18,11 +22,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 public class JsonUtils {
 
@@ -192,19 +191,19 @@ public class JsonUtils {
     // }
 
     @SuppressWarnings("unchecked")
-	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
-    	JsonElement el = obj.get(property);
-    	if (el.isJsonNull()) {
-    		return (T) null;
-    	} else if (type == String.class) {
-    		return (T) el.getAsString();
-    	} else if (type == Double.class) {
-    		return (T) Double.valueOf(el.getAsDouble());
-    	} else if (type == Integer.class) {
-    		return (T) Integer.valueOf(el.getAsInt());
-    	} else {
-    		throw new IllegalArgumentException("Unsupported type: " + type);
-    	}
+    public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
+        JsonElement el = obj.get(property);
+        if (el.isJsonNull()) {
+            return (T) null;
+        } else if (type == String.class) {
+            return (T) el.getAsString();
+        } else if (type == Double.class) {
+            return (T) Double.valueOf(el.getAsDouble());
+        } else if (type == Integer.class) {
+            return (T) Integer.valueOf(el.getAsInt());
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
     }
 
 }
