@@ -5,7 +5,9 @@
 <div id="password-form">
     <h1>Enter your login email</h1>
     <form action="${root}/password" method="post">
-        <input autocomplete="off" id="email" name="email" placeholder="Email" value="" type="email">
+        <fieldset>
+            <input autocomplete="off" id="email" name="email" placeholder="Email" value="" type="email" class="text">
+        </fieldset>
         <input class="button" value="Request Password Reset Key" type="submit">
     </form>
 </div>
