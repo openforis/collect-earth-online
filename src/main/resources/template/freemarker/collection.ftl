@@ -19,7 +19,7 @@
         </div>
     </div>
     <div id="sidebar" ng-show="collection.showSideBar">
-        <div id="hamburger" ng-click="collection.toggleStats()">
+        <div id="showarrow" ng-click="collection.toggleStats()">
             <div ng-class="collection.arrowstate"></div>
             <div></div>
             <div></div>
@@ -35,15 +35,15 @@
                     </tr>
                     <tr>
                         <td>Plots Assigned</td>
-                        <td>{{ collection.plotsAssigned }} ({{ (100 * collection.plotsAssigned / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.analyzedPlots }} ({{ (100 * collection.analyzedPlots / collection.currentProject.numPlots)| number:0 }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Flagged</td>
-                        <td>{{ collection.plotsFlagged }} ({{ (100 * collection.plotsFlagged / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.flaggedPlots }} ({{ (100 * collection.flaggedPlots / collection.currentProject.numPlots)| number:0 }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Completed</td>
-                        <td>{{ collection.plotsAssigned + collection.plotsFlagged }} ({{ (100 * (collection.plotsAssigned + collection.plotsFlagged) / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.analyzedPlots + collection.flaggedPlots }} ({{ (100 * (collection.analyzedPlots + collection.flaggedPlots) / collection.currentProject.numPlots)| number:0 }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Total</td>

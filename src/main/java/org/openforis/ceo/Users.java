@@ -16,12 +16,18 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import spark.Request;
 import spark.Response;
 
 public class Users {
+
+    private static final String SMTP_USER = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER = CeoConfig.smtpServer;
+    private static final String SMTP_PORT = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
 
     public static Request login(Request req, Response res) {
         String inputEmail = req.queryParams("email");
@@ -64,11 +70,11 @@ public class Users {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         // Validate input params and assign flash_messages if invalid
-        if (! isEmail(inputEmail)) {
+        if (!isEmail(inputEmail)) {
             req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
         } else if (inputPassword.length() < 8) {
             req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
-        } else if (! inputPassword.equals(inputPasswordConfirmation)) {
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
             req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
         } else {
             JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
@@ -124,22 +130,118 @@ public class Users {
         return req;
     }
 
-    // FIXME: stub
     public static Request updateAccount(Request req, Response res) {
-        String accountId = req.params(":id"); // FIXME: Use this
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String userId = req.session().attribute("userid");
+        String inputEmail = req.queryParams("email");
+        String inputPassword = req.queryParams("password");
+        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        String inputCurrentPassword = req.queryParams("current-password");
+        // Validate input params and assign flash_messages if invalid
+        if (!isEmail(inputEmail)) {
+            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+        } else if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else {
+            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
+            if (!matchingUser.isPresent()) {
+                req.session().attribute("flash_messages", new String[]{"The requested user account does not exist."});
+            } else {
+                JsonObject foundUser = matchingUser.get();
+                if (!foundUser.get("password").getAsString().equals(inputCurrentPassword)) {
+                    req.session().attribute("flash_messages", new String[]{"Invalid password."});
+                } else {
+                    mapJsonFile("user-list.json",
+                                user -> {
+                                    if (user.get("id").getAsString().equals(userId)) {
+                                        user.addProperty("email", inputEmail);
+                                        user.addProperty("password", inputPassword);
+                                        return user;
+                                    } else {
+                                        return user;
+                                    }
+                                });
+                    req.session().attribute("username", inputEmail);
+                    req.session().attribute("flash_messages", new String[]{"The user has been updated."});
+                }
+            }
+        }
         return req;
     }
 
-    // FIXME: stub
     public static Request getPasswordResetKey(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
-        return req;
+        String inputEmail = req.queryParams("email");
+        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+        Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+        if (!matchingUser.isPresent()) {
+            req.session().attribute("flash_messages", new String[]{"There is no user with that email address."});
+            return req;
+        } else {
+            try {
+                String resetKey = UUID.randomUUID().toString();
+                mapJsonFile("user-list.json",
+                            user -> {
+                                if (user.get("email").getAsString().equals(inputEmail)) {
+                                    user.addProperty("resetKey", resetKey);
+                                    return user;
+                                } else {
+                                    return user;
+                                }
+                            });
+                String body = "Hi "
+                    + inputEmail
+                    + ",\n\n"
+                    + "  To reset your password, simply click the following link:\n\n"
+                    + "  http://ceo.sig-gis.com/password-reset?email="
+                    + inputEmail
+                    + "&password-reset-key="
+                    + resetKey;
+                Mail.sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
+                return req;
+            } catch (Exception e) {
+                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+                return req;
+            }
+        }
     }
 
-    // FIXME: stub
     public static Request resetPassword(Request req, Response res) {
-        req.session().attribute("flash_messages", new String[]{"This functionality has not yet been implemented."});
+        String inputEmail = req.queryParams("email");
+        String inputResetKey = req.queryParams("password-reset-key");
+        String inputPassword = req.queryParams("password");
+        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        // Validate input params and assign flash_messages if invalid
+        if (inputPassword.length() < 8) {
+            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+        } else if (!inputPassword.equals(inputPasswordConfirmation)) {
+            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+        } else {
+            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+            if (!matchingUser.isPresent()) {
+                req.session().attribute("flash_messages", new String[]{"There is no user with that email address."});
+            } else {
+                JsonObject foundUser = matchingUser.get();
+                if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
+                    req.session().attribute("flash_messages", new String[]{"Invalid reset key for user " + inputEmail + "."});
+                } else {
+                    mapJsonFile("user-list.json",
+                                user -> {
+                                    if (user.get("email").getAsString().equals(inputEmail)) {
+                                        user.addProperty("password", inputPassword);
+                                        user.add("resetKey", null);
+                                        return user;
+                                    } else {
+                                        return user;
+                                    }
+                                });
+                    req.session().attribute("flash_messages", new String[]{"The password has been changed."});
+                }
+            }
+        }
         return req;
     }
 

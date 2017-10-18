@@ -1,5 +1,6 @@
 package org.openforis.ceo;
 
+import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static spark.Spark.exception;
 import static spark.Spark.get;
 import static spark.Spark.port;
@@ -7,6 +8,8 @@ import static spark.Spark.post;
 import static spark.Spark.staticFileLocation;
 
 import java.io.File;
+
+import com.google.gson.JsonObject;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -195,6 +198,13 @@ public class Server implements SparkApplication {
     public static void main(String[] args) {
         // Store the current document root for dynamic link resolution
         documentRoot = "";
+
+        // Load the SMTP settings for sending reset password emails
+        JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
+        CeoConfig.smtpUser = smtpSettings.get("smtpUser").getAsString();
+        CeoConfig.smtpServer = smtpSettings.get("smtpServer").getAsString();
+        CeoConfig.smtpPort = smtpSettings.get("smtpPort").getAsString();
+        CeoConfig.smtpPassword = smtpSettings.get("smtpPassword").getAsString();
 
         // Start the Jetty webserver on port 8080
         port(8080);

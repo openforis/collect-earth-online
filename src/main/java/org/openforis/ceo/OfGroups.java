@@ -38,9 +38,9 @@ import spark.Response;
 
 public class OfGroups {
 
-    static String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
-    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
