@@ -10,6 +10,7 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
@@ -30,7 +31,7 @@ import spark.Response;
 
 public class OfUsers {
 
-    static String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
     static final String SMTP_USER = CeoConfig.smtpUser;
     static final String SMTP_SERVER = CeoConfig.smtpServer;
     static final String SMTP_PORT = CeoConfig.smtpPort;
@@ -65,6 +66,10 @@ public class OfUsers {
         return createRequestFactory()
             .buildPostRequest(new GenericUrl(url),
                               new JsonHttpContent(new JacksonFactory(), data));
+    }
+
+    private static HttpRequest prepareDeleteRequest(String url) throws IOException {
+        return createRequestFactory().buildDeleteRequest(new GenericUrl(url));
     }
 
     private static JsonElement getResponseAsJson(HttpResponse response) throws IOException {
@@ -266,7 +271,6 @@ public class OfUsers {
                 HttpResponse response = prepareGetRequest(url).execute(); // get group's users
                 if (response.isSuccessStatusCode()) {
                     JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
-                    // FIXME: Exclude the superuser account (admin@sig-gis.com) from the returned list of users
                     return toStream(groupUsers)
                         .map(groupUser -> {
                                 groupUser.getAsJsonObject("user").addProperty("institutionRole",
@@ -282,21 +286,27 @@ public class OfUsers {
                                 user.addProperty("email", user.get("username").getAsString());
                                 return user;
                             })
+                        .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
                         .collect(intoJsonArray)
                         .toString();
                 } else {
-                    // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
                     return (new JsonArray()).toString();
                 }
             } else {
                 HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
                 if (response.isSuccessStatusCode()) {
                     JsonArray users = getResponseAsJson(response).getAsJsonArray();
-                    // FIXME: Exclude the superuser account (admin@sig-gis.com) from the returned list of users
-                    // return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com")).toString();
-                    return users.toString();
+                    return toStream(users)
+                            .map(user -> {
+                                    user.addProperty("email", user.get("username").getAsString());
+                                    return user;
+                            })
+                            .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
+                            .collect(intoJsonArray)
+                            .toString();
                 } else {
-                    // FIXME: Raise a red flag that an error just occurred in communicating with the database
+                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
                     return (new JsonArray()).toString();
                 }
             }
@@ -332,51 +342,95 @@ public class OfUsers {
         }
     }
 
-    // FIXME: stub
-    public static String updateInstitutionRole(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        JsonElement userId = jsonInputs.get("userId");
-        String institutionId = jsonInputs.get("institutionId").getAsString();
-        String role = jsonInputs.get("role").getAsString();
+    private static JsonObject groupToInstitution(String groupId) {
+        JsonObject group = new JsonObject();
+        String url = String.format(OF_USERS_API_URL + "group/%s", groupId);
+        HttpResponse response;
+        try {
+            response = prepareGetRequest(url).execute();
+            if (response.isSuccessStatusCode()) {
+                group = getResponseAsJson(response).getAsJsonObject();
+                url = String.format(OF_USERS_API_URL + "group/%s/users", groupId);
+                response = prepareGetRequest(url).execute();
+                JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
+                JsonArray members = new JsonArray();
+                JsonArray admins = new JsonArray();
+                JsonArray pending = new JsonArray();
+                toStream(groupUsers).forEach(groupUser -> {
+                    if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
+                    else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
+                    else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
+                    else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
+                    else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
+                });
+                group.add("admins", admins);
+                group.add("members", members);
+                group.add("pending", pending);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return group;
+    }
 
-        return "";
+    public static Optional<JsonObject> updateInstitutionRole(Request req, Response res) {
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+        String userId = jsonInputs.get("userId").getAsString();
+        String groupId = jsonInputs.get("institutionId").getAsString();
+        String role = jsonInputs.get("role").getAsString();
+        try {
+            String url = String.format(OF_USERS_API_URL + "group/%s/user/%s", groupId, userId);
+            try {
+                HttpResponse response = prepareGetRequest(url).execute();
+                if (response.isSuccessStatusCode()) {
+                    String newRoleCode = "";
+                    if (role.equals("member")) {
+                        newRoleCode = "OPR";
+                    } else if (role.equals("admin")) {
+                        newRoleCode = "ADM";
+                    }
+                    if (!newRoleCode.isEmpty()) {
+                        GenericData data = new GenericData();
+                        data.put("roleCode", newRoleCode);
+                        data.put("statusCode", "A");
+                        preparePatchRequest(url, data).execute();
+                    } else {
+                        prepareDeleteRequest(url).execute();
+                    }
+                }
+            } catch (HttpResponseException e) {
+                if (e.getStatusCode() == 404) {
+                    GenericData data = new GenericData();
+                    data.put("roleCode", "OPR");
+                    data.put("statusCode", "A");
+                    preparePostRequest(url, data).execute(); // add user to a group (as accepted)
+                } else {
+                    e.printStackTrace(); //TODO
+                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); //TODO
+            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+        }
+        JsonObject group = groupToInstitution(groupId);
+        return Optional.ofNullable(group);
     }
 
     public static String requestInstitutionMembership(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String userId = jsonInputs.get("userId").getAsString();
-        String institutionId = jsonInputs.get("institutionId").getAsString();
+        String groupId = jsonInputs.get("institutionId").getAsString();
         try {
-            String postUrl = String.format(OF_USERS_API_URL + "group/%s/user/%s", institutionId, userId);
-            // FIXME: Does this add the user to the pending queue for this userGroup?
-            HttpResponse postResponse = preparePostRequest(postUrl, new GenericData()).execute(); // add user in a group
-            if (postResponse.isSuccessStatusCode()) {
-                // FIXME: This branch doesn't do anything useful. Remove it.
-                String getUrl = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
-                HttpResponse getResponse = prepareGetRequest(getUrl).execute(); // get group's users
-                JsonArray groupUsers = getResponseAsJson(getResponse).getAsJsonArray();
-                JsonArray members = new JsonArray();
-                JsonArray admins = new JsonArray();
-                JsonArray pending = new JsonArray();
-                toStream(groupUsers).forEach(groupUser -> {
-                        if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
-                        else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
-                        else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
-                        else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
-                        else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
-                    });
-                JsonObject group = groupUsers.get(0).getAsJsonObject();
-                group.add("admins", admins);
-                group.add("members", members);
-                group.add("pending", pending);
-                return group.toString();
-            } else {
-                // FIXME: Raise a red flag that an error just occurred in communicating with the database
-                return "";
-            }
+            String url = String.format(OF_USERS_API_URL + "group/%s/user/%s", groupId, userId);
+            GenericData data = new GenericData();
+            data.put("roleCode", "OPR");
+            data.put("statusCode", "P");
+            preparePostRequest(url, data).execute(); // add user to a group (as pending)
+            return "";
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
             return "";
         }
     }
