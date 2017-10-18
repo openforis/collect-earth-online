@@ -48,9 +48,9 @@
     <div id="login-info">
         <#if username??>
             <#if navlink == "Logout">
-                 ${username} <a class="active-link" href="${root}/logout">Logout</a>
+                 <span>${username}</span> <a class="active-link" href="${root}/logout">Logout</a>
             <#else>
-                 ${username} <a href="${root}/logout">Logout</a>
+                <span>${username}</span> <a href="${root}/logout">Logout</a>
             </#if>
         <#else>
             <#if navlink == "Login" || navlink == "Register">
