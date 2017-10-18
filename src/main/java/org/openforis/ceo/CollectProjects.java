@@ -42,9 +42,9 @@ import spark.Response;
 
 public class CollectProjects {
 
-    static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
-    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    private static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     public static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {

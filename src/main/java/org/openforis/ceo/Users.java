@@ -24,10 +24,10 @@ import spark.Response;
 
 public class Users {
 
-    static final String SMTP_USER = CeoConfig.smtpUser;
-    static final String SMTP_SERVER = CeoConfig.smtpServer;
-    static final String SMTP_PORT = CeoConfig.smtpPort;
-    static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final String SMTP_USER = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER = CeoConfig.smtpServer;
+    private static final String SMTP_PORT = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
 
     public static Request login(Request req, Response res) {
         String inputEmail = req.queryParams("email");

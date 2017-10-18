@@ -31,13 +31,13 @@ import spark.Response;
 
 public class OfUsers {
 
-    static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
-    static final String SMTP_USER = CeoConfig.smtpUser;
-    static final String SMTP_SERVER = CeoConfig.smtpServer;
-    static final String SMTP_PORT = CeoConfig.smtpPort;
-    static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
-    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    private static final String SMTP_USER = CeoConfig.smtpUser;
+    private static final String SMTP_SERVER = CeoConfig.smtpServer;
+    private static final String SMTP_PORT = CeoConfig.smtpPort;
+    private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
