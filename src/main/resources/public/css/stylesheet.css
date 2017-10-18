@@ -882,10 +882,22 @@ Tree expanded icon
     left: 50%;
     transform: translate(-50%, -50%);
     height: calc(80% - 4rem);
-    width: 25vw;
-    padding: 2rem;
+    width: fill-content;
+    /*padding: 2rem;*/
     overflow: auto;
-    border: 1px solid darkgray;
+    border: 6px solid darkgray;
+    background-color:#ffffff;
+}
+#login-form p{
+    text-align: center;
+    color: gray;
+    font-size: .85em;
+    padding: 15px 0px;
+}
+
+
+#login-form form, #login-form div{
+    padding: 0rem 2rem;
 }
 
 #login-form h1, #register-form h1, #password-form h1, #account-form h1 {
@@ -893,6 +905,13 @@ Tree expanded icon
     font-weight: 100;
     padding: 0 0.5rem 0.5rem 0.5rem;
     color: gray;
+}
+#login-form h1{
+    background-color: #FFCF06;
+    padding: 15px;
+    color: #77941e;
+    font-size: 1.25em;
+    margin: 0 0 8px 0;
 }
 
 #login-form h2, #register-form h2, #password-form h2, #account-form h2 {
@@ -937,6 +956,18 @@ Tree expanded icon
 
 #login-form input.button:focus, #register-form input.button:focus, #password-form input.button:focus, #account-form input.button:focus {
     border: 1px solid #999;
+}
+#login-form input.text
+{
+     width: 100%;
+     margin: 0 0 15px;
+     color: #0b6ef2;
+     padding: 15px;
+     font: inherit;
+     float: left;
+     box-shadow: 2px 2px 2px #fff, 4px 4px 6px #dadada, inset 0 0 0 rgba(255,255,255,.8);
+     -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
 }
 
 #login-form hr, #register-form hr, #password-form hr, #account-form hr {
