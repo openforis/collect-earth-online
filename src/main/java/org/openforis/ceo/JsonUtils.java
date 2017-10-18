@@ -193,7 +193,7 @@ public class JsonUtils {
 
     @SuppressWarnings("unchecked")
 	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
-    	JsonElement el = obj.get(property);
+    	JsonElement el = findElement(obj, property);
     	if (el.isJsonNull()) {
     		return (T) null;
     	} else if (type == String.class) {
@@ -202,6 +202,8 @@ public class JsonUtils {
     		return (T) Double.valueOf(el.getAsDouble());
     	} else if (type == Integer.class) {
     		return (T) Integer.valueOf(el.getAsInt());
+    	} else if (type == Boolean.class) {
+    		return (T) Boolean.valueOf(el.getAsBoolean());
     	} else {
     		throw new IllegalArgumentException("Unsupported type: " + type);
     	}

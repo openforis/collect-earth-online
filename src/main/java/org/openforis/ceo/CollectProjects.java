@@ -2,15 +2,19 @@ package org.openforis.ceo;
 
 import static java.lang.String.format;
 import static java.math.BigInteger.ONE;
+import static org.openforis.ceo.Collect.getFromCollect;
+import static org.openforis.ceo.Collect.patchToCollect;
+import static org.openforis.ceo.Collect.postToCollect;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
+import static org.openforis.ceo.JsonUtils.forEachInJsonArray;
+import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.toElementStream;
 import static org.openforis.ceo.PartUtils.partToString;
 import static org.openforis.ceo.PartUtils.partsToJsonObject;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,18 +24,6 @@ import java.util.stream.Stream;
 
 import javax.servlet.MultipartConfigElement;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpMethods;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.http.json.JsonHttpContent;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -41,16 +33,6 @@ import spark.Request;
 import spark.Response;
 
 public class CollectProjects {
-
-    static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
-    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    static final JsonFactory JSON_FACTORY = new JacksonFactory();
-
-    public static HttpRequestFactory createRequestFactory() {
-        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-            request.setParser(new JsonObjectParser(JSON_FACTORY));
-        });
-    }
 
     /**
      * Call Collect's REST API to QUERY the database.
@@ -142,26 +124,24 @@ public class CollectProjects {
                 totalMeasurements = BigInteger.valueOf(0), totalFlagged = BigInteger.valueOf(0);
         final Set<Integer> contributorsId = new HashSet<Integer>();
         
-        toElementStream(samplingPointItems)
-            .forEach(item -> {
-                JsonObject itemObj = (JsonObject) item;
-                boolean flagged = isFlagged(itemObj);
-                if (flagged) {
-                    totalFlagged.add(ONE);
-                }
-                String plotId = itemObj.get("id").getAsString();
-                JsonArray recordSummaries = getCollectRecordSummariesByPlotId(projectId, plotId);
-                if (recordSummaries.size() == 0) {
-                    unanalyzedPlots.add(ONE);
-                } else {
-                    analyzedPlots.add(ONE);
-                    totalMeasurements.add(BigInteger.valueOf(recordSummaries.size()));
-                    
-                    toElementStream(recordSummaries).forEach(summary -> {
-                        contributorsId.add(findElement((JsonObject) summary, "modifiedBy.id").getAsInt());
-                    });
-                }
-            });
+        forEachInJsonArray(samplingPointItems, item -> {
+            boolean flagged = isFlagged(item);
+            if (flagged) {
+                totalFlagged.add(ONE);
+            }
+            String plotId = item.get("id").getAsString();
+			JsonArray recordSummaries = getCollectRecordSummariesByPlotId(projectId, plotId);
+            if (recordSummaries.size() == 0) {
+                unanalyzedPlots.add(ONE);
+            } else {
+                analyzedPlots.add(ONE);
+                totalMeasurements.add(BigInteger.valueOf(recordSummaries.size()));
+                
+                toElementStream(recordSummaries).forEach(summary -> {
+                    contributorsId.add(findElement((JsonObject) summary, "modifiedBy.id").getAsInt());
+                });
+            }
+        });
         return format("{flaggedPlots:%d,analyzedPlots:%d,unanalyzedPlots:%d,members:%d,contributors:%d}", 
                 totalFlagged.intValue(), analyzedPlots.intValue(), unanalyzedPlots.intValue(), 0, contributorsId.size());
     }
@@ -358,26 +338,28 @@ public class CollectProjects {
         p.addProperty("id", collectSurvey.get("id").getAsInt());
         p.add("name", collectSurvey.get("projectName"));
         p.add("description", collectSurvey.get("description"));
+        p.addProperty("institution", getMemberValue(collectSurvey, "userGroup.id", Integer.class));
         p.addProperty("availability", collectSurvey.get("availability").getAsString().toLowerCase());
         p.addProperty("privacyLevel","public"); //TODO
-        JsonObject boundary = new JsonObject();
-        boundary.addProperty("type", "Polygon");
-        JsonArray coordinates = Stream.iterate(0, i -> i + 1).limit(4)
-            .map(i -> {
-                JsonArray coordinate = new JsonArray();
-                coordinate.add(findElement(collectSurvey, format("ceoApplicationOptions.samplingPointDataConfiguration.aoiBoundary[%d].y", i)));
-                coordinate.add(findElement(collectSurvey, format("ceoApplicationOptions.samplingPointDataConfiguration.aoiBoundary[%d].x", i)));
-                return coordinate;
-            }).collect(intoJsonArray);
-        JsonArray coordinatesWrapper = new JsonArray();
-        coordinatesWrapper.add(coordinates);
-        boundary.add("coordinates", coordinatesWrapper);
-        p.addProperty("boundary", boundary.toString());
         p.addProperty("baseMapSource", "DigitalGlobeRecentImagery+Streets"); //TODO
         p.addProperty("imageryYear", 2016); //TODO
         p.addProperty("stackingProfile", "Accuracy_Profile"); //TODO
         if (! collectSurvey.get("ceoApplicationOptions").isJsonNull()) {
-	        p.addProperty("plotDistribution", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].distribution").getAsString().toLowerCase());
+            JsonObject boundary = new JsonObject();
+            boundary.addProperty("type", "Polygon");
+            JsonArray coordinates = Stream.iterate(0, i -> i + 1).limit(4)
+                .map(i -> {
+                    JsonArray coordinate = new JsonArray();
+                    coordinate.add(findElement(collectSurvey, format("ceoApplicationOptions.samplingPointDataConfiguration.aoiBoundary[%d].y", i)));
+                    coordinate.add(findElement(collectSurvey, format("ceoApplicationOptions.samplingPointDataConfiguration.aoiBoundary[%d].x", i)));
+                    return coordinate;
+                }).collect(intoJsonArray);
+            JsonArray coordinatesWrapper = new JsonArray();
+            coordinatesWrapper.add(coordinates);
+            boundary.add("coordinates", coordinatesWrapper);
+            p.addProperty("boundary", boundary.toString());
+
+            p.addProperty("plotDistribution", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].distribution").getAsString().toLowerCase());
 	        p.addProperty("numPlots", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].numPoints").getAsInt());
 	        p.addProperty("plotSpacing", (String) null);
 	        p.addProperty("plotShape", findElement(collectSurvey, "ceoApplicationOptions.samplingPointDataConfiguration.levelsSettings[0].shape").getAsString().toLowerCase());
@@ -430,15 +412,14 @@ public class CollectProjects {
         obj.addProperty("analyses", getCollectRecordsCountByPlotId(projectId, plotId));
         obj.addProperty("user", (String) null); //TODO
         
-        JsonArray samples = toElementStream(sampleItems)
-                .map(item -> {
-                    JsonObject itemObj = (JsonObject) item;
-                    String sampleId = findElement(itemObj, "levelCodes[1]").getAsString();
-                    JsonObject o = new JsonObject();
-                    o.addProperty("id", sampleId);
-                    o.add("point", createPointObject(itemObj.get("x").getAsDouble(), itemObj.get("y").getAsDouble()));
-                    return o;
-                }).collect(intoJsonArray);
+        JsonArray samples = toElementStream(sampleItems).map(item -> {
+            JsonObject itemObj = (JsonObject) item;
+            String sampleId = findElement(itemObj, "levelCodes[1]").getAsString();
+            JsonObject o = new JsonObject();
+            o.addProperty("id", sampleId);
+            o.add("point", createPointObject(itemObj.get("x").getAsDouble(), itemObj.get("y").getAsDouble()));
+            return o;
+        }).collect(intoJsonArray);
         
         obj.add("samples", samples);
         return obj;
@@ -516,60 +497,6 @@ public class CollectProjects {
     }
     
     //COLLECT API HELPER FUNCTIONS
-    private static JsonElement getFromCollect(String url) {
-        return getFromCollect(url, null);
-    }
-
-    private static JsonElement getFromCollect(String url, Map<String, Object> params) {
-        try {
-            HttpRequestFactory requestFactory = createRequestFactory();
-            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(COLLECT_API_URL + url));
-            if (!(params == null || params.isEmpty())) {
-                request.getUrl().putAll(params);
-            }
-            String str = request.execute().parseAsString();
-            return parseJson(str);
-        } catch (IOException e) {
-            throw new RuntimeException("Error communicating with Collect", e);
-        }
-    }
-
-    private static JsonElement postToCollect(String url) {
-        return postToCollect(url, null);
-    }
-    
-    private static JsonElement postToCollect(String url, Object data) {
-        return sendToCollect(HttpMethods.POST, url, data);
-    }
-
-    private static JsonElement patchToCollect(String url) {
-        return patchToCollect(url, null);
-    }
-    
-    private static JsonElement patchToCollect(String url, Object data) {
-        return sendToCollect(HttpMethods.PATCH, url, data);
-    }
-    
-    private static JsonElement sendToCollect(String method, String url, Object params) {
-        try {
-            HttpRequestFactory requestFactory = createRequestFactory();
-            HttpContent content;
-            if (params == null) {
-            	content = null;
-            } else if (params instanceof JsonObject) {
-	            Map mapData = new Gson().fromJson((JsonObject) params, Map.class);
-	            content = new JsonHttpContent(JSON_FACTORY, mapData);
-            } else {
-	            content = new JsonHttpContent(JSON_FACTORY, params);
-            }
-            HttpRequest request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
-            String result = request.execute().parseAsString();
-            return parseJson(result);
-        } catch (IOException e) {
-            throw new RuntimeException("Error communicating with Collect", e);
-        }
-    }
-    
     private static JsonElement getCollectSurvey(int surveyId) {
         String url = "survey/" + surveyId;
         return getFromCollect(url);
@@ -594,18 +521,16 @@ public class CollectProjects {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("keyValues[0]", plotId);
         params.put("sortFields[0].field", "KEY2");
-        JsonArray plotSummaries = getFromCollect(format("survey/%d/data/records/summary", projectId), params).getAsJsonArray();
+        JsonObject fromCollect = getFromCollect(format("survey/%d/data/records/summary", projectId), params).getAsJsonObject();
+		JsonArray plotSummaries = fromCollect.get("records").getAsJsonArray();
         return plotSummaries;
     }
     
     private static Integer getLastCollectRecordIdByPlotId(int projectId, String plotId) {
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("keyValues[0]", plotId);
-        params.put("sortFields[0].field", "KEY2");
-        JsonArray plotSummaries = getFromCollect(format("survey/%d/data/records/summary", projectId), params).getAsJsonArray();
-        if (plotSummaries.size() == 1) {
-            JsonObject plotSummary = plotSummaries.get(0).getAsJsonObject();
-            int recordId = plotSummary.get("id").getAsInt();
+    	JsonArray summaries = getCollectRecordSummariesByPlotId(projectId, plotId);
+        if (summaries.size() == 1) {
+            JsonObject summary = summaries.get(0).getAsJsonObject();
+            int recordId = summary.get("id").getAsInt();
             return recordId;
         } else {
             return null;
@@ -613,14 +538,12 @@ public class CollectProjects {
     }
     
     private static int getCollectRecordsCountByPlotId(int projectId, String plotId) {
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("keyValues[0]", plotId);
-        JsonArray plotSummaries = getFromCollect(format("survey/%d/data/records/summary", projectId), params).getAsJsonArray();
-        return plotSummaries.size();
+    	JsonArray summaries = getCollectRecordSummariesByPlotId(projectId, plotId);
+        return summaries.size();
     }
     
     private static boolean isFlagged(JsonObject samplingPointItem) {
-        return findElement(samplingPointItem, "infoAttributes[0]").getAsBoolean();
+        return Boolean.TRUE.equals(getMemberValue(samplingPointItem, "infoAttributes[0]", Boolean.class));
     }
 
     private static JsonObject createPointObject(double x, double y) {

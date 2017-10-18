@@ -6,10 +6,10 @@ import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.staticFileLocation;
 
+import java.io.File;
+
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
-import java.io.File;
-import java.net.URL;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
@@ -171,9 +171,9 @@ public class Server implements SparkApplication {
         post("/archive-institution/:id",    (req, res) -> { return OfGroups.archiveInstitution(req, res); });
 
         // Routing Table: Imagery API
-//        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
-//        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
-//        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
+        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
+        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
+        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
