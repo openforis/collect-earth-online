@@ -1709,6 +1709,26 @@ div#institution:before {
     -moz-animation: sweep 1s infinite linear;
     -o-animation: sweep 1s infinite linear;
 }
+#geodash #geohead {
+    height: 40px;
+    width: 100%;
+    color: #eee;
+    background-color: #3a3a3a;
+}
+#geodash #login-info {
+    position: absolute;
+    top: 0px;
+    right: 40px;
+    padding: 11.2px;
+    font-size: 12.8px;
+}
+#geodash #login-info a {
+    margin-left: 3.2px;
+    padding: 6px;
+    border: 1px solid #FFCF06;
+    background-color: #e8f5f9;
+    color: #3c948b!important;
+}
 #geodash .mapRange {
   -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
   width: 100%; /* Specific width is required for Firefox. */
