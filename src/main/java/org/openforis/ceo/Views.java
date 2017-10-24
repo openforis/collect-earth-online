@@ -80,7 +80,11 @@ public class Views {
     }
 
     public static ModelAndView login(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Login", "large"), "login.ftl");
+        //String inputReturnURL = req.queryParams("returnurl");
+        Map<String, Object> model = getBaseModel(req, "Project", "large");
+        model.put("returnurl", req.queryParams("returnurl") );
+        model.put("querystring", req.queryString() );
+        return new ModelAndView(model, "login.ftl");
     }
 
     public static ModelAndView register(Request req, Response res) {

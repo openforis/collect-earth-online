@@ -19,6 +19,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.pageWidgets = [];
     this.maxHeight = 284;
     this.sHeight = 0;
+    this.querystring;
     var geodash = this;
     gmodcdash = this;
     this.mainWidgetTypes = [{ id: "ImageCollectionNDVI", name: "NDVI Image Collection" },
@@ -37,6 +38,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.graphCollectionList = ["timeSeriesGraph", "ndviTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries", "ndwiTimeSeries"];
     this.initialize = function (documentRoot) {
         geodash = this;
+        this.querystring = window.location.search;
         var pid = this.getParameterByName("pid");
         gpid = pid;
         var title = this.getParameterByName("title");

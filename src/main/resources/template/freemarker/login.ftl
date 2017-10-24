@@ -6,7 +6,7 @@
 <p>Welcome to Collect Earth Online</p>
     <h1>Sign into your account</h1>
 
-    <form action="${root}/login" method="post">
+    <form action="${root}/login?returnurl=${returnurl}&${querystring}" method="post">
         <fieldset>
             <input id="email" name="email" placeholder="Email" value="" type="email" class="text">
         </fieldset>

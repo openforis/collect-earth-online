@@ -29,7 +29,7 @@
                     <#if navlink == "Login" || navlink == "Register">
                         <a class="active-link" href="${root}/login">Login/Register</a>
                     <#else>
-                        <a href="${root}/login?returnurl=geo-dash">Login/Register</a>
+                        <a ng-href="${root}/login{{geodash.querystring}}&returnurl=geo-dash">Login/Register</a>
                     </#if>
                 </#if>
             </div>
