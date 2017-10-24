@@ -82,8 +82,17 @@ public class Views {
     public static ModelAndView login(Request req, Response res) {
         //String inputReturnURL = req.queryParams("returnurl");
         Map<String, Object> model = getBaseModel(req, "Project", "large");
-        model.put("returnurl", req.queryParams("returnurl") );
-        model.put("querystring", req.queryString() );
+        String inputReturnURL = req.queryParams("returnurl");
+        String returnURL = "home";
+        if(inputReturnURL != null && !inputReturnURL.isEmpty()) {
+            returnURL = inputReturnURL;
+        }
+        String psssQuery = req.queryString();
+        if(psssQuery == null || psssQuery.isEmpty()) {
+            psssQuery = "empty";
+        }
+        model.put("returnurl", returnURL );
+        model.put("querystring", psssQuery );
         return new ModelAndView(model, "login.ftl");
     }
 
