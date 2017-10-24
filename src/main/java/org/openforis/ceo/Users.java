@@ -32,6 +32,11 @@ public class Users {
     public static Request login(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
+        String inputReturnURL = req.queryParams("returnurl");
+        String returnURL = Server.documentRoot + "/home";
+        if(inputReturnURL != null && !inputReturnURL.isEmpty()) {
+            returnURL =  Server.documentRoot + "/" + inputReturnURL + "?" + req.queryString();
+        }//
         // Check if email exists
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
         Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
@@ -46,7 +51,7 @@ public class Users {
                 req.session().attribute("userid", storedId);
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", storedRole);
-                res.redirect(Server.documentRoot + "/home");
+                res.redirect(returnURL);
             } else {
                 // Authentication failed
                 req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
