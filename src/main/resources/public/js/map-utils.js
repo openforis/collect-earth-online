@@ -570,14 +570,72 @@ map_utils.draw_project_points = function (samples, customStyle) {
                                       id: sample["id"]});
         features.push(feature);
     }
+
     var vector_source = new ol.source.Vector({features: features});
+    var clusterSource = new ol.source.Cluster({
+      distance: 40,
+      source: vector_source
+    });
+
+    var styleCache = {};
+    var clusters = new ol.layer.Vector({
+      source: clusterSource,
+      style: function(feature, resolution) {
+        var size = feature.get('features').length;
+        var style = styleCache[size];
+        if (!style) {
+          style = [new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 10,
+              stroke: new ol.style.Stroke({
+                color: '#fff'
+              }),
+              fill: new ol.style.Fill({
+                color: '#3399CC'
+              })
+            }),
+            text: new ol.style.Text({
+              text: size.toString(),
+              fill: new ol.style.Fill({
+                color: '#fff'
+              })
+            })
+          })];
+          styleCache[size] = style;
+        }
+        return style;
+      }
+    });
+
     var style = map_utils.styles[customStyle];
     var vector_layer = new ol.layer.Vector({source: vector_source,
                                             style: style});
     map_utils.remove_plots_layer();
-    map_utils.current_plots = vector_layer;
-    map_utils.map_ref.addLayer(vector_layer);
+    map_utils.current_plots = clusters;
+    map_utils.map_ref.addLayer(clusters);
     return map_utils.map_ref;
+}
+
+map_utils.isCluster = function(feature) {
+  if (!feature || !feature.get('features')) {
+        return false;
+  }
+  return feature.get('features').length > 1;
+}
+
+map_utils.zoomtocluster = function(event) {
+
+    console.log('zoomloop');
+    console.log(event.type);
+    var f = event.feature;
+    if (f.cluster.length > 1){
+          clusterpoints = [];
+          for(var i = 0; i<f.cluster.length; i++){
+              clusterpoints.push(f.cluster[i].geometry);
+          }
+          var linestring = new ol.Geometry.LineString(clusterpoints);
+          map.zoomToExtent(linestring.getBounds());
+    }
 }
 
 map_utils.draw_points = function (samples, customStyle) {

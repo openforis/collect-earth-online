@@ -14,6 +14,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.quitclass = "quit-full";
     this.statClass = "projNoStats";
     this.arrowstate = "arrow-down";
+    this.mapClickEvent;
     var mycollection = this;
 
     this.getProjectById = function (projectId, userId) {
@@ -116,7 +117,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     this.currentPlot = null;
                     alert("All plots have been analyzed for this project.");
                 } else {
-                    mreturn = response.data;
                     this.currentPlot = response.data[0];
                     this.loadRandomPlot();
                 }
@@ -130,7 +130,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             this.getPlotDatabyid(this.projectId, id);
         } else {
             utils.enable_element("flag-plot-button");
-            // map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
             map_utils.draw_points(this.currentPlot.samples);
             window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
@@ -146,7 +145,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             this.getPlotData(this.projectId);
         } else {
             utils.enable_element("flag-plot-button");
-            // map_utils.draw_plot(this.currentPlot.center, this.currentProject.plotSize, this.currentProject.plotShape);
             map_utils.draw_points(this.currentPlot.samples);
             window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
@@ -163,8 +161,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         mycollection.mapclass = "sidemap";
         mycollection.quitclass = "quit-side";
         map_utils.remove_plots_layer();
-        //mycollection.loadPlotById(feature.get("id"));
-
         map_utils.map_ref.updateSize();
         window.setTimeout('map_utils.map_ref.updateSize()', 550);
         this.currentPlot = null;
@@ -239,33 +235,44 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.loadProjectPlots = function(){
         $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
                 .then(angular.bind(this, function successCallback(response) {
-                    //alert("Plot " + mycollection.currentPlot.id + " has been flagged.");
-                   /* response.data.forEach(function(plot){
-                        map_utils.draw_point(JSON.parse(plot.center).coordinates[0], JSON.parse(plot.center).coordinates[1], "red_fill", plot.id);
-                    });
-                    */
-                    mreturn = response.data;
                     map_utils.draw_project_points(response.data, "red_fill");
                     var plotclick = function(feature){
-                                                        if(feature.get("id") != null){
-                                                            mycollection.showSideBar = true;
-                                                            mycollection.mapclass = "sidemap";
-                                                            mycollection.quitclass = "quit-side";
-                                                            map_utils.remove_plots_layer();
-                                                            mycollection.loadPlotById(feature.get("id"));
-                                                            }
-                                                            map_utils.map_ref.updateSize();
-                                                            window.setTimeout('map_utils.map_ref.updateSize()', 550);
 
-                                                            };
-                    map_utils.map_ref.on("click", function(event){map_utils.map_ref.forEachFeatureAtPixel(event.pixel, plotclick)});
-
-                    //loadPlotById
+                        if(feature.get("id") != null){
+                            mycollection.showSideBar = true;
+                            mycollection.mapclass = "sidemap";
+                            mycollection.quitclass = "quit-side";
+                            map_utils.remove_plots_layer();
+                            mycollection.loadPlotById(feature.get("id"));
+                        }
+                        map_utils.map_ref.updateSize();
+                        window.setTimeout('map_utils.map_ref.updateSize()', 550);
+                    };
+                    mycollection.mapClickEvent = map_utils.map_ref.on("click", function(evt){
+                    var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function(feature) { return feature; });
+                    //Check if it is a cluster or a single
+                    if (map_utils.isCluster(feature)) {
+                        var features = feature.get('features');
+                        clusterpoints = [];
+                        for(var i = 0; i < features.length; i++) {
+                          clusterpoints.push(features[i].getGeometry().getCoordinates());
+                        }
+                        var linestring = new ol.geom.LineString(clusterpoints);
+                        map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
+                    } else {
+                        mycollection.showSideBar = true;
+                        mycollection.mapclass = "sidemap";
+                        mycollection.quitclass = "quit-side";
+                        map_utils.remove_plots_layer();
+                        map_utils.map_ref.unByKey(mycollection.mapClickEvent);
+                        mycollection.loadPlotById(feature.get("features")[0].get('id'));
+                        map_utils.map_ref.updateSize();
+                        window.setTimeout('map_utils.map_ref.updateSize()', 550);
+                    }
+                    });
                 }), function errorCallback(response) {
                     console.log(response);
                     alert("Error flagging plot as bad. See console for details.");
                 });
     }
-
 }]);
-var mreturn;
