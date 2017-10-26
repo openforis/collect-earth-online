@@ -260,14 +260,17 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                         var linestring = new ol.geom.LineString(clusterpoints);
                         map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
                     } else {
-                        mycollection.showSideBar = true;
-                        mycollection.mapclass = "sidemap";
-                        mycollection.quitclass = "quit-side";
-                        map_utils.remove_plots_layer();
-                        map_utils.map_ref.unByKey(mycollection.mapClickEvent);
-                        mycollection.loadPlotById(feature.get("features")[0].get('id'));
-                        map_utils.map_ref.updateSize();
-                        window.setTimeout('map_utils.map_ref.updateSize()', 550);
+                        if(feature.get("features") != null)
+                        {
+                            mycollection.showSideBar = true;
+                            mycollection.mapclass = "sidemap";
+                            mycollection.quitclass = "quit-side";
+                            map_utils.remove_plots_layer();
+                            map_utils.map_ref.unByKey(mycollection.mapClickEvent);
+                            mycollection.loadPlotById(feature.get("features")[0].get('id'));
+                            map_utils.map_ref.updateSize();
+                            window.setTimeout('map_utils.map_ref.updateSize()', 550);
+                        }
                     }
                     });
                 }), function errorCallback(response) {
