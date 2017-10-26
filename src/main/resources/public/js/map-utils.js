@@ -512,29 +512,92 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
         }
     );
     var vector_source = new ol.source.Vector({"features": features});
-    var vector_style = map_utils.styles["ceoicon"];
-    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
-                                            "source": vector_source,
-                                            "style":  vector_style});
+    var clusterSource = new ol.source.Cluster({
+          distance: 40,
+          source: vector_source
+        });
+
+        var styleCache = {};
+        var clusters = new ol.layer.Vector({
+          source: clusterSource,
+          style: function(feature, resolution) {
+            var size = feature.get('features').length;
+            var style = styleCache[size];
+            if (!style) {
+              style = [new ol.style.Style({
+                image: new ol.style.Circle({
+                  radius: 10,
+                  stroke: new ol.style.Stroke({
+                    color: '#fff'
+                  }),
+                  fill: new ol.style.Fill({
+                    color: '#3399CC'
+                  })
+                }),
+                text: new ol.style.Text({
+                  text: size.toString(),
+                  fill: new ol.style.Fill({
+                    color: '#fff'
+                  })
+                })
+              })];
+              styleCache[size] = style;
+            }
+            return style;
+          }
+        });
+
+        var style = map_utils.styles["red_point"];
+        var vector_layer = new ol.layer.Vector({source: vector_source,
+                                                style: style});
+
+    //var vector_source = new ol.source.Vector({"features": features});
+    //var vector_style = map_utils.styles["ceoicon"];
+    //var vector_layer = new ol.layer.Vector({"title": "Project Markers",
+    //                                        "source": vector_source,
+     //                                       "style":  vector_style});
+
+
     layerRef = vector_layer;
-    map_utils.map_ref.addLayer(vector_layer);
+    map_utils.map_ref.addLayer(clusters);
     var extent = vector_layer.getSource().getExtent();
     map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
 
-    map_utils.map_ref.getViewport().addEventListener("click", function(e) {
-        map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
-            var description = feature.get("description") == "" ? "N/A" : feature.get("description");
-            var html = '<div class="cTitle" >';
-            html += '<h1 >' + feature.get("name") +'</h1> </div>';
-            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
-            html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
-            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
-            gPopup.show(feature.getGeometry().getCoordinates(),html);
-            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
+    map_utils.map_ref.on("click", function(evt) {
+        var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function(feature) { return feature; });
+                            //Check if it is a cluster or a single
+        if (map_utils.isCluster(feature)) {
+            var features = feature.get('features');
+            clusterpoints = [];
+            for(var i = 0; i < features.length; i++) {
+              clusterpoints.push(features[i].getGeometry().getCoordinates());
+            }
+            var linestring = new ol.geom.LineString(clusterpoints);
+            map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
+        } else {
+            if(feature.get("features") != null)
+            {
 
-
-        });
+                window.location = dRoot +'/collection/'+ feature.get("features")[0].get('pID');
+            }
+        }
     });
+
+   /*****************Save this, possibly will use this in a mouse over event, will discuss to see if needed
+           map_utils.map_ref.getViewport().addEventListener("click", function(e) {
+            map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
+                var description = feature.get("description") == "" ? "N/A" : feature.get("description");
+                var html = '<div class="cTitle" >';
+                html += '<h1 >' + feature.get("name") +'</h1> </div>';
+                html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
+                html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
+                html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+                gPopup.show(feature.getGeometry().getCoordinates(),html);
+                //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
+
+
+            });
+        });*/
 
     return map_utils.map_ref;
 };

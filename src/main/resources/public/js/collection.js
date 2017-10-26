@@ -236,18 +236,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
                 .then(angular.bind(this, function successCallback(response) {
                     map_utils.draw_project_points(response.data, "red_fill");
-                    var plotclick = function(feature){
 
-                        if(feature.get("id") != null){
-                            mycollection.showSideBar = true;
-                            mycollection.mapclass = "sidemap";
-                            mycollection.quitclass = "quit-side";
-                            map_utils.remove_plots_layer();
-                            mycollection.loadPlotById(feature.get("id"));
-                        }
-                        map_utils.map_ref.updateSize();
-                        window.setTimeout('map_utils.map_ref.updateSize()', 550);
-                    };
                     mycollection.mapClickEvent = map_utils.map_ref.on("click", function(evt){
                     var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function(feature) { return feature; });
                     //Check if it is a cluster or a single
