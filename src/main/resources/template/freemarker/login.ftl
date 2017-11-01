@@ -14,12 +14,10 @@
             <input id="password" name="password" placeholder="Password" value="" type="password" class="text">
         </fieldset>
         <p id="forgot-password"><a href="${root}/password">Forgot your password?</a></p>
-        <input class="button" name="login" value="Login" type="submit">
+        <input class="button" name="login" value="Login" type="submit"> <input class="button" name="register" onclick="window.location='${root}/register'" value="Register" type="button">
     </form>
-    <hr>
-    <h1>New to CEO?</h1>
     <div class="registerdiv">
-    <input class="button" name="register" onclick="window.location='${root}/register'" value="Register a new account" type="button">
+
     </div>
 </div>
 

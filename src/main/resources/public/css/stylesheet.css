@@ -810,6 +810,7 @@ Tree expanded icon
     right: 50%;
     white-space: nowrap;
     width: fit-content;
+    width: -moz-fit-content;
     text-align: center;
 }
 
@@ -998,7 +999,7 @@ Tree expanded icon
 
 #login-form input.button, #register-form input.button, #password-form input.button, #account-form input.button {
     height: 2rem;
-    width: 21rem;
+    width: 150px; /*21rem;*/
     margin: 0.6rem 0.3rem;
     padding: 0.5rem;
     border: 1px solid #ececec;

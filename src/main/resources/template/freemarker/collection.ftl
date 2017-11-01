@@ -35,15 +35,15 @@
                     </tr>
                     <tr>
                         <td>Plots Assigned</td>
-                        <td>{{ collection.analyzedPlots }} ({{ (100 * collection.analyzedPlots / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.plotsAssigned }} ({{ collection.assignedPercentage() }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Flagged</td>
-                        <td>{{ collection.flaggedPlots }} ({{ (100 * collection.flaggedPlots / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.plotsFlagged }} ({{ collection.flaggedPercentage() }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Completed</td>
-                        <td>{{ collection.analyzedPlots + collection.flaggedPlots }} ({{ (100 * (collection.analyzedPlots + collection.flaggedPlots) / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.plotsAssigned + collection.plotsFlagged }} ({{ collection.completePercentage() }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Total</td>

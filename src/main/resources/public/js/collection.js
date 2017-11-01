@@ -16,7 +16,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.arrowstate = "arrow-down";
     this.mapClickEvent;
     var mycollection = this;
-
+    gmycollection = mycollection;
     this.getProjectById = function (projectId, userId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
@@ -24,6 +24,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.root + "/home";
                 } else {
+                    currentp = response.data;
                     this.currentProject = response.data;
                     this.initialize(this.root, userId, this.userName, projectId);
                 }
@@ -91,6 +92,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             this.setBaseMapSource();
             map_utils.draw_polygon(this.currentProject.boundary);
             this.loadProjectPlots();
+            this.getProjectStats();
+
         }
     };
 
@@ -200,7 +203,40 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             alert("No sample points selected. Please click some first.");
         }
     };
-
+    this.assignedPercentage = function(){
+        var p = 0;
+        try{
+            p = (100 * this.plotsAssigned / this.currentProject.numPlots);
+        }
+        catch(e)
+        {
+            p = 0;
+        }
+        return parseFloat(p).toFixed(2);
+    }
+    this.flaggedPercentage = function(){
+        var p = 0;
+        try{
+            p = (100 * this.plotsFlagged / this.currentProject.numPlots);
+        }
+        catch(e)
+        {
+            p = 0;
+        }
+        return parseFloat(p).toFixed(2);
+    }
+    this.completePercentage = function()
+    {
+        var p = 0;
+        try{
+            p = (100 * (this.plotsAssigned + this.plotsFlagged) / this.currentProject.numPlots);
+        }
+        catch(e)
+        {
+            p = 0;
+        }
+        return parseFloat(p).toFixed(2);
+    }
     this.saveValues = function () {
         $http.post(this.root + "/add-user-samples",
                    {projectId: this.projectId,
@@ -216,6 +252,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 console.log(response);
                 alert("Error saving your assignments to the database. See console for details.");
             });
+            this.plotsAssigned++;
     };
 
     this.flagPlot = function () {
@@ -225,18 +262,29 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             .then(angular.bind(this, function successCallback(response) {
                 alert("Plot " + this.currentPlot.id + " has been flagged.");
                 this.plotsFlagged++;
+                this.plotsAssigned++;
                 this.nextPlot();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error flagging plot as bad. See console for details.");
             });
     };
+    this.getProjectStats = function(){
+        $http.get(this.root + "/get-project-stats/" + this.projectId)
+                        .then(angular.bind(this, function successCallback(response) {
+                            mreturn = response;
+                            mycollection.plotsAssigned = response.data.analyzedPlots;
+                            mycollection.plotsFlagged = response.data.flaggedPlots;
+                        }), function errorCallback(response) {
+                             console.log(response);
+                             alert("Error getting project stats. See console for details.");
+                         });
+    }
 
     this.loadProjectPlots = function(){
         $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
                 .then(angular.bind(this, function successCallback(response) {
                     map_utils.draw_project_points(response.data, "red_fill");
-
                     mycollection.mapClickEvent = map_utils.map_ref.on("click", function(evt){
                     var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function(feature) { return feature; });
                     //Check if it is a cluster or a single
@@ -268,3 +316,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 });
     }
 }]);
+var currentp;
+var gmycollection;
+var mreturn;
