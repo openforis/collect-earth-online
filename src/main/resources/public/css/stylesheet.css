@@ -776,6 +776,20 @@ Tree expanded icon
     display: none;
 }
 
+#home .ol-popup-content .cContent p {
+    clear: both;
+}
+#home .ol-popup-content .cContent .clusterList{
+    width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#home .ol-popup-content .cContent {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
 #collection .ol-dragbox {
     background-color: rgba(255,255,255,0.4);
     border-color: rgba(100,150,0,1);
@@ -884,6 +898,7 @@ Tree expanded icon
     transform: translate(-50%, -50%);
     height: calc(80% - 4rem);
     width: fit-content;
+    width: -moz-fit-content;
     /*padding: 2rem;*/
     overflow: auto;
     border: 6px solid darkgray;
@@ -895,6 +910,8 @@ Tree expanded icon
     left: 50%;
     transform: translate(-50%, -50%);
     width: fit-content;
+    width: -moz-fit-content;
+    min-width: 900px;
 }
 #account-form {
     position: unset;
@@ -907,6 +924,7 @@ Tree expanded icon
 #user-stats{
     height: calc(80% - 4rem);
     width: fit-content;
+    width: -moz-fit-content;
     /*padding: 2rem;*/
     overflow: auto;
     border: 6px solid darkgray;
@@ -1028,10 +1046,13 @@ font-size: .85em;
     margin-left: 20px!important;
 }
 
-#login-form hr, #register-form hr, #password-form hr, #account-form hr {
+#login-form hr, #register-form hr, #password-form hr, #account-form hr, #user-stats hr {
     height: 12px;
     border: 0;
     box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
+}
+#account-form, #user-stats {
+    min-height:456px;
 }
 .w3-light-grey, .w3-hover-light-grey:hover, .w3-light-gray, .w3-hover-light-gray:hover {
     color: #000!important;

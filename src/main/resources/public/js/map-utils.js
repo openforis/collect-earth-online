@@ -557,8 +557,6 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
     //                                        "source": vector_source,
      //                                       "style":  vector_style});
 
-
-    layerRef = vector_layer;
     map_utils.map_ref.addLayer(clusters);
     var extent = vector_layer.getSource().getExtent();
     map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
@@ -569,39 +567,40 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
         if (map_utils.isCluster(feature)) {
             var features = feature.get('features');
             clusterpoints = [];
+            var html = '<div class="cTitle" ><h1>Cluster info</h1></div><div class="cContent" >';
             for(var i = 0; i < features.length; i++) {
               clusterpoints.push(features[i].getGeometry().getCoordinates());
+              html += '<p><span style="float:left;" class="clusterList" title="'+ features[i].get("name") +'" alt="'+ features[i].get("name") +'">'+features[i].get("name") + ' ' + '</span><a href="'+ dRoot+'/collection/'+ features[i].get("pID") +'" class="lnkStart">Get Started</a></p>';
             }
             var linestring = new ol.geom.LineString(clusterpoints);
-            map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
+            html += '<p><a onclick="map_utils.zoomToCluster(['+linestring.getExtent()+'])" class="lnkStart" style="cursor:pointer; min-width:350px;">Zoom to cluster</a></p></div>';
+            gPopup.show(feature.get("features")[0].getGeometry().getCoordinates(),html);
         } else {
-            if(feature.get("features") != null)
+            if(feature != null && feature.get("features") != null)
             {
-
-                window.location = dRoot +'/collection/'+ feature.get("features")[0].get('pID');
+                if(feature != null && feature.get("features") != null)
+                {
+                    var description = feature.get("features")[0].get("description") == "" ? "N/A" : feature.get("features")[0].get("description");
+                                    var html = '<div class="cTitle" >';
+                                    html += '<h1 >' + feature.get("features")[0].get("name") +'</h1> </div>';
+                                    html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
+                                    html += '<p><span class="pField">Number of plots: </span>' + feature.get("features")[0].get("numPlots")  + '</p>';
+                                    html += '<a href="'+ dRoot+'/collection/'+ feature.get("features")[0].get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+                                    gPopup.show(feature.get("features")[0].getGeometry().getCoordinates(),html);
+                }
+            }
+            else{
+                gPopup.hide();
             }
         }
     });
 
-   /*****************Save this, possibly will use this in a mouse over event, will discuss to see if needed
-           map_utils.map_ref.getViewport().addEventListener("click", function(e) {
-            map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
-                var description = feature.get("description") == "" ? "N/A" : feature.get("description");
-                var html = '<div class="cTitle" >';
-                html += '<h1 >' + feature.get("name") +'</h1> </div>';
-                html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
-                html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
-                html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
-                gPopup.show(feature.getGeometry().getCoordinates(),html);
-                //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
-
-
-            });
-        });*/
-
     return map_utils.map_ref;
 };
-var layerRef;
+map_utils.zoomToCluster = function(extent){
+     gPopup.hide();
+     map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
+}
 var gPopup;
 map_utils.draw_point = function (lon, lat, style, plotid, collectionRef) {
     if(style === null){
