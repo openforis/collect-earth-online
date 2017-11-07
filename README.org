@@ -63,14 +63,14 @@ Collect. Access to this database is made through REST API calls to the
 Collect web application running on the same host as CEO. In order to
 build and launch Collect, follow these steps:
 
-1. Install Maven 3.0.5. You can download this version here:
-   https://archive.apache.org/dist/maven/maven-3/3.0.5/
+1. Install Maven 3.5.0+. You can download the latest version here:
+   https://maven.apache.org/download.cgi
 
 2. Set M2_HOME to the directory where you installed this version of
    Maven.
 
 #+begin_src sh
-export M2_HOME="/where/you/installed/maven-3.0.5"
+export M2_HOME="/where/you/installed/maven-3.5.0"
 #+end_src
 
 3. Clone the collect repository and package it as a WAR file.
