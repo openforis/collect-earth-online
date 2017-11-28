@@ -1,9 +1,5 @@
 package org.openforis.ceo;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -23,6 +19,12 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 public class JsonUtils {
 
     public static String expandResourcePath(String filename) {
@@ -36,6 +38,10 @@ public class JsonUtils {
 
     public static JsonElement parseJson(String jsonString) {
         return (new JsonParser()).parse(jsonString);
+    }
+    
+    public static String toJson(Object obj) {
+    	return new Gson().toJson(obj);
     }
 
     public static JsonElement readJsonFile(String filename) {
