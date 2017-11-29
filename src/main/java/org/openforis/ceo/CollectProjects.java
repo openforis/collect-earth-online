@@ -494,10 +494,10 @@ public class CollectProjects {
 
     private static JsonArray extractAoiBoundaryData(JsonObject jsonObj) {
     	JsonArray result = new JsonArray();
-    	result.add(extractCoordinateData(jsonObj, "latMin", "lonMin"));
+    	result.add(extractCoordinateData(jsonObj, "latMax", "lonMin"));
+    	result.add(extractCoordinateData(jsonObj, "latMax", "lonMax"));
     	result.add(extractCoordinateData(jsonObj, "latMin", "lonMax"));
-		result.add(extractCoordinateData(jsonObj, "latMax", "lonMin"));
-		result.add(extractCoordinateData(jsonObj, "latMax", "lonMax"));
+    	result.add(extractCoordinateData(jsonObj, "latMin", "lonMin"));
 		return result;
     }
 
