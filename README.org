@@ -78,7 +78,7 @@ export M2_HOME="/where/you/installed/maven-3.5.0"
 #+begin_src sh
 git clone https://github.com/openforis/collect.git
 cd collect
-git checkout collect4
+git checkout ceo
 mvn clean
 mvn verify
 sudo ln -s $PWD/collect-web/collect-webapp/target/collect.war $TOMCAT_HOME/webapps/collect.war
