@@ -10,6 +10,9 @@ public class RequestUtils {
 	
 	public static String getParam(Request req, String param, String defaultValue) {
 		String val = req.params(":" + param);
+		if (val == null) {
+			val = req.queryParams(param);
+		}
 		return val == null ? defaultValue : val;
 	}
 	
@@ -19,6 +22,6 @@ public class RequestUtils {
 	
 	public static int getIntParam(Request req, String param, int defaultValue) {
 		String val = getParam(req, param);
-		return val == null ? defaultValue : Integer.parseInt(val);
+		return val == null || val.isEmpty() ? defaultValue : Integer.parseInt(val);
 	}
 }

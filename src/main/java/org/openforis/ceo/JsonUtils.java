@@ -24,6 +24,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 public class JsonUtils {
 
@@ -112,6 +113,12 @@ public class JsonUtils {
             .max(Comparator.naturalOrder())
             .get() + 1;
     }
+
+	public static JsonArray singletonArray(JsonElement el) {
+		JsonArray array = new JsonArray();
+		array.add(el);
+		return array;
+	}
 
     // Note: The JSON file must contain an array of objects.
     public static void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
