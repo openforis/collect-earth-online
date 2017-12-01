@@ -167,7 +167,7 @@ map_utils.set_dg_wms_layer_params = function (imagery_year, stacking_profile) {
                                                   url: "https://services.digitalglobe.com/mapservice/wmsaccess",
                                                   params: {"VERSION": "1.1.1",
                                                            "LAYERS": "DigitalGlobe:Imagery",
-                                                           "CONNECTID": "63f634af-fc31-4d81-9505-b62b4701f8a9",
+                                                           "CONNECTID": "b6742ef2-9a67-4226-b388-c97ac7a44ac8",
                                                            "FEATUREPROFILE": stacking_profile,
                                                            // "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
                                                            //                      + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
