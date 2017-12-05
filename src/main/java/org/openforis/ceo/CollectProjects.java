@@ -10,6 +10,7 @@ import static org.openforis.ceo.JsonUtils.forEachInJsonArray;
 import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
+import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.singletonArray;
 import static org.openforis.ceo.JsonUtils.toElementStream;
 import static org.openforis.ceo.PartUtils.partToString;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -40,6 +42,7 @@ import spark.Response;
 public class CollectProjects {
 
     private static final String ADMIN_USERNAME = "admin@openforis.org";
+	private static final int MAX_MEASUREMENTS = 3;
 
 	/**
      * Call Collect's REST API to QUERY the database.
@@ -127,7 +130,7 @@ public class CollectProjects {
     public static String getProjectStats(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         String username = getParam(req, "userId", ADMIN_USERNAME); //TODO
-        JsonArray samplingPointItems = getFromCollect(format("survey/%d/sampling_point_data", projectId)).getAsJsonArray();
+        JsonArray samplingPointItems = getCollectSamplingPointItems(projectId, null, true);
         
         final Set<Integer> contributorIds = new HashSet<Integer>();
         
@@ -162,7 +165,7 @@ public class CollectProjects {
     //
     // ==> "{flagged:false,analyses:0,...}" | "done"
     public static String getUnanalyzedPlot(Request req, Response res) {
-        int projectId = getIntParam(req, "id");
+    	int projectId = getIntParam(req, "id");
         String username = getParam(req, "userId", ADMIN_USERNAME); //TODO pass user id param
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("username", username);
@@ -181,6 +184,26 @@ public class CollectProjects {
             JsonObject plotSamplingPointItem = plotSamplingPointItems.get(0).getAsJsonObject();
             JsonArray sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
             return convertToCeoRecord(username, projectId, recordObj, plotSamplingPointItem, sampleItems).toString();
+        }
+    }
+    
+    public static String getUnanalyzedPlotByID(Request req, Response res) {
+    	int projectId = getIntParam(req, "projid");
+        String plotId = getParam(req, "id");
+        String username = getParam(req, "userId", ADMIN_USERNAME);
+		JsonArray summaries = getCollectRecordSummariesByPlotId(username, projectId, plotId);
+        if (summaries.size() < MAX_MEASUREMENTS) {
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("username", username);
+            params.put("addSecondLevelEntities", true);
+            params.put("recordKey", Arrays.asList(plotId));
+            JsonObject recordObj = postToCollect(format("survey/%d/data/records", projectId), params).getAsJsonObject();
+            JsonArray plotSamplingPointItems = getCollectSamplingPointItems(projectId, plotId, true);
+            JsonObject plotSamplingPointItem = plotSamplingPointItems.get(0).getAsJsonObject();
+            JsonArray sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
+            return convertToCeoRecord(username, projectId, recordObj, plotSamplingPointItem, sampleItems).toString();
+        } else {
+        	return "done";
         }
     }
 
@@ -257,8 +280,8 @@ public class CollectProjects {
         
         Map<String, Object> newRecordParams = new HashMap<String, Object>();
         newRecordParams.put("username", username);
-        newRecordParams.put("recordKey[0]", plotId);
-        newRecordParams.put("recordKey[1]", currentAnalyses+1);
+        newRecordParams.put("recordKey", Arrays.asList(plotId, currentAnalyses+1));
+//        newRecordParams.put("recordKey[1]", currentAnalyses+1);
         newRecordParams.put("addSecondLevelEntities", true);
         JsonObject newRecord = postToCollect(String.format("survey/%s/data/records", projectId), newRecordParams).getAsJsonObject();
         int recordId = newRecord.get("id").getAsInt();
@@ -266,24 +289,33 @@ public class CollectProjects {
         JsonObject survey = getCollectSurvey(projectId).getAsJsonObject();
         
         userSamples.entrySet().forEach(e -> {
-            String key = e.getKey();
-            String value = e.getValue().getAsString();
+            String sampleSubplotKey = e.getKey();
+            JsonObject sampleValue = e.getValue().getAsJsonObject();
             
             int subplotNodeDefId = getCollectSurveyNodeDefinitionId(survey, "subplot");
             JsonArray subplots = findElement(newRecord,
-                    format("rootEntity.childrenByDefinitionId.%d[0]", subplotNodeDefId)).getAsJsonArray();
+                    format("rootEntity.childrenByDefinitionId.%d", subplotNodeDefId)).getAsJsonArray();
             
             JsonObject subplot = toElementStream(subplots).filter(s -> {
-                int subplotKeyDefId = getCollectSurveyNodeDefinitionId(survey, "subplot.subplot_id");
+                int subplotKeyDefId = getCollectSurveyNodeDefinitionId(survey, "subplot/subplot_id");
                 String subplotKey = findElement((JsonObject) s,
                         format("childrenByDefinitionId.%d[0].fields[0].value", subplotKeyDefId)).getAsString();
-                return subplotKey.equals(key);
+                return subplotKey.equals(sampleSubplotKey);
             }).collect(intoJsonArray).get(0).getAsJsonObject();
 
-            JsonObject command = createAttributeUpdateCommand(projectId, survey, recordId, subplot,
-                    "subplot/value", value, username);
+            JsonArray attributeUpdateCommands = sampleValue.entrySet().stream().map(sampleValueEntry -> {
+            	String codeListName = sampleValueEntry.getKey(); //listNNN
+				String attrName = "values_" + codeListName.substring(4);
+            	String attrVal = sampleValueEntry.getValue().getAsString();
+
+                return createAttributeUpdateCommand(projectId, survey, recordId, subplot,
+                        format("subplot/%s", attrName), attrVal, username);
+            }).collect(intoJsonArray);
             
-            patchToCollect("record/attribute", command);
+            JsonObject attributeUpdateCommandsWrapper = new JsonObject();
+            attributeUpdateCommandsWrapper.add("commands", attributeUpdateCommands);
+            
+            postToCollect("command/record/attributes", attributeUpdateCommandsWrapper);
         });
         return "";
     }
@@ -373,13 +405,15 @@ public class CollectProjects {
             p.add("imageryYear", ceoApplicationOptions.get("imageryYear"));
             p.add("stackingProfile", ceoApplicationOptions.get("stackingProfile"));
             
+            JsonObject samplingPointDataConfiguration = ceoApplicationOptions.get("samplingPointDataConfiguration").getAsJsonObject();
+            
             JsonObject boundary = new JsonObject();
             boundary.addProperty("type", "Polygon");
             JsonArray coordinates = Stream.iterate(0, i -> i + 1).limit(4)
                 .map(i -> {
                     JsonArray coordinate = new JsonArray();
-                    coordinate.add(findElement(ceoApplicationOptions, format("samplingPointDataConfiguration.aoiBoundary[%d].y", i)));
-                    coordinate.add(findElement(ceoApplicationOptions, format("samplingPointDataConfiguration.aoiBoundary[%d].x", i)));
+                    coordinate.add(findElement(samplingPointDataConfiguration, format("aoiBoundary[%d].x", i)));
+                    coordinate.add(findElement(samplingPointDataConfiguration, format("aoiBoundary[%d].y", i)));
                     return coordinate;
                 }).collect(intoJsonArray);
             JsonArray coordinatesWrapper = new JsonArray();
@@ -387,14 +421,14 @@ public class CollectProjects {
             boundary.add("coordinates", coordinatesWrapper);
             p.addProperty("boundary", boundary.toString());
 
-            p.addProperty("plotDistribution", findElement(ceoApplicationOptions, "samplingPointDataConfiguration.levelsSettings[0].distribution").getAsString().toLowerCase());
-	        p.addProperty("numPlots", findElement(ceoApplicationOptions, "samplingPointDataConfiguration.levelsSettings[0].numPoints").getAsInt());
+            p.addProperty("plotDistribution", findElement(samplingPointDataConfiguration, "levelsSettings[0].distribution").getAsString().toLowerCase());
+	        p.addProperty("numPlots", findElement(samplingPointDataConfiguration, "levelsSettings[0].numPoints").getAsInt());
 	        p.addProperty("plotSpacing", (String) null);
-	        p.addProperty("plotShape", findElement(ceoApplicationOptions, "samplingPointDataConfiguration.levelsSettings[0].shape").getAsString().toLowerCase());
-	        p.addProperty("plotSize", findElement(ceoApplicationOptions, "samplingPointDataConfiguration.levelsSettings[0].pointWidth").getAsInt());
+	        p.addProperty("plotShape", findElement(samplingPointDataConfiguration, "levelsSettings[0].shape").getAsString().toLowerCase());
+	        p.addProperty("plotSize", findElement(samplingPointDataConfiguration, "levelsSettings[0].pointWidth").getAsInt());
 	        
-	        p.addProperty("sampleDistribution", findElement(ceoApplicationOptions, "samplingPointDataConfiguration.levelsSettings[1].distribution").getAsString().toLowerCase());
-	        p.addProperty("samplesPerPlot", findElement(ceoApplicationOptions, "samplingPointDataConfiguration.levelsSettings[1].numPoints").getAsInt());
+	        p.addProperty("sampleDistribution", findElement(samplingPointDataConfiguration, "levelsSettings[1].distribution").getAsString().toLowerCase());
+	        p.addProperty("samplesPerPlot", findElement(samplingPointDataConfiguration, "levelsSettings[1].numPoints").getAsInt());
 	        p.addProperty("sampleResolution", (String) null); //TODO
         }
         
@@ -516,10 +550,10 @@ public class CollectProjects {
 
     private static JsonArray extractAoiBoundaryData(JsonObject jsonObj) {
     	JsonArray result = new JsonArray();
-    	result.add(extractCoordinateData(jsonObj, "latMax", "lonMin"));
-    	result.add(extractCoordinateData(jsonObj, "latMax", "lonMax"));
     	result.add(extractCoordinateData(jsonObj, "latMin", "lonMax"));
     	result.add(extractCoordinateData(jsonObj, "latMin", "lonMin"));
+    	result.add(extractCoordinateData(jsonObj, "latMax", "lonMin"));
+    	result.add(extractCoordinateData(jsonObj, "latMax", "lonMax"));
 		return result;
     }
 
@@ -542,7 +576,8 @@ public class CollectProjects {
         String[] pathParts = nodePath.split("/");
         for (String pathPart : pathParts) {
             JsonArray currentChildrenDefs = findElement(currentObj, "children").getAsJsonArray();
-            currentObj = filterJsonArray(currentChildrenDefs, o -> pathPart.equals(o.get("name").getAsString())).get(0).getAsJsonObject();
+            currentObj = filterJsonArray(currentChildrenDefs, o -> pathPart.equals(o.get("name").getAsString()))
+            		.get(0).getAsJsonObject();
         };
         return currentObj.get("id").getAsInt();
     }
@@ -586,15 +621,17 @@ public class CollectProjects {
         JsonObject o = new JsonObject();
         o.add("type", new JsonPrimitive("Point"));
         JsonArray coordinates = new JsonArray();
-        coordinates.add(y);
         coordinates.add(x);
+        coordinates.add(y);
         o.add("coordinates", coordinates);
         return o;
     }
     
     private static JsonArray getCollectSamplingPointItems(int projectId, String plotId, boolean onlyParentItem) {
         HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("parent_keys", plotId);
+        if (plotId != null) {
+        	params.put("parent_keys", plotId);
+        }
         params.put("only_parent_item", onlyParentItem);
         JsonArray sampleItems = getFromCollect(format("survey/%d/sampling_point_data", projectId), params)
                 .getAsJsonArray();
@@ -618,8 +655,8 @@ public class CollectProjects {
         command.addProperty("surveyId", projectId);
         command.addProperty("recordId", recordId);
         command.addProperty("nodeDefId", valueAttrDefId);
-        command.addProperty("nodeId", valueAttr.get("id").getAsInt());
-        command.addProperty("parentEntityId", parentEntity.get("id").getAsInt());
+        command.addProperty("nodePath", valueAttr.get("path").getAsString());
+        command.addProperty("parentEntityPath", parentEntity.get("path").getAsString());
         command.addProperty("attributeType", "CODE");
         JsonObject valueByField = new JsonObject();
         valueByField.addProperty("code", value);
