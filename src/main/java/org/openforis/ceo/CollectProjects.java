@@ -2,7 +2,6 @@ package org.openforis.ceo;
 
 import static java.lang.String.format;
 import static org.openforis.ceo.Collect.getFromCollect;
-import static org.openforis.ceo.Collect.patchToCollect;
 import static org.openforis.ceo.Collect.postToCollect;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
@@ -10,7 +9,6 @@ import static org.openforis.ceo.JsonUtils.forEachInJsonArray;
 import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.singletonArray;
 import static org.openforis.ceo.JsonUtils.toElementStream;
 import static org.openforis.ceo.PartUtils.partToString;
@@ -24,7 +22,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -41,8 +38,9 @@ import spark.Response;
 
 public class CollectProjects {
 
-    private static final String ADMIN_USERNAME = "admin@openforis.org";
-	private static final int MAX_MEASUREMENTS = 3;
+	private static final String ADMIN_USERNAME = "admin@openforis.org";
+	private static final int MAX_PLOT_MEASUREMENTS = 3;
+	private static final double SAMPLE_POINT_WIDTH_M = 10.0d;
 
 	/**
      * Call Collect's REST API to QUERY the database.
@@ -192,7 +190,7 @@ public class CollectProjects {
         String plotId = getParam(req, "id");
         String username = getParam(req, "userId", ADMIN_USERNAME);
 		JsonArray summaries = getCollectRecordSummariesByPlotId(username, projectId, plotId);
-        if (summaries.size() < MAX_MEASUREMENTS) {
+        if (summaries.size() < MAX_PLOT_MEASUREMENTS) {
             Map<String, Object> params = new HashMap<String, Object>();
             params.put("username", username);
             params.put("addSecondLevelEntities", true);
@@ -330,7 +328,6 @@ public class CollectProjects {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         int projectId = jsonInputs.get("projectId").getAsInt();
         String plotId = jsonInputs.get("plotId").getAsString();
-        String username = "test"; //TODO
         
         JsonObject samplingPointItem = getCollectSamplingPointItems(projectId, plotId, true).getAsJsonArray().get(0).getAsJsonObject();
         JsonArray infoAttributes = findElement(samplingPointItem, "infoAttributes").getAsJsonArray();
@@ -421,15 +418,18 @@ public class CollectProjects {
             boundary.add("coordinates", coordinatesWrapper);
             p.addProperty("boundary", boundary.toString());
 
-            p.addProperty("plotDistribution", findElement(samplingPointDataConfiguration, "levelsSettings[0].distribution").getAsString().toLowerCase());
-	        p.addProperty("numPlots", findElement(samplingPointDataConfiguration, "levelsSettings[0].numPoints").getAsInt());
-	        p.addProperty("plotSpacing", (String) null);
-	        p.addProperty("plotShape", findElement(samplingPointDataConfiguration, "levelsSettings[0].shape").getAsString().toLowerCase());
-	        p.addProperty("plotSize", findElement(samplingPointDataConfiguration, "levelsSettings[0].pointWidth").getAsInt());
+            JsonObject plotLevelSettings = findElement(samplingPointDataConfiguration, "levelsSettings[0]").getAsJsonObject();
+            JsonObject samplePointLevelSettings = findElement(samplingPointDataConfiguration, "levelsSettings[1]").getAsJsonObject();
+            
+            p.addProperty("plotDistribution", plotLevelSettings.get("distribution").getAsString().toLowerCase());
+	        p.addProperty("numPlots", plotLevelSettings.get("numPoints").getAsInt());
+	        p.add("plotSpacing", plotLevelSettings.get("resolution"));
+	        p.addProperty("plotShape", samplePointLevelSettings.get("shape").getAsString().toLowerCase());
+	        p.addProperty("plotSize", plotLevelSettings.get("pointWidth").getAsInt());
 	        
-	        p.addProperty("sampleDistribution", findElement(samplingPointDataConfiguration, "levelsSettings[1].distribution").getAsString().toLowerCase());
-	        p.addProperty("samplesPerPlot", findElement(samplingPointDataConfiguration, "levelsSettings[1].numPoints").getAsInt());
-	        p.addProperty("sampleResolution", (String) null); //TODO
+	        p.addProperty("sampleDistribution", samplePointLevelSettings.get("distribution").getAsString().toLowerCase());
+	        p.addProperty("samplesPerPlot", samplePointLevelSettings.get("numPoints").getAsInt());
+	        p.add("sampleResolution", samplePointLevelSettings.get("resolution"));
         }
         
         JsonArray codeLists = collectSurvey.get("codeLists").getAsJsonArray();
@@ -507,7 +507,7 @@ public class CollectProjects {
         JsonArray samplingPointSettings = new JsonArray();
         JsonObject plotLevelSettings = new JsonObject();
         plotLevelSettings.add("numPoints", ceoProject.get("numPlots"));
-        plotLevelSettings.addProperty("shape", ceoProject.get("plotShape").getAsString().toUpperCase());
+        plotLevelSettings.addProperty("shape", "SQUARE");
         plotLevelSettings.addProperty("distribution", ceoProject.get("plotDistribution").getAsString().toUpperCase());
         plotLevelSettings.add("resolution", ceoProject.get("plotSpacing"));
         plotLevelSettings.add("pointWidth", ceoProject.get("plotSize"));
@@ -515,10 +515,10 @@ public class CollectProjects {
 
         JsonObject sampleLevelSettings = new JsonObject();
         sampleLevelSettings.addProperty("numPoints", ceoProject.get("samplesPerPlot").getAsInt());
-        sampleLevelSettings.addProperty("shape", "CIRCLE");
+        sampleLevelSettings.addProperty("shape", ceoProject.get("plotShape").getAsString().toUpperCase());
         sampleLevelSettings.addProperty("distribution", ceoProject.get("sampleDistribution").getAsString().toUpperCase());
         sampleLevelSettings.add("resolution", ceoProject.get("sampleResolution"));
-        sampleLevelSettings.addProperty("pointWidth", 10.0d);
+        sampleLevelSettings.addProperty("pointWidth", SAMPLE_POINT_WIDTH_M);
         samplingPointSettings.add(sampleLevelSettings);
         
         samplingPointGenerationData.add("levelsSettings", samplingPointSettings);
