@@ -281,7 +281,6 @@ public class CollectProjects {
             return Server.documentRoot + "/downloads/" + outputFileName;
         }
     }
-    
 
     private static JsonObject getValueDistribution(JsonObject collectSurvey, String username, int projectId, String plotId, 
             JsonArray samples, final Map<String, String> sampleValueTranslations) {
@@ -383,10 +382,12 @@ public class CollectProjects {
             JsonObject subplot = getCollectRecordSubplot(survey, newRecord, sampleSubplotKey);
 
             JsonArray attributeUpdateCommands = sampleValue.entrySet().stream().map(sampleValueEntry -> {
-                String codeListName = sampleValueEntry.getKey(); //listNNN
-                String attrName = "values_" + codeListName.substring(4);
-                String attrVal = sampleValueEntry.getValue().getAsString();
-
+                String codeListLabel = sampleValueEntry.getKey();
+                JsonObject codeList = getCollectCodeListFromLabel(survey, codeListLabel);
+                String codeListName = codeList.get("name").getAsString();
+                String codeListItemLabel = sampleValueEntry.getValue().getAsString();
+                String attrName = codeListName;
+                String attrVal = getCollectCodeListItemCodeFromLabel(codeList, codeListItemLabel);
                 return createAttributeUpdateCommand(projectId, survey, recordId, subplot,
                         format("subplot/%s", attrName), attrVal, username);
             }).collect(intoJsonArray);
@@ -664,6 +665,18 @@ public class CollectProjects {
     }
     
 
+    private static JsonObject getCollectCodeListFromLabel(JsonObject survey, String codeListLabel) {
+        JsonArray codeLists = survey.get("codeLists").getAsJsonArray();
+        JsonObject codeList = filterJsonArray(codeLists, l -> codeListLabel.equals(getMemberValue(l, "label", String.class))).get(0).getAsJsonObject();
+        return codeList;
+    }
+    
+    private static String getCollectCodeListItemCodeFromLabel(JsonObject codeList, String codeListItemLabel) {
+        JsonArray codeListItems = codeList.get("items").getAsJsonArray();
+        JsonObject codeListItem = filterJsonArray(codeListItems, i -> i.get("label").getAsString().equals(codeListItemLabel)).get(0).getAsJsonObject();
+        return codeListItem.get("code").getAsString();
+    }
+
     private static JsonObject getCollectRecord(int surveyId, int recordId) {
         return getFromCollect(format("survey/%s/data/records/%s", surveyId, recordId)).getAsJsonObject();
     }
@@ -748,7 +761,8 @@ public class CollectProjects {
     
     private static String getCollectRecordAttributeValue(JsonObject parentEntity, int attrDefId) {
         JsonObject attr = getCollectRecordAttribute(parentEntity, attrDefId);
-        return findElement(attr, "fields[0].value").getAsString();
+        JsonElement valEl = findElement(attr, "fields[0].value");
+        return valEl.isJsonNull() ? null : valEl.getAsString();
     }
     
     private static JsonObject createAttributeUpdateCommand(int projectId, JsonObject survey, int recordId,
@@ -787,7 +801,7 @@ public class CollectProjects {
         JsonObject firstGroup = sampleValueGroups.get(0).getAsJsonObject();
         String firstGroupName = firstGroup.get("name").getAsString();
         return toStream(firstGroup.get("values").getAsJsonArray())
-            .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsString(),
+            .collect(Collectors.toMap(sampleValue -> sampleValue.get("code").getAsString(),
                                       sampleValue -> firstGroupName + ":" + sampleValue.get("name").getAsString(),
                                       (a, b) -> b));
     }
