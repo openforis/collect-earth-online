@@ -6,6 +6,7 @@ import static org.openforis.ceo.Collect.postToCollect;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
+import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
 import static org.openforis.ceo.JsonUtils.forEachInJsonArray;
 import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
@@ -275,6 +276,106 @@ public class CollectProjects {
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
             String outputFileName = "ceo-" + projectName + "-" + currentDate + ".csv";
+
+            writeCsvFile(outputFileName, csvHeader, csvRows);
+
+            return Server.documentRoot + "/downloads/" + outputFileName;
+        }
+    }
+    
+    public static String dumpProjectRawData(Request req, Response res) {
+        int projectId = getIntParam(req, "id");
+        String username = getParam(req, "userId", ADMIN_USERNAME);
+        
+        JsonElement collectSurveyEl = getCollectSurvey(projectId);
+        if (collectSurveyEl.isJsonNull()) {
+             return Server.documentRoot + "/project-not-found";
+        } else {
+            JsonObject collectSurvey = collectSurveyEl.getAsJsonObject();
+            
+            
+            JsonObject ceoProject = convertToCeoProject(collectSurvey);
+            Map<String, String> sampleValueTranslations = getSampleValueTranslations(ceoProject);
+            JsonArray plotPoints = getCollectSamplingPointItems(projectId);
+            JsonArray sampleSummaries = flatMapJsonArray(plotPoints,
+                    plot -> {
+                        String plotUsername = ADMIN_USERNAME; //TODO
+                        String plotId = getMemberValue(plot, "levelCodes[0]", String.class);
+                        JsonArray recordSummaries = getCollectRecordSummariesByPlotId(username, projectId, plotId);
+                        boolean flagged = isFlagged(plot);
+                        int analyses = recordSummaries.size();
+                        JsonArray samplingPoints = getCollectSamplingPointItems(projectId, plotId, false);
+                        JsonArray records = toStream(recordSummaries).map(recordSummary -> {
+                            return getCollectRecord(projectId, recordSummary.getAsJsonObject().get("id").getAsInt());
+                        }).collect(intoJsonArray);
+
+                        return toStream(samplingPoints).flatMap(samplingPoint -> {
+                            String subplotId = getMemberValue(samplingPoint, "levelCodes[1]", String.class);
+                            if (records.size() == 0) {
+                                //unanalyzed sampling point
+                                JsonObject sampleSummary = new JsonObject();
+                                sampleSummary.addProperty("plot_id", plotId);
+                                sampleSummary.addProperty("sample_id", subplotId);
+                                sampleSummary.add("lon", samplingPoint.get("x"));
+                                sampleSummary.add("lat", samplingPoint.get("y"));
+                                sampleSummary.addProperty("flagged", flagged);
+                                sampleSummary.addProperty("analyses", analyses);
+                                sampleSummary.addProperty("user_id", plotUsername);
+                                sampleSummary.addProperty("value", (String) null);
+                                return Arrays.asList(sampleSummary).stream();
+                            } else {
+                                return toStream(records).map(collectRecord -> {
+                                    JsonObject subplot = getCollectRecordSubplot(collectSurvey, collectRecord, subplotId);
+                                    int valueDefId = getCollectSurveyNodeDefinitionId(collectSurvey, "subplot/values_1");
+                                    String val = getCollectRecordAttributeValue(subplot, valueDefId);
+                                    JsonObject sampleSummary = new JsonObject();
+                                    sampleSummary.addProperty("plot_id", plotId);
+                                    sampleSummary.addProperty("sample_id", subplotId);
+                                    sampleSummary.add("lon", samplingPoint.get("x"));
+                                    sampleSummary.add("lat", samplingPoint.get("y"));
+                                    sampleSummary.addProperty("flagged", flagged);
+                                    sampleSummary.addProperty("analyses", analyses);
+                                    sampleSummary.addProperty("user_id", plotUsername);
+                                    sampleSummary.addProperty("value", val);
+                                    return sampleSummary;
+                                });
+                            }
+                        });
+                    }
+            );
+
+            JsonArray sampleValueGroups = ceoProject.get("sampleValues").getAsJsonArray();
+            Map<Integer, String> sampleValueGroupNames = toStream(sampleValueGroups)
+                .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
+                                          sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
+                                          (a, b) -> b));
+
+            String[] fields = {"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"};
+            String[] labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+
+            String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+
+            String[] csvRows = toStream(sampleSummaries)
+                .map(sampleSummary -> {
+                        Stream<String> fieldStream = Arrays.stream(fields);
+                        Stream<String> labelStream = Arrays.stream(labels);
+                        return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
+                                             labelStream.map(label -> {
+                                                     JsonElement value = sampleSummary.get("value");
+                                                     if (value.isJsonNull()) {
+                                                         return "";
+                                                     } else if (value.isJsonPrimitive()) {
+                                                         return sampleValueTranslations.getOrDefault(value.getAsString(), "LULC:NoValue").split(":")[1];
+                                                     } else {
+                                                         return value.getAsJsonObject().get(label).getAsString();
+                                                     }}))
+                                     .collect(Collectors.joining(","));
+                    })
+                .toArray(String[]::new);
+
+            String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
+            String currentDate = LocalDate.now().toString();
+            String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
 
             writeCsvFile(outputFileName, csvHeader, csvRows);
 

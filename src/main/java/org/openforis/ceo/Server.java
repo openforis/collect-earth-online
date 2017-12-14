@@ -155,7 +155,7 @@ public class Server implements SparkApplication {
         get("/get-unanalyzed-plot/:id",         (req, res) -> { return CollectProjects.getUnanalyzedPlot(req, res); });
         get("/get-unanalyzed-plot-byid/:projid/:id",         (req, res) -> { return CollectProjects.getUnanalyzedPlotByID(req, res); });
         get("/dump-project-aggregate-data/:id", (req, res) -> { return CollectProjects.dumpProjectAggregateData(req, res); });
-//        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
+        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
         post("/create-project",                 (req, res) -> { return CollectProjects.createProject(req, res); });
         post("/publish-project/:id",            (req, res) -> { return CollectProjects.publishProject(req, res); });
         post("/close-project/:id",              (req, res) -> { return CollectProjects.closeProject(req, res); });
