@@ -22,9 +22,10 @@ import com.google.gson.JsonObject;
 
 public class Collect {
 
-    static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
+	static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    static final int CONNECTION_TIMEOUT = 60000;
 
     public static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
@@ -77,20 +78,24 @@ public class Collect {
     public static JsonElement sendToCollect(String method, String url, Object params) {
         try {
             HttpRequestFactory requestFactory = createRequestFactory();
-            HttpContent content;
-            if (params == null) {
-            	content = null;
-            } else if (params instanceof JsonObject) {
-	            Map<?,?> mapData = new Gson().fromJson((JsonObject) params, Map.class);
-	            content = new JsonHttpContent(JSON_FACTORY, mapData);
-            } else {
-	            content = new JsonHttpContent(JSON_FACTORY, params);
-            }
+            HttpContent content = toRequestContent(params);
             HttpRequest request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
+            request.setConnectTimeout(CONNECTION_TIMEOUT);
             String result = request.execute().parseAsString();
             return parseJson(result);
         } catch (IOException e) {
             throw new RuntimeException("Error communicating with Collect", e);
         }
     }
+
+	private static HttpContent toRequestContent(Object params) {
+		if (params == null) {
+			return null;
+		} else if (params instanceof JsonObject) {
+		    Map<?,?> mapData = new Gson().fromJson((JsonObject) params, Map.class);
+		    return new JsonHttpContent(JSON_FACTORY, mapData);
+		} else {
+			return new JsonHttpContent(JSON_FACTORY, params);
+		}
+	}
 }
