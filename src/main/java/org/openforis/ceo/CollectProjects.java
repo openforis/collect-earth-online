@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import static java.lang.String.format;
+import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.Collect.getFromCollect;
 import static org.openforis.ceo.Collect.postToCollect;
 import static org.openforis.ceo.JsonUtils.expandResourcePath;
@@ -23,8 +24,10 @@ import static org.openforis.ceo.RequestUtils.getParam;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,6 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.google.gson.JsonArray;
@@ -62,7 +66,7 @@ public class CollectProjects {
      * @return the JSON array of JSON objects (one per project) that match the relevant query filters
      */
     public static String getAllProjects(Request req, Response res) {
-    	String username = getLoggedUsername(req);
+        String username = getLoggedUsername(req);
         String institutionId = req.queryParams("institutionId");
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("username", username);
@@ -191,7 +195,7 @@ public class CollectProjects {
         }
     }
 
-	public static String getUnanalyzedPlotByID(Request req, Response res) {
+    public static String getUnanalyzedPlotByID(Request req, Response res) {
         int projectId = getIntParam(req, "projid");
         String plotId = getParam(req, "id");
         String username = getLoggedUsername(req);
@@ -219,13 +223,14 @@ public class CollectProjects {
     // downloaded.
     //
     // ==> "/downloads/ceo-<projectName>-<currentDate>.csv"
-    public static String dumpProjectAggregateData(Request req, Response res) {
+    public static HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         String username = getLoggedUsername(req);
         
         JsonElement collectSurveyEl = getCollectSurvey(projectId);
         if (collectSurveyEl.isJsonNull()) {
-             return Server.documentRoot + "/project-not-found";
+            res.raw().setStatus(SC_NO_CONTENT);
+            return res.raw();
         } else {
             JsonObject collectSurvey = collectSurveyEl.getAsJsonObject();
             JsonObject ceoProject = convertToCeoProject(collectSurvey);
@@ -255,34 +260,35 @@ public class CollectProjects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            String[] csvRows = toStream(plotSummaries)
-                .map(plotSummary -> {
-                        Stream<String> fieldStream = Arrays.stream(fields);
-                        Stream<String> labelStream = Arrays.stream(labels);
-                        JsonObject distribution = plotSummary.get("distribution").getAsJsonObject();
-                        return Stream.concat(fieldStream.map(field -> plotSummary.get(field).isJsonNull() ? "" : plotSummary.get(field).getAsString()),
-                                             labelStream.map(label -> distribution.has(label) ? distribution.get(label).getAsString() : "0.0"))
-                                     .collect(Collectors.joining(","));
-                    })
-                .toArray(String[]::new);
-
+            Stream<String> contentStream = toStream(plotSummaries)
+                    .map(plotSummary -> {
+                            Stream<String> fieldStream = Arrays.stream(fields);
+                            Stream<String> labelStream = Arrays.stream(labels);
+                            JsonObject distribution = plotSummary.get("distribution").getAsJsonObject();
+                            return Stream.concat(fieldStream.map(field -> plotSummary.get(field).isJsonNull() ? "" : plotSummary.get(field).getAsString()),
+                                                 labelStream.map(label -> distribution.has(label) ? distribution.get(label).getAsString() : "0.0"))
+                                         .collect(Collectors.joining(","));
+                        });
+            
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
             String outputFileName = "ceo-" + projectName + "-" + currentDate + ".csv";
 
-            writeCsvFile(outputFileName, csvHeader, csvRows);
-
-            return Server.documentRoot + "/downloads/" + outputFileName;
+            HttpServletResponse response = res.raw();
+            writeCsvFile(response, csvHeader, contentStream, outputFileName); 
+            
+            return response;
         }
     }
-    
-    public static String dumpProjectRawData(Request req, Response res) {
+
+    public static HttpServletResponse dumpProjectRawData(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         String username = getLoggedUsername(req);
         
         JsonElement collectSurveyEl = getCollectSurvey(projectId);
         if (collectSurveyEl.isJsonNull()) {
-             return Server.documentRoot + "/project-not-found";
+            res.raw().setStatus(SC_NO_CONTENT);
+            return res.raw();
         } else {
             JsonObject collectSurvey = collectSurveyEl.getAsJsonObject();
             
@@ -347,7 +353,7 @@ public class CollectProjects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            String[] csvRows = toStream(sampleSummaries)
+            Stream<String> contentStream = toStream(sampleSummaries)
                 .map(sampleSummary -> {
                         Stream<String> fieldStream = Arrays.stream(fields);
                         Stream<String> labelStream = Arrays.stream(labels);
@@ -362,16 +368,16 @@ public class CollectProjects {
                                                          return value.getAsJsonObject().get(label).getAsString();
                                                      }}))
                                      .collect(Collectors.joining(","));
-                    })
-                .toArray(String[]::new);
+                    });
 
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
             String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
 
-            writeCsvFile(outputFileName, csvHeader, csvRows);
-
-            return Server.documentRoot + "/downloads/" + outputFileName;
+            HttpServletResponse response = res.raw();
+            writeCsvFile(response, csvHeader, contentStream, outputFileName); 
+            
+            return response;
         }
     }
 
@@ -892,12 +898,22 @@ public class CollectProjects {
             .toArray(String[]::new);
     }
 
-    private static synchronized void writeCsvFile(String filename, String header, String[] rows) {
-        String csvDataDir = expandResourcePath("/public/downloads/");
-        try (FileWriter fileWriter = new FileWriter(new File(csvDataDir, filename))) {
-            fileWriter.write(header + "\n");
-            fileWriter.write(Arrays.stream(rows).collect(Collectors.joining("\n")));
-        } catch (Exception e) {
+    private static void writeCsvFile(HttpServletResponse response, String header, Stream<String> contentStream,
+            String outputFileName) {
+        response.setContentType("text/csv");
+        response.setHeader("Content-Disposition","attachment; filename="+ outputFileName +".csv");
+        
+        try(OutputStream os = response.getOutputStream()) {
+            os.write(header.getBytes());
+            contentStream.forEach(row -> {
+                try {
+                    os.write(row.getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            os.close();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -906,10 +922,10 @@ public class CollectProjects {
             Collectors.groupingBy(Function.identity(), Collectors.counting());
 
     private static String getLoggedUsername(Request req) {
-		HttpSession session = req.raw().getSession();
+        HttpSession session = req.raw().getSession();
         String username = (String) session.getAttribute("username");
-		return username;
-	}
+        return username;
+    }
     
     //END OF Projects.java common functions
 
