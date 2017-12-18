@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.Collect.getFromCollect;
 import static org.openforis.ceo.Collect.postToCollect;
-import static org.openforis.ceo.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
 import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
@@ -22,8 +21,6 @@ import static org.openforis.ceo.RequestUtils.getIntParam;
 import static org.openforis.ceo.RequestUtils.getParam;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -912,7 +909,6 @@ public class CollectProjects {
                     throw new RuntimeException(e);
                 }
             });
-            os.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
