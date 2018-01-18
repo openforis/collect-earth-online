@@ -1,15 +1,18 @@
 package org.openforis.ceo;
 
+import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static spark.Spark.exception;
 import static spark.Spark.get;
 import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.staticFileLocation;
 
+import java.io.File;
+
+import com.google.gson.JsonObject;
+
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
-import java.io.File;
-import java.net.URL;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
@@ -70,6 +73,7 @@ public class Server implements SparkApplication {
         get("/get-project-plots/:id/:max",      (req, res) -> { return Projects.getProjectPlots(req, res); });
         get("/get-project-stats/:id",           (req, res) -> { return Projects.getProjectStats(req, res); });
         get("/get-unanalyzed-plot/:id",         (req, res) -> { return Projects.getUnanalyzedPlot(req, res); });
+        get("/get-unanalyzed-plot-byid/:projid/:id",         (req, res) -> { return Projects.getUnanalyzedPlotByID(req, res); });
         get("/dump-project-aggregate-data/:id", (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
         get("/dump-project-raw-data/:id",       (req, res) -> { return Projects.dumpProjectRawData(req, res); });
         post("/create-project",                 (req, res) -> { return Projects.createProject(req, res); });
@@ -149,8 +153,9 @@ public class Server implements SparkApplication {
         get("/get-project-plots/:id/:max",      (req, res) -> { return CollectProjects.getProjectPlots(req, res); });
         get("/get-project-stats/:id",           (req, res) -> { return CollectProjects.getProjectStats(req, res); });
         get("/get-unanalyzed-plot/:id",         (req, res) -> { return CollectProjects.getUnanalyzedPlot(req, res); });
+        get("/get-unanalyzed-plot-byid/:projid/:id",         (req, res) -> { return CollectProjects.getUnanalyzedPlotByID(req, res); });
         get("/dump-project-aggregate-data/:id", (req, res) -> { return CollectProjects.dumpProjectAggregateData(req, res); });
-//        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
+        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
         post("/create-project",                 (req, res) -> { return CollectProjects.createProject(req, res); });
         post("/publish-project/:id",            (req, res) -> { return CollectProjects.publishProject(req, res); });
         post("/close-project/:id",              (req, res) -> { return CollectProjects.closeProject(req, res); });
@@ -170,9 +175,9 @@ public class Server implements SparkApplication {
         post("/archive-institution/:id",    (req, res) -> { return OfGroups.archiveInstitution(req, res); });
 
         // Routing Table: Imagery API
-//        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
-//        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
-//        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
+        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
+        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
+        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
@@ -194,6 +199,13 @@ public class Server implements SparkApplication {
     public static void main(String[] args) {
         // Store the current document root for dynamic link resolution
         documentRoot = "";
+
+        // Load the SMTP settings for sending reset password emails
+        JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
+        CeoConfig.smtpUser = smtpSettings.get("smtpUser").getAsString();
+        CeoConfig.smtpServer = smtpSettings.get("smtpServer").getAsString();
+        CeoConfig.smtpPort = smtpSettings.get("smtpPort").getAsString();
+        CeoConfig.smtpPassword = smtpSettings.get("smtpPassword").getAsString();
 
         // Start the Jetty webserver on port 8080
         port(8080);

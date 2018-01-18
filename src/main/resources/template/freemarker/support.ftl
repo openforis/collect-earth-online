@@ -8,7 +8,11 @@
         <li><a href="${root}/downloads/CEO_Manual.pdf">PDF Version</a></li>
         <li><a href="${root}/downloads/CEO_Manual.docx">DOCX Version</a></li>
     </ul>
-
+    <h1>Code and bug support</h1>
+    <ul>
+        <li><a href="https://github.com/openforis/collect-earth-online/issues">Github Issue Tracker</a></li>
+        <li><a href="http://www.openforis.org">OpenForis Website</a></li>
+    </ul>
     <h1>Collect Earth Online Tutorials</h1>
     <p>
         This content is currently under development. Please check back

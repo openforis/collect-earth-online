@@ -80,7 +80,20 @@ public class Views {
     }
 
     public static ModelAndView login(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Login", "large"), "login.ftl");
+        //String inputReturnURL = req.queryParams("returnurl");
+        Map<String, Object> model = getBaseModel(req, "Project", "large");
+        String inputReturnURL = req.queryParams("returnurl");
+        String returnURL = "home";
+        if(inputReturnURL != null && !inputReturnURL.isEmpty()) {
+            returnURL = inputReturnURL;
+        }
+        String psssQuery = req.queryString();
+        if(psssQuery == null || psssQuery.isEmpty()) {
+            psssQuery = "empty";
+        }
+        model.put("returnurl", returnURL );
+        model.put("querystring", psssQuery );
+        return new ModelAndView(model, "login.ftl");
     }
 
     public static ModelAndView register(Request req, Response res) {

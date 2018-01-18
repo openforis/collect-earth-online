@@ -6,10 +6,26 @@
 
 <div id="collection" ng-app="collection" ng-controller="CollectionController as collection"
      ng-init="collection.initialize('${root}', '${userid!""}', '${username!"guest"}', '${project_id}')">
-    <input id="quit-button" class="button" type="button" name="collection-quit" value="Quit" onclick="window.location='${root}/home'">
-    <div id="image-analysis-pane"></div>
-    <div id="sidebar">
-        <fieldset>
+    <input id="quit-button" class="button" type="button" name="collection-quit" value="Quit" ng-class="collection.quitclass" onclick="window.location='${root}/home'">
+    <div id="image-analysis-pane" ng-class="collection.mapclass">
+        <div class="buttonHolder">
+            <div ng-hide="collection.showSideBar">
+                <span id="action-button" name="collection-actioncall" title="Click a plot to analyze:" alt="Click a plot to analyze">Click a plot to analyze, or:<p></p><br> <span class="button" ng-click="collection.nextPlot()">Analyze random plot</span>
+                <br style="clear:both;"><br style="clear:both;"></span>
+            </div>
+            <div ng-show="collection.showSideBar" style="position:relative;">
+            <span id="action-button" name="collection-actioncall" title="Select each plot to choose value" alt="Select each plot to choose value">Select each dot to choose value</span>
+            </div>
+        </div>
+    </div>
+    <div id="sidebar" ng-show="collection.showSideBar">
+        <div id="showarrow" ng-click="collection.toggleStats()">
+            <div ng-class="collection.arrowstate"></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div id="spacer"></div>
+        <fieldset id="projStats" ng-class="collection.statClass">
             <legend>Project Stats</legend>
             <table>
                 <tbody>
@@ -19,15 +35,15 @@
                     </tr>
                     <tr>
                         <td>Plots Assigned</td>
-                        <td>{{ collection.plotsAssigned }} ({{ (100 * collection.plotsAssigned / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.plotsAssigned }} ({{ collection.assignedPercentage() }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Flagged</td>
-                        <td>{{ collection.plotsFlagged }} ({{ (100 * collection.plotsFlagged / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.plotsFlagged }} ({{ collection.flaggedPercentage() }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Completed</td>
-                        <td>{{ collection.plotsAssigned + collection.plotsFlagged }} ({{ (100 * (collection.plotsAssigned + collection.plotsFlagged) / collection.currentProject.numPlots)| number:0 }}%)</td>
+                        <td>{{ collection.plotsAssigned + collection.plotsFlagged }} ({{ collection.completePercentage() }}%)</td>
                     </tr>
                     <tr>
                         <td>Plots Total</td>
@@ -38,8 +54,8 @@
         </fieldset>
         <fieldset>
             <legend>Plot Navigation</legend>
-            <input id="new-plot-button" class="button" type="button" name="new-plot" value="Next Plot" ng-click="collection.nextPlot()">
-            <input id="save-values-button" class="button" type="button" name="save-values" value="Save Assignments" ng-click="collection.saveValues()"
+            <input id="new-plot-button" class="button" type="button" name="new-plot" value="Skip" ng-click="collection.nextPlot()">
+            <input id="save-values-button" class="button" type="button" name="save-values" value="Save" ng-click="collection.saveValues()"
                    style="opacity:0.5" disabled>
             <input id="flag-plot-button" class="button" type="button" name="flag-plot" value="Flag Plot as Bad" ng-click="collection.flagPlot()"
                    style="opacity:0.5" disabled>

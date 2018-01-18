@@ -11,6 +11,29 @@
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>
+     <div id="geohead"> <img id="ceo-site-logo" src="/img/ceo-logo1.png" style="
+            position: relative;
+            top: 1px;
+            left: 10px;
+            height: 40px;
+            padding: 4px;
+        ">
+        <div id="login-info">
+                <#if username??>
+                    <#if navlink == "Logout">
+                         <span>${username}</span> <a class="active-link" href="${root}/logout">Logout</a>
+                    <#else>
+                        <span>${username}</span> <a href="${root}/logout">Logout</a>
+                    </#if>
+                <#else>
+                    <#if navlink == "Login" || navlink == "Register">
+                        <a class="active-link" href="${root}/login">Login/Register</a>
+                    <#else>
+                        <a ng-href="${root}/login{{geodash.querystring}}&returnurl=geo-dash">Login/Register</a>
+                    </#if>
+                </#if>
+            </div>
+        </div>
     <div class="container-fluid">
         <div class="row">
             <div id="dashHolder" class="col-sm-12 col-md-12 main">

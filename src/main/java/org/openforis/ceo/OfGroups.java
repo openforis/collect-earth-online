@@ -38,9 +38,9 @@ import spark.Response;
 
 public class OfGroups {
 
-    static String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
-    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
@@ -65,12 +65,20 @@ public class OfGroups {
                               new JsonHttpContent(new JacksonFactory(), data));
     }
 
+    private static HttpRequest preparePostRequest(String url) throws IOException {
+    	return preparePostRequest(url, null);
+    }
+    
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
         return createRequestFactory()
             .buildPostRequest(new GenericUrl(url),
-                              new JsonHttpContent(new JacksonFactory(), data));
+                              data == null ? null : new JsonHttpContent(new JacksonFactory(), data));
     }
 
+    private static HttpRequest prepareDeleteRequest(String url) throws IOException {
+        return createRequestFactory().buildDeleteRequest(new GenericUrl(url));
+    }
+    
     private static JsonElement getResponseAsJson(HttpResponse response) throws IOException {
         return parseJson(response.parseAsString());
     }
@@ -243,6 +251,24 @@ public class OfGroups {
             // FIXME: Raise a red flag that an error just occurred in communicating with the database
             return "";
         }
+    }
+    
+    public static JsonArray getResourceIds(int institutionId, String resourceType) throws IOException {
+		String url = String.format(OF_USERS_API_URL + "group/%d/resources/%s", institutionId, resourceType);
+		HttpResponse response = prepareGetRequest(url).execute();
+    	return getResponseAsJson(response).getAsJsonArray();
+    }
+    
+    public static String associateResource(int institutionId, String resourceType, String resourceId) throws IOException {
+    	preparePostRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
+    		.execute();
+    	return "";
+    }
+
+    public static String disassociateResource(int institutionId, String resourceType, String resourceId) throws IOException {
+    	prepareDeleteRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
+    		.execute();
+    	return "";
     }
 
 }

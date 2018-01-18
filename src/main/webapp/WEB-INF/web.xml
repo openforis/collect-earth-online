@@ -17,6 +17,26 @@
     <param-value>http://127.0.0.1:8080/of-users/api/</param-value>
   </context-param>
 
+  <context-param>
+    <param-name>smtpUser</param-name>
+    <param-value>collectearth.mail@gmail.com</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>smtpServer</param-name>
+    <param-value>smtp.gmail.com</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>smtpPort</param-name>
+    <param-value>587</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>smtpPassword</param-name>
+    <param-value></param-value>
+  </context-param>
+
   <filter>
     <filter-name>javamelody</filter-name>
     <filter-class>net.bull.javamelody.MonitoringFilter</filter-class>

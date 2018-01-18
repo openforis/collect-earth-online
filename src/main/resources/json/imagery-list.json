@@ -42,4 +42,4 @@
                  geoserverUrl: "https://services.digitalglobe.com/mapservice/wmsaccess",
                  geoserverParams: {"VERSION": "1.1.1",
                                    "LAYERS": "DigitalGlobe:Imagery",
-                                   "CONNECTID": "63f634af-fc31-4d81-9505-b62b4701f8a9"}}}]
+                                   "CONNECTID": "b6742ef2-9a67-4226-b388-c97ac7a44ac8"}}}]

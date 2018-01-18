@@ -207,7 +207,7 @@ section#content {
     position: relative;
     width: calc(100% - 2px);
     color: #222;
-    border: 1px solid darkgray;
+    /*border: 1px solid darkgray;*/
 }
 
 section#content a {
@@ -776,6 +776,20 @@ Tree expanded icon
     display: none;
 }
 
+#home .ol-popup-content .cContent p {
+    clear: both;
+}
+#home .ol-popup-content .cContent .clusterList{
+    width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#home .ol-popup-content .cContent {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
 #collection .ol-dragbox {
     background-color: rgba(255,255,255,0.4);
     border-color: rgba(100,150,0,1);
@@ -784,7 +798,35 @@ Tree expanded icon
 #collection .ol-rotate {
     top: 4rem;
 }
-
+#collection .fullmap{
+    width:100%;
+}
+#collection .sidemap{
+    width:70%;
+}
+#collection #action-button {
+    line-height: 100%;
+    cursor: pointer;
+    background-color: #3C948B;
+    color: white;
+    font-family: Oswald;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    padding: 0.5rem;
+    border-radius: 0px;
+    -webkit-border-radius: 0px;
+    -o-border-radius: 0px;
+    position: absolute;
+    z-index: 100;
+    left: 50%;
+    margin-left: -108px;
+    cursor: initial;
+    right: 50%;
+    white-space: nowrap;
+    width: fit-content;
+    width: -moz-fit-content;
+    text-align: center;
+}
 
 
 /**************/
@@ -855,17 +897,84 @@ Tree expanded icon
     left: 50%;
     transform: translate(-50%, -50%);
     height: calc(80% - 4rem);
-    width: 25vw;
-    padding: 2rem;
+    width: fit-content;
+    width: -moz-fit-content;
+    /*padding: 2rem;*/
     overflow: auto;
-    border: 1px solid darkgray;
+    border: 6px solid darkgray;
+    background-color:#ffffff;
 }
-
-#login-form h1, #register-form h1, #password-form h1, #account-form h1 {
+#account-page{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: fit-content;
+    width: -moz-fit-content;
+    min-width: 900px;
+}
+#account-form {
+    position: unset;
+    top: auto;
+    left: auto;
+    transform: none;
+    float: left;
+    margin: 0 7px;
+}
+#user-stats{
+    height: calc(80% - 4rem);
+    width: fit-content;
+    width: -moz-fit-content;
+    /*padding: 2rem;*/
+    overflow: auto;
+    border: 6px solid darkgray;
+    background-color:#ffffff;
+    float: left;
+    margin: 0 7px;
+}
+#login-form p, #account-form p, #user-stats p, #user-stats td{
+    text-align: center;
+    color: gray;
+    font-size: .85em;
+    padding: 14px 0px;
+}
+#user-stats-table{
+    margin-left: auto;
+    margin-right: auto;
+    max-width:421px;
+}
+#user-stats td{
+    padding: 9px 5px;
+}
+#user-stats .text {
+    margin-left: 20px!important;
+    height: 2rem;
+    width: 20rem;
+    margin: 0.3rem;
+    padding: 0px 5px;
+    display: inline-block;
+    text-align: center;
+        color: gray;
+        font-size: .85em;
+}
+.tspace{
+    width:15px;
+}
+#login-form form, #login-form div, #register-form form, #password-form form, #account-form form, #user-stats form{
+    padding: 0rem 2rem;
+}
+#login-form h1, #register-form h1, #password-form h1, #account-form h1, #user-stats h1  {
     font-size: 1.7rem;
     font-weight: 100;
     padding: 0 0.5rem 0.5rem 0.5rem;
     color: gray;
+}
+#login-form h1, #password-form h1, #register-form h1, #account-form h1, #user-stats h1{
+    background-color: #FFCF06;
+    padding: 15px;
+    color: #77941e;
+    font-size: 1.25em;
+    margin: 0 0 8px 0;
 }
 
 #login-form h2, #register-form h2, #password-form h2, #account-form h2 {
@@ -874,8 +983,14 @@ Tree expanded icon
     padding: 0.1rem;
     color: darkgray;
 }
+#account-form h2{
+    color: gray;
+    font-size: .85em;
+    padding: 3px 0px;
+}
 
-#login-form input#email, #login-form input#password, #login-form input#password-confirmation, #login-form input#password-reset-key, #login-form input#current-password, #register-form input#email, #register-form input#password, #register-form input#password-confirmation, #register-form input#password-reset-key, #register-form input#current-password, #password-form input#email, #password-form input#password, #password-form input#password-confirmation, #password-form input#password-reset-key, #password-form input#current-password, #account-form input#email, #account-form input#password, #account-form input#password-confirmation, #account-form input#password-reset-key, #account-form input#current-password {
+
+#login-form input#email, #login-form input#password, #login-form input#password-confirmation, #login-form input#password-reset-key, #login-form input#current-password, #register-form input#email, #register-form input#password, #register-form input#password-confirmation, #register-form input#password-reset-key, #register-form input#current-password, #password-form input#email, #password-form input#password, #password-form input#password-confirmation, #password-form input#password-reset-key, #password-form input#current-password, #account-form input#email, #account-form input#password, #account-form input#password-confirmation, #account-form input#password-reset-key, #account-form input#current-password, #user-stats input{
     height: 2rem;
     width: 20rem;
     border: 1px solid #ececec;
@@ -902,7 +1017,7 @@ Tree expanded icon
 
 #login-form input.button, #register-form input.button, #password-form input.button, #account-form input.button {
     height: 2rem;
-    width: 21rem;
+    width: 150px; /*21rem;*/
     margin: 0.6rem 0.3rem;
     padding: 0.5rem;
     border: 1px solid #ececec;
@@ -911,13 +1026,46 @@ Tree expanded icon
 #login-form input.button:focus, #register-form input.button:focus, #password-form input.button:focus, #account-form input.button:focus {
     border: 1px solid #999;
 }
+#login-form input.text, #password-form input.text, #register-form input.text, #account-form input.text
+{
+     width: 100%;
+     margin: 0 0 15px;
+     color: #0b6ef2;
+     padding: 15px;
+     font: inherit;
+     float: left;
+     box-shadow: 2px 2px 2px #fff, 4px 4px 6px #dadada, inset 0 0 0 rgba(255,255,255,.8);
+     -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+}
+#account-form input[type="email"], #account-form input[type="password"]{
+font-size: .85em;
+}
+#account-form input.text, #user-stats input.text
+{
+    margin-left: 20px!important;
+}
 
-#login-form hr, #register-form hr, #password-form hr, #account-form hr {
+#login-form hr, #register-form hr, #password-form hr, #account-form hr, #user-stats hr {
     height: 12px;
     border: 0;
     box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
 }
-
+#account-form, #user-stats {
+    min-height:456px;
+}
+.w3-light-grey, .w3-hover-light-grey:hover, .w3-light-gray, .w3-hover-light-gray:hover {
+    color: #000!important;
+    background-color: #f1f1f1!important;
+    margin: 15px 15px 0 15px;
+}
+.w3-blue, .w3-hover-blue:hover {
+    color: #fff!important;
+    background-color: #3FABC6!important;
+}
+.w3-center {
+    text-align: center!important;
+}
 /***********************/
 /* Page Not Found Page */
 /***********************/
@@ -1141,10 +1289,39 @@ div#institution:before {
     padding: 0rem;
     background: rgba(255,255,255,0.8);
 }
+#collection #showarrow{
+    float:right;
+    cursor:pointer;
+}
+#collection #spacer{
+    content: ' ';
+      display: block;
+      height: 20px;
+}
+#collection .projNoStats{
+    display:none;
+}
+#collection .projStats{
+    display:block;
+}
+#collection .arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #3FABC6;
+}
 
+#collection .arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #3FABC6;
+}
 #collection #quit-button {
     position: absolute;
-    right: 30%;
+    /*right: 30%;*/
     height: 40px;
     width: 5rem;
     text-align: center;
@@ -1153,11 +1330,16 @@ div#institution:before {
     box-shadow: none;
     border: none;
 }
-
+#collection .quit-side{
+     right:30%;
+}
+#collection .quit-full{
+    right:0%;
+}
 #collection #image-analysis-pane {
     float: left;
     height: 100%;
-    width: 70%;
+    /*width: 70%;*/
     background-color: darkgray;
 }
 
@@ -1549,6 +1731,26 @@ div#institution:before {
     -moz-animation: sweep 1s infinite linear;
     -o-animation: sweep 1s infinite linear;
 }
+#geodash #geohead {
+    height: 40px;
+    width: 100%;
+    color: #eee;
+    background-color: #3a3a3a;
+}
+#geodash #login-info {
+    position: absolute;
+    top: 0px;
+    right: 40px;
+    padding: 11.2px;
+    font-size: 12.8px;
+}
+#geodash #login-info a {
+    margin-left: 3.2px;
+    padding: 6px;
+    border: 1px solid #FFCF06;
+    background-color: #e8f5f9;
+    color: #3c948b!important;
+}
 #geodash .mapRange {
   -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
   width: 100%; /* Specific width is required for Firefox. */
@@ -1666,7 +1868,22 @@ div#institution:before {
 @-o-keyframes      sweep { to { -o-transform:rotate(360deg); } }
 
 @keyframes         sweep { to { transform:rotate(360deg); } }
+@media screen and (max-width: 895px) {
+    #user-stats, #account-form{
+        float:unset;
+        margin:7px 0;
+    }
+    #account-page{
+        top: 0px;
+        transform: translate(-50%, -0%);
+    }
 
+}
+@media screen and (max-width: 800px) {
+    #login-info span{
+        display:none;
+    }
+}
 
 @media screen and (max-width: 600px) {
     .topnav li:not(:first-child) {display: none;}
@@ -1711,14 +1928,18 @@ div#institution:before {
         right: 10px;
         float: right;
     }
-    #login-form, #register-form, #password-form, #account-form{
-        width: 100%;
+    #login-form, #register-form, #password-form, #account-form, #user-stats{
+        width: 98%;
         text-align: center;
+        margin:7px 0;
     }
     #home #ceo-description p{
         display:none;
     }
     #home #ceo-description h1{
         display:none;
+    }
+    #account-page{
+    width: 100%;
     }
 }

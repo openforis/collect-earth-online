@@ -1,10 +1,5 @@
 package org.openforis.ceo;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -24,6 +19,12 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 public class JsonUtils {
 
     public static String expandResourcePath(String filename) {
@@ -37,6 +38,10 @@ public class JsonUtils {
 
     public static JsonElement parseJson(String jsonString) {
         return (new JsonParser()).parse(jsonString);
+    }
+    
+    public static String toJson(Object obj) {
+    	return new Gson().toJson(obj);
     }
 
     public static JsonElement readJsonFile(String filename) {
@@ -107,6 +112,12 @@ public class JsonUtils {
             .max(Comparator.naturalOrder())
             .get() + 1;
     }
+
+	public static JsonArray singletonArray(JsonElement el) {
+		JsonArray array = new JsonArray();
+		array.add(el);
+		return array;
+	}
 
     // Note: The JSON file must contain an array of objects.
     public static void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
@@ -192,15 +203,21 @@ public class JsonUtils {
     // }
 
     @SuppressWarnings("unchecked")
-    public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
-        JsonElement el = obj.get(property);
-        if (el == null) {
-            return null;
-        } else if (type == String.class) {
-            return (T) el.getAsString();
-        } else {
-            throw new IllegalArgumentException("Unsupported type: " + type);
-        }
+	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
+    	JsonElement el = findElement(obj, property);
+    	if (el.isJsonNull()) {
+    		return (T) null;
+    	} else if (type == String.class) {
+    		return (T) el.getAsString();
+    	} else if (type == Double.class) {
+    		return (T) Double.valueOf(el.getAsDouble());
+    	} else if (type == Integer.class) {
+    		return (T) Integer.valueOf(el.getAsInt());
+    	} else if (type == Boolean.class) {
+    		return (T) Boolean.valueOf(el.getAsBoolean());
+    	} else {
+    		throw new IllegalArgumentException("Unsupported type: " + type);
+    	}
     }
 
 }

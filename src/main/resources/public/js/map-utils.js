@@ -167,7 +167,7 @@ map_utils.set_dg_wms_layer_params = function (imagery_year, stacking_profile) {
                                                   url: "https://services.digitalglobe.com/mapservice/wmsaccess",
                                                   params: {"VERSION": "1.1.1",
                                                            "LAYERS": "DigitalGlobe:Imagery",
-                                                           "CONNECTID": "63f634af-fc31-4d81-9505-b62b4701f8a9",
+                                                           "CONNECTID": "b6742ef2-9a67-4226-b388-c97ac7a44ac8",
                                                            "FEATUREPROFILE": stacking_profile,
                                                            // "COVERAGE_CQL_FILTER": "(acquisition_date>'" + imagery_year + "-01-01')"
                                                            //                      + "AND(acquisition_date<'" + imagery_year + "-12-31')"}
@@ -208,6 +208,13 @@ map_utils.styles =
                                         "stroke": new ol.style.Stroke(
                                             {"color": "#8b2323",
                                              "width": 2})})}),
+
+     "red_fill": new ol.style.Style(
+         {"image": new ol.style.Circle({"radius": 5,
+                                        "fill": new ol.style.Fill({"color": "#8b2323"}),
+                                        "stroke": new ol.style.Stroke(
+                                            {"color": "#ffffff",
+                                             "width": 1})})}),
 
      "blue_point": new ol.style.Style(
          {"image": new ol.style.Circle({"radius": 5,
@@ -456,11 +463,19 @@ map_utils.disable_selection = function () {
 *****************************************************************************/
 
 map_utils.current_samples = null;
+map_utils.current_plots = null;
 
 map_utils.remove_sample_layer = function () {
     if (map_utils.current_samples != null) {
         map_utils.map_ref.removeLayer(map_utils.current_samples);
         map_utils.current_samples = null;
+    }
+    return null;
+};
+map_utils.remove_plots_layer = function () {
+    if (map_utils.current_plots != null) {
+        map_utils.map_ref.removeLayer(map_utils.current_plots);
+        map_utils.current_plots = null;
     }
     return null;
 };
@@ -497,47 +512,198 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
         }
     );
     var vector_source = new ol.source.Vector({"features": features});
-    var vector_style = map_utils.styles["ceoicon"];
-    var vector_layer = new ol.layer.Vector({"title": "Project Markers",
-                                            "source": vector_source,
-                                            "style":  vector_style});
-    layerRef = vector_layer;
-    map_utils.map_ref.addLayer(vector_layer);
+    var clusterSource = new ol.source.Cluster({
+          distance: 40,
+          source: vector_source
+        });
+
+        var styleCache = {};
+        var clusters = new ol.layer.Vector({
+          source: clusterSource,
+          style: function(feature, resolution) {
+            var size = feature.get('features').length;
+            var style = styleCache[size];
+            if (!style) {
+              style = [new ol.style.Style({
+                image: new ol.style.Circle({
+                  radius: 10,
+                  stroke: new ol.style.Stroke({
+                    color: '#fff'
+                  }),
+                  fill: new ol.style.Fill({
+                    color: '#3399CC'
+                  })
+                }),
+                text: new ol.style.Text({
+                  text: size.toString(),
+                  fill: new ol.style.Fill({
+                    color: '#fff'
+                  })
+                })
+              })];
+              styleCache[size] = style;
+            }
+            return style;
+          }
+        });
+
+        var style = map_utils.styles["red_point"];
+        var vector_layer = new ol.layer.Vector({source: vector_source,
+                                                style: style});
+
+    //var vector_source = new ol.source.Vector({"features": features});
+    //var vector_style = map_utils.styles["ceoicon"];
+    //var vector_layer = new ol.layer.Vector({"title": "Project Markers",
+    //                                        "source": vector_source,
+     //                                       "style":  vector_style});
+
+    map_utils.map_ref.addLayer(clusters);
     var extent = vector_layer.getSource().getExtent();
     map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
 
-    map_utils.map_ref.getViewport().addEventListener("click", function(e) {
-        map_utils.map_ref.forEachFeatureAtPixel(map_utils.map_ref.getEventPixel(e), function (feature, layer) {
-            var description = feature.get("description") == "" ? "N/A" : feature.get("description");
-            var html = '<div class="cTitle" >';
-            html += '<h1 >' + feature.get("name") +'</h1> </div>';
-            html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
-            html += '<p><span class="pField">Number of plots: </span>' + feature.get("numPlots")  + '</p>';
-            html += '<a href="'+ dRoot+'/collection/'+ feature.get("pID") +'" class="lnkStart">Get Started</a>  </div>';
-            gPopup.show(feature.getGeometry().getCoordinates(),html);
-            //gPopup.show(feature.getGeometry().getCoordinates(), '<div>' + feature.get("name") + '</br><a href="'+ dRoot+'/collection/'+ feature.get("pID") +'">Get Started</a> </div>');
-
-
-        });
+    map_utils.map_ref.on("click", function(evt) {
+        var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function(feature) { return feature; });
+                            //Check if it is a cluster or a single
+        if (map_utils.isCluster(feature)) {
+            var features = feature.get('features');
+            clusterpoints = [];
+            var html = '<div class="cTitle" ><h1>Cluster info</h1></div><div class="cContent" >';
+            for(var i = 0; i < features.length; i++) {
+              clusterpoints.push(features[i].getGeometry().getCoordinates());
+              html += '<p><span style="float:left;" class="clusterList" title="'+ features[i].get("name") +'" alt="'+ features[i].get("name") +'">'+features[i].get("name") + ' ' + '</span><a href="'+ dRoot+'/collection/'+ features[i].get("pID") +'" class="lnkStart">Get Started</a></p>';
+            }
+            var linestring = new ol.geom.LineString(clusterpoints);
+            html += '<p><a onclick="map_utils.zoomToCluster(['+linestring.getExtent()+'])" class="lnkStart" style="cursor:pointer; min-width:350px;">Zoom to cluster</a></p></div>';
+            gPopup.show(feature.get("features")[0].getGeometry().getCoordinates(),html);
+        } else {
+            if(feature != null && feature.get("features") != null)
+            {
+                if(feature != null && feature.get("features") != null)
+                {
+                    var description = feature.get("features")[0].get("description") == "" ? "N/A" : feature.get("features")[0].get("description");
+                                    var html = '<div class="cTitle" >';
+                                    html += '<h1 >' + feature.get("features")[0].get("name") +'</h1> </div>';
+                                    html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
+                                    html += '<p><span class="pField">Number of plots: </span>' + feature.get("features")[0].get("numPlots")  + '</p>';
+                                    html += '<a href="'+ dRoot+'/collection/'+ feature.get("features")[0].get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+                                    gPopup.show(feature.get("features")[0].getGeometry().getCoordinates(),html);
+                }
+            }
+            else{
+                gPopup.hide();
+            }
+        }
     });
 
     return map_utils.map_ref;
 };
-var layerRef;
+map_utils.zoomToCluster = function(extent){
+     gPopup.hide();
+     map_utils.map_ref.getView().fit(extent, map_utils.map_ref.getSize());
+}
 var gPopup;
-map_utils.draw_point = function (lon, lat) {
+map_utils.draw_point = function (lon, lat, style, plotid, collectionRef) {
+    if(style === null){
+        style = "red_point";
+    }
     var coords = map_utils.reproject_to_map(lon, lat);
     var geometry = new ol.geom.Point(coords);
-    var feature = new ol.Feature({geometry: geometry});
+    var feature = new ol.Feature({geometry: geometry, id: plotid});
     var vector_source = new ol.source.Vector({features: [feature]});
-    var style = map_utils.styles["red_point"];
+    var style = map_utils.styles[style];
     var vector_layer = new ol.layer.Vector({source: vector_source,
                                             style: style});
     map_utils.map_ref.addLayer(vector_layer);
+
     return map_utils.map_ref;
 };
+map_utils.draw_project_points = function (samples, customStyle) {
+    if(customStyle === null){
+            customStyle = "red_point";
+    }
+    mgpass = samples;
+    var features = [];
+    for (i=0; i<samples.length; i++) {
+        var sample = samples[i];
+        var format = new ol.format.GeoJSON();
+        var latlon = format.readGeometry(sample.center);
+        var geometry = latlon.transform("EPSG:4326", "EPSG:3857");
+        var feature = new ol.Feature({geometry: geometry,
+                                      id: sample["id"]});
+        features.push(feature);
+    }
 
-map_utils.draw_points = function (samples) {
+    var vector_source = new ol.source.Vector({features: features});
+    var clusterSource = new ol.source.Cluster({
+      distance: 40,
+      source: vector_source
+    });
+
+    var styleCache = {};
+    var clusters = new ol.layer.Vector({
+      source: clusterSource,
+      style: function(feature, resolution) {
+        var size = feature.get('features').length;
+        var style = styleCache[size];
+        if (!style) {
+          style = [new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 10,
+              stroke: new ol.style.Stroke({
+                color: '#fff'
+              }),
+              fill: new ol.style.Fill({
+                color: '#3399CC'
+              })
+            }),
+            text: new ol.style.Text({
+              text: size.toString(),
+              fill: new ol.style.Fill({
+                color: '#fff'
+              })
+            })
+          })];
+          styleCache[size] = style;
+        }
+        return style;
+      }
+    });
+
+    var style = map_utils.styles[customStyle];
+    var vector_layer = new ol.layer.Vector({source: vector_source,
+                                            style: style});
+    map_utils.remove_plots_layer();
+    map_utils.current_plots = clusters;
+    map_utils.map_ref.addLayer(clusters);
+    return map_utils.map_ref;
+}
+
+map_utils.isCluster = function(feature) {
+  if (!feature || !feature.get('features')) {
+        return false;
+  }
+  return feature.get('features').length > 1;
+}
+
+map_utils.zoomtocluster = function(event) {
+
+    console.log('zoomloop');
+    console.log(event.type);
+    var f = event.feature;
+    if (f.cluster.length > 1){
+          clusterpoints = [];
+          for(var i = 0; i<f.cluster.length; i++){
+              clusterpoints.push(f.cluster[i].geometry);
+          }
+          var linestring = new ol.Geometry.LineString(clusterpoints);
+          map.zoomToExtent(linestring.getBounds());
+    }
+}
+
+map_utils.draw_points = function (samples, customStyle) {
+    if(customStyle === null){
+        customStyle = "red_point";
+    }
     var features = [];
     for (i=0; i<samples.length; i++) {
         var sample = samples[i];
@@ -549,7 +715,7 @@ map_utils.draw_points = function (samples) {
         features.push(feature);
     }
     var vector_source = new ol.source.Vector({features: features});
-    var style = map_utils.styles["red_point"];
+    var style = map_utils.styles[customStyle];
     var vector_layer = new ol.layer.Vector({source: vector_source,
                                             style: style});
     map_utils.remove_sample_layer();
@@ -640,3 +806,4 @@ map_utils.disable_dragbox_draw = function () {
     }
     return null;
 };
+var mgpass;
