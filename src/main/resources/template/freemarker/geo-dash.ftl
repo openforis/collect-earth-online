@@ -11,7 +11,7 @@
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>
-     <div id="geohead"> <img id="ceo-site-logo" src="/img/ceo-logo1.png" style="
+     <div id="geohead"> <img id="ceo-site-logo" src="${root}/img/ceo-logo1.png" style="
             position: relative;
             top: 1px;
             left: 10px;
