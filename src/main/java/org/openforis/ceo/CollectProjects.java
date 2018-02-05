@@ -49,6 +49,7 @@ import com.google.gson.JsonPrimitive;
 
 import spark.Request;
 import spark.Response;
+import spark.utils.StringUtils;
 
 public class CollectProjects {
 
@@ -64,6 +65,7 @@ public class CollectProjects {
      */
     public static String getAllProjects(Request req, Response res) {
         String username = getLoggedUsername(req);
+        Integer userId = getLoggedUserId(req);
         String institutionId = req.queryParams("institutionId");
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("username", username);
@@ -73,10 +75,63 @@ public class CollectProjects {
         params.put("includeCodeListValues", true);
         
         JsonArray allSurveys = getFromCollect("survey", params).getAsJsonArray();
-        JsonArray result = toElementStream(allSurveys)
+        JsonArray projects = toElementStream(allSurveys)
             .map(s -> convertToCeoProject((JsonObject) s))
             .collect(intoJsonArray);
-        return result.toString();
+        
+        if (userId == null) {
+            // Not logged in
+            Stream<JsonObject> filteredProjects = toStream(projects)
+                .filter(project -> project.get("archived").getAsBoolean() == false
+                                   && project.get("privacyLevel").getAsString().equals("public")
+                                   && project.get("availability").getAsString().equals("published"))
+                .map(project -> {
+                        project.addProperty("editable", false);
+                        return project;
+                    });
+            if (institutionId.equals("")) {
+                return filteredProjects.collect(intoJsonArray).toString();
+            } else {
+                return filteredProjects
+                    .filter(project -> project.get("institution").getAsString().equals(institutionId))
+                    .collect(intoJsonArray)
+                    .toString();
+            }
+        } else {
+            Map<Integer, String> institutionRoles = Users.getInstitutionRoles(userId);
+            Stream<JsonObject> filteredProjects = toStream(projects)
+                .filter(project -> project.get("archived").getAsBoolean() == false)
+                .filter(project -> {
+                        String role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+                        String privacyLevel = project.get("privacyLevel").getAsString();
+                        String availability = project.get("availability").getAsString();
+                        if (role.equals("admin")) {
+                            return (privacyLevel.equals("public") || privacyLevel.equals("private") || privacyLevel.equals("institution"))
+                                && (availability.equals("unpublished") || availability.equals("published") || availability.equals("closed"));
+                        } else if (role.equals("member")) {
+                            return (privacyLevel.equals("public") || privacyLevel.equals("institution")) && availability.equals("published");
+                        } else {
+                            return privacyLevel.equals("public") && availability.equals("published");
+                        }
+                    })
+                .map(project -> {
+                        String role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+                        if (role.equals("admin")) {
+                            project.addProperty("editable", true);
+                        } else {
+                            project.addProperty("editable", false);
+                        }
+                        return project;
+                    });
+            if (institutionId.equals("")) {
+                return filteredProjects.collect(intoJsonArray).toString();
+            } else {
+                return filteredProjects
+                    .filter(project -> project.get("institution").getAsString().equals(institutionId))
+                    .collect(intoJsonArray)
+                    .toString();
+            }
+        }
     }
 
     /**
@@ -922,7 +977,18 @@ public class CollectProjects {
         String username = (String) session.getAttribute("username");
         return username;
     }
-    
+
+    private static Integer getLoggedUserId(Request req) {
+        HttpSession session = req.raw().getSession();
+        String userIdStr = (String) session.getAttribute("userId");
+        if (StringUtils.isEmpty(userIdStr)) {
+        	return null;
+        } else {
+        	Integer userId = Integer.parseInt(userIdStr);
+        	return userId;
+        }
+    }
+
     //END OF Projects.java common functions
 
 }
