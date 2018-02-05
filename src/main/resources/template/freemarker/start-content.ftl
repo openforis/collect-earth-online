@@ -1,9 +1,9 @@
 <#if content_size == "small">
-    <section id="content" style="background-image:${background_image};height:calc(100vh - 2.5rem - 55px - 2px)">
+    <section id="content">
 <#elseif content_size == "large">
-    <section id="content" style="background-image:${background_image};height:calc(100vh - 2.5rem - 2px)">
+    <section id="content" >
 <#else>
-    <section id="content" style="background-image:${background_image};height:calc(100vh - 2px)">
+    <section id="content">
 </#if>
 <#list flash_messages>
     <div class="alert">

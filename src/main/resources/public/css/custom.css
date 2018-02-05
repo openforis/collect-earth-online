@@ -1,0 +1,116 @@
+/*********************************************************************/
+/* GENERAL */
+/*********************************************************************/
+/* Fonts */
+/*************/
+@font-face {
+font-family: 'CaviarDreams';
+src: url('../fonts/CaviarDreams.eot');
+src: local('☺'), 
+url('../fonts/CaviarDreams.woff') format('woff'), 
+url('../fonts/CaviarDreams.ttf') format('truetype'), 
+url('../fonts/CaviarDreams.svg') format('svg');
+}
+@font-face {
+font-family: 'CaviarDreams_Bold';
+src: url('../fonts/CaviarDreams_Bold.eot');
+src: local('☺'), 
+url('../fonts/CaviarDreams_Bold.woff') format('woff'), 
+url('../fonts/CaviarDreams_Bold.ttf') format('truetype'), 
+url('../fonts/CaviarDreams_Bold.svg') format('svg');
+}
+/* Typography */
+/*************/
+
+h1, h2, h3, h4, h5, h6{
+	font-family:'CaviarDreams';
+	color:#707070;
+}
+
+/* Colors */
+/*****************/
+/* Lightgreen #31BAB0 */
+/* Lightgreen hover #279B93 */
+/* Darkgreen #0C4D48 */
+/* Yellow #FCCF07 */
+.bg-darkgreen{
+	background-color:#0C4D48!important;
+	color:white;
+}
+
+.bg-lightgreen{
+	background-color:#31BAB0!important;
+	color:white;
+}
+.bg-lightgray{
+	background-color:#ECEEEF!important;
+}
+.bg-yellow{
+	background-color:#FCCF07!important;
+	color:white;
+}
+.bg-yellow a:hover{
+	background-color:#FCCF07!important;
+	color:#279B93;
+}
+
+/* Links */
+/*************/
+a {
+	color:#31BAB0;
+}
+a:hover{
+	color:#279B93;
+	text-decoration:none;
+}
+
+/*********************************************************************/
+/* NAV */
+/*********************************************************************/
+
+#main-nav .active{
+	border-top: solid 1px #707070;
+	margin-top:-1px;
+}
+#main-nav .nav-item:hover{
+		border-top: solid 1px lightgrey;	
+		margin-top:-1px;	
+}
+#main-nav .nav-item{
+}
+
+
+/*********************************************************************/
+/* HOME PAGE */
+/*********************************************************************/
+#home #ceo-description {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.5rem 0rem;
+    border-bottom: 2px solid darkgray;
+    overflow: auto;
+    display: none;
+}
+#lPanel ul {
+	padding-left:0;
+	liste-style:none;
+}
+/*********************************************************************/
+/* LOGIN PAGE/REGISTER PAGE */
+/*********************************************************************/
+#login, #register-form{
+	border:solid 1px #31BAB0;
+	position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    overflow: auto;
+}
+#login .header, #register-form .header{
+	color:white;
+	background:#31BAB0;
+	margin: 0 -15px 10px -15px;;
+	padding:1rem;
+}

@@ -3,3 +3,4 @@
 /target/
 collect-earth-online.iml
 /src/main/resources/public/downloads/*.csv
+/bin/

@@ -31,24 +31,28 @@
         <div id="bcontainer">
         <span id="mobilespan" ></span>
             <div class="Wrapper">
-                <div class="Table">
-                    <div id="btnHolder" style="width: {{ home.btnHolderWidth }}">
+                <div class="row">
+                    <div id="btnHolder" class="col-md-3" style="width: {{ home.btnHolderWidth }}">
                         <div id="lPanel" class="Column" ng-show="home.showPanel">
-                            <h1 id="panelTitle">Institutions <!--[{{ home.institutionList.length }}]--></h1>
+                        	                       	 <div class="bg-darkgreen p-4">
+                        
+                           <h2 class="text-center text-white tree_label" id="panelTitle">Institutions <!--[{{ home.institutionList.length }}]--></h2>
+                           </div>
                             <ul class="tree">
                                 <#if role??>
-                                    <li><a class="create-institution" href="${root}/institution/0">Create New Institution</a></li>
+                                    <li class="bg-yellow"><a class="create-institution" href="${root}/institution/0"><i class="fa fa-file"></i> Create New Institution</a></li>
                                 </#if>
                                 <li ng-repeat="institution in home.institutionList">
                                     <input type="checkbox"  id="c{{ institution.id }}" />
                                     <span class="tree_label" >
-                                    <label class="tree_label" for="c{{ institution.id }}">{{ institution.name }}
+                                    <div class="bg-lightgreen text-center">
+                                    <p class="tree_label text-white" for="c{{ institution.id }}">{{ institution.name }}
                                     <a class="institution_info" href="${root}/institution/{{ institution.id }}"><img src="${root}/img/institution_info.png" alt="Institution info" title="Institution info"></a>
-                                    </label>
-
+                                    </p>
+									</div>
                                     </span>
                                     <ul>
-                                        <li ng-repeat="project in home.projectList | filter : {institution: institution.id }">
+                                        <li class="bg-lightgrey" ng-repeat="project in home.projectList | filter : {institution: institution.id }">
                                             <span class="tree_label">
                                             <a ng-if="project.editable == true" class="view-project" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
                                             <a ng-if="project.editable == true" class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>

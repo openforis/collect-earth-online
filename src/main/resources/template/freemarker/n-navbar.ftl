@@ -1,15 +1,9 @@
 <style>
 
-
-
-
-
 @media screen and (max-width: 600px) {
-
-
 }
 </style>
-<nav class="navbar navbar-expand-lg navbar-light" style="background-color: white;" id="main-nav">
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: white;">
 	<a class="navbar-brand" href="home">    
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 	</a>
@@ -42,7 +36,7 @@
         </#if>
         </ul>
 	      <ul id="login-info" class="navbar-nav mr-0">
-        <#if username??>
+	        <#if username??>
 	            <#if navlink == "Logout">
 	            <li class="nav-item">
 	            <span class="nav-link disabled">${username}</span> 
@@ -58,19 +52,24 @@
            	      Logout
                  </button>	    
                </#if>
-        <#else>
-            <#if navlink == "Login" || navlink == "Register">
-	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
+	        <#else>
+	            <#if navlink == "Login" || navlink == "Register">
+	            <button type="button" class="btn btn-outline-success btn-sm" onclick="location.href = '${root}/login'">
 	                Login/Register
                 </button>
 	            <#else>
-	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
+	            <button type="button" class="btn btn-outline-success btn-sm" onclick="location.href = '${root}/login'">
 	                Login/Register
                 </button>
-            </#if>
-        </#if>
-    </ul>
+	            </#if>
+	        </#if>
+	        </li>
+	        </div>
+        </ul>
+    </div>
+
 </nav>
+
 <script>
 function menuControls() {
     var x = document.getElementById("myTopnav");
