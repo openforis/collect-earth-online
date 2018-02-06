@@ -44,14 +44,14 @@
 	      <ul id="login-info" class="navbar-nav mr-0">
         <#if username??>
 	            <#if navlink == "Logout">
-	            <li class="nav-item">
+	            <li id="username" class="nav-item">
 	            <span class="nav-link disabled">${username}</span> 
 	            </li>
    	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
            	      Logout
                  </button>	    
 	            <#else>
-	            <li class="nav-item">
+	            <li id="username" class="nav-item">
 	            <span class="nav-link disabled">${username}</span> 
 	            </li>
    	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">

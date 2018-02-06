@@ -1,6 +1,11 @@
 /*********************************************************************/
 /* GENERAL */
 /*********************************************************************/
+/* Content */
+/*************/
+#content.container{
+
+}
 /* Fonts */
 /*************/
 @font-face {
@@ -25,7 +30,12 @@ url('../fonts/CaviarDreams_Bold.svg') format('svg');
 h1, h2, h3, h4, h5, h6{
 	font-family:'CaviarDreams';
 	color:#707070;
+	text-align:center;
 }
+h1 {font-size: 2rem;}
+h2 {font-size: 1.5rem;}
+h3 {font-size: 1rem;}
+h4 {font-size: 0.5rem;}
 
 /* Colors */
 /*****************/
@@ -37,6 +47,11 @@ h1, h2, h3, h4, h5, h6{
 	background-color:#0C4D48!important;
 	color:white;
 }
+.bg-darkgreen h1{
+	padding:1rem;
+	color:white;	
+	margin:0;
+}
 
 .bg-lightgreen{
 	background-color:#31BAB0!important;
@@ -47,13 +62,59 @@ h1, h2, h3, h4, h5, h6{
 }
 .bg-yellow{
 	background-color:#FCCF07!important;
-	color:white;
-}
-.bg-yellow a:hover{
-	background-color:#FCCF07!important;
 	color:#279B93;
 }
-
+.bg-yellow a:hover{
+	background-color:#ecbc0d!important;
+	color:#279B93;
+}
+/* Buttons */
+/*****************/
+.btn-outline-lightgreen{
+    color: #31BAB0;
+    background-color: transparent;
+    background-image: none;
+    border-color: #31BAB0;
+}
+.btn-outline-lightgreen:hover{
+    color: #ffff;
+    background-color: #31BAB0;
+    border-color: #31BAB0;
+}
+.btn-outline-yellow{
+    color: #FCCF07;
+    background-color: transparent;
+    background-image: none;
+    border-color: #FCCF07;
+}
+.btn-outline-yellow:hover{
+    color: black;
+    background-color: #FCCF07;
+    border-color: #FCCF07;
+}
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+.btn.bg-lightgreen:hover{
+	background-color: #279B93!important;
+	color:white;
+}
 /* Links */
 /*************/
 a {
@@ -76,7 +137,9 @@ a:hover{
 		border-top: solid 1px lightgrey;	
 		margin-top:-1px;	
 }
-#main-nav .nav-item{
+
+#main-nav .nav-item#username{
+	border:none;
 }
 
 
@@ -95,7 +158,12 @@ a:hover{
 }
 #lPanel ul {
 	padding-left:0;
-	liste-style:none;
+	list-style:none;
+}
+
+#lPanel a li.bg-yellow:hover{
+	background-color:#ecbc0d!important;
+	color:#white;
 }
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
