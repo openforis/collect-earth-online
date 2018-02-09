@@ -1,10 +1,10 @@
 angular.module("home", []).controller("HomeController", ["$scope", "$http", "$window", function HomeController($scope, $http, $window) {
     this.root = "";
     this.userId = "";
-    this.institutionList = [];
-    this.projectList = [];
-    this.userList = [];
-    this.imageryList = [];
+    this.institutionList = null;
+    this.projectList = null;
+    this.userList = null;
+    this.imageryList = null;
     this.showPanel = true;
     this.mapWidth = "75%";
     this.toggleValue = "<<";
@@ -93,9 +93,7 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             }
         }
         // FIXME: use this.updateMapSize()
-        $scope.$$postDigest(function () {
-            map_utils.map_ref.updateSize();
-        });
+        $scope.$$postDigest(this.updateMapSize());
     };
 
     this.checkResizing = function () {
@@ -144,10 +142,10 @@ angular.module("home", []).controller("HomeController", ["$scope", "$http", "$wi
             $scope.home.checkResizing();
         });
 
-        if (angular.equals(this.imageryList, [])) {
+        if (this.imageryList == null) {
             // Load the imageryList
             this.getImageryList();
-        } else if (angular.equals(this.projectList, [])) {
+        } else if (this.projectList == null) {
             // Load the projectList for this userId
             this.getProjectList(userId);
         } else {
