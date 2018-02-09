@@ -18,6 +18,7 @@
           <script type="text/javascript" src="${root}/js/html5shiv.js"></script>
         <![endif]-->
         <script type="text/javascript" src="${root}/js/angular.min.js"></script>
+        <script type="text/javascript" src="${root}/js/angular.min.js.map"></script>
         <script type="text/javascript" src="${root}/js/openlayers-3.13.0.js"></script>
         <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
         <script type="text/javascript" src="${root}/js/map-utils.js"></script>
