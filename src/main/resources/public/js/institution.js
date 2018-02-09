@@ -120,6 +120,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                    {transformRequest: angular.identity,
                     headers: {"Content-Type": undefined}})
             .then(angular.bind(this, function successCallback(response) {
+            	/*
                 this.details.id = response.data.id;
                 this.isAdmin = true;
                 if (response.data.logo != "") {
@@ -128,6 +129,8 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                 this.getUserList(this.details.id);
                 this.getUserListComplete();
                 this.getImageryList(this.details.id);
+                */
+                window.location = this.root + "/institution/" + response.data.id;
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error updating institution details. See console for details.");

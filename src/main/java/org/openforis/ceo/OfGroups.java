@@ -226,7 +226,15 @@ public class OfGroups {
                 HttpResponse response = httpRequestFactory.buildPostRequest(new GenericUrl(OF_USERS_API_URL + "group"), content).execute(); // TODO
                 if (response.isSuccessStatusCode()) {
                     JsonObject group = getResponseAsJson(response).getAsJsonObject();
-
+                    //
+                    GenericData data = new GenericData();
+                    data.put("roleCode", "ADM");
+                    data.put("statusCode", "A");
+                    preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), 1), data).execute();
+                    if (userid != 1) {
+                        preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), userid), data).execute();
+                    }
+                    //
                     JsonObject newInstitution = new JsonObject();
                     newInstitution.addProperty("id", group.get("id").getAsString());
                     newInstitution.addProperty("name", name);
