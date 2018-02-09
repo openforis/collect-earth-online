@@ -117,6 +117,10 @@ public class Views {
         return new ModelAndView(model, "geo-dash.ftl");
     }
 
+    public static ModelAndView cardTest(Request req, Response res) {
+        return new ModelAndView(getBaseModel(req, "Card-Test", "large"), "card-test.ftl");
+    }
+
     public static ModelAndView pageNotFound(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Page-Not-Found", "large"), "page-not-found.ftl");
     }
