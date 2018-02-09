@@ -7,12 +7,10 @@ import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.staticFileLocation;
 
-import java.io.File;
-
 import com.google.gson.JsonObject;
-
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
+import java.io.File;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 

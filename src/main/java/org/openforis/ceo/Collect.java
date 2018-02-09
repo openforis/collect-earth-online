@@ -2,9 +2,6 @@ package org.openforis.ceo;
 
 import static org.openforis.ceo.JsonUtils.parseJson;
 
-import java.io.IOException;
-import java.util.Map;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpMethods;
@@ -19,6 +16,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import java.io.IOException;
+import java.util.Map;
 
 public class Collect {
 
