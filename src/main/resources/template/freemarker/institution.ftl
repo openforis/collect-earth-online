@@ -6,11 +6,10 @@
 
 <div id="institution" ng-app="institution" ng-controller="InstitutionController as institution"
      ng-init="institution.initialize('${root}', '${userid!""}', '${institution_id}')">
-    <div id="institution-details">
-        <div id="institution-view" ng-show="institution.pageMode == 'view'">
+    <div id="institution-details" class="row">
+        <div id="institution-view" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1" ng-show="institution.pageMode == 'view'">
             <div id="institution-logo-container">
                 <a href="{{ institution.details.url }}">
-                    
                 </a>
             </div>
             <h1><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>
@@ -22,100 +21,139 @@
             <label id="institution-logo-selector">Logo <input id="institution-logo" type="file" accept="image/*"></label>
             <label id="institution-description">Description<br><textarea ng-model="institution.details.description"></textarea></label>
         </div>
-        <#if role??>
-            <div id="institution-controls">
-                <input id="create-institution" type="button" value="Create Institution"
-                       ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
-                <input id="edit-institution" type="button" value="{{ institution.pageMode == 'view' ? 'Edit' : 'Save' }}"
-                       ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin">
-                <input id="delete-institution" type="button" value="Delete"
-                       ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
+
+    </div>
+     <#if role??>
+         <div class="row justify-content-center mb-2" id="institution-controls">
+         		<div class="col-2">
+         		<div class="btn-group btn-block">
+		             <button id="create-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-group btn-block mt-0"
+		                     ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
+		            	 Create Institution
+		            	 </button>
+		             <button id="edit-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-group btn-block mt-0"
+		                     ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin">
+					{{ institution.pageMode == 'view' ? 'Edit' : 'Save' }}
+					</button>				                     
+              		<button id="delete-institution" type="button" class="btn btn-sm btn-outline-danger btn-group btn-block mt-0"
+                     ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
+                    Delete
+                     </button>
+                     </div>
+         		</div>
+         </div>
+     </#if>
+    <div class="row">
+	    <div id="imagery-list" class="col-lg-4 col-xs-12" ng-if="institution.imageryMode == 'view'">
+	        <h2>Imagery <span class="badge badge-pill bg-lightgreen">{{ institution.imageryList.length }}</span></h2>
+	            <div class="row" ng-repeat="imagery in institution.imageryList">
+		            		<div ng-if="institution.isAdmin == false" class="col mb-1">
+		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
+		                </div>
+	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-10 mb-1 pr-1">
+		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
+		               	</div>
+	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-2 pl-0">
+			                <button class="btn btn-outline-danger btn-sm btn-block" ng-if="institution.isAdmin == true" id="delete-imagery" type="button" ng-click="institution.deleteImagery(imagery.id)">
+			                		Delete
+			                </button>
+		            		</div>
+	            </div>
+	            <div class="row">
+			        <table id="add-imagery" class="table table-sm" ng-if="institution.isAdmin == true && institution.imageryMode == 'edit'">
+			            <tr>
+			                <td>Title</td>
+			                <td><input type="text" name="imagery-title" autocomplete="off" ng-model="institution.newImageryTitle"></td>
+			            </tr>
+			            <tr>
+			                <td>Attribution</td>
+			                <td><input type="text" name="imagery-attribution" autocomplete="off" ng-model="institution.newImageryAttribution"></td>
+			            </tr>
+			            <tr>
+			                <td>GeoServer URL</td>
+			                <td><input type="text" name="imagery-geoserver-url" autocomplete="off" ng-model="institution.newGeoServerURL"></td>
+			            </tr>
+			            <tr>
+			                <td>GeoServer Layer Name</td>
+			                <td><input type="text" name="imagery-layer-name" autocomplete="off" ng-model="institution.newLayerName"></td>
+			            </tr>
+			            <tr>
+			                <td>GeoServer Params<br>(as JSON string)</td>
+			                <td><input type="text" name="imagery-geoserver-params" autocomplete="off" ng-model="institution.newGeoServerParams"></td>
+			            </tr>
+			        </table>
+		        </div>
+	        <div class="row">
+	        		<div class="col-lg-12">
+	        		        <input ng-if="institution.isAdmin == true" type="button" id="add-imagery-button"
+		               class="btn btn-sm btn-block btn-outline-yellow" ng-click="institution.toggleImageryMode()"
+		               value="{{ institution.imageryMode == 'view' ? 'Add Imagery' : 'Save Changes' }}">
+             	</div>
+             </div>
+	    </div>
+	  <div id="project-list" class="col-lg-4 col-xs-12">
+	      <h2>Projects <span class="badge badge-pill bg-lightgreen">{{ institution.projectList.length }}</span></h2>
+	          <div class="row mb-1" ng-if="institution.isAdmin == true">
+		          <div class="col">
+		          	<button id="create-project" type="button" class="btn btn-sm btn-block btn-outline-yellow"
+		                     ng-click="institution.createProject()" >
+		                     Create New Project
+	                </button>
+				</div>
+	          </div>
+	          <div class="row" ng-if="institution.isAdmin == true" ng-repeat="project in institution.projectList">
+	          	<div class="col-lg-10 mb-1 pr-1">
+	             	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">
+	             		{{ project.name }}
+	             	</a>
+              	</div>
+				<div class="col-lg-2 pl-0">
+              		<a class="btn btn-sm btn-outline-lightgreen btn-block" class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
+              	</div>
+	          </div>
+	          <div class="row" ng-if="institution.isAdmin == false" ng-repeat="project in institution.projectList">
+	          	<div class="col mb-1 pr-1">
+	             	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">
+	             		{{ project.name }}
+	             	</a>
+              	</div>
+            	</div>
+	  </div>
+    <div id="user-list" class="col-lg-4 col-xs-12">
+        <h2 ng-if="institution.isAdmin == true">Users <span class="badge badge-pill bg-lightgreen">{{ institution.userList.length }}</span></h2>
+        <h2 ng-if="institution.isAdmin == false">Users <span class="badge badge-pill bg-lightgreen">{{ institution.nonPendingUsers }}</span></h2>
+            <div class="row" ng-repeat="user in institution.userList">
+            		<div class="col mb-1" ng-if="institution.isAdmin == false && user.institutionRole != 'pending'" >
+              	  	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/account/{{ user.id }}">{{ user.email }}</a>
+            		</div>
+            		<div class="col-lg-9 mb-1 pr-1" ng-if="institution.isAdmin == true" >
+	                <a class="btn btn-sm btn-outline-lightgreen btn-block " href="${root}/account/{{ user.id }}">{{ user.email }}</a>
+	            </div>
+	            <div class="col-lg-3 mb-1 pl-0"  ng-if="institution.isAdmin == true" >
+	                <select class="custom-select custom-select-sm" name="user-institution-role" size="1"
+	                        ng-model="user.institutionRole"
+	                        ng-change="institution.updateUserInstitutionRole(user.id, user.email, user.institutionRole)">
+	                    <option ng-if="user.institutionRole == 'pending'" value="pending">Pending</option>
+	                    <option value="member">Member</option>
+	                    <option value="admin">Admin</option>
+	                    <option value="not-member">Remove</option>
+	                </select>
+				</div>
+
             </div>
-        </#if>
-    </div>
-        <div id="bcontainer">
-        <div class="Wrapper">
-        <div class="Table">
-    <div id="imagery-list" class="Column">
-        <h1>Imagery [{{ institution.imageryList.length }}]</h1>
-        <ul ng-if="institution.imageryMode == 'view'">
-            <li ng-repeat="imagery in institution.imageryList">
-                <a ng-if="institution.isAdmin == false" class="wide-entry">{{ imagery.title }}</a>
-                <a ng-if="institution.isAdmin == true" class="narrow-entry">{{ imagery.title }}</a>
-                <input ng-if="institution.isAdmin == true" id="delete-imagery" type="button" value="Delete" ng-click="institution.deleteImagery(imagery.id)">
-            </li>
-        </ul>
-        <table id="add-imagery" ng-if="institution.isAdmin == true && institution.imageryMode == 'edit'">
-            <tr>
-                <td>Title</td>
-                <td><input type="text" name="imagery-title" autocomplete="off" ng-model="institution.newImageryTitle"></td>
-            </tr>
-            <tr>
-                <td>Attribution</td>
-                <td><input type="text" name="imagery-attribution" autocomplete="off" ng-model="institution.newImageryAttribution"></td>
-            </tr>
-            <tr>
-                <td>GeoServer URL</td>
-                <td><input type="text" name="imagery-geoserver-url" autocomplete="off" ng-model="institution.newGeoServerURL"></td>
-            </tr>
-            <tr>
-                <td>GeoServer Layer Name</td>
-                <td><input type="text" name="imagery-layer-name" autocomplete="off" ng-model="institution.newLayerName"></td>
-            </tr>
-            <tr>
-                <td>GeoServer Params<br>(as JSON string)</td>
-                <td><input type="text" name="imagery-geoserver-params" autocomplete="off" ng-model="institution.newGeoServerParams"></td>
-            </tr>
-        </table>
-        <input ng-if="institution.isAdmin == true" type="button" id="add-imagery-button"
-               class="button" ng-click="institution.toggleImageryMode()"
-               value="{{ institution.imageryMode == 'view' ? 'Add Imagery' : 'Save Changes' }}">
-    </div>
-    <div id="project-list" class="Column">
-        <h1>Projects [{{ institution.projectList.length }}]</h1>
-        <ul>
-            <li><input id="create-project" type="button" value="Create New Project"
-                       ng-click="institution.createProject()" ng-if="institution.isAdmin == true">
-            </li>
-            <li ng-if="institution.isAdmin == true" ng-repeat="project in institution.projectList">
-                <a class="view-project" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
-                <a class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
-            </li>
-            <li ng-if="institution.isAdmin == false" ng-repeat="project in institution.projectList">
-                <a href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
-            </li>
-        </ul>
-    </div>
-    <div id="user-list" class="Column">
-        <h1 ng-if="institution.isAdmin == true">Users [{{ institution.userList.length }}]</h1>
-        <h1 ng-if="institution.isAdmin == false">Users [{{ institution.nonPendingUsers }}]</h1>
-        <ul>
-            <li ng-repeat="user in institution.userList">
-                <a ng-if="institution.isAdmin == false && user.institutionRole != 'pending'" class="wide-entry"
-                   href="${root}/account/{{ user.id }}">{{ user.email }}</a>
-                <a ng-if="institution.isAdmin == true" class="narrow-entry"
-                   href="${root}/account/{{ user.id }}">{{ user.email }}</a>
-                <select ng-if="institution.isAdmin == true" name="user-institution-role" size="1"
-                        ng-model="user.institutionRole"
-                        ng-change="institution.updateUserInstitutionRole(user.id, user.email, user.institutionRole)">
-                    <option ng-if="user.institutionRole == 'pending'" value="pending">Pending</option>
-                    <option value="member">Member</option>
-                    <option value="admin">Admin</option>
-                    <option value="not-member">Remove</option>
-                </select>
-            </li>
-            <li ng-if="institution.isAdmin == true">
-                <input type="text" name="new-institution-user" autocomplete="off" placeholder="Email"
-                       ng-model="institution.newUserEmail">
-                <input type="button" class="button" name="add-institution-user" value="Add User" ng-click="institution.addUser()">
-            </li>
-            <li ng-if="institution.userId != '' && institution.details.id > 0 && !institution.isInstitutionMember(institution.userId)">
+            <div class="row" ng-if="institution.isAdmin == true">
+	            	<div class="col-lg-9 mb-1 pr-1">
+	   	              <input class="form-control form-control-sm" type="email" name="new-institution-user" autocomplete="off" placeholder="Email" ng-model="institution.newUserEmail">
+ 	            	</div>
+ 	            	<div class="col-lg-3 mb-1 pl-0">
+	                <button class="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user" ng-click="institution.addUser()">Add User</button>
+	            	</div>
+            </div>
+            <div ng-if="institution.userId != '' && institution.details.id > 0 && !institution.isInstitutionMember(institution.userId)">
                 <input type="button" class="button" id="request-membership-button" name="request-membership-button"
                        value="Request Membership" ng-click="institution.requestMembership()">
-            </li>
-        </ul>
-    </div>
-    </div>
+            </div>
+
     </div>
     </div>
 </div>

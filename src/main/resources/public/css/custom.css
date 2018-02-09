@@ -6,6 +6,10 @@
 #content.container{
 
 }
+
+.full-height{
+	height: calc(100vh - 76px);
+}
 /* Fonts */
 /*************/
 @font-face {
@@ -39,10 +43,18 @@ h4 {font-size: 0.5rem;}
 
 /* Colors */
 /*****************/
-/* Lightgreen #31BAB0 */
-/* Lightgreen hover #279B93 */
-/* Darkgreen #0C4D48 */
-/* Yellow #FCCF07 */
+/* Lightgreen 			#31BAB0 */
+/* Lightgreen:hover 		#279B93 */
+/* Darkgreen 			#0C4D48 */
+/* Darkgreen:hover 		#0b302c */
+/* Yellow 				#FCCF07 */
+/* Yellow:hover 			#ecbc0d */
+/* Lightgray 			#ECEEEF */
+/* Lightgray:hover 		#dadcdf */
+/* Darkgray 				#0C4D48 */
+/* Darkgray:hover 		#0b302c */
+
+
 .bg-darkgreen{
 	background-color:#0C4D48!important;
 	color:white;
@@ -56,13 +68,30 @@ h4 {font-size: 0.5rem;}
 .bg-lightgreen{
 	background-color:#31BAB0!important;
 	color:white;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+.bg-lightgreen:hover{
+	background-color:#279B93!important;
+	color:white;
 }
 .bg-lightgray{
 	background-color:#ECEEEF!important;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+.bg-lightgray:hover{
+	background-color:#dadcdf!important;
+
 }
 .bg-yellow{
 	background-color:#FCCF07!important;
 	color:#279B93;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
 }
 .bg-yellow a:hover{
 	background-color:#ecbc0d!important;
@@ -81,8 +110,29 @@ h4 {font-size: 0.5rem;}
     background-color: #31BAB0;
     border-color: #31BAB0;
 }
+.btn-outline-lightgray{
+    color: black;
+    background-color: transparent;
+    background-image: none;
+    border-color: #ECEEEF;
+}
+.btn-outline-lightgray:hover{
+    background-color: #dadcdf;
+    border-color: #dadcdf;
+}
+.btn-outline-darkgray{
+    color: #5e5f60;
+    background-color: transparent;
+    background-image: none;
+    border-color: #5e5f60;
+}
+.btn-outline-darkgray:hover{
+    color: #ffff;
+    background-color: #3a3b3c;
+    border-color: #3a3b3c;
+}
 .btn-outline-yellow{
-    color: #FCCF07;
+    color: #f1c00f;
     background-color: transparent;
     background-image: none;
     border-color: #FCCF07;
@@ -159,11 +209,34 @@ a:hover{
 #lPanel ul {
 	padding-left:0;
 	list-style:none;
+    margin-bottom: 0;
 }
 
 #lPanel a li.bg-yellow:hover{
 	background-color:#ecbc0d!important;
 	color:#white;
+}
+
+
+
+@media (min-width: 1200px){
+	#mapPanel .col-xl-1 {
+	    min-width: 14px;
+	    max-width: 14px;
+	    width: 14px;
+	    padding: 0;
+	    cursor:pointer;
+	    border-left:#dadcdf solid 1px;
+    		border-right:#dadcdf solid 1px;	    
+	}
+	#mapPanel .col-xl-11 {
+	min-width: calc(100% - 14px);
+	max-width: calc(100% - 14px);
+ 	    width: calc(100% - 14px);
+	    
+    }
+}
+#tog-symb{
 }
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
@@ -181,4 +254,29 @@ a:hover{
 	background:#31BAB0;
 	margin: 0 -15px 10px -15px;;
 	padding:1rem;
+}
+
+/*********************************************************************/
+/* PROJECT PAGE */
+/*********************************************************************/
+.circle {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.5rem;
+    margin: 0rem auto;
+}
+/*********************************************************************/
+/* COLLECTION PAGE */
+/*********************************************************************/
+ul#samplevalue{
+	padding-left:0;
+ 	column-count: 2;
+	
+	}
+#samplevalue li{
+	list-style:none;
+	margin-bottom:1rem;
+-webkit-column-break-inside: avoid;
+          page-break-inside: avoid;
+               break-inside: avoid;	
 }

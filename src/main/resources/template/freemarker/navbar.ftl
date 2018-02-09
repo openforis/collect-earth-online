@@ -1,15 +1,4 @@
-<style>
-
-
-
-
-
-@media screen and (max-width: 600px) {
-
-
-}
-</style>
-<nav class="navbar navbar-expand-lg navbar-light" style="background-color: white;" id="main-nav">
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="main-nav">
 	<a class="navbar-brand" href="home">    
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 	</a>

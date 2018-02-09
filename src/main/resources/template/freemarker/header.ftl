@@ -30,7 +30,6 @@
         <script type="text/javascript" src="${root}/js/map-utils.js"></script>
         <script type="text/javascript" src="${root}/js/utils.js"></script>
         <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="${root}/js/custom.js"></script>
 
         <#if navlink == "Geo-Dash">
         <!----------------------------------------------------------------->
@@ -56,4 +55,4 @@
         <!--------------------------------------------------------------->
         </#if>
     </head>
-    <body>
+    <body style="padding-top:76px;">
