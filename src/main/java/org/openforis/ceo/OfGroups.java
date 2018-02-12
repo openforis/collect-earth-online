@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -94,10 +95,10 @@ public class OfGroups {
             HttpResponse response = prepareGetRequest(url).execute(); // get all groups
             if (response.isSuccessStatusCode()) {
                 JsonArray groups = getResponseAsJson(response).getAsJsonArray();
-                String[] hiddenInstitutions = new String[]{"All Users", "Administrators"};
+                List<String> hiddenInstitutions = Arrays.asList("default_public_group", "admin_private_group");
                 JsonArray visibleGroups = filterJsonArray(groups, group ->
                                                           group.get("enabled").getAsBoolean() == true
-                                                          && !Arrays.asList(hiddenInstitutions).contains(group.get("name").getAsString()));
+                                                          && !hiddenInstitutions.contains(group.get("name").getAsString()));
                 JsonArray institutions = mapJsonArray(visibleGroups, group -> {
                 	JsonObject institution = new JsonObject();
                 	institution.addProperty("id", getMemberValue(group, "id", Integer.class));

@@ -325,11 +325,11 @@ public class OfUsers {
                 JsonArray userGroups = getResponseAsJson(response).getAsJsonArray();
                 return toStream(userGroups)
                     .collect(Collectors.toMap(userGroup -> userGroup.get("groupId").getAsInt(),
-                                              userGroup -> userGroup.get("roleCode").getAsString().equals("ADM") ? "admin"
-                                              : userGroup.get("roleCode").getAsString().equals("OWN") ? "admin"
-                                              : userGroup.get("roleCode").getAsString().equals("OPR") ? "member"
-                                              : userGroup.get("roleCode").getAsString().equals("VWR") ? "member"
-                                              : "not-member",
+                                              userGroup -> {
+                                            	  String roleCode = userGroup.get("roleCode").getAsString();
+                                            	  return roleCode.equals("ADM") || roleCode.equals("OWN") ? "admin" 
+                                            		  : roleCode.equals("OPR") || roleCode.equals("VWR") ? "member"
+                                        			  : "not-member";},
                                               (a, b) -> b));
             } else {
                 // FIXME: Raise a red flag that an error just occurred in communicating with the database

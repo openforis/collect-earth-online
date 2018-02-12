@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,9 +54,10 @@ import spark.utils.StringUtils;
 
 public class CollectProjects {
 
-    private static final String ADMIN_USERNAME = "admin@openforis.org";
+	private static final String ADMIN_USERNAME = "admin@openforis.org";
     private static final int MAX_PLOT_MEASUREMENTS = 3;
     private static final double SAMPLE_POINT_WIDTH_M = 10.0d;
+    private static final String COLLECT_EARTH_ONLINE_TARGET = "COLLECT_EARTH_ONLINE";
 
     /**
      * Call Collect's REST API to QUERY the database.
@@ -73,6 +75,7 @@ public class CollectProjects {
         params.put("includeTemporary", true);
         params.put("full", true);
         params.put("includeCodeListValues", true);
+        params.put("target", COLLECT_EARTH_ONLINE_TARGET);
         
         JsonArray allSurveys = getFromCollect("survey", params).getAsJsonArray();
         JsonArray projects = toElementStream(allSurveys)
@@ -98,7 +101,7 @@ public class CollectProjects {
                     .toString();
             }
         } else {
-            Map<Integer, String> institutionRoles = Users.getInstitutionRoles(userId);
+            Map<Integer, String> institutionRoles = OfUsers.getInstitutionRoles(userId);
             Stream<JsonObject> filteredProjects = toStream(projects)
                 .filter(project -> project.get("archived").getAsBoolean() == false)
                 .filter(project -> {
@@ -627,7 +630,8 @@ public class CollectProjects {
         p.add("description", collectSurvey.get("description"));
         p.addProperty("institution", getMemberValue(collectSurvey, "userGroup.id", Integer.class));
         p.addProperty("availability", collectSurvey.get("availability").getAsString().toLowerCase());
-        p.addProperty("privacyLevel","public"); //TODO
+        String collectSurveyPrivacyLevel = collectSurvey.get("privacyLevel").getAsString().toLowerCase();
+        p.addProperty("privacyLevel", collectSurveyPrivacyLevel.equals("group") ? "institution": collectSurveyPrivacyLevel);
         JsonElement ceoApplicationOptionsEl = collectSurvey.get("ceoApplicationOptions");
         if (! ceoApplicationOptionsEl.isJsonNull()) {
             JsonObject ceoApplicationOptions = ceoApplicationOptionsEl.getAsJsonObject();
@@ -681,7 +685,7 @@ public class CollectProjects {
                     sampleValue.add("id", obj.get("id"));
                     sampleValue.add("code", obj.get("code"));
                     sampleValue.add("name", obj.get("label"));
-                    sampleValue.add("color", obj.get("color"));
+                    sampleValue.addProperty("color", "#" + obj.get("color").getAsString());
                     return sampleValue;
                 }).collect(intoJsonArray);
                 
@@ -722,9 +726,12 @@ public class CollectProjects {
 
     private static JsonObject convertToCollectProjectParameters(JsonObject ceoProject) {
         JsonObject data = new JsonObject();
+        data.addProperty("target", COLLECT_EARTH_ONLINE_TARGET);
         data.addProperty("projectName", ceoProject.get("name").getAsString());
         data.add("description", ceoProject.get("description"));
         data.addProperty("userGroupId", ceoProject.get("institution").getAsLong());
+        String ceoPrivacyLevel = ceoProject.get("privacyLevel").getAsString();
+		data.addProperty("privacyLevel", (ceoPrivacyLevel.equals("institution") ? "group": ceoPrivacyLevel).toUpperCase(Locale.ENGLISH));
         
         JsonObject ceoSettings = new JsonObject();
         ceoSettings.add("baseMapSource", ceoProject.get("baseMapSource"));
@@ -769,7 +776,7 @@ public class CollectProjects {
                 JsonObject valObj = valEl.getAsJsonObject();
                 JsonObject item = new JsonObject();
                 item.addProperty("label", valObj.get("name").getAsString());
-                item.addProperty("color", valObj.get("color").getAsString());
+                item.addProperty("color", valObj.get("color").getAsString().substring(1));
                 return item;
             }).collect(intoJsonArray);
             
@@ -980,7 +987,7 @@ public class CollectProjects {
 
     private static Integer getLoggedUserId(Request req) {
         HttpSession session = req.raw().getSession();
-        String userIdStr = (String) session.getAttribute("userId");
+        String userIdStr = (String) session.getAttribute("userid");
         if (StringUtils.isEmpty(userIdStr)) {
         	return null;
         } else {
