@@ -6,8 +6,8 @@ import static org.openforis.ceo.Collect.getFromCollect;
 import static org.openforis.ceo.Collect.postToCollect;
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
+import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
-import static org.openforis.ceo.JsonUtils.forEachInJsonArray;
 import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonArray;
@@ -28,11 +28,10 @@ import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -197,31 +196,16 @@ public class CollectProjects {
     // ==> "{flaggedPlots:#,analyzedPlots:#,unanalyzedPlots:#,members:#,contributors:#}"
     public static String getProjectStats(Request req, Response res) {
         int projectId = getIntParam(req, "id");
-        String username = getLoggedUsername(req);
-        JsonArray samplingPointItems = getCollectSamplingPointItems(projectId);
-        
-        final Set<Integer> contributorIds = new HashSet<Integer>();
+        Integer userId = getLoggedUserId(req);
         
         ProjectStats stats = new ProjectStats();
         
-        forEachInJsonArray(samplingPointItems, item -> {
-            boolean flagged = isFlagged(item);
-            if (flagged) {
-                stats.flaggedPlots++;
-            }
-            String plotId = item.get("id").getAsString();
-            JsonArray recordSummaries = getCollectRecordSummariesByPlotId(username, projectId, plotId);
-            if (recordSummaries.size() == 0) {
-                stats.unanalyzedPlots++;
-            } else {
-                stats.analyzedPlots++;
-                
-                toElementStream(recordSummaries).forEach(summary -> {
-                    contributorIds.add(findElement((JsonObject) summary, "modifiedBy.id").getAsInt());
-                });
-            }
-            stats.contributors = contributorIds.size();
-        });
+        int totalPlots = countCollectSamplingPointItems(projectId, 0, null);
+        stats.flaggedPlots = countCollectSamplingPointItems(projectId, 0, Arrays.asList("true"));
+        stats.analyzedPlots = countCollectRecords(projectId, true, userId);
+        stats.unanalyzedPlots = totalPlots - stats.analyzedPlots - stats.flaggedPlots;
+        stats.contributors = countCollectContributors(projectId);
+        stats.members = getProjectUsers(projectId).length;
         return JsonUtils.toJson(stats);
     }
     
@@ -882,6 +866,28 @@ public class CollectProjects {
                 .getAsJsonArray();
         return sampleItems;
     }
+    
+    private static int countCollectSamplingPointItems(int projectId, int levelIndex, List<String> infoAttributes) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("level", levelIndex);
+        params.put("info_attributes", infoAttributes);
+        int count = getFromCollect(format("survey/%d/count/sampling_point_data", projectId), params).getAsInt();
+        return count;
+    }
+    
+    private static int countCollectRecords(int projectId, boolean ignoreMeasurements, Integer userId) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("ignore_measurements", ignoreMeasurements);
+        params.put("user_id", userId);
+        int count = getFromCollect(format("survey/%d/data/count/records", projectId), params).getAsInt();
+        return count;
+    }
+
+    private static int countCollectContributors(int projectId) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        int count = getFromCollect(format("survey/%d/data/count/contributors", projectId), params).getAsInt();
+        return count;
+    }
 
     private static JsonObject getCollectRecordSubplot(JsonObject survey, JsonObject record, String subplotId) {
         int subplotNodeDefId = getCollectSurveyNodeDefinitionId(survey, "subplot");
@@ -923,6 +929,53 @@ public class CollectProjects {
         valueByField.addProperty("code", value);
         command.add("valueByField", valueByField);
         return command;
+    }
+    
+    private static String[] getProjectUsers(int projectId) {
+        JsonElement collectSurvey = getCollectSurvey(projectId);
+        JsonObject project = convertToCeoProject(collectSurvey.getAsJsonObject());
+            
+        boolean archived = project.get("archived").getAsBoolean();
+        String privacyLevel = project.get("privacyLevel").getAsString();
+        String availability = project.get("availability").getAsString();
+        String institutionId = project.get("institution").getAsString();
+        if (archived == true) {
+            // return no users
+            return new String[]{};
+        } else if (privacyLevel.equals("public")) {
+            // return all users
+        	JsonArray users = OfUsers.getAllUsers(institutionId);
+            return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
+        } else {
+        	JsonArray institutions = OfGroups.getAllInstitutions();
+            Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
+                                                                       institution ->
+                                                                       institution.get("id").getAsString().equals(institutionId));
+            if (matchingInstitution.isPresent()) {
+                JsonObject institution = matchingInstitution.get();
+                JsonArray admins = institution.getAsJsonArray("admins");
+                JsonArray members = institution.getAsJsonArray("members");
+                if (privacyLevel.equals("private")) {
+                    // return all institution admins
+                    return toElementStream(admins).map(element -> element.getAsString()).toArray(String[]::new);
+                } else if (privacyLevel.equals("institution")) {
+                    if (availability.equals("published")) {
+                        // return all institution members
+                        return toElementStream(members).map(element -> element.getAsString()).toArray(String[]::new);
+                    } else {
+                        // return all institution admins
+                        return toElementStream(admins).map(element -> element.getAsString()).toArray(String[]::new);
+                    }
+                } else {
+                    // FIXME: Implement this branch when privacyLevel.equals("invitation") is possible
+                    // return no users
+                    return new String[]{};
+                }
+            } else {
+                // return no users
+                return new String[]{};
+            }
+        }
     }
     
     /**

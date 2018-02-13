@@ -266,6 +266,15 @@ public class OfUsers {
     public static String getAllUsers(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
         try {
+        	return getAllUsers(institutionId).toString();
+        } catch (Exception e) {
+        	req.session().attribute("flash_messages", new String[]{e.getMessage()});
+        	return new JsonArray().toString();
+        }
+    }
+    
+    public static JsonArray getAllUsers(String institutionId) {
+        try {
             if (institutionId != null) {
                 String url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
                 HttpResponse response = prepareGetRequest(url).execute(); // get group's users
@@ -287,11 +296,9 @@ public class OfUsers {
                                 return user;
                             })
                         .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
-                        .collect(intoJsonArray)
-                        .toString();
+                        .collect(intoJsonArray);
                 } else {
-                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
-                    return (new JsonArray()).toString();
+                    throw new RuntimeException("An error occurred. Please try again later.");
                 }
             } else {
                 HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
@@ -303,17 +310,15 @@ public class OfUsers {
                                     return user;
                             })
                             .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
-                            .collect(intoJsonArray)
-                            .toString();
+                            .collect(intoJsonArray);
                 } else {
-                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
-                    return (new JsonArray()).toString();
+                	throw new RuntimeException("An error occurred. Please try again later.");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
             // FIXME: Raise a red flag that an error just occurred in communicating with the database
-            return (new JsonArray()).toString();
+            return new JsonArray();
         }
     }
 

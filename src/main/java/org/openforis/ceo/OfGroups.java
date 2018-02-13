@@ -90,6 +90,10 @@ public class OfGroups {
     }
 
     public static String getAllInstitutions(Request req, Response res) {
+    	return getAllInstitutions().toString();
+    }
+    	
+	public static JsonArray getAllInstitutions() {
         try {
             String url = OF_USERS_API_URL + "group";
             HttpResponse response = prepareGetRequest(url).execute(); // get all groups
@@ -103,17 +107,19 @@ public class OfGroups {
                 	JsonObject institution = new JsonObject();
                 	institution.addProperty("id", getMemberValue(group, "id", Integer.class));
                 	institution.addProperty("name", getMemberValue(group, "label", String.class));
+                	institution.add("admins", new JsonArray()); //TODO
+                	institution.add("members", new JsonArray()); //TODO
                 	return institution;
                 });
-                return institutions.toString();
+                return institutions;
             } else {
                 // FIXME: Raise a red flag that an error just occurred in communicating with the database
-                return (new JsonArray()).toString();
+                return new JsonArray();
             }
         } catch (IOException e) {
             e.printStackTrace(); // TODO
             // FIXME: Raise a red flag that an error just occurred in communicating with the database
-            return (new JsonArray()).toString();
+            return new JsonArray();
         }
     }
 
