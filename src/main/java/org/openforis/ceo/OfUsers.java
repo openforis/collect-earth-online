@@ -89,12 +89,12 @@ public class OfUsers {
             GenericData data = new GenericData();
             data.put("username", inputEmail);
             data.put("rawPassword", inputPassword);
-            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request
+            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login
             if (response.isSuccessStatusCode()) {
                 // Authentication successful
                 String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
                 res.cookie("/", "token", token, -1, false);
-                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user request
+                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
                 String userId = getResponseAsJson(userRequest.execute()).getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
                 HttpRequest roleRequest = prepareGetRequest(OF_USERS_API_URL + "user/" + userId + "/groups"); // get roles
@@ -149,6 +149,12 @@ public class OfUsers {
                             req.session().attribute("userid", newUserId);
                             req.session().attribute("username", inputEmail);
                             req.session().attribute("role", "user");
+                            response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login
+                            if (response.isSuccessStatusCode()) {
+                                // Authentication successful
+                                String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
+                                res.cookie("/", "token", token, -1, false);
+                            }
                             // Redirect to the Home page
                             res.redirect(Server.documentRoot + "/home");
                         }
