@@ -92,6 +92,8 @@ public class OfUsers {
             HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request
             if (response.isSuccessStatusCode()) {
                 // Authentication successful
+                String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
+                res.cookie("/", "token", token, -1, false);
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user request
                 userRequest.getUrl().put("username", inputEmail);
                 String userId = getResponseAsJson(userRequest.execute()).getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
@@ -99,6 +101,7 @@ public class OfUsers {
                 JsonArray jsonRoles = getResponseAsJson(roleRequest.execute()).getAsJsonArray();
                 Optional<JsonObject> matchingRole = findInJsonArray(jsonRoles, jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
                 String role = matchingRole.isPresent() ? "admin" : "user";
+                req.session().attribute("token", token);
                 req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", role);
@@ -161,10 +164,21 @@ public class OfUsers {
         return req;
     }
 
-    public static Request logout(Request req) {
-        req.session().removeAttribute("userid");
-        req.session().removeAttribute("username");
-        req.session().removeAttribute("role");
+    public static Request logout(Request req, Response res) {
+        GenericData data = new GenericData();
+        data.put("username", req.session().attribute("username"));
+        data.put("token", req.session().attribute("token"));
+        try {
+            preparePostRequest(OF_USERS_API_URL + "logout", data).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            req.session().removeAttribute("userid");
+            req.session().removeAttribute("username");
+            req.session().removeAttribute("role");
+            req.session().removeAttribute("token");
+            res.removeCookie("token");
+        }
         return req;
     }
 

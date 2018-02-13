@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static spark.Spark.before;
 import static spark.Spark.exception;
 import static spark.Spark.get;
 import static spark.Spark.port;
@@ -124,6 +125,8 @@ public class Server implements SparkApplication {
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
 
+        before("/*", new CeoAuthFilter());
+
         // Routing Table: HTML pages
         get("/",                (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/home",            (req, res) -> { return freemarker.render(Views.home(req, res)); });
@@ -144,7 +147,7 @@ public class Server implements SparkApplication {
         get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
         post("/password-reset", (req, res) -> { return freemarker.render(Views.passwordReset(OfUsers.resetPassword(req, res), res)); });
         get("/card-test",       (req, res) -> { return freemarker.render(Views.cardTest(req, res)); });
-        get("/logout",          (req, res) -> { return freemarker.render(Views.home(OfUsers.logout(req), res)); });
+        get("/logout",          (req, res) -> { return freemarker.render(Views.home(OfUsers.logout(req, res), res)); });
 
         // Routing Table: Projects API
         get("/get-all-projects",                (req, res) -> { return CollectProjects.getAllProjects(req, res); });
