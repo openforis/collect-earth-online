@@ -1,4 +1,5 @@
-.*
+.gradle/
+.meghanada/
 /build/
 /target/
 collect-earth-online.iml
