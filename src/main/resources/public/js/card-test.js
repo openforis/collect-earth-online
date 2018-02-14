@@ -12,14 +12,19 @@ angular.module("cardTest", []).controller("CardTestController", ["$http", functi
             alert("You must first enter a Project ID!");
         } else {
             $http.get("/collect/survey/" + this.projectId + "/ceoballooncontent.html")
-                .then(function successCallback(response) {
+                .then(angular.bind(this, function successCallback(response) {
+                    this.showSurvey(response.data);
                     console.log(response.data);
                     alert("Project cards loaded from Collect. See console output.");
-                }, function errorCallback(response) {
+                }), function errorCallback(response) {
                     console.log(response);
                     alert("Error loading the project cards from Collect. See console for details.");
                 });
         }
+    };
+
+    this.showSurvey = function (surveyHtml) {
+        angular.element(document.getElementById("collect-survey")).append(surveyHtml);
     };
 
 }]);
