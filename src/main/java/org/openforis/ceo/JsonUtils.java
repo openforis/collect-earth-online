@@ -1,18 +1,15 @@
 package org.openforis.ceo;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -24,9 +21,17 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 public class JsonUtils {
 
-    public static String expandResourcePath(String filename) {
+    private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
+
+	public static String expandResourcePath(String filename) {
         try {
             URI uri = JsonUtils.class.getResource(filename).toURI();
             return Paths.get(uri).toFile().getAbsolutePath();
@@ -216,6 +221,17 @@ public class JsonUtils {
     		return (T) Boolean.valueOf(el.getAsBoolean());
     	} else {
     		throw new IllegalArgumentException("Unsupported type: " + type);
+    	}
+    }
+    
+    public static String getDateAsString(JsonObject obj, String property) {
+    	JsonElement el = findElement(obj, property);
+    	if (el.isJsonNull()) {
+    		return null;
+    	} else {
+    		String dateStr = el.getAsString();
+			Date date = new Date(Long.parseLong(dateStr));
+			return DATE_FORMATTER.format(date);
     	}
     }
 

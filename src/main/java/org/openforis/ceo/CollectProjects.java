@@ -8,6 +8,7 @@ import static org.openforis.ceo.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.JsonUtils.findElement;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
+import static org.openforis.ceo.JsonUtils.getDateAsString;
 import static org.openforis.ceo.JsonUtils.getMemberValue;
 import static org.openforis.ceo.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.JsonUtils.mapJsonArray;
@@ -609,7 +610,8 @@ public class CollectProjects {
     
     private static JsonObject convertToCeoProject(JsonObject collectSurvey) {
         JsonObject p = new JsonObject();
-        p.addProperty("id", collectSurvey.get("id").getAsInt());
+        int projectId = collectSurvey.get("id").getAsInt();
+		p.addProperty("id", projectId);
         p.add("name", collectSurvey.get("projectName"));
         p.add("description", collectSurvey.get("description"));
         p.addProperty("institution", getMemberValue(collectSurvey, "userGroup.id", Integer.class));
@@ -680,6 +682,10 @@ public class CollectProjects {
         p.add("sampleValues", sampleValuesList);
         p.addProperty("attribution", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
         p.addProperty("archived", "archived".equalsIgnoreCase(collectSurvey.get("availability").getAsString()));
+        p.addProperty("numPlots", countCollectSamplingPointItems(projectId, 0, null));
+        p.addProperty("publishedDate", getDateAsString(collectSurvey, "publishedDate"));
+        p.addProperty("archivedDate", getDateAsString(collectSurvey, "archivedDate"));
+        p.addProperty("closedDate", getDateAsString(collectSurvey, "closedDate"));
         return p;
     }
     
