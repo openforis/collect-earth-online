@@ -21,18 +21,21 @@
         	</div>
     </div>
     <div id="sidebar" class="col-xl-3" old_ng-show="collection.showSideBar">
-    		<div class="row justify-content-center mb-4">
+    		<div class="row justify-content-center mb-3 text-center">
     			<div class="col-lg-12 ">
-        			<input id="quit-button" class="btn btn-outline-danger btn-block" type="button" name="collection-quit" value="Quit" ng-class="collection.quitclass" onclick="window.location='${root}/home'">
+        			<input id="quit-button" class="btn btn-outline-danger btn-block btn-sm" type="button" name="collection-quit" value="Quit" ng-class="collection.quitclass" onclick="window.location='${root}/home'">
     			</div>	
     		</div>
         <div id="showarrow" ng-click="collection.toggleStats()">
             <div ng-class="collection.arrowstate"></div>
-		   
         </div>
-        <div id="spacer"></div>
-        <fieldset id="projStats" ng-class="collection.statClass">
-            <h2>Project Stats</h2>
+        <fieldset id="projStats" ng-class="collection.statClass" class=" text-center">
+            <h3>
+            		  <a class="btn btn-outline-lightgreen btn-sm btn-block" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+            		Project Stats
+            		</a>
+        		</h3>
+        		<div class="collapse" id="collapseExample">
             <table class="table table-sm">
                 <tbody>
                     <tr>
@@ -57,10 +60,11 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </fieldset>
-        <fieldset class="mb-4">
-            <h2>Plot Navigation</h2>
-            <div class="row no-gutters btn-group btn-block justify-content-center">
+        <fieldset class="mb-3 text-center">
+            <h3>Plot Navigation</h3>
+            <div class="row no-gutters btn-group btn-block justify-content-center text-center">
 		            <input id="new-plot-button" class="btn btn-outline-lightgreen btn-sm " type="button" name="new-plot" value="Skip" ng-click="collection.nextPlot()">
             			<input id="save-values-button" class="btn btn-outline-lightgreen btn-sm" type="button" name="save-values" value="Save" ng-click="collection.saveValues()"
 	                   style="opacity:0.5" disabled>
@@ -68,17 +72,17 @@
 	                   style="opacity:0.5" disabled>
             </div>
         </fieldset>
-        <fieldset class="mb-4 justify-content-center">
-            <h2>Imagery Options</h2>
+        <fieldset class="mb-3 justify-content-center text-center">
+            <h3>Imagery Options</h3>
             <select id="base-map-source" class="form-control form-control-sm" name="base-map-source" size="1" ng-model="collection.currentProject.baseMapSource" ng-change="collection.setBaseMapSource()">
                 <option ng-repeat="imagery in collection.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
             </select>
         </fieldset>
-        <fieldset ng-repeat="sampleValueGroup in collection.currentProject.sampleValues" class="mb-4 justify-content-center">
-            <h2>Sample Value: {{ sampleValueGroup.name }}</h2>
+        <fieldset ng-repeat="sampleValueGroup in collection.currentProject.sampleValues" class="mb-3 justify-content-center text-center">
+            <h3 class="text-center">Sample Value: {{ sampleValueGroup.name }}</h3>
             <ul id="samplevalue" class="justify-content-center">
                 <li class="mb-1" ng-repeat="sampleValue in sampleValueGroup.values">
-                		 <button type="button" class="btn btn-outline-darkgray btn-small btn-block pl-1" id="{{ sampleValue.name + '_' + sampleValue.id }}" name="{{ sampleValue.name + '_' + sampleValue.id }}"
+                		 <button type="button" class="btn btn-outline-darkgray btn-sm btn-block pl-1" id="{{ sampleValue.name + '_' + sampleValue.id }}" name="{{ sampleValue.name + '_' + sampleValue.id }}"
                            ng-click="collection.setCurrentValue(sampleValueGroup, sampleValue)">
                            <div class="circle" style="background-color:{{ sampleValue.color }}; border:solid 1px; float: left;
     margin-top: 4px;"></div>

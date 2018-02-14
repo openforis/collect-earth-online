@@ -6,8 +6,8 @@
 
 <div id="institution" ng-app="institution" ng-controller="InstitutionController as institution"
      ng-init="institution.initialize('${root}', '${userid!""}', '${institution_id}')">
-    <div id="institution-details" class="row">
-        <div id="institution-view" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1" ng-show="institution.pageMode == 'view'">
+    <div id="institution-details" class="row justify-content-center">
+        <div id="institution-view" class="col-xl-6 col-lg-8 " ng-show="institution.pageMode == 'view'">
             <div id="institution-logo-container">
                 <a href="{{ institution.details.url }}">
                 </a>
@@ -15,11 +15,25 @@
             <h1><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>
             <p>{{ institution.details.description }}</p>
         </div>
-        <div id="institution-edit" ng-show="institution.pageMode == 'edit'">
-            <label id="institution-name" >Name <input type="text" ng-model="institution.details.name"></label>
-            <label id="institution-url">URL <input type="text" ng-model="institution.details.url"></label>
-            <label id="institution-logo-selector">Logo <input id="institution-logo" type="file" accept="image/*"></label>
-            <label id="institution-description">Description<br><textarea ng-model="institution.details.description"></textarea></label>
+        <div id="institution-edit" class="col-xl-6 col-lg-8"  ng-show="institution.pageMode == 'edit'">
+	        <form>
+	        		<div class="form-group form-row">
+		            <label id="institution-name" for="institution-details-name">Name</label>
+					<input id="institution-details-name" class="form-control mb-1 mr-sm-2" type="text" ng-model="institution.details.name">
+	        		</div>
+	        		<div class="form-group form-row">
+		            <label id="institution-url" for="institution-details-url">URL</label>
+		            <input id="" type="text" class="form-control mb-1 mr-sm-2" ng-model="institution.details.url">
+	        		</div>
+	        		<div class="form-group form-row">
+		            <label id="institution-logo-selector" for="institution-logo">Logo</label>
+		            <input id="institution-logo" class="form-control mb-1 mr-sm-2" type="file" accept="image/*">
+	        		</div>
+	        		<div class="form-group form-row">
+		            <label id="institution-description" for="institution-details-description">Description</label>
+		            <textarea id="institution-details-description" class="form-control"  ng-model="institution.details.description" rows="4"></textarea>
+	        		</div>	        			        			        		
+	      	</form>
         </div>
 
     </div>
@@ -27,15 +41,15 @@
          <div class="row justify-content-center mb-2" id="institution-controls">
          		<div class="col-2">
          		<div class="btn-group btn-block">
-		             <button id="create-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-group btn-block mt-0"
+		             <button id="create-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-block mt-0"
 		                     ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
 		            	 Create Institution
 		            	 </button>
-		             <button id="edit-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-group btn-block mt-0"
+		             <button id="edit-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-block mt-0"
 		                     ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin">
 					{{ institution.pageMode == 'view' ? 'Edit' : 'Save' }}
 					</button>				                     
-              		<button id="delete-institution" type="button" class="btn btn-sm btn-outline-danger btn-group btn-block mt-0"
+              		<button id="delete-institution" type="button" class="btn btn-sm btn-outline-danger btn-block mt-0"
                      ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin">
                     Delete
                      </button>
@@ -50,10 +64,10 @@
 		            		<div ng-if="institution.isAdmin == false" class="col mb-1">
 		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
 		                </div>
-	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-10 mb-1 pr-1">
+	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-10 col-sm-12 mb-1 pr-1 ">
 		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
 		               	</div>
-	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-2 pl-0">
+	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-2 col-sm-12 pl-0">
 			                <button class="btn btn-outline-danger btn-sm btn-block" ng-if="institution.isAdmin == true" id="delete-imagery" type="button" ng-click="institution.deleteImagery(imagery.id)">
 			                		Delete
 			                </button>

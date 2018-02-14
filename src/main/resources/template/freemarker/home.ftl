@@ -19,7 +19,7 @@
         <span id="mobilespan" ></span>
             <div class="Wrapper">
                 <div class="row tog-effect">
-                    <div id="lPanel" class="col-xl-3 pr-0 pl-0">
+                    <div id="lPanel" class="col-lg-3 pr-0 pl-0">
 						<div class="bg-darkgreen">
                            <h1 class="tree_label" id="panelTitle">
                            		Institutions <!--[{{ home.institutionList.length }}]-->
@@ -32,22 +32,35 @@
                                     </a>
                                 </#if>
                                 <li ng-repeat="institution in home.institutionList">
-	                                    <div class="bg-lightgreen text-center p-2">
-		                                    <p class="tree_label text-white m-0" for="c{{ institution.id }}"><input type="checkbox" class="d-none" id="c{{ institution.id }}" /> {{ institution.name }}
-		                                   	 <a class="institution_info" href="${root}/institution/{{ institution.id }}"><img src="${root}/img/institution_info.png" alt="Institution info" title="Institution info"></a>
-		                                    </p>
+	                                    <div class="btn bg-lightgreen btn-block m-0 p-2 rounded-0" data-toggle="collapse" href="#collapse{{ institution.id }}" role="button" aria-expanded="false">
+                                     		<div class="row">
+		                                    		<div class="col-lg-10 my-auto">
+			                                    		<p class="tree_label text-white m-0" for="c{{ institution.id }}"><input type="checkbox" class="d-none" id="c{{ institution.id }}" /><span class="">{{ institution.name }}</span></p>
+			                                    </div>
+			                                    <div class="col-lg-1">
+				                                   	 <a class="institution_info btn btn-sm btn-outline-lightgreen" href="${root}/institution/{{ institution.id }}"><i class="fa fa-info" style="color:white;"></i></a>
+			                                   </div>
 										</div>
-                                    <ul class="">
-                                        <li class="bg-lightgrey text-center p-1" ng-repeat="project in home.projectList | filter : {institution: institution.id }">
-                                            <a ng-if="project.editable == true" class="view-project" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
-                                            <a ng-if="project.editable == true" class="edit-project btn btn-outline-yellow btn-sm" href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Edit</a>
-                                            <a ng-if="project.editable == false" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
-                                        </li>
-                                    </ul>
+									</div>
+										<div  class="collapse" id="collapse{{ institution.id }}">
+	                                        <div class="bg-lightgrey text-center p-1 row px-auto" ng-if="project.editable == true"  ng-repeat="project in home.projectList | filter : {institution: institution.id }">
+	                               	          	<div class="col-lg-9 pr-lg-1">
+	                                           		 <a class="view-project btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
+												</div>	
+	                               	          	<div class="col-lg-3 pl-lg-0">
+	                                          			<a ng-if="project.editable == true" class="edit-project btn btn-outline-yellow btn-sm btn-block" href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Edit</a>
+	                                    			</div>
+	                                        </div>
+											<div class="bg-lightgrey text-center p-1 row" ng-if="project.editable == false"  ng-repeat="project in home.projectList | filter : {institution: institution.id }">
+												<div class="col mb-1 mx-0">
+		                                            <a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
+	                                           	</div>
+	                                         </div>
+                                         </div>
                                 </li>
                             </ul>
                     </div>
-                    <div id="mapPanel" class="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0">
+                    <div id="mapPanel" class="col-lg-9 col-md-12 pl-0 pr-0">
 	                    	<div class="row no-gutters full-height">
 	 						<div id="togbutton" class="button col-xl-1 bg-lightgray d-none d-xl-block">
 	 							<div class="row h-100">

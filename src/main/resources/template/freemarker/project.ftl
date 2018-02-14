@@ -292,7 +292,7 @@
                                 {{ sampleValue.name }}
                             </td>
                             <td>
-                                <div class="circle" style="background-color: {{ sampleValue.color }}"></div>
+                                <div class="circle" style="background-color: {{ sampleValue.color }};border:solid 1px; "></div>
                             </td>
                             <td>
                                 {{ sampleValue.image }}

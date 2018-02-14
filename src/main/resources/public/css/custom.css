@@ -238,6 +238,20 @@ a:hover{
 }
 #tog-symb{
 }
+/* map popover */
+/*************/
+.ol-popup-content .cTitle h1{
+	color:white;
+	font-family:inherit;
+	font-size:1rem;	
+	padding-bottom:0;
+}
+
+.ol-popup-content .cTitle {
+	background-color:#31BAB0;
+}
+
+
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
 /*********************************************************************/
