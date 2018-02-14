@@ -9,6 +9,8 @@ import spark.Response;
 
 public class Views {
 
+    private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+
     private static Map<String, Object> getBaseModel(Request req, String navlink, String contentSize) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("root", Server.documentRoot);
@@ -59,6 +61,7 @@ public class Views {
             authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         }
         Map<String, Object> model = getBaseModel(req, "Institution", "large");
+        model.put("of_users_api_url", OF_USERS_API_URL);
         model.put("institution_id", req.params(":id"));
         return new ModelAndView(model, "institution.ftl");
     }
