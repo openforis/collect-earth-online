@@ -51,7 +51,7 @@
             <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery-ui.css">
             <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery.selectBoxIt.css">
             <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery-steps.css">
-            <link rel="stylesheet" href="/collect/earthFiles/bootstrap/bootstrap.css">
+            <link rel="stylesheet" href="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.css">
             <link rel="stylesheet" href="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.css">
             <link rel="stylesheet" href="/collect/earthFiles/css/of-collect-forms.css">
             <script type="text/javascript" src="/collect/earthFiles/jquery/jquery-3.3.1.min.js"></script>
@@ -59,7 +59,7 @@
             <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.blockUI.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.selectBoxIt.min.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.steps.openforis.js"></script>
-            <script type="text/javascript" src="/collect/earthFiles/bootstrap/bootstrap.min.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/bootstrap/moment.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/openforis/of.js"></script>
