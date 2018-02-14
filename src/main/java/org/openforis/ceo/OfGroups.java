@@ -41,6 +41,7 @@ import com.google.gson.JsonObject;
 
 import spark.Request;
 import spark.Response;
+import spark.utils.IOUtils;
 
 public class OfGroups {
 
@@ -224,16 +225,28 @@ public class OfGroups {
                 // Add file
                 Part logo = req.raw().getPart("institution-logo");
                 String fileName = logo.getSubmittedFileName();
-                String result = new BufferedReader(new InputStreamReader(logo.getInputStream())).lines().collect(Collectors.joining("\n"));
-                MultipartContent.Part part = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), result.getBytes()));
-                part.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
-                content.addPart(part);
+                String contentType = logo.getContentType();
+                byte[] bytes = IOUtils.toByteArray(logo.getInputStream());
+                MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
+                part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
+                content.addPart(part1);
+                MultipartContent.Part part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
+                part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
+                content.addPart(part2);
                 // Request
                 HttpRequestFactory httpRequestFactory = createRequestFactory();
-                HttpResponse response = httpRequestFactory.buildPostRequest(new GenericUrl(OF_USERS_API_URL + "group"), content).execute(); // TODO
+                HttpResponse response = httpRequestFactory.buildPostRequest(new GenericUrl(OF_USERS_API_URL + "group"), content).execute(); // create a new group
                 if (response.isSuccessStatusCode()) {
                     JsonObject group = getResponseAsJson(response).getAsJsonObject();
-
+                    //
+                    GenericData data = new GenericData();
+                    data.put("roleCode", "ADM");
+                    data.put("statusCode", "A");
+                    preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), 1), data).execute();
+                    if (userid != 1) {
+                        preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), userid), data).execute();
+                    }
+                    //
                     JsonObject newInstitution = new JsonObject();
                     newInstitution.addProperty("id", group.get("id").getAsString());
                     newInstitution.addProperty("name", name);
@@ -248,7 +261,7 @@ public class OfGroups {
                     return newInstitution.toString();
                 }
             } else {
-                // TODO
+                // NOTE: This branch edits an existing institution
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -1,5 +1,9 @@
-.*
+.gradle/
+.meghanada/
+.tern-port
 /build/
 /target/
 collect-earth-online.iml
 /src/main/resources/public/downloads/*.csv
+.settings/
+bin/
