@@ -33,9 +33,9 @@ public class Users {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputReturnURL = req.queryParams("returnurl");
-        String returnURL = Server.documentRoot + "/home";
+        String returnURL = CeoConfig.documentRoot + "/home";
         if(inputReturnURL != null && !inputReturnURL.isEmpty()) {
-            returnURL =  Server.documentRoot + "/" + inputReturnURL + "?" + req.queryString();
+            returnURL =  CeoConfig.documentRoot + "/" + inputReturnURL + "?" + req.queryString();
         }//
         // Check if email exists
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
@@ -122,7 +122,7 @@ public class Users {
                 req.session().attribute("role", newUserRole);
 
                 // Redirect to the Home page
-                res.redirect(Server.documentRoot + "/home");
+                res.redirect(CeoConfig.documentRoot + "/home");
             }
         }
         return req;

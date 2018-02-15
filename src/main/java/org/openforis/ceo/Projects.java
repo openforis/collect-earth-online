@@ -360,9 +360,9 @@ public class Projects {
 
             writeCsvFile(outputFileName, csvHeader, csvRows);
 
-            return Server.documentRoot + "/downloads/" + outputFileName;
+            return CeoConfig.documentRoot + "/downloads/" + outputFileName;
         } else {
-            return Server.documentRoot + "/project-not-found";
+            return CeoConfig.documentRoot + "/project-not-found";
         }
     }
 
@@ -433,9 +433,9 @@ public class Projects {
 
             writeCsvFile(outputFileName, csvHeader, csvRows);
 
-            return Server.documentRoot + "/downloads/" + outputFileName;
+            return CeoConfig.documentRoot + "/downloads/" + outputFileName;
         } else {
-            return Server.documentRoot + "/project-not-found";
+            return CeoConfig.documentRoot + "/project-not-found";
         }
     }
 

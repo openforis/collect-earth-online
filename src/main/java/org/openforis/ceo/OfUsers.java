@@ -105,7 +105,7 @@ public class OfUsers {
                 req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", role);
-                res.redirect(Server.documentRoot + "/home");
+                res.redirect(CeoConfig.documentRoot + "/home");
             } else {
                 // Authentication failed
                 req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
@@ -156,7 +156,7 @@ public class OfUsers {
                                 res.cookie("/", "token", token, -1, false);
                             }
                             // Redirect to the Home page
-                            res.redirect(Server.documentRoot + "/home");
+                            res.redirect(CeoConfig.documentRoot + "/home");
                         }
                     }
                 } else {
