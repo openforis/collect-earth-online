@@ -1,9 +1,8 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.JsonUtils.filterJsonFile;
 import static org.openforis.ceo.JsonUtils.getNextId;
-import static org.openforis.ceo.JsonUtils.mapJsonFile;
 import static org.openforis.ceo.JsonUtils.parseJson;
 import static org.openforis.ceo.JsonUtils.readJsonFile;
 import static org.openforis.ceo.JsonUtils.writeJsonFile;
@@ -11,7 +10,6 @@ import static org.openforis.ceo.JsonUtils.writeJsonFile;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.util.Optional;
 import spark.Request;
 import spark.Response;
 
@@ -20,33 +18,28 @@ public class Imagery {
     public static String getAllImagery(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
         JsonArray imagery = readJsonFile("imagery-list.json").getAsJsonArray();
-        if (institutionId.equals("")) {
-            return imagery.toString();
+        if (institutionId.equals("") || institutionId.equals("0")) {
+            return filterJsonArray(imagery,
+                imageryEntry -> imageryEntry.get("institution").getAsString().equals("0")).toString();
         } else {
-            JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingInstitution = findInJsonArray(institutions, institution -> institution.get("id").getAsString().equals(institutionId));
-            if (matchingInstitution.isPresent()) {
-                JsonObject institution = matchingInstitution.get();
-                JsonArray institutionImagery = institution.getAsJsonArray("imagery");
-                return filterJsonArray(imagery, imageryEntry -> institutionImagery.contains(imageryEntry.get("id"))).toString();
-            } else {
-                return (new JsonArray()).toString();
-            }
+            return filterJsonArray(imagery,
+                imageryEntry -> imageryEntry.get("institution").getAsString().equals("0")
+                                || imageryEntry.get("institution").getAsString().equals(institutionId)).toString();
         }
     }
 
     public static synchronized String addInstitutionImagery(Request req, Response res) {
         try {
-            JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-            String institutionId = jsonInputs.get("institutionId").getAsString();
-            String imageryTitle = jsonInputs.get("imageryTitle").getAsString();
-            String imageryAttribution = jsonInputs.get("imageryAttribution").getAsString();
-            String geoserverURL = jsonInputs.get("geoserverURL").getAsString();
-            String layerName = jsonInputs.get("layerName").getAsString();
+            JsonObject jsonInputs        = parseJson(req.body()).getAsJsonObject();
+            int institutionId            = jsonInputs.get("institutionId").getAsInt();
+            String imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
+            String imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
+            String geoserverURL          = jsonInputs.get("geoserverURL").getAsString();
+            String layerName             = jsonInputs.get("layerName").getAsString();
             String geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
-            JsonObject geoserverParams = geoserverParamsString.equals("")
-                                         ? new JsonObject()
-                                         : parseJson(geoserverParamsString).getAsJsonObject();
+            JsonObject geoserverParams   = geoserverParamsString.equals("")
+                                               ? new JsonObject()
+                                               : parseJson(geoserverParamsString).getAsJsonObject();
 
             // Add layerName to geoserverParams
             geoserverParams.addProperty("LAYERS", layerName);
@@ -66,6 +59,7 @@ public class Imagery {
             // Create a new imagery object
             JsonObject newImagery = new JsonObject();
             newImagery.addProperty("id", newImageryId);
+            newImagery.addProperty("institution", institutionId);
             newImagery.addProperty("title", imageryTitle);
             newImagery.addProperty("attribution", imageryAttribution);
             newImagery.add("extent", null);
@@ -75,18 +69,6 @@ public class Imagery {
             imagery.add(newImagery);
             writeJsonFile("imagery-list.json", imagery);
 
-            // Add newImageryId to the selected institution's imagery list
-            mapJsonFile("institution-list.json",
-                        institution -> {
-                            if (institution.get("id").getAsString().equals(institutionId)) {
-                                JsonArray imageryList = institution.getAsJsonArray("imagery");
-                                imageryList.add(newImageryId);
-                                return institution;
-                            } else {
-                                return institution;
-                            }
-                        });
-
             return "";
         } catch (Exception e) {
             // Indicate that an error occurred with imagery creation
@@ -94,24 +76,12 @@ public class Imagery {
         }
     }
 
-    // FIXME: Delete imagery entries from imagery-list.json once they are no longer referenced by any institution
     public static synchronized String deleteInstitutionImagery(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        String institutionId = jsonInputs.get("institutionId").getAsString();
-        JsonElement imageryId = jsonInputs.get("imageryId");
+        String imageryId      = jsonInputs.get("imageryId").getAsString();
+        String institutionId  = jsonInputs.get("institutionId").getAsString();
 
-        mapJsonFile("institution-list.json",
-                    institution -> {
-                        if (institution.get("id").getAsString().equals(institutionId)) {
-                            JsonArray imagery = institution.getAsJsonArray("imagery");
-                            if (imagery.contains(imageryId)) {
-                                imagery.remove(imageryId);
-                            }
-                            return institution;
-                        } else {
-                            return institution;
-                        }
-                    });
+        filterJsonFile("imagery-list.json", imageryEntry -> !imageryEntry.get("id").getAsString().equals(imageryId));
 
         return "";
     }
