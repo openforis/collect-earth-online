@@ -183,7 +183,7 @@ public class OfUsers {
             req.session().removeAttribute("username");
             req.session().removeAttribute("role");
             req.session().removeAttribute("token");
-            res.removeCookie("token");
+            res.removeCookie("/", "token");
         }
         return req;
     }
