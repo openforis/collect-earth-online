@@ -21,47 +21,46 @@
         	</div>
     </div>
     <div id="sidebar" class="col-xl-3" old_ng-show="collection.showSideBar">
-    		<div class="row justify-content-center mb-3 text-center">
-    			<div class="col-lg-12 ">
-        			<input id="quit-button" class="btn btn-outline-danger btn-block btn-sm" type="button" name="collection-quit" value="Quit" ng-class="collection.quitclass" onclick="window.location='${root}/home'">
-    			</div>	
+    		<div class="row justify-content-center mb-0 text-center">
+    			<div class="col-lg-12">
+    				<div class="btn-group-vertical btn-block">
+        			<button id="quit-button" class="btn btn-outline-danger btn-block btn-sm" type="button" name="collection-quit" value="Quit" ng-class="collection.quitclass" onclick="window.location='${root}/home'">
+        				Quit
+        			</button>
+				<button class="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+            		 	Project Stats
+            		</button>
+            		</div>
+	 			<fieldset id="projStats" ng-class="collection.statClass" class=" text-center">
+		        		<div class="collapse" id="collapseExample">
+			            <table class="table table-sm">
+			                <tbody>
+			                    <tr>
+			                        <td class="small">Project</td>
+			                        <td class="small">{{ collection.currentProject.name }}</td>
+			                    </tr>
+			                    <tr>
+			                        <td class="small">Plots Assigned</td>
+			                        <td class="small">{{ collection.plotsAssigned }} ({{ collection.assignedPercentage() }}%)</td>
+			                    </tr>
+			                    <tr>
+			                        <td class="small">Plots Flagged</td>
+			                        <td class="small">{{ collection.plotsFlagged }} ({{ collection.flaggedPercentage() }}%)</td>
+			                    </tr>
+			                    <tr>
+			                        <td class="small">Plots Completed</td>
+			                        <td class="small">{{ collection.plotsAssigned + collection.plotsFlagged }} ({{ collection.completePercentage() }}%)</td>
+			                    </tr>
+			                    <tr>
+			                        <td class="small">Plots Total</td>
+			                        <td class="small">{{ collection.currentProject.numPlots }}</td>
+			                    </tr>
+			                </tbody>
+			            </table>
+		            </div>
+	        		</fieldset>
+			</div>	
     		</div>
-        <div id="showarrow" ng-click="collection.toggleStats()">
-            <div ng-class="collection.arrowstate"></div>
-        </div>
-        <fieldset id="projStats" ng-class="collection.statClass" class=" text-center">
-            <h3>
-            		  <a class="btn btn-outline-lightgreen btn-sm btn-block" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-            		Project Stats
-            		</a>
-        		</h3>
-        		<div class="collapse" id="collapseExample">
-            <table class="table table-sm">
-                <tbody>
-                    <tr>
-                        <td class="small">Project</td>
-                        <td class="small">{{ collection.currentProject.name }}</td>
-                    </tr>
-                    <tr>
-                        <td class="small">Plots Assigned</td>
-                        <td class="small">{{ collection.plotsAssigned }} ({{ collection.assignedPercentage() }}%)</td>
-                    </tr>
-                    <tr>
-                        <td class="small">Plots Flagged</td>
-                        <td class="small">{{ collection.plotsFlagged }} ({{ collection.flaggedPercentage() }}%)</td>
-                    </tr>
-                    <tr>
-                        <td class="small">Plots Completed</td>
-                        <td class="small">{{ collection.plotsAssigned + collection.plotsFlagged }} ({{ collection.completePercentage() }}%)</td>
-                    </tr>
-                    <tr>
-                        <td class="small">Plots Total</td>
-                        <td class="small">{{ collection.currentProject.numPlots }}</td>
-                    </tr>
-                </tbody>
-            </table>
-            </div>
-        </fieldset>
         <fieldset class="mb-3 text-center">
             <h3>Plot Navigation</h3>
             <div class="row no-gutters btn-group btn-block justify-content-center text-center">
