@@ -1,0 +1,296 @@
+/*********************************************************************/
+/* GENERAL */
+/*********************************************************************/
+/* Content */
+/*************/
+#content.container{
+
+}
+
+.full-height{
+	height: calc(100vh - 76px);
+}
+/* Fonts */
+/*************/
+@font-face {
+font-family: 'CaviarDreams';
+src: url('../fonts/CaviarDreams.eot');
+src: local('☺'), 
+url('../fonts/CaviarDreams.woff') format('woff'), 
+url('../fonts/CaviarDreams.ttf') format('truetype'), 
+url('../fonts/CaviarDreams.svg') format('svg');
+}
+@font-face {
+font-family: 'CaviarDreams_Bold';
+src: url('../fonts/CaviarDreams_Bold.eot');
+src: local('☺'), 
+url('../fonts/CaviarDreams_Bold.woff') format('woff'), 
+url('../fonts/CaviarDreams_Bold.ttf') format('truetype'), 
+url('../fonts/CaviarDreams_Bold.svg') format('svg');
+}
+/* Typography */
+/*************/
+
+h1, h2, h3, h4, h5, h6{
+	font-family:'CaviarDreams';
+	color:#707070;
+	text-align:center;
+}
+h1 {font-size: 2rem;}
+h2 {font-size: 1.5rem;}
+h3 {font-size: 1rem;}
+h4 {font-size: 0.5rem;}
+
+/* Colors */
+/*****************/
+/* Lightgreen 			#31BAB0 */
+/* Lightgreen:hover 		#279B93 */
+/* Darkgreen 			#0C4D48 */
+/* Darkgreen:hover 		#0b302c */
+/* Yellow 				#FCCF07 */
+/* Yellow:hover 			#ecbc0d */
+/* Lightgray 			#ECEEEF */
+/* Lightgray:hover 		#dadcdf */
+/* Darkgray 				#0C4D48 */
+/* Darkgray:hover 		#0b302c */
+
+
+.bg-darkgreen{
+	background-color:#0C4D48!important;
+	color:white;
+}
+.bg-darkgreen h1{
+	padding:1rem;
+	color:white;	
+	margin:0;
+}
+
+.bg-lightgreen{
+	background-color:#31BAB0!important;
+	color:white;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+.bg-lightgreen:hover{
+	background-color:#279B93!important;
+	color:white;
+}
+.bg-lightgray{
+	background-color:#ECEEEF!important;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+.bg-lightgray:hover{
+	background-color:#dadcdf!important;
+
+}
+.bg-yellow{
+	background-color:#FCCF07!important;
+	color:#279B93;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+.bg-yellow a:hover{
+	background-color:#ecbc0d!important;
+	color:#279B93;
+}
+/* Buttons */
+/*****************/
+.btn-outline-lightgreen{
+    color: #31BAB0;
+    background-color: transparent;
+    background-image: none;
+    border-color: #31BAB0;
+}
+.btn-outline-lightgreen:hover{
+    color: #ffff;
+    background-color: #31BAB0;
+    border-color: #31BAB0;
+}
+.btn-outline-lightgray{
+    color: black;
+    background-color: transparent;
+    background-image: none;
+    border-color: #ECEEEF;
+}
+.btn-outline-lightgray:hover{
+    background-color: #dadcdf;
+    border-color: #dadcdf;
+}
+.btn-outline-darkgray{
+    color: #5e5f60;
+    background-color: transparent;
+    background-image: none;
+    border-color: #5e5f60;
+}
+.btn-outline-darkgray:hover{
+    color: #ffff;
+    background-color: #3a3b3c;
+    border-color: #3a3b3c;
+}
+.btn-outline-yellow{
+    color: #f1c00f;
+    background-color: transparent;
+    background-image: none;
+    border-color: #FCCF07;
+}
+.btn-outline-yellow:hover{
+    color: black;
+    background-color: #FCCF07;
+    border-color: #FCCF07;
+}
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+.btn.bg-lightgreen:hover{
+	background-color: #279B93!important;
+	color:white;
+}
+/* Links */
+/*************/
+a {
+	color:#31BAB0;
+}
+a:hover{
+	color:#279B93;
+	text-decoration:none;
+}
+
+/*********************************************************************/
+/* NAV */
+/*********************************************************************/
+
+#main-nav .active{
+	border-top: solid 1px #707070;
+	margin-top:-1px;
+}
+#main-nav .nav-item:hover{
+		border-top: solid 1px lightgrey;	
+		margin-top:-1px;	
+}
+
+#main-nav .nav-item#username{
+	border:none;
+}
+
+
+/*********************************************************************/
+/* HOME PAGE */
+/*********************************************************************/
+#home #ceo-description {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.5rem 0rem;
+    border-bottom: 2px solid darkgray;
+    overflow: auto;
+    display: none;
+}
+#lPanel ul {
+	padding-left:0;
+	list-style:none;
+    margin-bottom: 0;
+}
+
+#lPanel a li.bg-yellow:hover{
+	background-color:#ecbc0d!important;
+	color:#white;
+}
+
+
+
+@media (min-width: 1200px){
+	#mapPanel .col-xl-1 {
+	    min-width: 14px;
+	    max-width: 14px;
+	    width: 14px;
+	    padding: 0;
+	    cursor:pointer;
+	    border-left:#dadcdf solid 1px;
+    		border-right:#dadcdf solid 1px;	    
+	}
+	#mapPanel .col-xl-11 {
+	min-width: calc(100% - 14px);
+	max-width: calc(100% - 14px);
+ 	    width: calc(100% - 14px);
+	    
+    }
+}
+#tog-symb{
+}
+/* map popover */
+/*************/
+.ol-popup-content .cTitle h1{
+	color:white;
+	font-family:inherit;
+	font-size:1rem;	
+	padding-bottom:0;
+}
+
+.ol-popup-content .cTitle {
+	background-color:#31BAB0;
+}
+
+
+/*********************************************************************/
+/* LOGIN PAGE/REGISTER PAGE */
+/*********************************************************************/
+#login, #register-form{
+	border:solid 1px #31BAB0;
+	position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    overflow: auto;
+}
+#login .header, #register-form .header{
+	color:white;
+	background:#31BAB0;
+	margin: 0 -15px 10px -15px;;
+	padding:1rem;
+}
+
+/*********************************************************************/
+/* PROJECT PAGE */
+/*********************************************************************/
+.circle {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.5rem;
+    margin: 0rem auto;
+}
+/*********************************************************************/
+/* COLLECTION PAGE */
+/*********************************************************************/
+ul#samplevalue{
+	padding-left:0;
+ 	column-count: 2;
+	
+	}
+#samplevalue li{
+	list-style:none;
+	margin-bottom:1rem;
+-webkit-column-break-inside: avoid;
+          page-break-inside: avoid;
+               break-inside: avoid;	
+}

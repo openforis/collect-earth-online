@@ -1,6 +1,61 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
-
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="geodash-nav">
+	<a class="navbar-brand" href="home">    
+		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
+	</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+     <ul id="login-info" class="navbar-nav mr-auto">
+	     <li  class="nav-item my-auto">
+	     	<h1>GEO-DASH</h1>
+	     </li>
+	         </ul>
+	     
+	     <ul class="navbar-nav mr-0">
+        <#if username??>
+	            <#if navlink == "Logout">
+	            <li id="username" class="nav-item my-auto">
+	            <span class="nav-link disabled">${username}</span> 
+	            </li>
+	            <li class="nav-item my-auto">
+   	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
+           	      Logout
+                 </button>	
+                 </li>    
+	            <#else>
+	            <li id="username" class="nav-item my-auto">
+	            <span class="nav-link disabled">${username}</span> 
+	            </li>
+	            <li  class="nav-item my-auto">
+   	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
+           	      Logout
+                 </button>	 
+                 </li>   
+               </#if>
+        <#else>
+            <#if navlink == "Login" || navlink == "Register">
+            <li class="nav-item my-auto">
+	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
+	                Login/Register
+                </button>
+                </li>
+	            <#else>
+	            <li class="nav-item my-auto">
+	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
+	                Login/Register
+                </button>
+                </li>
+            </#if>
+        </#if>
+        	     <li class="nav-item my-auto">                   
+	     	 <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-outline-lightgreen btn-sm" ng-click="geodash.createNewWidget()" style="float:right;">
+	     </li>
+	     </ul>
+    </div>
+</nav>
 <#if role?? && editable == "true">
 <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
 <div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
@@ -11,7 +66,7 @@
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>
-     <div id="geohead"> <img id="ceo-site-logo" src="${root}/img/ceo-logo1.png" style="
+     <div id="geohead" class="d-none"> <img id="ceo-site-logo" src="/img/ceo-logo1.png" style="
             position: relative;
             top: 1px;
             left: 10px;
@@ -38,14 +93,13 @@
         <div class="row">
             <div id="dashHolder" class="col-sm-12 col-md-12 main">
                 <div>
-                    <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-primary" ng-click="geodash.createNewWidget()" style="display:none; float:right;">
-                    <h1 class="page-header">GEO-DASH</h1>
                 </div>
             </div>
         </div>
     </div>
     <#if role?? && editable == "true">
-        <div id="dialog-form" title="Create new widget">
+        <div id="dialog-form" title="Create new widget" class="row justify-content-center">
+        <div class="col-lg-6 col-sm-12">
             <p class="validateTips">All form fields are required.</p>
 
             <form name="form" id="form">
@@ -143,6 +197,7 @@
                         </div>
                     </fieldset>
                 </form>
+                </div>
         </div>
     </#if>
 </div>

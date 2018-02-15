@@ -1,18 +1,6 @@
 <#include "header.ftl">
+<#include "navbar.ftl">
 <#include "start-content.ftl">
-<style>
-    /*Needed to override server calculated height */
-    #content{
-        height: calc(100vh - 2px)!important;
-    }
-    /*Needed to get root to css */
-    #home label.tree_label:before {
-        background-image: url(${root}/css/images/closedTree.png);
-    }
-    #home :checked ~ label.tree_label:before {
-        background-image: url(${root}/css/images/openTree.png);
-    }
-</style>
 <script type="text/javascript" src="${root}/js/home.js"></script>
 <div id="home" ng-app="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid!""}')">
     <div id="ceo-description">
@@ -27,47 +15,71 @@
             issues page.
         </p>
     </div>
-    <#include "navbar.ftl">
         <div id="bcontainer">
         <span id="mobilespan" ></span>
             <div class="Wrapper">
-                <div class="Table">
-                    <div id="btnHolder" style="width: {{ home.btnHolderWidth }}">
-                        <div id="lPanel" class="Column" ng-show="home.showPanel">
-                            <h1 id="panelTitle">Institutions <!--[{{ home.institutionList.length }}]--></h1>
+                <div class="row tog-effect">
+                    <div id="lPanel" class="col-lg-3 pr-0 pl-0">
+						<div class="bg-darkgreen">
+                           <h1 class="tree_label" id="panelTitle">
+                           		Institutions <!--[{{ home.institutionList.length }}]-->
+                           </h1>
+                          </div>
                             <ul class="tree">
                                 <#if role??>
-                                    <li><a class="create-institution" href="${root}/institution/0">Create New Institution</a></li>
+                                <a class="create-institution" href="${root}/institution/0">
+                                    <li class="bg-yellow text-center p-2"><i class="fa fa-file"></i> Create New Institution</li>
+                                    </a>
                                 </#if>
                                 <li ng-repeat="institution in home.institutionList">
-                                    <input type="checkbox"  id="c{{ institution.id }}" />
-                                    <span class="tree_label" >
-                                    <label class="tree_label" for="c{{ institution.id }}">{{ institution.name }}
-                                    <a class="institution_info" href="${root}/institution/{{ institution.id }}"><img src="${root}/img/institution_info.png" alt="Institution info" title="Institution info"></a>
-                                    </label>
-
-                                    </span>
-                                    <ul>
-                                        <li ng-repeat="project in home.projectList | filter : {institution: institution.id }">
-                                            <span class="tree_label">
-                                            <a ng-if="project.editable == true" class="view-project" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
-                                            <a ng-if="project.editable == true" class="edit-project" href="${root}/project/{{ project.id }}">Edit</a>
-                                            <a ng-if="project.editable == false" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
-                                            </span>
-                                        </li>
-                                    </ul>
+	                                    <div class="btn bg-lightgreen btn-block m-0 p-2 rounded-0" data-toggle="collapse" href="#collapse{{ institution.id }}" role="button" aria-expanded="false">
+                                     		<div class="row">
+		                                    		<div class="col-lg-10 my-auto">
+			                                    		<p class="tree_label text-white m-0" for="c{{ institution.id }}"><input type="checkbox" class="d-none" id="c{{ institution.id }}" /><span class="">{{ institution.name }}</span></p>
+			                                    </div>
+			                                    <div class="col-lg-1">
+				                                   	 <a class="institution_info btn btn-sm btn-outline-lightgreen" href="${root}/institution/{{ institution.id }}"><i class="fa fa-info" style="color:white;"></i></a>
+			                                   </div>
+										</div>
+									</div>
+										<div  class="collapse" id="collapse{{ institution.id }}">
+	                                        <div class="bg-lightgrey text-center p-1 row px-auto" ng-if="project.editable == true"  ng-repeat="project in home.projectList | filter : {institution: institution.id }">
+	                               	          	<div class="col-lg-9 pr-lg-1">
+	                                           		 <a class="view-project btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
+												</div>	
+	                               	          	<div class="col-lg-3 pl-lg-0">
+	                                          			<a ng-if="project.editable == true" class="edit-project btn btn-outline-yellow btn-sm btn-block" href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Edit</a>
+	                                    			</div>
+	                                        </div>
+											<div class="bg-lightgrey text-center p-1 row" ng-if="project.editable == false"  ng-repeat="project in home.projectList | filter : {institution: institution.id }">
+												<div class="col mb-1 mx-0">
+		                                            <a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
+	                                           	</div>
+	                                         </div>
+                                         </div>
                                 </li>
                             </ul>
-                        </div>
-                        <input id="togglePanel-button" class="button" type="button" name="togglePanel" style="float:left; z-index:100; right: {{ home.togglebtn }};" value="{{ home.toggleValue }}" ng-click="home.togglePanel(); home.updateMapSize();">
                     </div>
-                    <div id="mapPanel" class="Column" style="width: {{ home.mapWidth }}" onresize="alert(0); home.updateMapSize();">
-                    <div class="buttonHolder">
-
-                        <span id="action-button" name="collection-quit" title="Navigate on map or use the Institutions tree" alt="Navigate on map or use the Institutions tree">Choose a project to get started</span>
+                    <div id="mapPanel" class="col-lg-9 col-md-12 pl-0 pr-0">
+	                    	<div class="row no-gutters full-height">
+	 						<div id="togbutton" class="button col-xl-1 bg-lightgray d-none d-xl-block">
+	 							<div class="row h-100">
+	 								<div class="col-lg-12 my-auto no-gutters text-center">
+		 								<span id="tog-symb"><i class='fa fa-caret-left'></i></i></span>
+		 							</div>
+	 							</div>
+	                        </div>
+	                        <div class="col-xl-11 mr-0 ml-0 bg-lightgray">
+	                       	 	<div id="home-map-pane" style="width: 100%; height: 100%; position:fixed">
+	                       	 	</div>	
+	                        </div>
+	                    </div>
                     </div>
-                        <div id="home-map-pane" ></div>
+                    <!-- 
+                    <div id="mapPanel" class="col-xl-9 col-lg-9 col-md-12 pl-0 bg-lightgray" style="width: {{ home.mapWidth }}" onresize="alert(0); home.updateMapSize();">
+                        hide map panel to fix height issue  <div id="home-map-pane" ></div> 
                     </div>
+                    -->
                 </div>
             </div>
         </div>
