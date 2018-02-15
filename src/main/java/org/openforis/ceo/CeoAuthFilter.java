@@ -3,9 +3,6 @@ package org.openforis.ceo;
 import static org.openforis.ceo.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.JsonUtils.parseJson;
 
-import java.io.IOException;
-import java.util.Optional;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -20,7 +17,8 @@ import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
+import java.io.IOException;
+import java.util.Optional;
 import spark.Filter;
 import spark.Request;
 import spark.Response;
