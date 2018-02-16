@@ -32,7 +32,7 @@ public class Server implements SparkApplication {
         }
     }
 
-    // Sets up Spark's routing table and exception handling rules
+    // Sets up Spark's routing table and exception handling rules for the Maven/Gradle entry point
     private static void declareRoutes() {
         // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
@@ -125,6 +125,7 @@ public class Server implements SparkApplication {
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
 
+        // Allow token-based authentication if users are not logged in
         before("/*", new CeoAuthFilter());
 
         // Routing Table: HTML pages
@@ -195,19 +196,14 @@ public class Server implements SparkApplication {
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
     }
 
-    public static String documentRoot;
-
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
-        // Store the current document root for dynamic link resolution
-        documentRoot = "";
-
         // Load the SMTP settings for sending reset password emails
         JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
-        CeoConfig.smtpUser = smtpSettings.get("smtpUser").getAsString();
-        CeoConfig.smtpServer = smtpSettings.get("smtpServer").getAsString();
-        CeoConfig.smtpPort = smtpSettings.get("smtpPort").getAsString();
-        CeoConfig.smtpPassword = smtpSettings.get("smtpPassword").getAsString();
+        CeoConfig.smtpUser      = smtpSettings.get("smtpUser").getAsString();
+        CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
+        CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
+        CeoConfig.smtpPassword  = smtpSettings.get("smtpPassword").getAsString();
 
         // Start the Jetty webserver on port 8080
         port(8080);
@@ -218,9 +214,6 @@ public class Server implements SparkApplication {
 
     // Tomcat entry point
     public void init() {
-        // Store the current document root for dynamic link resolution
-        documentRoot = "/ceo";
-
         // Set up the routing table
         declareRoutesForCollect();
     }

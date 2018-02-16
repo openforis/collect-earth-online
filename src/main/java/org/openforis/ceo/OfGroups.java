@@ -72,6 +72,11 @@ public class OfGroups {
                               new JsonHttpContent(new JacksonFactory(), data));
     }
 
+    private static HttpRequest preparePatchRequest(String url, MultipartContent content) throws IOException {
+        return createPatchRequestFactory()
+            .buildPostRequest(new GenericUrl(url), content);
+    }
+
     private static HttpRequest preparePostRequest(String url) throws IOException {
     	return preparePostRequest(url, null);
     }
@@ -225,14 +230,16 @@ public class OfGroups {
                 // Add file
                 Part logo = req.raw().getPart("institution-logo");
                 String fileName = logo.getSubmittedFileName();
-                String contentType = logo.getContentType();
-                byte[] bytes = IOUtils.toByteArray(logo.getInputStream());
-                MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
-                part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
-                content.addPart(part1);
-                MultipartContent.Part part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
-                part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
-                content.addPart(part2);
+                if (fileName != null) {
+                    String contentType = logo.getContentType();
+                    byte[] bytes = IOUtils.toByteArray(logo.getInputStream());
+                    MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
+                    part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
+                    content.addPart(part1);
+                    MultipartContent.Part part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
+                    part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
+                    content.addPart(part2);
+                }
                 // Request
                 HttpRequestFactory httpRequestFactory = createRequestFactory();
                 HttpResponse response = httpRequestFactory.buildPostRequest(new GenericUrl(OF_USERS_API_URL + "group"), content).execute(); // create a new group
@@ -262,6 +269,44 @@ public class OfGroups {
                 }
             } else {
                 // NOTE: This branch edits an existing institution
+                // Add parameters
+                Map<String, String> parameters = Maps.newHashMap();
+                parameters.put("userid", "" + userid);
+                parameters.put("name", name);
+                parameters.put("url", url);
+                parameters.put("description", description);
+                MultipartContent content = new MultipartContent().setMediaType(new HttpMediaType("multipart/form-data").setParameter("boundary", "__END_OF_PART__"));
+                for (String key : parameters.keySet()) {
+                    MultipartContent.Part part = new MultipartContent.Part(new ByteArrayContent(null, parameters.get(key).getBytes()));
+                    part.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"%s\"", key)));
+                    content.addPart(part);
+                }
+                // Add file
+                Part logo = req.raw().getPart("institution-logo");
+                String fileName = logo.getSubmittedFileName();
+                if (fileName != null) {
+                    String contentType = logo.getContentType();
+                    byte[] bytes = IOUtils.toByteArray(logo.getInputStream());
+                    MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
+                    part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
+                    content.addPart(part1);
+                    MultipartContent.Part part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
+                    part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
+                    content.addPart(part2);
+                }
+                // Request
+                HttpResponse response = preparePatchRequest(OF_USERS_API_URL + "group/" + institutionId, content).execute(); // create a new group
+                if (response.isSuccessStatusCode()) {
+                    JsonObject group = getResponseAsJson(response).getAsJsonObject();
+                    //
+                    JsonObject newInstitution = new JsonObject();
+                    newInstitution.addProperty("id", group.get("id").getAsString());
+                    newInstitution.addProperty("name", name);
+                    newInstitution.addProperty("logo", "");
+                    newInstitution.addProperty("url", url);
+                    newInstitution.addProperty("description", description);
+                    return newInstitution.toString();
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

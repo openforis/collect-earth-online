@@ -1,0 +1,1154 @@
+* LICENSE
+  1. Ask FAO about changing MIT to AGPL.
+* README.org
+  1. Add a Description section to explain the website's purpose.
+  2. Include git clone instructions in the Installation section.
+  3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
+* notes/
+  1. Remove outdated and unnecessary files.
+* test/java/org/openforis/ceo/ServerTest.java
+  1. Write a unit test suite.
+* Server.java
+  1. Use deploy/clientkeystore file to enable HTTPS sitewide in declareRoutes() and declareRoutesForCollect().
+  2. Remove /card-test route from declareRoutesForCollect() once survey cards are added to the Project page.
+  3. Remove /get-unanalyzed-plot-byid/:projid/:id route from the declareRoutes*() functions.
+* GeoDash.java
+  1. Complete updateDashBoardByID() stub function.
+* Imagery.java
+  1. Remove institutionId argument from deleteInstitutionImagery() as it is no longer needed, and notify Stefano to make the same change in CollectImagery.java.
+* imagery-list.json
+  1. Include only the inexpensive (~$5/mo) imagery layers as default public layers (but get the access keys out of version control!).
+* Institution.java
+  1. Remove all references to the "All Users" and "Administrators" groups.
+* institution-list.json
+  1. Remove the "All Users" and "Administrators" groups.
+
+* Foo
+Project properties don't load on ceo/project/# until the project is published
+Home page and Collection page imagery doesn't work
+
+*** Rome TODOs
+    1) Update my CEO development todo list
+    2) Patch homepage to work with the empty collect and of-users databases
+    3) Check that the password reset email system works correctly
+    4) Reinstall and configure docker
+    5) Rebuild and deploy the CEO docker image
+    6) Fill in the smtpPassword field for collectearth.mail@gmail.com in src/main/webapp/WEB-INF/web.xml (Tomcat) and src/main/resources/json/mail-config.json (Jetty)
+    8) Ask Jeff to move the DNS for ceo.sig-gis.com -> collect.earth (Alfonso owns it)
+    9) Paul (NASA) is the new project manager and will send around a fill-in task list spreadsheet to everyone
+    10) Finish the collect database integration
+    11) Integrate Stefano's popup frames
+    12) What are we doing about imagery? (Dave is looking into it)
+    13) Rebrand website styling and logos as an OpenForis project (check with Alfonso for the FAO designer's contact info)
+    14) Call at 3pm on Tuesday with Jerome about the CEO Redesign
+    15) Create new session authentication token via Of-Users API and pass it to the Collect Survey Designer
+    16) Fix bugs in CEO homepage that hang on an empty database
+    17) Import Stefano's survey cards into the data collection page
+    18) Test CEO in Browserstack and improve responsive design for mobile devices
+
+*** Server.java
+**** TODO Uncomment all Collect and OfUsers routes once they are completed
+**** TODO Enable HTTPS site-wide: [expand]
+     1. Get deploy/clientkeystore signed by a certificate authority.
+     2. Include this in declareRoutes and declareRoutesForCollect: secure("deploy/clientkeystore", "ceocert", null, null);
+     Resources:
+     - https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
+     - https://spark.apache.org/docs/latest/security.html
+**** TODO Rename get-unanalyzed-plot-byid/ route to use my standard conventions
+*** Views.java
+**** TODO Make authenticateOrRedirect a more robust function not based on deprecated user roles
+*** Imagery.java
+**** TODO In deleteInstitutionImagery, delete imagery entries from imagery-list.json once they are no longer referenced by any institution
+*** CollectImagery.java
+**** TODO Implement getAllImagery, addInstitutionImagery, and deleteInstitutionImagery
+*** Users.java
+**** TODO Phase out role attributes
+**** TODO Stop adding new users to the "All Users" institution (delete this institution since it isn't used)
+**** TODO Implement getPasswordResetKey, and resetPassword
+**** TODO Verify that all conditional branches end in a return statement
+*** OfUsers.java
+**** TODO Why aren't all toplevel variables static final?
+**** TODO Review Roberto's implementations of updateAccount, getPasswordResetKey, resetPassword
+**** TODO Implement updateInstitutionRole
+**** TODO CamelCase all references to reset_key and ip_addr fields in the of-users database
+**** TODO Exclude the superuser account (admin@sig-gis.com) from the list of users returned by getAllUsers
+**** TODO Raise a red flag when an error occurs in communicating with the database in getAllUsers, getInstitutionRoles, and requestInstitutionMembership
+**** TODO Reimplement requestInstitutionMembership to add the user to the selected userGroup's pending queue
+**** TODO Verify that all conditional branches end in a return statement
+*** Institutions.java
+**** TODO Review updateInstitution
+*** OfGroups.java
+**** TODO Replace for loops
+**** TODO Raise a red flag when an error occurs in communicating with the database in getAllInstitutions, getInstitutionById, and archiveInstitution
+**** TODO Review updateInstitution
+**** TODO Review groupToInstitution, updateInstitutionRole, and requestInstitutionMembership
+*** Projects.java
+**** TODO Review the whole file
+**** TODO Review and rename getUnanalyzedPlotByID -> getUnanalyzedPlotById
+*** CollectProjects.java
+**** TODO Review the whole file
+**** TODO Run C-c C-r o to organize the imports
+**** TODO Implement dumpProjectRawData
+**** TODO Replace for loops
+*** imagery-list.json
+**** TODO Make sure all fields are camelCased
+*** user-list.json
+**** TODO Make sure all fields are camelCased
+*** proj.json
+**** TODO Make sure no repeated project entries exist in proj.json
+*** dash-*.json
+**** TODO Make sure all widgets fields are JSON arrays (not strings)
+**** TODO Delete all dash-*.json files that are not referenced in proj.json
+*** collection.ftl
+**** TODO Review Billy's changes
+*** project.ftl
+**** TODO Disable lat/lon fields (only allow drawing the bounding box)
+**** TODO Dave requests that I gray out the geodash button before the project is created
+*** map-utils.js
+**** TODO Review Billy's implementation of draw_projects and draw_project_points and port to Mercator.js
+**** TODO Review Billy's changes to draw_point and draw_points port to Mercator.js
+**** TODO Add "red_fill" style to Mercator.js
+**** TODO remove_plots_layer
+**** TODO Remove unnecessary vars
+*** collection.js
+**** TODO Remove console.* statements
+**** TODO Review Billy's changes to loadProjectPlots
+**** TODO toggleStats
+**** TODO getPlotDatabyId
+**** TODO loadPlotById
+**** TODO nextPlot
+**** TODO Remove unnecessary vars
+*** home.js
+**** TODO Review the whole file
+**** TODO Remove unnecessary vars
+*** Etc
+   Stuff with Stefano:
+   - [ ] home.js :: fix infinite loop at load time (see email from Stefano)
+   - [ ] project.js :: allow deleting sample value categories
+   - [ ] Projects.java and project.js :: change exported CSV column header from SHAPE to PLOT_SHAPE
+   - [ ] project.ftl :: add a note above the project extent (AOI) fields pointing out that the coordinates are in WGS84/EPSG:4326
+   - [ ] collection.ftl and collection.js :: Back button to go back to the last plot
+   - [ ] project.ftl and project.js :: upload points as a Shapefile
+   - [ ] SamplingPointDataGeneratorTest.java (in Collect?) :: test Stefano's project creation code for an upper limit on plots and sample points
+   - [ ] collection.js :: debug possible Billy error -> get-unanalyzed-plot-byid calls get-unanalyzed-plot again giving us the wrong plot
+   - [ ] imagery-list.json :: move access token parameters out of these files (not secure on github) <- how else can we store them?
+   - [ ] project.ftl :: link to Collect's survey editor using a url like this: http://127.0.0.1:8080/collect/editSurvey.htm?id=710 where id is your projectId
+   - [ ] check git log to see which files Stefano edited and make any cleanup changes necessary
+   - [ ] institution.js :: uploading institution logos is not handled correctly
+
+   Phase 1:
+   - [ ] About Page :: Move the logos out of the logo-banner and onto the page and add more of them (see the servir.adpc.net landcover tool site)
+   - [ ] Support Page :: Put some content here
+   - [ ] Register Page :: Add Location and Affiliation fields
+   - [ ] Account Page :: Rename to Operator page
+   - [ ] Operator Page :: Implement updating the user account details
+   - [ ] Operator Page :: Add a table of user statistics
+   - [ ] Collection Page :: Make project stats start with the current number assessed or flagged rather than 0
+   - [ ] Project Page :: Add dates to project-list.json and project stats table (RLCMS projects = 2017-07-12 for creation and publication)
+   - [ ] Project Page :: Allow selecting multiple imagery layers for the map (and parameterizing them with years and stacking profiles)
+   - [ ] Project Page :: Add other overview map overlay options
+   - [ ] Project Page :: Add additional fields to sample points if passed in CSV and include them in the download data outputs
+   - [ ] Project Page :: Hide Configure Geodash button until project has been created
+   - [ ] Project Page :: Rewrite gridded plot layout logic in web mercator to remove diagonal lines
+   - [ ] Project Page :: Add time sliders (or date pickers) to the DG basemap imagery
+   - [ ] GeoDash Page :: Fix admin permissions to satisfy Billy
+
+   Phase 2:
+   - [ ] Map-utils.js :: integrate [[https://github.com/camptocamp/ngeo][ngeo]] or [[http://tombatossals.github.io/angular-openlayers-directive][angular-openlayers-directive]] into CEO 
+   - [ ] Map-utils.js :: Reimplement map-utils.js around Google Maps API
+   - [ ] Collection Page :: Add a Back button
+   - [ ] Project + Collection Page :: Enable drawing point, line, and polygon features
+   - [ ] Case :: Change snake_case to camelCase in all JS files (i.e., map-utils.js, utils.js, and all JS files that reference their functions)
+   - [ ] Code.gov :: Ask about listing CEO under NASA's code.gov entry https://code.gov/#/explore-code/agencies/NASA
+   - [ ] Login/Register/Password(-Reset)/Account/Institution Pages :: Reprogram these pages to use the Users REST API (docs on #rfontanarosa)
+   - [ ] Project & Dashboard Pages :: Reprogram these pages to use the Collect REST API (docs and examples on #fefrain)
+   - [ ] Project Page :: Add a Re-Open Project button
+   - [ ] Project Page :: Implement Invitation-only privacy
+   - [ ] Project Page :: Create projects for each of Kel's chipsets 2002-2008 (get sample values from Karis) [[mu4e:msgid:AA01E563-4781-42FE-9FDD-8E9FF4B1DB3C@nasa.gov][email]]
+   - [ ] Project Page :: Add Karis' CSV calculations to the import/export process
+   - [ ] Map-utils.js :: Replace loops in map-utils.js with stream constructs
+   - [ ] Docker :: Update the Docker image (maybe use https://github.com/iron-io/dockers?)
+   - [ ] Cross-browser Testing :: Test CEO website with Browserstack
+   - [ ] Issue Tracking :: Move Github tasks from Mapcha and CEO into Trello or consolidate everything under CEO
+
+   Kel, Dave, and Karis:
+   - review Billy's code changes:
+     - stylesheet.css
+     - home.js
+     - collection.js
+   - hide Basemap WMS from non-SERVIR institutions
+   - remove Recent Imagery* layers from CEO
+   - rebuild Docker image
+   - integrate mercator-openlayers.js
+
+   Randy Hamilton/Costa Rica:
+   - [ ] Collection Page :: Clear first attribute's colors before assigning second attribute (this week)
+   - [X] Project Page :: Allow downloading raw (non-aggregated) samples (by Tuesday)
+   - [X] Project Page :: Allow assigning multiple attributes to each sample point (by Friday)
+   - [ ] Institution Page :: Add support for WMTS imagery sources (by Friday)
+   - [ ] Project Page :: Enable loading larger CSV-based projects (e.g., 10,000+ plots) (by Friday)
+   - [ ] Project Page :: Enable uploading the classification scheme in a CSV
+   - [ ] Project Page :: Enable organizing categories hierarchically
+
+   Collect Integration:
+   - [ ] Replace Stefano's for loops in CollectProjects.java with recursions or stream operations
+   - [ ] Proofread CollectProjects.java
+   - [ ] Look at Stefano's Collect code:
+     - org.openforis.collect.metamodel.SimpleSurveyCreationParameters
+     - org.openforis.collect.metamodel.SurveyCreator
+     - org.openforis.collect.io.metadata.samplingpointdata.SamplingPointDataGenerator
+   - [ ] Respond to Alfonso's github tickets
+
+   Institution Membership Github Requests:
+   - [ ] A user should be able to request joining an organization as either a member OR an admin (currently they are not able to specify desired role)
+   - [ ] A user who is a member of an organization should be able to see which members are admins
+   - [ ] A user should receive notification when their pending status is switched to confirmed member for an organization
+   - [ ] An organization's admin should receive notification when a user has requested membership
+
+   DigitalGlobe:
+   - [ ] Follow up with mike.quinene@digitalglobe.com about DG WFS timestamp examples
+
+   Ethiopia Requests:
+   - The ability to count elements within a plot
+   - The option to export/download data in various formats (e.g., xml, csv, Fusion table)
+   - Integration with SAIKU
+
+   Style Rewrite:
+   - [ ] Clean up Billy's latest homepage rewrite updates
+     - stylesheet.css
+     - home.js
+     - home.ftl
+     - institution.ftl
+     - navbar.ftl
+     - start-content.ftl
+     - public/ceoicon.png
+     - public/img/institution_info.png
+     - public/css/ol3-popup.css
+     - public/js/map-utils.js
+     - public/js/ol3-popup.js
+     - header.ftl
+     - public/css/images/closedTree.png
+     - public/css/images/openTree.png
+   - [ ] Chat with Billy about next steps, merging pull requests, and coding style
+
+   Database Improvements:
+   - [ ] Move attribution field from project-list.json to imagery-list.json (set in Projects.java, used in collection.ftl and collection.js)
+   - [ ] Eliminate projects with no data
+
+   - Of-Users API Docs from Roberto [[mu4e:msgid:HE1PR05MB145280B25ACA4912E4D9A0C2E95D0@HE1PR05MB1452.eurprd05.prod.outlook.com][email]]
+
+   - DG Docs:
+     - CQL :: https://dgcsportal.readme.io/docs/4-common-query-language-wms
+     - Stacking Profiles :: https://dgcsportal.readme.io/docs/11-existing-stacking-profiles and [[file:~/sig/projects/collect-earth-online/notes/Stacking_Profile_Samples.docx][Stacking_Profile_Samples.docx]]
+
+** TODO Update service account credentials for the gee-gateway on the ceo server [[mu4e:msgid:A263CD6B46DB584B891A7096415EED21076012ED@NDMSMBX304.ndc.nasa.gov][email]]
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Test and deploy Billy's new changes (where is the Github Issues link?)
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Release CEO's javascript as free https://www.gnu.org/software/librejs/free-your-javascript.html (check it with IceCat)
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Create new projects in CEO for each of Kel's 2002-2014 chipsets [[mu4e:msgid:93E0DF3B-3277-4C61-B2CC-E2C0D099D4DA@nasa.gov][email1]] [[mu4e:msgid:26872331-756A-4E55-A696-1F4D6C46816E@nasa.gov][email2]] [[mu4e:msgid:AA01E563-4781-42FE-9FDD-8E9FF4B1DB3C@nasa.gov][email]]3
+** TODO Create new projects in CEO for each of Kel's 2002-2014 chipsets [[mu4e:msgid:93E0DF3B-3277-4C61-B2CC-E2C0D099D4DA@nasa.gov][email1]] [[mu4e:msgid:26872331-756A-4E55-A696-1F4D6C46816E@nasa.gov][email2]] [[mu4e:msgid:AA01E563-4781-42FE-9FDD-8E9FF4B1DB3C@nasa.gov][email]]3
+** TODO Ask Karis to remove NASA's CONNECTID from the CEO manual
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Port the live CEO database to collect
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Implement proactive sampling in CEO
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Upload Lena's new CEO manual to the website (in email)
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Integrate CEO's training data with Ates GEE-based RLCMS classifier (sync with SEPAL's data requesting API)
+   SCHEDULED: <2018-02-14 Wed>
+** TODO [#A] Take care of Stefano's requests (in #fefrain)
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Create Account page back-end function for Billy: [expand]
+   SCHEDULED: <2018-02-14 Wed>
+   Return a JSON object with these fields:
+   - Projects worked so far
+   - Speed Score Total
+   - Plots Completed per project
+   - Accuracy Score per project
+   - Plots completed total
+   - Accuracy score total
+   - Speed Score per project
+** TODO Check out Jerome's collect-redesign branch
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Add C-a and C-q for select all points and select all remaining points in CEO's Collection page
+   SCHEDULED: <2018-02-14 Wed>
+** TODO Randy Hamilton requests that we send out an email to all CEO users whenever there is going to be a system outage
+   SCHEDULED: <2018-02-14 Wed>
+** TODO CEO feature request from Karis: It would be great to consider adding this process as a new feature: when we upload the csv with lat long (or a shapefile) to specify our sample locations, could we also preserve the predicted class and unique ID? Then include this info in the spreadsheet download as well? It would be pretty cool to also have the confusion/error matrices calculated in mapcha (with the ability to insert new columns for new prediction results since model building is an iterative process).
+   SCHEDULED: <2018-02-14 Wed>
+
+
+Plus all the Github issues here: https://github.com/openforis/collect-earth-online/issues
+
+==============================================================================
+From CEO_Design_Document.txt:
+
+Collect Earth Online Desired Features List:
+
+Remove branding_banner from homepage and replace with the logo and text below the navbar.
+Move homepage text about Github to the about page.
+Get disclaimer text from Eric.
+Get tutorials and demo content from Karis.
+Replace with logos from the bottom of this page http://servir-rlcms.appspot.com/.
+Allow regular users to create institutions.
+Create a dummy tutorial institution and make all users institution-level admins for that institution at registration time.
+*Send Karis a link to the Stacking Profile docs*.
+Replace Imagery Year dropdown with multiple slider bars to select ranges within ranges from 2000-2016. (e.g., Summers from 2014-2016)
+Figure out how to store the search criteria or the dates associated with returned tiles.
+MAYBE? Create multiple query windows for a single project.
+Sort institution list by project activity.
+Add Affiliations to Operator page for each user (business, university, government, NGO).
+Show Gravatar (http://en.gravatar.com) on Operator page.
+Store user location (get it on Register or Operator page).
+Use a color or icon to distinguish privacy level of projects in the Project List.
+Highlight projects on the Project List with a color to distinguish whether they are active or completed.
+Move Contributors/Members stats to project list buttons.
+Add Membership request button to Institution page.
+Add a metadata field to the institution edit screen to provide a short URL (/institution/fao) to link to your institution page.
+Add WMS feed selection to the Institution creation page.
+Allow uploading AOI polygons or CSVs to the project management page.
+Add "Upload" after "Random" and "Gridded" under Plot Distribution. (Upload CSV with lat/lon coordinates for plot centers).
+Create Training System for plot QA/QC (include a button to erase all data from a particular user if their score is terrible).
+Add "Import template" button for uploading a CSV with sample values to the project management page.
+Include a link on the project management page for opening the GeoDash to configure its widgets for a project.
+Replace the User Id with the User Name in the Downloaded CSV data.
+Show colors (red, yellow, green) on the Project page's map when reviewing a project (colors correspond to number of plots completed per area).
+Add a Clone Project button to the Project Management Page.
+Add a Reopen Project button to the Project Management Page.
+Change text on Flag Plot button to say "No Imagery"
+Add a "Go Back" button to the Data Collection page. (add timestamps to each save assignments or flag plot click and sort your previous plots by timestamp to get the history)
+Add a "Skip Plot" button to the Data Collection page.
+Add a button for toggling imagery
+Put a timer that counts up on the screen when you are analyzing a plot. Reset this to 0 for each plot.
+Show the total number of plots that the user has completed on the Collection page (out of all the plots in the project) and their current accuracy score.
+
+* DOCUMENTATION (was README.org)
+
+  - [X] Installation Instructions
+  - [X] Configuration and Launching
+  - [ ] Developer Documentation
+  - [X] Reporting Bugs and Requesting Features
+  - [ ] Tutorials and Demo
+  - [X] Contacts
+
+* INSTANCE LANDING PAGE (was Home + About)
+
+  - [ ] Logos (replace with logos from the bottom of this page http://servir-rlcms.appspot.com/)
+  - [X] Navbar
+  - [X] Single Page Scrolling Style
+  - [X] Description of CEO
+  - [ ] Featured Projects, Use Cases, and Past Applications
+  - [ ] Public List of Institutions Sorted by Activity (Site Statistics)
+  - [X] Link to Tutorials (e.g., "Try Demo!")
+  - [ ] Disclaimers (Eric)
+
+* LOGIN, REGISTER, FORGOT PASSWORD PAGES
+
+  - [ ] Facebook/Google/Linkedin Accounts
+  - [X] Email
+  - [X] Password
+  - [X] Automatically Add User to the Public Institution on First Registration
+  - [ ] Affiliations (business, university, individual)
+  - [ ] Avatar (https://en.gravatar.com)
+  - [ ] Capture IP Address On First Registration
+
+* OPERATOR PAGE (was Account)
+
+  - [ ] Update Account Details:
+    - Facebook/Google/Linkedin Accounts
+    - Email
+    - Password
+    - Avatar (https://en.gravatar.com/)
+  - [ ] Operator Summary Statistics:
+    - Projects Worked on So Far (latest and time graph)
+    - Plots Completed per Project
+    - Plots Completed Total (latest and time graph)
+    - Speed Score per Project
+    - Speed Score Total (latest and time graph)
+    - Accuracy Score per Project (based on the project's training data)
+    - Accuracy Score Total (latest and time graph)
+  - [ ] Project List: (click entries to jump to collection page)
+    - Public Projects (w/ featured projects highlighted)
+    - Private Projects from Affiliated Institutions (label w/ institution)
+    - Make New Project (redirect to project management page)
+
+* INSTITUTION PAGE (new page)
+
+  - Institution Management:
+    - List of Affiliated Institutions (label with user or admin role)
+    - Make New Institution
+  - Show/Hide Information by Institution:
+    - Name
+    - Logo
+    - Description
+    - Institution Summary Statistics:
+      - # Users
+      - # Projects
+      - #/# Projects Active or Complete
+    - User Management: (only if institution admin)
+      - Affiliated Users (see and update user roles)
+      - Pending Affiliation Requests (see and approve)
+      - Invite Users
+      - Ban Users (see current list and add new banned users)
+    - Project Management:
+      - List All Projects (label as featured/public/private for everyone, update label if admin)
+      - List Users by Project (see and add/remove users if admin)
+    - White Label Management:
+      - Select from a list of landing page templates
+      - Customize the title, background image, logos, and text
+      - Associate this landing page with a unique URL suffix (fao -> http://ceo.sig-gis.com/fao)
+      - Add request affiliation button (redirects to login and sends request to institution page)
+    - Image Servers:
+      - List All WMS Feeds (see and update featured/public/private permissions if admin)
+    - Social Media Integration:
+      - Canned Tweets and Facebook posts with Institution Stats
+      - Automatically post to Twitter and Facebook when a new featured project is created
+
+* PROJECT MANAGEMENT PAGE (was Admin)
+
+  - Design Project Mode:
+    1. Specify Name and Description
+    2. Select AOI:
+       - Click-and-Drag on the Map
+       - Type Name into Gazetteer (provide country boundaries to all users)
+       - Upload Polygon (CSV, KML, SHP, GeoJSON)
+       - Import Fusion Table ID 
+    3. Specify Record Attributes:
+       - Spatial Distribution: (include tooltips)
+         - Random
+           - Plot Size (radius, width)
+           - Plot Shape (circle, square)
+           - Number of Plots
+           - Minimum Distance between Plots
+           - Minimum Distance from AOI Boundary
+         - Systematic/Tile Grid
+           - Plot Size (radius, width, sample resolution)
+           - Plot Shape (circle, square, hexagon)
+           - Layout
+             - Distance between Plot Centers
+             - Use Pre-Defined Grid (3x3, 5x5, 7x7, 9x9)
+         - Import Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes
+           - Auto Generate AOI Boundary
+       - Validation Set Construction:
+         - Assign Users to be Trainers for this Project
+         - Define % of Plots to Use (or Use All Completed Plots from the Assigned Trainers)
+         - Specify How Many Times to Sample Each Training Plot
+    4. Entity Level
+       - Sample Data Collection Mode:
+         - Spatial Distribution: (include tooltips)
+           - No Sample Points (only show/modify record-level attributes)
+           - Single Center Point (DO WE NEED THIS?)
+           - Random
+             - Sample Size (radius, width)
+             - Sample Shape (circle, square)
+             - Number of Samples
+             - Minimum Distance between Samples
+             - Minimum Distance from Plot Boundary
+           - Systematic/Tile Grid
+             - Sample Size (radius, width, sample resolution)
+             - Sample Shape (circle, square, hexagon)
+             - Layout
+               - Distance between Sample Centers
+               - Use Pre-Defined Grid (3x3, 5x5, 7x7, 9x9)
+           - Import Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes
+             - Auto Generate Plot Boundary
+       - Mapping Mode (User-Driven Object Identification):
+         - Allowed Shapes:
+           - Point
+           - Line
+           - Polygon
+       - Specify Attributes: (allow assigning shortcut keys to each attribute)
+         - Land Cover (Single Attribute Assignment)
+         - Use Templates (e.g., Anderson LU/LC Categories)
+         - Use Collect Web (Multi-Attribute Assignment - http://openforis.org/collect/editSurvey.htm)
+    5. Select Basemap Imagery: (allow selecting multiple imagery sources per project)
+       - Define Time Period
+       - Choose Data Source:
+         - Google Maps
+         - Bing Maps
+         - Digital Globe (SEPAL project could fund if necessary and we could get a good deal)
+         - Yandex https://tech.yandex.com/
+         - Here https://developer.here.com/
+         - PlanetLabs
+         - Spot World Heritage (not sure if this exists as a served image collection or just download only)
+         - WMS Feeds (all public feeds + private feeds from affiliated institutions)
+         - Google Earth Engine Modules: (stored on EE Rest Server)
+           - LANDSAT
+           - SENTINEL
+           - Custom Equations:
+             - Search for changes between two images (i.e., dynamically produce difference layers)
+         - Sepal Modules (stored on Sepal Rest Server)
+    6. Optionally Add GEE Panels to the Collection Interface: (scripts stored on EE Rest Server)
+       - Charts:
+         - Aggregate Panel
+       - Sample Statistics:
+         - Min, Max, Median, Mean, Stddev, Variance
+       - Spawn Panel Button:
+         - Selection of EE charts/Imagery (allow labeling panels as "Show in Other Window")
+    7. User Administration:
+       - Possibility to pre-assign records to one or more operators (allow multiple users per record)
+  - Review Project Mode:
+    - Show Name, Description, and AOI/Record/Entity/Imagery Assignments per Project
+    - Project Summary Statistics:
+      - # Users
+      - #/# and % Samples Completed
+      - Sampling Quality and Quantity by User
+      - Overall Quality Score
+    - Download All Sample Data:
+      - CSV
+      - KML
+      - GeoJSON
+      - Fusion Table
+      - SAIKU's database format (coordinate with Stefano)
+    - Export Project as Schema and Data Files in Collect Mobile Format (coordinate with Stefano and Daniel)
+    - Overview Maps: (use dropdown menu to select what plot value is shown)
+      - Sampling Status (green = complete, yellow = partially complete, red = incomplete)
+      - Sample Values (pick an attribute and show its most commonly assigned value per plot)
+      - QA/QC Values (show user performance per plot)
+    - Clone Project Button -> Switch to Design Project Mode and Pre-populate Form Fields
+    - Close Project Button -> Disable Sampling
+    - Delete Project Button -> Archive Project
+    - Import/Export Projects Buttons (to move them between instances)
+    - Merge Project Button -> Prompt for Second Project and Combine AOI, Records, Entities, Imagery, and Panels
+
+* COLLECTION PAGE (was Dashboard)
+
+  - Minimize logos and navbar to a small single line at the top of the screen
+  - Show Basemap Imagery w/ Attribution (including Date) and Standard Map Elements and Interactions
+  - Show AOI Boundary, Plot Boundaries, and Sample Points
+  - Sidebar: (float over a full screen map like in ecodash and surface-water tools)
+    - Assess Next Plot Button
+    - No-Data for Plot Button (replaces Flag Plot As Bad)
+    - Save Assignments
+    - Do Later Button (persist attribute information entered thus far but mark plot as incomplete)
+    - Quit Button
+    - Render Record Level Attributes as Form Fields (use tabs if too much info)
+    - Render Sample Level Attributes as Form Fields (use tabs if too much info)
+    - Enable (and Show) Shortcut Keys
+    - Toggle Basemap Imagery (use radio buttons)
+    - Button to Push Current Plot and Sample Points to Google Earth KML Server
+    - Show Selected EE Panels (use tabs if too much info)
+    - Button to Open a New Window Containing Extra EE Panels
+    - User Timer (count up)
+    - User Statistics:
+      - #/# and % Plots Completed
+      - Current Accuracy Score (based on the project's training data)
+    - Go back to old plots:
+      - Choose from a Record History List (include Record ID)
+      - Dynamically Show Completed Plots in the Map Interface and Allow Click Selection
+    - Heads Up Digitizing of Points, Lines, and Polygons
+
+* OTHER FEATURES
+
+  - Installer for ready to run Collect Earth Online (InstallBuilder)
+  - Google Earth Network Link
+  - Street View Integration
+  - Mobile CSS styles
+  - Public CEO API (?)
+
+==============================================================================
+From CEO_Design_Document.v3.txt:
+
+Collect Earth Online Desired Features List
+
+
+Table of Contents
+1. DOCUMENTATION (was README.org)
+2. INSTANCE LANDING PAGE (was Home + About)
+3. LOGIN, REGISTER, FORGOT PASSWORD PAGES
+4. OPERATOR PAGE (was Account)
+5. INSTITUTION PAGE (new page)
+6. PROJECT MANAGEMENT PAGE (was Admin)
+7. COLLECTION PAGE (was Dashboard)
+8. OTHER FEATURES
+
+
+
+
+1. DOCUMENTATION (was README.org) 
+* Installation Instructions 
+* Configuration and Launching 
+* Developer Documentation (SIG)
+* Reporting Bugs and Requesting Features 
+* Tutorials and Demo (GTAC)
+* Contacts 
+1. INSTANCE LANDING PAGE (was Home + About) 
+* Logos 
+* Navbar 
+* Single Page Scrolling Style 
+* Description of CEO 
+* Featured Projects, Use Cases, and Past Applications 
+* Public List of Institutions Sorted by Activity (Site Statistics) 
+* Link to Tutorials (e.g., "Try Demo!") 
+* Disclaimers (NASA)
+1. LOGIN, REGISTER, FORGOT PASSWORD PAGES 
+* Facebook/Google/Linkedin Accounts (SIG P2)
+* Email 
+* Password 
+* Automatically Add User to the Public Institution on First Registration 
+* Operator Metadata-Affiliations (business, university, individual) (SIG P1)
+   * Avatar (https://en.gravatar.com) (SIG P2)
+* Location  (SIG P2)
+1. OPERATOR PAGE (was Account) 
+* Update Account Details: 
+   * Facebook/Google/Linkedin Accounts 
+   * Email 
+   * Password 
+   * Avatar (https://en.gravatar.com/) 
+* Operator Summary Statistics: (SIG P1)
+   * Projects Worked on So Far (latest and time graph) 
+   * Plots Completed per Project 
+   * Plots Completed Total (latest and time graph) 
+   * Speed Score per Project 
+   * Speed Score Total (latest and time graph) 
+   * Accuracy Score per Project (based on the project's training data) 
+   * Accuracy Score Total (latest and time graph) 
+* Project List: (click entries to jump to collection page) (MOVED to home page)
+   * Public Projects (w/ featured projects highlighted) 
+   * Private Projects from Affiliated Institutions (label w/ institution) 
+   * Make New Project (redirect to project management page) 
+1. INSTITUTION PAGE (new page) 
+* Institution Management: (MOVED TO HOME home Page)
+   * List of Affiliated Institutions (label with user or admin role) 
+   * Make New Institution 
+* Show/Hide Information by Institution: 
+   * Name 
+   * Logo 
+   * Description 
+   * Institution Summary Statistics: 
+      * # Users 
+      * # Projects 
+      * #/# Projects Active or Complete (SIG P2)
+   * User Management: (only if institution admin) (SIG P1)
+      * Affiliated Users (see and update user roles) 
+      * Pending Affiliation Requests (see and approve) 
+      * Invite Users 
+      * Ban Users (see current list and add new banned users) 
+   * Project Management: (SIG P1)
+      * List All Projects (label as featured/public/private for everyone, update label if admin) 
+      * List Contributor by Project (see and add/remove users if admin) 
+   * White Label Management: 
+      * Select from a list of landing page templates (SIG P3)
+      * Customize the title, background image, logos, and text  (SIG P3)
+      * Associate this landing page with a unique URL suffix (fao -> http://ceo.sig-gis.com/fao) (SIG P2)
+      * Add request affiliation button (redirects to login and sends request to institution page) (SIG P1)
+   * Image Servers: 
+      * List All WMS Feeds (see and update featured/public/private permissions if admin) (SIG P1)
+   * Social Media Integration: (SIG P4)
+      * Canned Tweets and Facebook posts with Institution Stats 
+      * Automatically post to Twitter and Facebook when a new featured project is created 
+1. PROJECT MANAGEMENT PAGE (was Admin) 
+* Design Project Mode: 
+   1. Specify Name and Description 
+   2. Select AOI: 
+      * Click-and-Drag on the Map 
+      * Type Name into Gazetteer (provide country boundaries to all users) (SIG P3)
+      * Upload Polygon (CSV, KML, SHP, GeoJSON) (SIG P1)
+   1. Specify Record Attributes: 
+      * Spatial Distribution: (include tooltips) 
+         * Random 
+            * Plot Size (radius, width) 
+            * Plot Shape (circle, square) 
+            * Number of Plots 
+            * Minimum Distance between Plots 
+            * Minimum Distance from AOI Boundary (SIG P4)
+         * Systematic/Tile Grid 
+            * Plot Size (radius, width, sample resolution) 
+            * Plot Shape (circle, square, hexagon) (SIG P3)
+            * Layout 
+               * Distance between Plot Centers 
+               * Use Pre-Defined Grid (3x3, 5x5, 7x7, 9x9) 
+         * Import Plot Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes (SIG P0) (Plot Design Spatial Distribution: Upload From Template)
+            * Auto Generate AOI Boundary (SIG P1)
+      * Set default map zoom level
+      * Validation Set Construction: (SIG P2)
+         * Assign Users to be Trainers for this Project 
+         * Define % of Plots to Use (or Use All Completed Plots from the Assigned Trainers) 
+         * Specify How Many Times to Sample Each Training Plot 
+         * Option to erase data entry by user with low rating (and re-submit plots into project for data entry)
+         * RESAMPLE BY USER
+         * RESAMPLE BY CATEGORY
+         * RESAMPLE BY GEOGRAPHY
+   1. Entity Level 
+      * Sample Data Collection Mode: 
+         * Spatial Distribution: (include tooltips) 
+            * No Sample Points (only show/modify record-level attributes) 
+            * Single Center Point (DO WE NEED THIS?) 
+            * Random 
+               * Sample Size (radius, width) 
+               * Sample Shape (circle, square)  (SIG P4)
+               * Number of Samples 
+               * Minimum Distance between Samples 
+               * Minimum Distance from Plot Boundary 
+            * Systematic/Tile Grid 
+               * Sample Size (radius, width, sample resolution) 
+               * Sample Shape (circle, square, hexagon)  (SIG P5)
+               * Layout 
+                  * Distance between Sample Centers 
+                  * Use Pre-Defined Grid (3x3, 5x5, 7x7, 9x9) 
+            * Import Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes (SIG P4)
+               * Auto Generate Plot Boundary 
+      * Mapping Mode (User-Driven Object Identification): (SIG P2)
+         * Allowed Shapes: 
+            * Point 
+            * Line 
+            * Polygon 
+      * Specify Attributes: (allow assigning shortcut keys to each attribute) 
+         * Land Cover (Single Attribute Assignment) 
+         * Use Templates (e.g., Anderson LU/LC Categories) (SIG P3)
+         * Use Collect Web (Multi-Attribute Assignment - http://openforis.org/collect/editSurvey.htm) (SIG P1)
+   1. Select Basemap Imagery: (allow selecting multiple imagery sources per project) 
+      * Define Time Period Range with Slider (SIG P1)
+         * Specify multiple image windows (e.g., winter, summer for year x)
+      * Choose Data Source: (Moved to Institution Page)
+         * Google Maps 
+         * Bing Maps 
+         * Digital Globe (SEPAL project could fund if necessary and we could get a good deal) 
+         * Yandex https://tech.yandex.com/ 
+         * Here https://developer.here.com/ 
+         * PlanetLabs 
+         * Spot World Heritage (not sure if this exists as a served image collection or just download only) 
+         * WMS Feeds (all public feeds + private feeds from affiliated institutions) 
+      * Google Earth Engine Modules: (stored on EE Rest Server) (SIG P3)
+         * LANDSAT 
+         * SENTINEL 
+         * Custom Equations: 
+            * Search for changes between two images (i.e., dynamically produce different layers) 
+         * Sepal Modules (stored on Sepal Rest Server) 
+   1. GEE Panels to the Collection Interface: (scripts stored on EE Rest Server) (NASA P1)
+      * Charts: 
+         * Aggregate Panel 
+      * Sample Statistics: 
+         * Min, Max, Median, Mean, Stddev, Variance 
+      * Spawn Panel Button: 
+         * Selection of EE charts/Imagery (allow labeling panels as "Show in Other Window") 
+   1. User Administration: (SIG P5)
+      * Possibility to pre-assign records to one or more operators (allow multiple users per record) This user get 1-5 user 2 get 6-10
+* Review Project Mode: 
+   * Show Name, Description, and AOI/Record/Entity/Imagery Assignments per Project 
+   * Project Summary Statistics: 
+      * # Users 
+      * #/# and % Samples Completed 
+      * Sampling Quality and Quantity by User (SIG P3)
+      * Overall Quality Score (SIG P3)
+   * Download All Sample Data: 
+      * CSV (Aggregated and raw data) (SIG P1)
+      * KML (SIG P3) 
+      * GeoJSON (SIG P3) 
+      * SAIKU's database format (FAO P3 coordinate with Stefano) 
+   * Export Project as Schema and Data Files in Collect Mobile Format (coordinate with Stefano and Daniel) (FAO P2)
+   * Overview Maps: (use drop down menu to select what plot value is shown) (SIG P1)
+      * Sampling Status (green = complete, yellow = partially complete, red = incomplete) 
+      * Sample Values (pick an attribute and show its most commonly assigned value per plot) 
+      * QA/QC Values (show user performance per plot) 
+   * Clone Project Button -> Switch to Design Project Mode and Pre-populate Form Fields (SIG P2)
+   * Close Project Button -> Disable Sampling 
+   * Open Project - And increase the number of plots (SIG P2)
+   * Delete Project Button -> Archive Project 
+   * Import/Export Projects Buttons (to move them between instances) (SIG/FAO P4)
+   * Merge Project Button -> Prompt for Second Project and Combine AOI, Records, Entities, Imagery, and Panels (SIG P4)
+1. COLLECTION PAGE (was Dashboard) 
+* Minimize logos and navbar to a small single line at the top of the screen 
+* Show Basemap Imagery w/ Attribution (including Date) and Standard Map Elements and Interactions 
+* Show AOI Boundary, Plot Boundaries, and Sample Points 
+* Sidebar: (float over a full screen map like in ecodash and surface-water tools) 
+   * Assess Next Plot Button 
+   * No-Data for Plot Button (replaces Flag Plot As Bad) 
+   * Save Assignments 
+   * Skip Button (SIG P1)
+   * Quit Button 
+   * Render Record Level Attributes as Form Fields (use tabs if too much info) 
+   * Render Sample Level Attributes as Form Fields (use tabs if too much info) 
+   * Enable (and Show) Shortcut Keys 
+   * Toggle Basemap Imagery (use radio buttons) (SIG P4)
+   * Button to Push Current Plot and Sample Points to Google Earth KML Server (SIG P4)
+   * Show Selected EE Panels (use tabs if too much info) 
+   * Button to Open a New Window Containing Extra EE Panels 
+   * User Timer (count up) (SIG P1)
+   * User Statistics:  (SIG P1)
+      * #/# and % Plots Completed 
+      * Current Accuracy Score (based on the project's training data) 
+   * Go back to old plots: (SIG P1)
+      * Choose from a Record History List (include Record ID and timestamp of when record was saved) 
+      * Dynamically Show Completed Plots in the Map Interface and Allow Click Selection 
+   * Heads Up Digitizing of Points, Lines, and Polygons (SIG P4)
+1. OTHER FEATURES 
+* Installer for ready to run Collect Earth Online (InstallBuilder) DOCKER
+* Google Earth Network Link (SIG P5)
+* Street View Integration (SIG P5) 
+* Mobile CSS styles  (SIG P5)
+* Public CEO API (?)  (SIG P5)
+* Accuracy assessment (FAO/SIG P3)
+
+==============================================================================
+From CEO_Latest_Task_List.txt:
+
+* Master Feature Request List
+ Phase 1:
+ - About Page :: Move the logos out of the logo-banner and onto the page and add more of them (see the servir.adpc.net landcover tool site)
+ - Support Page :: Put some content here
+ - Register Page :: Add Location and Affiliation fields
+ - Forgot Password Page :: Implement this functionality
+ - Account Page :: Rename to Operator page
+ - Operator Page :: Implement updating the user account details
+ - Operator Page :: Add a table of user statistics
+ - Collection Page :: Make project stats start with the current number assessed or flagged rather than 0
+ - Project Page :: Add dates to project-list.json and project stats table (RLCMS projects = 2017-07-12 for creation and publication)
+ - Project Page :: Allow selecting multiple imagery layers for the map (and parameterizing them with years and stacking profiles)
+ - Project Page :: Add other overview map overlay options
+ - Project Page :: Add additional fields to sample points if passed in CSV and include them in the download data outputs
+ - Project Page :: Hide Configure Geodash button until project has been created
+ - Project Page :: Rewrite gridded plot layout logic in web mercator to remove diagonal lines
+ - Project Page :: Add time sliders (or date pickers) to the DG basemap imagery
+ - GeoDash Page :: Fix admin permissions to satisfy Billy
+
+ Phase 2:
+ - Map-utils.js :: integrate [[https://github.com/camptocamp/ngeo][ngeo]] or [[http://tombatossals.github.io/angular-openlayers-directive][angular-openlayers-directive]] into CEO 
+ - Map-utils.js :: Reimplement map-utils.js around Google Maps API
+ - Collection Page :: Add a Back button
+ - Project + Collection Page :: Enable drawing point, line, and polygon features
+ - Case :: Change snake_case to camelCase in all JS files (i.e., map-utils.js, utils.js, and all JS files that reference their functions)
+ - Code.gov :: Ask about listing CEO under NASA's code.gov entry https://code.gov/#/explore-code/agencies/NASA
+ - Login/Register/Password(-Reset)/Account/Institution Pages :: Reprogram these pages to use the Users REST API (docs on #rfontanarosa)
+ - Project & Dashboard Pages :: Reprogram these pages to use the Collect REST API (docs and examples on #fefrain)
+ - Project Page :: Add a Re-Open Project button
+ - Project Page :: Implement Invitation-only privacy
+ - Project Page :: Create projects for each of Kel's chipsets 2002-2008 (get sample values from Karis) [[mu4e:msgid:AA01E563-4781-42FE-9FDD-8E9FF4B1DB3C@nasa.gov][email]]
+ - Project Page :: Add Karis' CSV calculations to the import/export process
+ - Map-utils.js :: Replace loops in map-utils.js with stream constructs
+ - Docker :: Update the Docker image (maybe use https://github.com/iron-io/dockers?)
+ - Cross-browser Testing :: Test CEO website with Browserstack
+ - Issue Tracking :: Move Github tasks from Mapcha and CEO into Trello or consolidate everything under CEO
+
+ Randy Hamilton/Costa Rica:
+ - Collection Page :: Clear first attribute's colors before assigning second attribute (this week)
+ - Project Page :: Allow downloading raw (non-aggregated) samples (by Tuesday)
+ - Project Page :: Allow assigning multiple attributes to each sample point (by Friday)
+ - Institution Page :: Add support for WMTS imagery sources (by Friday)
+ - Project Page :: Enable loading larger CSV-based projects (e.g., 10,000+ plots) (by Friday)
+ - Project Page :: Enable uploading the classification scheme in a CSV
+ - Project Page :: Enable organizing categories hierarchically
+
+ Ethiopia Requests:
+ - The ability to count elements within a plot
+ - The option to export/download data in various formats (e.g., xml, csv, Fusion table)
+ - Integration with SAIKU
+
+ Collect Integration:
+ - Replace Stefano's for loops in CollectProjects.java with recursions or stream operations
+ - Proofread CollectProjects.java
+ - Look at Stefano's Collect code:
+   - org.openforis.collect.metamodel.SimpleSurveyCreationParameters
+   - org.openforis.collect.metamodel.SurveyCreator
+   - org.openforis.collect.io.metadata.samplingpointdata.SamplingPointDataGenerator
+ - Respond to Alfonso's github tickets
+
+ Database Improvements:
+ - Move attribution field from project-list.json to imagery-list.json (set in Projects.java, used in collection.ftl and collection.js)
+ - Eliminate projects with no data
+
+ DigitalGlobe:
+ - Follow up with mike.quinene@digitalglobe.com about DG WFS timestamp examples
+
+ Kel, Dave, and Karis:
+ - review Billy's code changes:
+   - stylesheet.css
+   - home.js
+   - collection.js
+ - hide Basemap WMS from non-SERVIR institutions
+ - remove Recent Imagery* layers from CEO
+ - rebuild Docker image
+ - integrate mercator-openlayers.js
+
+ Style Rewrite:
+ - Clean up Billy's latest homepage rewrite updates
+   - stylesheet.css
+   - home.js
+   - home.ftl
+   - institution.ftl
+   - navbar.ftl
+   - start-content.ftl
+   - public/ceoicon.png
+   - public/img/institution_info.png
+   - public/css/ol3-popup.css
+   - public/js/map-utils.js
+   - public/js/ol3-popup.js
+   - header.ftl
+   - public/css/images/closedTree.png
+   - public/css/images/openTree.png
+ - Chat with Billy about next steps, merging pull requests, and coding style
+
+ - DG Docs:
+   - CQL :: https://dgcsportal.readme.io/docs/4-common-query-language-wms
+   - Stacking Profiles :: https://dgcsportal.readme.io/docs/11-existing-stacking-profiles and [[file:~/sig/projects/collect-earth-online/notes/Stacking_Profile_Samples.docx][Stacking_Profile_Samples.docx]]
+* Backend Code Sprint
+** Server.java
+*** TODO Enable HTTPS site-wide: [expand]
+    1. Get deploy/clientkeystore signed by a certificate authority.
+    2. Include this in declareRoutes and declareRoutesForCollect: secure("deploy/clientkeystore", "ceocert", null, null);
+    Resources:
+    - https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
+    - https://spark.apache.org/docs/latest/security.html
+** Views.java
+*** TODO Make authenticateOrRedirect a more robust function not based on deprecated user roles
+** Imagery.java
+*** TODO In deleteInstitutionImagery, delete imagery entries from imagery-list.json once they are no longer referenced by any institution
+** CollectImagery.java
+*** TODO Implement getAllImagery, addInstitutionImagery, and deleteInstitutionImagery
+** Users.java
+*** TODO Phase out role attributes
+*** TODO Stop adding new users to the "All Users" institution (delete this institution since it isn't used)
+*** TODO Implement updateAccount, getPasswordResetKey, and resetPassword
+** OfUsers.java
+*** TODO Implement updateAccount, getPasswordResetKey, resetPassword, and updateInstitutionRole
+*** TODO CamelCase all references to reset_key and ip_addr fields in the of-users database
+*** TODO Exclude the superuser account (admin@sig-gis.com) from the list of users returned by getAllUsers
+*** TODO Raise a red flag when an error occurs in communicating with the database in getAllUsers, getInstitutionRoles, and requestInstitutionMembership
+*** TODO Reimplement requestInstitutionMembership to add the user to the selected userGroup's pending queue
+** Institutions.java
+** OfGroups.java
+*** TODO Replace for loops
+** Projects.java
+** CollectProjects.java
+*** TODO Implement dumpProjectRawData
+*** TODO Replace for loops
+** imagery-list.json
+*** TODO Make sure all fields are camelCased
+** user-list.json
+*** TODO Make sure all fields are camelCased
+** proj.json
+*** TODO Make sure no repeated project entries exist in proj.json
+** dash-*.json
+*** TODO Make sure all widgets fields are JSON arrays (not strings)
+*** TODO Delete all dash-*.json files that are not referenced in proj.json
+
+
+==============================================================================
+From CEO_TASK_LIST_P1.csv:
+
+Page,Section,Task,Hours
+Register,Operator Metadata,"Add Business, University, and Individual Affiliation fields",2
+Operator,Summary Statistics,Projects Worked on So Far (latest and time graph),3
+Operator,Summary Statistics,Plots Completed per Project,2
+Operator,Summary Statistics,Plots Completed Total (latest and time graph),2
+Operator,Summary Statistics,Speed Score per Project,4
+Operator,Summary Statistics,Speed Score Total (latest and time graph),4
+Operator,Summary Statistics,Accuracy Score per Project (based on the project's training data),3
+Operator,Summary Statistics,Accuracy Score Total (latest and time graph),3
+Institution,User Management,Add request affiliation button,2
+Institution,User Management,Affiliated Users (see and update user roles if admin),3
+Institution,User Management,Pending Affiliation Requests (see and approve if admin),2
+Institution,User Management,Invite Users if admin,2
+Institution,User Management,Ban Users (see current list and add new banned users if admin),2
+Institution,Project Management,Label Projects as featured/public/private with icon,1
+Institution,Project Management,List Contributor by Project,2
+Institution,Project Management,See and add/remove users if admin,4
+Institution,Image Servers,List All WMS Feeds,4
+Institution,Image Servers,See and update featured/public/private permissions if admin,2
+Project,Select AOI,"Upload Polygon (CSV, KML, SHP, GeoJSON)",4
+Project,Record Level,"Import Plot Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes",3
+Project,Record Level,Auto Generate AOI Boundary,1
+Project,Entity Level,Allow assigning shortcut keys to each attribute,2
+Project,Entity Level,Use Collect Web for Multi-Attribute Assignment - http://openforis.org/collect/editSurvey.htm,
+Project,Select Basemap Imagery,Allow selecting multiple imagery sources per project,5
+Project,Select Basemap Imagery,Define Time Period Range with Sliders,4
+Project,Select Basemap Imagery,"Specify multiple image windows (e.g., winter, summer for year x))",3
+Project,Download All Sample Data,CSV (Aggregated and raw data),3
+Project,Overview Maps,Use drop down menu to select what plot value is shown,3
+Project,Overview Maps,"Option 1: Sampling Status (green = complete, yellow = partially complete, red = incomplete)",2
+Project,Overview Maps,Option 2: Sample Values (pick an attribute and show its most commonly assigned value per plot),2
+Project,Overview Maps,Option 3: QA/QC Values (show user performance per plot),2
+Collection,Sidebar,Float over a full screen map like in ecodash and surface-water tools,3
+Collection,Sidebar,Skip Button,1
+Collection,Sidebar,User Timer (count up),1
+Collection,Sidebar,User Statistics - #/# and % Plots Completed,2
+Collection,Sidebar,User Statistics - Current Accuracy Score (based on the project's training data),2
+Collection,Sidebar,Go Back - Dropdown list of previous plots by ID and timestamp,4
+Collection,Sidebar,Go Back - Dynamically Show Completed Plots in the Map Interface and Allow Click Selection,6
+Total,,,100
+
+
+==============================================================================
+From task_list_p1.txt:
+
+* Register Page:
+1. Operator Metadata-Affiliations (business, university, individual)
+
+* Operator Page:
+1. Operator Summary Statistics:
+   - Projects Worked on So Far (latest and time graph) 
+   - Plots Completed per Project 
+   - Plots Completed Total (latest and time graph) 
+   - Speed Score per Project 
+   - Speed Score Total (latest and time graph) 
+   - Accuracy Score per Project (based on the project's training data) 
+   - Accuracy Score Total (latest and time graph) 
+
+* Institution Page:
+1. User Management: (only if institution admin)
+   - Affiliated Users (see and update user roles)
+   - Pending Affiliation Requests (see and approve)
+   - Invite Users
+   - Ban Users (see current list and add new banned users)
+   - Add request affiliation button (redirects to login and sends request to institution page)
+
+2. Project Management:
+   - List All Projects (label as featured/public/private for everyone, update label if admin)
+   - List Contributor by Project (see and add/remove users if admin)
+
+3. Image Servers: 
+   - List All WMS Feeds (see and update featured/public/private permissions if admin)
+
+* Project Management Page:
+1. Select AOI:
+   - Upload Polygon (CSV, KML, SHP, GeoJSON)
+
+2. Specify Record Attributes:
+   - Import Plot Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes (SIG P0) (Plot Design Spatial Distribution: Upload From Template)
+     - Auto Generate AOI Boundary
+
+3. Entity Level:
+   - Specify Attributes: (allow assigning shortcut keys to each attribute)
+     - Use Collect Web (Multi-Attribute Assignment - http://openforis.org/collect/editSurvey.htm)
+
+4. Select Basemap Imagery: (allow selecting multiple imagery sources per project)
+   - Define Time Period Range with Slider
+     - Specify multiple image windows (e.g., winter, summer for year x)
+
+5. Download All Sample Data:
+   - CSV (Aggregated and raw data)
+
+6. Overview Maps: (use drop down menu to select what plot value is shown)
+   - Sampling Status (green = complete, yellow = partially complete, red = incomplete)
+   - Sample Values (pick an attribute and show its most commonly assigned value per plot)
+   - QA/QC Values (show user performance per plot)
+
+* Collection Page:
+1. Sidebar: (float over a full screen map like in ecodash and surface-water tools)
+   - Skip Button
+   - User Timer (count up)
+   - User Statistics:
+     - #/# and % Plots Completed
+     - Current Accuracy Score (based on the project's training data)
+   - Go back to old plots:
+     - Choose from a Record History List (include Record ID and timestamp of when record was saved)
+     - Dynamically Show Completed Plots in the Map Interface and Allow Click Selection
+
+==============================================================================
+From task_list_p1_table.txt:
+
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Page        | Section                  | Task                                                                                           | Hours |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Register    | Operator Metadata        | Add Business, University, and Individual Affiliation fields                                    |     2 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Operator    | Summary Statistics       | Projects Worked on So Far (latest and time graph)                                              |     3 |
+| Operator    | Summary Statistics       | Plots Completed per Project                                                                    |     2 |
+| Operator    | Summary Statistics       | Plots Completed Total (latest and time graph)                                                  |     2 |
+| Operator    | Summary Statistics       | Speed Score per Project                                                                        |     4 |
+| Operator    | Summary Statistics       | Speed Score Total (latest and time graph)                                                      |     4 |
+| Operator    | Summary Statistics       | Accuracy Score per Project (based on the project's training data)                              |     3 |
+| Operator    | Summary Statistics       | Accuracy Score Total (latest and time graph)                                                   |     3 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Institution | User Management          | Add request affiliation button                                                                 |     2 |
+| Institution | User Management          | Affiliated Users (see and update user roles if admin)                                          |     3 |
+| Institution | User Management          | Pending Affiliation Requests (see and approve if admin)                                        |     2 |
+| Institution | User Management          | Invite Users if admin                                                                          |     2 |
+| Institution | User Management          | Ban Users (see current list and add new banned users if admin)                                 |     2 |
+| Institution | Project Management       | Label Projects as featured/public/private with icon                                            |     1 |
+| Institution | Project Management       | List Contributor by Project                                                                    |     2 |
+| Institution | Project Management       | See and add/remove users if admin                                                              |     4 |
+| Institution | Image Servers            | List All WMS Feeds                                                                             |     4 |
+| Institution | Image Servers            | See and update featured/public/private permissions if admin                                    |     2 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Project     | Select AOI               | Upload Polygon (CSV, KML, SHP, GeoJSON)                                                        |     4 |
+| Project     | Record Level             | Import Plot Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes              |     3 |
+| Project     | Record Level             | Auto Generate AOI Boundary                                                                     |     1 |
+| Project     | Entity Level             | Allow assigning shortcut keys to each attribute                                                |     2 |
+| Project     | Entity Level             | Use Collect Web for Multi-Attribute Assignment - http://openforis.org/collect/editSurvey.htm   |       |
+| Project     | Select Basemap Imagery   | Allow selecting multiple imagery sources per project                                           |     5 |
+| Project     | Select Basemap Imagery   | Define Time Period Range with Sliders                                                          |     4 |
+| Project     | Select Basemap Imagery   | Specify multiple image windows (e.g., winter, summer for year x))                              |     3 |
+| Project     | Download All Sample Data | CSV (Aggregated and raw data)                                                                  |     3 |
+| Project     | Overview Maps            | Use drop down menu to select what plot value is shown                                          |     3 |
+| Project     | Overview Maps            | Option 1: Sampling Status (green = complete, yellow = partially complete, red = incomplete)    |     2 |
+| Project     | Overview Maps            | Option 2: Sample Values (pick an attribute and show its most commonly assigned value per plot) |     2 |
+| Project     | Overview Maps            | Option 3: QA/QC Values (show user performance per plot)                                        |     2 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Collection  | Sidebar                  | Float over a full screen map like in ecodash and surface-water tools                           |     3 |
+| Collection  | Sidebar                  | Skip Button                                                                                    |     1 |
+| Collection  | Sidebar                  | User Timer (count up)                                                                          |     1 |
+| Collection  | Sidebar                  | User Statistics - #/# and % Plots Completed                                                    |     2 |
+| Collection  | Sidebar                  | User Statistics - Current Accuracy Score (based on the project's training data)                |     2 |
+| Collection  | Sidebar                  | Go Back - Dropdown list of previous plots by ID and timestamp                                  |     4 |
+| Collection  | Sidebar                  | Go Back - Dynamically Show Completed Plots in the Map Interface and Allow Click Selection      |     6 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Total       |                          |                                                                                                |   100 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+
+==============================================================================
+From task_list_p2.txt:
+
+* Facebook/Google/Linkedin Accounts (SIG P2)
+   * Avatar (https://en.gravatar.com) (SIG P2)
+* Location  (SIG P2)
+      * #/# Projects Active or Complete (SIG P2)
+      * Associate this landing page with a unique URL suffix (fao -> http://ceo.sig-gis.com/fao) (SIG P2)
+      * Validation Set Construction: (SIG P2)
+      * Mapping Mode (User-Driven Object Identification): (SIG P2)
+   * Export Project as Schema and Data Files in Collect Mobile Format (coordinate with Stefano and Daniel) (FAO P2)
+   * Clone Project Button -> Switch to Design Project Mode and Pre-populate Form Fields (SIG P2)
+   * Open Project - And increase the number of plots (SIG P2)
+
+==============================================================================
+From wireframe_notes.txt:
+
+* Remaining Site-wide TODOs
+
+Home:
+- [ ] Enable user map w/ pushpins
+
+About:
+- [ ] Add Disclaimers to bottom
+
+Support:
+- [ ] Create tutorials and demo material
+
+Account:
+- [ ] Rename to Operator page
+- [ ] Restyle according to wireframes
+- [ ] Make a div for each user with their name and stats (# of institutions the belong to, # of projects they belong to, # of sample points completed)
+- [ ] Add location field (for homepage pushpin map)
+- [ ] Implement backend account update functionality (on form submission)
+
+Forgot Password:
+- [ ] Implement backend password retrieval system
+
+Institution:
+- [ ] Show total number of active and completed projects and total number of users
+- [ ] Show public projects and any the user has access to
+- [ ] Show list of institution users only if the user is logged in and a member of the institution
+- [ ] Add a button to request membership in this institution
+- [ ] Include buttons to Add and Delete members from your institution (only show users who are currently members or who have requested access)
+- [ ] Image Servers:
+  - [ ] Include Google Maps, Bing Maps, and DigitalGlobe Maps forms
+  - [ ] Include WMS server (e.g., Geoserver) form
+  - [ ] Each entry has an Enable button
+
+Admin:
+- [X] Rename to Project Management page
+- [X] Record institution # at project creation time
+- [X] Include Public/Institution/Invite-Only radio button
+- [ ] If Invite-Only is selected, provide a list of users who are members of this project with delete buttons next to them
+- [ ] Include an Add User button (must type in username)
+- [ ] Pop out to Collect for the Entity Design stage
+- [ ] Pop out to the GeoDash page for GEE Integration (Add/Remove widgets)
+- [ ] Include a time selector for the WMS imagery
+- [ ] Enable users to include their own WMS feeds as well as DigitalGlobe Maps, Bing Maps, or Google Maps authentication info
+
+Dashboard:
+- [ ] Rename to Collection page
+- [ ] Restyle according to the wireframes

@@ -24,7 +24,7 @@ public class GeoDash {
 
         JsonArray projects = readJsonFile("proj.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects,
-                                                               project -> project.get("projectID").getAsString().equals(projectId));
+            project -> project.get("projectID").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
             JsonObject project = matchingProject.get();
             String dashboardId = project.get("dashboard").getAsString();
