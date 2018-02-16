@@ -209,7 +209,7 @@ public class JsonUtils {
     @SuppressWarnings("unchecked")
 	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
     	JsonElement el = findElement(obj, property);
-    	if (el.isJsonNull()) {
+    	if (el == null || el.isJsonNull()) {
     		return (T) null;
     	} else if (type == String.class) {
     		return (T) el.getAsString();
