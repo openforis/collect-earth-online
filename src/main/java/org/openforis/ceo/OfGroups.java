@@ -230,14 +230,16 @@ public class OfGroups {
                 // Add file
                 Part logo = req.raw().getPart("institution-logo");
                 String fileName = logo.getSubmittedFileName();
-                String contentType = logo.getContentType();
-                byte[] bytes = IOUtils.toByteArray(logo.getInputStream());
-                MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
-                part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
-                content.addPart(part1);
-                MultipartContent.Part part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
-                part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
-                content.addPart(part2);
+                if (fileName != null) {
+                    String contentType = logo.getContentType();
+                    byte[] bytes = IOUtils.toByteArray(logo.getInputStream());
+                    MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
+                    part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
+                    content.addPart(part1);
+                    MultipartContent.Part part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
+                    part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
+                    content.addPart(part2);
+                }
                 // Request
                 HttpRequestFactory httpRequestFactory = createRequestFactory();
                 HttpResponse response = httpRequestFactory.buildPostRequest(new GenericUrl(OF_USERS_API_URL + "group"), content).execute(); // create a new group
@@ -278,6 +280,19 @@ public class OfGroups {
                     MultipartContent.Part part = new MultipartContent.Part(new ByteArrayContent(null, parameters.get(key).getBytes()));
                     part.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"%s\"", key)));
                     content.addPart(part);
+                }
+                // Add file
+                Part logo = req.raw().getPart("institution-logo");
+                String fileName = logo.getSubmittedFileName();
+                if (fileName != null) {
+                    String contentType = logo.getContentType();
+                    byte[] bytes = IOUtils.toByteArray(logo.getInputStream());
+                    MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
+                    part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
+                    content.addPart(part1);
+                    MultipartContent.Part part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
+                    part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
+                    content.addPart(part2);
                 }
                 // Request
                 HttpResponse response = preparePatchRequest(OF_USERS_API_URL + "group/" + institutionId, content).execute(); // create a new group
