@@ -1,3 +1,32 @@
+* LICENSE
+  1. Ask FAO about changing MIT to AGPL.
+* README.org
+  1. Add a Description section to explain the website's purpose.
+  2. Include git clone instructions in the Installation section.
+  3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
+* notes/
+  1. Remove outdated and unnecessary files.
+* test/java/org/openforis/ceo/ServerTest.java
+  1. Write a unit test suite.
+* Server.java
+  1. Use deploy/clientkeystore file to enable HTTPS sitewide in declareRoutes() and declareRoutesForCollect().
+  2. Remove /card-test route from declareRoutesForCollect() once survey cards are added to the Project page.
+  3. Remove /get-unanalyzed-plot-byid/:projid/:id route from the declareRoutes*() functions.
+* GeoDash.java
+  1. Complete updateDashBoardByID() stub function.
+* Imagery.java
+  1. Remove institutionId argument from deleteInstitutionImagery() as it is no longer needed, and notify Stefano to make the same change in CollectImagery.java.
+* imagery-list.json
+  1. Include only the inexpensive (~$5/mo) imagery layers as default public layers (but get the access keys out of version control!).
+* Institution.java
+  1. Remove all references to the "All Users" and "Administrators" groups.
+* institution-list.json
+  1. Remove the "All Users" and "Administrators" groups.
+
+* Foo
+Project properties don't load on ceo/project/# until the project is published
+Home page and Collection page imagery doesn't work
+
 *** Rome TODOs
     1) Update my CEO development todo list
     2) Patch homepage to work with the empty collect and of-users databases
@@ -5,7 +34,6 @@
     4) Reinstall and configure docker
     5) Rebuild and deploy the CEO docker image
     6) Fill in the smtpPassword field for collectearth.mail@gmail.com in src/main/webapp/WEB-INF/web.xml (Tomcat) and src/main/resources/json/mail-config.json (Jetty)
-    7) Document (in README.org) how to set the installation parameters in web.xml and mail-config.json: {collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
     8) Ask Jeff to move the DNS for ceo.sig-gis.com -> collect.earth (Alfonso owns it)
     9) Paul (NASA) is the new project manager and will send around a fill-in task list spreadsheet to everyone
     10) Finish the collect database integration
@@ -17,6 +45,7 @@
     16) Fix bugs in CEO homepage that hang on an empty database
     17) Import Stefano's survey cards into the data collection page
     18) Test CEO in Browserstack and improve responsive design for mobile devices
+
 *** Server.java
 **** TODO Uncomment all Collect and OfUsers routes once they are completed
 **** TODO Enable HTTPS site-wide: [expand]
@@ -130,7 +159,6 @@
    - [ ] Collection Page :: Add a Back button
    - [ ] Project + Collection Page :: Enable drawing point, line, and polygon features
    - [ ] Case :: Change snake_case to camelCase in all JS files (i.e., map-utils.js, utils.js, and all JS files that reference their functions)
-   - [ ] License :: Ask FAO about changing MIT to AGPL
    - [ ] Code.gov :: Ask about listing CEO under NASA's code.gov entry https://code.gov/#/explore-code/agencies/NASA
    - [ ] Login/Register/Password(-Reset)/Account/Institution Pages :: Reprogram these pages to use the Users REST API (docs on #rfontanarosa)
    - [ ] Project & Dashboard Pages :: Reprogram these pages to use the Collect REST API (docs and examples on #fefrain)
@@ -225,8 +253,6 @@
    SCHEDULED: <2018-02-14 Wed>
 ** TODO Port the live CEO database to collect
    SCHEDULED: <2018-02-14 Wed>
-** TODO Figure out how to add unit tests to CEO
-   SCHEDULED: <2018-02-14 Wed>
 ** TODO Implement proactive sampling in CEO
    SCHEDULED: <2018-02-14 Wed>
 ** TODO Upload Lena's new CEO manual to the website (in email)
@@ -306,7 +332,6 @@ Show the total number of plots that the user has completed on the Collection pag
   - [ ] Developer Documentation
   - [X] Reporting Bugs and Requesting Features
   - [ ] Tutorials and Demo
-  - [X] Licenses
   - [X] Contacts
 
 * INSTANCE LANDING PAGE (was Home + About)
@@ -549,7 +574,6 @@ Table of Contents
 * Developer Documentation (SIG)
 * Reporting Bugs and Requesting Features 
 * Tutorials and Demo (GTAC)
-* Licenses (need to talk to FAO and NASA)
 * Contacts 
 1. INSTANCE LANDING PAGE (was Home + About) 
 * Logos 
@@ -787,7 +811,6 @@ From CEO_Latest_Task_List.txt:
  - Collection Page :: Add a Back button
  - Project + Collection Page :: Enable drawing point, line, and polygon features
  - Case :: Change snake_case to camelCase in all JS files (i.e., map-utils.js, utils.js, and all JS files that reference their functions)
- - License :: Ask FAO about changing MIT to AGPL
  - Code.gov :: Ask about listing CEO under NASA's code.gov entry https://code.gov/#/explore-code/agencies/NASA
  - Login/Register/Password(-Reset)/Account/Institution Pages :: Reprogram these pages to use the Users REST API (docs on #rfontanarosa)
  - Project & Dashboard Pages :: Reprogram these pages to use the Collect REST API (docs and examples on #fefrain)
