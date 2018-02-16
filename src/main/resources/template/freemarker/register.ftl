@@ -1,21 +1,27 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-
-<div id="register-form">
-    <h1>Register a new account</h1>
-    <form action="${root}/register" method="post">
-        <fieldset>
-        <input autocomplete="off" id="email" name="email" placeholder="Email" value="" type="email" class="text">
-        </fieldset>
-        <fieldset>
-        <input autocomplete="off" id="password" name="password" placeholder="Password" value="" type="password" class="text">
-        </fieldset>
-        <fieldset>
-        <input autocomplete="off" id="password-confirmation" name="password-confirmation" placeholder="Password confirmation" value="" type="password">
-        </fieldset>
-        <input class="button" name="register" value="Register" type="submit">
-    </form>
+<div class="container">
+	<div class="row justify-content-center">
+		<div class="col-xl-3 col-lg-4 col-md-6 col-sm-9" id="register-form">
+   			<form action="${root}/register" method="post">
+		        <p class="header">Register a new account</p>
+    	     	<div class="form-group">
+	 	 	  	<label for="email">Email address</label>
+		        <input autocomplete="off" id="email" name="email" placeholder="Email" value="" type="email" class="form-control">
+	        </div>
+    	     	<div class="form-group">
+	 	 	  	<label for="password">Enter your password</label>
+		        <input autocomplete="off" id="password" name="password" placeholder="Password" value="" type="password" class="form-control">
+			</div>
+    	     	<div class="form-group">
+	 	 	  	<label for="password-confirmation">Confirm your password</label>			
+		        <input autocomplete="off" id="password-confirmation" name="password-confirmation" placeholder="Password confirmation" value="" type="password" class="form-control">
+	        </div>
+	      	  <input class="btn bg-lightgreen float-right mb-2" type="submit" value="Register">
+    			</form>
+		</div>
+	</di	v>
 </div>
 
 <#include "end-content.ftl">

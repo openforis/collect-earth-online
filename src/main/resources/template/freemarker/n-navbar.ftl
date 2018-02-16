@@ -1,8 +1,13 @@
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="main-nav">
+<style>
+
+@media screen and (max-width: 600px) {
+}
+</style>
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: white;">
 	<a class="navbar-brand" href="home">    
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 	</a>
-   <button class="navbar-toggler mb-2" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
   	<div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -31,43 +36,40 @@
         </#if>
         </ul>
 	      <ul id="login-info" class="navbar-nav mr-0">
-        <#if username??>
+	        <#if username??>
 	            <#if navlink == "Logout">
-	            <li id="username" class="nav-item">
-	            <span class="nav-link disabled">${username}</span> 
-	            </li>
 	            <li class="nav-item">
-   	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
-           	      Logout
-                 </button>	 
-                 </li>   
-	            <#else>
-	            <li id="username" class="nav-item my-auto">
 	            <span class="nav-link disabled">${username}</span> 
 	            </li>
-	            <li class="nav-item my-auto">
    	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
            	      Logout
-                 </button>
-                 </li>	    
-               </#if>
-        <#else>
-            <#if navlink == "Login" || navlink == "Register">
-            <li class="nav-item my-auto">
-	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
-	                Login/Register
-                </button>
-                </li>
+                 </button>	    
 	            <#else>
-	            <li class="nav-item my-auto">
-	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
+	            <li class="nav-item">
+	            <span class="nav-link disabled">${username}</span> 
+	            </li>
+   	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
+           	      Logout
+                 </button>	    
+               </#if>
+	        <#else>
+	            <#if navlink == "Login" || navlink == "Register">
+	            <button type="button" class="btn btn-outline-success btn-sm" onclick="location.href = '${root}/login'">
 	                Login/Register
                 </button>
-                </li>
-            </#if>
-        </#if>
-    </ul>
+	            <#else>
+	            <button type="button" class="btn btn-outline-success btn-sm" onclick="location.href = '${root}/login'">
+	                Login/Register
+                </button>
+	            </#if>
+	        </#if>
+	        </li>
+	        </div>
+        </ul>
+    </div>
+
 </nav>
+
 <script>
 function menuControls() {
     var x = document.getElementById("myTopnav");

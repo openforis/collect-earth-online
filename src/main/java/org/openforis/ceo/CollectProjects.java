@@ -228,14 +228,13 @@ public class CollectProjects {
         } else {
             JsonArray recordKeysArray = recordKeysEl.getAsJsonArray();
             String plotId = recordKeysArray.get(0).getAsString();
-            JsonArray plotSamplingPointItems = getCollectSamplingPointItems(projectId, plotId, true);
-            JsonObject plotSamplingPointItem = plotSamplingPointItems.get(0).getAsJsonObject();
+            JsonObject plotSamplingPointItem = getCollectPlotSamplingPointItem(projectId, plotId);
             JsonArray sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
             return convertToCeoRecord(username, projectId, plotSamplingPointItem, sampleItems).toString();
         }
     }
 
-    public static String getUnanalyzedPlotByID(Request req, Response res) {
+	public static String getUnanalyzedPlotByID(Request req, Response res) {
         int projectId = getIntParam(req, "projid");
         String plotId = getParam(req, "id");
         String username = getLoggedUsername(req);
@@ -245,8 +244,7 @@ public class CollectProjects {
             params.put("username", username);
             params.put("addSecondLevelEntities", true);
             params.put("recordKey", Arrays.asList(plotId));
-            JsonArray plotSamplingPointItems = getCollectSamplingPointItems(projectId, plotId, true);
-            JsonObject plotSamplingPointItem = plotSamplingPointItems.get(0).getAsJsonObject();
+            JsonObject plotSamplingPointItem = getCollectPlotSamplingPointItem(projectId, plotId);
             JsonArray sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
             return convertToCeoRecord(username, projectId, plotSamplingPointItem, sampleItems).toString();
         } else {
@@ -683,6 +681,7 @@ public class CollectProjects {
         p.addProperty("attribution", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
         p.addProperty("archived", "archived".equalsIgnoreCase(collectSurvey.get("availability").getAsString()));
         p.addProperty("numPlots", countCollectSamplingPointItems(projectId, 0, null));
+        p.addProperty("creationDate", getDateAsString(collectSurvey, "creationDate"));
         p.addProperty("publishedDate", getDateAsString(collectSurvey, "publishedDate"));
         p.addProperty("archivedDate", getDateAsString(collectSurvey, "archivedDate"));
         p.addProperty("closedDate", getDateAsString(collectSurvey, "closedDate"));
@@ -873,6 +872,11 @@ public class CollectProjects {
         return sampleItems;
     }
     
+    private static JsonObject getCollectPlotSamplingPointItem(int projectId, String plotId) {
+		JsonArray plotSamplingPointItems = getCollectSamplingPointItems(projectId, plotId, true);
+		return plotSamplingPointItems.get(0).getAsJsonObject();
+	}
+
     private static int countCollectSamplingPointItems(int projectId, int levelIndex, List<String> infoAttributes) {
         HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("level", levelIndex);

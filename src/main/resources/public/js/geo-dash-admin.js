@@ -1,11 +1,10 @@
-
 var gmodcdash;
 
 angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http" , "$scope", function GeodashController($http, $scope,  $compile) {
 
     this.theURL = "geo-dash/";
-    this.gateway = "http://gateway.servirglobal.net:8888";
-    //this.gateway = "http://ceo.sig-gis.com:8888";
+    this.prodGateway = "http://gateway.servirglobal.net:8888";
+	this.devGateway = "http://127.0.0.1:8888";
     //this.wCount = 0;
     //this.wLoaded = 0;
     this.projAOI;
@@ -84,6 +83,17 @@ angular.module("geodashadmin", []).controller("GeodashAdminController", ["$http"
                 console.warn("missing projAOI" + e.message);
             }
         }
+        var absUrl = $(location).attr('href');
+        if( 
+        		absUrl.indexOf("127.0.0.1") !== -1 || 
+        		absUrl.indexOf("localhost") !== -1  || 
+        		absUrl.indexOf("0.0.0.0") !== -1  ){
+        	this.gateway =  this.devGateway;
+        }else{
+        	this.gateway = this.prodGateway;
+        }
+        
+        
         this.ajaxurl = this.theURL + "id/" + pid;
         $.ajax({
             url: this.ajaxurl,
