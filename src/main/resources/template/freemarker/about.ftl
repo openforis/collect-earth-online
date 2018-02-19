@@ -37,7 +37,6 @@
 	        provided. Users are, however, kindly asked to report any
 	        errors or deficiencies in this product.
 	    </p>
-	    <p>Copyright © <a href="http://fao.org">FAO</a> 2016-2018</p>
 	    	<#include "logo-banner.ftl">
 	    
 	</div>
