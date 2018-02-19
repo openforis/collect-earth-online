@@ -38,6 +38,7 @@ public class OfUsers {
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+	private static final String AUTHENTICATION_TOKEN_NAME = "of-token";
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
@@ -93,7 +94,7 @@ public class OfUsers {
             if (response.isSuccessStatusCode()) {
                 // Authentication successful
                 String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
-                res.cookie("/", "token", token, -1, false);
+                setAuthenticationToken(req, res, token);
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
                 String userId = getResponseAsJson(userRequest.execute()).getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
@@ -153,7 +154,7 @@ public class OfUsers {
                             if (response.isSuccessStatusCode()) {
                                 // Authentication successful
                                 String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
-                                res.cookie("/", "token", token, -1, false);
+                                setAuthenticationToken(req, res, token);
                             }
                             // Redirect to the Home page
                             res.redirect(CeoConfig.documentRoot + "/home");
@@ -183,7 +184,7 @@ public class OfUsers {
             req.session().removeAttribute("username");
             req.session().removeAttribute("role");
             req.session().removeAttribute("token");
-            res.removeCookie("/", "token");
+            res.removeCookie("/", AUTHENTICATION_TOKEN_NAME);
         }
         return req;
     }
@@ -460,4 +461,11 @@ public class OfUsers {
         }
     }
 
+    private static void setAuthenticationToken(Request req, Response res, String token) {
+        String host = req.host();
+        if (host.indexOf(':') > -1) {
+            host = host.substring(0, host.lastIndexOf(':')); //remove port from host
+        }
+        res.cookie(host, "/", AUTHENTICATION_TOKEN_NAME, token, -1, false, false);
+    }
 }
