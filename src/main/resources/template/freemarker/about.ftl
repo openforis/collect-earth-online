@@ -14,7 +14,7 @@
 	        full functionality of Collect Earth Online including
 	        collaborative compilation of reference point databases is
 	        implemented online so there is no need for desktop
-	        installation.
+	        installation. Collect Earth Online codebase was developed by NASA SERVIR-Mekong and it has been donated to the Open Foris Initiative of the Food And Agriculture Organization of the United Nations.
 	    </p>
 	    <h1>Disclaimers</h1>
 	    <p>
@@ -31,13 +31,12 @@
 	        it, for program maintenance and upgrading as well as for any
 	        damage that may arise from them.
 	    </p>
-	    <p>
+	    <p class="mb-4">
 	        FAO also declines any responsibility for updating the data and
 	        assumes no responsibility for errors and omissions in the data
 	        provided. Users are, however, kindly asked to report any
 	        errors or deficiencies in this product.
 	    </p>
-	    <p>Copyright © <a href="http://openforis.org">OpenForis</a> 2016-2017</p>
 	    	<#include "logo-banner.ftl">
 	    
 	</div>
