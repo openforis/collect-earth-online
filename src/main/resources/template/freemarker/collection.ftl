@@ -23,10 +23,13 @@
     <div id="sidebar" class="col-xl-3" old_ng-show="collection.showSideBar">
         <fieldset class="mb-3 text-center">
             <h3>Plot Navigation</h3>
-            <div class="row no-gutters btn-group btn-block justify-content-center text-center">
-		            <input id="new-plot-button" class="btn btn-outline-lightgreen btn-sm " type="button" name="new-plot" value="Skip" ng-click="collection.nextPlot()">
-            		<input id="flag-plot-button" class="btn btn-outline-lightgreen btn-sm" type="button" name="flag-plot" value="Flag Plot as Bad" ng-click="collection.flagPlot()"
-	                   style="opacity:0.5" disabled>
+            <div class="row">
+            		<div class="col-sm-6 pr-2">
+					<input id="new-plot-button" class="btn btn-outline-lightgreen btn-sm btn-block" type="button" name="new-plot" value="Skip" ng-click="collection.nextPlot()">
+            		</div>
+            		<div class="col-sm-6 pl-2">
+					<input id="flag-plot-button" class="btn btn-outline-lightgreen btn-sm btn-block" type="button" name="flag-plot" value="Flag Plot as Bad" ng-click="collection.flagPlot()"  style="opacity:0.5" disabled>
+            		</div>
             </div>
         </fieldset>
         <fieldset class="mb-3 justify-content-center text-center">
