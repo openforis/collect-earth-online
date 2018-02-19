@@ -26,6 +26,15 @@
 * Foo
 Project properties don't load on ceo/project/# until the project is published
 Home page and Collection page imagery doesn't work
+Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
+Add time estimates to my CEO Smartsheet tasks
+Organize Java files into folders
+Review Collect*.java files
+Ask Stefano to include the institution attribute in returned imagery objects
+Ask Jeff to setup a new server with the collect.earth DNS
+Make sure project creation calculates the number of plots and samples per plot
+Use the new collectRecordId field from the plot JSON in the CollectForms() constructor on the Collection page
+Add the new features (e.g., pro-active sampling) to our embedded database and pull in Jerome's styles.
 
 *** Rome TODOs
     1) Update my CEO development todo list
