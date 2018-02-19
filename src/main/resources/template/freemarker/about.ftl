@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <section id="about" class="container">
-	<div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+	<div class="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
 	    <h1>About Collect Earth Online</h1>
 	    <p>
 	        Collect Earth Online is a custom built, open-source, high

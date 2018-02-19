@@ -10,6 +10,13 @@
 .full-height{
 	height: calc(100vh - 76px);
 }
+.absolute-center{
+	position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    overflow: auto;
+}
 /* Fonts */
 /*************/
 @font-face {
@@ -255,15 +262,11 @@ a:hover{
 /*********************************************************************/
 /* LOGIN PAGE/REGISTER PAGE */
 /*********************************************************************/
-#login, #register-form{
+#login, #register-form, #password-form{
 	border:solid 1px #31BAB0;
-	position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    overflow: auto;
+
 }
-#login .header, #register-form .header{
+#login .header, #register-form .header, #password-form .header{
 	color:white;
 	background:#31BAB0;
 	margin: 0 -15px 10px -15px;;

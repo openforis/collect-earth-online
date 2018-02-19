@@ -1,10 +1,10 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<div class="container">
+<div class="container absolute-center">
 
 	<div class="row justify-content-center">
-		<div class="col-xl-3 col-lg-4 col-md-6 col-sm-9" id="login">
+		<div class="col-lg-4 col-md-6 col-sm-10 pb-3" id="login">
 	    <form action="${root}/login?returnurl=${returnurl}&${querystring}" method="post" >
 	    	  	    <p class="header">Sign into your account</p>
 	    
@@ -28,7 +28,7 @@
 		</div>
 		</div>
 	    </div>
-	</div>
+</div>
 
 
 <#include "end-content.ftl">
