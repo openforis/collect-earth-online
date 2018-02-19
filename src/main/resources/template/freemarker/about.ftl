@@ -31,7 +31,7 @@
 	        it, for program maintenance and upgrading as well as for any
 	        damage that may arise from them.
 	    </p>
-	    <p>
+	    <p class="mb-4">
 	        FAO also declines any responsibility for updating the data and
 	        assumes no responsibility for errors and omissions in the data
 	        provided. Users are, however, kindly asked to report any
