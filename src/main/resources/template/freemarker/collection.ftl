@@ -58,7 +58,7 @@
 			<button class="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse" href="#project-stats-collapse" role="button" aria-expanded="false" aria-controls="project-stats-collapse">
             		 	Project Stats
             		</button>
-        	<div class="row justify-content-center mb-0 text-center">
+        	<div class="row justify-content-center mb-1 text-center">
     			<div class="col-lg-12">
 	 			<fieldset id="projStats" ng-class="collection.statClass" class=" text-center">
 		        		<div class="collapse" id="project-stats-collapse">
