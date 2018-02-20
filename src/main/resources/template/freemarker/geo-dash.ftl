@@ -1,5 +1,7 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
+
+<!-- geo dash nav -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="geodash-nav">
 	<a class="navbar-brand" href="home">    
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
@@ -51,11 +53,14 @@
             </#if>
         </#if>
         	     <li class="nav-item my-auto">                   
-	     	 <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-outline-lightgreen btn-sm" ng-click="geodash.createNewWidget()" style="float:right;">
+	     	 <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-outline-lightgreen btn-sm" ng-click="geodash.createNewWidget()" style="float:right;" data-toggle="modal" data-target="#dialog-form">
 	     </li>
 	     </ul>
     </div>
 </nav>
+<!-- end geo dash nav -->
+
+
 <#if role?? && editable == "true">
 <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
 <div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
@@ -97,16 +102,28 @@
             </div>
         </div>
     </div>
-    <#if role?? && editable == "true">
-        <div id="dialog-form" title="Create new widget" class="row justify-content-center">
-        <div class="col-lg-6 col-sm-12">
-            <p class="validateTips">All form fields are required.</p>
-
+    <!-- change false to true below -->
+    <#if role?? && editable == "false">
+<div class="modal fade" id="dialog-form" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+          <div class="modal-header">
+	        <h5 class="modal-title">New Widget</h5>
+			<p><small class="form-text text-muted">All form fields are required.</small></p>
+        
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+		<div class="modal-body">
             <form name="form" id="form">
                     <fieldset>
-                        <select  name="mainType" class="form-control" id="mainType" ng-model="geodash.mainwidgetTypeSelected" ng-change="geodash.updatemainwidgetType(geodash.mainwidgetTypeSelected)"
-                             data-ng-options="mainWidgetType as mainWidgetType.name for mainWidgetType in geodash.mainWidgetTypes" >
-                        </select>
+                    		<div class="form-group">
+	                    		<label for="mainType">Type</label>
+	                        <select name="mainType" class="form-control" id="mainType" ng-model="geodash.mainwidgetTypeSelected" ng-change="geodash.updatemainwidgetType(geodash.mainwidgetTypeSelected)"
+	                             data-ng-options="mainWidgetType as mainWidgetType.name for mainWidgetType in geodash.mainWidgetTypes" >
+	                        </select>
+	                        </div>
                         <div id="cookedWidget" ng-show="geodash.cooked">
                             <div id="cookedNDVIImage" ng-show="geodash.cookedImage">
                                 <div class="form-group">
@@ -189,16 +206,17 @@
                                     </div>
                                     <div class="form-group">
                                         <!-- Allow form submission with keyboard without duplicating the dialog button -->
-                                        <input type="submit" tabindex="-1" style="position: absolute; top: -1000px" class="btn btn-primary">
+                                        <input type="submit" tabindex="-1"class="btn btn-outline-lightgreen btn-block">
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </fieldset>
                 </form>
                 </div>
-        </div>
+              </div>
+              </div>
+              </div>
     </#if>
 </div>
 

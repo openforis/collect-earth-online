@@ -266,13 +266,23 @@ a:hover{
 	border:solid 1px #31BAB0;
 
 }
-#login .header, #register-form .header, #password-form .header{
+#login .header, #register-form .header, #password-form .header, {
 	color:white;
 	background:#31BAB0;
 	margin: 0 -15px 10px -15px;;
 	padding:1rem;
 }
-
+.modal-header{
+	color:white;
+	background:#31BAB0;
+	margin: 0 0px 10px 0px;;
+	padding:1rem;
+}
+.modal-title{
+	font-size:1rem;
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+	color:white;
+}
 /*********************************************************************/
 /* PROJECT PAGE */
 /*********************************************************************/
