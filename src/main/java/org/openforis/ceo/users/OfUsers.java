@@ -187,9 +187,7 @@ public class OfUsers {
             req.session().removeAttribute("username");
             req.session().removeAttribute("role");
             req.session().removeAttribute("token");
-            // FIXME: Does the new code do what the commented out code used to do?
-            // res.removeCookie("/", AUTHENTICATION_TOKEN_NAME);
-            res.removeCookie(AUTHENTICATION_TOKEN_NAME);
+            res.removeCookie("/", AUTHENTICATION_TOKEN_NAME);
         }
         return req;
     }
@@ -471,9 +469,7 @@ public class OfUsers {
         if (host.indexOf(':') > -1) {
             host = host.substring(0, host.lastIndexOf(':')); //remove port from host
         }
-        // FIXME: Does the new code do what the commented out code used to do?
-        // res.cookie(host, "/", AUTHENTICATION_TOKEN_NAME, token, -1, false, false);
-        res.cookie(AUTHENTICATION_TOKEN_NAME, token);
+        res.cookie(host, "/", AUTHENTICATION_TOKEN_NAME, token, -1, false, false);
     }
 
 }
