@@ -27,10 +27,8 @@ public class Views {
         return model;
     }
 
-    // FIXME: Make this test more robust
-    private static void authenticateOrRedirect(Request req, Response res, String[] requiredRoles) {
-        String currentRole = req.session().attribute("role");
-        if (! Arrays.asList(requiredRoles).contains(currentRole)) {
+    private static void authenticateOrRedirect(Request req, Response res) {
+        if (req.session().attribute("userid") == null) {
             res.redirect(CeoConfig.documentRoot + "/home");
         }
     }
@@ -48,7 +46,7 @@ public class Views {
     }
 
     public static ModelAndView account(Request req, Response res) {
-        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
+        authenticateOrRedirect(req, res);
         Map<String, Object> model = getBaseModel(req, "Account");
         model.put("account_id", req.params(":id"));
         return new ModelAndView(model, "account.ftl");
@@ -56,7 +54,7 @@ public class Views {
 
     public static ModelAndView institution(Request req, Response res) {
         if (req.params(":id").equals("0")) {
-            authenticateOrRedirect(req, res, new String[]{"user", "admin"});
+            authenticateOrRedirect(req, res);
         }
         Map<String, Object> model = getBaseModel(req, "Institution");
         model.put("of_users_api_url", OF_USERS_API_URL);
@@ -71,7 +69,7 @@ public class Views {
     }
 
     public static ModelAndView project(Request req, Response res) {
-        authenticateOrRedirect(req, res, new String[]{"user", "admin"});
+        authenticateOrRedirect(req, res);
         Map<String, Object> model = getBaseModel(req, "Project");
         model.put("project_id", req.params(":id"));
         if (req.params(":id").equals("0")) {
