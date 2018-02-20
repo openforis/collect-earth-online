@@ -22,7 +22,7 @@
 	      	  </div>
 	        </form>
     	  	    <p class="header">New to CEO?</p>
-	        <input class="btn bg-lightgreen mb-2 float-right" name="register" onclick="window.location='${root}/register'" value="Register" type="button">
+	        <input class="btn bg-lightgreen float-right mb-0" name="register" onclick="window.location='${root}/register'" value="Register" type="button">
 	    
 	    <div class="registerdiv">
 		</div>

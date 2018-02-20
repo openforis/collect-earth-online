@@ -1,7 +1,7 @@
 <div id="logo-banner">
 	<div class="row mb-4 justify-content-center">
 		<div class="col-sm-4 text-center">
-			<img class="img-fluid" id="servir" src="${root}/img/servir.png">
+			<img class="img-fluid" id="servir" src="${root}/img/servir-logo.png">
 		</div>
 	</div>
 	<div class="row justify-content-center mb-2 ">

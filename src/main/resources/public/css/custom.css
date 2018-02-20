@@ -186,17 +186,20 @@ a:hover{
 /* NAV */
 /*********************************************************************/
 
-#main-nav .active{
-	border-top: solid 1px #707070;
-	margin-top:-1px;
-}
-#main-nav .nav-item:hover{
-		border-top: solid 1px lightgrey;	
-		margin-top:-1px;	
-}
+#main-nav .nav-item.active, #main-nav .nav-item.active:hover{
+	border-top: solid 4px #31BAB0;
+    margin-top: -9px;
+    padding-top: 5px;
+    }
 
-#main-nav .nav-item#username{
+#main-nav .nav-item:hover{
+	border-top: solid 4px #FCCF07;	
+    margin-top: -9px;
+    padding-top: 5px;}
+
+#main-nav .nav-item#username, #main-nav .nav-item#login-button{
 	border:none;
+	padding-top:0;
 }
 
 
@@ -266,7 +269,7 @@ a:hover{
 	border:solid 1px #31BAB0;
 
 }
-#login .header, #register-form .header, #password-form .header, {
+#login .header, #register-form .header, #password-form .header{
 	color:white;
 	background:#31BAB0;
 	margin: 0 -15px 10px -15px;;

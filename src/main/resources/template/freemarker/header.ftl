@@ -79,4 +79,4 @@
             <script type="text/javascript" src="/collect/earthFiles/js/of_collect_forms.js"></script>
         </#if>
     </head>
-    <body style="padding-top:76px;">
+    <body style="padding-top:58px;">
