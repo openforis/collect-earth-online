@@ -1,18 +1,21 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static spark.Spark.before;
 import static spark.Spark.exception;
 import static spark.Spark.get;
 import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.staticFileLocation;
 
-import java.io.File;
-
 import com.google.gson.JsonObject;
-
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
+import java.io.File;
+
+import org.openforis.ceo.collect.CollectImagery;
+import org.openforis.ceo.collect.CollectProjects;
+
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
@@ -33,7 +36,7 @@ public class Server implements SparkApplication {
         }
     }
 
-    // Sets up Spark's routing table and exception handling rules
+    // Sets up Spark's routing table and exception handling rules for the Maven/Gradle entry point
     private static void declareRoutes() {
         // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
@@ -126,6 +129,9 @@ public class Server implements SparkApplication {
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
 
+        // Allow token-based authentication if users are not logged in
+        before("/*", new CeoAuthFilter());
+
         // Routing Table: HTML pages
         get("/",                (req, res) -> { return freemarker.render(Views.home(req, res)); });
         get("/home",            (req, res) -> { return freemarker.render(Views.home(req, res)); });
@@ -145,7 +151,8 @@ public class Server implements SparkApplication {
         post("/password",       (req, res) -> { return freemarker.render(Views.password(OfUsers.getPasswordResetKey(req, res), res)); });
         get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
         post("/password-reset", (req, res) -> { return freemarker.render(Views.passwordReset(OfUsers.resetPassword(req, res), res)); });
-        get("/logout",          (req, res) -> { return freemarker.render(Views.home(OfUsers.logout(req), res)); });
+        get("/card-test",       (req, res) -> { return freemarker.render(Views.cardTest(req, res)); });
+        get("/logout",          (req, res) -> { return freemarker.render(Views.home(OfUsers.logout(req, res), res)); });
 
         // Routing Table: Projects API
         get("/get-all-projects",                (req, res) -> { return CollectProjects.getAllProjects(req, res); });
@@ -193,19 +200,14 @@ public class Server implements SparkApplication {
         exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
     }
 
-    public static String documentRoot;
-
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
-        // Store the current document root for dynamic link resolution
-        documentRoot = "";
-
         // Load the SMTP settings for sending reset password emails
         JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
-        CeoConfig.smtpUser = smtpSettings.get("smtpUser").getAsString();
-        CeoConfig.smtpServer = smtpSettings.get("smtpServer").getAsString();
-        CeoConfig.smtpPort = smtpSettings.get("smtpPort").getAsString();
-        CeoConfig.smtpPassword = smtpSettings.get("smtpPassword").getAsString();
+        CeoConfig.smtpUser      = smtpSettings.get("smtpUser").getAsString();
+        CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
+        CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
+        CeoConfig.smtpPassword  = smtpSettings.get("smtpPassword").getAsString();
 
         // Start the Jetty webserver on port 8080
         port(8080);
@@ -216,9 +218,6 @@ public class Server implements SparkApplication {
 
     // Tomcat entry point
     public void init() {
-        // Store the current document root for dynamic link resolution
-        documentRoot = "/ceo";
-
         // Set up the routing table
         declareRoutesForCollect();
     }

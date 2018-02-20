@@ -1,6 +1,6 @@
 .*
-/build/
-/target/
 collect-earth-online.iml
-/src/main/resources/public/downloads/*.csv
 /bin/
+/build/
+/src/main/resources/public/downloads/*.csv
+/target/

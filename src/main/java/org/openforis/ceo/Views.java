@@ -9,9 +9,11 @@ import spark.Response;
 
 public class Views {
 
+    private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+
     private static Map<String, Object> getBaseModel(Request req, String navlink, String contentSize) {
         Map<String, Object> model = new HashMap<String, Object>();
-        model.put("root", Server.documentRoot);
+        model.put("root", CeoConfig.documentRoot);
         model.put("background_image", "linear-gradient(to bottom right, rgba(63,171,198,0.35), rgba(63,171,198,0.05), rgba(63,171,198,0.35))");
         model.put("navlink", navlink);
         model.put("content_size", contentSize);
@@ -31,7 +33,7 @@ public class Views {
     private static void authenticateOrRedirect(Request req, Response res, String[] requiredRoles) {
         String currentRole = req.session().attribute("role");
         if (! Arrays.asList(requiredRoles).contains(currentRole)) {
-            res.redirect(Server.documentRoot + "/home");
+            res.redirect(CeoConfig.documentRoot + "/home");
         }
     }
 
@@ -59,6 +61,7 @@ public class Views {
             authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         }
         Map<String, Object> model = getBaseModel(req, "Institution", "large");
+        model.put("of_users_api_url", OF_USERS_API_URL);
         model.put("institution_id", req.params(":id"));
         return new ModelAndView(model, "institution.ftl");
     }
@@ -115,6 +118,10 @@ public class Views {
         Map<String, Object> model = getBaseModel(req, "Geo-Dash", "full");
         model.put("editable", req.queryParams("editable"));
         return new ModelAndView(model, "geo-dash.ftl");
+    }
+
+    public static ModelAndView cardTest(Request req, Response res) {
+        return new ModelAndView(getBaseModel(req, "Card-Test", "large"), "card-test.ftl");
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {

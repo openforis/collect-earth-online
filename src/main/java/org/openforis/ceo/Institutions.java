@@ -1,17 +1,18 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.expandResourcePath;
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.getNextId;
-import static org.openforis.ceo.JsonUtils.mapJsonFile;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
-import static org.openforis.ceo.JsonUtils.writeJsonFile;
-import static org.openforis.ceo.PartUtils.partToString;
-import static org.openforis.ceo.PartUtils.writeFilePart;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.getNextId;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
+import static org.openforis.ceo.utils.PartUtils.partToString;
+import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;

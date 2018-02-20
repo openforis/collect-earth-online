@@ -1,10 +1,5 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.intoJsonArray;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.toStream;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
@@ -21,6 +16,12 @@ import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.toStream;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +39,7 @@ public class OfUsers {
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+	private static final String AUTHENTICATION_TOKEN_NAME = "of-token";
 
     private static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
@@ -89,20 +91,23 @@ public class OfUsers {
             GenericData data = new GenericData();
             data.put("username", inputEmail);
             data.put("rawPassword", inputPassword);
-            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login request
+            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login
             if (response.isSuccessStatusCode()) {
                 // Authentication successful
-                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user request
+                String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
+                setAuthenticationToken(req, res, token);
+                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
                 String userId = getResponseAsJson(userRequest.execute()).getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
                 HttpRequest roleRequest = prepareGetRequest(OF_USERS_API_URL + "user/" + userId + "/groups"); // get roles
                 JsonArray jsonRoles = getResponseAsJson(roleRequest.execute()).getAsJsonArray();
                 Optional<JsonObject> matchingRole = findInJsonArray(jsonRoles, jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
                 String role = matchingRole.isPresent() ? "admin" : "user";
+                req.session().attribute("token", token);
                 req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", role);
-                res.redirect(Server.documentRoot + "/home");
+                res.redirect(CeoConfig.documentRoot + "/home");
             } else {
                 // Authentication failed
                 req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
@@ -146,8 +151,14 @@ public class OfUsers {
                             req.session().attribute("userid", newUserId);
                             req.session().attribute("username", inputEmail);
                             req.session().attribute("role", "user");
+                            response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login
+                            if (response.isSuccessStatusCode()) {
+                                // Authentication successful
+                                String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
+                                setAuthenticationToken(req, res, token);
+                            }
                             // Redirect to the Home page
-                            res.redirect(Server.documentRoot + "/home");
+                            res.redirect(CeoConfig.documentRoot + "/home");
                         }
                     }
                 } else {
@@ -161,10 +172,21 @@ public class OfUsers {
         return req;
     }
 
-    public static Request logout(Request req) {
-        req.session().removeAttribute("userid");
-        req.session().removeAttribute("username");
-        req.session().removeAttribute("role");
+    public static Request logout(Request req, Response res) {
+        GenericData data = new GenericData();
+        data.put("username", req.session().attribute("username"));
+        data.put("token", req.session().attribute("token"));
+        try {
+            preparePostRequest(OF_USERS_API_URL + "logout", data).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            req.session().removeAttribute("userid");
+            req.session().removeAttribute("username");
+            req.session().removeAttribute("role");
+            req.session().removeAttribute("token");
+            res.removeCookie("/", AUTHENTICATION_TOKEN_NAME);
+        }
         return req;
     }
 
@@ -266,6 +288,15 @@ public class OfUsers {
     public static String getAllUsers(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
         try {
+        	return getAllUsers(institutionId).toString();
+        } catch (Exception e) {
+        	req.session().attribute("flash_messages", new String[]{e.getMessage()});
+        	return new JsonArray().toString();
+        }
+    }
+    
+    public static JsonArray getAllUsers(String institutionId) {
+        try {
             if (institutionId != null) {
                 String url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
                 HttpResponse response = prepareGetRequest(url).execute(); // get group's users
@@ -287,11 +318,9 @@ public class OfUsers {
                                 return user;
                             })
                         .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
-                        .collect(intoJsonArray)
-                        .toString();
+                        .collect(intoJsonArray);
                 } else {
-                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
-                    return (new JsonArray()).toString();
+                    throw new RuntimeException("An error occurred. Please try again later.");
                 }
             } else {
                 HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
@@ -303,17 +332,15 @@ public class OfUsers {
                                     return user;
                             })
                             .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
-                            .collect(intoJsonArray)
-                            .toString();
+                            .collect(intoJsonArray);
                 } else {
-                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
-                    return (new JsonArray()).toString();
+                	throw new RuntimeException("An error occurred. Please try again later.");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
             // FIXME: Raise a red flag that an error just occurred in communicating with the database
-            return (new JsonArray()).toString();
+            return new JsonArray();
         }
     }
 
@@ -325,11 +352,11 @@ public class OfUsers {
                 JsonArray userGroups = getResponseAsJson(response).getAsJsonArray();
                 return toStream(userGroups)
                     .collect(Collectors.toMap(userGroup -> userGroup.get("groupId").getAsInt(),
-                                              userGroup -> userGroup.get("roleCode").getAsString().equals("ADM") ? "admin"
-                                              : userGroup.get("roleCode").getAsString().equals("OWN") ? "admin"
-                                              : userGroup.get("roleCode").getAsString().equals("OPR") ? "member"
-                                              : userGroup.get("roleCode").getAsString().equals("VWR") ? "member"
-                                              : "not-member",
+                                              userGroup -> {
+                                            	  String roleCode = userGroup.get("roleCode").getAsString();
+                                            	  return roleCode.equals("ADM") || roleCode.equals("OWN") ? "admin" 
+                                            		  : roleCode.equals("OPR") || roleCode.equals("VWR") ? "member"
+                                        			  : "not-member";},
                                               (a, b) -> b));
             } else {
                 // FIXME: Raise a red flag that an error just occurred in communicating with the database
@@ -435,4 +462,11 @@ public class OfUsers {
         }
     }
 
+    private static void setAuthenticationToken(Request req, Response res, String token) {
+        String host = req.host();
+        if (host.indexOf(':') > -1) {
+            host = host.substring(0, host.lastIndexOf(':')); //remove port from host
+        }
+        res.cookie(host, "/", AUTHENTICATION_TOKEN_NAME, token, -1, false, false);
+    }
 }
