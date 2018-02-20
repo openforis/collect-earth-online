@@ -1,4 +1,4 @@
-package org.openforis.ceo;
+package org.openforis.ceo.local;
 
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonFile;

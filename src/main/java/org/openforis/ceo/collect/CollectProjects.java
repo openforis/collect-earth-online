@@ -2,8 +2,8 @@ package org.openforis.ceo.collect;
 
 import static java.lang.String.format;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
-import static org.openforis.ceo.client.CollectClient.getFromCollect;
-import static org.openforis.ceo.client.CollectClient.postToCollect;
+import static org.openforis.ceo.collect.CollectClient.getFromCollect;
+import static org.openforis.ceo.collect.CollectClient.postToCollect;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findElement;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -43,8 +43,8 @@ import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.openforis.ceo.OfGroups;
-import org.openforis.ceo.OfUsers;
+import org.openforis.ceo.users.OfGroups;
+import org.openforis.ceo.users.OfUsers;
 import org.openforis.ceo.model.ProjectStats;
 import org.openforis.ceo.utils.JsonUtils;
 

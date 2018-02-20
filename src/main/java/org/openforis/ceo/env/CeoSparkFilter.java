@@ -1,4 +1,4 @@
-package org.openforis.ceo;
+package org.openforis.ceo.env;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;

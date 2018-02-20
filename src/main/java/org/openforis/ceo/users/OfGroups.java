@@ -1,4 +1,4 @@
-package org.openforis.ceo;
+package org.openforis.ceo.users;
 
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getMemberValue;
@@ -6,6 +6,8 @@ import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.partToString;
+
+import org.openforis.ceo.env.CeoConfig;
 
 import java.io.IOException;
 import java.util.Arrays;

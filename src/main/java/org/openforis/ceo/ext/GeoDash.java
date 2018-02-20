@@ -1,7 +1,4 @@
-package org.openforis.ceo;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+package org.openforis.ceo.ext;
 
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -10,6 +7,8 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.net.URLDecoder;
 import java.util.Optional;
 import java.util.UUID;

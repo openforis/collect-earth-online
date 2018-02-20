@@ -1,4 +1,7 @@
-package org.openforis.ceo;
+package org.openforis.ceo.users;
+
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -14,12 +17,9 @@ import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.utils.JsonUtils.parseJson;
-
 import java.io.IOException;
 import java.util.Optional;
+import org.openforis.ceo.env.CeoConfig;
 import spark.Filter;
 import spark.Request;
 import spark.Response;

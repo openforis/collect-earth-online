@@ -1,10 +1,10 @@
 package org.openforis.ceo.collect;
 
-import static org.openforis.ceo.OfGroups.associateResource;
-import static org.openforis.ceo.OfGroups.disassociateResource;
-import static org.openforis.ceo.OfGroups.getResourceIds;
-import static org.openforis.ceo.client.CollectClient.getFromCollect;
-import static org.openforis.ceo.client.CollectClient.postToCollect;
+import static org.openforis.ceo.users.OfGroups.associateResource;
+import static org.openforis.ceo.users.OfGroups.disassociateResource;
+import static org.openforis.ceo.users.OfGroups.getResourceIds;
+import static org.openforis.ceo.collect.CollectClient.getFromCollect;
+import static org.openforis.ceo.collect.CollectClient.postToCollect;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findElement;
 import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;

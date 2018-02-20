@@ -1,4 +1,4 @@
-package org.openforis.ceo.client;
+package org.openforis.ceo.collect;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -20,7 +20,7 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import java.io.IOException;
 import java.util.Map;
 
-import org.openforis.ceo.CeoConfig;
+import org.openforis.ceo.env.CeoConfig;
 
 public class CollectClient {
 

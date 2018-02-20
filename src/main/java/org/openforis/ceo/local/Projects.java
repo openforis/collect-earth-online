@@ -1,4 +1,4 @@
-package org.openforis.ceo;
+package org.openforis.ceo.local;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -25,6 +25,8 @@ import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+
+import org.openforis.ceo.env.CeoConfig;
 
 import java.io.File;
 import java.io.FileWriter;

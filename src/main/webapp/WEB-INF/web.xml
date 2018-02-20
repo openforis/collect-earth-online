@@ -61,7 +61,7 @@
 
   <filter>
     <filter-name>SparkFilter</filter-name>
-    <filter-class>org.openforis.ceo.CeoSparkFilter</filter-class>
+    <filter-class>org.openforis.ceo.env.CeoSparkFilter</filter-class>
     <init-param>
       <param-name>applicationClass</param-name>
       <param-value>org.openforis.ceo.Server</param-value>

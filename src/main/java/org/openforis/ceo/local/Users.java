@@ -1,4 +1,4 @@
-package org.openforis.ceo;
+package org.openforis.ceo.local;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -14,6 +14,9 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
+
+import org.openforis.ceo.env.CeoConfig;
+import org.openforis.ceo.utils.Mail;
 
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +66,7 @@ public class Users {
         return req;
     }
 
-    protected static boolean isEmail(String email) {
+    public static boolean isEmail(String email) {
         String emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
             "(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*" +
             "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+" +
