@@ -44,7 +44,7 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules for the Maven/Gradle entry point
-    private static void declareRoutes() {
+    private static void declareLocalStorageRoutes() {
         // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -124,7 +124,7 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules for use with Collect and Of-Users
-    private static void declareRoutesForCollect() {
+    private static void declareRemoteStorageRoutes() {
         // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -220,13 +220,13 @@ public class Server implements SparkApplication {
         port(8080);
 
         // Set up the routing table
-        declareRoutes();
+        declareLocalStorageRoutes();
     }
 
     // Tomcat entry point
     public void init() {
         // Set up the routing table
-        declareRoutesForCollect();
+        declareRemoteStorageRoutes();
     }
 
 }
