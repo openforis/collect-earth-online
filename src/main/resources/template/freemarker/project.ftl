@@ -203,7 +203,7 @@
 			<div class="col-xl-6 col-lg-12">
                 <h2>Plot Design</h2>
 	            <div id="plot-design">
-	            		<div class="row">
+            		<div class="row">
 		                <div id="plot-design-col1" class="col-xl-6 col-md-12">
 		                    <label class="small mb-0">Spatial Distribution</label>
 										<div class="form-check">
@@ -314,12 +314,12 @@
                         </tr>
                     </tbody>
                 </table>
-            </fieldset>
+            </div>
             <div id="add-sample-value-group" style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                 <input type="button" class="button" value="Add Sample Value Group" ng-click="project.addSampleValueGroup()">
                 <input type="text" autocomplete="off" ng-model="project.newSampleValueGroupName">
             </div>
-        </div>
+        </form>
     </div>
     <div id="spinner"></div>
 </div>
