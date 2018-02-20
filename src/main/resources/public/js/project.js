@@ -128,23 +128,11 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.downloadPlotData = function () {
-        $http.get(this.root + "/dump-project-aggregate-data/" + this.details.id)
-            .then(function successCallback(response) {
-                window.open(response.data);
-            }, function errorCallback(response) {
-                console.log(response);
-                alert("Error downloading plot data for this project. See console for details.");
-            });
+        window.open(this.root + "/dump-project-aggregate-data/" + this.details.id, "_blank");
     };
 
     this.downloadSampleData = function () {
-        $http.get(this.root + "/dump-project-raw-data/" + this.details.id)
-            .then(function successCallback(response) {
-                window.open(response.data);
-            }, function errorCallback(response) {
-                console.log(response);
-                alert("Error downloading sample data for this project. See console for details.");
-            });
+        window.open(this.root + "/dump-project-raw-data/" + this.details.id, "_blank");
     };
 
     this.setPrivacyLevel = function (privacyLevel) {

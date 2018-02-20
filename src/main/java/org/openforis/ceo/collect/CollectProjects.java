@@ -328,12 +328,12 @@ public class CollectProjects {
             
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate + ".csv";
 
             HttpServletResponse response = res.raw();
             writeCsvFile(response, csvHeader, contentStream, outputFileName); 
             
-            return response;
+            return null;
         }
     }
 
@@ -428,12 +428,12 @@ public class CollectProjects {
 
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate + ".csv";
 
             HttpServletResponse response = res.raw();
             writeCsvFile(response, csvHeader, contentStream, outputFileName); 
             
-            return response;
+            return null;
         }
     }
 
