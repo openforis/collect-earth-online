@@ -11,11 +11,10 @@ public class Views {
 
     private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
 
-    private static Map<String, Object> getBaseModel(Request req, String navlink, String contentSize) {
+    private static Map<String, Object> getBaseModel(Request req, String navlink) {
         Map<String, Object> model = new HashMap<String, Object>();
         model.put("root", CeoConfig.documentRoot);
         model.put("navlink", navlink);
-        model.put("content_size", contentSize);
         model.put("userid", req.session().attribute("userid"));
         model.put("username", req.session().attribute("username"));
         model.put("role", req.session().attribute("role"));
@@ -37,20 +36,20 @@ public class Views {
     }
 
     public static ModelAndView home(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Home", "large"), "home.ftl");
+        return new ModelAndView(getBaseModel(req, "Home"), "home.ftl");
     }
 
     public static ModelAndView about(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "About", "small"), "about.ftl");
+        return new ModelAndView(getBaseModel(req, "About"), "about.ftl");
     }
 
     public static ModelAndView support(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Support", "large"), "support.ftl");
+        return new ModelAndView(getBaseModel(req, "Support"), "support.ftl");
     }
 
     public static ModelAndView account(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
-        Map<String, Object> model = getBaseModel(req, "Account", "large");
+        Map<String, Object> model = getBaseModel(req, "Account");
         model.put("account_id", req.params(":id"));
         return new ModelAndView(model, "account.ftl");
     }
@@ -59,21 +58,21 @@ public class Views {
         if (req.params(":id").equals("0")) {
             authenticateOrRedirect(req, res, new String[]{"user", "admin"});
         }
-        Map<String, Object> model = getBaseModel(req, "Institution", "large");
+        Map<String, Object> model = getBaseModel(req, "Institution");
         model.put("of_users_api_url", OF_USERS_API_URL);
         model.put("institution_id", req.params(":id"));
         return new ModelAndView(model, "institution.ftl");
     }
 
     public static ModelAndView collection(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "Collection", "large");
+        Map<String, Object> model = getBaseModel(req, "Collection");
         model.put("project_id", req.params(":id"));
         return new ModelAndView(model, "collection.ftl");
     }
 
     public static ModelAndView project(Request req, Response res) {
         authenticateOrRedirect(req, res, new String[]{"user", "admin"});
-        Map<String, Object> model = getBaseModel(req, "Project", "large");
+        Map<String, Object> model = getBaseModel(req, "Project");
         model.put("project_id", req.params(":id"));
         if (req.params(":id").equals("0")) {
             model.put("institution_id", req.queryParams("institution"));
@@ -83,7 +82,7 @@ public class Views {
 
     public static ModelAndView login(Request req, Response res) {
         //String inputReturnURL = req.queryParams("returnurl");
-        Map<String, Object> model = getBaseModel(req, "Project", "large");
+        Map<String, Object> model = getBaseModel(req, "Login");
         String inputReturnURL = req.queryParams("returnurl");
         String returnURL = "home";
         if(inputReturnURL != null && !inputReturnURL.isEmpty()) {
@@ -99,32 +98,32 @@ public class Views {
     }
 
     public static ModelAndView register(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Register", "large"), "register.ftl");
+        return new ModelAndView(getBaseModel(req, "Register"), "register.ftl");
     }
 
     public static ModelAndView password(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Password", "large"), "password.ftl");
+        return new ModelAndView(getBaseModel(req, "Password"), "password.ftl");
     }
 
     public static ModelAndView passwordReset(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "Password-Reset", "large");
+        Map<String, Object> model = getBaseModel(req, "Password-Reset");
         model.put("email", req.queryParams("email"));
         model.put("password_reset_key", req.queryParams("password-reset-key"));
         return new ModelAndView(model, "password-reset.ftl");
     }
 
     public static ModelAndView geodash(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "Geo-Dash", "full");
+        Map<String, Object> model = getBaseModel(req, "Geo-Dash");
         model.put("editable", req.queryParams("editable"));
         return new ModelAndView(model, "geo-dash.ftl");
     }
 
     public static ModelAndView cardTest(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Card-Test", "large"), "card-test.ftl");
+        return new ModelAndView(getBaseModel(req, "Card-Test"), "card-test.ftl");
     }
 
     public static ModelAndView pageNotFound(Request req, Response res) {
-        return new ModelAndView(getBaseModel(req, "Page-Not-Found", "large"), "page-not-found.ftl");
+        return new ModelAndView(getBaseModel(req, "Page-Not-Found"), "page-not-found.ftl");
     }
 
 }
