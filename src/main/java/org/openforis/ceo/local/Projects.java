@@ -1,14 +1,5 @@
 package org.openforis.ceo.local;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.PrecisionModel;
-
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -26,8 +17,14 @@ import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
-import org.openforis.ceo.env.CeoConfig;
-
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.PrecisionModel;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
@@ -47,6 +44,7 @@ import java.util.stream.Stream;
 import javax.servlet.MultipartConfigElement;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
+import org.openforis.ceo.env.CeoConfig;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;

@@ -1,8 +1,5 @@
 package org.openforis.ceo.local;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -13,6 +10,8 @@ import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;

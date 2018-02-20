@@ -471,4 +471,5 @@ public class OfUsers {
         }
         res.cookie(host, "/", AUTHENTICATION_TOKEN_NAME, token, -1, false, false);
     }
+
 }

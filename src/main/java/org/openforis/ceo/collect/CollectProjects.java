@@ -21,6 +21,10 @@ import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.RequestUtils.getIntParam;
 import static org.openforis.ceo.utils.RequestUtils.getParam;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,21 +42,13 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
+import org.openforis.ceo.model.ProjectStats;
 import org.openforis.ceo.users.OfGroups;
 import org.openforis.ceo.users.OfUsers;
-import org.openforis.ceo.model.ProjectStats;
 import org.openforis.ceo.utils.JsonUtils;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 import spark.Request;
 import spark.Response;
 import spark.utils.StringUtils;

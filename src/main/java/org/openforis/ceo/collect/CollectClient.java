@@ -1,5 +1,7 @@
 package org.openforis.ceo.collect;
 
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpMethods;
@@ -14,12 +16,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import static org.openforis.ceo.utils.JsonUtils.parseJson;
-
 import java.io.IOException;
 import java.util.Map;
-
 import org.openforis.ceo.env.CeoConfig;
 
 public class CollectClient {

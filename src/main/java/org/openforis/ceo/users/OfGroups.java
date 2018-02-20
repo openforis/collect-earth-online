@@ -7,17 +7,6 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 
-import org.openforis.ceo.env.CeoConfig;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.http.Part;
-
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -37,7 +26,14 @@ import com.google.api.client.util.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.Part;
+import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 import spark.utils.IOUtils;
