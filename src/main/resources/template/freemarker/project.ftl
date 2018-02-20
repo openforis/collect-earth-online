@@ -91,21 +91,21 @@
         <div class="row">
  			<div class="col-xl-8 col-lg-12">
  				<h2>Project Info</h2>
-	        		<form id="project-info" >
-  					<div class="form-group">
-		                <label class="small" for="project-name">Name</label>
-		                <input class="form-control form-control-sm" type="text" id="project-name" name="name" autocomplete="off" ng-model="project.details.name">
-		            	</div>
-  					<div class="form-group">
-		                <label class="small" for="project-description">Description</label>
-		                <textarea class="form-control form-control-sm"  id="project-description" name="description" ng-model="project.details.description"></textarea>
-		            	</div>
-	            </form>
+	        		<div id="project-info" >
+	  					<div class="form-group">
+			                <label class="small" for="project-name">Name</label>
+			                <input class="form-control form-control-sm" type="text" id="project-name" name="name" autocomplete="off" ng-model="project.details.name">
+			            	</div>
+	  					<div class="form-group">
+			                <label class="small" for="project-description">Description</label>
+			                <textarea class="form-control form-control-sm"  id="project-description" name="description" ng-model="project.details.description"></textarea>
+			            	</div>
+		            </div>
             </div>
             <div class="col-xl-4 col-lg-12">
 				<h2 class="mb-0">Project Visibility</h2>
 				<h3>Privacy Level</h3>
-	            <form id="project-visibility">
+	            <div id="project-visibility">
 					<div class="form-check">
                              <input class="form-check-input"  type="radio" id="privacy-public" name="privacy-level" value="public" ng-click="project.setPrivacyLevel('public')">
                              <label class="form-check-label small" for="privacy-level">Public: <i>All Users</i></label>
@@ -122,13 +122,13 @@
 	                                <input class="form-check-input"  type="radio" id="privacy-invitation" name="privacy-level" value="invitation" ng-click="project.setPrivacyLevel('invitation')" disabled>
 	                                <label class="form-check-label small" for="privacy-level">Invitation: <i>Coming Soon</i></label>
 					</div>
-	            </form>
+	            </div>
             </div>
 		</div>
 		<div class="row">
  			<div class="col-xl-6 col-lg-12">
                 <h2>Project AOI</h2>
-		            <form id="project-aoi">
+		            <div id="project-aoi">
               			<div class="form-group">
 			                <label class="small">Hold CTRL and click-and-drag a bounding box on the map</label>
 			                <div class="row">  
@@ -150,12 +150,12 @@
 								</div>
 			                </div>
 		                </div>
-		            </form>
+		            </div>
             </div>
  			<div class="col-xl-6 col-lg-12">
                 <h2>Project Imagery</h2>
  			
-            <form id="project-imagery">
+            <div id="project-imagery">
               <div class="form-group mb-1">
                 <label class="small mb-0" for="base-map-source">Basemap Source</label>
                 <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1" ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
@@ -196,13 +196,13 @@
                     <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
                 </select>
                 </div>
-            </form>
+            </div>
             </div>
 		</div>
 		<div class="row">
 			<div class="col-xl-6 col-lg-12">
                 <h2>Plot Design</h2>
-	            <form id="plot-design">
+	            <div id="plot-design">
 	            		<div class="row">
 		                <div id="plot-design-col1" class="col-xl-6 col-md-12">
 		                    <label class="small mb-0">Spatial Distribution</label>
@@ -244,10 +244,10 @@
 		                    <input class="form-control form-control-sm" type="number" id="plot-size" name="plot-size" autocomplete="off" min="0.0" step="any" ng-model="project.details.plotSize">
 		                </div>
 	                </div>
-	            </form>
+	            </div>
 	            </div>
 			<div class="col-xl-4 offset-xl-1 col-lg-12">
-	            <form id="sample-design">
+	            <div id="sample-design">
 	                <h2>Sample Design</h2>
 	                <label class="small mb-0">Spatial Distribution</label>
 					<div class="form-check">
@@ -266,12 +266,12 @@
 		                <label class="small mb-0" for="sample-resolution">Sample resolution (m)</label>
 		                <input class="form-control form-control-sm" type="number" id="sample-resolution" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="project.details.sampleResolution" disabled>
 	                </div>
-	            </form>
+	            </div>
            </div>           
 		</div>
            
             <hr>
-            <form class="sample-value-info" ng-repeat="sampleValueGroup in project.details.sampleValues">
+            <div class="sample-value-info" ng-repeat="sampleValueGroup in project.details.sampleValues">
                 <h2>Sample Value: {{ sampleValueGroup.name }}</h2>
                 <table class="table table-sm">
                     <thead>
@@ -319,7 +319,7 @@
                 <input type="button" class="button" value="Add Sample Value Group" ng-click="project.addSampleValueGroup()">
                 <input type="text" autocomplete="off" ng-model="project.newSampleValueGroupName">
             </div>
-        </form>
+        </div>
     </div>
     <div id="spinner"></div>
 </div>

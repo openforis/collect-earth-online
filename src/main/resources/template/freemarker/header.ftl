@@ -25,6 +25,7 @@
           <script type="text/javascript" src="${root}/js/html5shiv.js"></script>
         <![endif]-->
         <script type="text/javascript" src="${root}/js/angular.min.js"></script>
+        <script type="text/javascript" src="${root}/js/angular.min.js.map"></script>
         <script type="text/javascript" src="${root}/js/openlayers-3.13.0.js"></script>
         <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
         <script type="text/javascript" src="${root}/js/map-utils.js"></script>
@@ -53,6 +54,29 @@
         <!--------------------------------------------------------------->
         <!-- END: Billy's GEODASH libraries, FIXME: Simplify this list -->
         <!--------------------------------------------------------------->
+        </#if>
+        <#if navlink == "Card-Test">
+            <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery-ui.css">
+            <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery.selectBoxIt.css">
+            <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery-steps.css">
+            <link rel="stylesheet" href="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.css">
+            <link rel="stylesheet" href="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.css">
+            <link rel="stylesheet" href="/collect/earthFiles/css/of-collect-forms.css">
+            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery-3.3.1.min.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery-ui.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.blockUI.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.selectBoxIt.min.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.steps.openforis.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/bootstrap/moment.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/openforis/of.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/openforis/of-objects.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/openforis/of-arrays.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui-forms.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui-forms-validation.js"></script>
+            <script type="text/javascript" src="/collect/earthFiles/js/of_collect_forms.js"></script>
         </#if>
     </head>
     <body style="padding-top:76px;">

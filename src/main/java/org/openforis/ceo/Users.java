@@ -1,19 +1,20 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.getNextId;
-import static org.openforis.ceo.JsonUtils.intoJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonFile;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
-import static org.openforis.ceo.JsonUtils.toStream;
-import static org.openforis.ceo.JsonUtils.writeJsonFile;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.getNextId;
+import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.toStream;
+import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,9 +34,9 @@ public class Users {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputReturnURL = req.queryParams("returnurl");
-        String returnURL = Server.documentRoot + "/home";
+        String returnURL = CeoConfig.documentRoot + "/home";
         if(inputReturnURL != null && !inputReturnURL.isEmpty()) {
-            returnURL =  Server.documentRoot + "/" + inputReturnURL + "?" + req.queryString();
+            returnURL =  CeoConfig.documentRoot + "/" + inputReturnURL + "?" + req.queryString();
         }//
         // Check if email exists
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
@@ -122,7 +123,7 @@ public class Users {
                 req.session().attribute("role", newUserRole);
 
                 // Redirect to the Home page
-                res.redirect(Server.documentRoot + "/home");
+                res.redirect(CeoConfig.documentRoot + "/home");
             }
         }
         return req;

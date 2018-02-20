@@ -10,6 +10,7 @@
         <div id="institution-view" class="col-xl-6 col-lg-8 " ng-show="institution.pageMode == 'view'">
             <div id="institution-logo-container">
                 <a href="{{ institution.details.url }}">
+                    <img src="${ of_users_api_url }/group/logo/{{ institution.details.id }}" alt="logo" />
                 </a>
             </div>
             <h1><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>

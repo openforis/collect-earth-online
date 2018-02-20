@@ -1,6 +1,6 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.findElement;
+import static org.openforis.ceo.utils.JsonUtils.findElement;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
