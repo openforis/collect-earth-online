@@ -1,19 +1,48 @@
 * LICENSE
-  1. Ask FAO about changing MIT to AGPL.
+  1. Follow up with FAO about changing MIT to a reciprocal license like AGPL or EPL.
 * README.org
   1. Add a Description section to explain the website's purpose.
   2. Include git clone instructions in the Installation section.
   3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
+  4. Document how to add public imagery to the Collect H2 database.
 * notes/
   1. Remove outdated and unnecessary files.
 * test/java/org/openforis/ceo/ServerTest.java
   1. Write a unit test suite.
 * Server.java
-  1. Use deploy/clientkeystore file to enable HTTPS sitewide in declareRoutes() and declareRoutesForCollect().
-  2. Remove /card-test route from declareRoutesForCollect() once survey cards are added to the Project page.
-  3. Remove /get-unanalyzed-plot-byid/:projid/:id route from the declareRoutes*() functions.
+  1. Use deploy/clientkeystore file to enable HTTPS sitewide in declareLocalStorageRoutes() and declareRemoteStorageRoutes().
+  2. Remove /card-test route from declareRemoteStorageRoutes() once survey cards are added to the Project page.
+  3. Remove /get-unanalyzed-plot-byid/:projid/:id route from both declare*StorageRoutes() functions.
+* Views.java
+  1. Make sure institution() works when OF_USERS_API_URL="";
+  2. Remove the "role" attribute from Freemarker data.
+  3. Remove cardTest() once survey cards are added to the Project page.
+  4. Verify that all Freemarker data parameters are used:
+     |--------------------+--------------------------------------------------------|
+     | home.ftl           | defaults                                               |
+     | about.ftl          | defaults                                               |
+     | support.ftl        | defaults                                               |
+     | account.ftl        | defaults + account_id                                  |
+     | institution.ftl    | defaults + of_users_api_url + institution_id           |
+     | collection.ftl     | defaults + project_id                                  |
+     | project.ftl        | defaults + project_id + institution_id (creation only) |
+     | login.ftl          | defaults + returnurl + querystring                     |
+     | register.ftl       | defaults                                               |
+     | password.ftl       | defaults                                               |
+     | password-reset.ftl | defaults + email + password_reset_key                  |
+     | geo-dash.ftl       | defaults + editable                                    |
+     | card-test.ftl      | defaults                                               |
+     | page-not-found.ftl | defaults                                               |
+     |--------------------+--------------------------------------------------------|
+* CeoAuthFilter.java
+  1. Refactor HTTP_TRANSPORT, JSON_FACTORY, createRequestFactory(), prepareGetRequest(), preparePostRequest(), and getResponseAsJson() out into RequestUtils.java.
 * GeoDash.java
   1. Complete updateDashBoardByID() stub function.
+
+
+* (*).java
+  1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
+
 * Imagery.java
   1. Remove institutionId argument from deleteInstitutionImagery() as it is no longer needed, and notify Stefano to make the same change in CollectImagery.java.
 * imagery-list.json
