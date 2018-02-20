@@ -1,14 +1,15 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonArray;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
-import static org.openforis.ceo.JsonUtils.writeJsonFile;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
+
 import java.net.URLDecoder;
 import java.util.Optional;
 import java.util.UUID;

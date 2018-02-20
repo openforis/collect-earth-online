@@ -1,6 +1,6 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static spark.Spark.before;
 import static spark.Spark.exception;
 import static spark.Spark.get;
@@ -12,6 +12,10 @@ import com.google.gson.JsonObject;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
+
+import org.openforis.ceo.collect.CollectImagery;
+import org.openforis.ceo.collect.CollectProjects;
+
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 

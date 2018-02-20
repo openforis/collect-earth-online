@@ -1,4 +1,4 @@
-package org.openforis.ceo;
+package org.openforis.ceo.utils;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

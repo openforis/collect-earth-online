@@ -1,22 +1,5 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.expandResourcePath;
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
-import static org.openforis.ceo.JsonUtils.getNextId;
-import static org.openforis.ceo.JsonUtils.intoJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonFile;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
-import static org.openforis.ceo.JsonUtils.toElementStream;
-import static org.openforis.ceo.JsonUtils.toStream;
-import static org.openforis.ceo.JsonUtils.writeJsonFile;
-import static org.openforis.ceo.PartUtils.partToString;
-import static org.openforis.ceo.PartUtils.partsToJsonObject;
-import static org.openforis.ceo.PartUtils.writeFilePart;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -25,6 +8,24 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
+
+import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.flatMapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.getNextId;
+import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.toElementStream;
+import static org.openforis.ceo.utils.JsonUtils.toStream;
+import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
+import static org.openforis.ceo.utils.PartUtils.partToString;
+import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;

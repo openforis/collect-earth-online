@@ -1,15 +1,15 @@
-package org.openforis.ceo;
+package org.openforis.ceo.collect;
 
-import static org.openforis.ceo.Collect.getFromCollect;
-import static org.openforis.ceo.Collect.postToCollect;
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findElement;
-import static org.openforis.ceo.JsonUtils.mapJsonArray;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.toElementStream;
 import static org.openforis.ceo.OfGroups.associateResource;
 import static org.openforis.ceo.OfGroups.disassociateResource;
 import static org.openforis.ceo.OfGroups.getResourceIds;
+import static org.openforis.ceo.client.CollectClient.getFromCollect;
+import static org.openforis.ceo.client.CollectClient.postToCollect;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.findElement;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

@@ -1,6 +1,4 @@
-package org.openforis.ceo;
-
-import static org.openforis.ceo.JsonUtils.parseJson;
+package org.openforis.ceo.client;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -16,10 +14,15 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+
 import java.io.IOException;
 import java.util.Map;
 
-public class Collect {
+import org.openforis.ceo.CeoConfig;
+
+public class CollectClient {
 
 	static final String COLLECT_API_URL = CeoConfig.collectApiUrl;
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();

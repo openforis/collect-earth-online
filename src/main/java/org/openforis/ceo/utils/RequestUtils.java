@@ -1,4 +1,4 @@
-package org.openforis.ceo;
+package org.openforis.ceo.utils;
 
 import spark.Request;
 

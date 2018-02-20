@@ -1,11 +1,11 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.filterJsonFile;
-import static org.openforis.ceo.JsonUtils.getNextId;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.readJsonFile;
-import static org.openforis.ceo.JsonUtils.writeJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.getNextId;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

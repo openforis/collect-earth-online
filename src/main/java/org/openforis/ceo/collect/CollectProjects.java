@@ -1,25 +1,25 @@
-package org.openforis.ceo;
+package org.openforis.ceo.collect;
 
 import static java.lang.String.format;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
-import static org.openforis.ceo.Collect.getFromCollect;
-import static org.openforis.ceo.Collect.postToCollect;
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.findElement;
-import static org.openforis.ceo.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.JsonUtils.flatMapJsonArray;
-import static org.openforis.ceo.JsonUtils.getDateAsString;
-import static org.openforis.ceo.JsonUtils.getMemberValue;
-import static org.openforis.ceo.JsonUtils.intoJsonArray;
-import static org.openforis.ceo.JsonUtils.mapJsonArray;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.singletonArray;
-import static org.openforis.ceo.JsonUtils.toElementStream;
-import static org.openforis.ceo.JsonUtils.toStream;
-import static org.openforis.ceo.PartUtils.partToString;
-import static org.openforis.ceo.PartUtils.partsToJsonObject;
-import static org.openforis.ceo.RequestUtils.getIntParam;
-import static org.openforis.ceo.RequestUtils.getParam;
+import static org.openforis.ceo.client.CollectClient.getFromCollect;
+import static org.openforis.ceo.client.CollectClient.postToCollect;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.findElement;
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.flatMapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.getDateAsString;
+import static org.openforis.ceo.utils.JsonUtils.getMemberValue;
+import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.singletonArray;
+import static org.openforis.ceo.utils.JsonUtils.toElementStream;
+import static org.openforis.ceo.utils.JsonUtils.toStream;
+import static org.openforis.ceo.utils.PartUtils.partToString;
+import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.utils.RequestUtils.getIntParam;
+import static org.openforis.ceo.utils.RequestUtils.getParam;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,6 +42,11 @@ import java.util.stream.Stream;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.openforis.ceo.OfGroups;
+import org.openforis.ceo.OfUsers;
+import org.openforis.ceo.model.ProjectStats;
+import org.openforis.ceo.utils.JsonUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -66,11 +71,10 @@ public class CollectProjects {
      * @return the JSON array of JSON objects (one per project) that match the relevant query filters
      */
     public static String getAllProjects(Request req, Response res) {
-        String username = getLoggedUsername(req);
         Integer userId = getLoggedUserId(req);
         String institutionId = req.queryParams("institutionId");
         Map<String, Object> params = new HashMap<String, Object>();
-        params.put("username", username);
+        params.put("userId", userId);
         params.put("groupId", institutionId);
         params.put("includeTemporary", true);
         params.put("full", true);
@@ -202,11 +206,11 @@ public class CollectProjects {
         ProjectStats stats = new ProjectStats();
         
         int totalPlots = countCollectSamplingPointItems(projectId, 0, null);
-        stats.flaggedPlots = countCollectSamplingPointItems(projectId, 0, Arrays.asList("true"));
-        stats.analyzedPlots = countCollectRecords(projectId, true, userId);
-        stats.unanalyzedPlots = totalPlots - stats.analyzedPlots - stats.flaggedPlots;
-        stats.contributors = countCollectContributors(projectId);
-        stats.members = getProjectUsers(projectId).length;
+        stats.setFlaggedPlots(countCollectSamplingPointItems(projectId, 0, Arrays.asList("true")));
+        stats.setAnalyzedPlots(countCollectRecords(projectId, true, userId));
+        stats.setUnanalyzedPlots(totalPlots - stats.getAnalyzedPlots() - stats.getFlaggedPlots());
+        stats.setContributors(countCollectContributors(projectId));
+        stats.setMembers(getProjectUsers(projectId).length);
         return JsonUtils.toJson(stats);
     }
     
@@ -996,7 +1000,7 @@ public class CollectProjects {
         	JsonArray users = OfUsers.getAllUsers(institutionId);
             return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
         } else {
-        	JsonArray institutions = OfGroups.getAllInstitutions();
+        	JsonArray institutions = OfGroups.getAllInstitutions(null);
             Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
                                                                        institution ->
                                                                        institution.get("id").getAsString().equals(institutionId));
@@ -1025,17 +1029,6 @@ public class CollectProjects {
                 return new String[]{};
             }
         }
-    }
-    
-    /**
-     * Wrapper of Project Stats info
-     */
-    private static class ProjectStats {
-        public int flaggedPlots = 0;
-        public int analyzedPlots = 0;
-        public int unanalyzedPlots = 0;
-        public int members = 0;
-        public int contributors = 0;
     }
     
     //START OF Projects.java common functions
