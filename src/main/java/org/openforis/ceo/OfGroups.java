@@ -1,20 +1,17 @@
 package org.openforis.ceo;
 
-import static org.openforis.ceo.JsonUtils.filterJsonArray;
-import static org.openforis.ceo.JsonUtils.getMemberValue;
-import static org.openforis.ceo.JsonUtils.mapJsonArray;
-import static org.openforis.ceo.JsonUtils.parseJson;
-import static org.openforis.ceo.JsonUtils.toStream;
-import static org.openforis.ceo.PartUtils.partToString;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.getMemberValue;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.toStream;
+import static org.openforis.ceo.utils.PartUtils.partToString;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
@@ -78,7 +75,7 @@ public class OfGroups {
     }
 
     private static HttpRequest preparePostRequest(String url) throws IOException {
-    	return preparePostRequest(url, null);
+        return preparePostRequest(url, null);
     }
     
     private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
@@ -96,26 +93,31 @@ public class OfGroups {
     }
 
     public static String getAllInstitutions(Request req, Response res) {
-    	return getAllInstitutions().toString();
+        String username = (String) req.raw().getSession().getAttribute("username");
+		return getAllInstitutions(username).toString();
     }
-    	
-	public static JsonArray getAllInstitutions() {
+        
+    public static JsonArray getAllInstitutions(String username) {
         try {
             String url = OF_USERS_API_URL + "group";
             HttpResponse response = prepareGetRequest(url).execute(); // get all groups
+            String privateInstitutionName = username == null ? null : username.replaceAll("\\W", "_") + "_private_group";
             if (response.isSuccessStatusCode()) {
                 JsonArray groups = getResponseAsJson(response).getAsJsonArray();
+                
                 List<String> hiddenInstitutions = Arrays.asList("default_public_group", "admin_private_group");
                 JsonArray visibleGroups = filterJsonArray(groups, group ->
                                                           group.get("enabled").getAsBoolean() == true
+                                                          && (!group.get("name").getAsString().endsWith("_private_group") || 
+                                                        		  privateInstitutionName != null && group.get("name").getAsString().equals(privateInstitutionName)) 
                                                           && !hiddenInstitutions.contains(group.get("name").getAsString()));
                 JsonArray institutions = mapJsonArray(visibleGroups, group -> {
-                	JsonObject institution = new JsonObject();
-                	institution.addProperty("id", getMemberValue(group, "id", Integer.class));
-                	institution.addProperty("name", getMemberValue(group, "label", String.class));
-                	institution.add("admins", new JsonArray()); //TODO
-                	institution.add("members", new JsonArray()); //TODO
-                	return institution;
+                    JsonObject institution = new JsonObject();
+                    int institutionId = getMemberValue(group, "id", Integer.class);
+					institution.addProperty("id", institutionId);
+                    institution.addProperty("name", getMemberValue(group, "label", String.class));
+                    addUsersInGroup(institutionId, institution);
+                    return institution;
                 });
                 return institutions;
             } else {
@@ -135,23 +137,7 @@ public class OfGroups {
             HttpResponse groupResponse = prepareGetRequest(groupUrl).execute(); // get group
             if (groupResponse.isSuccessStatusCode()) {
                 JsonObject group = getResponseAsJson(groupResponse).getAsJsonObject();
-                String groupUsersUrl = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
-                HttpResponse groupUsersResponse = prepareGetRequest(groupUsersUrl).execute(); // get group's users
-                JsonArray groupUsers = getResponseAsJson(groupUsersResponse).getAsJsonArray();
-                JsonArray members = new JsonArray();
-                JsonArray admins = new JsonArray();
-                JsonArray pending = new JsonArray();
-                toStream(groupUsers)
-                    .forEach(groupUser -> {
-                            if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
-                            else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
-                            else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
-                            else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
-                            else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
-                        });
-                group.add("admins", admins);
-                group.add("members", members);
-                group.add("pending", pending);
+                addUsersInGroup(institutionId, group);
                 return Optional.ofNullable(group);
             } else {
                 // FIXME: Raise a red flag that an error just occurred in communicating with the database
@@ -162,6 +148,30 @@ public class OfGroups {
             // FIXME: Raise a red flag that an error just occurred in communicating with the database
             return Optional.empty();
         }
+    }
+
+    private static void addUsersInGroup(int institutionId, JsonObject group) {
+    	try {
+	        String groupUsersUrl = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
+	        HttpResponse groupUsersResponse = prepareGetRequest(groupUsersUrl).execute(); // get group's users
+	        JsonArray groupUsers = getResponseAsJson(groupUsersResponse).getAsJsonArray();
+	        JsonArray members = new JsonArray();
+	        JsonArray admins = new JsonArray();
+	        JsonArray pending = new JsonArray();
+	        toStream(groupUsers)
+	            .forEach(groupUser -> {
+	                    if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
+	                    else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
+	                    else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
+	                    else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
+	                    else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
+	                });
+	        group.add("admins", admins);
+	        group.add("members", members);
+	        group.add("pending", pending);
+    	} catch (IOException e) {
+    		throw new RuntimeException(e);
+    	}
     }
 
     public static String getInstitutionDetails(Request req, Response res) {
@@ -330,21 +340,21 @@ public class OfGroups {
     }
     
     public static JsonArray getResourceIds(int institutionId, String resourceType) throws IOException {
-		String url = String.format(OF_USERS_API_URL + "group/%d/resources/%s", institutionId, resourceType);
-		HttpResponse response = prepareGetRequest(url).execute();
-    	return getResponseAsJson(response).getAsJsonArray();
+        String url = String.format(OF_USERS_API_URL + "group/%d/resources/%s", institutionId, resourceType);
+        HttpResponse response = prepareGetRequest(url).execute();
+        return getResponseAsJson(response).getAsJsonArray();
     }
     
     public static String associateResource(int institutionId, String resourceType, String resourceId) throws IOException {
-    	preparePostRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
-    		.execute();
-    	return "";
+        preparePostRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
+            .execute();
+        return "";
     }
 
     public static String disassociateResource(int institutionId, String resourceType, String resourceId) throws IOException {
-    	prepareDeleteRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
-    		.execute();
-    	return "";
+        prepareDeleteRequest(String.format(OF_USERS_API_URL + "group/%d/resources/%s/%s", institutionId, resourceType, resourceId))
+            .execute();
+        return "";
     }
 
 }
