@@ -59,23 +59,23 @@
          </div>
      </#if>
     <div class="row">
-	    <div id="imagery-list" class="col-lg-4 col-xs-12" ng-if="institution.imageryMode == 'view'">
+	    <div id="imagery-list" class="col-lg-4 col-xs-12">
 	        <h2>Imagery <span class="badge badge-pill bg-lightgreen">{{ institution.imageryList.length }}</span></h2>
-	            <div class="row" ng-repeat="imagery in institution.imageryList">
-		            		<div ng-if="institution.isAdmin == false" class="col mb-1">
+	            <div class="row" ng-repeat="imagery in institution.imageryList" ng-if="institution.imageryMode == 'view'">
+		            	<div ng-if="institution.isAdmin == false" class="col mb-1">
 		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
 		                </div>
-	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-10 col-sm-12 mb-1 pr-1 ">
+	    	            <div ng-if="institution.isAdmin == true" class="col-lg-10 col-sm-12 mb-1 pr-1 ">
 		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
 		               	</div>
 	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-2 col-sm-12 pl-0">
 			                <button class="btn btn-outline-danger btn-sm btn-block" ng-if="institution.isAdmin == true" id="delete-imagery" type="button" ng-click="institution.deleteImagery(imagery.id)">
 			                		Delete
 			                </button>
-		            		</div>
+		            </div>
 	            </div>
-	            <div class="row">
-			        <table id="add-imagery" class="table table-sm" ng-if="institution.isAdmin == true && institution.imageryMode == 'edit'">
+	            <div class="row" ng-if="institution.isAdmin == true && institution.imageryMode == 'edit'">
+			        <table id="add-imagery" class="table table-sm">
 			            <tr>
 			                <td>Title</td>
 			                <td><input type="text" name="imagery-title" autocomplete="off" ng-model="institution.newImageryTitle"></td>
