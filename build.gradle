@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.sparkjava:spark-core:2.5'
+    compile 'com.sparkjava:spark-core:2.7.1'
     compile 'com.sparkjava:spark-template-freemarker:2.3'
     compile 'org.freemarker:freemarker:2.3.23'
     compile 'org.slf4j:slf4j-simple:1.7.21'
