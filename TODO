@@ -38,9 +38,10 @@
   1. Complete updateDashBoardByID() stub function.
 * imagery-list.json
   1. Include only the inexpensive (~$5/mo) imagery layers as default public layers (but get the access keys out of version control!).
-* Projects.java
-  - NOT YET REVIEWED
 * Users.java
+  - Remove all references to the role attribute.
+  - getPasswordResetKey has the site URL (http://ceo.sig-gis.com) hard-coded in its email body.
+* Projects.java
   - NOT YET REVIEWED
 * JsonUtils.java
   - NOT YET REVIEWED
