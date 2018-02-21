@@ -118,7 +118,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.configureGeoDash = function () {
-        window.open(this.root + "/geo-dash?editable=true&"
+        window.open(this.root + "/widget-layout-editor?editable=true&"
                     + encodeURIComponent("title=" + this.details.name
                                          + "&pid=" + this.details.id
                                          + "&aoi=[" + map_utils.get_plot_extent(this.plotList[0].center, this.details.plotSize)
