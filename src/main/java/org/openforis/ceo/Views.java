@@ -111,7 +111,7 @@ public class Views {
     public static ModelAndView editWidgetLayout(Request req, Response res) {
         authenticateOrRedirect(req, res);
         Map<String, Object> model = getBaseModel(req, "Widget-Editor");
-        model.put("project_id", req.params(":pid"));
+        model.put("project_id", req.queryParams("pid"));
         return new ModelAndView(model, "widget-layout-editor.ftl");
     }
 

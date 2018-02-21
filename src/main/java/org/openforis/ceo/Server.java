@@ -66,7 +66,7 @@ public class Server implements SparkApplication {
         get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res)); });
         get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
-        get("/widget-layout-editor",        (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
+        get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
         get("/project/:id",     (req, res) -> { return freemarker.render(Views.project(req, res)); });
         get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",          (req, res) -> { return freemarker.render(Views.login(Users.login(req, res), res)); });
@@ -150,6 +150,7 @@ public class Server implements SparkApplication {
         get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res)); });
         get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
+        get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
         get("/project/:id",     (req, res) -> { return freemarker.render(Views.project(req, res)); });
         get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",          (req, res) -> { return freemarker.render(Views.login(OfUsers.login(req, res), res)); });
