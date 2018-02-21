@@ -38,9 +38,6 @@
   1. Complete updateDashBoardByID() stub function.
 * imagery-list.json
   1. Include only the inexpensive (~$5/mo) imagery layers as default public layers (but get the access keys out of version control!).
-* Institution.java
-  - NOT YET REVIEWED
-  1. Remove all references to the "All Users" and "Administrators" groups.
 * Projects.java
   - NOT YET REVIEWED
 * Users.java
@@ -70,6 +67,7 @@ Prevent imagery deletion if any created or published projects use it as their ba
 Fix .gitignore again with Stefano (use .settings/ to hide eclipse files)
 Give imagery entries a visibility:[public|private] attribute
 Add Stefano's tasks from #fefrain to the CEO TODO list
+Fix Jerome's bootstrap bug (on every page in the console)
 
 *** Rome TODOs
     1) Update my CEO development todo list
