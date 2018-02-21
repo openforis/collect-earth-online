@@ -65,6 +65,7 @@ Fix .gitignore again with Stefano (use .settings/ to hide eclipse files)
 Give imagery entries a visibility:[public|private] attribute
 Add Stefano's tasks from #fefrain to the CEO TODO list
 Make sure Billy adds get("/widget-layout-editor" ...) to Server.declareRemoteStorageRoutes() and passes :pid to Views.editWidgetLayout()
+Ask Jerome to re-enable my CSS animations for flash messages
 
 *** Rome TODOs
     1) Update my CEO development todo list
