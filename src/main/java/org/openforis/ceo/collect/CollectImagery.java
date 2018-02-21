@@ -7,7 +7,7 @@ import static org.openforis.ceo.users.OfGroups.disassociateResource;
 import static org.openforis.ceo.users.OfGroups.getResourceIds;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findElement;
-import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.forEachInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 
@@ -28,24 +28,19 @@ public class CollectImagery {
 	public static String getAllImagery(Request req, Response res) throws IOException {
         String institutionId = req.queryParams("institutionId");
 		JsonArray imageryList = getFromCollect(String.format("imagery")).getAsJsonArray();
-		mapJsonArray(imageryList, imagery -> {
+		forEachInJsonArray(imageryList, imagery -> {
 			imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
 			imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
-			return imagery;
 		});
-		if (institutionId.isEmpty()) {
-			return imageryList.toString();
-		} else {
-			JsonArray resourceIdsArray = getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
-			List<Integer> resourceIds = toElementStream(resourceIdsArray)
-				.map(idEl -> idEl.getAsInt())
-				.collect(Collectors.toList());
-			return filterJsonArray(imageryList, imagery -> 
-					imagery.get("visibility").getAsString().equals("PUBLIC")
-						|| resourceIds.contains(imagery.get("id").getAsInt())
-				)
-				.toString();
-		}
+		JsonArray institutionImageryIdsArray = institutionId.isEmpty() ? new JsonArray(): getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
+		List<Integer> institutionImageryIds = toElementStream(institutionImageryIdsArray)
+			.map(idEl -> idEl.getAsInt())
+			.collect(Collectors.toList());
+		return filterJsonArray(imageryList, imagery -> 
+				imagery.get("visibility").getAsString().equals("public")
+					|| institutionImageryIds.contains(imagery.get("id").getAsInt())
+			)
+			.toString();
     }
 
     public static synchronized String addInstitutionImagery(Request req, Response res) throws IOException {
