@@ -173,38 +173,6 @@ public class JsonUtils {
         return walkJsonPath(jsonObj, path, pathParts);
     }
 
-    // public static JsonElement findElement(JsonObject jsonObj, String path) {
-    //     String[] pathParts = path.split("\\.");
-    //     JsonElement currentEl = jsonObj;
-    //     for (String pathPart : pathParts) {
-    //         if (currentEl instanceof JsonObject) {
-    //             JsonObject currentObj = (JsonObject) currentEl;
-    //             Pattern arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
-    //             Matcher arrayIndexMatcher = arrayIndexPattern.matcher(pathPart);
-    //             if (arrayIndexMatcher.matches()) {
-    //                 String arrayObjName = arrayIndexMatcher.group(1);
-    //                 String arrayIdxStr = arrayIndexMatcher.group(2);
-    //                 JsonArray array = currentObj.get(arrayObjName).getAsJsonArray();
-    //                 currentEl = array.get(Integer.parseInt(arrayIdxStr));
-    //             } else {
-    //                 Pattern propertyNamePattern = Pattern.compile("\\w+");
-    //                 Matcher propertyNameMatcher = propertyNamePattern.matcher(pathPart);
-    //                 if (propertyNameMatcher.matches()) {
-    //                     String propertyName = propertyNameMatcher.group();
-    //                     currentEl = currentObj.get(propertyName);
-    //                 } else {
-    //                     throw new IllegalArgumentException("Unexpected path parth for a JSON object : " + pathPart);
-    //                 }
-    //             }
-    //         } else if (currentEl instanceof JsonNull) {
-    //             return currentEl;
-    //         } else {
-    //             throw new IllegalArgumentException("Invalid path for JSON object : " + path);
-    //         }
-    //     }
-    //     return currentEl;
-    // }
-
     @SuppressWarnings("unchecked")
 	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
     	JsonElement el = findElement(obj, property);

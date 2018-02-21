@@ -43,8 +43,6 @@
   - getPasswordResetKey has the site URL (http://ceo.sig-gis.com) hard-coded in its email body.
 * Projects.java
   - NOT YET REVIEWED
-* JsonUtils.java
-  - NOT YET REVIEWED
 * PartUtils.java
   - NOT YET REVIEWED
 * (*).java
@@ -68,7 +66,7 @@ Prevent imagery deletion if any created or published projects use it as their ba
 Fix .gitignore again with Stefano (use .settings/ to hide eclipse files)
 Give imagery entries a visibility:[public|private] attribute
 Add Stefano's tasks from #fefrain to the CEO TODO list
-Fix Jerome's bootstrap bug (on every page in the console)
+Make sure Billy adds get("/widget-layout-editor" ...) to Server.declareRemoteStorageRoutes() and passes :pid to Views.editWidgetLayout()
 
 *** Rome TODOs
     1) Update my CEO development todo list
