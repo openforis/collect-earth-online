@@ -1,21 +1,13 @@
 package org.openforis.ceo.users;
 
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
-import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.RequestUtils.getResponseAsJson;
+import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 
-import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.http.json.JsonHttpContent;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.Optional;
@@ -27,27 +19,6 @@ import spark.Response;
 public class CeoAuthFilter implements Filter {
 
     private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
-    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
-
-    private static HttpRequestFactory createRequestFactory() {
-        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-            request.setParser(new JsonObjectParser(JSON_FACTORY));
-        });
-    }
-
-    private static HttpRequest prepareGetRequest(String url) throws IOException {
-        return createRequestFactory().buildGetRequest(new GenericUrl(url));
-    }
-
-    private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
-        return createRequestFactory().buildPostRequest(new GenericUrl(url),
-                new JsonHttpContent(new JacksonFactory(), data));
-    }
-
-    private static JsonElement getResponseAsJson(HttpResponse response) throws IOException {
-        return parseJson(response.parseAsString());
-    }
 
     public void handle(Request req, Response res) {
         String userIdStr = req.session().attribute("userid");

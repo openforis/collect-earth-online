@@ -9,6 +9,8 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
+import static org.openforis.ceo.utils.Mail.isEmail;
+import static org.openforis.ceo.utils.Mail.sendMail;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -17,10 +19,8 @@ import com.google.gson.JsonPrimitive;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.utils.Mail;
 import spark.Request;
 import spark.Response;
 
@@ -62,14 +62,6 @@ public class Users {
             req.session().attribute("flash_messages", new String[]{"No account with email " + inputEmail + " exists."});
         }
         return req;
-    }
-
-    public static boolean isEmail(String email) {
-        String emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
-            "(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*" +
-            "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+" +
-            "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
-        return Pattern.matches(emailPattern, email);
     }
 
     public static synchronized Request register(Request req, Response res) {
@@ -205,7 +197,7 @@ public class Users {
                     + inputEmail
                     + "&password-reset-key="
                     + resetKey;
-                Mail.sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
                 req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
                 return req;
             } catch (Exception e) {

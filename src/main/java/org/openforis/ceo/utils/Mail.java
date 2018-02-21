@@ -1,6 +1,7 @@
 package org.openforis.ceo.utils;
 
 import java.util.Properties;
+import java.util.regex.Pattern;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
@@ -11,7 +12,16 @@ import javax.mail.internet.MimeMessage;
 
 public class Mail {
 
-    public static void sendMail(String from, String to, String smtpServer, String smtpPort, String smtpPassword, String subject, String body) {
+    public static boolean isEmail(String email) {
+        String emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
+            "(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*" +
+            "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+" +
+            "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
+        return Pattern.matches(emailPattern, email);
+    }
+
+    public static void sendMail(String from, String to, String smtpServer, String smtpPort,
+                                String smtpPassword, String subject, String body) {
         try {
             // Get system properties
             Properties properties = new Properties();
