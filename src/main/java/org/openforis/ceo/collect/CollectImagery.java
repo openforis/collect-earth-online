@@ -11,11 +11,13 @@ import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import spark.Request;
 import spark.Response;
 
@@ -28,6 +30,7 @@ public class CollectImagery {
 		JsonArray imageryList = getFromCollect(String.format("imagery")).getAsJsonArray();
 		mapJsonArray(imageryList, imagery -> {
 			imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
+			imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
 			return imagery;
 		});
 		if (institutionId.isEmpty()) {
@@ -37,7 +40,10 @@ public class CollectImagery {
 			List<Integer> resourceIds = toElementStream(resourceIdsArray)
 				.map(idEl -> idEl.getAsInt())
 				.collect(Collectors.toList());
-			return filterJsonArray(imageryList, imagery -> resourceIds.contains(imagery.get("id").getAsInt()))
+			return filterJsonArray(imageryList, imagery -> 
+					imagery.get("visibility").getAsString().equals("PUBLIC")
+						|| resourceIds.contains(imagery.get("id").getAsInt())
+				)
 				.toString();
 		}
     }
