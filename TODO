@@ -43,8 +43,6 @@
   - getPasswordResetKey has the site URL (http://ceo.sig-gis.com) hard-coded in its email body.
 * Projects.java
   - NOT YET REVIEWED
-* PartUtils.java
-  - NOT YET REVIEWED
 * (*).java
   1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
 
