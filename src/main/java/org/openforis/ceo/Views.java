@@ -108,6 +108,13 @@ public class Views {
         return new ModelAndView(model, "geo-dash.ftl");
     }
 
+    public static ModelAndView editWidgetLayout(Request req, Response res) {
+        authenticateOrRedirect(req, res);
+        Map<String, Object> model = getBaseModel(req, "Widget-Editor");
+        model.put("project_id", req.params(":pid"));
+        return new ModelAndView(model, "widget-layout-editor.ftl");
+    }
+
     public static ModelAndView cardTest(Request req, Response res) {
         return new ModelAndView(getBaseModel(req, "Card-Test"), "card-test.ftl");
     }

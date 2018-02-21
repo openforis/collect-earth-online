@@ -33,7 +33,7 @@
         <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="${root}/js/custom.js"></script>
 
-        <#if navlink == "Geo-Dash">
+        <#if navlink == "Geo-Dash" || navlink == "Widget-Editor">
         <!----------------------------------------------------------------->
         <!-- BEGIN: Billy's GEODASH libraries -->
         <!----------------------------------------------------------------->
