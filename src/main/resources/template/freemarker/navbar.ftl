@@ -9,7 +9,7 @@
 			  </button>
 			  
 			  
-	  	<div class="collapse navbar-collapse " id="navbarSupportedContent">
+	  	<div class="collapse navbar-collapse" id="navbarSupportedContent">
 	  		<ul class="navbar-nav ml-auto">
 	        <#list ["Home","About", "Support"] as url>
 	            <#if navlink == url>

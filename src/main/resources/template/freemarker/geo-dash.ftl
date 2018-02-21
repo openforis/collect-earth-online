@@ -2,7 +2,8 @@
 <#include "start-content.ftl">
 
 <!-- geo dash nav -->
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="geodash-nav">
+<nav class="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0" style="background-color: white;" id="geodash-nav">
+	<div class="container">
 	<a class="navbar-brand" href="home">    
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 	</a>
@@ -52,10 +53,11 @@
                 </li>
             </#if>
         </#if>
-        	     <li class="nav-item my-auto">                   
+        	     <li class="nav-item my-auto ml-1">                   
 	     	 <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-outline-lightgreen btn-sm" ng-click="geodash.createNewWidget()" style="float:right;" data-toggle="modal" data-target="#dialog-form">
 	     </li>
 	     </ul>
+    </div>
     </div>
 </nav>
 <!-- end geo dash nav -->
@@ -107,15 +109,15 @@
 <div class="modal fade" id="dialog-form" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header mb-0">
 	        <h5 class="modal-title">New Widget</h5>
-			<p><small class="form-text text-muted">All form fields are required.</small></p>
-        
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
 		<div class="modal-body">
+					<p><small class="form-text text-muted">All form fields are required.</small></p>
+		
             <form name="form" id="form">
                     <fieldset>
                     		<div class="form-group">
@@ -130,11 +132,10 @@
                                     <label for="cookedImageTitle">Title</label>
                                     <input type="text" name="cookedImageTitle" id="cookedImageTitle" value="" class="form-control">
                                 </div>
-                                 <label>Select Image Date Range you would like</label>
                                  <div class="input-group input-daterange" id="range_new_cooked">
-
+                                 	<label for="sDate_new_cooked">Select Image Date Range you would like</label>
                                     <input type="text" class="form-control" value="" id="sDate_new_cooked">
-                                    <div class="input-group-addon">to</div>
+                                    <div class="input-group-addon my-auto">to</div>
                                     <input type="text" class="form-control" value="" id="eDate_new_cooked">
                                 </div>
                                 <div class="form-group">
@@ -151,7 +152,7 @@
                                  <label>Select Graph Date Range you would like</label>
                                  <div class="input-group input-daterange" id="range_new_cooked_graph">
 
-                                    <input type="text" class="form-control" value="" id="sDate_new_cooked_graph">
+                                    <input type="text" class="form-control my-auto" value="" id="sDate_new_cooked_graph">
                                     <div class="input-group-addon">to</div>
                                     <input type="text" class="form-control" value="" id="eDate_new_cooked_graph">
                                 </div>
@@ -191,13 +192,13 @@
                                     <input type="text" name="collection" id="iCollection" value="" class="form-control">
                                 </div>
                                 <div class="form-group">
-                                    <div class="input-group input-daterange" id="range_new">
+                                    <div class="input-group input-daterange  mb-2" id="range_new">
                                         <input type="text" class="form-control" value="" id="sDate_new">
-                                        <div class="input-group-addon">to</div>
+                                        <div class="input-group-addon my-auto">to</div>
                                         <input type="text" class="form-control" value="" id="eDate_new">
                                     </div>
                                     <div class="form-group">
-                                        <label for="bands">Bands:(optional)</label>
+                                        <label for="bands">Bands(optional)</label>
                                         <input type="text" name="bands" id="bands" value="" class="form-control">
                                     </div>
                                     <div class="form-group">
@@ -206,7 +207,7 @@
                                     </div>
                                     <div class="form-group">
                                         <!-- Allow form submission with keyboard without duplicating the dialog button -->
-                                        <input type="submit" tabindex="-1"class="btn btn-outline-lightgreen btn-block">
+                                        <input type="submit" tabindex="-1" class="btn btn-outline-lightgreen btn-block">
                                     </div>
                                 </div>
                             </div>

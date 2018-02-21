@@ -250,11 +250,22 @@ a:hover{
 }
 /* map popover */
 /*************/
+.ol-popup{
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: .3rem;
+}
+.ol-popup-content .cContent{
+	padding:15px;
+}
+a.ol-popup-closer.close{
+	font-size:1rem;
+}
 .ol-popup-content .cTitle h1{
 	color:white;
 	font-family:inherit;
 	font-size:1rem;	
 	padding-bottom:0;
+	font-weight: 400;
 }
 
 .ol-popup-content .cTitle {

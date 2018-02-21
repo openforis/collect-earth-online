@@ -275,5 +275,8 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             this.imageryMode = "view";
         }
     };
+    this.cancelAddCustomImagery = function () {
+            this.imageryMode = "view";
+    };
 
 }]);
