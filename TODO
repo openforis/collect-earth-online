@@ -36,16 +36,11 @@
      |--------------------+--------------------------------------------------------|
 * GeoDash.java
   1. Complete updateDashBoardByID() stub function.
-* Imagery.java
-  - NOT YET REVIEWED
-  1. Remove institutionId argument from deleteInstitutionImagery() as it is no longer needed, and notify Stefano to make the same change in CollectImagery.java.
 * imagery-list.json
   1. Include only the inexpensive (~$5/mo) imagery layers as default public layers (but get the access keys out of version control!).
 * Institution.java
   - NOT YET REVIEWED
   1. Remove all references to the "All Users" and "Administrators" groups.
-* institution-list.json
-  1. Remove the "All Users" and "Administrators" groups.
 * Projects.java
   - NOT YET REVIEWED
 * Users.java
@@ -67,6 +62,14 @@ Ask Jeff to setup a new server with the collect.earth DNS
 Make sure project creation calculates the number of plots and samples per plot
 Use the new collectRecordId field from the plot JSON in the CollectForms() constructor on the Collection page
 Add the new features (e.g., pro-active sampling) to our embedded database and pull in Jerome's styles.
+Add form validation to project.ftl
+Add a Configure Survey button to CEO's project page that redirects to the Collect Survey Designer (disable or hide it after the project is published)
+Add the survey cards to the Collection page today
+Change style of imagery on institution page based on public:true/false attribute
+Prevent imagery deletion if any created or published projects use it as their basemap (but not closed or archived projects)
+Fix .gitignore again with Stefano (use .settings/ to hide eclipse files)
+Give imagery entries a visibility:[public|private] attribute
+Add Stefano's tasks from #fefrain to the CEO TODO list
 
 *** Rome TODOs
     1) Update my CEO development todo list

@@ -23,16 +23,13 @@ public class Institutions {
 
     public static String getAllInstitutions(Request req, Response res) {
         JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-        String[] hiddenInstitutions = new String[]{"All Users", "Administrators"};
-        JsonArray visibleInstitutions = filterJsonArray(institutions, institution ->
-                                                        institution.get("archived").getAsBoolean() == false
-                                                        && !Arrays.asList(hiddenInstitutions).contains(institution.get("name").getAsString()));
-        return visibleInstitutions.toString();
+        return filterJsonArray(institutions, institution -> institution.get("archived").getAsBoolean() == false).toString();
     }
 
     private static Optional<JsonObject> getInstitutionById(int institutionId) {
         JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-        return findInJsonArray(institutions, institution -> institution.get("id").getAsInt() == institutionId);
+        return findInJsonArray(institutions, institution -> institution.get("id").getAsInt() == institutionId
+                                                         && institution.get("archived").getAsBoolean() == false);
     }
 
     public static String getInstitutionDetails(Request req, Response res) {
@@ -42,11 +39,15 @@ public class Institutions {
             return matchingInstitution.get().toString();
         } else {
             JsonObject noInstitutionFound = new JsonObject();
-            noInstitutionFound.addProperty("id", "-1");
-            noInstitutionFound.addProperty("name", "No institution with ID=" + institutionId);
-            noInstitutionFound.addProperty("logo", "");
-            noInstitutionFound.addProperty("url", "");
+            noInstitutionFound.addProperty("id"         , -1);
+            noInstitutionFound.addProperty("name"       , "No institution with ID=" + institutionId);
+            noInstitutionFound.addProperty("logo"       , "");
             noInstitutionFound.addProperty("description", "");
+            noInstitutionFound.addProperty("url"        , "");
+            noInstitutionFound.addProperty("archived"   , false);
+            noInstitutionFound.add("members"            , new JsonArray());
+            noInstitutionFound.add("admins"             , new JsonArray());
+            noInstitutionFound.add("pending"            , new JsonArray());
             return noInstitutionFound.toString();
         }
     }
