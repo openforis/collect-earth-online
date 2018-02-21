@@ -254,7 +254,12 @@ height: 362px;
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
 }
-
+.panel-fullscreen{
+    cursor:pointer;
+}
+a.list-inline.panel-actions.panel-fullscreen{
+    float:right;
+}
 .panel {
     margin-bottom: 20px;
     background-color: #fff;

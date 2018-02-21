@@ -273,7 +273,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             "class": "list-inline panel-actions panel-fullscreen"
         });
         var theicon = $("<i/>", {
-            "class": "glyphicon glyphicon-resize-full"
+            "class": "fas fa-expand-arrows-alt" //"glyphicon glyphicon-resize-full"
         });
         thebutton.append(theicon);
         thebutton.attr("role", "button");
@@ -304,7 +304,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             front = $("<div />").addClass("front");
 
             wtext = widget.properties[0];
-            var widgettitle = $("<h4 />", {
+            var widgettitle = $("<h3 />", {
                 "id": "widgettitle_" + widget.id
             }).html(widget.name);
             var sub = $("<br />");
@@ -352,13 +352,13 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 });
                 var content = "<div><div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-population.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
                 content += "  <label for=\"totalPop_" + widget.id + "\" style=\"color:#787878\">Total population</label>";
-                content += "<h4 id=\"totalPop_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+                content += "<h3 id=\"totalPop_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
                 content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-area.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
                 content += "<label for=\"totalArea_" + widget.id + "\" style=\"color:#787878\">Area</label>";
-                content += "<h4 id=\"totalArea_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+                content += "<h3 id=\"totalArea_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
                 content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-elevation.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
                 content += "<label for=\"elevationRange_" + widget.id + "\" style=\"color:#787878\">Elevation</label>";
-                content += "<h4 id=\"elevationRange_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h4><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+                content += "<h3 id=\"elevationRange_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
                 statsDiv.append(content);
                 front.append(statsDiv);
                 widgetcontainer.append(front);
@@ -914,12 +914,12 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         $(".panel-fullscreen").click(function (e) {
             e.preventDefault();
             var $this = $(this);
-            if ($this.children("i").hasClass("glyphicon-resize-full")) {
-                $this.children("i").removeClass("glyphicon-resize-full");
-                $this.children("i").addClass("glyphicon-resize-small");
-            } else if ($this.children("i").hasClass("glyphicon-resize-small")) {
-                $this.children("i").removeClass("glyphicon-resize-small");
-                $this.children("i").addClass("glyphicon-resize-full");
+            if ($this.children("svg").hasClass("fa-expand-arrows-alt")) {
+                $this.children("svg").removeClass("fa-expand-arrows-alt");
+                $this.children("svg").addClass("fas fa-compress");
+            } else if ($this.children("svg").hasClass("fas fa-compress")) {
+                $this.children("svg").removeClass("fas fa-compress");
+                $this.children("svg").addClass("fa-expand-arrows-alt");
             }
             if (geodash.wStateFull) {
                 $("#fulldiv").css('display', 'none');

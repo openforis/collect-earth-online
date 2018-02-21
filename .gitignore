@@ -9,3 +9,4 @@ collect-earth-online.iml
 /build/
 /src/main/resources/public/downloads/*.csv
 /target/
+.idea/
