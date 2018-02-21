@@ -1,16 +1,16 @@
 var gpid;
 var gurl;
 var gmodcdash;
-
 angular.module("geodash", []).controller("GeodashController", ["$http", function GeodashController($http) {
     this.debugme;
     this.theURL = "geo-dash/";
     this.prodGateway = "http://gateway.servirglobal.net:8888";
-	this.devGateway = "http://127.0.0.1:8888";
+	this.devGateway = "http://ceo.sig-gis.com:8888";//"http://127.0.0.1:8888";
     this.wCount = 0;
     this.wLoaded = 0;
     this.projAOI;
     this.projPairAOI;
+    this.pid;
     this.wStateFull = false;
     this.dashboardID;
     this.bradius;
@@ -41,32 +41,28 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         geodash = this;
         this.querystring = window.location.search;
         var pid = this.getParameterByName("pid");
-        gpid = pid;
+        this.pid = pid;
         var title = this.getParameterByName("title");
         this.projAOI = this.getParameterByName("aoi");
         this.bradius = this.getParameterByName("bradius");
         this.bcenter = this.getParameterByName("bcenter");
-        console.info('top');
         if (geodash.projAOI) {
             try {
-            console.info('inside');
                 var theSplit = decodeURI(this.projAOI).replace("[", "").replace("]", "").split(",");
-                console.info('split: ' + theSplit);
                 this.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
             } catch (e) {
                 console.warn("missing projAOI" + e.message);
             }
         }
         var absUrl = $(location).attr('href');
-        if( 
-        		absUrl.indexOf("127.0.0.1") !== -1 || 
-        		absUrl.indexOf("localhost") !== -1  || 
-        		absUrl.indexOf("0.0.0.0") !== -1  ){
-        	this.gateway =  this.devGateway;
+        if(
+                absUrl.indexOf("127.0.0.1") !== -1 ||
+                absUrl.indexOf("localhost") !== -1  ||
+                absUrl.indexOf("0.0.0.0") !== -1  ){
+            this.gateway =  this.devGateway;
         }else{
-        	this.gateway = this.prodGateway;
+            this.gateway = this.prodGateway;
         }
-        console.info('out');
         this.makeAjax({
             url: this.theURL + "id/" + pid,
             type: "get",
@@ -81,6 +77,10 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             geodash.makeAdjustable();
         });
     };
+    this.openWidgetEditor = function()
+    {
+        window.location = "/widget-layout-editor?pid=" + this.pid;
+    }
     this.completeGraph = function () {
         "use strict";
         this.pageWidgets.forEach(function (widget, index) {
@@ -208,16 +208,57 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     this.addWidget = function (widget) {
         "use strict";
         var awidget = $("<div/>", {
-            "class": "col-xs-6 col-sm-3 placeholder"
-        });
-        if (widget.width) {
-            awidget = $("<div/>", {
-                "class": "col-xs-6 col-sm-" + widget.width + " placeholder"
-            });
-        }
-        var panel = $("<div/>", {
-            "class": "panel panel-default"
-        });
+                    "class": "col-xs-6 col-sm-3 placeholder"
+                });
+                var hasSpan = false;
+                if(widget.gridcolumn){
+                var classnames = "";
+                if (widget.gridcolumn.includes("span 12"))
+                {
+                    classnames = "placeholder fullcolumnspan";
+                }
+                else if (widget.gridcolumn.includes("span 9"))
+                {
+                    classnames = "placeholder columnSpan9";
+                }
+                else if (widget.gridcolumn.includes("span 6"))
+                {
+                    classnames = "placeholder columnSpan6";
+                }
+                else{
+                    classnames = "placeholder columnSpan3";
+                }
+                if(widget.gridrow.includes("span 2")){
+                    classnames += " rowSpan2";
+                    hasSpan = true;
+                }
+                else if(widget.gridrow.includes("span 3")){
+                    classnames += " rowSpan3";
+                    hasSpan = true;
+                }
+                else{
+                    classnames += " rowSpan1";
+                }
+
+                 awidget = $("<div/>", {
+                                "class": classnames,
+                                "style": "grid-column:" + widget.gridcolumn + "; grid-row: " + widget.gridrow +";"
+                            });
+                }
+                else if (widget.width) {
+                    awidget = $("<div/>", {
+                        "class": "col-xs-6 col-sm-" + widget.width + " placeholder"
+                    });
+                }
+                 var panel = $("<div/>", {
+                    "class": "panel panel-default"
+                });
+                if(hasSpan){
+                    panel = $("<div/>", {
+                        "class": "panel panel-default",
+                        "style": "height:100%;"
+                    });
+                }
         panel.attr("id", "widget_" + widget.id);
         var panHead = $("<div/>", {
             "class": "panel-heading"
@@ -246,11 +287,20 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         if (widget.properties[0]) {
             var front = "";
             var widgetcontainer = "";
+            if(hasSpan){
 
+            widgetcontainer = $("<div />", {
+                            "id": "widget-container_" + widget.id,
+                            "class": "widget-container",
+                            "height":"100%"
+                        });
+            }
+            else{
             widgetcontainer = $("<div />", {
                 "id": "widget-container_" + widget.id,
                 "class": "widget-container"
             });
+            }
             front = $("<div />").addClass("front");
 
             wtext = widget.properties[0];
@@ -287,7 +337,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 });
                 var graphcontainer = $("<div/>", {
                     "id": "graphcontainer_" + widget.id,
-                    "class": "minmapwidget graphwidget"
+                    "class": "minmapwidget graphwidget normal"
                 });
                 graphdiv.append(graphcontainer);
                 graphdiv.append(widgettitle).append(sub);
@@ -364,7 +414,6 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     };
     this.makeAjax = function (parameters, donefunction) {
         "use strict";
-        console.info('parameters: ' + parameters);
         $.ajax(parameters).fail(function (jqXHR, textStatus, errorThrown) {
             console.warn("error from ajax call: " + jqXHR + textStatus + errorThrown);
         }).done(donefunction);
@@ -376,13 +425,13 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         }
         return this.maxHeight - 29;
     };
+
     this.initWidget = function (widget) {
         "use strict";
-        $(".front").height(this.getWidgetHeight($("#widget_" + widget.id).height()));
+        //$(".front").height(this.getWidgetHeight($("#widget_" + widget.id).height()));
         var collectionName;
         var timeseriesData;
         var text;
-        console.info('widget.properties[0]' + widget.properties[0]);
         if (widget.properties[0] === "addImageCollection") {
             this.enableMapWidget("widgetmap_" + widget.id);
             if (this.projAOI === "") {
@@ -406,7 +455,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             collectionName = widget.properties[1];
             var dateFrom = widget.properties[2];
             var dateTo = widget.properties[3];
-            var url = this.gateway + "/imageByMosaicCollection";
+            var url = this.gateway + "/cloudMaskImageByMosaicCollection"; // "/imageByMosaicCollection";
             var bands = "";
             if (widget.properties.length === 5) {
                 bands = widget.properties[4];
@@ -459,6 +508,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         } else if (widget.properties[0] === "timeSeriesGraph") {
             collectionName = widget.properties[1];
             var indexName = widget.properties[4];
+            var date = new Date();
             $.ajax({
                             url: this.gateway + "/timeSeriesIndex",
                             type: "POST",
@@ -470,8 +520,8 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                                 collectionNameTimeSeries: widget.properties[1],
                                 polygon: $.parseJSON(this.projPairAOI),
                                 indexName: widget.properties[4],
-                                dateFromTimeSeries: widget.properties[2],
-                                dateToTimeSeries: widget.properties[3]
+                                dateFromTimeSeries: widget.properties[2].trim().length == 10 ? widget.properties[2].trim() : '2000-01-01',
+                                dateToTimeSeries: widget.properties[3].trim().length == 10 ? widget.properties[3].trim() :  date.yyyymmdd()
                             })
                         }).fail(function (jqXHR, textStatus, errorThrown) {
                             console.warn(jqXHR + textStatus + errorThrown);
@@ -489,6 +539,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                                             timeseriesData.push([value[0], value[1]]);
                                         }
                                     });
+                                    timeseriesData = timeseriesData.sort(geodash.sortData);
                                     var $this = this;
                                     text = indexName;
                                     geodash.graphWidgetArray["widgetgraph_" + $this.indexVal] = geodash.createChart($this.indexVal, text, timeseriesData);
@@ -624,8 +675,10 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                      );
                  }
                  collectionName = widget.properties[1];
-                 var dateFrom = widget.properties[2];
-                 var dateTo = widget.properties[3];
+                 var dateFrom = widget.properties[2].trim().length == 10 ? widget.properties[2].trim() : '2000-01-01';  //'2000-01-01'
+                 var date = new Date();
+
+                 var dateTo = widget.properties[3].trim().length == 10 ? widget.properties[3].trim() :  date.yyyymmdd(); //'2017-02-02';//widget.properties[3];
                  //var url = gmodcdash.gateway + "/"+which+"ImageCollection";
                  var url = gmodcdash.gateway + "/ImageCollectionbyIndex";
                  var bands = "";
@@ -683,7 +736,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                          visParams: visParams,
                          dateFrom: dateFrom,
                          dateTo: dateTo,
-                         index: which,
+                         index: which.toUpperCase(),
                          geometry: theGeometry
                      })
                  }).fail(function (jqXHR, textStatus, errorThrown) {
@@ -709,6 +762,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     };
     this.getTimeSeriesByIndex = function(which, widget)
     {
+         var date = new Date();
         $.ajax({
             url: this.gateway + "/timeSeriesIndex2",
             type: "POST",
@@ -720,8 +774,8 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 collectionNameTimeSeries: widget.properties[1],
                 geometry: $.parseJSON(this.projPairAOI),
                 indexName: which,
-                dateFromTimeSeries: widget.properties[2],
-                dateToTimeSeries: widget.properties[3]
+                dateFromTimeSeries: widget.properties[2].trim().length == 10 ? widget.properties[2].trim() : '2000-01-01',
+                dateToTimeSeries: widget.properties[3].trim().length == 10 ? widget.properties[3].trim() :  date.yyyymmdd()
             })
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.warn(jqXHR + textStatus + errorThrown);
@@ -739,15 +793,24 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                             timeseriesData.push([value[0], value[1]]);
                         }
                     });
+                    timeseriesData = timeseriesData.sort(geodash.sortData);
                     var $this = this;
                     text = which;
                     geodash.graphWidgetArray["widgetgraph_" + $this.indexVal] = geodash.createChart($this.indexVal, text, timeseriesData);
+
                 } else {
                     console.warn("Wrong Data Returned");
                 }
             }
         });
     };
+    this.sortData = function(a, b){
+
+       if (a[0] < b[0]) return -1;
+       if (a[0] > b[0]) return 1;
+       return 0;
+
+    }
     this.fillDashboard = function (dashboard) {
         "use strict";
         $("#projectTitle").text(dashboard.projectTitle);
@@ -767,9 +830,21 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             var rowDiv = null;
             dashboard.widgets.forEach(function (widget) {
                 if (!rowDiv) {
-                    rowDiv = $("<div/>", {
-                        "class": "row placeholders"
-                    });
+                    if(widget.gridcolumn)
+                    {
+                        rowDiv = $("<div/>", {
+                            "class": "row placeholders"
+                        });
+                        var rowsizer =$("<div/>", {
+                              "class": "grid-sizer"
+                          });
+                          rowDiv.append(rowsizer);
+                    }
+                    else{
+                         rowDiv = $("<div/>", {
+                            "class": "row placeholdersOld"
+                        });
+                    }
                 }
                 rowDiv.append(geodash.addWidget(widget));
                 geodash.pageWidgets.push(widget);
@@ -835,10 +910,9 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
     };
     this.makeAdjustable = function () {
         "use strict";
-        console.info(10);
+         $("#fulldiv").css('display', 'none');
         $(".panel-fullscreen").click(function (e) {
             e.preventDefault();
-            console.info(0);
             var $this = $(this);
             if ($this.children("i").hasClass("glyphicon-resize-full")) {
                 $this.children("i").removeClass("glyphicon-resize-full");
@@ -846,6 +920,12 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             } else if ($this.children("i").hasClass("glyphicon-resize-small")) {
                 $this.children("i").removeClass("glyphicon-resize-small");
                 $this.children("i").addClass("glyphicon-resize-full");
+            }
+            if (geodash.wStateFull) {
+                $("#fulldiv").css('display', 'none');
+            }
+            else{
+             $("#fulldiv").css('display', 'block');
             }
             $this.closest(".panel").toggleClass("panel-fullscreen");
             var theWidget = $this.parent().parent().parent().parent();
@@ -870,12 +950,12 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 widID = "widgetstats_" + $(theWidget).attr("id").substring(7);
             }
             if (geodash.wStateFull) {
-                $(theWidget).css("height", "auto");
+                $(theWidget).css("height", "100%");
                 $("#fulldiv").css("z-index", "0");
                 $(theWidget).css("margin-bottom", "20px");
                 $("#" + widID).removeClass("fullmapwidget");
                 $("#" + widID).addClass("minmapwidget");
-                $(theWidget.children()[1]).height(geodash.sHeight);
+                //$(theWidget.children()[1]).height(geodash.sHeight);
             } else {
                 $("#content").scrollTop(0);
                 $("#fulldiv").css("z-index", "1031");
@@ -912,13 +992,27 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             }
 
         });
-        console.info(11);
     };
     this.fixGraphSize = function(which)
     {
         width = $(which).outerWidth();
         height = $(which).outerHeight();
-        console.info(width);
         geodash.graphWidgetArray[which.id].setSize(width, height, true)
     }
+    $(window).resize(function() {
+        for (var property in gmodcdash.graphWidgetArray) {
+            if (gmodcdash.graphWidgetArray.hasOwnProperty(property)) {
+                gmodcdash.fixGraphSize(eval(property));
+            }
+        }
+    });
 }]);
+Date.prototype.yyyymmdd = function() {
+  var mm = this.getMonth() + 1; // getMonth() is zero-based
+  var dd = this.getDate();
+
+  return [this.getFullYear(),
+          (mm>9 ? '' : '0') + mm,
+          (dd>9 ? '' : '0') + dd
+         ].join('-');
+};

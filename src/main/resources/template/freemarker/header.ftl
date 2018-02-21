@@ -47,7 +47,6 @@
         <![endif]-->
         <script type="text/javascript" src="${root}/js/jquery-3.1.1.min.js"></script>
         <!-- Include all compiled plugins (below), or include individual files as needed -->
-        <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="${root}/js/jquery-ui.min.js"></script>
         <script type="text/javascript" src="${root}/js/highcharts.js"></script>
         <script type="text/javascript" src="${root}/js/jquery.flip.min.js"></script>

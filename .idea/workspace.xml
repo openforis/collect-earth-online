@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="1c32fbf1-c8b7-47cf-afee-df9916a66419" name="Default" comment="" />
+    <list default="true" id="1c32fbf1-c8b7-47cf-afee-df9916a66419" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/public/css/geo-dash.css" afterPath="$PROJECT_DIR$/src/main/resources/public/css/geo-dash.css" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/public/js/geo-dash.js" afterPath="$PROJECT_DIR$/src/main/resources/public/js/geo-dash.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/template/freemarker/footer.ftl" afterPath="$PROJECT_DIR$/src/main/resources/template/freemarker/footer.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/template/freemarker/geo-dash.ftl" afterPath="$PROJECT_DIR$/src/main/resources/template/freemarker/geo-dash.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/template/freemarker/header.ftl" afterPath="$PROJECT_DIR$/src/main/resources/template/freemarker/header.ftl" />
+    </list>
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -24,38 +31,18 @@
       <file leaf-file-name="geo-dash.css" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/resources/public/css/geo-dash.css">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="515">
-              <caret line="190" column="0" lean-forward="false" selection-start-line="190" selection-start-column="0" selection-end-line="190" selection-end-column="0" />
+            <state relative-caret-position="819">
+              <caret line="275" column="1" lean-forward="false" selection-start-line="275" selection-start-column="1" selection-end-line="275" selection-end-column="1" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="OfUsers.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/org/openforis/ceo/users/OfUsers.java">
+      <file leaf-file-name="stylesheet.css" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/resources/public/css/stylesheet.css">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="670">
-              <caret line="427" column="14" lean-forward="false" selection-start-line="427" selection-start-column="14" selection-end-line="427" selection-end-column="14" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="build.gradle" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/build.gradle">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="391">
-              <caret line="23" column="24" lean-forward="false" selection-start-line="23" selection-start-column="17" selection-end-line="23" selection-end-column="24" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="collect-earth-online.iml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/collect-earth-online.iml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="13" column="71" lean-forward="false" selection-start-line="13" selection-start-column="71" selection-end-line="13" selection-end-column="71" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -64,8 +51,8 @@
       <file leaf-file-name="geo-dash.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/resources/public/js/geo-dash.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="10047">
-              <caret line="591" column="60" lean-forward="false" selection-start-line="591" selection-start-column="60" selection-end-line="591" selection-end-column="60" />
+            <state relative-caret-position="12937">
+              <caret line="761" column="6" lean-forward="false" selection-start-line="761" selection-start-column="6" selection-end-line="761" selection-end-column="6" />
               <folding />
             </state>
           </provider>
@@ -74,8 +61,8 @@
       <file leaf-file-name="geo-dash.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/classes/public/js/geo-dash.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15708">
-              <caret line="924" column="0" lean-forward="false" selection-start-line="924" selection-start-column="0" selection-end-line="924" selection-end-column="0" />
+            <state relative-caret-position="986">
+              <caret line="58" column="40" lean-forward="false" selection-start-line="58" selection-start-column="40" selection-end-line="58" selection-end-column="40" />
               <folding />
             </state>
           </provider>
@@ -84,18 +71,18 @@
       <file leaf-file-name="geo-dash.ftl" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/geo-dash.ftl">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1003">
-              <caret line="59" column="20" lean-forward="false" selection-start-line="59" selection-start-column="19" selection-end-line="59" selection-end-column="20" />
+            <state relative-caret-position="1071">
+              <caret line="63" column="10" lean-forward="false" selection-start-line="63" selection-start-column="10" selection-end-line="63" selection-end-column="10" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="header.ftl" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/header.ftl">
+      <file leaf-file-name="geo-dash.ftl" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/geo-dash.ftl">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="340">
-              <caret line="20" column="71" lean-forward="true" selection-start-line="20" selection-start-column="71" selection-end-line="20" selection-end-column="71" />
+            <state relative-caret-position="969">
+              <caret line="57" column="6" lean-forward="false" selection-start-line="57" selection-start-column="6" selection-end-line="57" selection-end-column="6" />
               <folding />
             </state>
           </provider>
@@ -104,8 +91,38 @@
       <file leaf-file-name="header.ftl" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/header.ftl">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-9">
-              <caret line="39" column="71" lean-forward="false" selection-start-line="39" selection-start-column="65" selection-end-line="39" selection-end-column="71" />
+            <state relative-caret-position="544">
+              <caret line="32" column="82" lean-forward="true" selection-start-line="32" selection-start-column="82" selection-end-line="32" selection-end-column="82" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="header.ftl" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/header.ftl">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="102">
+              <caret line="6" column="132" lean-forward="false" selection-start-line="6" selection-start-column="130" selection-end-line="6" selection-end-column="132" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="footer.ftl" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/footer.ftl">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="8" lean-forward="false" selection-start-line="0" selection-start-column="8" selection-end-line="7" selection-end-column="14" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="footer.ftl" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/footer.ftl">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="170">
+              <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -122,10 +139,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>click</find>
-      <find>checkccookie</find>
-      <find>Select Graph Date Range you would like</find>
-      <find>fillDashboard</find>
       <find>122&quot;</find>
       <find>dateranger</find>
       <find>isUpdatedLayout</find>
@@ -152,6 +165,10 @@
       <find>org.geotools:gt-shapefile</find>
       <find>lowagie</find>
       <find>jquery</find>
+      <find>getImageCollectionByIndex = function</find>
+      <find>devGateway</find>
+      <find>this.gateway</find>
+      <find>grid</find>
     </findStrings>
     <replaceStrings>
       <replace>&quot;</replace>
@@ -175,8 +192,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/org/openforis/ceo/Projects.java" />
-        <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/register.ftl" />
         <option value="$PROJECT_DIR$/target/classes/template/freemarker/register.ftl" />
         <option value="$PROJECT_DIR$/target/classes/template/freemarker/password.ftl" />
         <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/password.ftl" />
@@ -201,7 +216,6 @@
         <option value="$PROJECT_DIR$/src/main/resources/public/js/map-utils.js" />
         <option value="$PROJECT_DIR$/src/main/resources/public/css/stylesheet.css" />
         <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/account.ftl" />
-        <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/header.ftl" />
         <option value="$PROJECT_DIR$/target/classes/json/proj.json" />
         <option value="$PROJECT_DIR$/target/classes/json/institution-list.json" />
         <option value="$PROJECT_DIR$/target/classes/json/project-list.json" />
@@ -210,22 +224,25 @@
         <option value="$PROJECT_DIR$/target/classes/json/dash-067e6162-3b6f-4ae2-a171-2470b63dff00.json" />
         <option value="$PROJECT_DIR$/target/classes/json/dash-f927168e-5b51-455c-bef1-6ac7f866db3f.json" />
         <option value="$PROJECT_DIR$/target/classes/json/dash-1cbbcc4b-842f-4f49-81ac-5600a4834174.json" />
-        <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/geo-dash.ftl" />
         <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/widget-layout-editor.ftl" />
         <option value="$PROJECT_DIR$/target/classes/json/dash-bdb2888d-7225-459d-9f02-f0e7613f8b52.json" />
         <option value="$PROJECT_DIR$/src/main/resources/public/js/project.js" />
         <option value="$PROJECT_DIR$/target/classes/json/dash-b43d9b75-a80a-4ca5-9b16-bbd767ad5dfb.json" />
         <option value="$PROJECT_DIR$/src/main/resources/public/js/geo-dash-widget-editor.js" />
-        <option value="$PROJECT_DIR$/target/classes/public/js/geo-dash.js" />
         <option value="$PROJECT_DIR$/src/main/java/org/openforis/ceo/Views.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/openforis/ceo/Server.java" />
-        <option value="$PROJECT_DIR$/src/main/resources/public/js/geo-dash.js" />
         <option value="$PROJECT_DIR$/target/classes/public/js/geo-dash-widget-editor.js" />
-        <option value="$PROJECT_DIR$/src/main/resources/public/css/geo-dash.css" />
         <option value="$PROJECT_DIR$/src/main/java/org/openforis/ceo/users/OfUsers.java" />
         <option value="$PROJECT_DIR$/collect-earth-online.iml" />
         <option value="$PROJECT_DIR$/target/classes/template/freemarker/header.ftl" />
         <option value="$PROJECT_DIR$/target/classes/template/freemarker/geo-dash.ftl" />
+        <option value="$PROJECT_DIR$/src/main/resources/public/js/geo-dash.js" />
+        <option value="$PROJECT_DIR$/target/classes/public/js/geo-dash.js" />
+        <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/geo-dash.ftl" />
+        <option value="$PROJECT_DIR$/target/classes/template/freemarker/footer.ftl" />
+        <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/footer.ftl" />
+        <option value="$PROJECT_DIR$/src/main/resources/public/css/geo-dash.css" />
+        <option value="$PROJECT_DIR$/src/main/resources/template/freemarker/header.ftl" />
       </list>
     </option>
   </component>
@@ -285,6 +302,9 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -456,6 +476,62 @@
               <option name="myItemId" value="resources" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="public" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="collect-earth-online" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="collect-earth-online" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="public" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="css" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="collect-earth-online" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="collect-earth-online" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -485,9 +561,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="AndroidView" />
     </panes>
   </component>
@@ -832,7 +905,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="75" y="48" width="2259" height="1347" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -841,10 +914,10 @@
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26596606" sideWeight="0.5795809" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26596606" sideWeight="0.5822559" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16139099" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26596606" sideWeight="0.4177441" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32924962" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26596606" sideWeight="0.42041907" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Properties" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -854,8 +927,8 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39141414" sideWeight="0.4676486" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -898,21 +971,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/institution.ftl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="26" column="87" lean-forward="false" selection-start-line="26" selection-start-column="87" selection-end-line="26" selection-end-column="87" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/account.ftl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="935">
-          <caret line="55" column="11" lean-forward="false" selection-start-line="55" selection-start-column="11" selection-end-line="55" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/openforis/ceo/Users.java" />
     <entry file="file://$PROJECT_DIR$/src/main/java/org/openforis/ceo/CeoConfig.java" />
     <entry file="file://$PROJECT_DIR$/src/main/java/org/openforis/ceo/CeoSparkFilter.java" />
     <entry file="file://$PROJECT_DIR$/src/main/java/org/openforis/ceo/PartUtils.java" />
@@ -1021,13 +1079,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/classes/public/js/js.cookie.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/target/classes/public/js/js.cookie.js" />
     <entry file="file://$PROJECT_DIR$/src/main/resources/public/js/js.cookie.js" />
     <entry file="file://$PROJECT_DIR$/src/main/java/org/openforis/ceo/GeoDash.java" />
     <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/widget-layout-editor.ftl" />
@@ -1042,13 +1094,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="89" lean-forward="false" selection-start-line="0" selection-start-column="89" selection-end-line="0" selection-end-column="89" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/geo-dash.ftl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="23" lean-forward="true" selection-start-line="6" selection-start-column="23" selection-end-line="6" selection-end-column="23" />
         </state>
       </provider>
     </entry>
@@ -1070,7 +1115,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1088">
           <caret line="64" column="53" lean-forward="false" selection-start-line="64" selection-start-column="53" selection-end-line="64" selection-end-column="53" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1078,7 +1122,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2040">
           <caret line="120" column="54" lean-forward="false" selection-start-line="120" selection-start-column="54" selection-end-line="120" selection-end-column="54" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1086,7 +1129,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="278" lean-forward="false" selection-start-line="0" selection-start-column="278" selection-end-line="0" selection-end-column="278" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1094,7 +1136,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="540" lean-forward="false" selection-start-line="0" selection-start-column="540" selection-end-line="0" selection-end-column="540" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1114,59 +1155,21 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
           <caret line="12" column="52" lean-forward="false" selection-start-line="12" selection-start-column="52" selection-end-line="12" selection-end-column="52" />
-          <folding>
-            <marker date="1519157412351" expanded="true" signature="35:60" ph="..." />
-          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/classes/public/js/geo-dash.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15708">
-          <caret line="924" column="0" lean-forward="false" selection-start-line="924" selection-start-column="0" selection-end-line="924" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/public/js/geo-dash.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="10047">
-          <caret line="591" column="60" lean-forward="false" selection-start-line="591" selection-start-column="60" selection-end-line="591" selection-end-column="60" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/classes/public/js/geo-dash-widget-editor.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="18462">
-          <caret line="1086" column="446" lean-forward="false" selection-start-line="1086" selection-start-column="446" selection-end-line="1086" selection-end-column="446" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/public/css/geo-dash.css">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="515">
-          <caret line="190" column="0" lean-forward="false" selection-start-line="190" selection-start-column="0" selection-end-line="190" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/target/classes/public/js/geo-dash-widget-editor.js" />
     <entry file="file://$PROJECT_DIR$/src/main/java/org/openforis/ceo/local/Users.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="306">
           <caret line="23" column="12" lean-forward="false" selection-start-line="23" selection-start-column="12" selection-end-line="23" selection-end-column="12" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/build.gradle">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="391">
-          <caret line="23" column="24" lean-forward="false" selection-start-line="23" selection-start-column="17" selection-end-line="23" selection-end-column="24" />
-          <folding />
+          <caret line="23" column="24" lean-forward="false" selection-start-line="23" selection-start-column="24" selection-end-line="23" selection-end-column="24" />
         </state>
       </provider>
     </entry>
@@ -1190,7 +1193,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="670">
           <caret line="427" column="14" lean-forward="false" selection-start-line="427" selection-start-column="14" selection-end-line="427" selection-end-column="14" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1198,30 +1200,85 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/classes/public/js/geo-dash.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="986">
+          <caret line="58" column="40" lean-forward="false" selection-start-line="58" selection-start-column="40" selection-end-line="58" selection-end-column="40" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/header.ftl">
+    <entry file="file://$PROJECT_DIR$/src/main/resources/public/js/geo-dash.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="20" column="71" lean-forward="true" selection-start-line="20" selection-start-column="71" selection-end-line="20" selection-end-column="71" />
+        <state relative-caret-position="12937">
+          <caret line="761" column="6" lean-forward="false" selection-start-line="761" selection-start-column="6" selection-end-line="761" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/public/css/stylesheet.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/geo-dash.ftl">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1003">
-          <caret line="59" column="20" lean-forward="false" selection-start-line="59" selection-start-column="19" selection-end-line="59" selection-end-column="20" />
+        <state relative-caret-position="1071">
+          <caret line="63" column="10" lean-forward="false" selection-start-line="63" selection-start-column="10" selection-end-line="63" selection-end-column="10" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/geo-dash.ftl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="969">
+          <caret line="57" column="6" lean-forward="false" selection-start-line="57" selection-start-column="6" selection-end-line="57" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/footer.ftl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="8" lean-forward="false" selection-start-line="0" selection-start-column="8" selection-end-line="7" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/classes/template/freemarker/header.ftl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" column="132" lean-forward="false" selection-start-line="6" selection-start-column="130" selection-end-line="6" selection-end-column="132" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/footer.ftl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/public/css/geo-dash.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="819">
+          <caret line="275" column="1" lean-forward="false" selection-start-line="275" selection-start-column="1" selection-end-line="275" selection-end-column="1" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/resources/template/freemarker/header.ftl">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-9">
-          <caret line="39" column="71" lean-forward="false" selection-start-line="39" selection-start-column="65" selection-end-line="39" selection-end-column="71" />
+        <state relative-caret-position="544">
+          <caret line="32" column="82" lean-forward="true" selection-start-line="32" selection-start-column="82" selection-end-line="32" selection-end-column="82" />
           <folding />
         </state>
       </provider>

@@ -17,6 +17,22 @@
 .navbar-fixed-top {
     border: 0;
 }
+.grid-sizer {
+    width: 25%;
+}
+
+.placeholder.is-dragging,
+.placeholder.is-positioning-post-drag, .ui-sortable-helper {
+  background: #C90;
+  z-index: 2;
+}
+
+.packery-drop-placeholder {
+  outline: 3px dashed hsla(0, 0%, 0%, 0.5);
+  outline-offset: -6px;
+  -webkit-transition: -webkit-transform 0.2s;
+          transition: transform 0.2s;
+}
 
 /*
  * Sidebar
@@ -77,42 +93,187 @@
         padding-left: 40px;
     }
 }
+#geodash .row {
+    display: grid;
+    margin-right: auto;
+    margin-left: auto;
+}
 
 .main .page-header {
     margin-top: 0;
 }
-
-
+.fullcolumnspan, .columnSpan12{
+    max-width:98%!important;
+}
+.columnSpan9{
+    max-width:97%!important;
+}
+.columnSpan6{
+    max-width:95%!important;
+}
+.columnSpan3{
+    max-width:90%!important;
+}
+.rowSpan1{
+    height:362px;
+}
+.rowSpan2{
+    height:725px;
+}
+.rowSpan3{
+    height:1182px;
+}
+.widgetEditor .rowSpan1{
+    height:181px;
+}
+.widgetEditor .rowSpan2{
+    height:384px;
+}
+.widgetEditor .rowSpan3{
+    height:590px;
+}
+.container-fluid.widgetEditor{
+    width: calc(50% - 30px);
+    float:left;
+    margin-right: unset;
+    margin-left: unset;
+}
+.active-link.apply{
+    margin-left: 3.2px;
+    padding: 6px 40px;
+    border: 1px solid #FFCF06;
+    background-color: #e8f5f9;
+    color: #3c948b!important;
+    text-shadow: none!important;
+    font-size: 16.8px;
+}
+.ui-widget-overlay {
+    background: #3c948b;
+    opacity: .75;
+    filter: Alpha(Opacity=30);
+}
+.update-widgets{
+    font-size: 26px; float: right; margin-right: 22px;
+}
+.active-widget{
+    opacity: .5;
+    outline: 4px dotted #de0541;
+    outline-offset: 5px;
+}
+.active-placed-widget{
+    background-color: #ffff00f0;
+}
+.rowSpan1 .minmapwidget {
+    height: calc(100% - 125px);
+}
+.rowSpan2 .minmapwidget {
+    height: calc(100% - 125px);
+}
+.rowSpan3 .minmapwidget {
+    height: calc(100% - 125px);
+}
+.rowSpan2 .widget-container .front {
+    position: absolute;
+    height: 100%;
+}
+.rowSpan1 .minmapwidget .graphwidget {
+    height: 250px;
+}
+.rowSpan2 .graphwidget{
+    height:calc(100% - 125px); /*100%!important;*/
+}
+.minmapwidget.graphwidget.normal{
+height:100%;
+}
 /*
  * Placeholder dashboard ideas
  */
-
-.placeholders {
+.placeholders.row, .placeholdersOld.row {
+  margin-right: auto;
+  margin-left: auto;
+}
+.placeholdersOld{
     margin-bottom: 30px;
     text-align: center;
 }
+.placeholdersOld .placeholder{
+height: 362px;
+}
+.placeholdersOld .minmapwidget {
+    height: calc(100% - 125px);
+}
 
-    .placeholders h4 {
-        margin-bottom: 0;
-    }
+.placeholdersOld .graphwidget{
+    height:250px;
+}
+.placeholders {
+    margin-bottom: 30px;
+    text-align: center;
+         display: grid;
+         /*grid-gap: 10px;*/
+         grid-template-columns: 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33%;
+        /* background-color: #fff;
+         color: #444;*/
+}
+
+.placeholders h4, .placeholdersOld h4 {
+    margin-bottom: 0;
+}
 
 .placeholder {
     margin-bottom: 20px;
 }
+.placeholder.c1{
 
-    .placeholder img {
-        display: inline-block;
-        border-radius: 50%;
-    }
-
+}
+.placeholder img {
+    display: inline-block;
+    border-radius: 50%;
+}
+.widget-container{
+    position:relative;
+    height:100%;
+}
+.widget-container .front{
+    position:absolute;
+    height:100%;
+}
 .panel-default {
     perspective: 1000px;
+    height: 100%;
+}
+.panel-default > .panel-heading {
+    min-height: 35px;
+    color: #333;
+    background-color: #f5f5f5;
+    border-color: #ddd;
+}
+.panel-heading {
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 
-    .panel-default > .panel-heading {
-        min-height: 35px;
-    }
-
+.panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+.glyphicon {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 .full {
     position: absolute;
     top: 0;
@@ -132,7 +293,8 @@ display:none;
 }
 
 .minmapwidget {
-    height: 200px;
+    /*height: 200px;*/
+    height: calc(100% - 98px);
 }
 
 .graphwidget{
@@ -188,6 +350,11 @@ display:none;
 
 .ui-widget.ui-widget-content {
     z-index: 101 !important;
+    max-height: 100vh;
+    overflow: auto;
+}
+div#ui-datepicker-div{
+    z-index: 102 !important;
 }
 
 .ui-datepicker .ui-datepicker-prev {
