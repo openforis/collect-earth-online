@@ -1,8 +1,10 @@
+.classpath
+.project
+.tern-port
+collect-earth-online.iml
 .gradle/
 .meghanada/
-.tern-port
 .settings/
-collect-earth-online.iml
 /bin/
 /build/
 /src/main/resources/public/downloads/*.csv
