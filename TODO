@@ -7,7 +7,7 @@
   4. Document how to add public imagery to the Collect H2 database.
 * notes/
   1. Remove outdated and unnecessary files.
-* test/java/org/openforis/ceo/ServerTest.java
+* ServerTest.java
   1. Write a unit test suite.
 * Server.java
   1. Use deploy/clientkeystore file to enable HTTPS sitewide in declareLocalStorageRoutes() and declareRemoteStorageRoutes().
@@ -34,31 +34,34 @@
      | card-test.ftl      | defaults                                               |
      | page-not-found.ftl | defaults                                               |
      |--------------------+--------------------------------------------------------|
-* CeoAuthFilter.java
-  1. Refactor HTTP_TRANSPORT, JSON_FACTORY, createRequestFactory(), prepareGetRequest(), preparePostRequest(), and getResponseAsJson() out into RequestUtils.java.
 * GeoDash.java
   1. Complete updateDashBoardByID() stub function.
-
-
-* (*).java
-  1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
-
 * Imagery.java
+  - NOT YET REVIEWED
   1. Remove institutionId argument from deleteInstitutionImagery() as it is no longer needed, and notify Stefano to make the same change in CollectImagery.java.
 * imagery-list.json
   1. Include only the inexpensive (~$5/mo) imagery layers as default public layers (but get the access keys out of version control!).
 * Institution.java
+  - NOT YET REVIEWED
   1. Remove all references to the "All Users" and "Administrators" groups.
 * institution-list.json
   1. Remove the "All Users" and "Administrators" groups.
+* Projects.java
+  - NOT YET REVIEWED
+* Users.java
+  - NOT YET REVIEWED
+* JsonUtils.java
+  - NOT YET REVIEWED
+* PartUtils.java
+  - NOT YET REVIEWED
+* (*).java
+  1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
 
 * Foo
 Project properties don't load on ceo/project/# until the project is published
 Home page and Collection page imagery doesn't work
 Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
 Add time estimates to my CEO Smartsheet tasks
-Organize Java files into folders
-Review Collect*.java files
 Ask Stefano to include the institution attribute in returned imagery objects
 Ask Jeff to setup a new server with the collect.earth DNS
 Make sure project creation calculates the number of plots and samples per plot

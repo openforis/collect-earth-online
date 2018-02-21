@@ -8,7 +8,6 @@ import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import spark.Request;
 import spark.Response;
@@ -17,14 +16,14 @@ public class Imagery {
 
     public static String getAllImagery(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
-        JsonArray imagery = readJsonFile("imagery-list.json").getAsJsonArray();
-        if (institutionId.equals("") || institutionId.equals("0")) {
-            return filterJsonArray(imagery,
-                imageryEntry -> imageryEntry.get("institution").getAsString().equals("0")).toString();
+        JsonArray imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+        if (institutionId.isEmpty()) {
+            return filterJsonArray(imageryList,
+                                   imagery -> imagery.get("visibility").getAsString().equals("public")).toString();
         } else {
-            return filterJsonArray(imagery,
-                imageryEntry -> imageryEntry.get("institution").getAsString().equals("0")
-                                || imageryEntry.get("institution").getAsString().equals(institutionId)).toString();
+            return filterJsonArray(imageryList,
+                                   imagery -> imagery.get("visibility").getAsString().equals("public")
+                                           || imagery.get("institution").getAsString().equals(institutionId)).toString();
         }
     }
 

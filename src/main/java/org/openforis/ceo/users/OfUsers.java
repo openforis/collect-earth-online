@@ -4,22 +4,19 @@ import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
+import static org.openforis.ceo.utils.Mail.isEmail;
+import static org.openforis.ceo.utils.Mail.sendMail;
+import static org.openforis.ceo.utils.RequestUtils.getResponseAsJson;
+import static org.openforis.ceo.utils.RequestUtils.prepareDeleteRequest;
+import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
+import static org.openforis.ceo.utils.RequestUtils.preparePatchRequest;
+import static org.openforis.ceo.utils.RequestUtils.preparePostRequest;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.http.json.JsonHttpContent;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,8 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.local.Users;
-import org.openforis.ceo.utils.Mail;
 import spark.Request;
 import spark.Response;
 
@@ -39,46 +34,7 @@ public class OfUsers {
     private static final String SMTP_SERVER = CeoConfig.smtpServer;
     private static final String SMTP_PORT = CeoConfig.smtpPort;
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
-    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	private static final String AUTHENTICATION_TOKEN_NAME = "of-token";
-
-    private static HttpRequestFactory createRequestFactory() {
-        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-                request.setParser(new JsonObjectParser(JSON_FACTORY));
-            });
-    }
-
-    private static HttpRequestFactory createPatchRequestFactory() {
-        return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
-                request.setHeaders(new HttpHeaders().set("X-HTTP-Method-Override", "PATCH"));
-                request.setParser(new JsonObjectParser(JSON_FACTORY));
-            });
-    }
-
-    private static HttpRequest prepareGetRequest(String url) throws IOException {
-        return createRequestFactory().buildGetRequest(new GenericUrl(url));
-    }
-
-    private static HttpRequest preparePatchRequest(String url, GenericData data) throws IOException {
-        return createPatchRequestFactory()
-            .buildPostRequest(new GenericUrl(url),
-                              new JsonHttpContent(new JacksonFactory(), data));
-    }
-
-    private static HttpRequest preparePostRequest(String url, GenericData data) throws IOException {
-        return createRequestFactory()
-            .buildPostRequest(new GenericUrl(url),
-                              new JsonHttpContent(new JacksonFactory(), data));
-    }
-
-    private static HttpRequest prepareDeleteRequest(String url) throws IOException {
-        return createRequestFactory().buildDeleteRequest(new GenericUrl(url));
-    }
-
-    private static JsonElement getResponseAsJson(HttpResponse response) throws IOException {
-        return parseJson(response.parseAsString());
-    }
 
     /**
      * Call Of-Users' REST API to QUERY the database.
@@ -127,7 +83,7 @@ public class OfUsers {
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         try {
             // Validate input params and assign flash_messages if invalid
-            if (!Users.isEmail(inputEmail)) {
+            if (!isEmail(inputEmail)) {
                 req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
             } else if (inputPassword.length() < 8) {
                 req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
@@ -187,9 +143,7 @@ public class OfUsers {
             req.session().removeAttribute("username");
             req.session().removeAttribute("role");
             req.session().removeAttribute("token");
-            // FIXME: Does the new code do what the commented out code used to do?
-            // res.removeCookie("/", AUTHENTICATION_TOKEN_NAME);
-            res.removeCookie(AUTHENTICATION_TOKEN_NAME);
+            res.removeCookie("/", AUTHENTICATION_TOKEN_NAME);
         }
         return req;
     }
@@ -201,7 +155,7 @@ public class OfUsers {
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         String inputCurrentPassword = req.queryParams("current-password");
         // Validate input params and assign flash_messages if invalid
-        if (!Users.isEmail(inputEmail)) {
+        if (!isEmail(inputEmail)) {
             req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
         } else if (inputPassword.length() < 8) {
             req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
@@ -251,7 +205,7 @@ public class OfUsers {
                     + inputEmail
                     + "&password-reset-key="
                     + user.get("resetKey").getAsString();
-                Mail.sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
+                sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
                 req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
             }
         } catch (IOException e) {
@@ -471,9 +425,7 @@ public class OfUsers {
         if (host.indexOf(':') > -1) {
             host = host.substring(0, host.lastIndexOf(':')); //remove port from host
         }
-        // FIXME: Does the new code do what the commented out code used to do?
-        // res.cookie(host, "/", AUTHENTICATION_TOKEN_NAME, token, -1, false, false);
-        res.cookie(AUTHENTICATION_TOKEN_NAME, token);
+        res.cookie(host, "/", AUTHENTICATION_TOKEN_NAME, token, -1, false, false);
     }
 
 }

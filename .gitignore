@@ -1,6 +1,7 @@
 .gradle/
 .meghanada/
 .tern-port
+.settings/
 collect-earth-online.iml
 /bin/
 /build/

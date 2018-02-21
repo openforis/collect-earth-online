@@ -2,12 +2,11 @@ The source code for CEO can be found on Github at this URL:
 
   https://github.com/openforis/collect-earth-online
 
-Switch to the collect-integration branch to see updates since October.
-Note that much of the development on new features has slowed within CEO
-proper over the past few months as we have been working with FAO to
-complete their Collect and OfUsers gateways, which provide the new, more
-powerful persistent storage mechanism for CEO. This is the reason I am
-in Rome right now.
+Switch to the collect-integration branch to see updates since
+October 2017. Note that much of the development on new features has
+slowed within CEO proper over the past few months as we have been
+working with FAO to complete their Collect and OfUsers gateways, which
+provide the new, more powerful persistent storage mechanism for CEO.
 
 Here is a high level description of CEO's system architecture:
 
@@ -42,13 +41,29 @@ Here are the relevant directories:
 | Front end      | Javascript | src/main/resources/public/js           |
 |----------------+------------+----------------------------------------|
 
+The Java files under src/main/java/org/openforis/ceo are separated
+into 7 packages below org.openforis.ceo. Here's the breakdown for
+future reference:
+
+|---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
+| Package | Maintainer | Description                                                                                                                               |
+|---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
+| collect | Stefano    | Files used for communicating with OpenForis Collect                                                                                       |
+| env     | Gary       | Sitewide environment variables and their Tomcat initialization routines                                                                   |
+| ext     | Billy      | Extensions to CEO (e.g., GeoDash and TimeSync)                                                                                            |
+| local   | Gary       | Files used for managing local file-based storage of users, groups, projects, and imagery, allowing CEO to run as a standalone application |
+| model   | Stefano    | Classes used for reifying concrete JSON messages that will be passed between CEO and other applications, including the client             |
+| users   | Roberto    | Files used for communicating with OpenForis Users                                                                                         |
+| utils   | Gary       | Utility functions that are used by both the standalone and networked versions of CEO                                                      |
+|---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
+
 CEO's entry point is CeoSparkFilter.java, which extracts some runtime
 configuration values from src/main/webapp/WEB-INF/web.xml and assigns
 them to attributes in CeoConfig.java. After that, control is passed to
-Server.java's init() method, which assigns Server.documentRoot to "/ceo"
-(CEO's URL under Tomcat) and calls Server.declareRoutesForCollect().
-This function uses Spark's static get() and post() functions to setup
-the routing table for all future incoming HTTP requests.
+Server.java's init() method, which simply calls
+Server.declareRemoteStorageRoutes(). This function uses Spark's static
+get() and post() functions to setup the routing table for all future
+incoming HTTP requests.
 
 Requests for viewable pages respond with calls to the relevant method
 within Views.java. All other requests are API calls to be used by the
@@ -76,15 +91,16 @@ GeoDash integration:
    <link rel="stylesheet" type="text/css" href="${root}/css/timesync.css">
    </#if>
 
-5. Add a route for your new page to Server.java's declareRoutes() and
-   declareRoutesForCollect() functions:
+5. Add a route for your new page to Server.java's
+   declareLocalStorageRoutes() and declareRemoteStorageRoutes()
+   functions:
 
    get("/timesync", (req, res) -> { return freemarker.render(Views.timesync(req, res)); });
 
 6. Add a new timesync function to Views.java:
 
    public static ModelAndView timesync(Request req, Response res) {
-        Map<String, Object> model = getBaseModel(req, "TimeSync", "full");
+        Map<String, Object> model = getBaseModel(req, "TimeSync");
         // Pass server-side parameters to your FTL template...
         model.put("some_variable", req.queryParams("some_value"));
         return new ModelAndView(model, "timesync.ftl");
