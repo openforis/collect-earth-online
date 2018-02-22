@@ -181,7 +181,51 @@ a:hover{
 	color:#279B93;
 	text-decoration:none;
 }
+/******************/
+/* Flash Messages */
+/******************/
 
+.alert {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    width: 35rem;
+    border: 1px solid #009;
+    padding: 1rem;
+    z-index: 1000;
+    font-size: 1rem;
+    font-style: italic;
+    background: white;
+    opacity: 0;
+    animation: fade-out 5s;
+    -webkit-animation: fade-out 5s;
+    -moz-animation: fade-out 5s;
+    -o-animation: fade-out 5s;
+}
+
+@-webkit-keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@-moz-keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@-o-keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes fade-out {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+}
 /*********************************************************************/
 /* NAV */
 /*********************************************************************/
