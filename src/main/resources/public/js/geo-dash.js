@@ -125,7 +125,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 zoomType: "x"
             },
             title: {
-                text: wText
+                text: ""
             },
             subtitle: {
                 text: document.ontouchstart === undefined
@@ -153,8 +153,8 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                             y2: 1
                         },
                         stops: [
-                            [0, Highcharts.getOptions().colors[0]],
-                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get("rgba")]
+                            [0, "#31bab0"],
+                            [1, Highcharts.Color("#31bab0").setOpacity(0).get("rgba")]
                         ]
                     },
                     marker: {
@@ -175,7 +175,8 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             series: [{
                 type: "area",
                 name: wText,
-                data: wTimeseriesData
+                data: wTimeseriesData,
+                color: "#31bab0"
             }]
         }, function () {
             geodash.completeGraph();
@@ -203,6 +204,7 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         if (area_ha < 0) {
             area_ha = area_ha * -1;
         }
+        area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
         return this.numberWithCommas(area_ha);
     };
     this.addWidget = function (widget) {
@@ -266,14 +268,21 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
         var toolsholder = $("<ul/>", {
             "class": "list-inline panel-actions pull-right"
         });
-        var toolSpace = $("<li/>");
+        var theName = widget.name == null || widget.name.trim() == ""? "GEO-DASH Widget" :widget.name;
+        var toolSpace = $("<li/>", {
+            "style" : "display:inline;"
+        }).html(theName);
+
         toolsholder.append(toolSpace);
-        var toolmaxtog = $("<li/>");
+        var toolmaxtog = $("<li/>", {
+            "style" : "display:inline;"
+        });
         var thebutton = $("<a/>", {
             "class": "list-inline panel-actions panel-fullscreen"
         });
         var theicon = $("<i/>", {
-            "class": "fas fa-expand-arrows-alt" //"glyphicon glyphicon-resize-full"
+            "class": "fas fa-expand-arrows-alt", //"glyphicon glyphicon-resize-full"
+            "style": "color: #31BAB0"
         });
         thebutton.append(theicon);
         thebutton.attr("role", "button");
@@ -327,7 +336,8 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
                 }
                 );
                 maddiv.attr("style", "width:100%; min-height:200px;");
-                front.append(maddiv).append(widgettitle).append(opacityControl).append(sub);
+                front.append(maddiv).append(opacityControl).append(sub);
+                //front.append(maddiv).append(widgettitle).append(opacityControl).append(sub);
                 widgetcontainer.append(front);
                 panel.append(widgetcontainer);
             } else if (wtext === "timeSeriesGraph" || wtext === "ndviTimeSeries" || wtext === "ndwiTimeSeries" || wtext === "eviTimeSeries" || wtext === "evi2TimeSeries" || wtext === "ndmiTimeSeries") {
@@ -348,17 +358,18 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
 
                 var statsDiv = $("<div/>", {
                     "id": "widgetstats_" + widget.id,
-                    "class": "minmapwidget"
+                    "class": "minmapwidget",
+                    "style" : "padding: 20px"
                 });
-                var content = "<div><div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-population.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
-                content += "  <label for=\"totalPop_" + widget.id + "\" style=\"color:#787878\">Total population</label>";
-                content += "<h3 id=\"totalPop_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
-                content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-area.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
-                content += "<label for=\"totalArea_" + widget.id + "\" style=\"color:#787878\">Area</label>";
-                content += "<h3 id=\"totalArea_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
-                content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-elevation.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: rgb(226, 132, 58);\"></div>";
-                content += "<label for=\"elevationRange_" + widget.id + "\" style=\"color:#787878\">Elevation</label>";
-                content += "<h3 id=\"elevationRange_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; \"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+                var content = "<div><div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-population.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: #31bab0;\"></div>";
+                content += "  <label for=\"totalPop_" + widget.id + "\" style=\"color:#787878; padding: 10px 20px;\">Total population</label>";
+                content += "<h3 id=\"totalPop_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; padding-top: 12px;\"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+                content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-area.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: #31bab0;\"></div>";
+                content += "<label for=\"totalArea_" + widget.id + "\" style=\"color:#787878; padding: 10px 20px;\">Area</label>";
+                content += "<h3 id=\"totalArea_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; padding-top: 12px;\"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
+                content += "<div class=\"form-group\"><div class=\"input-group\"><div class=\"input-group-addon\"><img src=\"img/icon-elevation.png\" style=\"width: 50px; height: 50px; border-radius: 25px; background-color: #31bab0;\"></div>";
+                content += "<label for=\"elevationRange_" + widget.id + "\" style=\"color:#787878; padding: 10px 20px;\">Elevation</label>";
+                content += "<h3 id=\"elevationRange_" + widget.id + "\" style=\"color: #606060; font-size: 16px; font-weight: bold; padding-top: 12px;\"></h3><img src=\"img/loading.gif\" id=\"loading-indicator-1\" style=\"display:none\" /></div></div>";
                 statsDiv.append(content);
                 front.append(statsDiv);
                 widgetcontainer.append(front);
@@ -916,9 +927,9 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             var $this = $(this);
             if ($this.children("svg").hasClass("fa-expand-arrows-alt")) {
                 $this.children("svg").removeClass("fa-expand-arrows-alt");
-                $this.children("svg").addClass("fas fa-compress");
-            } else if ($this.children("svg").hasClass("fas fa-compress")) {
-                $this.children("svg").removeClass("fas fa-compress");
+                $this.children("svg").addClass("fa-compress");
+            } else if ($this.children("svg").hasClass("fa-compress")) {
+                $this.children("svg").removeClass("fa-compress");
                 $this.children("svg").addClass("fa-expand-arrows-alt");
             }
             if (geodash.wStateFull) {

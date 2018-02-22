@@ -1,6 +1,7 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="geodash-nav">
+<nav class="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0" style="background-color: white;" id="geodash-nav">
+	<div class="container">
 	<a class="navbar-brand" href="home">
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 	</a>
@@ -50,15 +51,16 @@
                 </li>
             </#if>
         </#if>
-        	     <li class="nav-item my-auto">
-	     	 <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-outline-lightgreen btn-sm" ng-click="geodash.createNewWidget()" style="float:right;">
+        	     <li class="nav-item my-auto ml-1">
+	     	 <input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-outline-lightgreen btn-sm" ng-click="geodash.createNewWidget()" style="float:right;" data-toggle="modal" data-target="#dialog-form">
 	     </li>
 	     </ul>
+    </div>
     </div>
 </nav>
 <script type="text/javascript" src="${root}/js/geo-dash.js"></script>
 <div id="geodash" ng-app="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize('${root}')">
-
+<br style="clear:both;">
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>
