@@ -1,28 +1,64 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="geodash-nav">
+	<a class="navbar-brand" href="home">
+		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
+	</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+     <ul id="login-info" class="navbar-nav mr-auto">
+	     <li  class="nav-item my-auto">
+	     	<h1>GEO-DASH</h1>
+	     </li>
+	         </ul>
+
+	     <ul class="navbar-nav mr-0">
+        <#if username??>
+	            <#if navlink == "Logout">
+	            <li id="username" class="nav-item my-auto">
+	            <span class="nav-link disabled">${username}</span>
+	            </li>
+	            <li class="nav-item my-auto">
+   	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
+           	      Logout
+                 </button>
+                 </li>
+	            <#else>
+	            <li id="username" class="nav-item my-auto">
+	            <span class="nav-link disabled">${username}</span>
+	            </li>
+	            <li  class="nav-item my-auto">
+   	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
+           	      Logout
+                 </button>
+                 </li>
+               </#if>
+        <#else>
+            <#if navlink == "Login" || navlink == "Register">
+            <li class="nav-item my-auto">
+	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
+	                Login/Register
+                </button>
+                </li>
+	            <#else>
+	            <li class="nav-item my-auto">
+	            <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href = '${root}/login'">
+	                Login/Register
+                </button>
+                </li>
+            </#if>
+        </#if>
+        	    
+	     </ul>
+    </div>
+</nav>
 <script src="${root}/js/jquery-3.1.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <script type="text/javascript" src="${root}/js/js.cookie.js"></script>
 <script type="text/javascript" src="${root}/js/geo-dash-widget-editor.js"></script>
 <div id="geodash" ng-app="geodash" ng-controller="GeodashWidgetEditorController as geodash" ng-init="geodash.initialize('${root}')">
-    <div id="geohead">
-        <img id="ceo-site-logo" src="/img/ceo-logo1.png" style=" position: relative; top: 1px; left: 10px; height: 40px; padding: 4px;">
-            <div id="login-info">
-                    <#if username??>
-                        <#if navlink == "Logout">
-                             <span>${username}</span> <a class="active-link" href="${root}/logout">Logout</a>
-                        <#else>
-                            <span>${username}</span> <a href="${root}/logout">Logout</a>
-                        </#if>
-                    <#else>
-                        <#if navlink == "Login" || navlink == "Register">
-                            <a class="active-link" href="${root}/login">Login/Register</a>
-                        <#else>
-                            <a ng-href="${root}/login{{geodash.querystring}}&returnurl=geo-dash">Login/Register</a>
-                        </#if>
-                    </#if>
-                </div>
-            </div>
         <div class="container-fluid widgetEditor">
             <div class="row">
                 <div id="dashHolder" class="dashHolder widgetEditor">
@@ -150,10 +186,10 @@
                                  <h1 class="page-header">New Layout</h1>
                                  </div>
                                  <div style="width:100px; float:right; ">
-                                     <h1><input class="button update-widgets" name="update-widgets" value="Update" type="submit" onclick="gmodcdash.updateWidgets()"></h1>
+                                     <h1><input class="btn btn-outline-lightgreen btn-sm" name="update-widgets" value="Update" type="submit" onclick="gmodcdash.updateWidgets()"></h1>
                                   </div>
                                  <div style="width:100px; float:right; ">
-                                    <h1><input class="button update-widgets" name="create-widgets" value="Create" type="submit" onclick="gmodcdash.createWidgetDialog()"></h1>
+                                    <h1><input class="btn btn-outline-lightgreen btn-sm" name="create-widgets" value="New Widget" type="submit" onclick="gmodcdash.createWidgetDialog()"></h1>
                                   </div>
 
                             </div>
