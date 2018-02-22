@@ -6,3 +6,4 @@ $('#togbutton').on('click',function(){
 	   });
 
 
+//confirmation when leaving page
