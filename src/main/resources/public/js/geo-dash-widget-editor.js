@@ -438,7 +438,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                     checkccookie = statuscookie;
                     if(checkccookie == null || statuscookie == false || statuscookie == 'false')
                     {
-                    $('<div />').html('<p>Click an empty blue box to position the new widget</p><label><input type="checkbox" name="dismiss">Never show again!</label><br />').dialog({
+                    $('<div />').html('<p>Click an empty blue box to position the new widget</p><label style="float:right;"><input type="checkbox" name="dismiss">Never show again!</label><br />').dialog({
                                           modal: true,
                                          title: 'Widget placement',
                                          width: 400,
@@ -1084,7 +1084,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 {
                     if(this.isUpdatedLayout != 'true')
                     {
-                        $('<div />').html('<p>Arrange widgets by selecting each widget then clicking the blue box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;"><br /><label><input type="checkbox" name="initdirection">Never show again!</label><br />').dialog({
+                        $('<div />').html('<p>Arrange widgets by selecting each widget then clicking the blue box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;"><br /><label style="float:right;"><input type="checkbox" name="initdirection">Never show again!</label><br />').dialog({
                               modal: true,
                              title: 'Update Widgets',
                              width: '55vw',

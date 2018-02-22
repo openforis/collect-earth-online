@@ -50,7 +50,7 @@
                 </li>
             </#if>
         </#if>
-        	    
+
 	     </ul>
     </div>
 </nav>
@@ -59,12 +59,13 @@
 <script type="text/javascript" src="${root}/js/js.cookie.js"></script>
 <script type="text/javascript" src="${root}/js/geo-dash-widget-editor.js"></script>
 <div id="geodash" ng-app="geodash" ng-controller="GeodashWidgetEditorController as geodash" ng-init="geodash.initialize('${root}')">
+<br style="clear:both;">
         <div class="container-fluid widgetEditor">
             <div class="row">
                 <div id="dashHolder" class="dashHolder widgetEditor">
                     <div>
 
-                        <h1 class="page-header">Current Layout </h1>
+                        <h1>Current Layout </h1>
                     </div>
                 </div>
             </div>
@@ -183,7 +184,7 @@
                         <div id="updateDashHolder" class="dashHolder widgetEditor">
                             <div>
                                 <div style="width:calc(100% - 200px); float:left;" >
-                                 <h1 class="page-header">New Layout</h1>
+                                 <h1>New Layout</h1>
                                  </div>
                                  <div style="width:100px; float:right; ">
                                      <h1><input class="btn btn-outline-lightgreen btn-sm" name="update-widgets" value="Update" type="submit" onclick="gmodcdash.updateWidgets()"></h1>
