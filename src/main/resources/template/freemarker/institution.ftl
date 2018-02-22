@@ -8,16 +8,18 @@
      ng-init="institution.initialize('${root}', '${userid!""}', '${institution_id}')">
     <div id="institution-details" class="row justify-content-center">
         <div id="institution-view" class="col-xl-6 col-lg-8 " ng-show="institution.pageMode == 'view'">
-            <div id="institution-logo-container">
-                <a href="{{ institution.details.url }}">
-                    <img src="${ of_users_api_url }/group/logo/{{ institution.details.id }}" alt="logo" />
-                </a>
+      		<div class="row">
+	            <div class="col-md-3" id="institution-logo-container">
+	                <a href="{{ institution.details.url }}">
+	                    <img class="img-fluid" src="${ of_users_api_url }/group/logo/{{ institution.details.id }}" alt="logo" />
+	                </a>
+	            </div>
+	            <h1 class="col-md-9"><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>
             </div>
-            <h1><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>
             <p>{{ institution.details.description }}</p>
         </div>
         <div id="institution-edit" class="col-xl-6 col-lg-8"  ng-show="institution.pageMode == 'edit'">
-	        <form>
+	        <form class="mb-2 p-4 border rounded">
 	        		<div class="form-group form-row">
 		            <label id="institution-name" for="institution-details-name">Name</label>
 					<input id="institution-details-name" class="form-control mb-1 mr-sm-2" type="text" ng-model="institution.details.name">
@@ -59,52 +61,63 @@
          </div>
      </#if>
     <div class="row">
-	    <div id="imagery-list" class="col-lg-4 col-xs-12">
+	    <div id="imagery-list" class="col-lg-4 col-xs-12" >
 	        <h2>Imagery <span class="badge badge-pill bg-lightgreen">{{ institution.imageryList.length }}</span></h2>
-	            <div class="row" ng-repeat="imagery in institution.imageryList" ng-if="institution.imageryMode == 'view'">
-		            	<div ng-if="institution.isAdmin == false" class="col mb-1">
-		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
-		                </div>
-	    	            <div ng-if="institution.isAdmin == true" class="col-lg-10 col-sm-12 mb-1 pr-1 ">
-		               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
-		               	</div>
-	    	            		<div ng-if="institution.isAdmin == true" class="col-lg-2 col-sm-12 pl-0">
-			                <button class="btn btn-outline-danger btn-sm btn-block" ng-if="institution.isAdmin == true" id="delete-imagery" type="button" ng-click="institution.deleteImagery(imagery.id)">
-			                		Delete
-			                </button>
+	        		<div ng-if="institution.imageryMode == 'view'">
+		            <div class="row" ng-repeat="imagery in institution.imageryList">
+			            		<div ng-if="institution.isAdmin == false" class="col mb-1">
+			               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
+			                </div>
+		    	            		<div ng-if="institution.isAdmin == true" class="col-lg-10 col-sm-12 pr-lg-1 ">
+			               		<button class="btn btn-outline-lightgreen btn-sm btn-block" >{{ imagery.title }}</button>
+			               	</div>
+		    	            		<div ng-if="institution.isAdmin == true" class="col-lg-2 col-sm-12 pl-lg-0 mb-1">
+				                <button class="btn btn-outline-danger btn-sm btn-block" ng-if="institution.isAdmin == true" id="delete-imagery" type="button" ng-click="institution.deleteImagery(imagery.id)">
+				                		<span class="d-none d-xl-block">Delete</span>
+				                		<span class="d-xl-none"><i class="fa fa-times-circle"></i></span>
+				                </button>
+			            		</div>
 		            </div>
+	        	        <div class="row">
+			        		<div class="col-lg-12">
+			        		        <button ng-if="institution.isAdmin == true" type="button" id="add-imagery-button" class="btn btn-sm btn-block btn-outline-yellow" ng-click="institution.toggleImageryMode()">
+			        		        Add New Imagery
+			        		        </button>
+		             	</div>
+		             </div>
 	            </div>
-	            <div class="row" ng-if="institution.isAdmin == true && institution.imageryMode == 'edit'">
-			        <table id="add-imagery" class="table table-sm">
-			            <tr>
-			                <td>Title</td>
-			                <td><input type="text" name="imagery-title" autocomplete="off" ng-model="institution.newImageryTitle"></td>
-			            </tr>
-			            <tr>
-			                <td>Attribution</td>
-			                <td><input type="text" name="imagery-attribution" autocomplete="off" ng-model="institution.newImageryAttribution"></td>
-			            </tr>
-			            <tr>
-			                <td>GeoServer URL</td>
-			                <td><input type="text" name="imagery-geoserver-url" autocomplete="off" ng-model="institution.newGeoServerURL"></td>
-			            </tr>
-			            <tr>
-			                <td>GeoServer Layer Name</td>
-			                <td><input type="text" name="imagery-layer-name" autocomplete="off" ng-model="institution.newLayerName"></td>
-			            </tr>
-			            <tr>
-			                <td>GeoServer Params<br>(as JSON string)</td>
-			                <td><input type="text" name="imagery-geoserver-params" autocomplete="off" ng-model="institution.newGeoServerParams"></td>
-			            </tr>
-			        </table>
+	            <div class="row" id="add-imagery" ng-if="institution.isAdmin == true && institution.imageryMode == 'edit'">
+	            		<div class="col">
+				        <form class="mb-2 p-2 border rounded">
+				            <div class="form-group">
+				                <label for="newImageryTitle">Title</label>
+				                <input class="form-control" id="newImageryTitle" type="text" name="imagery-title" autocomplete="off" ng-model="institution.newImageryTitle">
+				            </div>
+				            <div class="form-group">
+				                <label for="newImageryAttribution">Attribution</label>
+				                <input class="form-control" id="newImageryAttribution" type="text" name="imagery-attribution" autocomplete="off" ng-model="institution.newImageryAttribution">
+				            </div>
+				            <div class="form-group">
+				                <label for="newGeoServerURL">GeoServer URL</label>
+				                <input class="form-control" id="newGeoServerURL" type="text" name="imagery-geoserver-url" autocomplete="off" ng-model="institution.newGeoServerURL">
+				            </div>
+				            <div class="form-group">
+				                <label for="newLayerName">GeoServer Layer Name</label>
+				                <input class="form-control" id="newLayerName" type="text" name="imagery-layer-name" autocomplete="off" ng-model="institution.newLayerName">
+				            </div>
+				            <div class="form-group">
+				                <label for="newGeoServerParams">GeoServer Params<br>(as JSON string)</label>
+				                <input class="form-control" id="newGeoServerParams" type="text" name="imagery-geoserver-params" autocomplete="off" ng-model="institution.newGeoServerParams">
+				            </div>
+				            <div class="btn-group-vertical btn-block">
+					            <button id="add-imagery-button" ng-if="institution.isAdmin == true" class="btn btn-sm btn-block btn-outline-yellow btn-group" ng-click="institution.toggleImageryMode()">
+			               			Add New Imagery
+		               			</button>
+		               			<button  class="btn btn-sm btn-block btn-outline-danger btn-group"  ng-click="institution.cancelAddCustomImagery()">Cancel</button>
+	               			</div>
+				        </form>
+			        </div>
 		        </div>
-	        <div class="row">
-	        		<div class="col-lg-12">
-	        		        <input ng-if="institution.isAdmin == true" type="button" id="add-imagery-button"
-		               class="btn btn-sm btn-block btn-outline-yellow" ng-click="institution.toggleImageryMode()"
-		               value="{{ institution.imageryMode == 'view' ? 'Add Imagery' : 'Save Changes' }}">
-             	</div>
-             </div>
 	    </div>
 	  <div id="project-list" class="col-lg-4 col-xs-12">
 	      <h2>Projects <span class="badge badge-pill bg-lightgreen">{{ institution.projectList.length }}</span></h2>

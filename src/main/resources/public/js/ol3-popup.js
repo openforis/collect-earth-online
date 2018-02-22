@@ -32,7 +32,7 @@
         this.container.className = 'ol-popup';
 
         this.closer = document.createElement('a');
-        this.closer.className = 'ol-popup-closer';
+        this.closer.className = 'ol-popup-closer close p-2';
         this.closer.href = '#';
         this.container.appendChild(this.closer);
 

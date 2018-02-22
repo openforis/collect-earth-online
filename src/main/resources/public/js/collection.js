@@ -160,6 +160,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     };
 
     this.nextPlot = function () {
+		$("#go-to-first-plot-button").addClass("d-none");
+		$("#plot-nav").removeClass("d-none");
         mycollection.showSideBar = true;
         mycollection.mapclass = "sidemap";
         mycollection.quitclass = "quit-side";

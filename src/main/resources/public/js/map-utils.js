@@ -568,12 +568,14 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
             var features = feature.get('features');
             clusterpoints = [];
             var html = '<div class="cTitle" ><h1>Cluster info</h1></div><div class="cContent" >';
+            html += "<table class=\'table table-sm\'><tbody>";
             for(var i = 0; i < features.length; i++) {
               clusterpoints.push(features[i].getGeometry().getCoordinates());
-              html += '<p><span style="float:left;" class="clusterList" title="'+ features[i].get("name") +'" alt="'+ features[i].get("name") +'">'+features[i].get("name") + ' ' + '</span><a href="'+ dRoot+'/collection/'+ features[i].get("pID") +'" class="lnkStart">Get Started</a></p>';
+              html += '<tr class=\'d-flex\'><td class=\'small col-6 px-0 my-auto \' title="'+ features[i].get("name") +'" alt="'+ features[i].get("name") +'">'+features[i].get("name") + ' ' + '</td><td class=\'small col-6 pr-0\'><a href="'+ dRoot+'/collection/'+ features[i].get("pID") +'" class="btn btn-sm btn-block btn-outline-lightgreen">Get Started</a></td></tr>';
             }
+            html +="</tbody></table>";
             var linestring = new ol.geom.LineString(clusterpoints);
-            html += '<p><a onclick="map_utils.zoomToCluster(['+linestring.getExtent()+'])" class="lnkStart" style="cursor:pointer; min-width:350px;">Zoom to cluster</a></p></div>';
+            html += '<p><a onclick="map_utils.zoomToCluster(['+linestring.getExtent()+'])" class="btn btn-block btn-sm btn-outline-lightgreen" style="cursor:pointer; min-width:350px;">Zoom to cluster</a></p></div>';
             gPopup.show(feature.get("features")[0].getGeometry().getCoordinates(),html);
         } else {
             if(feature != null && feature.get("features") != null)
@@ -583,9 +585,9 @@ map_utils.draw_project_markers = function (project_list, dRoot) {
                     var description = feature.get("features")[0].get("description") == "" ? "N/A" : feature.get("features")[0].get("description");
                                     var html = '<div class="cTitle" >';
                                     html += '<h1 >' + feature.get("features")[0].get("name") +'</h1> </div>';
-                                    html += '<div class="cContent" ><p><span class="pField">Description: </span>' + description + '</p>';
-                                    html += '<p><span class="pField">Number of plots: </span>' + feature.get("features")[0].get("numPlots")  + '</p>';
-                                    html += '<a href="'+ dRoot+'/collection/'+ feature.get("features")[0].get("pID") +'" class="lnkStart">Get Started</a>  </div>';
+                                    html += '<div class="cContent" ><table class=\'table table-sm\'><tbody><tr class=\'d-flex\'><td class=\'small col-6 px-0 \'>Description</td><td class=\'small col-6 pr-0\'>' + description + '</td></tr>';
+                                    html += '<tr class=\'d-flex\'><td class=\'small col-6 px-0\'>Number of plots</td><td class=\'small col-6 pr-0\'>' + feature.get("features")[0].get("numPlots")  + '</td></tr></tbody></table>';
+                                    html += '<a href="'+ dRoot+'/collection/'+ feature.get("features")[0].get("pID") +'" class="btn btn-small btn-block btn-outline-lightgreen">Get Started</a>  </div>';
                                     gPopup.show(feature.get("features")[0].getGeometry().getCoordinates(),html);
                 }
             }

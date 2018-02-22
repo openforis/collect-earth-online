@@ -24,6 +24,11 @@
         <fieldset class="mb-3 text-center">
             <h3>Plot Navigation</h3>
             <div class="row">
+            		<div class="col" id="go-to-first-plot">
+					<input id="go-to-first-plot-button" class="btn btn-outline-lightgreen btn-sm btn-block" type="button" name="new-plot" value="Go to first plot" ng-click="collection.nextPlot()">
+				</div>
+            </div>
+            <div class="row d-none" id="plot-nav">
             		<div class="col-sm-6 pr-2">
 					<input id="new-plot-button" class="btn btn-outline-lightgreen btn-sm btn-block" type="button" name="new-plot" value="Skip" ng-click="collection.nextPlot()">
             		</div>
@@ -124,5 +129,11 @@
     </div>
   </div>
 </div><!-- end Modal -->
+
+<script>
+
+</script>
+
+
 <#include "end-content.ftl">
 <#include "footer.ftl">
