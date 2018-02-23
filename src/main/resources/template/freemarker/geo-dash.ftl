@@ -3,7 +3,7 @@
 
 <!-- geo dash nav -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0" style="background-color: white;" id="geodash-nav">
-	<div class="container">
+	<div class="container-fluid">
 	<a class="navbar-brand" href="home">    
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 	</a>

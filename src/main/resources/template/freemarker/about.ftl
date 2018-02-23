@@ -1,7 +1,8 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <section id="about" class="container">
-	<div class="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
+	<div class="row justify-content-center">
+	<div class="col-xl-8 col-lg-10">
 	    <h1>About Collect Earth Online</h1>
 	    <p>
 	        Collect Earth Online is a custom built, open-source, high
@@ -42,6 +43,7 @@
 	        report any errors or deficiencies in this product.
 	    </p>
         <#include "logo-banner.ftl">
+	</div>
 	</div>
 </section>
 <#include "footer.ftl">

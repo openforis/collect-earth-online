@@ -1,6 +1,6 @@
 
-<nav class="navbar navbar-expand-lg navbar-light fixed-top pt-0 pb-0" style="background-color: white;" id="main-nav">
-	<div class="container">
+<nav class="navbar navbar-expand-lg navbar-light fixed-top py-0" style="background-color: white;" id="main-nav">
+	<div class="container-fluid">
 				<a class="navbar-brand pt-1 pb-1" href="${root}/home">    
 					<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 				</a>

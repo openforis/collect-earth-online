@@ -8,7 +8,7 @@
              overflow-x: hidden;
          }
         </style>
-        <div id="user-stats" class="col-xl-4 col-md-5">
+        <div id="user-stats" class="col-xl-4 col-md-5 ">
             <h3>Here's your progress</h3>
             <h1><span class="badge bg-lightgreen">Level 1</span></h1>
             <div class="progress w3-light-grey mb-1">

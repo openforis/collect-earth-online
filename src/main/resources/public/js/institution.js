@@ -146,6 +146,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             this.pageMode = "view";
         }
     };
+    this.cancelChanges = function(){
+    	 	this.pageMode = "view";
+    }
 
     this.deleteInstitution = function () {
         if (confirm("Do you REALLY want to delete this institution?!")) {

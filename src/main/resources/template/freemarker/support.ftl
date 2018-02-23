@@ -1,8 +1,8 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <section id="support" class="container">
-	<div class="row"></div>
-		<div class="col-xl-6 offset-xl-3 col-lg-8 offset-lg-2">
+	<div class="row justify-content-center"></div>
+		<div class="col-xl-6 offset-xl-3 col-lg-8">
 	    <h1>Collect Earth Online User Manual</h1>
 	    <div class="btn-group-vertical btn-block mb-4">
 			<a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual.pdf" role="button"><i class="fa fa-download"></i> PDF Version</a></li>

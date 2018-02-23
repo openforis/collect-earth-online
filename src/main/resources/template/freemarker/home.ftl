@@ -28,26 +28,26 @@
                             <ul class="tree">
                                 <#if role??>
                                 <a class="create-institution" href="${root}/institution/0">
-                                    <li class="bg-yellow text-center p-2"><i class="fa fa-file"></i> Create New Institution</li>
+                                    <li class="bg-yellow text-center p-2"><i class="fa fa-plus-square"></i> Create New Institution</li>
                                     </a>
                                 </#if>
                                 <li ng-repeat="institution in home.institutionList">
 	                                    <div class="btn bg-lightgreen btn-block m-0 p-2 rounded-0" data-toggle="collapse" href="#collapse{{ institution.id }}" role="button" aria-expanded="false">
                                      		<div class="row">
-		                                    		<div class="col-lg-10 my-auto">
+		                                    		<div class="col-11 my-auto">
 			                                    		<p class="tree_label text-white m-0" for="c{{ institution.id }}"><input type="checkbox" class="d-none" id="c{{ institution.id }}" /><span class="">{{ institution.name }}</span></p>
 			                                    </div>
-			                                    <div class="col-lg-1">
+			                                    <div class="col-xs">
 				                                   	 <a class="institution_info btn btn-sm btn-outline-lightgreen" href="${root}/institution/{{ institution.id }}"><i class="fa fa-info" style="color:white;"></i></a>
 			                                   </div>
 										</div>
 									</div>
 										<div  class="collapse" id="collapse{{ institution.id }}">
 	                                        <div class="bg-lightgrey text-center p-1 row px-auto" ng-if="project.editable == true"  ng-repeat="project in home.projectList | filter : {institution: institution.id }">
-	                               	          	<div class="col-lg-9 pr-lg-1">
+	                               	          	<div class="col-9 pr-1">
 	                                           		 <a class="view-project btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
 												</div>	
-	                               	          	<div class="col-lg-3 pl-lg-0">
+	                               	          	<div class="col-3 pl-0">
 	                                          			<a ng-if="project.editable == true" class="edit-project btn btn-outline-yellow btn-sm btn-block" href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Edit</a>
 	                                    			</div>
 	                                        </div>

@@ -6,7 +6,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by Spatial Informatics Group">
         <meta name="keywords" content="collect earth online image analysis crowdsourcing platform SIG spatial informatics group">
-        <title>Collect Earth Online</title>
+        <#if navlink == "Geo-Dash" >
+			<title>Geo Dash</title>
+		<#else>
+			<title>Collect Earth Online</title>
+         </#if>
         <link rel="shortcut icon" href="${root}/favicon.ico">
         <!--  <link rel="stylesheet" type="text/css" href="${root}/css/cssreset-min.css"> 
         <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css">
