@@ -192,9 +192,10 @@
                                     <input type="text" name="collection" id="iCollection" value="" class="form-control">
                                 </div>
                                 <div class="form-group">
+                                		<label for="sDate_new">Date Range</label>
                                     <div class="input-group input-daterange  mb-2" id="range_new">
                                         <input type="text" class="form-control" value="" id="sDate_new">
-                                        <div class="input-group-addon my-auto">to</div>
+                                        <div class="input-group-addon my-auto mx-1">to</div>
                                         <input type="text" class="form-control" value="" id="eDate_new">
                                     </div>
                                     <div class="form-group">
@@ -207,7 +208,7 @@
                                     </div>
                                     <div class="form-group">
                                         <!-- Allow form submission with keyboard without duplicating the dialog button -->
-                                        <input type="submit" tabindex="-1" class="btn btn-outline-lightgreen btn-block">
+                                        <input type="submit" tabindex="-1" class="btn btn-outline-lightgreen btn-block" >
                                     </div>
                                 </div>
                             </div>
