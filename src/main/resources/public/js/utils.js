@@ -45,6 +45,6 @@ utils.lowlight_border = function (element_id) {
 
 utils.blink_border = function (element_id) {
     utils.highlight_border(element_id);
-    setTimeout(function () { utils.lowlight_border(element_id) }, 500);
+    setTimeout(function () { utils.lowlight_border(element_id); }, 500);
     return null;
 };

@@ -2,8 +2,8 @@ package org.openforis.ceo.collect;
 
 import static java.lang.String.format;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
-import static org.openforis.ceo.client.CollectClient.getFromCollect;
-import static org.openforis.ceo.client.CollectClient.postToCollect;
+import static org.openforis.ceo.collect.CollectClient.getFromCollect;
+import static org.openforis.ceo.collect.CollectClient.postToCollect;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findElement;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -21,6 +21,10 @@ import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.RequestUtils.getIntParam;
 import static org.openforis.ceo.utils.RequestUtils.getParam;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,21 +42,13 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import org.openforis.ceo.OfGroups;
-import org.openforis.ceo.OfUsers;
 import org.openforis.ceo.model.ProjectStats;
+import org.openforis.ceo.users.OfGroups;
+import org.openforis.ceo.users.OfUsers;
 import org.openforis.ceo.utils.JsonUtils;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 import spark.Request;
 import spark.Response;
 import spark.utils.StringUtils;
@@ -328,12 +324,12 @@ public class CollectProjects {
             
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate + ".csv";
 
             HttpServletResponse response = res.raw();
             writeCsvFile(response, csvHeader, contentStream, outputFileName); 
             
-            return response;
+            return null;
         }
     }
 
@@ -428,12 +424,12 @@ public class CollectProjects {
 
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate + ".csv";
 
             HttpServletResponse response = res.raw();
             writeCsvFile(response, csvHeader, contentStream, outputFileName); 
             
-            return response;
+            return null;
         }
     }
 

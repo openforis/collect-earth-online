@@ -12,10 +12,17 @@ import com.google.gson.JsonObject;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
-
 import org.openforis.ceo.collect.CollectImagery;
 import org.openforis.ceo.collect.CollectProjects;
-
+import org.openforis.ceo.env.CeoConfig;
+import org.openforis.ceo.ext.GeoDash;
+import org.openforis.ceo.local.Imagery;
+import org.openforis.ceo.local.Institutions;
+import org.openforis.ceo.local.Projects;
+import org.openforis.ceo.local.Users;
+import org.openforis.ceo.users.CeoAuthFilter;
+import org.openforis.ceo.users.OfGroups;
+import org.openforis.ceo.users.OfUsers;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
@@ -37,7 +44,7 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules for the Maven/Gradle entry point
-    private static void declareRoutes() {
+    private static void declareLocalStorageRoutes() {
         // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -59,6 +66,7 @@ public class Server implements SparkApplication {
         get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res)); });
         get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
+        get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
         get("/project/:id",     (req, res) -> { return freemarker.render(Views.project(req, res)); });
         get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",          (req, res) -> { return freemarker.render(Views.login(Users.login(req, res), res)); });
@@ -117,7 +125,7 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules for use with Collect and Of-Users
-    private static void declareRoutesForCollect() {
+    private static void declareRemoteStorageRoutes() {
         // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -142,6 +150,7 @@ public class Server implements SparkApplication {
         get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res)); });
         get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
+        get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
         get("/project/:id",     (req, res) -> { return freemarker.render(Views.project(req, res)); });
         get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
         post("/login",          (req, res) -> { return freemarker.render(Views.login(OfUsers.login(req, res), res)); });
@@ -213,13 +222,13 @@ public class Server implements SparkApplication {
         port(8080);
 
         // Set up the routing table
-        declareRoutes();
+        declareLocalStorageRoutes();
     }
 
     // Tomcat entry point
     public void init() {
         // Set up the routing table
-        declareRoutesForCollect();
+        declareRemoteStorageRoutes();
     }
 
 }

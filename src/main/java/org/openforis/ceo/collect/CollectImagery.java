@@ -1,21 +1,23 @@
 package org.openforis.ceo.collect;
 
-import static org.openforis.ceo.OfGroups.associateResource;
-import static org.openforis.ceo.OfGroups.disassociateResource;
-import static org.openforis.ceo.OfGroups.getResourceIds;
-import static org.openforis.ceo.client.CollectClient.getFromCollect;
-import static org.openforis.ceo.client.CollectClient.postToCollect;
+import static org.openforis.ceo.collect.CollectClient.getFromCollect;
+import static org.openforis.ceo.collect.CollectClient.postToCollect;
+import static org.openforis.ceo.users.OfGroups.associateResource;
+import static org.openforis.ceo.users.OfGroups.disassociateResource;
+import static org.openforis.ceo.users.OfGroups.getResourceIds;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findElement;
-import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.forEachInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import spark.Request;
 import spark.Response;
 
@@ -26,20 +28,19 @@ public class CollectImagery {
 	public static String getAllImagery(Request req, Response res) throws IOException {
         String institutionId = req.queryParams("institutionId");
 		JsonArray imageryList = getFromCollect(String.format("imagery")).getAsJsonArray();
-		mapJsonArray(imageryList, imagery -> {
+		forEachInJsonArray(imageryList, imagery -> {
 			imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
-			return imagery;
+			imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
 		});
-		if (institutionId.isEmpty()) {
-			return imageryList.toString();
-		} else {
-			JsonArray resourceIdsArray = getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
-			List<Integer> resourceIds = toElementStream(resourceIdsArray)
-				.map(idEl -> idEl.getAsInt())
-				.collect(Collectors.toList());
-			return filterJsonArray(imageryList, imagery -> resourceIds.contains(imagery.get("id").getAsInt()))
-				.toString();
-		}
+		JsonArray institutionImageryIdsArray = institutionId.isEmpty() ? new JsonArray(): getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
+		List<Integer> institutionImageryIds = toElementStream(institutionImageryIdsArray)
+			.map(idEl -> idEl.getAsInt())
+			.collect(Collectors.toList());
+		return filterJsonArray(imageryList, imagery -> 
+				imagery.get("visibility").getAsString().equals("public")
+					|| institutionImageryIds.contains(imagery.get("id").getAsInt())
+			)
+			.toString();
     }
 
     public static synchronized String addInstitutionImagery(Request req, Response res) throws IOException {

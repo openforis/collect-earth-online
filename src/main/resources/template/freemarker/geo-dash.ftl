@@ -62,7 +62,6 @@
 </nav>
 <!-- end geo dash nav -->
 
-
 <#if role?? && editable == "true">
 <script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
 <div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
@@ -70,6 +69,7 @@
 <script type="text/javascript" src="${root}/js/geo-dash.js"></script>
 <div id="geodash" ng-app="geodash" ng-controller="GeodashController as geodash" ng-init="geodash.initialize('${root}')">
 </#if>
+
     <div id="fulldiv" class="full">
         <div id="fullholder"></div>
     </div>
@@ -98,12 +98,13 @@
         </div>
     <div class="container-fluid">
         <div class="row">
-            <div id="dashHolder" class="col-sm-12 col-md-12 main">
+            <div id="dashHolder" class="dashHolder">
                 <div>
                 </div>
             </div>
         </div>
     </div>
+
     <!-- change false to true below -->
     <#if role?? && editable == "false">
 <div class="modal fade" id="dialog-form" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
