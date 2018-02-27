@@ -4,7 +4,11 @@
   1. Add a Description section to explain the website's purpose.
   2. Include git clone instructions in the Installation section.
   3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
-  4. Document how to add public imagery to the Collect H2 database.
+  4. Document how to add public imagery to the Collect H2 database or present the user with instructions to do so on the homepage.
+  5. Include the login credentials (user/pass) for the administrator accounts.
+  6. Re-write the instructions for Windows machines as well. (jdbc:h2:C:/Users/<username>/.openforis/{collect,of-users})
+  7. Export as README.pdf for all the non-Emacs users out there.
+  8. Move the XML file configurations and H2 JAR installation into a new section "Setting up the H2 Database".
 * notes/
   1. Remove outdated and unnecessary files.
 * ServerTest.java
@@ -66,6 +70,12 @@ Give imagery entries a visibility:[public|private] attribute
 Add Stefano's tasks from #fefrain to the CEO TODO list
 Make sure Billy adds get("/widget-layout-editor" ...) to Server.declareRemoteStorageRoutes() and passes :pid to Views.editWidgetLayout()
 Ask Jerome to re-enable my CSS animations for flash messages
+Project Stats don't add up correctly in the table on the Collection page anymore
+Set smtpPassword = "OpenForisMailer" in mail-config.json and web.xml
+Remove deploy/clientkeystore file from version control and add config settings to mail-config.json and web.xml to include your own HTTPS certificate
+Create a separate server for http://collect.earth (set it up with Jeff and Alfonso)
+Remove ADPC logo from About page
+Make the standalone version of CEO use admin@openforis.org/admin for user/pass to match the Tomcat version
 
 *** Rome TODOs
     1) Update my CEO development todo list
