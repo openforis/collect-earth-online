@@ -19,7 +19,6 @@
         <link rel="stylesheet" type="text/css" href="${root}/css/ol3-popup.css" />
          <!-- <link rel="stylesheet" type="text/css" href="${root}/css/stylesheet.css"> -->
 		<link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
-		<link rel="stylesheet" type="text/css" href="${root}/css/custom.css">
 		
 		<!-- font awesome -->
 		<script defer src="${root}/js/fontawesome-all.min.js"></script>
@@ -80,6 +79,12 @@
             <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui-forms.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui-forms-validation.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/js/of_collect_forms.js"></script>
+            
+     
+            
         </#if>
+               <!-- CSS JEROME -->
+			<link rel="stylesheet" type="text/css" href="${root}/css/custom.css">
+            <!-- CSS JEROME -->
     </head>
     <body style="padding-top:58px;">

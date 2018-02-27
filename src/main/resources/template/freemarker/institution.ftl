@@ -51,7 +51,7 @@
 				<div class="row">	
 					<div class="col-6">	
 					<button class="btn btn-sm btn-outline-lightgreen btn-block mt-0" ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id > 0">
-						<i class="fa fa-plus-square"></i> Save Changes
+						<i class="fa fa-save"></i> Save Changes
 					</button>
 					</div>
 					<div class="col-6">	

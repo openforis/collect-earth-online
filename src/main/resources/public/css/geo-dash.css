@@ -94,7 +94,7 @@
     }
 }
 #geodash .row {
-    display: grid;
+    /*display: grid;*/
     margin-right: auto;
     margin-left: auto;
 }

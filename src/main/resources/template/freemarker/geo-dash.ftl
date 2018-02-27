@@ -97,11 +97,8 @@
             </div>
         </div>
     <div class="container-fluid">
-        <div class="row">
-            <div id="dashHolder" class="dashHolder">
-                <div>
-                </div>
-            </div>
+        <div id="dashHolder">
+
         </div>
     </div>
 
