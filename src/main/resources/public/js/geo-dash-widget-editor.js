@@ -188,6 +188,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
         if(which != null && which.id)
         {
             if(which.id === 'getStats'){
+                this.cooked = true;
                 this.cookedStats = true;
             }
             else{
@@ -316,7 +317,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
             geodash.form = this.dialog.find("form");
     };
     this.createWidgetDialog = function(){
-        geodash.dialog.dialog("open");
+        gmodcdash.dialog.dialog("open");
     }
     this.createUserWidget = function(){
         //alert("Click an empty blue box to position the new widget");
@@ -438,7 +439,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                     checkccookie = statuscookie;
                     if(checkccookie == null || statuscookie == false || statuscookie == 'false')
                     {
-                    $('<div />').html('<p>Click an empty blue box to position the new widget</p><label style="float:right;"><input type="checkbox" name="dismiss">Never show again!</label><br />').dialog({
+                    $('<div />').html('<p>Click an empty green box to position the new widget</p><label style="float:right;"><input type="checkbox" name="dismiss">Never show again!</label><br />').dialog({
                                           modal: true,
                                          title: 'Widget placement',
                                          width: 400,
@@ -1084,7 +1085,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
             if(!dashboard.widgets[0].gridcolumn)
             {
                 //change this to a sorry and help message with update_widget_demo.gif
-                $('<div />').html('<p>Update widgets to version 2 by selecting each widget then clicking the blue box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;">').dialog({
+                $('<div />').html('<p>Update widgets to version 2 by selecting each widget then clicking the green box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;">').dialog({
                                                           modal: true,
                                                          title: 'Update Widgets',
                                                          width: '55vw',
@@ -1116,7 +1117,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 {
                     if(this.isUpdatedLayout != 'true')
                     {
-                        $('<div />').html('<p>Arrange widgets by selecting each widget then clicking the blue box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;"><br /><label style="float:right;"><input type="checkbox" name="initdirection">Never show again!</label><br />').dialog({
+                        $('<div />').html('<p>Arrange widgets by selecting each widget then clicking the green box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;"><br /><label style="float:right;"><input type="checkbox" name="initdirection">Never show again!</label><br />').dialog({
                               modal: true,
                              title: 'Update Widgets',
                              width: '55vw',
@@ -1151,7 +1152,13 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 }
 
         } else{
-            $('<div />').html('<p>Start adding by widgets. The create button is at the top right after you create your first widget click that to add another.</p><img src="img/new_widget_layout.gif" alt="Create widget layout" style="max-width:50vw">').dialog({
+            var filename = 'new_widget_layout.gif';
+            if(jQuery(window).width() < 992)
+            {
+                /* I need to create this resource using the responsive sized screen*/
+                //filename = 'mapsample.gif';
+            }
+            $('<div />').html('<p>Start adding by widgets. The create button is at the top right after you create your first widget click that to add another.</p><img src="img/'+filename+'" alt="Create widget layout" style="max-width:50vw">').dialog({
                   modal: true,
                  title: 'Add Widgets',
                  width: '55vw',
@@ -1159,7 +1166,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 buttons : {
                     Ok: function() {
                         $(this).dialog("close"); //closing on Ok click
-                         $('[name="create-widgets"]').click();
+                         gmodcdash.createWidgetDialog();
                     }
                 },
 

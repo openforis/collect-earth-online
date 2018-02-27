@@ -102,17 +102,35 @@
 .main .page-header {
     margin-top: 0;
 }
+
+
 .fullcolumnspan, .columnSpan12{
     max-width:98%!important;
+    grid-column-end: span 12;
 }
 .columnSpan9{
     max-width:97%!important;
+    grid-column-end: span 9;
 }
 .columnSpan6{
     max-width:95%!important;
+    grid-column-end: span 6;
 }
 .columnSpan3{
     max-width:90%!important;
+    grid-column-end: span 3;
+}
+.colStart1{
+    grid-column-start: 1;
+}
+.colStart4{
+    grid-column-start: 4;
+}
+.colStart7{
+    grid-column-start: 7;
+}
+.colStart10{
+    grid-column-start: 10;
 }
 .rowSpan1{
     height:362px;
@@ -283,7 +301,7 @@ a.list-inline.panel-actions.panel-fullscreen{
     -moz-osx-font-smoothing: grayscale;
 }
 .full {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -485,8 +503,35 @@ div#ui-datepicker-div{
 .list-inline {
     margin-bottom: 0px;
 }
+@media (max-width: 990px) {
+    .container-fluid.widgetEditor{
+        width: 100%;
+    }
+}
 @media (max-width: 550px) {
     .col-xs-6 {
     width: 100%;
 }
+}
+@media (max-width: 600px){
+#geodash .row{
+display:block;
+}
+.dashHolder.widgetEditor
+{
+    width:100%;
+}
+.fullcolumnspan, .columnSpan12{
+    max-width:98%!important;
+}
+.columnSpan9{
+    max-width:98%!important;
+}
+.columnSpan6{
+    max-width:98%!important;
+}
+.columnSpan3{
+    max-width:98%!important;
+}
+
 }

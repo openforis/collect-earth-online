@@ -934,9 +934,11 @@ angular.module("geodash", []).controller("GeodashController", ["$http", function
             }
             if (geodash.wStateFull) {
                 $("#fulldiv").css('display', 'none');
+                $("body").css('overflow', 'auto');
             }
             else{
              $("#fulldiv").css('display', 'block');
+             $("body").css('overflow', 'hidden');
             }
             $this.closest(".panel").toggleClass("panel-fullscreen");
             var theWidget = $this.parent().parent().parent().parent();
