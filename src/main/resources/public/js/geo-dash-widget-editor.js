@@ -188,6 +188,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
         if(which != null && which.id)
         {
             if(which.id === 'getStats'){
+                this.cooked = true;
                 this.cookedStats = true;
             }
             else{
@@ -316,7 +317,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
             geodash.form = this.dialog.find("form");
     };
     this.createWidgetDialog = function(){
-        geodash.dialog.dialog("open");
+        gmodcdash.dialog.dialog("open");
     }
     this.createUserWidget = function(){
         //alert("Click an empty blue box to position the new widget");
@@ -438,7 +439,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                     checkccookie = statuscookie;
                     if(checkccookie == null || statuscookie == false || statuscookie == 'false')
                     {
-                    $('<div />').html('<p>Click an empty blue box to position the new widget</p><label><input type="checkbox" name="dismiss">Never show again!</label><br />').dialog({
+                    $('<div />').html('<p>Click an empty green box to position the new widget</p><label style="float:right;"><input type="checkbox" name="dismiss">Never show again!</label><br />').dialog({
                                           modal: true,
                                          title: 'Widget placement',
                                          width: 400,
@@ -507,12 +508,33 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                         mynode.classList.remove(removeList[a]);
                     }
                     mynode.classList.add("columnSpan3");
+
+//                    var toolmaxtog = $("<li/>", {
+//                                "style" : "display:inline;"
+//                            });
+//                            var thebutton = $("<a/>", {
+//                                "class": "list-inline panel-actions panel-fullscreen"
+//                            });
+//                            var theicon = $("<i/>", {
+//                                "class": "fas fa-expand-arrows-alt" //"glyphicon glyphicon-resize-full"
+//                            });
+                    var myli = document.createElement('li');
+                    myli.style.display = "inline";
+                    myli.style.float = "right";
+
                     var removeMe = "Remove Me";
                     var a = document.createElement('a');
                     a.onclick = function(){geodash.removePlacedWidget(mynode.firstElementChild.id);};
                     a.style.cursor = "pointer";
-                    a.innerHTML = "X";
-                    mynode.firstElementChild.firstElementChild.firstElementChild.firstElementChild.append(a);
+                    //a.innerHTML = "X";
+                    var itext = document.createElement('i');
+                    itext.classList.add("fas");
+                    itext.classList.add("fa-window-close");
+                    itext.style.color = "#31BAB0";
+                    a.append(itext);
+
+                    myli.append(a);
+                    mynode.firstElementChild.firstElementChild.firstElementChild.append(myli);
                     geodash.workingNode = mynode;
                     //gmodcdash.activeMenu = mynode;
                     document.getElementById("replacementContainer").appendChild(mynode);
@@ -526,7 +548,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
         }
     }
     this.removePlacedWidget = function(which){
-        alert("Remove Me: " + which);
+        //alert("Remove Me: " + which);
         var indexval = parseInt(which.substr(which.indexOf('_') + 1,which.length - which.indexOf('c') + 1));
         bang = which;
         if(gmodcdash.activeMenu.id == which.substr(0,which.indexOf('c')))
@@ -977,20 +999,12 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
         var toolsholder = $("<ul/>", {
             "class": "list-inline panel-actions pull-right"
         });
-        var toolSpace = $("<li/>");
+        var theName = widget.name == null || widget.name.trim() == ""? "Unnamed Widget" :widget.name;
+        var toolSpace = $("<li/>", {
+            "style" : "display:inline;"
+        }).html(theName);
         toolsholder.append(toolSpace);
-        /*var toolmaxtog = $("<li/>");
-        var thebutton = $("<a/>", {
-            "class": "list-inline panel-actions panel-fullscreen"
-        });
-        var theicon = $("<i/>", {
-            "class": "glyphicon glyphicon-resize-full"
-        });
-        thebutton.append(theicon);
-        thebutton.attr("role", "button");
-        thebutton.attr("title", "Toggle Fullscreen");
-        toolmaxtog.append(thebutton);
-        toolsholder.append(toolmaxtog);*/
+
         panHead.append(toolsholder);
         panel.append(panHead);
         var img;
@@ -1012,12 +1026,18 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                     "class": "widget-container"
                 });
             }
-            front = $("<div />").addClass("front");
+
+            var typeimage = geodash.getImageByType(widget.properties[0])
+            front = $("<div />", {
+                "class": "front",
+                "style": "height: calc(100% - 45px); background-image: url('" + typeimage+ "');background-size: cover; background-repeat: no-repeat; background-position: 50% 50%; text-align:center; display:table; width:100%;"
+            });
 
             wtext = widget.properties[0];
-            var widgettitle = $("<h4 />", {
-                "id": "widgettitle_" + widget.id
-            }).html(widget.name);
+            var widgettitle = $("<h3 />", {
+                "id": "widgettitle_" + widget.id,
+                "style": "color: red; display: table-cell; vertical-align: middle; font-weight: 900;"
+            }).html("Sample image");
             var sub = $("<br />");
             front.append(widgettitle).append(sub);
             panel.append(front);
@@ -1025,7 +1045,20 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
         awidget.append(panel);
         return awidget;
     };
+    this.getImageByType = function(which){
+        var theImage = "";
+        if (which === "getStats") {
+            theImage = "/img/statssample.gif";
+        }
+        else if (which.toLowerCase().includes("image")) {
+            theImage = "/img/mapsample.gif";
+        }
+        else {
+            theImage = "/img/graphsample.gif";
+        }
 
+        return theImage;
+    }
     this.makeAjax = function (parameters, donefunction) {
         "use strict";
         $.ajax(parameters).fail(function (jqXHR, textStatus, errorThrown) {
@@ -1052,7 +1085,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
             if(!dashboard.widgets[0].gridcolumn)
             {
                 //change this to a sorry and help message with update_widget_demo.gif
-                $('<div />').html('<p>Update widgets to version 2 by selecting each widget then clicking the blue box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;">').dialog({
+                $('<div />').html('<p>Update widgets to version 2 by selecting each widget then clicking the green box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;">').dialog({
                                                           modal: true,
                                                          title: 'Update Widgets',
                                                          width: '55vw',
@@ -1084,7 +1117,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 {
                     if(this.isUpdatedLayout != 'true')
                     {
-                        $('<div />').html('<p>Arrange widgets by selecting each widget then clicking the blue box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;"><br /><label><input type="checkbox" name="initdirection">Never show again!</label><br />').dialog({
+                        $('<div />').html('<p>Arrange widgets by selecting each widget then clicking the green box you would like the widget to start in and clicking connecting boxes to expand as seen below.  Click update when finished.</p><img src="img/update_widget_demo.gif" alt="Update Widgets" style="max-width: 50vw;"><br /><label style="float:right;"><input type="checkbox" name="initdirection">Never show again!</label><br />').dialog({
                               modal: true,
                              title: 'Update Widgets',
                              width: '55vw',
@@ -1119,7 +1152,13 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 }
 
         } else{
-            $('<div />').html('<p>Start adding by widgets. The create button is at the top right after you create your first widget click that to add another.</p><img src="img/new_widget_layout.gif" alt="Create widget layout" style="max-width:50vw">').dialog({
+            var filename = 'new_widget_layout.gif';
+            if(jQuery(window).width() < 992)
+            {
+                /* I need to create this resource using the responsive sized screen*/
+                //filename = 'mapsample.gif';
+            }
+            $('<div />').html('<p>Start adding by widgets. The create button is at the top right after you create your first widget click that to add another.</p><img src="img/'+filename+'" alt="Create widget layout" style="max-width:50vw">').dialog({
                   modal: true,
                  title: 'Add Widgets',
                  width: '55vw',
@@ -1127,7 +1166,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 buttons : {
                     Ok: function() {
                         $(this).dialog("close"); //closing on Ok click
-                         $('[name="create-widgets"]').click();
+                         gmodcdash.createWidgetDialog();
                     }
                 },
 
