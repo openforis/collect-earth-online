@@ -4,56 +4,66 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by Spatial Informatics Group">
-        <meta name="keywords" content="collect earth online image analysis crowdsourcing platform SIG spatial informatics group">
+        <meta name="description" content="Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group">
+        <meta name="keywords" content="collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group">
         <title>Collect Earth Online</title>
         <link rel="shortcut icon" href="${root}/favicon.ico">
-        <!--  <link rel="stylesheet" type="text/css" href="${root}/css/cssreset-min.css"> 
-        <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css">
-        <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-oswald.css"> -->
-        <link rel="stylesheet" type="text/css" href="${root}/css/openlayers-3.13.0.css">
-        <link rel="stylesheet" type="text/css" href="${root}/css/ol3-popup.css" />
-         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/stylesheet.css"> -->
-		<link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
-		<link rel="stylesheet" type="text/css" href="${root}/css/custom.css">
-		
-		<!-- font awesome -->
-		<script defer src="${root}/js/fontawesome-all.min.js"></script>
-        
+
+        <!-- Various hacks to make Internet Explorer work right -->
+        <link rel="stylesheet" type="text/css" href="${root}/css/ie10-viewport-bug-workaround.css">
+        <script type="text/javascript" src="${root}/js/ie-emulation-modes-warning.js"></script>
         <!--[if lt IE 9]>
           <script type="text/javascript" src="${root}/js/html5shiv.js"></script>
-        <![endif]-->
-        <script type="text/javascript" src="${root}/js/angular.min.js"></script>
-        <script type="text/javascript" src="${root}/js/openlayers-3.13.0.js"></script>
-        <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
-        <script type="text/javascript" src="${root}/js/map-utils.js"></script>
-        <script type="text/javascript" src="${root}/js/utils.js"></script>
-        <script type="text/javascript" src="${root}/js/jquery-3.1.1.min.js"></script>
-        <script type="text/javascript" src="${root}/js/popper.min.js"></script>
-        <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="${root}/js/custom.js"></script>
-
-        <#if navlink == "Geo-Dash" || navlink == "Widget-Editor">
-        <!----------------------------------------------------------------->
-        <!-- BEGIN: Billy's GEODASH libraries -->
-        <!----------------------------------------------------------------->
-        <link rel="stylesheet" type="text/css" href="${root}/css/ie10-viewport-bug-workaround.css">
-        <link rel="stylesheet" type="text/css" href="${root}/css/jquery-ui.css">
-        <link rel="stylesheet" type="text/css" href="${root}/css/datepicker.css">
-        <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
-        <script type="text/javascript" src="${root}/js/ie-emulation-modes-warning.js"></script>
-        <!-- Respond.js for IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
           <script type="text/javascript" src="${root}/js/respond.min.js"></script>
         <![endif]-->
-        <!-- Include all compiled plugins (below), or include individual files as needed -->
+
+        <!-- CSS Reset -->
+        <!-- <link rel="stylesheet" type="text/css" href="${root}/css/cssreset-min.css"> -->
+
+        <!-- Bootstrap -->
+        <link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
+        <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
+
+        <!-- JQuery -->
+        <link rel="stylesheet" type="text/css" href="${root}/css/jquery-ui.css">
+        <link rel="stylesheet" type="text/css" href="${root}/css/datepicker.css">
+        <script type="text/javascript" src="${root}/js/jquery-3.1.1.min.js"></script>
         <script type="text/javascript" src="${root}/js/jquery-ui.min.js"></script>
-        <script type="text/javascript" src="${root}/js/highcharts.js"></script>
         <script type="text/javascript" src="${root}/js/jquery.flip.min.js"></script>
-        <!--------------------------------------------------------------->
-        <!-- END: Billy's GEODASH libraries, FIXME: Simplify this list -->
-        <!--------------------------------------------------------------->
-        </#if>
+
+        <!-- Highcharts -->
+        <script type="text/javascript" src="${root}/js/highcharts.js"></script>
+
+        <!-- Popper -->
+        <script type="text/javascript" src="${root}/js/popper.min.js"></script>
+
+        <!-- Angular -->
+        <script type="text/javascript" src="${root}/js/angular.min.js"></script>
+
+        <!-- OpenLayers3 -->
+        <link rel="stylesheet" type="text/css" href="${root}/css/openlayers-3.13.0.css">
+        <link rel="stylesheet" type="text/css" href="${root}/css/ol3-popup.css" />
+        <script type="text/javascript" src="${root}/js/openlayers-3.13.0.js"></script>
+        <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
+
+        <!-- Fonts -->
+        <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css"> -->
+        <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-oswald.css"> -->
+        <script type="text/javascript" src="${root}/js/fontawesome-all.min.js" defer></script>
+
+        <!-- Gary's custom styles and scripts -->
+        <!-- <link rel="stylesheet" type="text/css" href="${root}/css/stylesheet.css"> -->
+        <script type="text/javascript" src="${root}/js/map-utils.js"></script>
+        <script type="text/javascript" src="${root}/js/utils.js"></script>
+
+        <!-- Jerome's custom styles and scripts -->
+        <link rel="stylesheet" type="text/css" href="${root}/css/custom.css">
+        <script type="text/javascript" src="${root}/js/custom.js"></script>
+
+        <!-- Billy's custom styles and scripts -->
+        <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
+
+        <!-- Stefano's styles and scripts for Collect integration -->
         <#if navlink == "Card-Test">
             <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery-ui.css">
             <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery.selectBoxIt.css">

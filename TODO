@@ -50,6 +50,11 @@
   - NOT YET REVIEWED
 * (*).java
   1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
+* header.ftl
+  1. Import Stefano's styles and scripts on the Collection page once the Card Test page has been removed.
+  2. Ask Billy if we are actually using datepicker.css.
+* navbar.ftl
+  1. Ask Jerome if we are actually using the script block at the end of the file.
 
 * Foo
 Project properties don't load on ceo/project/# until the project is published
