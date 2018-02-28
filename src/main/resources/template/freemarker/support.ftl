@@ -9,7 +9,7 @@
 			<a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual.pdf" role="button">
                 <i class="fa fa-download"></i> PDF Version
             </a>
-	        <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual.docx">
+	        <a class="btn btn-outline-lightgreen btn-block" href="${root}/downloads/CEO_Manual.docx" role="button">
                 <i class="fa fa-download"></i> DOCX Version
             </a>
 	    </div>
