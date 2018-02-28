@@ -55,6 +55,13 @@
   2. Ask Billy if we are actually using datepicker.css.
 * navbar.ftl
   1. Ask Jerome if we are actually using the script block at the end of the file.
+* home.ftl
+  *IN PROGRESS*
+* about.ftl
+  1. Ask Jerome whether the text should reference SERVIR or SERVIR-MEKONG.
+* logo-banner.ftl
+  1. Ask Jerome whether he intends to use the SERVIR or SERVIR-MEKONG logo.
+  2. Make all logo images into clickable links to their organizations' websites.
 
 * Foo
 Project properties don't load on ceo/project/# until the project is published
