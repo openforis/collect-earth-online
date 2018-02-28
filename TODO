@@ -9,6 +9,7 @@
   6. Re-write the instructions for Windows machines as well. (jdbc:h2:C:/Users/<username>/.openforis/{collect,of-users})
   7. Export as README.pdf for all the non-Emacs users out there.
   8. Move the XML file configurations and H2 JAR installation into a new section "Setting up the H2 Database".
+  9. Make it crystal clear which collect.war file to use.
 * notes/
   1. Remove outdated and unnecessary files.
 * ServerTest.java
@@ -78,20 +79,15 @@ Remove ADPC logo from About page
 Make the standalone version of CEO use admin@openforis.org/admin for user/pass to match the Tomcat version
 
 *** Rome TODOs
-    1) Update my CEO development todo list
     2) Patch homepage to work with the empty collect and of-users databases
     3) Check that the password reset email system works correctly
     4) Reinstall and configure docker
     5) Rebuild and deploy the CEO docker image
     6) Fill in the smtpPassword field for collectearth.mail@gmail.com in src/main/webapp/WEB-INF/web.xml (Tomcat) and src/main/resources/json/mail-config.json (Jetty)
     8) Ask Jeff to move the DNS for ceo.sig-gis.com -> collect.earth (Alfonso owns it)
-    9) Paul (NASA) is the new project manager and will send around a fill-in task list spreadsheet to everyone
     10) Finish the collect database integration
     11) Integrate Stefano's popup frames
     12) What are we doing about imagery? (Dave is looking into it)
-    13) Rebrand website styling and logos as an OpenForis project (check with Alfonso for the FAO designer's contact info)
-    14) Call at 3pm on Tuesday with Jerome about the CEO Redesign
-    15) Create new session authentication token via Of-Users API and pass it to the Collect Survey Designer
     16) Fix bugs in CEO homepage that hang on an empty database
     17) Import Stefano's survey cards into the data collection page
     18) Test CEO in Browserstack and improve responsive design for mobile devices
