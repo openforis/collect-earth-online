@@ -46,6 +46,8 @@
 * Users.java
   - Remove all references to the role attribute.
   - getPasswordResetKey has the site URL (http://ceo.sig-gis.com) hard-coded in its email body.
+* user-list.json
+  1. Replace admin@sig-gis.com/administrator with admin@openforis.org/admin.
 * Projects.java
   - NOT YET REVIEWED
 * (*).java
@@ -53,6 +55,7 @@
 * header.ftl
   1. Import Stefano's styles and scripts on the Collection page once the Card Test page has been removed.
   2. Ask Billy if we are actually using datepicker.css.
+  3. Revert to an earlier version of Bootstrap to eliminate the "TypeError: t is undefined" console error.
 * navbar.ftl
   1. Ask Jerome if we are actually using the script block at the end of the file.
 * home.ftl
@@ -62,6 +65,15 @@
 * logo-banner.ftl
   1. Ask Jerome whether he intends to use the SERVIR or SERVIR-MEKONG logo.
   2. Make all logo images into clickable links to their organizations' websites.
+* custom.css
+  1. Fix flash message styles.
+* register.ftl
+  *IN PROGRESS*
+* password.ftl
+  *IN PROGRESS*
+* password-reset.ftl
+  *IN PROGRESS*
+
 
 * Foo
 Project properties don't load on ceo/project/# until the project is published
@@ -88,7 +100,6 @@ Set smtpPassword = "OpenForisMailer" in mail-config.json and web.xml
 Remove deploy/clientkeystore file from version control and add config settings to mail-config.json and web.xml to include your own HTTPS certificate
 Create a separate server for http://collect.earth (set it up with Jeff and Alfonso)
 Remove ADPC logo from About page
-Make the standalone version of CEO use admin@openforis.org/admin for user/pass to match the Tomcat version
 
 *** Rome TODOs
     2) Patch homepage to work with the empty collect and of-users databases
