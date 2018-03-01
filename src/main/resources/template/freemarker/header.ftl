@@ -20,16 +20,16 @@
         <!-- CSS Reset -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/cssreset-min.css"> -->
 
-        <!-- Bootstrap -->
-        <link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
-        <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
-
         <!-- JQuery -->
         <link rel="stylesheet" type="text/css" href="${root}/css/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="${root}/css/datepicker.css">
         <script type="text/javascript" src="${root}/js/jquery-3.1.1.min.js"></script>
         <script type="text/javascript" src="${root}/js/jquery-ui.min.js"></script>
         <script type="text/javascript" src="${root}/js/jquery.flip.min.js"></script>
+
+        <!-- Bootstrap -->
+        <link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
+        <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
 
         <!-- Highcharts -->
         <script type="text/javascript" src="${root}/js/highcharts.js"></script>
@@ -65,12 +65,12 @@
 
         <!-- Stefano's styles and scripts for Collect integration -->
         <#if navlink == "Card-Test">
-            <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery-ui.css">
-            <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery.selectBoxIt.css">
-            <link rel="stylesheet" href="/collect/earthFiles/jquery/jquery-steps.css">
-            <link rel="stylesheet" href="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.css">
-            <link rel="stylesheet" href="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.css">
-            <link rel="stylesheet" href="/collect/earthFiles/css/of-collect-forms.css">
+            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/jquery/jquery-ui.css">
+            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/jquery/jquery.selectBoxIt.css">
+            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/jquery/jquery-steps.css">
+            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/bootstrap/3.3.7/bootstrap.min.css">
+            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/bootstrap/bootstrap-datetimepicker.min.css">
+            <link rel="stylesheet" type="text/css" href="/collect/earthFiles/css/of-collect-forms.css">
             <script type="text/javascript" src="/collect/earthFiles/jquery/jquery-3.3.1.min.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/jquery/jquery-ui.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/jquery/jquery.blockUI.js"></script>
