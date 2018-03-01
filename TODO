@@ -67,12 +67,8 @@
   2. Make all logo images into clickable links to their organizations' websites.
 * custom.css
   1. Fix flash message styles.
-* register.ftl
-  *IN PROGRESS*
-* password.ftl
-  *IN PROGRESS*
-* password-reset.ftl
-  *IN PROGRESS*
+* password.ftl/password-reset.ftl
+  1. Check that the password reset email system works correctly.
 
 
 * Foo
@@ -102,18 +98,17 @@ Create a separate server for http://collect.earth (set it up with Jeff and Alfon
 Remove ADPC logo from About page
 
 *** Rome TODOs
-    2) Patch homepage to work with the empty collect and of-users databases
-    3) Check that the password reset email system works correctly
-    4) Reinstall and configure docker
-    5) Rebuild and deploy the CEO docker image
-    6) Fill in the smtpPassword field for collectearth.mail@gmail.com in src/main/webapp/WEB-INF/web.xml (Tomcat) and src/main/resources/json/mail-config.json (Jetty)
-    8) Ask Jeff to move the DNS for ceo.sig-gis.com -> collect.earth (Alfonso owns it)
-    10) Finish the collect database integration
-    11) Integrate Stefano's popup frames
-    12) What are we doing about imagery? (Dave is looking into it)
-    16) Fix bugs in CEO homepage that hang on an empty database
-    17) Import Stefano's survey cards into the data collection page
-    18) Test CEO in Browserstack and improve responsive design for mobile devices
+    1) Patch homepage to work with the empty collect and of-users databases
+    2) Reinstall and configure docker
+    3) Rebuild and deploy the CEO docker image
+    4) Fill in the smtpPassword field for collectearth.mail@gmail.com in src/main/webapp/WEB-INF/web.xml (Tomcat) and src/main/resources/json/mail-config.json (Jetty)
+    5) Ask Jeff to move the DNS for ceo.sig-gis.com -> collect.earth (Alfonso owns it)
+    6) Finish the collect database integration
+    7) Integrate Stefano's popup frames
+    8) What are we doing about imagery? (Dave is looking into it)
+    9) Fix bugs in CEO homepage that hang on an empty database
+    10) Import Stefano's survey cards into the data collection page
+    11) Test CEO in Browserstack and improve responsive design for mobile devices
 
 *** Server.java
 **** TODO Uncomment all Collect and OfUsers routes once they are completed
