@@ -46,6 +46,7 @@
 * Users.java
   - Remove all references to the role attribute.
   - getPasswordResetKey has the site URL (http://ceo.sig-gis.com) hard-coded in its email body.
+  - The login() function's returnurl and querystring arguments expand recursively. (see login.ftl)
 * user-list.json
   1. Replace admin@sig-gis.com/administrator with admin@openforis.org/admin.
 * Projects.java
@@ -65,17 +66,21 @@
 * logo-banner.ftl
   1. Ask Jerome whether he intends to use the SERVIR or SERVIR-MEKONG logo.
   2. Make all logo images into clickable links to their organizations' websites.
-* custom.css
-  1. Fix flash message styles.
-* password.ftl/password-reset.ftl
-  1. Check that the password reset email system works correctly.
-
+* login.ftl
+  1. The login() function's returnurl and querystring arguments expand recursively. (see Users.java)
+* account.ftl
+  *IN PROGRESS*
+* institution.ftl
+  *IN PROGRESS*
+* project.ftl
+  *IN PROGRESS*
+* collection.ftl
+  *IN PROGRESS*
 
 * Foo
 Project properties don't load on ceo/project/# until the project is published
 Home page and Collection page imagery doesn't work
 Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
-Add time estimates to my CEO Smartsheet tasks
 Ask Stefano to include the institution attribute in returned imagery objects
 Ask Jeff to setup a new server with the collect.earth DNS
 Make sure project creation calculates the number of plots and samples per plot
@@ -96,6 +101,16 @@ Set smtpPassword = "OpenForisMailer" in mail-config.json and web.xml
 Remove deploy/clientkeystore file from version control and add config settings to mail-config.json and web.xml to include your own HTTPS certificate
 Create a separate server for http://collect.earth (set it up with Jeff and Alfonso)
 Remove ADPC logo from About page
+Give CEO's Tomcat process more memory
+Ask Stefano about the C:\Users\<username>\OpenForis\Collect\data directory
+Alfonso shared this GEE grid generation script: https://code.earthengine.google.com/8809a49aba2386b651eafa25f97f39e4
+Integrate the collect earth form (couple of days) with Stefano
+Gary to provide suggestions on task "Figure out how to update UI when selected samples contain different value
+Add Google Earth Engine Assets Support as a layer
+Export of the data from collect directly from project Dashboard, doing it the same as collect--CSV or ZIP; he can get code from stefano
+AOI of collection as a shapefile, name of country, district, or region--they already have a script in GEE--could Gary interface to that script; or maybe just a button with a tutorial as workaround
+Work on QA/QC--compare operators against the plots--this is a big task/separate module
+Shortcuts for point selection
 
 *** Rome TODOs
     1) Patch homepage to work with the empty collect and of-users databases
