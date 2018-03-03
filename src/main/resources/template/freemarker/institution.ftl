@@ -24,10 +24,10 @@
         </div>
         <div id="institution-edit" class="col-xl-6 col-lg-6 border pb-3 mb-2"  ng-show="institution.pageMode == 'edit'">
 	        <form>
-	        	    	 <p class="header">					
+	        	    	 <h2 class="header">					
 		        	    	<span ng-show="institution.details.id > 0">Edit  Institution</span>
 					<span ng-show="institution.details.id == 0">Create New Institution</span> 
-        			</p>	
+        			</h2>	
 	        		<div class="form-group">
 		            <label id="institution-name" for="institution-details-name">Name</label>
 					<input id="institution-details-name" class="form-control mb-1 mr-sm-2" type="text" ng-model="institution.details.name">

@@ -4,7 +4,7 @@
 <div class=" container absolute-center">
 	<section class="row justify-content-center">
 		<div class="col-lg-4 col-md-6 col-sm-10 pb-3" id="password-form">
-		    <p class="header">Enter your login email</p>
+		    <h2 class="header">Enter your login email</h2>
 		    <form action="${root}/password" method="post">
 		        <fieldset class="form-group">
 		            <input class="form-control" autocomplete="off" id="email" name="email" placeholder="Email" value="" type="email">

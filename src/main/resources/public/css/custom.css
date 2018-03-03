@@ -38,7 +38,7 @@ url('../fonts/CaviarDreams_Bold.svg') format('svg');
 /* Typography */
 /*************/
 
-h1, h2, h3, h4, h5, h6{
+h1, h2{
 	font-family:'CaviarDreams';
 	color:#707070;
 	text-align:center;
@@ -344,11 +344,14 @@ a.ol-popup-closer.close{
 	border:solid 1px #31BAB0;
 
 }
-p.header{
+h2.header{
 	color:white;
 	background:#31BAB0;
 	margin: 0 -15px 10px -15px;;
 	padding:1rem;
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+	font-size:1rem;
+	font-weight:500;
 }
 .modal-header{
 	color:white;
@@ -429,3 +432,15 @@ ul#samplevalue{
          color: #444;*/
 }
 
+
+/*********************************************************************/
+/* GEO DASH WIDGET EDITOR PAGE */
+/*********************************************************************
+.container-fluid.widgetEditor{
+	width:100%;!important
+}
+.active-widget{
+	opacity: .5;
+    outline: 4px dotted #ecbc0d;
+    outline-offset: 5px;
+}

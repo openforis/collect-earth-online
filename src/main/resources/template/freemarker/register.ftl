@@ -5,7 +5,7 @@
 	<div class="row justify-content-center">
 		<div class="col-xl-3 col-lg-4 col-md-6 col-sm-9" id="register-form">
    			<form action="${root}/register" method="post">
-		        <p class="header">Register a new account</p>
+		        <h2 class="header">Register a new account</h2>
     	     	<div class="form-group">
 	 	 	  	<label for="email">Email address</label>
 		        <input autocomplete="off" id="email" name="email" placeholder="Email" value="" type="email" class="form-control">

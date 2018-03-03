@@ -302,7 +302,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 },
                         {
                             text: "Cancel",
-                            "class": "btn btn-primary",
+                            "class": "btn btn-outline-danger btn-sm",
                             click: function () {
                                 geodash.dialog.dialog("close");
                             }

@@ -133,7 +133,6 @@
     height:590px;
 }
 .container-fluid.widgetEditor{
-    width: calc(50% - 30px);
     float:left;
     margin-right: unset;
     margin-left: unset;
@@ -152,13 +151,11 @@
     opacity: .75;
     filter: Alpha(Opacity=30);
 }
-.update-widgets{
-    font-size: 26px; float: right; margin-right: 22px;
-}
+
 .active-widget{
     opacity: .5;
-    outline: 4px dotted #de0541;
-    outline-offset: 5px;
+    outline: 4px dashed #ecbc0d;
+    outline-offset: 1px;
 }
 .active-placed-widget{
     background-color: #ffff00f0;

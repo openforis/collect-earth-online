@@ -6,7 +6,7 @@
 	<div class="row justify-content-center">
 		<div class="col-lg-4 col-md-6 col-sm-10 pb-3" id="login">
 	    <form action="${root}/login?returnurl=${returnurl}&${querystring}" method="post" >
-	    	  	    <p class="header">Sign into your account</p>
+	    	  	    <h2 class="header">Sign into your account</h2>
 	    
 	      <div class="form-group">
 	 	 	  <label for="email">Email address</label>
@@ -21,7 +21,7 @@
 	      	  <input class="btn bg-lightgreen float-right" type="submit" value="Login">
 	      	  </div>
 	        </form>
-    	  	    <p class="header">New to CEO?</p>
+    	  	    <h2 class="header">New to CEO?</h2>
 	        <input class="btn bg-lightgreen float-right mb-0" name="register" onclick="window.location='${root}/register'" value="Register" type="button">
 	    
 	    <div class="registerdiv">
