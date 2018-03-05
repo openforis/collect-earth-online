@@ -17,16 +17,15 @@
                 <div id="updateDashHolder" class="dashHolder widgetEditor col-lg-6">
                     <div class="row">
                          <h2 class="header col mx-0">New Layout</h2>
-                                             </div>
-                         
-                         <div class="row mb-2">
-	                         <div class="col-6 pl-0">
-	                            <button class="btn btn-sm btn-outline-lightgreen btn-block update-widgets" name="update-widgets" value="Update" type="submit" onclick="gmodcdash.updateWidgets()"><i class="fa fa-sync-alt"></i> Update</button>
-	                          </div>
-	                         <div class="col-6 pr-0">
-	                            <button class="btn btn-sm btn-outline-lightgreen btn-block update-widgets" name="create-widgets" value="Create" type="submit" onclick="gmodcdash.createWidgetDialog()"><i class="fa fa-plus-square"></i> Create</button>
-	                          </div>
-						</div>
+					</div>
+ 					<div class="row mb-2">
+                       <div class="col-6 pl-0">
+                          <button class="btn btn-sm btn-outline-lightgreen btn-block update-widgets" name="update-widgets" value="Update" type="submit" onclick="gmodcdash.updateWidgets()"><i class="fa fa-sync-alt"></i> Update</button>
+                        </div>
+                       <div class="col-6 pr-0">
+                          <button class="btn btn-sm btn-outline-lightgreen btn-block update-widgets" name="create-widgets" value="Create" type="submit" onclick="gmodcdash.createWidgetDialog()"><i class="fa fa-plus-square"></i> Create</button>
+                        </div>
+					</div>
                     <div class="row placeholders" id="replacementContainer" style="margin-right:-30px;">
                         <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 1; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
                         <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 1; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>

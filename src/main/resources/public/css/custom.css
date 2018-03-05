@@ -350,7 +350,7 @@ h2.header{
 	margin: 0 -15px 10px -15px;;
 	padding:1rem;
 	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-	font-size:1rem;
+	font-size:1.1rem;
 	font-weight:500;
 }
 .modal-header{
@@ -372,6 +372,15 @@ h2.header{
     height: 1rem;
     border-radius: 0.5rem;
     margin: 0rem auto;
+}
+
+#project-design-form.bg-lightgray:hover{
+		background-color:#ECEEEF!important;
+	
+}
+#project-design-form .header{
+	margin-left:-8px;
+	margin-right:-8px;
 }
 /*********************************************************************/
 /* COLLECTION PAGE */

@@ -4,133 +4,107 @@
 
 <script type="text/javascript" src="${root}/js/project.js"></script>
 
-<div id="project" class="row" ng-app="project" ng-controller="ProjectController as project"
+<div id="project" class="row justify-content-center" ng-app="project" ng-controller="ProjectController as project"
      ng-init="project.initialize('${root}', '${project_id!0}', '${institution_id!0}')">
-    <div id="project-dashboard" class="col-md-6">
- 		<div class="bg-darkgreen">
-      	  <h1>Project Dashboard</h1>
-        </div>
-        <div id="project-map"></div>
-        <div class="row">
-        <div id="project-stats" class="col-xl-6 col-lg-12">
-			<div class="row">
-            		<h2 class="col-xl-12">Project Stats</h2>
-            </div>
-            <div class="row">
-	            <div class=" col-xl-12">
-		            <table class="table table-sm">
-		                <tbody>
-		                    <tr>
-		                        <td>Members</td>
-		                        <td>{{ project.members }}</td>
-		                        <td>Contributors</td>
-		                        <td>{{ project.contributors }}</td>
-		                    </tr>
-		                    <tr>
-		                        <td>Total Plots</td>
-		                        <td>{{ project.details.numPlots || 0 }}</td>
-		                        <td>Date Created</td>
-		                        <td>{{ project.dateCreated }}</td>
-		                    </tr>
-		                    <tr>
-		                        <td>Flagged Plots</td>
-		                        <td>{{ project.flaggedPlots }}</td>
-		                        <td>Date Published</td>
-		                        <td>{{ project.datePublished }}</td>
-		                    </tr>
-		                    <tr>
-		                        <td>Analyzed Plots</td>
-		                        <td>{{ project.analyzedPlots }}</td>
-		                        <td>Date Closed</td>
-		                        <td>{{ project.dateClosed }}</td>
-		                    </tr>
-		                    <tr>
-		                        <td>Unanalyzed Plots</td>
-		                        <td>{{ project.unanalyzedPlots }}</td>
-		                        <td>Date Archived</td>
-		                        <td>{{ project.dateArchived }}</td>
-		                    </tr>
-		                </tbody>
-		            </table>
-	            </div>
-            </div>
-        </div>
-        <div id="project-management" class="col-xl-6 col-lg-12">
-        		<div class="row">
-            		<h2 class="col-xl-12">Project Management</h2>
-            </div>
-			<div class="row">
-            <div class="col-lg-12 text-center">
-            	<div class="btn-group-vertical btn-block">
-		            <input type="button" id="configure-geo-dash" class="btn btn-outline-lightgreen btn-sm btn-block"
-		                   name="configure-geo-dash" value="Configure Geo-Dash"
-		                   ng-click="project.configureGeoDash()">
-		            <input type="button" id="download-plot-data" class="btn btn-outline-lightgreen btn-sm btn-block"
-		                   name="download-plot-data" value="Download Plot Data"
-		                   ng-click="project.downloadPlotData()"
-		                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
-		            <input type="button" id="download-sample-data" class="btn btn-outline-lightgreen btn-sm btn-block"
-		                   name="download-sample-data" value="Download Sample Data"
-		                   ng-click="project.downloadSampleData()"
-		                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
-		            <input type="button" id="change-availability" class="btn btn-outline-danger btn-sm btn-block"
-		                   name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
-		                   ng-click="project.changeAvailability()">		                   
-				 </div>
-             </div>
-             </div>
-        </div>
-    </div>
-    </div>
-    
-    <div id="project-design" class="col-md-6">
-        <form id="project-design-form" method="post" action="${root}/create-project" enctype="multipart/form-data">
- 		<div class="bg-darkgreen mb-2">
+    <div id="project-design" class="col-xl-6 col-lg-8">
+ 		<div class="bg-darkgreen mb-3">
       	  <h1>Project Design</h1>
-        </div>            
+        </div>
+        <div id="project-map" class="d-none"></div>
+        <div class="row mb-3">
+	        <div id="project-stats" class="col">
+	            	<button class="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse" href="#project-stats-collapse" role="button" aria-expanded="false" aria-controls="project-stats-collapse">
+					Project Stats
+            		</button>
+		            <div class="collapse col-xl-12" id="project-stats-collapse">
+			            <table class="table table-sm">
+			                <tbody>
+			                    <tr>
+			                        <td>Members</td>
+			                        <td>{{ project.members }}</td>
+			                        <td>Contributors</td>
+			                        <td>{{ project.contributors }}</td>
+			                    </tr>
+			                    <tr>
+			                        <td>Total Plots</td>
+			                        <td>{{ project.details.numPlots || 0 }}</td>
+			                        <td>Date Created</td>
+			                        <td>{{ project.dateCreated }}</td>
+			                    </tr>
+			                    <tr>
+			                        <td>Flagged Plots</td>
+			                        <td>{{ project.flaggedPlots }}</td>
+			                        <td>Date Published</td>
+			                        <td>{{ project.datePublished }}</td>
+			                    </tr>
+			                    <tr>
+			                        <td>Analyzed Plots</td>
+			                        <td>{{ project.analyzedPlots }}</td>
+			                        <td>Date Closed</td>
+			                        <td>{{ project.dateClosed }}</td>
+			                    </tr>
+			                    <tr>
+			                        <td>Unanalyzed Plots</td>
+			                        <td>{{ project.unanalyzedPlots }}</td>
+			                        <td>Date Archived</td>
+			                        <td>{{ project.dateArchived }}</td>
+			                    </tr>
+			                </tbody>
+			            </table>
+		            </div>
+	        </div>
+    		</div>
+
+        <form id="project-design-form" class="bg-lightgray px-2 pb-2" method="post" action="${root}/create-project" enctype="multipart/form-data">
+         
         <div class="row">
- 			<div class="col-xl-8 col-lg-12">
- 				<h2>Project Info</h2>
+ 			<div class="col">
+ 				<h2 class="header px-0">Project Info</h2>
 	        		<div id="project-info" >
 	  					<div class="form-group">
-			                <label class="small" for="project-name">Name</label>
+			                <h3 for="project-name">Name</label>
 			                <input class="form-control form-control-sm" type="text" id="project-name" name="name" autocomplete="off" ng-model="project.details.name">
 			            	</div>
 	  					<div class="form-group">
-			                <label class="small" for="project-description">Description</label>
+			                <h3 for="project-description">Description</label>
 			                <textarea class="form-control form-control-sm"  id="project-description" name="description" ng-model="project.details.description"></textarea>
 			            	</div>
 		            </div>
             </div>
-            <div class="col-xl-4 col-lg-12">
-				<h2 class="mb-0">Project Visibility</h2>
+            </div>
+		<div class="row">
+            
+            <div class="col">
+				<h2 class="header px-0">Project Visibility</h2>
 				<h3>Privacy Level</h3>
-	            <div id="project-visibility">
-					<div class="form-check">
+	            <div id="project-visibility" class="mb-3">
+					<div class="form-check form-check-inline">
                              <input class="form-check-input"  type="radio" id="privacy-public" name="privacy-level" value="public" ng-click="project.setPrivacyLevel('public')">
-                             <label class="form-check-label small" for="privacy-level">Public: <i>All Users</i></label>
+                             <label class="form-check-label small" for="privacy-public">Public: <i>All Users</i></label>
 					</div>
-					<div class="form-check">
+					<div class="form-check form-check-inline">
 	                                <input class="form-check-input"  type="radio" id="privacy-private" name="privacy-level" value="private" ng-click="project.setPrivacyLevel('private')" checked>
-	                                <label class="form-check-label small" for="privacy-level">Private: <i>Group Admins</i></label>
+	                                <label class="form-check-label small" for="privacy-private">Private: <i>Group Admins</i></label>
 					</div>
-					<div class="form-check">
+					<div class="form-check form-check-inline">
 	                                <input class="form-check-input"  type="radio" id="privacy-institution" name="privacy-level" value="institution" ng-click="project.setPrivacyLevel('institution')">
-	                                <label class="form-check-label small" for="privacy-level">Institution: <i>Group Members</i></label>
+	                                <label class="form-check-label small" for="privacy-institution">Institution: <i>Group Members</i></label>
 					</div>
-					<div class="form-check">
+					<div class="form-check form-check-inline">
 	                                <input class="form-check-input"  type="radio" id="privacy-invitation" name="privacy-level" value="invitation" ng-click="project.setPrivacyLevel('invitation')" disabled>
-	                                <label class="form-check-label small" for="privacy-level">Invitation: <i>Coming Soon</i></label>
+	                                <label class="form-check-label small" for="privacy-invitation">Invitation: <i>Coming Soon</i></label>
 					</div>
 	            </div>
             </div>
 		</div>
-		<div class="row">
- 			<div class="col-xl-6 col-lg-12">
-                <h2>Project AOI</h2>
+		<div class="row d-none">
+ 			<div class="col">
+                <h2 class="header px-0">Project AOI</h2>
 		            <div id="project-aoi">
-              			<div class="form-group">
-			                <label class="small">Hold CTRL and click-and-drag a bounding box on the map</label>
+		            <div class="row">
+						<div class="col small text-center mb-2">Hold CTRL and click-and-drag a bounding box on the map</div>
+		            </div>
+              			<div class="form-group mx-4">
 			                <div class="row">  
 			                		<div class="col-md-6 offset-md-3">
 			                			<input class="form-control form-control-sm" type="number" id="lat-max" name="lat-max" ng-model="project.latMax" placeholder="North" autocomplete="off" min="-90.0" max="90.0" step="any">
@@ -152,18 +126,19 @@
 		                </div>
 		            </div>
             </div>
- 			<div class="col-xl-6 col-lg-12">
-                <h2>Project Imagery</h2>
- 			
+            </div>
+            	<div class="row mb-3">
+ 			<div class="col">
+                <h2 class="header px-0">Project Imagery</h2>
             <div id="project-imagery">
               <div class="form-group mb-1">
-                <label class="small mb-0" for="base-map-source">Basemap Source</label>
+                <h3  for="base-map-source">Basemap Source</h3>
                 <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1" ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
                     <option ng-repeat="imagery in project.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
                 </select>
                </div>
-               <div class="form-group mb-1">
-                <label class="small mb-0" for="imagery-year" style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
+               <div class="form-group mb-1 {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'd-none' }}">
+                <h3  for="imagery-year" >Imagery Year</h3>
                 <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                     <option value="2016">2016</option>
@@ -185,8 +160,8 @@
                     <option value="2000">2000</option>
                 </select>
                 </div>
-                <div class="form-group mb-1">
-                <label class="small mb-0" for="stacking-profile" style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
+                <div class="form-group mb-3  {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'd-none' }}" >
+               <h3  for="stacking-profile">Stacking Profile</h3>
                 <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1" ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
                     <option value="Accuracy_Profile">Accuracy Profile</option>
@@ -199,22 +174,22 @@
             </div>
             </div>
 		</div>
-		<div class="row">
-			<div class="col-xl-6 col-lg-12">
-                <h2>Plot Design</h2>
+		<div class="row mb-3">
+			<div class="col">
+                <h2 class="header px-0">Plot Design</h2>
 	            <div id="plot-design">
             		<div class="row">
 		                <div id="plot-design-col1" class="col-xl-6 col-md-12">
-		                    <label class="small mb-0">Spatial Distribution</label>
-										<div class="form-check">
+		                   <h3>Spatial Distribution</h3>
+										<div class="form-check form-check-inline">
 		                                    <input class="form-check-input" type="radio" id="plot-distribution-random" name="plot-distribution"	 value="random" ng-click="project.setPlotDistribution('random')" checked>
 		                                    <label class="form-check-label small">Random</label>
 	                                    </div>
-										<div class="form-check">
+										<div class="form-check form-check-inline">
 		                                    <input class="form-check-input" type="radio" id="plot-distribution-gridded" name="plot-distribution" value="gridded" ng-click="project.setPlotDistribution('gridded')">
 		                                    <label class="form-check-label small">Gridded</label>
 	                                    </div>
-										<div class="form-check">
+										<div class="form-check form-check-inline">
 		                                    <input class="form-check-input" type="radio" id="plot-distribution-csv" name="plot-distribution" value="csv" ng-click="project.setPlotDistribution('csv')">
 		                                    <label class="btn btn-sm btn-block btn-outline-lightgreen btn-file pt-0 pb-0" id="custom-csv-upload">
 		                                        <small>Upload CSV</small>
@@ -222,39 +197,42 @@
 		                                    </label>
 										</div>
 						              <div class="form-group mb-1">
-					                    <label class="small mb-0" for="num-plots">Number of plots</label>
+					                    <h3  for="num-plots">Number of plots</h3>
 					                    <input class="form-control form-control-sm" type="number" id="num-plots" name="num-plots" autocomplete="off" min="0" step="1" ng-model="project.details.numPlots">
 				                    </div>
-           						   <div class="form-group mb-1">
-					                    <label class="small mb-0" for="plot-spacing">Plot spacing (m)</label>
+           						   <div class="form-group mb-3">
+					                    <h3 for="plot-spacing">Plot spacing (m)</h3>
 					                    <input class="form-control form-control-sm" type="number" id="plot-spacing" name="plot-spacing" autocomplete="off" min="0.0" step="any" ng-model="project.details.plotSpacing" disabled>
 				                    </div>
 		                </div>
+
 		                <div id="plot-design-col2" class="col-xl-6 col-md-12">
-		                    <label class="small mb-0">Plot Shape</label>
-								<div class="form-check">
+		                    <h3>Plot Shape</h3>
+								<div class="form-check form-check-inline">
                                     <input class="form-check-input" type="radio" id="plot-shape-circle" name="plot-shape" value="circle" ng-click="project.setPlotShape('circle')" checked>
                                     <label class="form-check-label small">Circle</label>
 								</div>				
-								<div class="form-check">
+								<div class="form-check form-check-inline">
                                     <input class="form-check-input" type="radio" id="plot-shape-square" name="plot-shape" value="square" ng-click="project.setPlotShape('square')">
                                     <label class="form-check-label small">Square</label>
 								</div>		
-		                    <label class="small mb-0" for="plot-size">Plot {{ project.details.plotShape == 'circle' ? 'Diameter' : 'Width' }} (m)</label>
+		                    <h3 for="plot-size">Plot {{ project.details.plotShape == 'circle' ? 'Diameter' : 'Width' }} (m)</h3>
 		                    <input class="form-control form-control-sm" type="number" id="plot-size" name="plot-size" autocomplete="off" min="0.0" step="any" ng-model="project.details.plotSize">
 		                </div>
 	                </div>
 	            </div>
 	            </div>
-			<div class="col-xl-4 offset-xl-1 col-lg-12">
+            </div>
+            <div class="row mb-3">
+			<div class="col">
 	            <div id="sample-design">
-	                <h2>Sample Design</h2>
+	                <h2 class="header px-0">Sample Design</h2>
 	                <label class="small mb-0">Spatial Distribution</label>
-					<div class="form-check">
+					<div class="form-check form-check-inline">
                          <input class="form-check-input" type="radio" id="sample-distribution-random" name="sample-distribution" value="random" ng-click="project.setSampleDistribution('random')" checked>
                          <label class="form-check-label small">Random</label>
                         </div>
-					<div class="form-check">
+					<div class="form-check form-check-inline">
                          <input class="form-check-input" type="radio" id="sample-distribution-gridded" name="sample-distribution" value="gridded" ng-click="project.setSampleDistribution('gridded')">
                          <label class="form-check-label small">Gridded</label>
                     </div>
@@ -269,10 +247,9 @@
 	            </div>
            </div>           
 		</div>
-           
-            <hr>
+ 
             <div class="sample-value-info" ng-repeat="sampleValueGroup in project.details.sampleValues">
-                <h2>Sample Value: {{ sampleValueGroup.name }}</h2>
+                <h2 class="header px-0">Sample Value: {{ sampleValueGroup.name }}</h2>
                 <table class="table table-sm">
                     <thead>
                         <tr>
@@ -298,7 +275,7 @@
                                 {{ sampleValue.image }}
                             </td>
                         </tr>
-                        <tr style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                        <tr class="{{ project.details.id == 0 ? 'visible' : 'd-none' }}">
                             <td>
                                 <input type="button" class="button" value="+" ng-click="project.addSampleValueRow(sampleValueGroup.name)">
                             </td>
@@ -315,11 +292,32 @@
                     </tbody>
                 </table>
             </div>
-            <div id="add-sample-value-group" style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+            <div id="add-sample-value-group" class="{{ project.details.id == 0 ? 'visible' : 'd-none' }}">
                 <input type="button" class="button" value="Add Sample Value Group" ng-click="project.addSampleValueGroup()">
                 <input type="text" autocomplete="off" ng-model="project.newSampleValueGroupName">
             </div>
         </form>
+        <div id="project-management" class="col mb-5">
+            	<h2 class="header px-0">
+            		Project Management
+            	</h2>
+            	<div class="row">
+			            <input type="button" id="configure-geo-dash" class="btn btn-outline-lightgreen btn-sm btn-block"
+			                   name="configure-geo-dash" value="Configure Geo-Dash"
+			                   ng-click="project.configureGeoDash()">
+			            <input type="button" id="download-plot-data" class="btn btn-outline-lightgreen btn-sm btn-block"
+			                   name="download-plot-data" value="Download Plot Data"
+			                   ng-click="project.downloadPlotData()"
+			                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
+			            <input type="button" id="download-sample-data" class="btn btn-outline-lightgreen btn-sm btn-block"
+			                   name="download-sample-data" value="Download Sample Data"
+			                   ng-click="project.downloadSampleData()"
+			                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
+			            <input type="button" id="change-availability" class="btn btn-outline-danger btn-sm btn-block"
+			                   name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
+			                   ng-click="project.changeAvailability()">		                   
+             </div>
+        </div>
     </div>
     <div id="spinner"></div>
 </div>
