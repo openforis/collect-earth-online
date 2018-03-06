@@ -17,6 +17,10 @@
     transform: translate(-50%, -50%);
     overflow: auto;
 }
+.no-container-margin{
+		margin-left:-15px;
+		margin-right:-15px;	
+}
 /* Fonts */
 /*************/
 @font-face {
@@ -374,9 +378,16 @@ h2.header{
     margin: 0rem auto;
 }
 
-#project-design-form.bg-lightgray:hover{
+#project-design.bg-lightgray:hover{
 		background-color:#ECEEEF!important;
-	
+}
+#project-design h3{
+	margin-top:1rem;
+}
+#project-design p{
+	    margin-bottom: 0rem;
+	    font-size:80%;
+	    margin-top:0.5rem;
 }
 #project-design-form .header{
 	margin-left:-8px;
@@ -388,7 +399,6 @@ h2.header{
 ul#samplevalue{
 	padding-left:0; 
  	column-count: 2;
-	
 	}
 #samplevalue li{
 	list-style:none;
@@ -397,9 +407,6 @@ ul#samplevalue{
           page-break-inside: avoid;
                break-inside: avoid;	
 }
-
-
-
 
 /*********************************************************************/
 /* GEO DASH PAGE */
