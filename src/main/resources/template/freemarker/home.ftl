@@ -75,11 +75,6 @@
                         </div>
                     </div>
                 </div>
-                <!--
-                  <div id="mapPanel" class="col-xl-9 col-lg-9 col-md-12 pl-0 bg-lightgray" style="width: {{ home.mapWidth }}" onresize="alert(0); home.updateMapSize();">
-                  hide map panel to fix height issue  <div id="home-map-pane" ></div>
-                  </div>
-                  -->
             </div>
         </div>
     </div>
