@@ -57,7 +57,7 @@ public class Projects {
         String institutionId = req.queryParams("institutionId");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
 
-        if (userId.equals("")) {
+        if (userId == null || userId.isEmpty()) {
             // Not logged in
             Stream<JsonObject> filteredProjects = toStream(projects)
                 .filter(project -> project.get("archived").getAsBoolean() == false
@@ -67,7 +67,7 @@ public class Projects {
                         project.addProperty("editable", false);
                         return project;
                     });
-            if (institutionId.equals("")) {
+            if (institutionId == null || institutionId.isEmpty()) {
                 return filteredProjects.collect(intoJsonArray).toString();
             } else {
                 return filteredProjects
@@ -101,7 +101,7 @@ public class Projects {
                         }
                         return project;
                     });
-            if (institutionId.equals("")) {
+            if (institutionId == null || institutionId.isEmpty()) {
                 return filteredProjects.collect(intoJsonArray).toString();
             } else {
                 return filteredProjects

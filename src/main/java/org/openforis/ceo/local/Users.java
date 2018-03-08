@@ -251,7 +251,9 @@ public class Users {
         String institutionId = req.queryParams("institutionId");
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
 
-        if (institutionId != null) {
+        if (institutionId == null || institutionId.isEmpty()) {
+            return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com")).toString();
+        } else {
             JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
             Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
                 institution -> institution.get("id").getAsString().equals(institutionId));
@@ -276,8 +278,6 @@ public class Users {
             } else {
                 return (new JsonArray()).toString();
             }
-        } else {
-            return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com")).toString();
         }
     }
 
