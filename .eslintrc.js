@@ -6,7 +6,8 @@ module.exports = {
     globals: {
         ol: false,
         angular: false,
-        map_utils: false
+        map_utils: false,
+        mercator: false
     },
     extends: "eslint:recommended",
     rules: {
