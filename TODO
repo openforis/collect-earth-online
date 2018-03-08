@@ -49,18 +49,17 @@
   - The login() function's returnurl and querystring arguments expand recursively. (see login.ftl)
 * user-list.json
   1. Replace admin@sig-gis.com/administrator with admin@openforis.org/admin.
-* Projects.java
-  - NOT YET REVIEWED
 * (*).java
   1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
 * header.ftl
   1. Import Stefano's styles and scripts on the Collection page once the Card Test page has been removed.
   2. Ask Billy if we are actually using datepicker.css.
-  3. Revert to an earlier version of Bootstrap to eliminate the "TypeError: t is undefined" console error.
-* navbar.ftl
-  1. Ask Jerome if we are actually using the script block at the end of the file.
-* home.ftl
-  *IN PROGRESS*
+* n-navbar.ftl
+  1. Ask Jerome where we are using this.
+* o-navbar.ftl
+  1. Ask Jerome where we are using this.
+  2. Ask Jerome why he is using .active-link rather than .active on his links.
+  3. Ask Jerome why div#login-info exists since this content is already in li#mobileLogin.
 * about.ftl
   1. Ask Jerome whether the text should reference SERVIR or SERVIR-MEKONG.
 * logo-banner.ftl
@@ -68,6 +67,12 @@
   2. Make all logo images into clickable links to their organizations' websites.
 * login.ftl
   1. The login() function's returnurl and querystring arguments expand recursively. (see Users.java)
+* test-jerome.ftl
+  1. Ask Jerome if we can remove this file.
+* Projects.java
+  *IN PROGRESS*
+* home.ftl
+  *IN PROGRESS*
 * account.ftl
   *IN PROGRESS*
 * institution.ftl
@@ -75,6 +80,12 @@
 * project.ftl
   *IN PROGRESS*
 * collection.ftl
+  *IN PROGRESS*
+* card-test.ftl
+  *IN PROGRESS*
+* geo-dash.ftl
+  *IN PROGRESS*
+* widget-layout-editor.ftl
   *IN PROGRESS*
 
 * Foo
@@ -95,7 +106,6 @@ Fix .gitignore again with Stefano (use .settings/ to hide eclipse files)
 Give imagery entries a visibility:[public|private] attribute
 Add Stefano's tasks from #fefrain to the CEO TODO list
 Make sure Billy adds get("/widget-layout-editor" ...) to Server.declareRemoteStorageRoutes() and passes :pid to Views.editWidgetLayout()
-Ask Jerome to re-enable my CSS animations for flash messages
 Project Stats don't add up correctly in the table on the Collection page anymore
 Set smtpPassword = "OpenForisMailer" in mail-config.json and web.xml
 Remove deploy/clientkeystore file from version control and add config settings to mail-config.json and web.xml to include your own HTTPS certificate
