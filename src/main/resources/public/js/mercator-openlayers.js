@@ -266,7 +266,7 @@ mercator.setVisibleLayer = function (mapConfig, layerTitle) {
 // [Pure] Returns the map layer with title == layerTitle or null if no
 // such layer exists.
 mercator.getLayerByTitle = function (mapConfig, layerTitle) {
-    return mapConfig.layers.getArray().find(
+    return mapConfig.layers.find(
         function (layer) {
             return layer.get("title") == layerTitle;
         }
@@ -669,7 +669,7 @@ mercator.addOverlay = function (mapConfig, overlayTitle) {
 // [Pure] Returns the map overlay with title == overlayTitle or null
 // if no such overlay exists.
 mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
-    return mapConfig.map.getOverLays().getArray().find(
+    return mapConfig.map.getOverlays().getArray().find(
         function (overlay) {
             return overlay.get("title") == overlayTitle;
         }
