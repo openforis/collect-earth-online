@@ -34,7 +34,6 @@
         <script type="text/javascript" src="${root}/js/jquery-3.1.1.min.js"></script>
         <script type="text/javascript" src="${root}/js/popper.min.js"></script>
         <script type="text/javascript" src="${root}/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="${root}/js/custom.js"></script>
 
         <#if navlink == "Geo-Dash" || navlink == "Widget-Editor">
         <!----------------------------------------------------------------->
