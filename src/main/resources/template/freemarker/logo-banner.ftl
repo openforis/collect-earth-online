@@ -13,7 +13,7 @@
 	</div>
 	<div class="row mb-4">
 		<div class="col-sm-3 text-center my-auto">
-			<a href="https://www.adpc.net/" target="_blank">
+			<a href="https://www.adpc.net" target="_blank">
 		    		<img class="img-fluid" id="adpc" src="${root}/img/adpc.jpg">
 			</a>	    		
 		</div>
@@ -23,7 +23,7 @@
 		    </a>
 	    </div>
 		<div class="col-sm-3 text-center my-auto">
-			<a href="https://www.usaid.gov/" target="_blank">    	
+			<a href="https://www.usaid.gov" target="_blank">    	
 		    		<img class="img-fluid" id="usaid" src="${root}/img/usaid.png">
 			</a>	    		
 	    </div>
