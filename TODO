@@ -62,7 +62,7 @@
   2. Ask Jerome why he is using .active-link rather than .active on his links.
   3. Ask Jerome why div#login-info exists since this content is already in li#mobileLogin.
 * about.ftl
-  1. Ask Jerome whether the text should reference SERVIR or SERVIR-MEKONG.
+  1. Ask Jerome whether the text should reference SERVIR or SERVIR-Mekong.
 * logo-banner.ftl
   1. Ask Jerome whether he intends to use the SERVIR or SERVIR-MEKONG logo.
   2. Make all logo images into clickable links to their organizations' websites.
@@ -70,13 +70,14 @@
   1. The login() function's returnurl and querystring arguments expand recursively. (see Users.java)
 * test-jerome.ftl
   1. Ask Jerome if we can remove this file.
-* Projects.java
-  *IN PROGRESS*
 * home.ftl
   1. Ask Jerome to fix the sidebar visibility toggling or remove it entirely.
   2. Limit the map extent to only show the world once.
 * home.js
-  1. Replace map_utils calls with mercator calls.
+  *RESUME HERE*
+  1. Port map_utils.draw_project_markers to mercator.addProjectMarkers().
+* Projects.java
+  *IN PROGRESS*
 * account.ftl
   *IN PROGRESS*
 * institution.ftl
@@ -125,7 +126,18 @@ Export of the data from collect directly from project Dashboard, doing it the sa
 AOI of collection as a shapefile, name of country, district, or region--they already have a script in GEE--could Gary interface to that script; or maybe just a button with a tutorial as workaround
 Work on QA/QC--compare operators against the plots--this is a big task/separate module
 Shortcuts for point selection
-
+Allow users to view the imagery parameters after a new layer has been added to an institution
+Turn the plot boundaries back on on the collection page (either make sure they don't intersect the points or let users toggle the plot boundary on/off)
+Merge Jerome's front-end changes into master:
+  - merge collect-redesign into master
+  - delete n-navbar.ftl, o-navbar.ftl, and test-jerome.ftl
+  - change the text and logo on the About page to replace SERVIR-Mekong with SERVIR
+  - merge master into collect-redesign
+  - send an update to #ceo (ask Alfonso about moving Jerome onto the master branch going forward)
+Check Karis' manual to make sure the DigitalGlobeWMSImagery CONNECTIDs are not present
+Send a mass email to all CEO users that the BaseMap imagery will be deprecated on March 31 (wait to hear back from Kel)
+CEO request from Kel: Can we please add functionality to add just one sample per plot in the center on the project design page?
+CEO request from Kel: Export classes and colors from one project to use in another
 *** Rome TODOs
     1) Patch homepage to work with the empty collect and of-users databases
     2) Reinstall and configure docker

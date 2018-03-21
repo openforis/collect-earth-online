@@ -3,7 +3,7 @@
 *** Mercator-OpenLayers.js
 ***
 *** Author: Gary W. Johnson
-*** Copyright: 2017 Spatial Informatics Group, LLC
+*** Copyright: 2017-2018 Spatial Informatics Group, LLC
 *** License: LGPLv3
 ***
 *** Description: This library provides a set of functions for
@@ -86,8 +86,8 @@ mercator.createSource = function (sourceConfig) {
     }
 };
 
-// [Pure] Returns a new ol.layer.* object or null if the layerConfig
-// is invalid.
+// [Pure] Returns a new ol.layer.Tile object or null if the
+// layerConfig is invalid.
 mercator.createLayer = function (layerConfig) {
     var source = mercator.createSource(layerConfig.sourceConfig);
     if (source == null) {
@@ -215,7 +215,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
                        centerCoords: centerCoords,
                        zoomLevel: zoomLevel,
                        layerConfigs: layerConfigs},
-                layers: layers,
+                layers: map.getLayers(),
                 controls: controls,
                 view: view,
                 map: map};
@@ -224,17 +224,32 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
 
 /*****************************************************************************
 ***
+*** Destroy a map instance
+***
+*****************************************************************************/
+
+// [Side Effects] Removes the mapConfig's map from its container div.
+// Returns null.
+mercator.destroyMap = function (mapConfig) {
+    document.getElementById(mapConfig.init.divName).innerHTML = "";
+    return null;
+};
+
+/*****************************************************************************
+***
 *** Reset a map instance to its initial state
 ***
 *****************************************************************************/
 
-// [Side Effects] Resets all of the map parameters to their
-// initialization-time values. Returns a new mapConfig object, and
-// does not modify its inputs.
+// [Side Effects] Returns a new mapConfig object created with the
+// initialization-time values of the passed-in mapConfig. Removes the
+// original mapConfig's map from its container div and renders the new
+// mapConfig's map into it instead.
 //
 // Example call:
 // var newMapConfig = mercator.resetMap(mapConfig);
 mercator.resetMap = function (mapConfig) {
+    mercator.destroyMap(mapConfig);
     return mercator.createMap(mapConfig.init.divName,
                               mapConfig.init.centerCoords,
                               mapConfig.init.zoomLevel,
@@ -266,7 +281,7 @@ mercator.setVisibleLayer = function (mapConfig, layerTitle) {
 // [Pure] Returns the map layer with title == layerTitle or null if no
 // such layer exists.
 mercator.getLayerByTitle = function (mapConfig, layerTitle) {
-    return mapConfig.layers.find(
+    return mapConfig.layers.getArray().find(
         function (layer) {
             return layer.get("title") == layerTitle;
         }
@@ -658,22 +673,18 @@ mercator.disableDragBoxDraw = function (mapConfig) {
 *****************************************************************************/
 
 // [Side Effects] Adds a new empty overlay to mapConfig's map object
-// with title set to overlayTitle.
+// with id set to overlayTitle.
 mercator.addOverlay = function (mapConfig, overlayTitle) {
-    var overlay = new ol.Overlay({title: overlayTitle,
+    var overlay = new ol.Overlay({id: overlayTitle,
                                   element: document.createElement("div")});
     mapConfig.map.addOverlay(overlay);
     return mapConfig;
 };
 
-// [Pure] Returns the map overlay with title == overlayTitle or null
-// if no such overlay exists.
+// [Pure] Returns the map overlay with id == overlayTitle or null if
+// no such overlay exists.
 mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
-    return mapConfig.map.getOverlays().getArray().find(
-        function (overlay) {
-            return overlay.get("title") == overlayTitle;
-        }
-    );
+    return mapConfig.map.getOverlayById(overlayTitle);
 };
 
 // [Side Effects] Updates the overlay element's innerHTML with fields
@@ -727,7 +738,11 @@ mercator.addProjectMarkers = function (mapConfig, projects, documentRoot) {
                             ceoMapStyles.ceoicon);
     mercator.addOverlay(mapConfig, "projectPopup");
     var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    mapConfig.map.on("click", function (event) { mapConfig.map.forEachFeatureAtPixel(event.pixel, mercator.showProjectPopup.bind(null, overlay, documentRoot)); });
+    mapConfig.map.on("click",
+                     function (event) {
+                         mapConfig.map.forEachFeatureAtPixel(event.pixel,
+                                                             mercator.showProjectPopup.bind(null, overlay, documentRoot));
+                     });
     return mapConfig;
 };
 
