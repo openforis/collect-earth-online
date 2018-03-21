@@ -76,6 +76,7 @@
 * home.js
   *RESUME HERE*
   1. Port map_utils.draw_project_markers to mercator.addProjectMarkers().
+  2. Re-add the missing styles needed for mercator.showProjectPopup(): div.cTitle, div.cContent, span.pField, a.lnkStart
 * Projects.java
   *IN PROGRESS*
 * account.ftl

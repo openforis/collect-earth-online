@@ -479,9 +479,8 @@ map_utils.remove_plots_layer = function () {
     }
     return null;
 };
-var pList;
+
 map_utils.draw_project_markers = function (project_list, dRoot) {
-    pList = project_list;
     gPopup = new ol.Overlay.Popup();
     map_utils.map_ref.addOverlay(gPopup);
     var format = new ol.format.GeoJSON();

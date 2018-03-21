@@ -1,12 +1,11 @@
 angular.module("home", []).controller("HomeController", ["$http", function HomeController($http) {
-    this.root = "";
-    this.userId = "";
     this.institutionList = null;
     this.projectList = null;
     this.imageryList = null;
+    this.mapConfig = null;
 
-    this.getInstitutionList = function () {
-        $http.get(this.root + "/get-all-institutions")
+    this.getInstitutionList = function (documentRoot) {
+        $http.get(documentRoot + "/get-all-institutions")
             .then(angular.bind(this, function successCallback(response) {
                 this.institutionList = response.data;
             }), function errorCallback(response) {
@@ -15,54 +14,48 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
             });
     };
 
-    this.getProjectList = function () {
-        $http.get(this.root + "/get-all-projects?userId=" + this.userId)
+    this.getProjectList = function (documentRoot, userId) {
+        $http.get(documentRoot + "/get-all-projects?userId=" + userId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
-                this.initialize(this.root, this.userId);
+                this.initialize(documentRoot, userId);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the project list. See console for details.");
             });
     };
 
-    this.getImageryList = function () {
-        $http.get(this.root + "/get-all-imagery")
+    this.getImageryList = function (documentRoot, userId) {
+        $http.get(documentRoot + "/get-all-imagery")
             .then(angular.bind(this, function successCallback(response) {
                 this.imageryList = response.data;
-                this.initialize(this.root, this.userId);
+                this.initialize(documentRoot, userId);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
             });
     };
 
-    this.initialize = function (documentRoot, userId) {
-        // Make the current documentRoot and userId globally available
-        this.root = documentRoot;
-        this.userId = userId;
+    this.showProjectMap = function (documentRoot) {
+        this.mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.imageryList);
+        mercator.setVisibleLayer(this.mapConfig, "DigitalGlobeRecentImagery");
+        mercator.addProjectMarkers(this.mapConfig, this.projectList, documentRoot);
+        mercator.zoomMapToLayer(this.mapConfig, "projectMarkers");
+    };
 
+    this.initialize = function (documentRoot, userId) {
         if (this.imageryList == null) {
             // Load the imageryList
-            this.getImageryList();
+            this.getImageryList(documentRoot, userId);
         } else if (this.projectList == null) {
             // Load the projectList
-            this.getProjectList();
+            this.getProjectList(documentRoot, userId);
         } else {
             // Load the institutionList
-            this.getInstitutionList();
+            this.getInstitutionList(documentRoot);
 
-            // Display the project map
-            map_utils.digital_globe_base_map({div_name: "home-map-pane",
-                                              center_coords: [0.0, 0.0],
-                                              zoom_level: 1},
-                                             this.imageryList);
-
-            // Show the DigitalGlobe RecentImagery layer
-            map_utils.set_current_imagery("DigitalGlobeRecentImagery");
-
-            // Draw markers on the map for each project
-            map_utils.draw_project_markers(this.projectList, this.root);
+            // Display the world map and project markers
+            this.showProjectMap(documentRoot);
         }
     };
 
