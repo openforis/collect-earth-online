@@ -72,11 +72,9 @@
   1. Ask Jerome if we can remove this file.
 * home.ftl
   1. Ask Jerome to fix the sidebar visibility toggling or remove it entirely.
-  2. Limit the map extent to only show the world once.
 * home.js
-  *RESUME HERE*
   1. Port map_utils.draw_project_markers to mercator.addProjectMarkers().
-  2. Re-add the missing styles needed for mercator.showProjectPopup(): div.cTitle, div.cContent, span.pField, a.lnkStart
+  2. Re-add the missing styles needed for mercator.showProjectPopup() to custom.css: div.cTitle, div.cContent, span.pField, a.lnkStart.
 * Projects.java
   *IN PROGRESS*
 * account.ftl

@@ -294,17 +294,21 @@ a:hover{
 }
 /* map popover */
 /*************/
-.ol-popup{
+/* .ol-popup{ */
+.ol-overlay-container {
     border: 1px solid rgba(0,0,0,.2);
     border-radius: .3rem;
+	background-color: white;
 }
-.ol-popup-content .cContent{
+/* .ol-popup-content .cContent{ */
+.ol-overlay-container .cContent {
 	padding:15px;
 }
 a.ol-popup-closer.close{
 	font-size:1rem;
 }
-.ol-popup-content .cTitle h1{
+/* .ol-popup-content .cTitle h1{ */
+.ol-overlay-container .cTitle h1 {
 	color:white;
 	font-family:inherit;
 	font-size:1rem;	
@@ -312,7 +316,8 @@ a.ol-popup-closer.close{
 	font-weight: 400;
 }
 
-.ol-popup-content .cTitle {
+/* .ol-popup-content .cTitle { */
+.ol-overlay-container .cTitle {
 	background-color:#31BAB0;
 }
 
