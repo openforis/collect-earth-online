@@ -130,7 +130,7 @@ public class CollectProjects {
                         }
                         return project;
                     });
-            if (institutionId.equals("")) {
+            if (isBlank(institutionId)) {
                 return filteredProjects.collect(intoJsonArray).toString();
             } else {
                 return filteredProjects
