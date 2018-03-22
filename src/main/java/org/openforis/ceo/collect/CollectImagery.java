@@ -10,6 +10,7 @@ import static org.openforis.ceo.utils.JsonUtils.findElement;
 import static org.openforis.ceo.utils.JsonUtils.forEachInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toElementStream;
+import static spark.utils.StringUtils.isBlank;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,7 +33,7 @@ public class CollectImagery {
             imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
             imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
         });
-        JsonArray institutionImageryIdsArray = institutionId.isEmpty() ? new JsonArray(): getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
+        JsonArray institutionImageryIdsArray = isBlank(institutionId) ? new JsonArray(): getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
         List<Integer> institutionImageryIds = toElementStream(institutionImageryIdsArray)
             .map(idEl -> idEl.getAsInt())
             .collect(Collectors.toList());
