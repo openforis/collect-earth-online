@@ -99,7 +99,7 @@ sudo ln -s $PWD/collect-web/collect-webapp/target/collect.war $TOMCAT_HOME/webap
       type="javax.sql.DataSource"
       factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
       driverClassName="org.h2.Driver"
-      url="jdbc:h2:/your/home/directory/.openforis/collect">
+      url="jdbc:h2:/your/home/directory/.openforis/collect;AUTO_SERVER=true">
   </Resource>
 </Context>
 #+end_src
@@ -158,7 +158,7 @@ sudo ln -s $PWD/target/of-users.war $TOMCAT_HOME/webapps/of-users.war
       type="javax.sql.DataSource"
       factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
       driverClassName="org.h2.Driver"
-      url="jdbc:h2:/your/home/directory/.openforis/of-users">
+      url="jdbc:h2:/your/home/directory/.openforis/of-users;AUTO_SERVER=true">
   </Resource>
 </Context>
 #+end_src

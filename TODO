@@ -4,8 +4,8 @@
   1. Add a Description section to explain the website's purpose.
   2. Include git clone instructions in the Installation section.
   3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
-  4. Document how to add public imagery to the Collect H2 database or present the user with instructions to do so on the homepage.
-  5. Include the login credentials (user/pass) for the administrator accounts.
+  4. Document how to add public imagery to imagery-list.json and the Collect H2 database or present the user with instructions to do so on the homepage.
+  5. Include the login credentials (user/pass) for the administrator account.
   6. Re-write the instructions for Windows machines as well. (jdbc:h2:C:/Users/<username>/.openforis/{collect,of-users})
   7. Export as README.pdf for all the non-Emacs users out there.
   8. Move the XML file configurations and H2 JAR installation into a new section "Setting up the H2 Database".

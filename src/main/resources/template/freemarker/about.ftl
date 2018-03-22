@@ -7,18 +7,18 @@
         <p>
             Collect Earth Online is a custom built, open-source, high
             resolution satellite image viewing and interpretation
-            system that is being developed by SERVIR-Mekong as a tool
-            for use in projects that require land cover and/or land
-            use reference data. Collect Earth Online promotes
-            consistency in locating, interpreting, and labeling
-            reference data plots for use in classifying and monitoring
-            land cover / land use change. The full functionality of
-            Collect Earth Online including collaborative compilation
-            of reference point databases is implemented online so
-            there is no need for desktop installation. The Collect
-            Earth Online codebase was developed by NASA SERVIR-Mekong
-            and has been donated to the Open Foris Initiative of the
-            Food And Agriculture Organization of the United Nations.
+            system that is being developed by SERVIR as a tool for use
+            in projects that require land cover and/or land use
+            reference data. Collect Earth Online promotes consistency
+            in locating, interpreting, and labeling reference data
+            plots for use in classifying and monitoring land cover /
+            land use change. The full functionality of Collect Earth
+            Online including collaborative compilation of reference
+            point databases is implemented online so there is no need
+            for desktop installation. The Collect Earth Online
+            codebase was developed by NASA SERVIR and has been donated
+            to the Open Foris Initiative of the Food And Agriculture
+            Organization of the United Nations.
         </p>
         <h1>Disclaimers</h1>
         <p>
