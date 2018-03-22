@@ -38,10 +38,14 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
     };
 
     this.showProjectMap = function (documentRoot) {
-        this.mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.imageryList);
-        mercator.setVisibleLayer(this.mapConfig, "DigitalGlobeRecentImagery");
-        mercator.addProjectMarkers(this.mapConfig, this.projectList, documentRoot);
-        mercator.zoomMapToLayer(this.mapConfig, "projectMarkers");
+        if (this.imageryList.length > 0) {
+            this.mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.imageryList);
+            mercator.setVisibleLayer(this.mapConfig, this.imageryList[0].title);
+            if (this.projectList.length > 0) {
+                mercator.addProjectMarkers(this.mapConfig, this.projectList, documentRoot);
+                mercator.zoomMapToLayer(this.mapConfig, "projectMarkers");
+            }
+        }
     };
 
     this.initialize = function (documentRoot, userId) {
