@@ -47,9 +47,6 @@
   1. Remove all references to the role attribute.
   2. getPasswordResetKey has the site URL (http://ceo.sig-gis.com) hard-coded in its email body.
   3. The login() function's returnurl and querystring arguments expand recursively. (see login.ftl)
-  4. Replace admin@sig-gis.com with admin@openforis.org in getAllUsers().
-* user-list.json
-  1. Replace admin@sig-gis.com/administrator with admin@openforis.org/admin.
 * (*).java
   1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
 * header.ftl
@@ -79,6 +76,7 @@
   1. Make getAllProjects() return [] when no projects exist in the database.
 * CollectImagery.java
   1. Make getAllImagery() return [] when no imagery exists in the database.
+  2. Include DigitalGlobeRecentImagery from imagery-list.json in the collect database somehow by default.
 * Projects.java
   *IN PROGRESS*
 * account.ftl
@@ -91,6 +89,7 @@
   *IN PROGRESS*
 * card-test.ftl
   *IN PROGRESS*
+  1. Remove this file once survey cards are added to the Project page.
 * geo-dash.ftl
   *IN PROGRESS*
 * widget-layout-editor.ftl

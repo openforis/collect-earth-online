@@ -275,7 +275,7 @@ public class OfUsers {
                                 user.addProperty("email", user.get("username").getAsString());
                                 return user;
                             })
-                        .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
+                        .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
                         .collect(intoJsonArray);
                 } else {
                     throw new RuntimeException("An error occurred. Please try again later.");
@@ -289,7 +289,7 @@ public class OfUsers {
                                     user.addProperty("email", user.get("username").getAsString());
                                     return user;
                             })
-                            .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
+                            .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
                             .collect(intoJsonArray);
                 } else {
                 	throw new RuntimeException("An error occurred. Please try again later.");

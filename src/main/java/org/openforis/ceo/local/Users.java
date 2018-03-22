@@ -252,7 +252,7 @@ public class Users {
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
 
         if (institutionId == null || institutionId.isEmpty()) {
-            return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@sig-gis.com")).toString();
+            return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@openforis.org")).toString();
         } else {
             JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
             Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
@@ -263,7 +263,7 @@ public class Users {
                 JsonArray admins = institution.getAsJsonArray("admins");
                 JsonArray pending = institution.getAsJsonArray("pending");
                 return toStream(users)
-                    .filter(user -> !user.get("email").getAsString().equals("admin@sig-gis.com"))
+                    .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
                     .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
                     .map(user -> {
                             user.addProperty("institutionRole",
