@@ -75,6 +75,10 @@
 * home.js
   1. Port map_utils.draw_project_markers to mercator.addProjectMarkers().
   2. Re-add the missing styles needed for mercator.showProjectPopup() to custom.css: div.cTitle, div.cContent, span.pField, a.lnkStart.
+* CollectProjects.java
+  1. Make getAllProjects() return [] when no projects exist in the database.
+* CollectImagery.java
+  1. Make getAllImagery() return [] when no imagery exists in the database.
 * Projects.java
   *IN PROGRESS*
 * account.ftl

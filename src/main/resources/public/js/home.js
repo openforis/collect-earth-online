@@ -4,10 +4,11 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
     this.imageryList = null;
     this.mapConfig = null;
 
-    this.getInstitutionList = function (documentRoot) {
+    this.getInstitutionList = function (documentRoot, userId) {
         $http.get(documentRoot + "/get-all-institutions")
             .then(angular.bind(this, function successCallback(response) {
                 this.institutionList = response.data;
+                this.initialize(documentRoot, userId);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the institution list. See console for details.");
@@ -44,16 +45,16 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
     };
 
     this.initialize = function (documentRoot, userId) {
-        if (this.imageryList == null) {
-            // Load the imageryList
-            this.getImageryList(documentRoot, userId);
+        if (this.institutionList == null) {
+            // Load the institutionList
+            this.getInstitutionList(documentRoot, userId);
         } else if (this.projectList == null) {
             // Load the projectList
             this.getProjectList(documentRoot, userId);
+        } else if (this.imageryList == null) {
+            // Load the imageryList
+            this.getImageryList(documentRoot, userId);
         } else {
-            // Load the institutionList
-            this.getInstitutionList(documentRoot);
-
             // Display the world map and project markers
             this.showProjectMap(documentRoot);
         }
