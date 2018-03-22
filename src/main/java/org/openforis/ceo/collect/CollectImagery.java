@@ -23,24 +23,24 @@ import spark.Response;
 
 public class CollectImagery {
 
-	private static final String IMAGERY_RESOURCE_TYPE = "IMAGERY";
+    private static final String IMAGERY_RESOURCE_TYPE = "IMAGERY";
 
-	public static String getAllImagery(Request req, Response res) throws IOException {
+    public static String getAllImagery(Request req, Response res) throws IOException {
         String institutionId = req.queryParams("institutionId");
-		JsonArray imageryList = getFromCollect(String.format("imagery")).getAsJsonArray();
-		forEachInJsonArray(imageryList, imagery -> {
-			imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
-			imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
-		});
-		JsonArray institutionImageryIdsArray = institutionId.isEmpty() ? new JsonArray(): getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
-		List<Integer> institutionImageryIds = toElementStream(institutionImageryIdsArray)
-			.map(idEl -> idEl.getAsInt())
-			.collect(Collectors.toList());
-		return filterJsonArray(imageryList, imagery -> 
-				imagery.get("visibility").getAsString().equals("public")
-					|| institutionImageryIds.contains(imagery.get("id").getAsInt())
-			)
-			.toString();
+        JsonArray imageryList = getFromCollect("imagery").getAsJsonArray();
+        forEachInJsonArray(imageryList, imagery -> {
+            imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
+            imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
+        });
+        JsonArray institutionImageryIdsArray = institutionId.isEmpty() ? new JsonArray(): getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
+        List<Integer> institutionImageryIds = toElementStream(institutionImageryIdsArray)
+            .map(idEl -> idEl.getAsInt())
+            .collect(Collectors.toList());
+        return filterJsonArray(imageryList, imagery -> 
+                imagery.get("visibility").getAsString().equals("public")
+                    || institutionImageryIds.contains(imagery.get("id").getAsInt())
+            )
+            .toString();
     }
 
     public static synchronized String addInstitutionImagery(Request req, Response res) throws IOException {
@@ -74,13 +74,13 @@ public class CollectImagery {
         //insert new imagery into Collect DB
         JsonObject insertImageryResponse = postToCollect("imagery", imagery).getAsJsonObject();
         if ("OK".equals(insertImageryResponse.get("status").getAsString())) {
-        	String imageryId = findElement(insertImageryResponse, "form.id").getAsString();
-        	//associate imagery to institution
-        	associateResource(institutionId, IMAGERY_RESOURCE_TYPE, imageryId);
-        	return "";
+            String imageryId = findElement(insertImageryResponse, "form.id").getAsString();
+            //associate imagery to institution
+            associateResource(institutionId, IMAGERY_RESOURCE_TYPE, imageryId);
+            return "";
         } else {
-        	String errorMessage = insertImageryResponse.get("errorMessage").getAsString();
-			throw new RuntimeException("Error inserting new imagery: " + errorMessage);
+            String errorMessage = insertImageryResponse.get("errorMessage").getAsString();
+            throw new RuntimeException("Error inserting new imagery: " + errorMessage);
         }
     }
 
