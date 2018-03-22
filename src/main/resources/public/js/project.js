@@ -54,7 +54,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         if (confirm("Do you REALLY want to publish this project?")) {
             utils.show_element("spinner");
             $http.post(this.root + "/publish-project/" + this.details.id)
-                .then(angular.bind(this, function successCallback(response) {
+                .then(angular.bind(this, function successCallback() {
                     this.details.availability = "published";
                     utils.hide_element("spinner");
                 }), function errorCallback(response) {
@@ -69,7 +69,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         if (confirm("Do you REALLY want to close this project?")) {
             utils.show_element("spinner");
             $http.post(this.root + "/close-project/" + this.details.id)
-                .then(angular.bind(this, function successCallback(response) {
+                .then(angular.bind(this, function successCallback() {
                     this.details.availability = "closed";
                     utils.hide_element("spinner");
                 }), function errorCallback(response) {
@@ -84,7 +84,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         if (confirm("Do you REALLY want to archive this project?!")) {
             utils.show_element("spinner");
             $http.post(this.root + "/archive-project/" + this.details.id)
-                .then(angular.bind(this, function successCallback(response) {
+                .then(angular.bind(this, function successCallback() {
                     this.details.availability = "archived";
                     utils.hide_element("spinner");
                     alert("Project " + this.details.id + " has been archived.");
