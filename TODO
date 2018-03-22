@@ -4,7 +4,7 @@
   1. Add a Description section to explain the website's purpose.
   2. Include git clone instructions in the Installation section.
   3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
-  4. Document how to add public imagery to imagery-list.json and the Collect H2 database or present the user with instructions to do so on the homepage.
+  4. Document how to add public imagery to imagery-list.json and the Collect H2 database (use OFC_IMAGERY table, VISIBILITY=N(private) or P(public)).
   5. Include the login credentials (user/pass) for the administrator account.
   6. Re-write the instructions for Windows machines as well. (jdbc:h2:C:/Users/<username>/.openforis/{collect,of-users})
   7. Export as README.pdf for all the non-Emacs users out there.
@@ -72,24 +72,26 @@
 * home.js
   1. Port map_utils.draw_project_markers to mercator.addProjectMarkers().
   2. Re-add the missing styles needed for mercator.showProjectPopup() to custom.css: div.cTitle, div.cContent, span.pField, a.lnkStart.
-* CollectProjects.java
-  1. Make getAllProjects() return [] when no projects exist in the database.
-* CollectImagery.java
-  1. Make getAllImagery() return [] when no imagery exists in the database.
-  2. Include DigitalGlobeRecentImagery from imagery-list.json in the collect database somehow by default.
 * Projects.java
   *IN PROGRESS*
-* account.ftl
-  *IN PROGRESS*
-* institution.ftl
-  *IN PROGRESS*
 * project.ftl
-  *IN PROGRESS*
+  *RESUME HERE*
+  1. Initial basemap imagery should be this.imageryList[0] on the map and in the Project Imagery select dropdown.
+  2. Move the OpenLayers icon up onto the map by fixing its style.
+  3. Check the Project Stats variables (something's wrong here).
+  4. Hide Configure Geo-Dash button until after the project is created.
+  5. Add a Configure Survey button to edit a survey by id (e.g., id=710) with this url: http://127.0.0.1:8080/collect/editSurvey.htm?id=710
+  6. Change the Create Project button's confirmation text.
+  7. Enable the date-related project stats.
 * collection.ftl
   *IN PROGRESS*
 * card-test.ftl
   *IN PROGRESS*
   1. Remove this file once survey cards are added to the Project page.
+* account.ftl
+  *IN PROGRESS*
+* institution.ftl
+  *IN PROGRESS*
 * geo-dash.ftl
   *IN PROGRESS*
 * widget-layout-editor.ftl

@@ -7,7 +7,8 @@ module.exports = {
         ol: false,
         angular: false,
         map_utils: false,
-        mercator: false
+        mercator: false,
+        utils: false
     },
     extends: "eslint:recommended",
     rules: {
