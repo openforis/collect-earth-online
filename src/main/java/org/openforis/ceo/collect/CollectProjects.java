@@ -59,7 +59,7 @@ import spark.Response;
 
 public class CollectProjects {
 
-	private static final String ADMIN_USERNAME = "admin@openforis.org";
+    private static final String ADMIN_USERNAME = "admin@openforis.org";
     private static final int MAX_PLOT_MEASUREMENTS = 3;
     private static final double SAMPLE_POINT_WIDTH_M = 10.0d;
     private static final String COLLECT_EARTH_ONLINE_TARGET = "COLLECT_EARTH_ONLINE";
@@ -82,33 +82,31 @@ public class CollectProjects {
         params.put("target", COLLECT_EARTH_ONLINE_TARGET);
         
         JsonArray allSurveys = getFromCollect("survey", params).getAsJsonArray();
-        JsonArray projects = toElementStream(allSurveys)
-            .map(s -> convertToCeoProject((JsonObject) s))
-            .collect(intoJsonArray);
+        Stream<JsonObject> allProjects = toElementStream(allSurveys)
+            .map(s -> convertToCeoProject((JsonObject) s));
         
+        //consider only not archived projects
+        Stream<JsonObject> filteredProjects = allProjects.filter(
+                project -> ! project.get("archived").getAsBoolean());
+        
+        //filter by institution
+        if (! isBlank(institutionId)) {
+            filteredProjects = filteredProjects.filter(project -> project.get("institution").getAsString().equals(institutionId));
+        }
+
         if (userId == null) {
             // Not logged in
-            Stream<JsonObject> filteredProjects = toStream(projects)
-                .filter(project -> project.get("archived").getAsBoolean() == false
-                                   && project.get("privacyLevel").getAsString().equals("public")
-                                   && project.get("availability").getAsString().equals("published"))
-                .map(project -> {
-                        project.addProperty("editable", false);
-                        return project;
-                    });
-            if (isBlank(institutionId)) {
-                return filteredProjects.collect(intoJsonArray).toString();
-            } else {
-                return filteredProjects
-                    .filter(project -> project.get("institution").getAsString().equals(institutionId))
-                    .collect(intoJsonArray)
-                    .toString();
-            }
+           filteredProjects = filteredProjects.filter(project -> 
+                               project.get("privacyLevel").getAsString().equals("public")
+                               && project.get("availability").getAsString().equals("published")
+               ).map(project -> {
+                    project.addProperty("editable", false);
+                    return project;
+                });
         } else {
+        	//logged in
             Map<Integer, String> institutionRoles = OfUsers.getInstitutionRoles(userId);
-            Stream<JsonObject> filteredProjects = toStream(projects)
-                .filter(project -> project.get("archived").getAsBoolean() == false)
-                .filter(project -> {
+            filteredProjects = filteredProjects.filter(project -> {
                         String role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
                         String privacyLevel = project.get("privacyLevel").getAsString();
                         String availability = project.get("availability").getAsString();
@@ -130,15 +128,9 @@ public class CollectProjects {
                         }
                         return project;
                     });
-            if (isBlank(institutionId)) {
-                return filteredProjects.collect(intoJsonArray).toString();
-            } else {
-                return filteredProjects
-                    .filter(project -> project.get("institution").getAsString().equals(institutionId))
-                    .collect(intoJsonArray)
-                    .toString();
-            }
+            
         }
+        return filteredProjects.collect(intoJsonArray).toString();
     }
 
     /**
@@ -187,7 +179,7 @@ public class CollectProjects {
             JsonObject itemObj = (JsonObject) el;
             String plotId = findElement(itemObj, "levelCodes[0]").getAsString();
             JsonArray sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
-			return convertToCeoRecord(username, projectId, itemObj, sampleItems, null);
+            return convertToCeoRecord(username, projectId, itemObj, sampleItems, null);
         }).collect(intoJsonArray);
 
         return convertedItems.toString();
@@ -234,34 +226,34 @@ public class CollectProjects {
             String plotId = recordKeysArray.get(0).getAsString();
             
             JsonObject existingRecordSummary = getTemporaryCollectRecordSummaryByPlotId(username, projectId, plotId);
-        	int recordId;
-        	if (existingRecordSummary == null) {
-        		int measurement = recordKeysArray.get(1).getAsInt();
-        		JsonObject collectRecord = createNewCollectRecord(projectId, username, plotId, measurement + 1);
-            	recordId = collectRecord.get("id").getAsInt();
-        	} else {
-        		recordId = existingRecordSummary.get("id").getAsInt();
-        	}
+            int recordId;
+            if (existingRecordSummary == null) {
+                int measurement = recordKeysArray.get(1).getAsInt();
+                JsonObject collectRecord = createNewCollectRecord(projectId, username, plotId, measurement + 1);
+                recordId = collectRecord.get("id").getAsInt();
+            } else {
+                recordId = existingRecordSummary.get("id").getAsInt();
+            }
             JsonObject plotSamplingPointItem = getCollectPlotSamplingPointItem(projectId, plotId);
             JsonArray sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
             return convertToCeoRecord(username, projectId, plotSamplingPointItem, sampleItems, recordId).toString();
         }
     }
 
-	public static String getUnanalyzedPlotByID(Request req, Response res) {
+    public static String getUnanalyzedPlotByID(Request req, Response res) {
         int projectId = getIntParam(req, "projid");
         String plotId = getParam(req, "id");
         String username = getLoggedUsername(req);
         int count = getCollectRecordsCountByPlotId(username, projectId, plotId);
         if (count < MAX_PLOT_MEASUREMENTS) {
-        	JsonObject existingRecordSummary = getTemporaryCollectRecordSummaryByPlotId(username, projectId, plotId);
-        	int recordId;
-        	if (existingRecordSummary == null) {
-        		JsonObject collectRecord = createNewCollectRecord(projectId, username, plotId, count + 1);
-        		recordId = collectRecord.get("id").getAsInt();
-        	} else {
-        		recordId = existingRecordSummary.get("id").getAsInt();
-        	}
+            JsonObject existingRecordSummary = getTemporaryCollectRecordSummaryByPlotId(username, projectId, plotId);
+            int recordId;
+            if (existingRecordSummary == null) {
+                JsonObject collectRecord = createNewCollectRecord(projectId, username, plotId, count + 1);
+                recordId = collectRecord.get("id").getAsInt();
+            } else {
+                recordId = existingRecordSummary.get("id").getAsInt();
+            }
             JsonObject plotSamplingPointItem = getCollectPlotSamplingPointItem(projectId, plotId);
             JsonArray sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
             return convertToCeoRecord(username, projectId, plotSamplingPointItem, sampleItems, recordId).toString();
@@ -270,7 +262,7 @@ public class CollectProjects {
         }
     }
 
-	// Call Collect's REST API to QUERY the database.
+    // Call Collect's REST API to QUERY the database.
     //
     // Read in the project and plot data for a project with
     // matching id, compute several plot-level aggregate
@@ -523,9 +515,9 @@ public class CollectProjects {
         
         JsonObject collectRecord; 
         if (collectRecordId == null) {
-    		collectRecord = createNewCollectRecord(projectId, username, plotId, currentAnalyses+1);
+            collectRecord = createNewCollectRecord(projectId, username, plotId, currentAnalyses+1);
         } else {
-        	collectRecord = getCollectRecord(projectId, collectRecordId);
+            collectRecord = getCollectRecord(projectId, collectRecordId);
         }
         final int recordId = collectRecord.get("id").getAsInt();
         
@@ -631,7 +623,7 @@ public class CollectProjects {
     private static JsonObject convertToCeoProject(JsonObject collectSurvey) {
         JsonObject p = new JsonObject();
         int projectId = collectSurvey.get("id").getAsInt();
-		p.addProperty("id", projectId);
+        p.addProperty("id", projectId);
         p.add("name", collectSurvey.get("projectName"));
         p.add("description", collectSurvey.get("description"));
         p.addProperty("institution", getMemberValue(collectSurvey, "userGroup.id", Integer.class));
@@ -711,12 +703,12 @@ public class CollectProjects {
     }
     
     private static JsonObject convertToCeoRecord(String username, int projectId, JsonObject plotSamplingItem, 
-    		JsonArray sampleItems, Integer recordId) {
+            JsonArray sampleItems, Integer recordId) {
         String plotId = findElement(plotSamplingItem, "levelCodes[0]").getAsString();
         JsonObject obj = new JsonObject();
         obj.addProperty("id", plotId);
         if (recordId != null) {
-        	obj.addProperty("collectRecordId", recordId);
+            obj.addProperty("collectRecordId", recordId);
         }
         obj.add("center", createPointObject(plotSamplingItem.get("x").getAsDouble(), plotSamplingItem.get("y").getAsDouble()));
         
@@ -746,7 +738,7 @@ public class CollectProjects {
         data.add("description", ceoProject.get("description"));
         data.addProperty("userGroupId", ceoProject.get("institution").getAsLong());
         String ceoPrivacyLevel = ceoProject.get("privacyLevel").getAsString();
-		data.addProperty("privacyLevel", (ceoPrivacyLevel.equals("institution") ? "group": ceoPrivacyLevel).toUpperCase(Locale.ENGLISH));
+        data.addProperty("privacyLevel", (ceoPrivacyLevel.equals("institution") ? "group": ceoPrivacyLevel).toUpperCase(Locale.ENGLISH));
         
         JsonObject ceoSettings = new JsonObject();
         ceoSettings.add("baseMapSource", ceoProject.get("baseMapSource"));
@@ -855,7 +847,7 @@ public class CollectProjects {
     }
     
     private static JsonArray getCollectRecordSummariesByPlotId(String username, int projectId, String plotId, 
-    		boolean onlyOwnedRecords, String step, String stepGreaterOrEqualTo) {
+            boolean onlyOwnedRecords, String step, String stepGreaterOrEqualTo) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("username", username);
         params.put("keyValues[0]", plotId);
@@ -868,9 +860,9 @@ public class CollectProjects {
     }
     
     private static JsonObject getTemporaryCollectRecordSummaryByPlotId(String username, int projectId, String plotId) {
-    	JsonArray summaries = getCollectRecordSummariesByPlotId(username, projectId, plotId, true, "ENTRY", null);
-		return summaries.isJsonNull() || summaries.size() == 0 ? null : summaries.get(0).getAsJsonObject();
-	}
+        JsonArray summaries = getCollectRecordSummariesByPlotId(username, projectId, plotId, true, "ENTRY", null);
+        return summaries.isJsonNull() || summaries.size() == 0 ? null : summaries.get(0).getAsJsonObject();
+    }
 
     private static int getCollectRecordsCountByPlotId(String username, int projectId, String plotId) {
         JsonArray summaries = getCollectRecordSummariesByPlotId(username, projectId, plotId, false, null, "CLEANSING");
@@ -907,9 +899,9 @@ public class CollectProjects {
     }
     
     private static JsonObject getCollectPlotSamplingPointItem(int projectId, String plotId) {
-		JsonArray plotSamplingPointItems = getCollectSamplingPointItems(projectId, plotId, true);
-		return plotSamplingPointItems.get(0).getAsJsonObject();
-	}
+        JsonArray plotSamplingPointItems = getCollectSamplingPointItems(projectId, plotId, true);
+        return plotSamplingPointItems.get(0).getAsJsonObject();
+    }
 
     private static int countCollectSamplingPointItems(int projectId, int levelIndex, List<String> infoAttributes) {
         HashMap<String, Object> params = new HashMap<String, Object>();
@@ -928,13 +920,13 @@ public class CollectProjects {
     }
 
     private static JsonObject createNewCollectRecord(int projectId, String username, String plotId, int measurement) {
-		Map<String, Object> newRecordParams = new HashMap<String, Object>();
-		newRecordParams.put("username", username);
-		newRecordParams.put("recordKey", Arrays.asList(plotId, measurement));
-		newRecordParams.put("addSecondLevelEntities", true);
-		JsonObject newRecord = postToCollect(String.format("survey/%s/data/records", projectId), newRecordParams).getAsJsonObject();
-		return newRecord;
-	}
+        Map<String, Object> newRecordParams = new HashMap<String, Object>();
+        newRecordParams.put("username", username);
+        newRecordParams.put("recordKey", Arrays.asList(plotId, measurement));
+        newRecordParams.put("addSecondLevelEntities", true);
+        JsonObject newRecord = postToCollect(String.format("survey/%s/data/records", projectId), newRecordParams).getAsJsonObject();
+        return newRecord;
+    }
     
     private static int countCollectContributors(int projectId) {
         HashMap<String, Object> params = new HashMap<String, Object>();
@@ -997,10 +989,10 @@ public class CollectProjects {
             return new String[]{};
         } else if (privacyLevel.equals("public")) {
             // return all users
-        	JsonArray users = OfUsers.getAllUsers(institutionId);
+            JsonArray users = OfUsers.getAllUsers(institutionId);
             return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
         } else {
-        	JsonArray institutions = OfGroups.getAllInstitutions(null);
+            JsonArray institutions = OfGroups.getAllInstitutions(null);
             Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
                                                                        institution ->
                                                                        institution.get("id").getAsString().equals(institutionId));
@@ -1084,10 +1076,10 @@ public class CollectProjects {
         HttpSession session = req.raw().getSession();
         String userIdStr = (String) session.getAttribute("userid");
         if (isBlank(userIdStr)) {
-        	return null;
+            return null;
         } else {
-        	Integer userId = Integer.parseInt(userIdStr);
-        	return userId;
+            Integer userId = Integer.parseInt(userIdStr);
+            return userId;
         }
     }
 
