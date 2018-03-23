@@ -13,6 +13,7 @@
   7. Export as README.pdf for all the non-Emacs users out there.
   8. Move the XML file configurations and H2 JAR installation into a new section "Setting up the H2 Database".
   9. Make it crystal clear which collect.war file to use.
+  10. Explain private institutions (all projects in them are only visible to their logged-in user regardless of privacyLevel).
 * notes/
   1. Remove outdated and unnecessary files.
 * ServerTest.java
@@ -72,6 +73,7 @@
   1. Ask Jerome if we can remove this file.
 * home.ftl
   1. Ask Jerome to fix the sidebar visibility toggling or remove it entirely.
+  2. Shrink home-map-pane so we can see the scalebar.
 * home.js
   1. Port map_utils.draw_project_markers to mercator.addProjectMarkers().
   2. Re-add the missing styles needed for mercator.showProjectPopup() to custom.css: div.cTitle, div.cContent, span.pField, a.lnkStart.
@@ -79,15 +81,19 @@
   *IN PROGRESS*
 * project.ftl
   *RESUME HERE*
-  1. Initial basemap imagery should be this.imageryList[0] on the map and in the Project Imagery select dropdown.
-  2. Move the OpenLayers icon up onto the map by fixing its style.
-  3. Check the Project Stats variables (something's wrong here).
-  4. Hide Configure Geo-Dash button until after the project is created.
-  5. Add a Configure Survey button to edit a survey by id (e.g., id=710) with this url: http://127.0.0.1:8080/collect/editSurvey.htm?id=710
-  6. Change the Create Project button's confirmation text.
-  7. Enable the date-related project stats.
+  1. Move the OpenLayers icon up onto the map by fixing its style.
+  2. Enable the date-related project stats.
+  3. Hide Configure Geo-Dash button until after the project is created.
+  4. Add a Configure Survey button to edit a survey by id (e.g., id=710) with this url: http://127.0.0.1:8080/collect/editSurvey.htm?id=710
+  5. Change the Create Project button's confirmation text.
+  6. Add form validation.
+* project.js
+  *IN PROGRESS*
+  1. Set this.lonMin/lonMax/latMin/latMax in displayDragBoxBounds() rather than using document.getElementById().
 * collection.ftl
   *IN PROGRESS*
+  1. Plot Navigation should change from "Go to First Plot" to "Skip and Flag Plot as Bad" if a plot is reach by clicking on the map.
+  2. Project Stats don't properly reflect the total number of Plots Assigned and Plots Completed.
 * card-test.ftl
   *IN PROGRESS*
   1. Remove this file once survey cards are added to the Project page.

@@ -8,6 +8,7 @@ module.exports = {
         angular: false,
         map_utils: false,
         mercator: false,
+        ceoMapStyles: false,
         utils: false
     },
     extends: "eslint:recommended",

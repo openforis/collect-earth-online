@@ -1,20 +1,17 @@
 angular.module("project", []).controller("ProjectController", ["$http", function ProjectController($http) {
     this.root = "";
     this.institution = "";
-    this.details = {};
+    this.details = null;
+    this.stats = null;
+    this.imageryList = null;
+    this.mapConfig = null;
+    this.plotList = null;
     this.lonMin = "";
     this.latMin = "";
     this.lonMax = "";
     this.latMax = "";
     this.newSampleValueGroupName = "";
     this.newValueEntry = {};
-    this.plotList = [];
-    this.flaggedPlots = 0;
-    this.analyzedPlots = 0;
-    this.unanalyzedPlots = 0;
-    this.members = 0;
-    this.contributors = 0;
-    this.imageryList = [];
 
     // FIXME: Add these attributes to the JSON database
     this.dateCreated = null;
@@ -260,27 +257,67 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.showPlotCenters = function (projectId, maxPlots) {
-        if (angular.equals(this.plotList, [])) {
+        if (this.plotList == null) {
             // Load the current project plots
             this.getPlotList(projectId, maxPlots);
         } else {
             // Draw the plot shapes on the map
-            map_utils.draw_plots(this.plotList, this.details.plotShape);
+            mercator.addPlotOverviewLayers(this.mapConfig, this.plotList, this.details.plotShape);
         }
     };
 
     this.getProjectStats = function (projectId) {
         $http.get(this.root + "/get-project-stats/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
-                this.flaggedPlots = response.data.flaggedPlots;
-                this.analyzedPlots = response.data.analyzedPlots;
-                this.unanalyzedPlots = response.data.unanalyzedPlots;
-                this.members = response.data.members;
-                this.contributors = response.data.contributors;
+                this.stats = response.data;
+                this.initialize(this.root, projectId, this.institution);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving project stats. See console for details.");
             });
+    };
+
+    this.showProjectMap = function (projectId) {
+        // Initialize the basemap
+        this.mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.imageryList);
+        mercator.setVisibleLayer(this.mapConfig, this.details.baseMapSource);
+        if (this.baseMapSource == "DigitalGlobeWMSImagery") {
+            mercator.updateLayerWmsParams(this.mapConfig,
+                                          "DigitalGlobeWMSImagery",
+                                          {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
+                                           + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
+                                           FEATUREPROFILE: this.details.stackingProfile});
+        }
+
+        if (this.details.id == 0) {
+            // Enable dragbox interaction if we are creating a new project
+            var displayDragBoxBounds = function (dragBox) {
+                var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+                // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
+                document.getElementById("lon-min").value = extent[0];
+                document.getElementById("lat-min").value = extent[1];
+                document.getElementById("lon-max").value = extent[2];
+                document.getElementById("lat-max").value = extent[3];
+            };
+            mercator.enableDragBoxDraw(this.mapConfig, displayDragBoxBounds);
+        } else {
+            // Extract bounding box coordinates from the project boundary and show on the map
+            var boundaryExtent = mercator.parseGeoJson(this.details.boundary, false).getExtent();
+            this.lonMin = boundaryExtent[0];
+            this.latMin = boundaryExtent[1];
+            this.lonMax = boundaryExtent[2];
+            this.latMax = boundaryExtent[3];
+
+            // Display a bounding box with the project's AOI on the map and zoom to it
+            mercator.addVectorLayer(this.mapConfig,
+                                    "currentAOI",
+                                    mercator.geometryToVectorSource(mercator.parseGeoJson(this.details.boundary, true)),
+                                    ceoMapStyles.polygon);
+            mercator.zoomMapToLayer(this.mapConfig, "currentAOI");
+
+            // Show the plot centers on the map (but constrain to <= 100 points)
+            this.showPlotCenters(projectId, 100);
+        }
     };
 
     this.initialize = function (documentRoot, projectId, institutionId) {
@@ -288,57 +325,16 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         this.root = documentRoot;
         this.institution = institutionId;
 
-        if (angular.equals(this.details, {})) {
+        if (this.details == null) {
             // Load the current project details
             this.getProjectById(projectId);
-        } else if (angular.equals(this.imageryList, [])) {
+        } else if (this.details.id != 0 && this.stats == null) {
+            // Load the project stats
+            this.getProjectStats(projectId);
+        } else if (this.imageryList == null) {
             // Load the imageryList
             this.getImageryList(this.institution);
         } else {
-            // Initialize the base map
-            map_utils.digital_globe_base_map({div_name: "project-map",
-                                              center_coords: [0.0, 0.0],
-                                              zoom_level: 1},
-                                             this.imageryList);
-            map_utils.set_dg_wms_layer_params(this.details.imageryYear, this.details.stackingProfile);
-            map_utils.set_current_imagery(this.details.baseMapSource);
-
-            if (this.details.id == 0) {
-                // var displayDragBoxBounds = function (dragBox) {
-                //     var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-                //     document.getElementById("lon-min").value = extent[0];
-                //     document.getElementById("lat-min").value = extent[1];
-                //     document.getElementById("lon-max").value = extent[2];
-                //     document.getElementById("lat-max").value = extent[3];
-                // };
-                // mercator.enableDragBoxDraw(mapConfig, displayDragBoxBounds);
-
-                // Enable the dragbox interaction
-                map_utils.enable_dragbox_draw();
-
-                // Link the bounding box input fields to the map object
-                map_utils.set_bbox_coords = function () {
-                    document.getElementById("lat-max").value = map_utils.current_bbox.maxlat;
-                    document.getElementById("lon-max").value = map_utils.current_bbox.maxlon;
-                    document.getElementById("lat-min").value = map_utils.current_bbox.minlat;
-                    document.getElementById("lon-min").value = map_utils.current_bbox.minlon;
-                };
-            } else {
-                // Extract bounding box coordinates from the project boundary and show on the map
-                var boundaryExtent = map_utils.polygon_extent(this.details.boundary);
-                this.lonMin = boundaryExtent[0];
-                this.latMin = boundaryExtent[1];
-                this.lonMax = boundaryExtent[2];
-                this.latMax = boundaryExtent[3];
-                map_utils.draw_polygon(this.details.boundary);
-
-                // Show the plot centers on the map (but constrain to <= 100 points)
-                this.showPlotCenters(projectId, 100);
-
-                // Load the project stats
-                this.getProjectStats(projectId);
-            }
-
             // Check the radio button values for this project
             document.getElementById("privacy-" + this.details.privacyLevel).checked = true;
             document.getElementById("plot-distribution-" + this.details.plotDistribution).checked = true;
@@ -351,6 +347,16 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             }
             if (this.details.sampleDistribution == "gridded") {
                 utils.enable_element("sample-resolution");
+            }
+
+            if (this.imageryList.length > 0) {
+                // Set sensible defaults for imagery-related variables
+                this.details.baseMapSource = this.details.baseMapSource || this.imageryList[0].title;
+                this.details.imageryYear = this.details.imageryYear || 2016;
+                this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
+
+                // Draw a map with the project AOI and a sampling of its plots
+                this.showProjectMap(projectId);
             }
         }
     };
