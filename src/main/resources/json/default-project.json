@@ -5,7 +5,7 @@
   description: "",
   privacyLevel: "private",
   boundary: null,
-  baseMapSource: "DigitalGlobeWMSImagery",
+  baseMapSource: "DigitalGlobeRecentImagery+Streets",
   imageryYear: 2016,
   stackingProfile: "Accuracy_Profile",
   plotDistribution: "random",
@@ -17,5 +17,5 @@
   samplesPerPlot: null,
   sampleResolution: null,
   sampleValues: [],
-  attribution: "DigitalGlobe BaseMap Imagery Layer | © DigitalGlobe, Inc",
+  attribution: "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc",
   archived: false}
