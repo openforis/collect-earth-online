@@ -294,8 +294,8 @@ mercator.getLayerByTitle = function (mapConfig, layerTitle) {
 // Example call:
 // var mapConfig2 = mercator.updateLayerWmsParams(mapConfig,
 //                                                "DigitalGlobeWMSImagery",
-//                                                {COVERAGE_CQL_FILTER: "(acquisition_date<'" + imageryYear + "-12-31')",
-//                                              // COVERAGE_CQL_FILTER: "(acquisition_date>'" + imageryYear + "-01-01')AND(acquisition_date<'" + imageryYear + "-12-31')",
+//                                                {COVERAGE_CQL_FILTER: "(acquisition_date>='" + imageryYear + "-01-01')"
+//                                                                 + "AND(acquisition_date<='" + imageryYear + "-12-31')",
 //                                                 FEATUREPROFILE: stackingProfile});
 mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
@@ -339,12 +339,13 @@ mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth)
 };
 
 // [Pure] Returns a style object that displays a shape with the
-// specified number of points, radius, fillColor, borderColor, and
-// borderWidth. A triangle has 3 points. A square has 4 points. A star
-// has 5 points.
-mercator.getRegularShapeStyle = function (radius, points, fillColor, borderColor, borderWidth) {
+// specified number of points, radius, rotation, fillColor,
+// borderColor, and borderWidth. A triangle has 3 points. A square has
+// 4 points with rotation pi/4. A star has 5 points.
+mercator.getRegularShapeStyle = function (radius, points, rotation, fillColor, borderColor, borderWidth) {
     return new ol.style.Style({image: new ol.style.RegularShape({radius: radius,
                                                                  points: points,
+                                                                 rotation: rotation || 0,
                                                                  fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
                                                                  stroke: new ol.style.Stroke({color: borderColor,
                                                                                               width: borderWidth})})});
@@ -366,9 +367,9 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     redCircle:    mercator.getCircleStyle(5, null, "red", 2),
                     yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
                     greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
-                    redSquare:    mercator.getRegularShapeStyle(5, 4, null, "red", 2),
-                    yellowSquare: mercator.getRegularShapeStyle(5, 4, null, "yellow", 2),
-                    greenSquare:  mercator.getRegularShapeStyle(5, 4, null, "green", 2),
+                    redSquare:    mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
+                    yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
+                    greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
                     polygon:      mercator.getPolygonStyle(null, "#8b2323", 3)};
 
 /*****************************************************************************
