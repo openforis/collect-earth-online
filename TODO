@@ -4,7 +4,10 @@
   1. Add a Description section to explain the website's purpose.
   2. Include git clone instructions in the Installation section.
   3. Document how to set the instance parameters in web.xml and mail-config.json: documentRoot,{collect,ofUsers}ApiUrl,smtp{Server,Port,User,Pass}
-  4. Document how to add public imagery to imagery-list.json and the Collect H2 database (use OFC_IMAGERY table, VISIBILITY=N(private) or P(public)).
+  4. Document how to add public imagery to imagery-list.json and the
+     Collect H2 database (use OFC_IMAGERY table, VISIBILITY=N(private)
+     or P(public) and test with
+     http://127.0.0.1:8080/collect/api/imagery).
   5. Include the login credentials (user/pass) for the administrator account.
   6. Re-write the instructions for Windows machines as well. (jdbc:h2:C:/Users/<username>/.openforis/{collect,of-users})
   7. Export as README.pdf for all the non-Emacs users out there.
@@ -92,6 +95,7 @@
   *IN PROGRESS*
 * institution.ftl
   *IN PROGRESS*
+  1. Fix new institution creation with OfGroups (CURRENTLY BROKEN).
 * geo-dash.ftl
   *IN PROGRESS*
 * widget-layout-editor.ftl

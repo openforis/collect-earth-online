@@ -308,11 +308,12 @@ mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
 
 // [Side Effects] Zooms the map view to contain the layer with
 // title == layerTitle.
-mercator.zoomMapToLayer = function (mapConfig, layerTitle) {
+mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     if (layer) {
         mapConfig.view.fit(layer.getSource().getExtent(),
-                           mapConfig.map.getSize());
+                           mapConfig.map.getSize(),
+                           {maxZoom: maxZoom || 19});
     }
     return mapConfig;
 };
