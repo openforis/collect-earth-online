@@ -1,5 +1,6 @@
 package org.openforis.ceo.local;
 
+import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -25,8 +26,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
-import java.io.File;
-import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -42,9 +43,9 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.HttpServletResponse;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
-import org.openforis.ceo.env.CeoConfig;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
@@ -301,17 +302,22 @@ public class Projects {
         }
     }
 
-    private static synchronized void writeCsvFile(String filename, String header, String[] rows) {
-        String csvDataDir = expandResourcePath("/public/downloads/");
-        try (FileWriter fileWriter = new FileWriter(new File(csvDataDir, filename))) {
-            fileWriter.write(header + "\n");
-            fileWriter.write(Arrays.stream(rows).collect(Collectors.joining("\n")));
-        } catch (Exception e) {
+    private static HttpServletResponse writeCsvFile(HttpServletResponse response, String header, String content,
+                                                    String outputFileName) {
+        response.setContentType("text/csv");
+        response.setHeader("Content-Disposition", "attachment; filename=" + outputFileName + ".csv");
+
+        try (OutputStream os = response.getOutputStream()) {
+            os.write((header + "\n").getBytes());
+            os.write(content.getBytes());
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        return response;
     }
 
-    public static String dumpProjectAggregateData(Request req, Response res) {
+    public static HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
@@ -344,7 +350,7 @@ public class Projects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            String[] csvRows = toStream(plotSummaries)
+            String csvContent = toStream(plotSummaries)
                 .map(plotSummary -> {
                         Stream<String> fieldStream = Arrays.stream(fields);
                         Stream<String> labelStream = Arrays.stream(labels);
@@ -353,21 +359,20 @@ public class Projects {
                                              labelStream.map(label -> distribution.has(label) ? distribution.get(label).getAsString() : "0.0"))
                                      .collect(Collectors.joining(","));
                     })
-                .toArray(String[]::new);
+                .collect(Collectors.joining("\n"));
 
             String projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate;
 
-            writeCsvFile(outputFileName, csvHeader, csvRows);
-
-            return CeoConfig.documentRoot + "/downloads/" + outputFileName;
+            return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
         } else {
-            return CeoConfig.documentRoot + "/project-not-found";
+            res.raw().setStatus(SC_NO_CONTENT);
+            return res.raw();
         }
     }
 
-    public static String dumpProjectRawData(Request req, Response res) {
+    public static HttpServletResponse dumpProjectRawData(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
@@ -410,7 +415,7 @@ public class Projects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            String[] csvRows = toStream(sampleSummaries)
+            String csvContent = toStream(sampleSummaries)
                 .map(sampleSummary -> {
                         Stream<String> fieldStream = Arrays.stream(fields);
                         Stream<String> labelStream = Arrays.stream(labels);
@@ -426,17 +431,16 @@ public class Projects {
                                                      }}))
                                      .collect(Collectors.joining(","));
                     })
-                .toArray(String[]::new);
+                .collect(Collectors.joining("\n"));
 
             String projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-raw-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate;
 
-            writeCsvFile(outputFileName, csvHeader, csvRows);
-
-            return CeoConfig.documentRoot + "/downloads/" + outputFileName;
+            return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
         } else {
-            return CeoConfig.documentRoot + "/project-not-found";
+            res.raw().setStatus(SC_NO_CONTENT);
+            return res.raw();
         }
     }
 

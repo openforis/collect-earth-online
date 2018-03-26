@@ -308,7 +308,7 @@ public class CollectProjects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            Stream<String> contentStream = toStream(plotSummaries)
+            String csvContent = toStream(plotSummaries)
                     .map(plotSummary -> {
                             Stream<String> fieldStream = Arrays.stream(fields);
                             Stream<String> labelStream = Arrays.stream(labels);
@@ -316,16 +316,14 @@ public class CollectProjects {
                             return Stream.concat(fieldStream.map(field -> plotSummary.get(field).isJsonNull() ? "" : plotSummary.get(field).getAsString()),
                                                  labelStream.map(label -> distribution.has(label) ? distribution.get(label).getAsString() : "0.0"))
                                          .collect(Collectors.joining(","));
-                        });
-            
+                        })
+                .collect(Collectors.joining("\n"));
+
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate;
 
-            HttpServletResponse response = res.raw();
-            writeCsvFile(response, csvHeader, contentStream, outputFileName); 
-            
-            return null;
+            return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
         }
     }
 
@@ -339,8 +337,6 @@ public class CollectProjects {
             return res.raw();
         } else {
             JsonObject collectSurvey = collectSurveyEl.getAsJsonObject();
-            
-            
             JsonObject ceoProject = convertToCeoProject(collectSurvey);
             Map<String, String> sampleValueTranslations = getSampleValueTranslations(ceoProject);
             JsonArray plotPoints = getCollectSamplingPointItems(projectId);
@@ -401,7 +397,7 @@ public class CollectProjects {
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
-            Stream<String> contentStream = toStream(sampleSummaries)
+            String csvContent = toStream(sampleSummaries)
                 .map(sampleSummary -> {
                         Stream<String> fieldStream = Arrays.stream(fields);
                         Stream<String> labelStream = Arrays.stream(labels);
@@ -416,16 +412,14 @@ public class CollectProjects {
                                                          return value.getAsJsonObject().get(label).getAsString();
                                                      }}))
                                      .collect(Collectors.joining(","));
-                    });
+                    })
+                .collect(Collectors.joining("\n"));
 
             String projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             String currentDate = LocalDate.now().toString();
-            String outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate + ".csv";
+            String outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate;
 
-            HttpServletResponse response = res.raw();
-            writeCsvFile(response, csvHeader, contentStream, outputFileName); 
-            
-            return null;
+            return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
         }
     }
 
@@ -1044,23 +1038,19 @@ public class CollectProjects {
             .toArray(String[]::new);
     }
 
-    private static void writeCsvFile(HttpServletResponse response, String header, Stream<String> contentStream,
-            String outputFileName) {
+    private static HttpServletResponse writeCsvFile(HttpServletResponse response, String header, String content,
+                                                    String outputFileName) {
         response.setContentType("text/csv");
-        response.setHeader("Content-Disposition","attachment; filename="+ outputFileName +".csv");
+        response.setHeader("Content-Disposition", "attachment; filename=" + outputFileName + ".csv");
         
         try(OutputStream os = response.getOutputStream()) {
-            os.write(header.getBytes());
-            contentStream.forEach(row -> {
-                try {
-                    os.write(row.getBytes());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            os.write((header + "\n").getBytes());
+            os.write(content.getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        return response;
     }
     
     private static Collector<String, ?, Map<String, Long>> countDistinct =
