@@ -737,7 +737,7 @@ mercator.addProjectMarkers = function (mapConfig, projects, documentRoot) {
     mercator.addVectorLayer(mapConfig,
                             "projectMarkers",
                             mercator.projectsToVectorSource(projects),
-                            ceoMapStyles.ceoicon);
+                            ceoMapStyles.ceoIcon);
     mercator.addOverlay(mapConfig, "projectPopup");
     var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
     mapConfig.map.on("click",

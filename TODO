@@ -62,8 +62,9 @@
 ** o-navbar.ftl
    1. Remove this file.
 ** logo-banner.ftl
-   1. Make all logo images into clickable links to their organizations' websites.
-   2. Remove ADPC logo.
+   1. Remove ADPC logo.
+   2. Add SERVIR-Mekong to the third line along with Google and SIG.
+   3. Make all logo images into clickable links to their organizations' websites.
 ** login.ftl
    1. The login() function's returnurl and querystring arguments expand recursively. (see Users.java)
 ** test-jerome.ftl
@@ -108,6 +109,25 @@
    *IN PROGRESS*
    1. Fix new institution creation with OfGroups (CURRENTLY BROKEN).
    2. Allow users to view/edit the imagery parameters after a new layer has been added to an institution.
+   3. Add maxlength=1000 to the description textarea.
+   4. Fix broken logos on http://collect.earth and email all institution admins to re-upload their logos to the site.
+** mercator-openlayers.js
+   *IN PROGRESS*
+   1. Replace map-utils with mercator globally in CEO
+   2. Refactor these CEO specific functions out of mercator and into map-utils:
+      - ceoMapStyles
+      - getPlotPolygon
+      - getPlotExtent
+      - plotsToVectorSource
+      - addPlotOverviewLayers
+      - addPointLayer
+      - samplesToVectorSource
+      - getSelectedSamples
+      - highlightSamplePoint
+      - showProjectPopup
+      - projectsToVectorSource
+      - addProjectMarkers
+   3. Implement mercator-google-maps.js with Roberto
 ** geo-dash.ftl
    *IN PROGRESS*
 ** widget-layout-editor.ftl
