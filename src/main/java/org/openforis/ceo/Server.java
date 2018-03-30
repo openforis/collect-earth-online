@@ -63,7 +63,7 @@ public class Server implements SparkApplication {
         get("/support",         (req, res) -> { return freemarker.render(Views.support(req, res)); });
         get("/account/:id",     (req, res) -> { return freemarker.render(Views.account(req, res)); });
         post("/account/:id",    (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
-        get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res)); });
+        get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res, "local")); });
         get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
         get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
@@ -147,7 +147,7 @@ public class Server implements SparkApplication {
         get("/support",         (req, res) -> { return freemarker.render(Views.support(req, res)); });
         get("/account/:id",     (req, res) -> { return freemarker.render(Views.account(req, res)); });
         post("/account/:id",    (req, res) -> { return freemarker.render(Views.account(OfUsers.updateAccount(req, res), res)); });
-        get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res)); });
+        get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res, "remote")); });
         get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
         get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
         get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });

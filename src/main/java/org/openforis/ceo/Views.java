@@ -52,13 +52,14 @@ public class Views {
         return new ModelAndView(model, "account.ftl");
     }
 
-    public static ModelAndView institution(Request req, Response res) {
+    public static ModelAndView institution(Request req, Response res, String storage) {
         if (req.params(":id").equals("0")) {
             authenticateOrRedirect(req, res);
         }
         Map<String, Object> model = getBaseModel(req, "Institution");
         model.put("of_users_api_url", OF_USERS_API_URL);
         model.put("institution_id", req.params(":id"));
+        model.put("storage", storage);
         return new ModelAndView(model, "institution.ftl");
     }
 
