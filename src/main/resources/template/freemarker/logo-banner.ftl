@@ -38,7 +38,7 @@
         </div>
         <div class="col-sm-3 text-center my-auto">
             <a href="https://servir.adpc.net">
-                <img class="img-fluid" id="sig" src="${root}/img/servir-mekong-logo.png">
+                <img class="img-fluid" id="servir-mekong" src="${root}/img/servir-mekong-logo.png">
             </a>
         </div>
     </div>

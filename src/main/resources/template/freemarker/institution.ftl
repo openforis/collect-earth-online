@@ -11,12 +11,11 @@
       		<div class="row">
 	            <div class="col-md-3" id="institution-logo-container">
 	                <a href="{{ institution.details.url }}">
-	                
-                    <#if storage?has_content && storage?is_string && storage=="local">
-                        <img src="${root}/{{ institution.details.logo }}">
-                    <#else>
-                        <img class="img-fluid" src="${of_users_api_url}/group/logo/${institution_id}" alt="logo" />
-                    </#if>
+                        <#if storage?has_content && storage?is_string && storage=="local">
+                            <img class="img-fluid" src="${root}/{{ institution.details.logo }}" alt="logo">
+                        <#else>
+                            <img class="img-fluid" src="${of_users_api_url}/group/logo/${institution_id}" alt="logo">
+                        </#if>
 	                </a>
 	            </div>
 	            <h1 class="col-md-9"><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>
