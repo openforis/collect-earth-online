@@ -106,12 +106,12 @@
                     <div id="project-visibility">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" id="privacy-public" name="privacy-level" value="public"
-                                   ng-click="project.setPrivacyLevel('public')">
+                                   ng-click="project.setPrivacyLevel('public')" checked>
                             <label class="form-check-label small" for="privacy-level">Public: <i>All Users</i></label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" id="privacy-private" name="privacy-level" value="private"
-                                   ng-click="project.setPrivacyLevel('private')" checked>
+                                   ng-click="project.setPrivacyLevel('private')">
                             <label class="form-check-label small" for="privacy-level">Private: <i>Group Admins</i></label>
                         </div>
                         <div class="form-check">
