@@ -67,6 +67,7 @@
    3. Make all logo images into clickable links to their organizations' websites.
 ** login.ftl
    1. The login() function's returnurl and querystring arguments expand recursively. (see Users.java)
+   2. Add OAuth2.0 support to CEO logins (using e.g. a Google account).
 ** test-jerome.ftl
    1. Remove this file.
 ** home.ftl
@@ -88,9 +89,13 @@
    7. Fix download data buttons.
    8. Make it possible to add just one sample per plot in the center.
    9. Export classes and colors from one project to use in another (as CSV?).
+   10. Allow projects to add multiple temporal imagery layers.
+   11. Can we remove the reference image field from the sample values table yet?
 ** project.js
-   *IN PROGRESS*
    1. Set this.lonMin/lonMax/latMin/latMax in displayDragBoxBounds() rather than using document.getElementById().
+   2. Add this.date{Created,Published,Closed,Archived} to the JSON database and retrieve these with getProjectStats.
+   3. Does the spinner appear correctly when creating a new project?
+   4. Can we remove the reference image field from the sample values table yet?
 ** collection.ftl
    *IN PROGRESS*
    1. Plot Navigation should change from "Go to First Plot" to "Skip and Flag Plot as Bad" if a plot is reach by clicking on the map.
@@ -128,11 +133,20 @@
       - projectsToVectorSource
       - addProjectMarkers
    3. Implement mercator-google-maps.js with Roberto
+   4. Diverge Mercator namespaces:
+      - mercator-openlayers -> mercatorOL.*
+      - mercator-google-maps -> mercatorGM.*
 ** geo-dash.ftl
    *IN PROGRESS*
 ** widget-layout-editor.ftl
    *IN PROGRESS*
 * Unsorted TODOs
+  - CEO migration:
+    - setup yet another CEO instance on machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
+    - migrate projects from ceo to machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
+    - ask Jeff to redirect ceo.sig-gis.com to machiavelli
+    - ask Alfonso to redirect collect.earth (etc) to machiavelli
+    - email all users about the migration
   - Project properties don't load on ceo/project/# until the project is published
   - Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
   - Ask Stefano to include the institution attribute in returned imagery objects
@@ -151,6 +165,8 @@
   - Work on QA/QC--compare operators against the plots--this is a big task/separate module
   - Check Karis' manual to make sure the DigitalGlobeWMSImagery CONNECTIDs are not present
   - Rebuild and deploy docker image
+  - Review Githika's new spreadsheet and give her a new set of tasks
+  - Move the CEO data directory to ~/.ceodb
 * TODOs by File (Old)
 ** Server.java
 *** TODO Uncomment all Collect and OfUsers routes once they are completed

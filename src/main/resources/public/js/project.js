@@ -115,13 +115,17 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.configureGeoDash = function () {
-        window.open(this.root + "/widget-layout-editor?editable=true&"
-                    + encodeURIComponent("title=" + this.details.name
-                                         + "&pid=" + this.details.id
-                                         + "&aoi=[" + map_utils.get_plot_extent(this.plotList[0].center, this.details.plotSize)
-                                         + "]&daterange=&bcenter=" + this.plotList[0].center
-                                         + "&bradius=" + this.details.plotSize / 2),
-                    "_geo-dash");
+        if (this.plotList != null) {
+            window.open(this.root + "/widget-layout-editor?editable=true&"
+                        + encodeURIComponent("title=" + this.details.name
+                                             + "&pid=" + this.details.id
+                                             + "&aoi=[" + mercator.getPlotExtent(this.plotList[0].center,
+                                                                                 this.details.plotSize,
+                                                                                 this.details.plotShape)
+                                             + "]&daterange=&bcenter=" + this.plotList[0].center
+                                             + "&bradius=" + this.details.plotSize / 2),
+                        "_geo-dash");
+        }
     };
 
     this.downloadPlotData = function () {
@@ -137,11 +141,15 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     };
 
     this.setBaseMapSource = function () {
-        map_utils.set_current_imagery(this.details.baseMapSource);
+        mercator.setVisibleLayer(this.mapConfig, this.details.baseMapSource);
     };
 
     this.updateDGWMSLayer = function () {
-        map_utils.set_dg_wms_layer_params(this.details.imageryYear, this.details.stackingProfile);
+        mercator.updateLayerWmsParams(this.mapConfig,
+                                      "DigitalGlobeWMSImagery",
+                                      {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
+                                       + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
+                                       FEATUREPROFILE: this.details.stackingProfile});
     };
 
     this.setPlotDistribution = function (plotDistribution) {
@@ -234,6 +242,17 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             });
     };
 
+    this.getProjectStats = function (projectId) {
+        $http.get(this.root + "/get-project-stats/" + projectId)
+            .then(angular.bind(this, function successCallback(response) {
+                this.stats = response.data;
+                this.initialize(this.root, projectId, this.institution);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving project stats. See console for details.");
+            });
+    };
+
     this.getImageryList = function (institutionId) {
         $http.get(this.root + "/get-all-imagery?institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
@@ -264,17 +283,6 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             // Draw the plot shapes on the map
             mercator.addPlotOverviewLayers(this.mapConfig, this.plotList, this.details.plotShape);
         }
-    };
-
-    this.getProjectStats = function (projectId) {
-        $http.get(this.root + "/get-project-stats/" + projectId)
-            .then(angular.bind(this, function successCallback(response) {
-                this.stats = response.data;
-                this.initialize(this.root, projectId, this.institution);
-            }), function errorCallback(response) {
-                console.log(response);
-                alert("Error retrieving project stats. See console for details.");
-            });
     };
 
     this.showProjectMap = function (projectId) {
