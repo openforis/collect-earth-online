@@ -360,7 +360,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             if (this.imageryList.length > 0) {
                 // Set sensible defaults for imagery-related variables
                 this.details.baseMapSource = this.details.baseMapSource || this.imageryList[0].title;
-                this.details.imageryYear = this.details.imageryYear || 2016;
+                this.details.imageryYear = this.details.imageryYear || 2017;
                 this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
 
                 // Draw a map with the project AOI and a sampling of its plots

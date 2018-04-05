@@ -173,6 +173,7 @@
                             <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
                                     ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
                                     style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
+                                <option value="2017">2017</option>
                                 <option value="2016">2016</option>
                                 <option value="2015">2015</option>
                                 <option value="2014">2014</option>
