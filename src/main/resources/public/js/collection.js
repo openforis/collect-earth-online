@@ -19,8 +19,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.arrowstate = "arrow-down";
     this.mapClickEvent;
 
-    var mycollection = this;
-
     this.getProjectById = function (projectId, userId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
@@ -166,9 +164,9 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.nextPlot = function () {
         document.getElementById("go-to-first-plot-button").addClass("d-none");
         document.getElementById("plot-nav").removeClass("d-none");
-        mycollection.showSideBar = true;
-        mycollection.mapclass = "sidemap";
-        mycollection.quitclass = "quit-side";
+        this.showSideBar = true;
+        this.mapclass = "sidemap";
+        this.quitclass = "quit-side";
         map_utils.remove_plots_layer();
         map_utils.map_ref.updateSize();
         window.setTimeout("map_utils.map_ref.updateSize()", 550);
@@ -282,8 +280,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.getProjectStats = function () {
         $http.get(this.root + "/get-project-stats/" + this.projectId)
             .then(angular.bind(this, function successCallback(response) {
-                mycollection.plotsAssigned = response.data.analyzedPlots;
-                mycollection.plotsFlagged = response.data.flaggedPlots;
+                this.plotsAssigned = response.data.analyzedPlots;
+                this.plotsFlagged = response.data.flaggedPlots;
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error getting project stats. See console for details.");
@@ -294,7 +292,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
             .then(angular.bind(this, function successCallback(response) {
                 map_utils.draw_project_points(response.data, "red_fill");
-                mycollection.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
+                this.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
                     var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
                     //Check if it is a cluster or a single
                     if (map_utils.isCluster(feature)) {
@@ -308,12 +306,12 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     } else {
                         if(feature.get("features") != null)
                         {
-                            mycollection.showSideBar = true;
-                            mycollection.mapclass = "sidemap";
-                            mycollection.quitclass = "quit-side";
+                            this.showSideBar = true;
+                            this.mapclass = "sidemap";
+                            this.quitclass = "quit-side";
                             map_utils.remove_plots_layer();
-                            map_utils.map_ref.unByKey(mycollection.mapClickEvent);
-                            mycollection.loadPlotById(feature.get("features")[0].get("id"));
+                            map_utils.map_ref.unByKey(this.mapClickEvent);
+                            this.loadPlotById(feature.get("features")[0].get("id"));
                             map_utils.map_ref.updateSize();
                             window.setTimeout("map_utils.map_ref.updateSize()", 550);
                         }
