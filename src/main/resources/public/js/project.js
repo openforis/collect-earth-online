@@ -319,7 +319,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         this.institution = institutionId;
 
         if (this.details == null) {
-            // Load the current project details
+            // Load the project details
             this.getProjectById(projectId);
         } else if (this.details.id != 0 && this.stats == null) {
             // Load the project stats

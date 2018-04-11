@@ -3,7 +3,7 @@
 <#include "start-content.ftl">
 <script type="text/javascript" src="${root}/js/collection.js"></script>
 <div id="collection" class="row" ng-app="collection" ng-controller="CollectionController as collection"
-     ng-init="collection.initialize('${root}', '${userid!""}', '${username!"guest"}', '${project_id}')">
+     ng-init="collection.initialize('${root}', '${username!"guest"}', '${project_id}')">
     <div id="image-analysis-pane" ng-class="collection.map" class="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
         <div class="buttonHolder d-none">
             <div ng-hide="collection.showSideBar">
@@ -46,9 +46,40 @@
         </fieldset>
         <fieldset class="mb-3 justify-content-center text-center">
             <h3>Imagery Options</h3>
-            <select id="base-map-source" class="form-control form-control-sm" name="base-map-source" size="1"
+            <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1"
                     ng-model="collection.currentProject.baseMapSource" ng-change="collection.setBaseMapSource()">
                 <option ng-repeat="imagery in collection.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
+            </select>
+            <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
+                    ng-model="collection.imageryYear" convert-to-number ng-change="collection.updateDGWMSLayer()"
+                    ng-show="collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'">
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+                <option value="2015">2015</option>
+                <option value="2014">2014</option>
+                <option value="2013">2013</option>
+                <option value="2012">2012</option>
+                <option value="2011">2011</option>
+                <option value="2010">2010</option>
+                <option value="2009">2009</option>
+                <option value="2008">2008</option>
+                <option value="2007">2007</option>
+                <option value="2006">2006</option>
+                <option value="2005">2005</option>
+                <option value="2004">2004</option>
+                <option value="2003">2003</option>
+                <option value="2002">2002</option>
+                <option value="2001">2001</option>
+                <option value="2000">2000</option>
+            </select>
+            <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1"
+                    ng-model="collection.stackingProfile" ng-change="collection.updateDGWMSLayer()"
+                    ng-show="collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'">
+                <option value="Accuracy_Profile">Accuracy Profile</option>
+                <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
+                <option value="Global_Currency_Profile">Global Currency Profile</option>
+                <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
+                <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
             </select>
         </fieldset>
         <fieldset ng-repeat="sampleValueGroup in collection.currentProject.sampleValues"
@@ -88,15 +119,24 @@
                                         </tr>
                                         <tr>
                                             <td class="small">Plots Assigned</td>
-                                            <td class="small">{{ collection.plotsAssigned }} ({{ collection.assignedPercentage() }}%)</td>
+                                            <td class="small">
+                                                {{ collection.stats.analyzedPlots }}
+                                                ({{ collection.assignedPercentage() }}%)
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td class="small">Plots Flagged</td>
-                                            <td class="small">{{ collection.plotsFlagged }} ({{ collection.flaggedPercentage() }}%)</td>
+                                            <td class="small">
+                                                {{ collection.stats.flaggedPlots }}
+                                                ({{ collection.flaggedPercentage() }}%)
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td class="small">Plots Completed</td>
-                                            <td class="small">{{ collection.plotsAssigned + collection.plotsFlagged }} ({{ collection.completePercentage() }}%)</td>
+                                            <td class="small">
+                                                {{ collection.stats.analyzedPlots + collection.stats.flaggedPlots }}
+                                                ({{ collection.completePercentage() }}%)
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td class="small">Plots Total</td>
