@@ -89,8 +89,84 @@
    7. Fix download data buttons.
    8. Make it possible to add just one sample per plot in the center.
    9. Export classes and colors from one project to use in another (as CSV?).
-   10. Allow projects to add multiple temporal imagery layers.
-   11. Can we remove the reference image field from the sample values table yet?
+   10. Can we remove the reference image field from the sample values table yet?
+   11. Allow projects to add multiple temporal imagery layers.
+       1. [X] Remove imagery-year, stacking-profile, and attribution from project-list.json and default-project.json.
+       2. [X] Do not add these features when creating a project in Projects.java.
+       3. [X] Remove the imagery year and stacking profile dropdown menus from project.ftl and project.js.
+       4. [X] Remove all references to imagery year and stacking profile from project.ftl and project.js.
+       5. [ ] Replace all references to project attribution with imagery attribution in collection.ftl and collection.js.
+       6. [ ] Replace all references to map_utils with mercator in collection.js.
+       7. [ ] Add the Imagery Year and Stacking Profile dropdown menus to collection.ftl and collection.js.
+       8. [ ] Notify Stefano to remove imagery-year, stacking-profile, and attribution from his database schema for projects and edit CollectProjects.java.
+              <div class="form-group mb-1">
+                  <label class="small mb-0" for="imagery-year"
+                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
+                  <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
+                          ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
+                          style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
+                      <option value="2017">2017</option>
+                      <option value="2016">2016</option>
+                      <option value="2015">2015</option>
+                      <option value="2014">2014</option>
+                      <option value="2013">2013</option>
+                      <option value="2012">2012</option>
+                      <option value="2011">2011</option>
+                      <option value="2010">2010</option>
+                      <option value="2009">2009</option>
+                      <option value="2008">2008</option>
+                      <option value="2007">2007</option>
+                      <option value="2006">2006</option>
+                      <option value="2005">2005</option>
+                      <option value="2004">2004</option>
+                      <option value="2003">2003</option>
+                      <option value="2002">2002</option>
+                      <option value="2001">2001</option>
+                      <option value="2000">2000</option>
+                  </select>
+              </div>
+              <div class="form-group mb-1">
+                  <label class="small mb-0" for="stacking-profile"
+                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
+                  <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1"
+                          ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
+                          style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
+                      <option value="Accuracy_Profile">Accuracy Profile</option>
+                      <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
+                      <option value="Global_Currency_Profile">Global Currency Profile</option>
+                      <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
+                      <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+                  </select>
+              </div>
+
+              this.updateDGWMSLayer = function () {
+                 mercator.updateLayerWmsParams(this.mapConfig,
+                 "DigitalGlobeWMSImagery",
+                 {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
+          + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
+          FEATUREPROFILE: this.details.stackingProfile});
+          };
+
+          .directive("convertToNumber",
+          function () {
+          return {require: "ngModel",
+          link: function (scope, element, attrs, ngModel) {
+          ngModel.$parsers.push(function (val) { return parseInt(val, 10); });
+          ngModel.$formatters.push(function (val) { return "" + val; });
+          }
+          };
+          })
+
+          this.details.imageryYear = this.details.imageryYear || 2017;
+          this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
+
+          if (this.baseMapSource == "DigitalGlobeWMSImagery") {
+          mercator.updateLayerWmsParams(this.mapConfig,
+          "DigitalGlobeWMSImagery",
+          {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
+            + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
+          FEATUREPROFILE: this.details.stackingProfile});
+          }
 ** project.js
    1. Set this.lonMin/lonMax/latMin/latMax in displayDragBoxBounds() rather than using document.getElementById().
    2. Add this.date{Created,Published,Closed,Archived} to the JSON database and retrieve these with getProjectStats.
@@ -167,6 +243,7 @@
   - Rebuild and deploy docker image
   - Review Githika's new spreadsheet and give her a new set of tasks
   - Move the CEO data directory to ~/.ceodb
+  - Add logging with timestamps
 * TODOs by File (Old)
 ** Server.java
 *** TODO Uncomment all Collect and OfUsers routes once they are completed
