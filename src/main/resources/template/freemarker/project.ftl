@@ -162,49 +162,10 @@
                     <h2>Project Imagery</h2>
                     <div id="project-imagery">
                         <div class="form-group mb-1">
-                            <label class="small mb-0" for="base-map-source">Basemap Source</label>
+                            <label class="small mb-0" for="base-map-source">Default Basemap Source</label>
                             <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1"
                                     ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
                                 <option ng-repeat="imagery in project.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-1">
-                            <label class="small mb-0" for="imagery-year"
-                                   style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
-                            <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
-                                    ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
-                                    style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-                                <option value="2017">2017</option>
-                                <option value="2016">2016</option>
-                                <option value="2015">2015</option>
-                                <option value="2014">2014</option>
-                                <option value="2013">2013</option>
-                                <option value="2012">2012</option>
-                                <option value="2011">2011</option>
-                                <option value="2010">2010</option>
-                                <option value="2009">2009</option>
-                                <option value="2008">2008</option>
-                                <option value="2007">2007</option>
-                                <option value="2006">2006</option>
-                                <option value="2005">2005</option>
-                                <option value="2004">2004</option>
-                                <option value="2003">2003</option>
-                                <option value="2002">2002</option>
-                                <option value="2001">2001</option>
-                                <option value="2000">2000</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-1">
-                            <label class="small mb-0" for="stacking-profile"
-                                   style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
-                            <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1"
-                                    ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
-                                    style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-                                <option value="Accuracy_Profile">Accuracy Profile</option>
-                                <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
-                                <option value="Global_Currency_Profile">Global Currency Profile</option>
-                                <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
-                                <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
                             </select>
                         </div>
                     </div>
