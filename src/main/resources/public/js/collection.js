@@ -9,14 +9,18 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.plotsAssigned = 0;
     this.plotsFlagged = 0;
     this.imageryList = [];
+    this.currentImagery = {attribution: ""};
+    this.imageryYear = "";
+    this.stackingProfile = "";
     this.showSideBar = false;
     this.mapclass = "fullmap";
     this.quitclass = "quit-full";
     this.statClass = "projNoStats";
     this.arrowstate = "arrow-down";
     this.mapClickEvent;
+
     var mycollection = this;
-    gmycollection = mycollection;
+
     this.getProjectById = function (projectId, userId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
@@ -24,7 +28,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.root + "/home";
                 } else {
-                    currentp = response.data;
                     this.currentProject = response.data;
                     this.initialize(this.root, userId, this.userName, projectId);
                 }
@@ -44,28 +47,27 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 alert("Error retrieving the imagery list. See console for details.");
             });
     };
-    this.toggleStats = function(){
+
+    this.toggleStats = function () {
         if(this.statClass == "projNoStats"){
             this.statClass = "projStats";
             this.arrowstate = "arrow-up";
-         }
-         else{
+        } else {
             this.statClass = "projNoStats";
             this.arrowstate = "arrow-down";
-         }
+        }
     };
+
     this.setBaseMapSource = function () {
         map_utils.set_current_imagery(this.currentProject.baseMapSource);
-        var attribution = this.imageryList.find(
+        this.currentImagery = this.imageryList.find(
             function (imagery) {
                 return imagery.title == this.currentProject.baseMapSource;
             },
             this
-        ).attribution;
+        );
         if (this.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
-            this.currentProject.attribution = attribution + " | " + this.currentProject.imageryYear + " (" + this.currentProject.stackingProfile + ")";
-        } else {
-            this.currentProject.attribution = attribution;
+            this.currentImagery.attribution += " | " + this.imageryYear + " (" + this.stackingProfile + ")";
         }
     };
 
@@ -88,7 +90,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                                               center_coords: [0.0, 0.0],
                                               zoom_level: 1},
                                              this.imageryList);
-            map_utils.set_dg_wms_layer_params(this.currentProject.imageryYear, this.currentProject.stackingProfile);
+            map_utils.set_dg_wms_layer_params(this.imageryYear, this.stackingProfile);
             this.setBaseMapSource();
             map_utils.draw_polygon(this.currentProject.boundary);
             this.loadProjectPlots();
@@ -128,6 +130,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 alert("Error retrieving plot data. See console for details.");
             });
     };
+
     this.loadPlotById = function (id) {
         if (this.currentPlot == null) {
             this.getPlotDatabyid(this.projectId, id);
@@ -143,6 +146,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                         "_geo-dash");
         }
     };
+
     this.loadRandomPlot = function () {
         if (this.currentPlot == null) {
             this.getPlotData(this.projectId);
@@ -160,14 +164,14 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     };
 
     this.nextPlot = function () {
-		$("#go-to-first-plot-button").addClass("d-none");
-		$("#plot-nav").removeClass("d-none");
+        document.getElementById("go-to-first-plot-button").addClass("d-none");
+        document.getElementById("plot-nav").removeClass("d-none");
         mycollection.showSideBar = true;
         mycollection.mapclass = "sidemap";
         mycollection.quitclass = "quit-side";
         map_utils.remove_plots_layer();
         map_utils.map_ref.updateSize();
-        window.setTimeout('map_utils.map_ref.updateSize()', 550);
+        window.setTimeout("map_utils.map_ref.updateSize()", 550);
         this.currentPlot = null;
         this.userSamples = {};
         utils.disable_element("flag-plot-button");
@@ -205,7 +209,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             alert("No sample points selected. Please click some first.");
         }
     };
-    this.assignedPercentage = function(){
+
+    this.assignedPercentage = function () {
         var p = 0;
         try{
             p = (100 * this.plotsAssigned / this.currentProject.numPlots);
@@ -215,8 +220,9 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             p = 0;
         }
         return parseFloat(p).toFixed(2);
-    }
-    this.flaggedPercentage = function(){
+    };
+
+    this.flaggedPercentage = function () {
         var p = 0;
         try{
             p = (100 * this.plotsFlagged / this.currentProject.numPlots);
@@ -226,9 +232,9 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             p = 0;
         }
         return parseFloat(p).toFixed(2);
-    }
-    this.completePercentage = function()
-    {
+    };
+
+    this.completePercentage = function () {
         var p = 0;
         try{
             p = (100 * (this.plotsAssigned + this.plotsFlagged) / this.currentProject.numPlots);
@@ -238,14 +244,15 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             p = 0;
         }
         return parseFloat(p).toFixed(2);
-    }
+    };
+
     this.saveValues = function () {
         $http.post(this.root + "/add-user-samples",
                    {projectId: this.projectId,
                     plotId: this.currentPlot.id,
                     userId: this.userName,
                     userSamples: this.userSamples})
-            .then(angular.bind(this, function successCallback(response) {
+            .then(angular.bind(this, function successCallback() {
                 alert("Your assignments have been saved to the database.");
                 map_utils.disable_selection();
                 this.plotsAssigned++;
@@ -254,14 +261,14 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 console.log(response);
                 alert("Error saving your assignments to the database. See console for details.");
             });
-            this.plotsAssigned++;
+        this.plotsAssigned++;
     };
 
     this.flagPlot = function () {
         $http.post(this.root + "/flag-plot",
                    {projectId: this.projectId,
                     plotId:    this.currentPlot.id})
-            .then(angular.bind(this, function successCallback(response) {
+            .then(angular.bind(this, function successCallback() {
                 alert("Plot " + this.currentPlot.id + " has been flagged.");
                 this.plotsFlagged++;
                 this.plotsAssigned++;
@@ -271,30 +278,30 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 alert("Error flagging plot as bad. See console for details.");
             });
     };
-    this.getProjectStats = function(){
-        $http.get(this.root + "/get-project-stats/" + this.projectId)
-                        .then(angular.bind(this, function successCallback(response) {
-                            mreturn = response;
-                            mycollection.plotsAssigned = response.data.analyzedPlots;
-                            mycollection.plotsFlagged = response.data.flaggedPlots;
-                        }), function errorCallback(response) {
-                             console.log(response);
-                             alert("Error getting project stats. See console for details.");
-                         });
-    }
 
-    this.loadProjectPlots = function(){
+    this.getProjectStats = function () {
+        $http.get(this.root + "/get-project-stats/" + this.projectId)
+            .then(angular.bind(this, function successCallback(response) {
+                mycollection.plotsAssigned = response.data.analyzedPlots;
+                mycollection.plotsFlagged = response.data.flaggedPlots;
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error getting project stats. See console for details.");
+            });
+    };
+
+    this.loadProjectPlots = function () {
         $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
-                .then(angular.bind(this, function successCallback(response) {
-                    map_utils.draw_project_points(response.data, "red_fill");
-                    mycollection.mapClickEvent = map_utils.map_ref.on("click", function(evt){
-                    var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function(feature) { return feature; });
+            .then(angular.bind(this, function successCallback(response) {
+                map_utils.draw_project_points(response.data, "red_fill");
+                mycollection.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
+                    var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
                     //Check if it is a cluster or a single
                     if (map_utils.isCluster(feature)) {
-                        var features = feature.get('features');
-                        clusterpoints = [];
+                        var features = feature.get("features");
+                        var clusterpoints = [];
                         for(var i = 0; i < features.length; i++) {
-                          clusterpoints.push(features[i].getGeometry().getCoordinates());
+                            clusterpoints.push(features[i].getGeometry().getCoordinates());
                         }
                         var linestring = new ol.geom.LineString(clusterpoints);
                         map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
@@ -306,18 +313,16 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                             mycollection.quitclass = "quit-side";
                             map_utils.remove_plots_layer();
                             map_utils.map_ref.unByKey(mycollection.mapClickEvent);
-                            mycollection.loadPlotById(feature.get("features")[0].get('id'));
+                            mycollection.loadPlotById(feature.get("features")[0].get("id"));
                             map_utils.map_ref.updateSize();
-                            window.setTimeout('map_utils.map_ref.updateSize()', 550);
+                            window.setTimeout("map_utils.map_ref.updateSize()", 550);
                         }
                     }
-                    });
-                }), function errorCallback(response) {
-                    console.log(response);
-                    alert("Error flagging plot as bad. See console for details.");
                 });
-    }
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error flagging plot as bad. See console for details.");
+            });
+    };
+
 }]);
-var currentp;
-var gmycollection;
-var mreturn;
