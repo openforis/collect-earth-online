@@ -306,14 +306,20 @@ mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
     return mapConfig;
 };
 
+// [Side Effects] Zooms the map view to contain the passed in extent.
+mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
+    mapConfig.view.fit(extent,
+                       mapConfig.map.getSize(),
+                       {maxZoom: maxZoom || 19});
+    return mapConfig;
+};
+
 // [Side Effects] Zooms the map view to contain the layer with
 // title == layerTitle.
 mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     if (layer) {
-        mapConfig.view.fit(layer.getSource().getExtent(),
-                           mapConfig.map.getSize(),
-                           {maxZoom: maxZoom || 19});
+        mercator.zoomMapToExtent(mapConfig, layer.getSource().getExtent(), maxZoom);
     }
     return mapConfig;
 };
@@ -330,12 +336,23 @@ mercator.getIconStyle = function (imageSrc) {
 };
 
 // [Pure] Returns a style object that displays a circle with the
-// specified radius, fillColor, borderColor, and borderWidth.
-mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth) {
-    return new ol.style.Style({image: new ol.style.Circle({radius: radius,
-                                                           fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
-                                                           stroke: new ol.style.Stroke({color: borderColor,
-                                                                                        width: borderWidth})})});
+// specified radius, fillColor, borderColor, and borderWidth. If text
+// and textFillColor are also passed, they will be used to overlay
+// text on the circle.
+mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth, text, textFillColor) {
+    if (text == null || textFillColor == null) {
+        return new ol.style.Style({image: new ol.style.Circle({radius: radius,
+                                                               fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
+                                                               stroke: new ol.style.Stroke({color: borderColor,
+                                                                                            width: borderWidth})})});
+    } else {
+        return new ol.style.Style({image: new ol.style.Circle({radius: radius,
+                                                               fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
+                                                               stroke: new ol.style.Stroke({color: borderColor,
+                                                                                            width: borderWidth})}),
+                                   text: new ol.style.Text({text: text.toString(),
+                                                            fill: new ol.style.Fill({color: textFillColor})})});
+    }
 };
 
 // [Pure] Returns a style object that displays a shape with the
@@ -732,19 +749,38 @@ mercator.projectsToVectorSource = function (projects) {
 // mapConfig's map object containing icons at each of the project's
 // AOI centers. Also adds a dynamic overlay popup to the map which
 // shows a brief project description whenever a project icon is
-// clicked.
-mercator.addProjectMarkers = function (mapConfig, projects, documentRoot) {
-    mercator.addVectorLayer(mapConfig,
-                            "projectMarkers",
-                            mercator.projectsToVectorSource(projects),
-                            ceoMapStyles.ceoIcon);
-    mercator.addOverlay(mapConfig, "projectPopup");
-    var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    mapConfig.map.on("click",
-                     function (event) {
-                         mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                                             mercator.showProjectPopup.bind(null, overlay, documentRoot));
-                     });
+// clicked. If clusterDistance is not null, the new vector source will
+// cluster the projects. Finally, zooms the map view to the new
+// layer's extent.
+mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot, clusterDistance) {
+    var projectSource = mercator.projectsToVectorSource(projects);
+
+    if (clusterDistance == null) {
+        mercator.addVectorLayer(mapConfig,
+                                "projectMarkers",
+                                projectSource,
+                                ceoMapStyles.ceoIcon);
+    } else {
+        var clusterSource = new ol.source.Cluster({source:   projectSource,
+                                                   distance: clusterDistance});
+        mercator.addVectorLayer(mapConfig,
+                                "projectMarkers",
+                                clusterSource,
+                                function (feature) {
+                                    var numProjects = feature.get("features").length;
+                                    return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numProjects, "#ffffff");
+                                });
+    }
+
+    // RESUME HERE
+    // mercator.addOverlay(mapConfig, "projectPopup");
+    // var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
+    // mapConfig.map.on("click",
+    //                  function (event) {
+    //                      mapConfig.map.forEachFeatureAtPixel(event.pixel,
+    //                                                          mercator.showProjectPopup.bind(null, overlay, documentRoot));
+    //                  });
+    mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
     return mapConfig;
 };
 
@@ -791,7 +827,7 @@ mercator.addProjectMarkers = function (mapConfig, projects, documentRoot) {
 // FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change references to pID in home.js to projectId
 // FIXME: change calls from draw_project_markers to:
-//        mercator.addProjectMarkers(mapConfig, projects, documentRoot);
+//        mercator.addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance);
 //        mercator.zoomMapToLayer(mapConfig, "projectMarkers");
+// FIXME: change references to pID in home.js to projectId
