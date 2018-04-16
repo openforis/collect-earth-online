@@ -579,9 +579,9 @@ public class CollectProjects {
 
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             JsonObject newProject = partsToJsonObject(req,
-                                                      new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min", "lat-max",
-                                                                   "base-map-source", "imagery-year", "stacking-profile", "plot-distribution",
-                                                                   "num-plots", "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
+                                                      new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
+                                                                   "lat-max", "base-map-source", "plot-distribution", "num-plots",
+                                                                   "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
                                                                    "samples-per-plot", "sample-resolution", "sample-values"});
 
             // Manually add the name and description fields since they may be invalid JSON
