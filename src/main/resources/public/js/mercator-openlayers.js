@@ -387,6 +387,7 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     redSquare:    mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
                     yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
                     greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
+                    cluster:      mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
                     polygon:      mercator.getPolygonStyle(null, "#8b2323", 3)};
 
 /*****************************************************************************
@@ -706,11 +707,54 @@ mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
     return mapConfig.map.getOverlayById(overlayTitle);
 };
 
+// [Pure] Returns true if the feature is a cluster, false otherwise.
+mercator.isCluster = function (feature) {
+    return feature && feature.get("features") && feature.get("features").length > 1;
+};
+
 // [Side Effects] Updates the overlay element's innerHTML with fields
 // containing the feature's name, description, and numPlots fields as
 // well as a link to its data collection page and then displays the
 // overlay on the map at the feature's coordinates.
 mercator.showProjectPopup = function (overlay, documentRoot, feature) {
+    if (mercator.isCluster(feature)) {
+        var subFeatures = feature.get("features");
+        var htmlTableHeader = "<div class=\"cTitle\"><h1>Cluster info</h1></div><div class=\"cContent\">"
+                            + "<table class=\"table table-sm\"><tbody>";
+        var htmlTableRows = subFeatures.map(
+            function (subFeature) {
+                var projectName = subFeature.get("name");
+                var projectId = subFeature.get("projectId");
+                return "<tr class=\"d-flex\"><td class=\"small col-6 px-0 my-auto\" title=\""
+                    + projectName
+                    + "\" alt=\""
+                    + projectName
+                    + "\">"
+                    + projectName
+                    + "</td><td class=\"small col-6 pr-0\"><a href=\""
+                    + documentRoot
+                    + "/collection/"
+                    + projectId
+                    + "\" class=\"btn btn-sm btn-block btn-outline-lightgreen\">Get Started</a></td></tr>";
+            }
+        ).join("\n");
+        var htmlTableFooter = "</tbody></table>";
+        var clusterPoints = subFeatures.map(
+            function (subFeature) {
+                return subFeature.getGeometry().getCoordinates();
+            }
+        );
+        var clusterExtent = (new ol.geom.LineString(clusterPoints)).getExtent();
+        // FIXME: mapConfig is undefined
+        var htmlZoomLink = "<p><a onclick=\"mercator.zoomMapToExtent(mapConfig, " + clusterExtent + ")\" "
+            + "class=\"btn btn-block btn-sm btn-outline-lightgreen\" style=\"cursor:pointer; min-width:350px;\">"
+            + "Zoom to cluster</a></p></div>";
+        overlay.getElement().innerHTML = htmlTableHeader + htmlTableRows + htmlTableFooter + htmlZoomLink;
+        overlay.setPosition(subFeatures[0].getGeometry().getCoordinates());
+    } else {
+        // RESUME HERE
+    }
+
     var description = feature.get("description") == "" ? "N/A" : feature.get("description");
     var html = "<div class=\"cTitle\"><h1>" + feature.get("name") + "</h1></div>";
     html += "<div class=\"cContent\"><p><span class=\"pField\">Description: </span>" + description + "</p>";
@@ -772,14 +816,14 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
                                 });
     }
 
-    // RESUME HERE
-    // mercator.addOverlay(mapConfig, "projectPopup");
-    // var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    // mapConfig.map.on("click",
-    //                  function (event) {
-    //                      mapConfig.map.forEachFeatureAtPixel(event.pixel,
-    //                                                          mercator.showProjectPopup.bind(null, overlay, documentRoot));
-    //                  });
+    mercator.addOverlay(mapConfig, "projectPopup");
+    var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
+    mapConfig.map.on("click",
+                     function (event) {
+                         mapConfig.map.forEachFeatureAtPixel(event.pixel,
+                                                             mercator.showProjectPopup.bind(null, overlay, documentRoot));
+                     });
+
     mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
     return mapConfig;
 };
@@ -813,6 +857,7 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
 // FIXME: change calls from enable_selection to mercator.enableSelection
 // FIXME: change calls from disable_selection to mercator.disableSelection
 // FIXME: change calls from remove_sample_layer to mercator.removeLayerByTitle(mapConfig, "currentSamples");
+// FIXME: change calls from remove_plots_layer to mercator.removeLayerByTitle(mapConfig, "currentPlots");
 // FIXME: change calls from draw_points to:
 //        mercator.disableSelection(mapConfig);
 //        mercator.removeLayerByTitle(mapConfig, "currentSamples");
