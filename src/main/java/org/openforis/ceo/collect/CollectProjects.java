@@ -628,8 +628,6 @@ public class CollectProjects {
         if (! ceoApplicationOptionsEl.isJsonNull()) {
             JsonObject ceoApplicationOptions = ceoApplicationOptionsEl.getAsJsonObject();
             p.add("baseMapSource", ceoApplicationOptions.get("baseMapSource"));
-            p.add("imageryYear", ceoApplicationOptions.get("imageryYear"));
-            p.add("stackingProfile", ceoApplicationOptions.get("stackingProfile"));
             
             JsonObject samplingPointDataConfiguration = ceoApplicationOptions.get("samplingPointDataConfiguration").getAsJsonObject();
             
@@ -736,8 +734,6 @@ public class CollectProjects {
         
         JsonObject ceoSettings = new JsonObject();
         ceoSettings.add("baseMapSource", ceoProject.get("baseMapSource"));
-        ceoSettings.add("imageryYear", ceoProject.get("imageryYear"));
-        ceoSettings.add("stackingProfile", ceoProject.get("stackingProfile"));
         data.add("ceoSettings", ceoSettings);
         
         JsonObject samplingPointGenerationData = new JsonObject();
