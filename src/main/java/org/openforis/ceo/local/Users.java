@@ -1,6 +1,5 @@
 package org.openforis.ceo.local;
 
-import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
@@ -252,7 +251,14 @@ public class Users {
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
 
         if (institutionId == null || institutionId.isEmpty()) {
-            return filterJsonArray(users, user -> !user.get("email").getAsString().equals("admin@openforis.org")).toString();
+            return toStream(users)
+                .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
+                .map(user -> {
+                        user.remove("password");
+                        return user;
+                    })
+                .collect(intoJsonArray)
+                .toString();
         } else {
             JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
             Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
@@ -265,6 +271,10 @@ public class Users {
                 return toStream(users)
                     .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
                     .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
+                    .map(user -> {
+                            user.remove("password");
+                            return user;
+                        })
                     .map(user -> {
                             user.addProperty("institutionRole",
                                              admins.contains(user.get("id")) ? "admin"

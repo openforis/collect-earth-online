@@ -1,32 +1,35 @@
 angular.module("collection", []).controller("CollectionController", ["$http", function CollectionController($http) {
     this.root = "";
-    this.userId = "";
     this.userName = "";
     this.projectId = "";
     this.currentProject = null;
+    this.stats = null;
+    this.plotList = null;
+    this.imageryList = null;
+    this.currentImagery = {attribution: ""};
+    this.imageryYear = 2017;
+    this.stackingProfile = "Accuracy_Profile";
+    this.mapConfig = null;
+
+    // FIXME: make sure these are used
     this.currentPlot = null;
     this.userSamples = {};
-    this.plotsAssigned = 0;
-    this.plotsFlagged = 0;
-    this.imageryList = [];
     this.showSideBar = false;
     this.mapclass = "fullmap";
     this.quitclass = "quit-full";
     this.statClass = "projNoStats";
     this.arrowstate = "arrow-down";
     this.mapClickEvent;
-    var mycollection = this;
-    gmycollection = mycollection;
-    this.getProjectById = function (projectId, userId) {
+
+    this.getProjectById = function (projectId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
-                if (response.data == "") {
+                if (response.data == "" || response.data.id == 0) {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.root + "/home";
                 } else {
-                    currentp = response.data;
                     this.currentProject = response.data;
-                    this.initialize(this.root, userId, this.userName, projectId);
+                    this.initialize(this.root, this.userName, projectId);
                 }
             }), function errorCallback(response) {
                 console.log(response);
@@ -34,66 +37,135 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             });
     };
 
+    this.getProjectStats = function () {
+        $http.get(this.root + "/get-project-stats/" + this.projectId)
+            .then(angular.bind(this, function successCallback(response) {
+                this.stats = response.data;
+                this.initialize(this.root, this.userName, this.projectId);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error getting project stats. See console for details.");
+            });
+    };
+
+    // FIXME: replace map_utils with mercator, set this.plotList, and recurse back with this.initialize()
+    this.getProjectPlots = function () {
+        $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
+            .then(angular.bind(this, function successCallback(response) {
+                this.plotList = response.data;
+                mercator.drawProjectPoints(this.plotList);
+                map_utils.draw_project_points(response.data, "red_fill");
+                this.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
+                    var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
+                    //Check if it is a cluster or a single
+                    if (map_utils.isCluster(feature)) {
+                        var features = feature.get("features");
+                        var clusterpoints = [];
+                        for(var i = 0; i < features.length; i++) {
+                            clusterpoints.push(features[i].getGeometry().getCoordinates());
+                        }
+                        var linestring = new ol.geom.LineString(clusterpoints);
+                        map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
+                    } else {
+                        if(feature.get("features") != null)
+                        {
+                            this.showSideBar = true;
+                            this.mapclass = "sidemap";
+                            this.quitclass = "quit-side";
+                            map_utils.remove_plots_layer();
+                            map_utils.map_ref.unByKey(this.mapClickEvent);
+                            this.loadPlotById(feature.get("features")[0].get("id"));
+                            map_utils.map_ref.updateSize();
+                            window.setTimeout("map_utils.map_ref.updateSize()", 550);
+                        }
+                    }
+                });
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error flagging plot as bad. See console for details.");
+            });
+    };
+
     this.getImageryList = function (institutionId) {
         $http.get(this.root + "/get-all-imagery?institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.imageryList = response.data;
-                this.initialize(this.root, this.userId, this.userName, this.projectId);
+                this.initialize(this.root, this.userName, this.projectId);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
             });
     };
-    this.toggleStats = function(){
-        if(this.statClass == "projNoStats"){
-            this.statClass = "projStats";
-            this.arrowstate = "arrow-up";
-         }
-         else{
-            this.statClass = "projNoStats";
-            this.arrowstate = "arrow-down";
-         }
-    };
-    this.setBaseMapSource = function () {
-        map_utils.set_current_imagery(this.currentProject.baseMapSource);
-        var attribution = this.imageryList.find(
+
+    this.getImageryByTitle = function (imageryTitle) {
+        return this.imageryList.find(
             function (imagery) {
-                return imagery.title == this.currentProject.baseMapSource;
-            },
-            this
-        ).attribution;
+                return imagery.title == imageryTitle;
+            }
+        );
+    };
+
+    this.updateDGWMSLayer = function () {
+        mercator.updateLayerWmsParams(this.mapConfig,
+                                      "DigitalGlobeWMSImagery",
+                                      {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.imageryYear + "-01-01')"
+                                       + "AND(acquisition_date<='" + this.imageryYear + "-12-31')",
+                                       FEATUREPROFILE: this.stackingProfile});
+    };
+
+    this.setBaseMapSource = function () {
+        mercator.setVisibleLayer(this.mapConfig, this.currentProject.baseMapSource);
+        this.currentImagery = this.getImageryByTitle(this.currentProject.baseMapSource);
         if (this.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
-            this.currentProject.attribution = attribution + " | " + this.currentProject.imageryYear + " (" + this.currentProject.stackingProfile + ")";
-        } else {
-            this.currentProject.attribution = attribution;
+            this.currentImagery.attribution += " | " + this.imageryYear + " (" + this.stackingProfile + ")";
+            this.updateDGWMSLayer();
         }
     };
 
-    this.initialize = function (documentRoot, userId, userName, projectId) {
-        // Make the current documentRoot, userId, userName, and projectId globally available
+    this.showProjectMap = function () {
+        // Initialize the base map
+        this.mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.imageryList);
+        this.setBaseMapSource();
+
+        // Show the project's boundary
+        mercator.addVectorLayer(this.mapConfig,
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.currentProject.boundary, true)),
+                                ceoMapStyles.polygon);
+        mercator.zoomMapToLayer(this.mapConfig, "currentAOI");
+    };
+
+    this.initialize = function (documentRoot, userName, projectId) {
+        // Make the documentRoot, userName, and projectId globally available
         this.root = documentRoot;
-        this.userId = userId;
         this.userName = userName;
         this.projectId = projectId;
 
         if (this.currentProject == null) {
             // Load the project details
-            this.getProjectById(projectId, userId);
-        } else if (angular.equals(this.imageryList, [])) {
+            this.getProjectById(projectId);
+        } else if (this.stats == null) {
+            // Load the project stats
+            this.getProjectStats();
+        } else if (this.plotList == null) {
+            // Load the project plots
+            this.getProjectPlots();
+        } else if (this.imageryList == null) {
             // Load the imageryList
             this.getImageryList(this.currentProject.institution);
-        } else {
-            // Initialize the base map and show the selected project's boundary
-            map_utils.digital_globe_base_map({div_name: "image-analysis-pane",
-                                              center_coords: [0.0, 0.0],
-                                              zoom_level: 1},
-                                             this.imageryList);
-            map_utils.set_dg_wms_layer_params(this.currentProject.imageryYear, this.currentProject.stackingProfile);
-            this.setBaseMapSource();
-            map_utils.draw_polygon(this.currentProject.boundary);
-            this.loadProjectPlots();
-            this.getProjectStats();
+        } else if (this.imageryList.length > 0) {
+            // Draw a map with the project AOI
+            this.showProjectMap();
+        }
+    };
 
+    this.toggleStats = function () {
+        if(this.statClass == "projNoStats"){
+            this.statClass = "projStats";
+            this.arrowstate = "arrow-up";
+        } else {
+            this.statClass = "projNoStats";
+            this.arrowstate = "arrow-down";
         }
     };
 
@@ -128,6 +200,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 alert("Error retrieving plot data. See console for details.");
             });
     };
+
+    // FIXME: replace map_utils with mercator
     this.loadPlotById = function (id) {
         if (this.currentPlot == null) {
             this.getPlotDatabyid(this.projectId, id);
@@ -143,6 +217,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                         "_geo-dash");
         }
     };
+
+    // FIXME: replace map_utils with mercator
     this.loadRandomPlot = function () {
         if (this.currentPlot == null) {
             this.getPlotData(this.projectId);
@@ -159,15 +235,16 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
+    // FIXME: replace map_utils with mercator
     this.nextPlot = function () {
-		$("#go-to-first-plot-button").addClass("d-none");
-		$("#plot-nav").removeClass("d-none");
-        mycollection.showSideBar = true;
-        mycollection.mapclass = "sidemap";
-        mycollection.quitclass = "quit-side";
+        document.getElementById("go-to-first-plot-button").addClass("d-none");
+        document.getElementById("plot-nav").removeClass("d-none");
+        this.showSideBar = true;
+        this.mapclass = "sidemap";
+        this.quitclass = "quit-side";
         map_utils.remove_plots_layer();
         map_utils.map_ref.updateSize();
-        window.setTimeout('map_utils.map_ref.updateSize()', 550);
+        window.setTimeout("map_utils.map_ref.updateSize()", 550);
         this.currentPlot = null;
         this.userSamples = {};
         utils.disable_element("flag-plot-button");
@@ -175,6 +252,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         this.loadRandomPlot();
     };
 
+    // FIXME: replace map_utils with mercator
     this.setCurrentValue = function (sampleValueGroup, sampleValue) {
         var selectedFeatures = map_utils.get_selected_samples();
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
@@ -205,119 +283,87 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             alert("No sample points selected. Please click some first.");
         }
     };
-    this.assignedPercentage = function(){
+
+    // FIXME: these values are incorrect
+    this.assignedPercentage = function () {
         var p = 0;
         try{
-            p = (100 * this.plotsAssigned / this.currentProject.numPlots);
+            p = (100 * this.stats.analyzedPlots / this.currentProject.numPlots);
         }
         catch(e)
         {
             p = 0;
         }
         return parseFloat(p).toFixed(2);
-    }
-    this.flaggedPercentage = function(){
+    };
+
+    // FIXME: these values are incorrect
+    this.flaggedPercentage = function () {
         var p = 0;
         try{
-            p = (100 * this.plotsFlagged / this.currentProject.numPlots);
+            p = (100 * this.stats.flaggedPlots / this.currentProject.numPlots);
         }
         catch(e)
         {
             p = 0;
         }
         return parseFloat(p).toFixed(2);
-    }
-    this.completePercentage = function()
-    {
+    };
+
+    // FIXME: these values are incorrect
+    this.completePercentage = function () {
         var p = 0;
         try{
-            p = (100 * (this.plotsAssigned + this.plotsFlagged) / this.currentProject.numPlots);
+            p = (100 * (this.stats.analyzedPlots + this.stats.flaggedPlots) / this.currentProject.numPlots);
         }
         catch(e)
         {
             p = 0;
         }
         return parseFloat(p).toFixed(2);
-    }
+    };
+
+    // FIXME: replace map_utils with mercator
     this.saveValues = function () {
         $http.post(this.root + "/add-user-samples",
                    {projectId: this.projectId,
                     plotId: this.currentPlot.id,
                     userId: this.userName,
                     userSamples: this.userSamples})
-            .then(angular.bind(this, function successCallback(response) {
+            .then(angular.bind(this, function successCallback() {
                 alert("Your assignments have been saved to the database.");
                 map_utils.disable_selection();
-                this.plotsAssigned++;
+                this.stats.analyzedPlots++;
                 this.nextPlot();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error saving your assignments to the database. See console for details.");
             });
-            this.plotsAssigned++;
+        this.stats.analyzedPlots++;
     };
 
     this.flagPlot = function () {
         $http.post(this.root + "/flag-plot",
                    {projectId: this.projectId,
                     plotId:    this.currentPlot.id})
-            .then(angular.bind(this, function successCallback(response) {
+            .then(angular.bind(this, function successCallback() {
                 alert("Plot " + this.currentPlot.id + " has been flagged.");
-                this.plotsFlagged++;
-                this.plotsAssigned++;
+                this.stats.flaggedPlots++;
+                this.stats.analyzedPlots++;
                 this.nextPlot();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error flagging plot as bad. See console for details.");
             });
     };
-    this.getProjectStats = function(){
-        $http.get(this.root + "/get-project-stats/" + this.projectId)
-                        .then(angular.bind(this, function successCallback(response) {
-                            mreturn = response;
-                            mycollection.plotsAssigned = response.data.analyzedPlots;
-                            mycollection.plotsFlagged = response.data.flaggedPlots;
-                        }), function errorCallback(response) {
-                             console.log(response);
-                             alert("Error getting project stats. See console for details.");
-                         });
-    }
 
-    this.loadProjectPlots = function(){
-        $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
-                .then(angular.bind(this, function successCallback(response) {
-                    map_utils.draw_project_points(response.data, "red_fill");
-                    mycollection.mapClickEvent = map_utils.map_ref.on("click", function(evt){
-                    var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function(feature) { return feature; });
-                    //Check if it is a cluster or a single
-                    if (map_utils.isCluster(feature)) {
-                        var features = feature.get('features');
-                        clusterpoints = [];
-                        for(var i = 0; i < features.length; i++) {
-                          clusterpoints.push(features[i].getGeometry().getCoordinates());
-                        }
-                        var linestring = new ol.geom.LineString(clusterpoints);
-                        map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
-                    } else {
-                        if(feature.get("features") != null)
-                        {
-                            mycollection.showSideBar = true;
-                            mycollection.mapclass = "sidemap";
-                            mycollection.quitclass = "quit-side";
-                            map_utils.remove_plots_layer();
-                            map_utils.map_ref.unByKey(mycollection.mapClickEvent);
-                            mycollection.loadPlotById(feature.get("features")[0].get('id'));
-                            map_utils.map_ref.updateSize();
-                            window.setTimeout('map_utils.map_ref.updateSize()', 550);
-                        }
-                    }
-                    });
-                }), function errorCallback(response) {
-                    console.log(response);
-                    alert("Error flagging plot as bad. See console for details.");
-                });
-    }
-}]);
-var currentp;
-var gmycollection;
-var mreturn;
+}]).directive("convertToNumber",
+              function () {
+                  return {
+                      require: "ngModel",
+                      link: function (scope, element, attrs, ngModel) {
+                          ngModel.$parsers.push(function (val) { return parseInt(val, 10); });
+                          ngModel.$formatters.push(function (val) { return "" + val; });
+                      }
+                  };
+              });

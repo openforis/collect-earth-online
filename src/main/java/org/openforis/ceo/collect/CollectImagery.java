@@ -67,6 +67,7 @@ public class CollectImagery {
 
         // Create a new imagery object
         JsonObject imagery = new JsonObject();
+        imagery.addProperty("visibility", "PRIVATE");
         imagery.addProperty("title", imageryTitle);
         imagery.addProperty("attribution", imageryAttribution);
         imagery.add("extent", null);

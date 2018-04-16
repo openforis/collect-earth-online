@@ -120,18 +120,18 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                    {transformRequest: angular.identity,
                     headers: {"Content-Type": undefined}})
             .then(angular.bind(this, function successCallback(response) {
-            	if (this.details.id == 0) {
+                if (this.details.id == 0) {
                     window.location = this.root + "/institution/" + response.data.id;
-            	} else {
-	                this.details.id = response.data.id;
-	                this.isAdmin = true;
-	                if (response.data.logo != "") {
-	                    this.details.logo = response.data.logo;
-	                }
-	                this.getUserList(this.details.id);
-	                this.getUserListComplete();
-	                this.getImageryList(this.details.id);
-            	}
+                } else {
+                    this.details.id = response.data.id;
+                    this.isAdmin = true;
+                    if (response.data.logo != "") {
+                        this.details.logo = response.data.logo;
+                    }
+                    this.getUserList(this.details.id);
+                    this.getUserListComplete();
+                    this.getImageryList(this.details.id);
+                }
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error updating institution details. See console for details.");
@@ -150,7 +150,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     this.deleteInstitution = function () {
         if (confirm("Do you REALLY want to delete this institution?!")) {
             $http.post(this.root + "/archive-institution/" + this.details.id)
-                .then(angular.bind(this, function successCallback(response) {
+                .then(angular.bind(this, function successCallback() {
                     alert("Institution " + this.details.name + " has been deleted.");
                     window.location = this.root + "/home";
                 }), function errorCallback(response) {
@@ -173,7 +173,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     this.updateUserInstitutionRole = function (userId, email, role) {
         $http.post(this.root + "/update-user-institution-role",
                    {userId: userId, institutionId: this.details.id, role: role})
-            .then(angular.bind(this, function successCallback(response) {
+            .then(angular.bind(this, function successCallback() {
                 alert("User " + email + " has been given role '" + role + "'.");
                 if (userId == this.userId && role != "admin") {
                     this.pageMode = "view";
@@ -222,7 +222,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
     this.requestMembership = function () {
         $http.post(this.root + "/request-institution-membership",
                    {institutionId: this.details.id, userId: parseInt(this.userId)})
-            .then(angular.bind(this, function successCallback(response) {
+            .then(angular.bind(this, function successCallback() {
                 alert("Membership requested for user " + this.userId + ".");
                 utils.disable_element("request-membership-button");
             }), function errorCallback(response) {
@@ -235,7 +235,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
         if (confirm("Do you REALLY want to delete this imagery?!")) {
             $http.post(this.root + "/delete-institution-imagery",
                        {institutionId: this.details.id, imageryId: imageryId})
-                .then(angular.bind(this, function successCallback(response) {
+                .then(angular.bind(this, function successCallback() {
                     alert("Imagery " + imageryId + " has been deleted from institution " + this.details.name + ".");
                     this.getImageryList(this.details.id);
                 }), function errorCallback(response) {
@@ -253,7 +253,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
                     geoserverURL: this.newGeoServerURL,
                     layerName: this.newLayerName,
                     geoserverParams: this.newGeoServerParams})
-            .then(angular.bind(this, function successCallback(response) {
+            .then(angular.bind(this, function successCallback() {
                 alert("Imagery " + this.newImageryTitle + " has been added to institution " + this.details.name + ".");
                 this.newImageryTitle = "";
                 this.newImageryAttribution = "";
@@ -275,8 +275,9 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             this.imageryMode = "view";
         }
     };
+
     this.cancelAddCustomImagery = function () {
-            this.imageryMode = "view";
+        this.imageryMode = "view";
     };
 
 }]);

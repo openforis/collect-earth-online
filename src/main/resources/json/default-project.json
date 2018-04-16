@@ -6,8 +6,6 @@
  privacyLevel: "public",
  boundary: null,
  baseMapSource: null,
- imageryYear: null,
- stackingProfile: null,
  plotDistribution: "random",
  numPlots: null,
  plotSpacing: null,
@@ -17,5 +15,4 @@
  samplesPerPlot: null,
  sampleResolution: null,
  sampleValues: [],
- attribution: null,
  archived: false}

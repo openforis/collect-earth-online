@@ -144,14 +144,6 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         mercator.setVisibleLayer(this.mapConfig, this.details.baseMapSource);
     };
 
-    this.updateDGWMSLayer = function () {
-        mercator.updateLayerWmsParams(this.mapConfig,
-                                      "DigitalGlobeWMSImagery",
-                                      {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
-                                       + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
-                                       FEATUREPROFILE: this.details.stackingProfile});
-    };
-
     this.setPlotDistribution = function (plotDistribution) {
         this.details.plotDistribution = plotDistribution;
         if (plotDistribution == "random") {
@@ -289,13 +281,6 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         // Initialize the basemap
         this.mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.imageryList);
         mercator.setVisibleLayer(this.mapConfig, this.details.baseMapSource);
-        if (this.baseMapSource == "DigitalGlobeWMSImagery") {
-            mercator.updateLayerWmsParams(this.mapConfig,
-                                          "DigitalGlobeWMSImagery",
-                                          {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
-                                           + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
-                                           FEATUREPROFILE: this.details.stackingProfile});
-        }
 
         if (this.details.id == 0) {
             // Enable dragbox interaction if we are creating a new project
@@ -334,7 +319,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         this.institution = institutionId;
 
         if (this.details == null) {
-            // Load the current project details
+            // Load the project details
             this.getProjectById(projectId);
         } else if (this.details.id != 0 && this.stats == null) {
             // Load the project stats
@@ -358,10 +343,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             }
 
             if (this.imageryList.length > 0) {
-                // Set sensible defaults for imagery-related variables
+                // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
                 this.details.baseMapSource = this.details.baseMapSource || this.imageryList[0].title;
-                this.details.imageryYear = this.details.imageryYear || 2017;
-                this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
 
                 // Draw a map with the project AOI and a sampling of its plots
                 this.showProjectMap(projectId);
@@ -369,16 +352,4 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
-}]).directive("convertToNumber", function () {
-    return {
-        require: "ngModel",
-        link: function (scope, element, attrs, ngModel) {
-            ngModel.$parsers.push(function (val) {
-                return parseInt(val, 10);
-            });
-            ngModel.$formatters.push(function (val) {
-                return "" + val;
-            });
-        }
-    };
-});
+}]);

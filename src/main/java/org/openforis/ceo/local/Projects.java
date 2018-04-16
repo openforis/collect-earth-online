@@ -586,17 +586,6 @@ public class Projects {
         return geoJsonPolygon;
     }
 
-    private static String getImageryAttribution(String baseMapSource, String imageryYear) {
-        Map<String, String> imageryAttribution = new HashMap<String, String>();
-        imageryAttribution.put("DigitalGlobeWMSImagery",            "DigitalGlobe BaseMap | " + imageryYear + " | © DigitalGlobe, Inc");
-        imageryAttribution.put("DigitalGlobeRecentImagery+Streets", "DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc");
-        imageryAttribution.put("DigitalGlobeRecentImagery",         "DigitalGlobe Maps API: Recent Imagery | June 2015 | © DigitalGlobe, Inc");
-        imageryAttribution.put("BingAerial",                        "Bing Maps API: Aerial | © Microsoft Corporation");
-        imageryAttribution.put("BingAerialWithLabels",              "Bing Maps API: Aerial with Labels | © Microsoft Corporation");
-        imageryAttribution.put("NASASERVIRChipset2002",             "June 2002 Imagery Data Courtesy of DigitalGlobe");
-        return imageryAttribution.get(baseMapSource);
-    }
-
     private static Double[] reprojectPoint(Double[] point, int fromEPSG, int toEPSG) {
         try {
             Point oldPoint = (new GeometryFactory(new PrecisionModel(), fromEPSG)).createPoint(new Coordinate(point[0], point[1]));
@@ -819,9 +808,9 @@ public class Projects {
 
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             JsonObject newProject = partsToJsonObject(req,
-                                                      new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min", "lat-max",
-                                                                   "base-map-source", "imagery-year", "stacking-profile", "plot-distribution",
-                                                                   "num-plots", "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
+                                                      new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
+                                                                   "lat-max", "base-map-source", "plot-distribution", "num-plots",
+                                                                   "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
                                                                    "samples-per-plot", "sample-resolution", "sample-values"});
 
             // Manually add the name and description fields since they may be invalid JSON
@@ -872,8 +861,6 @@ public class Projects {
             // Add some missing fields that don't come from the web UI
             newProject.addProperty("archived", false);
             newProject.addProperty("availability", "unpublished");
-            newProject.addProperty("attribution", getImageryAttribution(newProject.get("baseMapSource").getAsString(),
-                                                                        newProject.get("imageryYear").getAsString()));
 
             // Create the requested plot set and write it to plot-data-<newProjectId>.json
             JsonObject newProjectUpdated = createProjectPlots(newProject);
