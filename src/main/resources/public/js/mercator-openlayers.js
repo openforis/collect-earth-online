@@ -262,12 +262,12 @@ mercator.resetMap = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Side Effects] Hides all map layers in mapConfig except that with
-// title == layerTitle.
+// [Side Effects] Hides all raster layers in mapConfig except those
+// with title == layerTitle.
 mercator.setVisibleLayer = function (mapConfig, layerTitle) {
     mapConfig.layers.forEach(
         function (layer) {
-            if (layer.getVisible() == true) {
+            if (layer.getVisible() == true && layer instanceof ol.layer.Tile) {
                 layer.setVisible(false);
             }
             if (layer.get("title") == layerTitle) {
