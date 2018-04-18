@@ -11,15 +11,14 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.stackingProfile = "Accuracy_Profile";
     this.mapConfig = null;
     this.currentPlot = null;
+    this.userSamples = {};
 
     // FIXME: make sure these are used
     this.showSideBar = false;
     this.mapClass = "fullmap";
     this.quitClass = "quit-full";
-    this.userSamples = {};
     this.statClass = "projNoStats";
     this.arrowstate = "arrow-down";
-    this.mapClickEvent;
 
     this.getProjectById = function (projectId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
@@ -210,34 +209,42 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             });
     };
 
-    // FIXME: replace map_utils with mercator
     // FIXME: merge with loadPlotById()
     this.loadRandomPlot = function () {
         if (this.currentPlot == null) {
             this.getPlotData();
         } else {
             utils.enable_element("flag-plot-button");
-            map_utils.draw_points(this.currentPlot.samples); // to mercator
+
+            // FIXME: Move these calls into a function in mercator-openlayers.js
+            mercator.disableSelection(this.mapConfig);
+            mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.mapConfig,
+                                    "currentSamples",
+                                    mercator.samplesToVectorSource(this.currentPlot.samples),
+                                    ceoMapStyles.redPoint);
+            mercator.enableSelection(this.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.mapConfig, "currentSamples");
+
             window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
                                              + "&pid=" + this.projectId
-                                             + "&aoi=[" + map_utils.get_view_extent() // to mercator
+                                             + "&aoi=[" + mercator.getViewExtent(this.mapConfig)
                                              + "]&daterange=&bcenter=" + this.currentPlot.center
                                              + "&bradius=" + this.currentProject.plotSize / 2),
                         "_geo-dash");
         }
     };
 
-    // FIXME: replace map_utils with mercator
+    // RESUME HERE
     this.nextPlot = function () {
-        document.getElementById("go-to-first-plot-button").addClass("d-none");
-        document.getElementById("plot-nav").removeClass("d-none");
+        angular.element("#go-to-first-plot-button").addClass("d-none");
+        angular.element("#plot-nav").removeClass("d-none");
         this.showSideBar = true;
         this.mapClass = "sidemap";
         this.quitClass = "quit-side";
-        map_utils.remove_plots_layer();
-        map_utils.map_ref.updateSize();
-        window.setTimeout("map_utils.map_ref.updateSize()", 550);
+        mercator.removeLayerByTitle(this.mapConfig, "currentPlots");
+        mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
         this.currentPlot = null;
         this.userSamples = {};
         utils.disable_element("flag-plot-button");
