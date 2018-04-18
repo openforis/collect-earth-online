@@ -12,13 +12,11 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.mapConfig = null;
     this.currentPlot = null;
     this.userSamples = {};
-
-    // FIXME: make sure these are used
     this.showSideBar = false;
     this.mapClass = "fullmap";
     this.quitClass = "quit-full";
     this.statClass = "projNoStats";
-    this.arrowstate = "arrow-down";
+    this.arrowState = "arrow-down";
 
     this.getProjectById = function (projectId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
@@ -236,7 +234,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
-    // RESUME HERE
     this.nextPlot = function () {
         angular.element("#go-to-first-plot-button").addClass("d-none");
         angular.element("#plot-nav").removeClass("d-none");
@@ -284,13 +281,47 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
+    // FIXME: replace map_utils with mercator
+    this.saveValues = function () {
+        $http.post(this.root + "/add-user-samples",
+                   {projectId: this.projectId,
+                    plotId: this.currentPlot.id,
+                    userId: this.userName,
+                    userSamples: this.userSamples})
+            .then(angular.bind(this, function successCallback() {
+                alert("Your assignments have been saved to the database.");
+                map_utils.disable_selection();
+                this.stats.analyzedPlots++;
+                this.nextPlot();
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error saving your assignments to the database. See console for details.");
+            });
+        this.stats.analyzedPlots++;
+    };
+
+    this.flagPlot = function () {
+        $http.post(this.root + "/flag-plot",
+                   {projectId: this.projectId,
+                    plotId:    this.currentPlot.id})
+            .then(angular.bind(this, function successCallback() {
+                alert("Plot " + this.currentPlot.id + " has been flagged.");
+                this.stats.flaggedPlots++;
+                this.stats.analyzedPlots++;
+                this.nextPlot();
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error flagging plot as bad. See console for details.");
+            });
+    };
+
     this.toggleStats = function () {
-        if(this.statClass == "projNoStats"){
+        if (this.statClass == "projNoStats") {
             this.statClass = "projStats";
-            this.arrowstate = "arrow-up";
+            this.arrowState = "arrow-up";
         } else {
             this.statClass = "projNoStats";
-            this.arrowstate = "arrow-down";
+            this.arrowState = "arrow-down";
         }
     };
 
@@ -331,40 +362,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             p = 0;
         }
         return parseFloat(p).toFixed(2);
-    };
-
-    // FIXME: replace map_utils with mercator
-    this.saveValues = function () {
-        $http.post(this.root + "/add-user-samples",
-                   {projectId: this.projectId,
-                    plotId: this.currentPlot.id,
-                    userId: this.userName,
-                    userSamples: this.userSamples})
-            .then(angular.bind(this, function successCallback() {
-                alert("Your assignments have been saved to the database.");
-                map_utils.disable_selection();
-                this.stats.analyzedPlots++;
-                this.nextPlot();
-            }), function errorCallback(response) {
-                console.log(response);
-                alert("Error saving your assignments to the database. See console for details.");
-            });
-        this.stats.analyzedPlots++;
-    };
-
-    this.flagPlot = function () {
-        $http.post(this.root + "/flag-plot",
-                   {projectId: this.projectId,
-                    plotId:    this.currentPlot.id})
-            .then(angular.bind(this, function successCallback() {
-                alert("Plot " + this.currentPlot.id + " has been flagged.");
-                this.stats.flaggedPlots++;
-                this.stats.analyzedPlots++;
-                this.nextPlot();
-            }), function errorCallback(response) {
-                console.log(response);
-                alert("Error flagging plot as bad. See console for details.");
-            });
     };
 
 }]).directive("convertToNumber",
