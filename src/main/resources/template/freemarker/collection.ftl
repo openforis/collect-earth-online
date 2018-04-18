@@ -149,7 +149,7 @@
                     </div>
                 </div>
                 <button id="collection-quit-button" class="btn btn-outline-danger btn-block btn-sm" type="button"
-                        name="collection-quit" ng-class="collection.quitclass" data-toggle="modal" data-target="#confirmation-quit">
+                        name="collection-quit" ng-class="collection.quitClass" data-toggle="modal" data-target="#confirmation-quit">
                     Quit
                 </button>
             </div>

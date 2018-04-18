@@ -10,13 +10,13 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.imageryYear = 2009;
     this.stackingProfile = "Accuracy_Profile";
     this.mapConfig = null;
+    this.currentPlot = null;
 
     // FIXME: make sure these are used
-    this.currentPlot = null;
-    this.userSamples = {};
     this.showSideBar = false;
-    this.mapclass = "fullmap";
-    this.quitclass = "quit-full";
+    this.mapClass = "fullmap";
+    this.quitClass = "quit-full";
+    this.userSamples = {};
     this.statClass = "projNoStats";
     this.arrowstate = "arrow-down";
     this.mapClickEvent;
