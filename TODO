@@ -91,82 +91,54 @@
    9. Export classes and colors from one project to use in another (as CSV?).
    10. Can we remove the reference image field from the sample values table yet?
    11. Allow projects to add multiple temporal imagery layers.
-       1. [X] Remove imagery-year, stacking-profile, and attribution from project-list.json and default-project.json.
-       2. [X] Do not add these features when creating a project in Projects.java.
-       3. [X] Remove the imagery year and stacking profile dropdown menus from project.ftl and project.js.
-       4. [X] Remove all references to imagery year and stacking profile from project.ftl and project.js.
-       5. [ ] Replace all references to project attribution with imagery attribution in collection.ftl and collection.js.
-       6. [ ] Replace all references to map_utils with mercator in collection.js.
-       7. [ ] Add the Imagery Year and Stacking Profile dropdown menus to collection.ftl and collection.js.
-       8. [ ] Notify Stefano to remove imagery-year, stacking-profile, and attribution from his database schema for projects and edit CollectProjects.java.
-              <div class="form-group mb-1">
-                  <label class="small mb-0" for="imagery-year"
-                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
-                  <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
-                          ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
-                          style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-                      <option value="2017">2017</option>
-                      <option value="2016">2016</option>
-                      <option value="2015">2015</option>
-                      <option value="2014">2014</option>
-                      <option value="2013">2013</option>
-                      <option value="2012">2012</option>
-                      <option value="2011">2011</option>
-                      <option value="2010">2010</option>
-                      <option value="2009">2009</option>
-                      <option value="2008">2008</option>
-                      <option value="2007">2007</option>
-                      <option value="2006">2006</option>
-                      <option value="2005">2005</option>
-                      <option value="2004">2004</option>
-                      <option value="2003">2003</option>
-                      <option value="2002">2002</option>
-                      <option value="2001">2001</option>
-                      <option value="2000">2000</option>
-                  </select>
-              </div>
-              <div class="form-group mb-1">
-                  <label class="small mb-0" for="stacking-profile"
-                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
-                  <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1"
-                          ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
-                          style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-                      <option value="Accuracy_Profile">Accuracy Profile</option>
-                      <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
-                      <option value="Global_Currency_Profile">Global Currency Profile</option>
-                      <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
-                      <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
-                  </select>
-              </div>
-
-              this.updateDGWMSLayer = function () {
-                 mercator.updateLayerWmsParams(this.mapConfig,
-                 "DigitalGlobeWMSImagery",
-                 {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
-          + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
-          FEATUREPROFILE: this.details.stackingProfile});
-          };
-
-          .directive("convertToNumber",
-          function () {
-          return {require: "ngModel",
-          link: function (scope, element, attrs, ngModel) {
-          ngModel.$parsers.push(function (val) { return parseInt(val, 10); });
-          ngModel.$formatters.push(function (val) { return "" + val; });
-          }
-          };
-          })
-
-          this.details.imageryYear = this.details.imageryYear || 2017;
-          this.details.stackingProfile = this.details.stackingProfile || "Accuracy_Profile";
-
-          if (this.baseMapSource == "DigitalGlobeWMSImagery") {
-          mercator.updateLayerWmsParams(this.mapConfig,
-          "DigitalGlobeWMSImagery",
-          {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.details.imageryYear + "-01-01')"
-            + "AND(acquisition_date<='" + this.details.imageryYear + "-12-31')",
-          FEATUREPROFILE: this.details.stackingProfile});
-          }
+       - [X] Remove imagery-year, stacking-profile, and attribution from project-list.json and default-project.json.
+       - [X] Do not add these features when creating a project in Projects.java.
+       - [X] Remove the imagery year and stacking profile dropdown menus from project.ftl and project.js.
+       - [X] Remove all references to imagery year and stacking profile from project.ftl and project.js.
+       - [X] Replace all references to project attribution with imagery attribution in collection.ftl and collection.js.
+       - [X] Add the Imagery Year and Stacking Profile dropdown menus to collection.ftl and collection.js.
+       - [X] Initialize this.currentImagery, this.imageryYear, and this.stackingProfile in collection.js.
+       - [ ] Replace all references to map_utils with mercator in collection.js.
+       - [X] Notify Stefano to remove imagery-year, stacking-profile, and attribution from his database schema for projects and edit CollectProjects.java.
+             <div class="form-group mb-1">
+                 <label class="small mb-0" for="imagery-year"
+                        style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
+                 <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
+                         ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
+                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
+                     <option value="2017">2017</option>
+                     <option value="2016">2016</option>
+                     <option value="2015">2015</option>
+                     <option value="2014">2014</option>
+                     <option value="2013">2013</option>
+                     <option value="2012">2012</option>
+                     <option value="2011">2011</option>
+                     <option value="2010">2010</option>
+                     <option value="2009">2009</option>
+                     <option value="2008">2008</option>
+                     <option value="2007">2007</option>
+                     <option value="2006">2006</option>
+                     <option value="2005">2005</option>
+                     <option value="2004">2004</option>
+                     <option value="2003">2003</option>
+                     <option value="2002">2002</option>
+                     <option value="2001">2001</option>
+                     <option value="2000">2000</option>
+                 </select>
+             </div>
+             <div class="form-group mb-1">
+                 <label class="small mb-0" for="stacking-profile"
+                        style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
+                 <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1"
+                         ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
+                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
+                     <option value="Accuracy_Profile">Accuracy Profile</option>
+                     <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
+                     <option value="Global_Currency_Profile">Global Currency Profile</option>
+                     <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
+                     <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+                 </select>
+             </div>
 ** project.js
    1. Set this.lonMin/lonMax/latMin/latMax in displayDragBoxBounds() rather than using document.getElementById().
    2. Add this.date{Created,Published,Closed,Archived} to the JSON database and retrieve these with getProjectStats.
@@ -175,10 +147,12 @@
 ** collection.ftl
    *IN PROGRESS*
    1. Plot Navigation should change from "Go to First Plot" to "Skip and Flag Plot as Bad" if a plot is reach by clicking on the map.
-   2. Project Stats don't properly reflect the total number of Plots Assigned and Plots Completed.
+   2. Fix broken Project Stats values.
    3. Add the survey cards to the sidebar.
    4. Add keyboard shortcuts for point selection.
    5. Turn the plot boundaries back on on the collection page (either make sure they don't intersect the points or let users toggle the plot boundary on/off).
+   6. Get Jerome to fix the styles for the #imagery-info div (it's currently invisible).
+   7. Why have all the default projects already been analyzed?
 ** card-test.ftl
    *IN PROGRESS*
    1. Remove this file once survey cards are added to the Project page.
@@ -217,12 +191,21 @@
 ** widget-layout-editor.ftl
    *IN PROGRESS*
 * Unsorted TODOs
-  - CEO migration:
-    - setup yet another CEO instance on machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
-    - migrate projects from ceo to machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
-    - ask Jeff to redirect ceo.sig-gis.com to machiavelli
-    - ask Alfonso to redirect collect.earth (etc) to machiavelli
-    - email all users about the migration
+** FOR NEXT WEEK*
+    1. Add red announcement banner to homepage
+    2. Add News page to navbar
+    3. Finish Mercator port
+    4. Fix broken Collect page stats
+    5. Get temporal imagery dropdown working
+    6. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
+    7. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
+       - keep ceo2:Demo Institution CEO Webinar April
+       - nuke ceo2:everything else
+       - copy over ceo:everything
+       - if user accounts collide, retain new passwords
+    8. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
+    9. Ask Alfonso to redirect collect.earth (etc) to machiavelli
+** And onward
   - Project properties don't load on ceo/project/# until the project is published
   - Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
   - Ask Stefano to include the institution attribute in returned imagery objects
