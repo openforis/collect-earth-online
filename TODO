@@ -73,9 +73,6 @@
 ** home.ftl
    1. Ask Jerome to fix the sidebar visibility toggling or remove it entirely.
    2. Shrink home-map-pane so we can see the scalebar.
-** home.js
-   1. Port map_utils.draw_project_markers to mercator.addProjectMarkers() to reenable home page clustering.
-   2. Re-add the missing styles needed for mercator.showProjectPopup() to custom.css: div.cTitle, div.cContent, span.pField, a.lnkStart.
 ** Projects.java
    *IN PROGRESS*
 ** project.ftl
