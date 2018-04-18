@@ -48,41 +48,14 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             });
     };
 
-    // FIXME: replace map_utils with mercator, set this.plotList, and recurse back with this.initialize()
     this.getProjectPlots = function () {
         $http.get(this.root + "/get-project-plots/" + this.projectId + "/1000")
             .then(angular.bind(this, function successCallback(response) {
                 this.plotList = response.data;
-                mercator.drawProjectPoints(this.plotList);
-                map_utils.draw_project_points(response.data, "red_fill");
-                this.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
-                    var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
-                    //Check if it is a cluster or a single
-                    if (map_utils.isCluster(feature)) {
-                        var features = feature.get("features");
-                        var clusterpoints = [];
-                        for(var i = 0; i < features.length; i++) {
-                            clusterpoints.push(features[i].getGeometry().getCoordinates());
-                        }
-                        var linestring = new ol.geom.LineString(clusterpoints);
-                        map_utils.map_ref.getView().fit(linestring.getExtent(), map_utils.map_ref.getSize());
-                    } else {
-                        if(feature.get("features") != null)
-                        {
-                            this.showSideBar = true;
-                            this.mapclass = "sidemap";
-                            this.quitclass = "quit-side";
-                            map_utils.remove_plots_layer();
-                            map_utils.map_ref.unByKey(this.mapClickEvent);
-                            this.loadPlotById(feature.get("features")[0].get("id"));
-                            map_utils.map_ref.updateSize();
-                            window.setTimeout("map_utils.map_ref.updateSize()", 550);
-                        }
-                    }
-                });
+                this.initialize(this.root, this.userName, this.projectId);
             }), function errorCallback(response) {
                 console.log(response);
-                alert("Error flagging plot as bad. See console for details.");
+                alert("Error loading plot data. See console for details.");
             });
     };
 
@@ -135,6 +108,35 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         mercator.zoomMapToLayer(this.mapConfig, "currentAOI");
     };
 
+    // FIXME: replace map_utils with mercator
+    this.showProjectPlots = function () {
+        mercator.drawProjectPoints(this.plotList, "red_fill"); // FIXME: implement this function
+        // map_utils.draw_project_points(response.data, "red_fill");
+        this.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
+            var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
+            //Check if it is a cluster or a single
+            if (map_utils.isCluster(feature)) {
+                var features = feature.get("features");
+                var clusterpoints = features.map(
+                    function (feature) {
+                        return feature.getGeometry().getCoordinates();
+                    }
+                );
+                var linestring = new ol.geom.LineString(clusterpoints);
+                map_utils.zoom_map_to_layer(linestring); // FIXME: make linestring a layer
+            } else if (feature.get("features") != null) {
+                this.showSideBar = true;
+                this.mapclass = "sidemap";
+                this.quitclass = "quit-side";
+                map_utils.remove_plots_layer();
+                map_utils.map_ref.unByKey(this.mapClickEvent);
+                this.loadPlotById(feature.get("features")[0].get("id"));
+                map_utils.map_ref.updateSize();
+                window.setTimeout("map_utils.map_ref.updateSize()", 550);
+            }
+        });
+    };
+
     this.initialize = function (documentRoot, userName, projectId) {
         // Make the documentRoot, userName, and projectId globally available
         this.root = documentRoot;
@@ -156,6 +158,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         } else if (this.imageryList.length > 0) {
             // Draw a map with the project AOI
             this.showProjectMap();
+            // Draw a sampling of the project plots as clusters on the map
+            // this.showProjectPlots();
         }
     };
 
