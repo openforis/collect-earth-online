@@ -249,21 +249,20 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         this.loadRandomPlot();
     };
 
-    // FIXME: replace map_utils with mercator
     this.setCurrentValue = function (sampleValueGroup, sampleValue) {
-        var selectedFeatures = map_utils.get_selected_samples();
+        var selectedFeatures = mercator.getSelectedSamples(this.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
             selectedFeatures.forEach(
                 function (sample) {
-                    var pointAssignments = this.userSamples[sample.get("sample_id")];
+                    var pointAssignments = this.userSamples[sample.get("sampleId")];
                     if (pointAssignments) {
                         pointAssignments[sampleValueGroup.name] = sampleValue.name;
                     } else {
                         pointAssignments = {};
                         pointAssignments[sampleValueGroup.name] = sampleValue.name;
                     }
-                    this.userSamples[sample.get("sample_id")] = pointAssignments;
-                    map_utils.highlight_sample(sample, sampleValue.color);
+                    this.userSamples[sample.get("sampleId")] = pointAssignments;
+                    mercator.highlightSamplePoint(sample, sampleValue.color);
                 },
                 this // necessary to pass outer scope into function
             );
@@ -281,7 +280,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
-    // FIXME: replace map_utils with mercator
     this.saveValues = function () {
         $http.post(this.root + "/add-user-samples",
                    {projectId: this.projectId,
@@ -290,7 +288,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     userSamples: this.userSamples})
             .then(angular.bind(this, function successCallback() {
                 alert("Your assignments have been saved to the database.");
-                map_utils.disable_selection();
+                mercator.disableSelection(this.mapConfig);
                 this.stats.analyzedPlots++;
                 this.nextPlot();
             }), function errorCallback(response) {
