@@ -7,7 +7,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.plotList = null;
     this.imageryList = null;
     this.currentImagery = {attribution: ""};
-    this.imageryYear = 2017;
+    this.imageryYear = 2009;
     this.stackingProfile = "Accuracy_Profile";
     this.mapConfig = null;
 
