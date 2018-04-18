@@ -737,6 +737,17 @@ mercator.makeRows = function (documentRoot, project) {
         + rowEnd;
 };
 
+// [Pure] Returns the minimum extent that bounds all of the
+// subfeatures in the passed in clusterFeature.
+mercator.getClusterExtent = function (clusterFeature) {
+    var clusterPoints = clusterFeature.get("features").map(
+        function (subFeature) {
+            return subFeature.getGeometry().getCoordinates();
+        }
+    );
+    return (new ol.geom.LineString(clusterPoints)).getExtent();
+};
+
 // [Pure] Returns a string of HTML to display in a popup box on the map.
 mercator.getPopupContent = function (documentRoot, feature) {
     var title = "<div class=\"cTitle\"><h1>"
@@ -751,14 +762,8 @@ mercator.getPopupContent = function (documentRoot, feature) {
     var contentEnd = "</div>";
 
     if (mercator.isCluster(feature)) {
-        var clusterPoints = feature.get("features").map(
-            function (subFeature) {
-                return subFeature.getGeometry().getCoordinates();
-            }
-        );
-        var clusterExtent = (new ol.geom.LineString(clusterPoints)).getExtent();
         var zoomLink = "<p><a onclick=\"mercator.zoomMapToExtent(angular.element('#home').scope().home.mapConfig, ["
-            + clusterExtent + "])\" "
+            + mercator.getClusterExtent(feature) + "])\" "
             + "class=\"btn btn-block btn-sm btn-outline-lightgreen\" style=\"cursor:pointer; min-width:350px;\">"
             + "Zoom to cluster</a></p>";
         return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
@@ -846,10 +851,16 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
     return mapConfig;
 };
 
-mercator.addPlotLayer = function (mapConfig, plots) {
+// [Side Effects] Adds a new vector layer called "currentPlots" to
+// mapConfig's map object that clusters the passed in plots. Clicking
+// on clusters with more than one plot zooms the map view to the
+// extent covered by these plots. If a cluster only contains one plot,
+// the callBack function will be called on the cluster feature.
+mercator.addPlotLayer = function (mapConfig, plots, callBack) {
     var plotSource = mercator.plotsToVectorSource(plots);
     var clusterSource = new ol.source.Cluster({source:   plotSource,
                                                distance: 40});
+
     mercator.addVectorLayer(mapConfig,
                             "currentPlots",
                             clusterSource,
@@ -857,6 +868,23 @@ mercator.addPlotLayer = function (mapConfig, plots) {
                                 var numPlots = feature.get("features").length;
                                 return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numPlots, "#ffffff");
                             });
+
+    var clickHandler = function (event) {
+        mapConfig.map.forEachFeatureAtPixel(event.pixel,
+                                            function (feature) {
+                                                if (mercator.isCluster(feature)) {
+                                                    if (feature.get("features").length > 1) {
+                                                        mercator.zoomMapToExtent(mapConfig,
+                                                                                 mercator.getClusterExtent(feature));
+                                                    } else {
+                                                        mercator.removeLayerByTitle(mapConfig, "currentPlots");
+                                                        mapConfig.map.un("click", clickHandler);
+                                                        callBack.call(null, feature);
+                                                    }
+                                                }
+                                            });
+    };
+    mapConfig.map.on("click", clickHandler);
 
     return mapConfig;
 };

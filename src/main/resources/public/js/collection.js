@@ -95,6 +95,18 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
+    this.showProjectPlots = function () {
+        mercator.addPlotLayer(this.mapConfig,
+                              this.plotList,
+                              angular.bind(this, function (feature) {
+                                  // FIXME: These three assignments don't appear to do anything
+                                  this.showSideBar = true;
+                                  this.mapClass = "sidemap";
+                                  this.quitClass = "quit-side";
+                                  this.loadPlotById(feature.get("features")[0].get("plotId"));
+                              }));
+    };
+
     this.showProjectMap = function () {
         // Initialize the base map
         this.mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.imageryList);
