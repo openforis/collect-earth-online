@@ -846,6 +846,21 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
     return mapConfig;
 };
 
+mercator.addPlotLayer = function (mapConfig, plots) {
+    var plotSource = mercator.plotsToVectorSource(plots);
+    var clusterSource = new ol.source.Cluster({source:   plotSource,
+                                               distance: 40});
+    mercator.addVectorLayer(mapConfig,
+                            "currentPlots",
+                            clusterSource,
+                            function (feature) {
+                                var numPlots = feature.get("features").length;
+                                return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numPlots, "#ffffff");
+                            });
+
+    return mapConfig;
+};
+
 /*****************************************************************************
 ***
 *** FIXMEs
@@ -895,3 +910,6 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
 //        mercator.addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance);
 //        mercator.zoomMapToLayer(mapConfig, "projectMarkers");
 // FIXME: change references to pID in home.js to projectId
+// FIXME: change calls from draw_project_points to:
+//        mercator.removeLayerByTitle(mapConfig, "currentPlots");
+//        mercator.addPlotLayer(mapConfig, plots);

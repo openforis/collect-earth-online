@@ -110,31 +110,31 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
 
     // FIXME: replace map_utils with mercator
     this.showProjectPlots = function () {
-        mercator.drawProjectPoints(this.plotList, "red_fill"); // FIXME: implement this function
-        // map_utils.draw_project_points(response.data, "red_fill");
-        this.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
-            var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
-            //Check if it is a cluster or a single
-            if (map_utils.isCluster(feature)) {
-                var features = feature.get("features");
-                var clusterpoints = features.map(
-                    function (feature) {
-                        return feature.getGeometry().getCoordinates();
-                    }
-                );
-                var linestring = new ol.geom.LineString(clusterpoints);
-                map_utils.zoom_map_to_layer(linestring); // FIXME: make linestring a layer
-            } else if (feature.get("features") != null) {
-                this.showSideBar = true;
-                this.mapclass = "sidemap";
-                this.quitclass = "quit-side";
-                map_utils.remove_plots_layer();
-                map_utils.map_ref.unByKey(this.mapClickEvent);
-                this.loadPlotById(feature.get("features")[0].get("id"));
-                map_utils.map_ref.updateSize();
-                window.setTimeout("map_utils.map_ref.updateSize()", 550);
-            }
-        });
+        mercator.addPlotLayer(this.mapConfig, this.plotList);
+        // RESUME HERE
+        // this.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
+        //     var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
+        //     //Check if it is a cluster or a single
+        //     if (map_utils.isCluster(feature)) {
+        //         var features = feature.get("features");
+        //         var clusterpoints = features.map(
+        //             function (feature) {
+        //                 return feature.getGeometry().getCoordinates();
+        //             }
+        //         );
+        //         var linestring = new ol.geom.LineString(clusterpoints);
+        //         map_utils.zoom_map_to_layer(linestring); // FIXME: make linestring a layer
+        //     } else if (feature.get("features") != null) {
+        //         this.showSideBar = true;
+        //         this.mapclass = "sidemap";
+        //         this.quitclass = "quit-side";
+        //         map_utils.remove_plots_layer();
+        //         map_utils.map_ref.unByKey(this.mapClickEvent);
+        //         this.loadPlotById(feature.get("features")[0].get("id"));
+        //         map_utils.map_ref.updateSize();
+        //         window.setTimeout("map_utils.map_ref.updateSize()", 550);
+        //     }
+        // });
     };
 
     this.initialize = function (documentRoot, userName, projectId) {
@@ -159,7 +159,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             // Draw a map with the project AOI
             this.showProjectMap();
             // Draw a sampling of the project plots as clusters on the map
-            // this.showProjectPlots();
+            this.showProjectPlots();
         }
     };
 
