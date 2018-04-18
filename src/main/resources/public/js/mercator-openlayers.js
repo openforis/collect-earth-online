@@ -709,7 +709,62 @@ mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
 
 // [Pure] Returns true if the feature is a cluster, false otherwise.
 mercator.isCluster = function (feature) {
-    return feature && feature.get("features") && feature.get("features").length > 1;
+    return feature && feature.get("features") && feature.get("features").length > 0;
+};
+
+// [Pure] Returns a string of HTML representing several table rows
+// that describe the passed in project.
+mercator.makeRows = function (documentRoot, project) {
+    var rowStart = "<tr class=\"d-flex\">";
+    var rowEnd = "</tr>";
+    var leftColStart = "<td class=\"small col-6 px-0 my-auto\">";
+    var rightColStart = "<td class=\"small col-6 pr-0\">";
+    var colEnd = "</td>";
+    var linkStart = "<a href=\"" + documentRoot + "/collection/" + project.get("projectId") + "\" "
+                  + "class=\"btn btn-sm btn-block btn-outline-lightgreen\">";
+    var linkEnd = "</a>";
+    return rowStart
+        + leftColStart + "Name" + colEnd
+        + rightColStart + linkStart + project.get("name") + linkEnd + colEnd
+        + rowEnd
+        + rowStart
+        + leftColStart + "Description" + colEnd
+        + rightColStart + (project.get("description") == "" ? "N/A" : project.get("description")) + colEnd
+        + rowEnd
+        + rowStart
+        + leftColStart + "Number of plots" + colEnd
+        + rightColStart + project.get("numPlots") + colEnd
+        + rowEnd;
+};
+
+// [Pure] Returns a string of HTML to display in a popup box on the map.
+mercator.getPopupContent = function (documentRoot, feature) {
+    var title = "<div class=\"cTitle\"><h1>"
+              + (mercator.isCluster(feature) ? "Cluster info" : "Project info")
+              + "</h1></div>";
+    var contentStart = "<div class=\"cContent\">";
+    var tableStart = "<table class=\"table table-sm\"><tbody>";
+    var tableRows = mercator.isCluster(feature)
+        ? feature.get("features").map(mercator.makeRows.bind(null, documentRoot)).join("\n")
+        : mercator.makeRows(documentRoot, feature);
+    var tableEnd = "</tbody></table>";
+    var contentEnd = "</div>";
+
+    if (mercator.isCluster(feature)) {
+        var clusterPoints = feature.get("features").map(
+            function (subFeature) {
+                return subFeature.getGeometry().getCoordinates();
+            }
+        );
+        var clusterExtent = (new ol.geom.LineString(clusterPoints)).getExtent();
+        var zoomLink = "<p><a onclick=\"mercator.zoomMapToExtent(angular.element('#home').scope().home.mapConfig, ["
+            + clusterExtent + "])\" "
+            + "class=\"btn btn-block btn-sm btn-outline-lightgreen\" style=\"cursor:pointer; min-width:350px;\">"
+            + "Zoom to cluster</a></p>";
+        return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
+    } else {
+        return title + contentStart + tableStart + tableRows + tableEnd + contentEnd;
+    }
 };
 
 // [Side Effects] Updates the overlay element's innerHTML with fields
@@ -717,51 +772,10 @@ mercator.isCluster = function (feature) {
 // well as a link to its data collection page and then displays the
 // overlay on the map at the feature's coordinates.
 mercator.showProjectPopup = function (overlay, documentRoot, feature) {
-    if (mercator.isCluster(feature)) {
-        var subFeatures = feature.get("features");
-        var htmlTableHeader = "<div class=\"cTitle\"><h1>Cluster info</h1></div><div class=\"cContent\">"
-                            + "<table class=\"table table-sm\"><tbody>";
-        var htmlTableRows = subFeatures.map(
-            function (subFeature) {
-                var projectName = subFeature.get("name");
-                var projectId = subFeature.get("projectId");
-                return "<tr class=\"d-flex\"><td class=\"small col-6 px-0 my-auto\" title=\""
-                    + projectName
-                    + "\" alt=\""
-                    + projectName
-                    + "\">"
-                    + projectName
-                    + "</td><td class=\"small col-6 pr-0\"><a href=\""
-                    + documentRoot
-                    + "/collection/"
-                    + projectId
-                    + "\" class=\"btn btn-sm btn-block btn-outline-lightgreen\">Get Started</a></td></tr>";
-            }
-        ).join("\n");
-        var htmlTableFooter = "</tbody></table>";
-        var clusterPoints = subFeatures.map(
-            function (subFeature) {
-                return subFeature.getGeometry().getCoordinates();
-            }
-        );
-        var clusterExtent = (new ol.geom.LineString(clusterPoints)).getExtent();
-        // FIXME: mapConfig is undefined
-        var htmlZoomLink = "<p><a onclick=\"mercator.zoomMapToExtent(mapConfig, " + clusterExtent + ")\" "
-            + "class=\"btn btn-block btn-sm btn-outline-lightgreen\" style=\"cursor:pointer; min-width:350px;\">"
-            + "Zoom to cluster</a></p></div>";
-        overlay.getElement().innerHTML = htmlTableHeader + htmlTableRows + htmlTableFooter + htmlZoomLink;
-        overlay.setPosition(subFeatures[0].getGeometry().getCoordinates());
-    } else {
-        // RESUME HERE
-    }
-
-    var description = feature.get("description") == "" ? "N/A" : feature.get("description");
-    var html = "<div class=\"cTitle\"><h1>" + feature.get("name") + "</h1></div>";
-    html += "<div class=\"cContent\"><p><span class=\"pField\">Description: </span>" + description + "</p>";
-    html += "<p><span class=\"pField\">Number of plots: </span>" + feature.get("numPlots")  + "</p>";
-    html += "<a href=\"" + documentRoot + "/collection/" + feature.get("projectId") + "\" class=\"lnkStart\">Get Started</a></div>";
-    overlay.getElement().innerHTML = html;
-    overlay.setPosition(feature.getGeometry().getCoordinates());
+    overlay.getElement().innerHTML = mercator.getPopupContent(documentRoot, feature);
+    overlay.setPosition(mercator.isCluster(feature)
+                        ? feature.get("features")[0].getGeometry().getCoordinates()
+                        : feature.getGeometry().getCoordinates());
 };
 
 // [Pure] Returns a new vector source containing points for each of
@@ -820,8 +834,12 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
     var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
     mapConfig.map.on("click",
                      function (event) {
-                         mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                                             mercator.showProjectPopup.bind(null, overlay, documentRoot));
+                         if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
+                             mapConfig.map.forEachFeatureAtPixel(event.pixel,
+                                                                 mercator.showProjectPopup.bind(null, overlay, documentRoot));
+                         } else {
+                             overlay.setPosition(undefined);
+                         }
                      });
 
     mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
@@ -835,6 +853,7 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
 *****************************************************************************/
 //
 // FIXME: Move ceoMapStyles out of Mercator.js
+// FIXME: Move mercator.getPopupContent() out of Mercator.js (it is hard-coded to CEO's home page)
 // FIXME: change calls from remove_plot_layer to mercator.removeLayerByTitle(mapConfig, layerTitle)
 // FIXME: change calls from draw_polygon to:
 //        mercator.removeLayerByTitle(mapConfig, "currentAOI");
