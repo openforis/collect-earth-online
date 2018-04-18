@@ -524,8 +524,8 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
-    var select = new ol.interaction.Select({title: interactionTitle,
-                                            layers: [layer]});
+    var select = new ol.interaction.Select({layers: [layer]});
+    select.set("title", interactionTitle);
     var action = function (event) {
         event.selected.forEach(function (feature) {
             featureStyles[feature] = feature.getStyle();
@@ -548,8 +548,8 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures) {
-    var dragBox = new ol.interaction.DragBox({title: interactionTitle,
-                                              condition: ol.events.condition.platformModifierKeyOnly});
+    var dragBox = new ol.interaction.DragBox({condition: ol.events.condition.platformModifierKeyOnly});
+    dragBox.set("title", interactionTitle);
     var boxstartAction = function () {
         selectedFeatures.clear();
     };
