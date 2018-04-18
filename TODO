@@ -153,6 +153,7 @@
    5. Turn the plot boundaries back on on the collection page (either make sure they don't intersect the points or let users toggle the plot boundary on/off).
    6. Get Jerome to fix the styles for the #imagery-info div (it's currently invisible).
    7. Why have all the default projects already been analyzed?
+   8. Get Billy to fix the styles related to showSideBar, mapClass, and quitClass.
 ** card-test.ftl
    *IN PROGRESS*
    1. Remove this file once survey cards are added to the Project page.

@@ -118,35 +118,9 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.currentProject.boundary, true)),
                                 ceoMapStyles.polygon);
         mercator.zoomMapToLayer(this.mapConfig, "currentAOI");
-    };
 
-    // FIXME: replace map_utils with mercator
-    this.showProjectPlots = function () {
-        mercator.addPlotLayer(this.mapConfig, this.plotList);
-        // RESUME HERE
-        // this.mapClickEvent = map_utils.map_ref.on("click", function (evt) {
-        //     var feature = map_utils.map_ref.forEachFeatureAtPixel(evt.pixel, function (feature) { return feature; });
-        //     //Check if it is a cluster or a single
-        //     if (map_utils.isCluster(feature)) {
-        //         var features = feature.get("features");
-        //         var clusterpoints = features.map(
-        //             function (feature) {
-        //                 return feature.getGeometry().getCoordinates();
-        //             }
-        //         );
-        //         var linestring = new ol.geom.LineString(clusterpoints);
-        //         map_utils.zoom_map_to_layer(linestring); // FIXME: make linestring a layer
-        //     } else if (feature.get("features") != null) {
-        //         this.showSideBar = true;
-        //         this.mapclass = "sidemap";
-        //         this.quitclass = "quit-side";
-        //         map_utils.remove_plots_layer();
-        //         map_utils.map_ref.unByKey(this.mapClickEvent);
-        //         this.loadPlotById(feature.get("features")[0].get("id"));
-        //         map_utils.map_ref.updateSize();
-        //         window.setTimeout("map_utils.map_ref.updateSize()", 550);
-        //     }
-        // });
+        // Draw the project plots as clusters on the map
+        this.showProjectPlots();
     };
 
     this.initialize = function (documentRoot, userName, projectId) {
@@ -168,25 +142,60 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             // Load the imageryList
             this.getImageryList(this.currentProject.institution);
         } else if (this.imageryList.length > 0) {
-            // Draw a map with the project AOI
+            // Draw a map with the project AOI and plot clusters
             this.showProjectMap();
-            // Draw a sampling of the project plots as clusters on the map
-            this.showProjectPlots();
         }
     };
 
-    this.toggleStats = function () {
-        if(this.statClass == "projNoStats"){
-            this.statClass = "projStats";
-            this.arrowstate = "arrow-up";
+    this.getPlotDataById = function (plotId) {
+        $http.get(this.root + "/get-unanalyzed-plot-by-id/" + this.projectId + "/" + plotId)
+            .then(angular.bind(this, function successCallback(response) {
+                if (response.data == "done") {
+                    this.currentPlot = null;
+                    this.showProjectPlots();
+                    alert("This plot has already been analyzed.");
+                } else if (response.data == "not found") {
+                    this.currentPlot = null;
+                    this.showProjectPlots();
+                    alert("No plot with ID " + plotId + " found.");
+                } else {
+                    this.currentPlot = response.data;
+                    this.loadPlotById(plotId);
+                }
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
+            });
+    };
+
+    this.loadPlotById = function (plotId) {
+        if (this.currentPlot == null) {
+            this.getPlotDataById(plotId);
         } else {
-            this.statClass = "projNoStats";
-            this.arrowstate = "arrow-down";
+            utils.enable_element("flag-plot-button");
+
+            // FIXME: Move these calls into a function in mercator-openlayers.js
+            mercator.disableSelection(this.mapConfig);
+            mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.mapConfig,
+                                    "currentSamples",
+                                    mercator.samplesToVectorSource(this.currentPlot.samples),
+                                    ceoMapStyles.redPoint);
+            mercator.enableSelection(this.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.mapConfig, "currentSamples");
+
+            window.open(this.root + "/geo-dash?editable=false&"
+                        + encodeURIComponent("title=" + this.currentProject.name
+                                             + "&pid=" + this.projectId
+                                             + "&aoi=[" + mercator.getViewExtent(this.mapConfig)
+                                             + "]&daterange=&bcenter=" + this.currentPlot.center
+                                             + "&bradius=" + this.currentProject.plotSize / 2),
+                        "_geo-dash");
         }
     };
 
-    this.getPlotData = function (projectId) {
-        $http.get(this.root + "/get-unanalyzed-plot/" + projectId)
+    this.getPlotData = function () {
+        $http.get(this.root + "/get-unanalyzed-plot/" + this.projectId)
             .then(angular.bind(this, function successCallback(response) {
                 if (response.data == "done") {
                     this.currentPlot = null;
@@ -201,50 +210,18 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             });
     };
 
-    this.getPlotDatabyid = function (projectId, plotid) {
-        $http.get(this.root + "/get-unanalyzed-plot-byid/" + projectId + "/" + plotid)
-            .then(angular.bind(this, function successCallback(response) {
-                if (response.data == "done") {
-                    this.currentPlot = null;
-                    alert("All plots have been analyzed for this project.");
-                } else {
-                    this.currentPlot = response.data[0];
-                    this.loadRandomPlot();
-                }
-            }), function errorCallback(response) {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            });
-    };
-
     // FIXME: replace map_utils with mercator
-    this.loadPlotById = function (id) {
-        if (this.currentPlot == null) {
-            this.getPlotDatabyid(this.projectId, id);
-        } else {
-            utils.enable_element("flag-plot-button");
-            map_utils.draw_points(this.currentPlot.samples);
-            window.open(this.root + "/geo-dash?editable=false&"
-                        + encodeURIComponent("title=" + this.currentProject.name
-                                             + "&pid=" + this.projectId
-                                             + "&aoi=[" + map_utils.get_view_extent()
-                                             + "]&daterange=&bcenter=" + this.currentPlot.center
-                                             + "&bradius=" + this.currentProject.plotSize / 2),
-                        "_geo-dash");
-        }
-    };
-
-    // FIXME: replace map_utils with mercator
+    // FIXME: merge with loadPlotById()
     this.loadRandomPlot = function () {
         if (this.currentPlot == null) {
-            this.getPlotData(this.projectId);
+            this.getPlotData();
         } else {
             utils.enable_element("flag-plot-button");
-            map_utils.draw_points(this.currentPlot.samples);
+            map_utils.draw_points(this.currentPlot.samples); // to mercator
             window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
                                              + "&pid=" + this.projectId
-                                             + "&aoi=[" + map_utils.get_view_extent()
+                                             + "&aoi=[" + map_utils.get_view_extent() // to mercator
                                              + "]&daterange=&bcenter=" + this.currentPlot.center
                                              + "&bradius=" + this.currentProject.plotSize / 2),
                         "_geo-dash");
@@ -256,8 +233,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         document.getElementById("go-to-first-plot-button").addClass("d-none");
         document.getElementById("plot-nav").removeClass("d-none");
         this.showSideBar = true;
-        this.mapclass = "sidemap";
-        this.quitclass = "quit-side";
+        this.mapClass = "sidemap";
+        this.quitClass = "quit-side";
         map_utils.remove_plots_layer();
         map_utils.map_ref.updateSize();
         window.setTimeout("map_utils.map_ref.updateSize()", 550);
@@ -297,6 +274,16 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             }
         } else {
             alert("No sample points selected. Please click some first.");
+        }
+    };
+
+    this.toggleStats = function () {
+        if(this.statClass == "projNoStats"){
+            this.statClass = "projStats";
+            this.arrowstate = "arrow-up";
+        } else {
+            this.statClass = "projNoStats";
+            this.arrowstate = "arrow-down";
         }
     };
 

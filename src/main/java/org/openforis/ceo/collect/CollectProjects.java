@@ -240,7 +240,7 @@ public class CollectProjects {
         }
     }
 
-    public static String getUnanalyzedPlotByID(Request req, Response res) {
+    public static String getUnanalyzedPlotById(Request req, Response res) {
         int projectId = getIntParam(req, "projid");
         String plotId = getParam(req, "id");
         String username = getLoggedUsername(req);

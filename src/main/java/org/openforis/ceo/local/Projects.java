@@ -230,20 +230,22 @@ public class Projects {
         }
     }
 
-    public static String getUnanalyzedPlotByID(Request req, Response res) {
+    public static String getUnanalyzedPlotById(Request req, Response res) {
         String projectId = req.params(":projid");
         String plotId = req.params(":id");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
-        JsonArray unanalyzedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == false
-                && plot.get("analyses").getAsInt() == 0 && plot.get("id").getAsInt() == Integer.parseInt(plotId));
-        /*int numPlots = unanalyzedPlots.size();
-        if (numPlots > 0) {
-            //int randomIndex = (int) Math.floor(numPlots * Math.random());
-            return unanalyzedPlots.get(randomIndex).toString();
+
+        Optional<JsonObject> matchingPlot = findInJsonArray(plots, plot -> plot.get("id").getAsString().equals(plotId));
+        if (matchingPlot.isPresent()) {
+            JsonObject plot = matchingPlot.get();
+            if (plot.get("flagged").getAsBoolean() == false && plot.get("analyses").getAsInt() == 0) {
+                return plot.toString();
+            } else {
+                return "done";
+            }
         } else {
-            return "done";
-        }*/
-        return unanalyzedPlots.toString();
+            return "not found";
+        }
     }
 
     private static Collector<String, ?, Map<String, Long>> countDistinct =
