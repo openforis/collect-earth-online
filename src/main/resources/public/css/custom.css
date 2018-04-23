@@ -378,7 +378,7 @@ h2.header{
     margin: 0rem auto;
 }
 
-#project-design.bg-lightgray:hover{
+#project-design.bg-lightgray:hover, #account-page.bg-lightgray:hover{
 		background-color:#ECEEEF!important;
 }
 #project-design h3{
@@ -407,7 +407,11 @@ ul#samplevalue{
           page-break-inside: avoid;
                break-inside: avoid;	
 }
+/*********************************************************************/
+/* INSTITUTION PAGE */
+/*********************************************************************/
 
+#institution .header{margin:1rem 0;}
 /*********************************************************************/
 /* GEO DASH PAGE */
 /*********************************************************************/

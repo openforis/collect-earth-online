@@ -82,7 +82,7 @@
      </#if>
     <div class="row">
 	    <div id="imagery-list" class="col-lg-4 col-xs-12" >
-	        <h2>Imagery <span class="badge badge-pill bg-lightgreen">{{ institution.imageryList.length }}</span></h2>
+	        <h2 class="header">Imagery <span class="badge badge-pill badge-light">{{ institution.imageryList.length }}</span></h2>
 	        		<div ng-if="institution.imageryMode == 'view'">
 		            <div class="row mb-1" ng-repeat="imagery in institution.imageryList">
 			            		<div ng-if="institution.isAdmin == false" class="col mb-1">
@@ -140,7 +140,7 @@
 		        </div>
 	    </div>
 	  <div id="project-list" class="col-lg-4 col-xs-12">
-	      <h2>Projects <span class="badge badge-pill bg-lightgreen">{{ institution.projectList.length }}</span></h2>
+	      <h2 class="header">Projects <span class="badge badge-pill  badge-light">{{ institution.projectList.length }}</span></h2>
 	          <div class="row mb-1" ng-if="institution.isAdmin == true">
 		          <div class="col">
 		          	<button id="create-project" type="button" class="btn btn-sm btn-block btn-outline-yellow"
@@ -169,8 +169,8 @@
             	</div>
 	  </div>
     <div id="user-list" class="col-lg-4 col-xs-12">
-        <h2 ng-if="institution.isAdmin == true">Users <span class="badge badge-pill bg-lightgreen">{{ institution.userList.length }}</span></h2>
-        <h2 ng-if="institution.isAdmin == false">Users <span class="badge badge-pill bg-lightgreen">{{ institution.nonPendingUsers }}</span></h2>
+        <h2 ng-if="institution.isAdmin == true" class="header">Users <span class="badge badge-pill  badge-light">{{ institution.userList.length }}</span></h2>
+        <h2 ng-if="institution.isAdmin == false" class="header">Users <span class="badge badge-pill  badge-light">{{ institution.nonPendingUsers }}</span></h2>
             <div class="row" ng-repeat="user in institution.userList">
             		<div class="col mb-1" ng-if="institution.isAdmin == false && user.institutionRole != 'pending'" >
               	  	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/account/{{ user.id }}">{{ user.email }}</a>
