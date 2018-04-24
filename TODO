@@ -144,16 +144,17 @@
    4. Can we remove the reference image field from the sample values table yet?
 ** collection.ftl
    *IN PROGRESS*
-   1. Plot Navigation should change from "Go to First Plot" to "Skip and Flag Plot as Bad" if a plot is reached by clicking on the map.
-   3. Add the survey cards to the sidebar:
+   1. Add the survey cards to the sidebar:
       - Replace surveyHTML on card-test page before calling CollectForms() constructor each time
       - Figure out where to grab the recordId and sampleIds for the CollectForms() constructor (in card-test.js)
-   4. Add keyboard shortcuts for point selection.
-   5. Turn the plot boundaries back on on the collection page (either make sure they don't intersect the points or let users toggle the plot boundary on/off).
-   6. Get Jerome to fix the styles for the #imagery-info div (it's currently invisible).
-   7. Why have all the default projects already been analyzed?
-   8. Get Billy to fix the styles related to showSideBar, mapClass, and quitClass.
-   9. Handle edge case of projects with 0 sample points.
+   2. Add keyboard shortcuts for point selection.
+   3. Turn the plot boundaries back on on the collection page (either make sure they don't intersect the points or let users toggle the plot boundary on/off).
+   4. Get Jerome to fix the styles for the #imagery-info div (it's currently invisible).
+   5. Why have all the default projects already been analyzed?
+   6. Get Billy to fix the styles related to showSideBar, mapClass, and quitClass.
+   7. Handle edge case of projects with 0 sample points.
+** collection.js
+   1. Make sure the utils.[enable|disable]_element() calls make sense.
 ** card-test.ftl
    *IN PROGRESS*
    1. Remove this file once survey cards are added to the Project page.

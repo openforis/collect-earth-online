@@ -169,7 +169,14 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         if (this.currentPlot == null) {
             this.getPlotDataById(plotId);
         } else {
+            angular.element("#go-to-first-plot-button").addClass("d-none");
+            angular.element("#plot-nav").removeClass("d-none");
+            this.showSideBar = true;
+            this.mapClass = "sidemap";
+            this.quitClass = "quit-side";
+            utils.enable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
+            utils.disable_element("save-values-button");
 
             // FIXME: Move these calls into a function in mercator-openlayers.js
             mercator.disableSelection(this.mapConfig);
@@ -196,6 +203,9 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             .then(angular.bind(this, function successCallback(response) {
                 if (response.data == "done") {
                     this.currentPlot = null;
+                    utils.disable_element("new-plot-button");
+                    utils.disable_element("flag-plot-button");
+                    utils.disable_element("save-values-button");
                     alert("All plots have been analyzed for this project.");
                 } else {
                     this.currentPlot = response.data;
@@ -244,7 +254,8 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
         this.currentPlot = null;
         this.userSamples = {};
-        utils.disable_element("flag-plot-button");
+        utils.enable_element("new-plot-button");
+        utils.enable_element("flag-plot-button");
         utils.disable_element("save-values-button");
         this.loadRandomPlot();
     };
