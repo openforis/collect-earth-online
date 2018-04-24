@@ -135,7 +135,7 @@
                                             <td class="small">Plots Completed</td>
                                             <td class="small">
                                                 {{ collection.stats.analyzedPlots + collection.stats.flaggedPlots }}
-                                                ({{ collection.completePercentage() }}%)
+                                                ({{ collection.completedPercentage() }}%)
                                             </td>
                                         </tr>
                                         <tr>

@@ -87,7 +87,8 @@
    8. Make it possible to add just one sample per plot in the center.
    9. Export classes and colors from one project to use in another (as CSV?).
    10. Can we remove the reference image field from the sample values table yet?
-   11. Allow projects to add multiple temporal imagery layers.
+   11. Handle edge case of projects with 0 sample points.
+   12. Allow projects to add multiple temporal imagery layers.
        - [X] Remove imagery-year, stacking-profile, and attribution from project-list.json and default-project.json.
        - [X] Do not add these features when creating a project in Projects.java.
        - [X] Remove the imagery year and stacking profile dropdown menus from project.ftl and project.js.
@@ -143,14 +144,16 @@
    4. Can we remove the reference image field from the sample values table yet?
 ** collection.ftl
    *IN PROGRESS*
-   1. Plot Navigation should change from "Go to First Plot" to "Skip and Flag Plot as Bad" if a plot is reach by clicking on the map.
-   2. Fix broken Project Stats values.
-   3. Add the survey cards to the sidebar.
+   1. Plot Navigation should change from "Go to First Plot" to "Skip and Flag Plot as Bad" if a plot is reached by clicking on the map.
+   3. Add the survey cards to the sidebar:
+      - Replace surveyHTML on card-test page before calling CollectForms() constructor each time
+      - Figure out where to grab the recordId and sampleIds for the CollectForms() constructor (in card-test.js)
    4. Add keyboard shortcuts for point selection.
    5. Turn the plot boundaries back on on the collection page (either make sure they don't intersect the points or let users toggle the plot boundary on/off).
    6. Get Jerome to fix the styles for the #imagery-info div (it's currently invisible).
    7. Why have all the default projects already been analyzed?
    8. Get Billy to fix the styles related to showSideBar, mapClass, and quitClass.
+   9. Handle edge case of projects with 0 sample points.
 ** card-test.ftl
    *IN PROGRESS*
    1. Remove this file once survey cards are added to the Project page.
@@ -166,7 +169,7 @@
    4. Fix broken logos on http://collect.earth and email all institution admins to re-upload their logos to the site.
 ** mercator-openlayers.js
    *IN PROGRESS*
-   1. Replace map-utils with mercator globally in CEO
+   1. Remove ceoMapStyles.cluster (not using it)
    2. Refactor these CEO specific functions out of mercator and into map-utils:
       - ceoMapStyles
       - getPlotPolygon
@@ -190,19 +193,22 @@
    *IN PROGRESS*
 * Unsorted TODOs
 ** FOR NEXT WEEK*
-    1. Add red announcement banner to homepage
-    2. Add News page to navbar
-    3. Finish Mercator port
-    4. Fix broken Collect page stats
-    5. Get temporal imagery dropdown working
-    6. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
-    7. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
-       - keep ceo2:Demo Institution CEO Webinar April
-       - nuke ceo2:everything else
-       - copy over ceo:everything
-       - if user accounts collide, retain new passwords
-    8. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
-    9. Ask Alfonso to redirect collect.earth (etc) to machiavelli
+   1. Fix Quyen's save bug on the Collection page
+   2. Fix broken Collect page stats
+   3. Add red announcement banner to homepage
+   4. Add News page to navbar
+   5. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
+   6. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
+      - keep ceo2:Demo Institution CEO Webinar April
+      - nuke ceo2:everything else
+      - copy over ceo:everything
+      - if user accounts collide, retain new passwords
+   7. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
+   8. Ask Alfonso to redirect collect.earth (etc) to machiavelli
+   9. Add Planet imagery to basemaps before 5/7:
+      - https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_YYYY_MM_mosaic/gmap/{z}/{x}/{y}.png?api_key=c195ebe4bf894f5e9d592122acf0f14f (2016_01 <= YYYY_MM <= 2018_03)
+      - list available mosaics with this URL: https://api.planet.com/basemaps/v1/mosaics?api_key=c195ebe4bf894f5e9d592122acf0f14f
+      - API docs: https://developers.planet.com/docs/api/tile-services/
 ** And onward
   - Project properties don't load on ceo/project/# until the project is published
   - Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}

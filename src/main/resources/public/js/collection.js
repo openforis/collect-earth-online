@@ -288,14 +288,12 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     userSamples: this.userSamples})
             .then(angular.bind(this, function successCallback() {
                 alert("Your assignments have been saved to the database.");
-                mercator.disableSelection(this.mapConfig);
                 this.stats.analyzedPlots++;
                 this.nextPlot();
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error saving your assignments to the database. See console for details.");
             });
-        this.stats.analyzedPlots++;
     };
 
     this.flagPlot = function () {
@@ -305,7 +303,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             .then(angular.bind(this, function successCallback() {
                 alert("Plot " + this.currentPlot.id + " has been flagged.");
                 this.stats.flaggedPlots++;
-                this.stats.analyzedPlots++;
                 this.nextPlot();
             }), function errorCallback(response) {
                 console.log(response);
@@ -325,41 +322,29 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
 
     // FIXME: these values are incorrect
     this.assignedPercentage = function () {
-        var p = 0;
-        try{
-            p = (100 * this.stats.analyzedPlots / this.currentProject.numPlots);
+        if (this.currentProject == null || this.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * this.stats.analyzedPlots / this.currentProject.numPlots).toFixed(2);
         }
-        catch(e)
-        {
-            p = 0;
-        }
-        return parseFloat(p).toFixed(2);
     };
 
     // FIXME: these values are incorrect
     this.flaggedPercentage = function () {
-        var p = 0;
-        try{
-            p = (100 * this.stats.flaggedPlots / this.currentProject.numPlots);
+        if (this.currentProject == null || this.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * this.stats.flaggedPlots / this.currentProject.numPlots).toFixed(2);
         }
-        catch(e)
-        {
-            p = 0;
-        }
-        return parseFloat(p).toFixed(2);
     };
 
     // FIXME: these values are incorrect
-    this.completePercentage = function () {
-        var p = 0;
-        try{
-            p = (100 * (this.stats.analyzedPlots + this.stats.flaggedPlots) / this.currentProject.numPlots);
+    this.completedPercentage = function () {
+        if (this.currentProject == null || this.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * (this.stats.analyzedPlots + this.stats.flaggedPlots) / this.currentProject.numPlots).toFixed(2);
         }
-        catch(e)
-        {
-            p = 0;
-        }
-        return parseFloat(p).toFixed(2);
     };
 
 }]).directive("convertToNumber",
