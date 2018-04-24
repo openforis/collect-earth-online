@@ -199,6 +199,8 @@
 	            	</div>
             </div>
             <div ng-if="institution.userId != '' && institution.details.id > 0 && !institution.isInstitutionMember(institution.userId)">
+            	                <button class="btn btn-sm btn-outline-yellow btn-block" id="request-membership-button" name="request-membership-button"  ng-click="institution.requestMembership()"><span class="d-xl-none"><i class="fa fa-plus-square"></i></span> <span class="d-none d-xl-block">Request membership</span></button>
+            
                 <input type="button" class="button" id="request-membership-button" name="request-membership-button"
                        value="Request Membership" ng-click="institution.requestMembership()">
             </div>
