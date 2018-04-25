@@ -93,7 +93,6 @@
    3. Does the spinner appear correctly when creating a new project?
    4. Can we remove the reference image field from the sample values table yet?
 ** collection.ftl
-   *IN PROGRESS*
    1. Add the survey cards to the sidebar:
       - Replace surveyHTML on card-test page before calling CollectForms() constructor each time
       - Figure out where to grab the recordId and sampleIds for the CollectForms() constructor (in card-test.js)
@@ -104,8 +103,11 @@
    6. Get Billy to fix the styles related to showSideBar, mapClass, and quitClass.
    7. Handle edge case of projects with 0 sample points.
 ** collection.js
-   *IN PROGRESS*
-   1. Make sure the utils.[enable|disable]_element() calls make sense.
+   1. Reduce the utils.[enable|disable]_element() calls to the minimum number that works correctly.
+   2. Can we remove this.showSideBar, this.mapClass, and this.quitClass? They don't appear to do anything.
+   3. Switch the "Go To First Plot" button with the "Skip" and "Flag Plot As Bad" buttons using ng-if in collection.ftl.
+   4. Move the calls in loadRandomPlot() and loadPlotById() into a function in mercator-openlayers.js.
+   5. Merge loadRandomPlot() and loadPlotById().
 ** card-test.ftl
    *IN PROGRESS*
    1. Remove this file once survey cards are added to the Project page.

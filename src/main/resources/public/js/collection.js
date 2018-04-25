@@ -12,11 +12,12 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.mapConfig = null;
     this.currentPlot = null;
     this.userSamples = {};
+    this.statClass = "projNoStats";
+    this.arrowState = "arrow-down";
+    // FIXME: These values don't appear to do anything
     this.showSideBar = false;
     this.mapClass = "fullmap";
     this.quitClass = "quit-full";
-    this.statClass = "projNoStats";
-    this.arrowState = "arrow-down";
 
     this.getProjectById = function (projectId) {
         $http.get(this.root + "/get-project-by-id/" + projectId)
@@ -169,14 +170,17 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         if (this.currentPlot == null) {
             this.getPlotDataById(plotId);
         } else {
-            angular.element("#go-to-first-plot-button").addClass("d-none");
-            angular.element("#plot-nav").removeClass("d-none");
-            this.showSideBar = true;
-            this.mapClass = "sidemap";
-            this.quitClass = "quit-side";
+            // FIXME: What is the minimal set of these that I can execute?
             utils.enable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
             utils.disable_element("save-values-button");
+            // FIXME: These classes should be handled with an ng-if in collection.ftl
+            angular.element("#go-to-first-plot-button").addClass("d-none");
+            angular.element("#plot-nav").removeClass("d-none");
+            // FIXME: These three assignments don't appear to do anything
+            this.showSideBar = true;
+            this.mapClass = "sidemap";
+            this.quitClass = "quit-side";
 
             // FIXME: Move these calls into a function in mercator-openlayers.js
             mercator.disableSelection(this.mapConfig);
@@ -203,6 +207,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             .then(angular.bind(this, function successCallback(response) {
                 if (response.data == "done") {
                     this.currentPlot = null;
+                    // FIXME: What is the minimal set of these that I can execute?
                     utils.disable_element("new-plot-button");
                     utils.disable_element("flag-plot-button");
                     utils.disable_element("save-values-button");
@@ -222,6 +227,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         if (this.currentPlot == null) {
             this.getPlotData();
         } else {
+            // FIXME: What is the minimal set of these that I can execute?
             utils.enable_element("flag-plot-button");
 
             // FIXME: Move these calls into a function in mercator-openlayers.js
@@ -245,8 +251,14 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     };
 
     this.nextPlot = function () {
+        // FIXME: What is the minimal set of these that I can execute?
+        utils.enable_element("new-plot-button");
+        utils.enable_element("flag-plot-button");
+        utils.disable_element("save-values-button");
+        // FIXME: These classes should be handled with an ng-if in collection.ftl
         angular.element("#go-to-first-plot-button").addClass("d-none");
         angular.element("#plot-nav").removeClass("d-none");
+        // FIXME: These three assignments don't appear to do anything
         this.showSideBar = true;
         this.mapClass = "sidemap";
         this.quitClass = "quit-side";
@@ -254,9 +266,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
         this.currentPlot = null;
         this.userSamples = {};
-        utils.enable_element("new-plot-button");
-        utils.enable_element("flag-plot-button");
-        utils.disable_element("save-values-button");
         this.loadRandomPlot();
     };
 
@@ -280,6 +289,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 && Object.values(this.userSamples).every(function (values) {
                     return Object.keys(values).length == this.currentProject.sampleValues.length;
                 }, this)) {
+                // FIXME: What is the minimal set of these that I can execute?
                 utils.enable_element("save-values-button");
                 utils.disable_element("new-plot-button");
             }
@@ -328,7 +338,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
-    // FIXME: these values are incorrect
     this.assignedPercentage = function () {
         if (this.currentProject == null || this.stats == null) {
             return "0.00";
@@ -337,7 +346,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
-    // FIXME: these values are incorrect
     this.flaggedPercentage = function () {
         if (this.currentProject == null || this.stats == null) {
             return "0.00";
@@ -346,7 +354,6 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         }
     };
 
-    // FIXME: these values are incorrect
     this.completedPercentage = function () {
         if (this.currentProject == null || this.stats == null) {
             return "0.00";
