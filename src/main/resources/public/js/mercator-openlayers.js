@@ -762,7 +762,7 @@ mercator.getPopupContent = function (documentRoot, feature) {
     var tableEnd = "</tbody></table>";
     var contentEnd = "</div>";
 
-    if (mercator.isCluster(feature)) {
+    if (mercator.isCluster(feature) && feature.get("features").length > 1) {
         var zoomLink = "<p><a onclick=\"mercator.zoomMapToExtent(angular.element('#home').scope().home.mapConfig, ["
             + mercator.getClusterExtent(feature) + "])\" "
             + "class=\"btn btn-block btn-sm btn-outline-lightgreen\" style=\"cursor:pointer; min-width:350px;\">"
