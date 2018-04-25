@@ -265,14 +265,11 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
             selectedFeatures.forEach(
                 function (sample) {
-                    var pointAssignments = this.userSamples[sample.get("sampleId")];
-                    if (pointAssignments) {
-                        pointAssignments[sampleValueGroup.name] = sampleValue.name;
-                    } else {
-                        pointAssignments = {};
-                        pointAssignments[sampleValueGroup.name] = sampleValue.name;
+                    var sampleId = sample.get("sampleId");
+                    if (!this.userSamples[sampleId]) {
+                        this.userSamples[sampleId] = {};
                     }
-                    this.userSamples[sample.get("sampleId")] = pointAssignments;
+                    this.userSamples[sampleId][sampleValueGroup.name] = sampleValue.name;
                     mercator.highlightSamplePoint(sample, sampleValue.color);
                 },
                 this // necessary to pass outer scope into function

@@ -76,7 +76,6 @@
 ** Projects.java
    *IN PROGRESS*
 ** project.ftl
-   *RESUME HERE*
    1. Move the OpenLayers icon up onto the map by fixing its style.
    2. Enable the date-related project stats.
    3. Hide Configure Geo-Dash button until after the project is created.
@@ -88,55 +87,6 @@
    9. Export classes and colors from one project to use in another (as CSV?).
    10. Can we remove the reference image field from the sample values table yet?
    11. Handle edge case of projects with 0 sample points.
-   12. Allow projects to add multiple temporal imagery layers.
-       - [X] Remove imagery-year, stacking-profile, and attribution from project-list.json and default-project.json.
-       - [X] Do not add these features when creating a project in Projects.java.
-       - [X] Remove the imagery year and stacking profile dropdown menus from project.ftl and project.js.
-       - [X] Remove all references to imagery year and stacking profile from project.ftl and project.js.
-       - [X] Replace all references to project attribution with imagery attribution in collection.ftl and collection.js.
-       - [X] Add the Imagery Year and Stacking Profile dropdown menus to collection.ftl and collection.js.
-       - [X] Initialize this.currentImagery, this.imageryYear, and this.stackingProfile in collection.js.
-       - [ ] Replace all references to map_utils with mercator in collection.js.
-       - [X] Notify Stefano to remove imagery-year, stacking-profile, and attribution from his database schema for projects and edit CollectProjects.java.
-             <div class="form-group mb-1">
-                 <label class="small mb-0" for="imagery-year"
-                        style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Imagery Year</label>
-                 <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
-                         ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
-                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-                     <option value="2017">2017</option>
-                     <option value="2016">2016</option>
-                     <option value="2015">2015</option>
-                     <option value="2014">2014</option>
-                     <option value="2013">2013</option>
-                     <option value="2012">2012</option>
-                     <option value="2011">2011</option>
-                     <option value="2010">2010</option>
-                     <option value="2009">2009</option>
-                     <option value="2008">2008</option>
-                     <option value="2007">2007</option>
-                     <option value="2006">2006</option>
-                     <option value="2005">2005</option>
-                     <option value="2004">2004</option>
-                     <option value="2003">2003</option>
-                     <option value="2002">2002</option>
-                     <option value="2001">2001</option>
-                     <option value="2000">2000</option>
-                 </select>
-             </div>
-             <div class="form-group mb-1">
-                 <label class="small mb-0" for="stacking-profile"
-                        style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">Stacking Profile</label>
-                 <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1"
-                         ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
-                         style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-                     <option value="Accuracy_Profile">Accuracy Profile</option>
-                     <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
-                     <option value="Global_Currency_Profile">Global Currency Profile</option>
-                     <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
-                     <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
-                 </select>
-             </div>
 ** project.js
    1. Set this.lonMin/lonMax/latMin/latMax in displayDragBoxBounds() rather than using document.getElementById().
    2. Add this.date{Created,Published,Closed,Archived} to the JSON database and retrieve these with getProjectStats.
@@ -154,6 +104,7 @@
    6. Get Billy to fix the styles related to showSideBar, mapClass, and quitClass.
    7. Handle edge case of projects with 0 sample points.
 ** collection.js
+   *IN PROGRESS*
    1. Make sure the utils.[enable|disable]_element() calls make sense.
 ** card-test.ftl
    *IN PROGRESS*
@@ -169,9 +120,9 @@
    3. Add maxlength=1000 to the description textarea.
    4. Fix broken logos on http://collect.earth and email all institution admins to re-upload their logos to the site.
 ** mercator-openlayers.js
-   *IN PROGRESS*
    1. Remove ceoMapStyles.cluster (not using it)
-   2. Refactor these CEO specific functions out of mercator and into map-utils:
+   2. Remove FIXME comments from the bottom of the file.
+   3. Refactor these CEO specific functions out of mercator and into map-utils:
       - ceoMapStyles
       - getPlotPolygon
       - getPlotExtent
@@ -184,8 +135,8 @@
       - showProjectPopup
       - projectsToVectorSource
       - addProjectMarkers
-   3. Implement mercator-google-maps.js with Roberto
-   4. Diverge Mercator namespaces:
+   4. Implement mercator-google-maps.js with Roberto
+   5. Diverge Mercator namespaces:
       - mercator-openlayers -> mercatorOL.*
       - mercator-google-maps -> mercatorGM.*
 ** geo-dash.ftl
@@ -195,18 +146,17 @@
 * Unsorted TODOs
 ** FOR NEXT WEEK*
    1. Fix Quyen's save bug on the Collection page
-   2. Fix broken Collect page stats
-   3. Add red announcement banner to homepage
-   4. Add News page to navbar
-   5. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
-   6. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
+   2. Add red announcement banner to homepage
+   3. Add News page to navbar
+   4. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
+   5. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
       - keep ceo2:Demo Institution CEO Webinar April
       - nuke ceo2:everything else
       - copy over ceo:everything
       - if user accounts collide, retain new passwords
-   7. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
-   8. Ask Alfonso to redirect collect.earth (etc) to machiavelli
-   9. Add Planet imagery to basemaps before 5/7:
+   6. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
+   7. Ask Alfonso to redirect collect.earth (etc) to machiavelli
+   8. Add Planet imagery to basemaps before 5/7:
       - https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_YYYY_MM_mosaic/gmap/{z}/{x}/{y}.png?api_key=c195ebe4bf894f5e9d592122acf0f14f (2016_01 <= YYYY_MM <= 2018_03)
       - list available mosaics with this URL: https://api.planet.com/basemaps/v1/mosaics?api_key=c195ebe4bf894f5e9d592122acf0f14f
       - API docs: https://developers.planet.com/docs/api/tile-services/
