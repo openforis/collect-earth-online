@@ -145,18 +145,16 @@
    *IN PROGRESS*
 * Unsorted TODOs
 ** FOR NEXT WEEK*
-   1. Fix Quyen's save bug on the Collection page
-   2. Add red announcement banner to homepage
-   3. Add News page to navbar
-   4. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
-   5. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
+   1. Add News page to navbar
+   2. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
+   3. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
       - keep ceo2:Demo Institution CEO Webinar April
       - nuke ceo2:everything else
       - copy over ceo:everything
       - if user accounts collide, retain new passwords
-   6. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
-   7. Ask Alfonso to redirect collect.earth (etc) to machiavelli
-   8. Add Planet imagery to basemaps before 5/7:
+   4. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
+   5. Ask Alfonso to redirect collect.earth (etc) to machiavelli
+   6. Add Planet imagery to basemaps before 5/7:
       - https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_YYYY_MM_mosaic/gmap/{z}/{x}/{y}.png?api_key=c195ebe4bf894f5e9d592122acf0f14f (2016_01 <= YYYY_MM <= 2018_03)
       - list available mosaics with this URL: https://api.planet.com/basemaps/v1/mosaics?api_key=c195ebe4bf894f5e9d592122acf0f14f
       - API docs: https://developers.planet.com/docs/api/tile-services/
