@@ -721,7 +721,8 @@ mercator.makeRows = function (documentRoot, project) {
     var rightColStart = "<td class=\"small col-6 pr-0\">";
     var colEnd = "</td>";
     var linkStart = "<a href=\"" + documentRoot + "/collection/" + project.get("projectId") + "\" "
-                  + "class=\"btn btn-sm btn-block btn-outline-lightgreen\">";
+                  + "class=\"btn btn-sm btn-block btn-outline-lightgreen\" "
+                  + "style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis\">";
     var linkEnd = "</a>";
     return rowStart
         + leftColStart + "Name" + colEnd
