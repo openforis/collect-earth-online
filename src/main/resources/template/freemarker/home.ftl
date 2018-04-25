@@ -1,5 +1,6 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
+<#include "announcements.ftl">
 <#include "start-content.ftl">
 <script type="text/javascript" src="${root}/js/home.js"></script>
 <div id="home" ng-app="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid!""}')">
