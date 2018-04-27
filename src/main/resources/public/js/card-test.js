@@ -1,38 +1,64 @@
-angular.module("cardTest", []).controller("CardTestController", ["$http", function CardTestController($http) {
+angular.module("cardTest", []).controller("CardTestController", ["$http", "$sce", function CardTestController($http, $sce) {
     this.root = "";
-    this.surveyForm = "";
     this.projectId = "";
-    this.recordId = 554;
-    this.sampleIds = ["1", "2"];
+    this.plotType = "";
+    this.recordId = "";
+    this.sampleIds = null;
+    this.surveyForm = "";
+    this.collectForm = null;
 
     this.initialize = function (documentRoot) {
         this.root = documentRoot;
     };
 
-    // Or add ?rootentitypath=/plot/subplot to the URL to request subplot info
-    this.loadCollectCardsByProjectId = function () {
+    this.callRemote = function (url, errorMessage, successCallback) {
+        $http.get(url).then(angular.bind(this, successCallback),
+                            function errorCallback (response) {
+                                console.log(response);
+                                alert(errorMessage);
+                            });
+    };
+
+    this.loadPlotSurvey = function () {
         if (this.projectId == "") {
             alert("You must first enter a Project ID!");
         } else {
-            $http.get("/collect/survey/" + this.projectId + "/ceoballooncontent.html?rootentitypath=/plot/subplot")
-                .then(angular.bind(this, function successCallback(response) {
-                    this.showSurvey(response.data);
-                    console.log(response.data);
-                    alert("Project cards loaded from Collect. See console output.");
-                }), function errorCallback(response) {
-                    console.log(response);
-                    alert("Error loading the project cards from Collect. See console for details.");
-                });
+            this.callRemote("/collect/survey/" + this.projectId + "/ceoballooncontent.html?rootentitypath=/plot",
+                            "Error loading the plot survey from Collect. See console for details.",
+                            function successCallback (response) {
+                                this.surveyForm = $sce.trustAsHtml(response.data);
+                                this.plotType = "plot";
+                                this.recordId = 554;   // FIXME: set this dynamically
+                                this.sampleIds = null; // FIXME: set this dynamically
+                            });
         }
     };
 
-    this.showSurvey = function (surveyHtml) {
-        angular.element(document.getElementById("collect-survey")).append(surveyHtml);
-        this.surveyForm = new CollectForms(document.getElementById("collect-survey"),
-                                           this.projectId,
-                                           this.recordId,
-                                           "plot/subplot",
-                                           this.sampleIds);
+    this.loadSubplotSurvey = function () {
+        if (this.projectId == "") {
+            alert("You must first enter a Project ID!");
+        } else {
+            this.callRemote("/collect/survey/" + this.projectId + "/ceoballooncontent.html?rootentitypath=/plot/subplot",
+                            "Error loading the subplot survey from Collect. See console for details.",
+                            function successCallback (response) {
+                                this.surveyForm = $sce.trustAsHtml(response.data);
+                                this.plotType = "plot/subplot";
+                                this.recordId = 554;         // FIXME: set this dynamically
+                                this.sampleIds = ["1", "2"]; // FIXME: set this dynamically
+                            });
+        }
+    };
+
+    this.callCollectForms = function () {
+        if (this.projectId == "") {
+            alert("You must first enter a Project ID!");
+        } else {
+            this.collectForm = new CollectForms(angular.element("#collect-survey"),
+                                                this.projectId,
+                                                this.recordId,
+                                                this.plotType,
+                                                this.sampleIds);
+        }
     };
 
 }]);

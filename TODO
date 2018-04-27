@@ -110,9 +110,21 @@
    5. Merge loadRandomPlot() and loadPlotById().
 ** card-test.ftl
    *IN PROGRESS*
-   1. Remove this file once survey cards are added to the Project page.
-   2. Store the collectRecordId property (from each plot object) when you click on a plot.
-   3. Call the CollectForms constructor with collectRecordId every time a user selects a different set of points.
+   1. Make the survey cards behave correctly:
+      - When the page loads:
+        1. [X] Show nothing in the sidebar for value selection.
+      - When the user selects a plot:
+        1. [ ] Store the collectRecordId attribute of the selected plot.
+        2. [X] Call the rootentitypath=/plot URL to get the plot-level survey cards.
+        3. [X] Embed the plot-level survey cards in the page.
+        4. [X] Call CollectForms() with sampleIds = null or sampleIds = [] (because no points have been chosen yet).
+      - When the user selects some sample points:
+        1. [ ] Store the sampleId attributes of the selected samples.
+        2. [X] Call the rootentitypath=/plot/subplot URL to get the subplot survey cards.
+        3. [X] Erase the plot-level survey cards.
+        4. [X] Embed the subplot survey cards in the page.
+        5. [X] Call CollectForms() with sampleIds = [the points I selected].
+   2. Remove this file once survey cards are added to the Project page.
 ** account.ftl
    *IN PROGRESS*
 ** institution.ftl
@@ -160,6 +172,9 @@
       - https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_YYYY_MM_mosaic/gmap/{z}/{x}/{y}.png?api_key=c195ebe4bf894f5e9d592122acf0f14f (2016_01 <= YYYY_MM <= 2018_03)
       - list available mosaics with this URL: https://api.planet.com/basemaps/v1/mosaics?api_key=c195ebe4bf894f5e9d592122acf0f14f
       - API docs: https://developers.planet.com/docs/api/tile-services/
+   7. CEO + Collect:
+      - Collection :: Go to Next Plot stays on same plot
+      - Project :: Gridded sample distribution does not create points correctly
 ** And onward
   - Project properties don't load on ceo/project/# until the project is published
   - Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
