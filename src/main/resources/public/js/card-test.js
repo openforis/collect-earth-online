@@ -27,7 +27,7 @@ angular.module("cardTest", []).controller("CardTestController", ["$http", "$sce"
                             "Error loading the plot survey from Collect. See console for details.",
                             function successCallback (response) {
                                 this.surveyForm = $sce.trustAsHtml(response.data);
-                                this.plotType = "plot";
+                                this.plotType = "/plot";
                                 this.recordId = 554;   // FIXME: set this dynamically
                                 this.sampleIds = null; // FIXME: set this dynamically
                             });
@@ -42,7 +42,7 @@ angular.module("cardTest", []).controller("CardTestController", ["$http", "$sce"
                             "Error loading the subplot survey from Collect. See console for details.",
                             function successCallback (response) {
                                 this.surveyForm = $sce.trustAsHtml(response.data);
-                                this.plotType = "plot/subplot";
+                                this.plotType = "/plot/subplot";
                                 this.recordId = 554;         // FIXME: set this dynamically
                                 this.sampleIds = ["1", "2"]; // FIXME: set this dynamically
                             });
