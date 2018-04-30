@@ -7,6 +7,7 @@
  boundary: null,
  baseMapSource: null,
  plotDistribution: "random",
+ csv: null,
  numPlots: null,
  plotSpacing: null,
  plotShape: "circle",
