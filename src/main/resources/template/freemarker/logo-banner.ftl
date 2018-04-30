@@ -41,5 +41,10 @@
                 <img class="img-fluid" id="servir-mekong" src="${root}/img/servir-mekong-logo.png">
             </a>
         </div>
+        <div class="col-sm-3 text-center my-auto">
+            <a href="http://www.silvacarbon.org">
+                <img class="img-fluid" id="silvacarbon" src="${root}/img/SilvaCarbon.png">
+            </a>
+        </div>
     </div>
 </div>
