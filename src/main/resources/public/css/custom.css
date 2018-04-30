@@ -370,3 +370,10 @@ ul#samplevalue{
           page-break-inside: avoid;
                break-inside: avoid;	
 }
+/*********************************************************************/
+/* NEW COLLECTION PAGE */
+/*********************************************************************/
+.ce-forms-container div.steps.wizard div.steps,
+.ce-forms-container div.actions.clearfix {
+	display: none; 
+}
