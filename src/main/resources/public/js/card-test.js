@@ -28,8 +28,8 @@ angular.module("cardTest", []).controller("CardTestController", ["$http", "$sce"
                             function successCallback (response) {
                                 this.surveyForm = $sce.trustAsHtml(response.data);
                                 this.plotType = "/plot";
-                                this.recordId = 554;   // FIXME: set this dynamically
-                                this.sampleIds = null; // FIXME: set this dynamically
+                                this.recordId = 5;   // FIXME: set this from this.currentPlot.collectRecordId after running loadRandomPlot() or loadPlotById()
+                                this.sampleIds = null;
                             });
         }
     };
@@ -43,8 +43,8 @@ angular.module("cardTest", []).controller("CardTestController", ["$http", "$sce"
                             function successCallback (response) {
                                 this.surveyForm = $sce.trustAsHtml(response.data);
                                 this.plotType = "/plot/subplot";
-                                this.recordId = 554;         // FIXME: set this dynamically
-                                this.sampleIds = ["1", "2"]; // FIXME: set this dynamically
+                                this.recordId = 5;         // FIXME: set this from this.currentPlot.collectRecordId after running loadRandomPlot() or loadPlotById()
+                                this.sampleIds = ["1"]; // FIXME: set this from the currently selected samples
                             });
         }
     };

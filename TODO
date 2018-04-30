@@ -135,8 +135,9 @@
    4. Fix broken logos on http://collect.earth and email all institution admins to re-upload their logos to the site.
 ** mercator-openlayers.js
    1. Remove ceoMapStyles.cluster (not using it)
-   2. Remove FIXME comments from the bottom of the file.
-   3. Refactor these CEO specific functions out of mercator and into map-utils:
+   2. Change ceoMapStyles.ceoIcon to use "img/ceoicon.png" and move ceoicon.png into the public/img folder
+   3. Remove FIXME comments from the bottom of the file.
+   4. Refactor these CEO specific functions out of mercator and into map-utils:
       - ceoMapStyles
       - getPlotPolygon
       - getPlotExtent
@@ -149,23 +150,25 @@
       - showProjectPopup
       - projectsToVectorSource
       - addProjectMarkers
-   4. Implement mercator-google-maps.js with Roberto
-   5. Diverge Mercator namespaces:
+   5. Implement mercator-google-maps.js with Roberto
+   6. Diverge Mercator namespaces:
       - mercator-openlayers -> mercatorOL.*
       - mercator-google-maps -> mercatorGM.*
+** mercator-test.html
+   1. Delete this file.
 ** geo-dash.ftl
    *IN PROGRESS*
 ** widget-layout-editor.ftl
    *IN PROGRESS*
 * Unsorted TODOs
 ** FOR NEXT WEEK*
-   1. Add News page to navbar
-   2. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
-   3. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
+   1. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
       - keep ceo2:Demo Institution CEO Webinar April
       - nuke ceo2:everything else
       - copy over ceo:everything
       - if user accounts collide, retain new passwords
+   2. Add News page to navbar
+   3. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
    4. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
    5. Ask Alfonso to redirect collect.earth (etc) to machiavelli
    6. Add Planet imagery to basemaps before 5/7:
