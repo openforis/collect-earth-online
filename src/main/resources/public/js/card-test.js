@@ -2,8 +2,8 @@ angular.module("cardTest", []).controller("CardTestController", ["$http", "$sce"
     this.root = "";
     this.projectId = "";
     this.plotType = "";
-    this.recordId = "";
-    this.sampleIds = null;
+    this.recordId = "";  // FIXME: set this from this.currentPlot.collectRecordId after running loadRandomPlot() or loadPlotById()
+    this.sampleIds = ""; // FIXME: set this from the currently selected samples
     this.surveyForm = "";
     this.collectForm = null;
 
@@ -20,44 +20,42 @@ angular.module("cardTest", []).controller("CardTestController", ["$http", "$sce"
     };
 
     this.loadPlotSurvey = function () {
-        if (this.projectId == "") {
-            alert("You must first enter a Project ID!");
+        if (this.projectId == "" || this.recordId == "" || this.sampleIds == "") {
+            alert("Please fill in all the fields.");
         } else {
             this.callRemote("/collect/survey/" + this.projectId + "/ceoballooncontent.html?rootentitypath=/plot",
                             "Error loading the plot survey from Collect. See console for details.",
                             function successCallback (response) {
                                 this.surveyForm = $sce.trustAsHtml(response.data);
                                 this.plotType = "/plot";
-                                this.recordId = 5;   // FIXME: set this from this.currentPlot.collectRecordId after running loadRandomPlot() or loadPlotById()
-                                this.sampleIds = null;
+                                // this.callCollectForms();
                             });
         }
     };
 
     this.loadSubplotSurvey = function () {
-        if (this.projectId == "") {
-            alert("You must first enter a Project ID!");
+        if (this.projectId == "" || this.recordId == "" || this.sampleIds == "") {
+            alert("Please fill in all the fields.");
         } else {
             this.callRemote("/collect/survey/" + this.projectId + "/ceoballooncontent.html?rootentitypath=/plot/subplot",
                             "Error loading the subplot survey from Collect. See console for details.",
                             function successCallback (response) {
                                 this.surveyForm = $sce.trustAsHtml(response.data);
                                 this.plotType = "/plot/subplot";
-                                this.recordId = 5;         // FIXME: set this from this.currentPlot.collectRecordId after running loadRandomPlot() or loadPlotById()
-                                this.sampleIds = ["1"]; // FIXME: set this from the currently selected samples
+                                // this.callCollectForms();
                             });
         }
     };
 
     this.callCollectForms = function () {
-        if (this.projectId == "") {
-            alert("You must first enter a Project ID!");
+        if (this.projectId == "" || this.recordId == "" || this.sampleIds == "") {
+            alert("Please fill in all the fields.");
         } else {
             this.collectForm = new CollectForms(angular.element("#collect-survey"),
                                                 this.projectId,
                                                 this.recordId,
                                                 this.plotType,
-                                                this.sampleIds);
+                                                JSON.parse(this.sampleIds));
         }
     };
 
