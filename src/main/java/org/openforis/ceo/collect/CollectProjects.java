@@ -744,17 +744,19 @@ public class CollectProjects {
         JsonArray samplingPointSettings = new JsonArray();
         JsonObject plotLevelSettings = new JsonObject();
         plotLevelSettings.add("numPoints", ceoProject.get("numPlots"));
-        plotLevelSettings.addProperty("shape", "SQUARE"); //aoi is always a square
+        plotLevelSettings.addProperty("shape", ceoProject.get("plotShape").getAsString().toUpperCase());
         plotLevelSettings.addProperty("distribution", ceoProject.get("plotDistribution").getAsString().toUpperCase());
         plotLevelSettings.add("resolution", ceoProject.get("plotSpacing"));
+        plotLevelSettings.addProperty("pointShape", ceoProject.get("plotShape").getAsString().toUpperCase());
         plotLevelSettings.add("pointWidth", ceoProject.get("plotSize"));
         samplingPointSettings.add(plotLevelSettings);
 
         JsonObject sampleLevelSettings = new JsonObject();
         sampleLevelSettings.add("numPoints", ceoProject.get("samplesPerPlot"));
-        sampleLevelSettings.addProperty("shape", ceoProject.get("plotShape").getAsString().toUpperCase());
+        sampleLevelSettings.addProperty("shape", "CIRCLE");
         sampleLevelSettings.addProperty("distribution", ceoProject.get("sampleDistribution").getAsString().toUpperCase());
         sampleLevelSettings.add("resolution", ceoProject.get("sampleResolution"));
+        sampleLevelSettings.addProperty("pointShape", "CIRCLE");
         sampleLevelSettings.addProperty("pointWidth", SAMPLE_POINT_WIDTH_M);
         samplingPointSettings.add(sampleLevelSettings);
         
@@ -766,7 +768,7 @@ public class CollectProjects {
         JsonArray codeLists = toElementStream(sampleValueLists).map(sampleValueList -> {
             JsonObject sampleValueListObj = (JsonObject) sampleValueList;
             JsonObject codeList = new JsonObject();
-            codeList.addProperty("name", sampleValueListObj.get("name").getAsString());
+            codeList.addProperty("label", sampleValueListObj.get("name").getAsString());
             
             JsonArray values = sampleValueListObj.get("values").getAsJsonArray();
             JsonArray codeListItems = toElementStream(values).map(valEl -> {
