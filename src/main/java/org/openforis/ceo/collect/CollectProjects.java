@@ -651,7 +651,7 @@ public class CollectProjects {
             p.addProperty("plotDistribution", plotLevelSettings.get("distribution").getAsString().toLowerCase());
             p.addProperty("numPlots", plotLevelSettings.get("numPoints").getAsInt());
             p.add("plotSpacing", plotLevelSettings.get("resolution"));
-            p.addProperty("plotShape", samplePointLevelSettings.get("shape").getAsString().toLowerCase());
+            p.addProperty("plotShape", plotLevelSettings.get("shape").getAsString().toLowerCase());
             p.addProperty("plotSize", plotLevelSettings.get("pointWidth").getAsInt());
             
             p.addProperty("sampleDistribution", samplePointLevelSettings.get("distribution").getAsString().toLowerCase());
