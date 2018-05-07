@@ -161,23 +161,48 @@
 ** widget-layout-editor.ftl
    *IN PROGRESS*
 * Unsorted TODOs
-** FOR NEXT WEEK*
-   1. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
-      - keep ceo2:Demo Institution CEO Webinar April
-      - nuke ceo2:everything else
-      - copy over ceo:everything
-      - if user accounts collide, retain new passwords
-   2. Add News page to navbar
-   3. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
-   4. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
-   5. Ask Alfonso to redirect collect.earth (etc) to machiavelli
-   6. Add Planet imagery to basemaps before 5/7:
+** High Priority
+   1. BUG: Allow Quyen to only fill in values for one of her sample values on https://collect.earth
+   2. BUG: Karis can't create a new project under the USFS institution on https://collect.earth
+   3. Add imagery to the ceo development server
+   4. Email everyone a link to ceo's development server (http://216.218.220.138/)
+   5. Add Planet imagery to basemaps before 5/7:
       - https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_YYYY_MM_mosaic/gmap/{z}/{x}/{y}.png?api_key=c195ebe4bf894f5e9d592122acf0f14f (2016_01 <= YYYY_MM <= 2018_03)
       - list available mosaics with this URL: https://api.planet.com/basemaps/v1/mosaics?api_key=c195ebe4bf894f5e9d592122acf0f14f
       - API docs: https://developers.planet.com/docs/api/tile-services/
-   7. CEO + Collect:
-      - Collection :: Go to Next Plot stays on same plot
-      - Project :: Gridded sample distribution does not create points correctly
+   6. Update the announcement banner to say DigitalGlobe is going dark as of 5/7 and to use Planet Imagery instead
+   7. Talk to Roberto about mercator-googlemaps.js integration
+   8. Get new About page text from Kel
+   9. Update CEO Manual with Karis
+   10. Add News page to navbar
+   11. Make Account page work correctly (and communicate with Billy about it)
+   12. Ask Githika to test the new site on all devices
+   13. Merge card-test page into Collection page and add Configure Survey button to Project page
+       - sampleIds: they have to be numbers but the array can be an array of strings or numbers
+       - the constructor of Collect Forms was not supposed to be called multiple times... you should reload/change the content of the "container" and then call the constructor again
+   14. Ask Jerome to update survey card CSS
+   15. Record imagery timestamp when plot values are saved
+   16. Ask Stefano to fix the buggy project creation algorithm in Collect
+       - Plot Shape = Square + Sample Distribution = Gridded seems to return only 2 points and only 1 is shown on the Collection page
+   17. Work on migration to Collect database with Stefano
+   18. Cleanup merged database on ceo2:
+       - Remove plot-data files for non-existent projects
+       - Remove dash files for non-existent geodash dashboards
+   19. Add an option to show the same plot multiple times to the Project creation page
+   20. Add client-side validation to the Project page (restrict numPlots<=10,000 and samplesPerPlot<=400)
+   21. Re-enable the spinner animation on the Project page
+   22. Make sure Stefano fixes timeout with Project creation
+   23. Merge ceo and ceo2 database on machiavelli (resume in ~/geek/code/clojure/merge-ceo-projects/)
+       - keep ceo2:Demo Institution CEO Webinar April
+       - nuke ceo2:everything else
+       - copy over ceo:everything
+       - if user accounts collide, retain new passwords
+   24. Migrate ceo to machiavelli (increase the -Xmx value for its JVM and ensure that the app auto-starts at boot)
+   25. Ask Jeff to redirect ceo.sig-gis.com to machiavelli
+   26. Ask Alfonso to redirect collect.earth (etc) to machiavelli
+   27. CEO + Collect:
+       - Collection :: Go to Next Plot stays on same plot
+       - Project :: Gridded sample distribution does not create points correctly
 ** And onward
   - Project properties don't load on ceo/project/# until the project is published
   - Remove second call to get-unanalyzed-plot-byid in project.{ftl,js}
