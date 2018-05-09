@@ -44,4 +44,14 @@
                  geoserverUrl: "https://services.digitalglobe.com/mapservice/wmsaccess",
                  geoserverParams: {"VERSION": "1.1.1",
                                    "LAYERS": "DigitalGlobe:Imagery",
-                                   "CONNECTID": "b6742ef2-9a67-4226-b388-c97ac7a44ac8"}}}]
+                                   "CONNECTID": "b6742ef2-9a67-4226-b388-c97ac7a44ac8"}}},
+ {id: 6,
+  institution: 1,
+  visibility: "public",
+  title: "PlanetGlobalMosaic",
+  attribution: "Planet Labs Global Mosaic | © Planet Labs, Inc",
+  extent: null,
+  sourceConfig: {type: "Planet",
+                 year: "2018",
+                 month: "01",
+                 accessToken: "c195ebe4bf894f5e9d592122acf0f14f"}}]

@@ -73,6 +73,11 @@ mercator.createSource = function (sourceConfig) {
         return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
                                   + "/{z}/{x}/{y}.png?access_token=" + sourceConfig.accessToken,
                                   attribution: "© DigitalGlobe, Inc"});
+    } else if (sourceConfig.type == "Planet") {
+        return new ol.source.XYZ({url: "https://tiles0.planet.com/basemaps/v1/planet-tiles/global_monthly_"
+                                  + sourceConfig.year + "_" + sourceConfig.month + "_mosaic/gmap/{z}/{x}/{y}.png?api_key="
+                                  + sourceConfig.accessToken,
+                                  attribution: "© Planet Labs, Inc"});
     } else if (sourceConfig.type == "BingMaps") {
         return new ol.source.BingMaps({imagerySet: sourceConfig.imageryId,
                                        key: sourceConfig.accessToken,
