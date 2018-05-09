@@ -1,10 +1,15 @@
 <div style="color:#eec922; background-color:#e63232; text-align:center; padding:5px;">
     <p style="margin:0px; padding:0px;">
-        The DigitalGlobeWMSImagery feed is experiencing a (hopefully)
-        temporary blackout. In the meantime, we will be adding a
-        monthly temporal imagery feed from <a href="http://planet.com">Planet</a>.
-        Look for this in your institution's imagery list starting on
-        May 8th.
+        A bug preventing the creation of new projects was accidentally
+        introduced as part of the recent database merge. It has been
+        identified and fixed. Thank you to the users who reported this
+        issue. Please let us know if you notice any other bugs going
+        forward.
+        <!-- The DigitalGlobeWMSImagery feed is experiencing a (hopefully)
+          temporary blackout. In the meantime, we will be adding a
+          monthly temporal imagery feed from <a href="http://planet.com">Planet</a>.
+          Look for this in your institution's imagery list starting on
+          May 8th. -->
         <!-- All institutions, users, projects, and imagery from
           <a href="http://ceo.sig-gis.com">http://ceo.sig-gis.com</a>
           have been transferred to this site. If you had a user account
