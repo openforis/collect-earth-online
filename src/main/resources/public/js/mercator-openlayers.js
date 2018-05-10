@@ -74,7 +74,7 @@ mercator.createSource = function (sourceConfig) {
                                   + "/{z}/{x}/{y}.png?access_token=" + sourceConfig.accessToken,
                                   attribution: "© DigitalGlobe, Inc"});
     } else if (sourceConfig.type == "Planet") {
-        return new ol.source.XYZ({url: "https://tiles0.planet.com/basemaps/v1/planet-tiles/global_monthly_"
+        return new ol.source.XYZ({url: "https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/global_monthly_"
                                   + sourceConfig.year + "_" + sourceConfig.month + "_mosaic/gmap/{z}/{x}/{y}.png?api_key="
                                   + sourceConfig.accessToken,
                                   attribution: "© Planet Labs, Inc"});
@@ -291,6 +291,27 @@ mercator.getLayerByTitle = function (mapConfig, layerTitle) {
             return layer.get("title") == layerTitle;
         }
     );
+};
+
+// [Pure] Returns the initial layerConfig for the map layer with title
+// == layerTitle or null if no such layer exists.
+mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
+    return mapConfig.init.layerConfigs.find(
+        function (layerConfig) {
+            return layerConfig.title == layerTitle;
+        }
+    );
+};
+
+// [Side Effects] Finds the map layer with title == layerTitle and
+// applies transformer to its initial sourceConfig to create a new
+// source for the layer.
+mercator.updateLayerSource = function (mapConfig, layerTitle, transformer) {
+    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    var layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
+    if (layer && layerConfig) {
+        layer.setSource(mercator.createSource(transformer.call(null, layerConfig.sourceConfig)));
+    }
 };
 
 // [Side Effects] Finds the map layer with title == layerTitle and
