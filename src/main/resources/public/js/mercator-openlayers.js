@@ -712,7 +712,8 @@ mercator.disableDragBoxDraw = function (mapConfig) {
     return mapConfig;
 };
 
-//
+// [Pure] Returns the extent of the rectangle drawn by the passed-in
+// dragBox in lat/lon coords (EPSG:4326).
 mercator.getDragBoxExtent = function (dragBox) {
     return dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
 };
