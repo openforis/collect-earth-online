@@ -1,10 +1,14 @@
 <div style="color:#eec922; background-color:#e63232; text-align:center; padding:5px;">
     <p style="margin:0px; padding:0px;">
-        A bug preventing the creation of new projects was accidentally
-        introduced as part of the recent database merge. It has been
-        identified and fixed. Thank you to the users who reported this
-        issue. Please let us know if you notice any other bugs going
-        forward.
+        Check out the new <a href="http://planet.com">Planet Labs</a> imagery
+        source on any project's data collection page. This layer
+        provides monthly global imagery from January 2016 - March
+        2018.
+        <!-- A bug preventing the creation of new projects was accidentally
+          introduced as part of the recent database merge. It has been
+          identified and fixed. Thank you to the users who reported this
+          issue. Please let us know if you notice any other bugs going
+          forward. -->
         <!-- The DigitalGlobeWMSImagery feed is experiencing a (hopefully)
           temporary blackout. In the meantime, we will be adding a
           monthly temporal imagery feed from <a href="http://planet.com">Planet</a>.
