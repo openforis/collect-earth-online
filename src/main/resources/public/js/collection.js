@@ -7,8 +7,10 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.plotList = null;
     this.imageryList = null;
     this.currentImagery = {attribution: ""};
-    this.imageryYear = 2009;
-    this.stackingProfile = "Accuracy_Profile";
+    this.imageryYearDG = 2009;
+    this.stackingProfileDG = "Accuracy_Profile";
+    this.imageryYearPlanet = 2018;
+    this.imageryMonthPlanet = "03";
     this.mapConfig = null;
     this.currentPlot = null;
     this.userSamples = {};
@@ -79,17 +81,31 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.updateDGWMSLayer = function () {
         mercator.updateLayerWmsParams(this.mapConfig,
                                       "DigitalGlobeWMSImagery",
-                                      {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.imageryYear + "-01-01')"
-                                       + "AND(acquisition_date<='" + this.imageryYear + "-12-31')",
-                                       FEATUREPROFILE: this.stackingProfile});
+                                      {COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.imageryYearDG + "-01-01')"
+                                       + "AND(acquisition_date<='" + this.imageryYearDG + "-12-31')",
+                                       FEATUREPROFILE: this.stackingProfileDG});
+    };
+
+    this.updatePlanetLayer = function () {
+        mercator.updateLayerSource(this.mapConfig,
+                                   "PlanetGlobalMosaic",
+                                   function (sourceConfig) {
+                                       sourceConfig.month = this.imageryMonthPlanet;
+                                       sourceConfig.year = this.imageryYearPlanet;
+                                       return sourceConfig;
+                                   },
+                                   this);
     };
 
     this.setBaseMapSource = function () {
         mercator.setVisibleLayer(this.mapConfig, this.currentProject.baseMapSource);
         this.currentImagery = this.getImageryByTitle(this.currentProject.baseMapSource);
         if (this.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
-            this.currentImagery.attribution += " | " + this.imageryYear + " (" + this.stackingProfile + ")";
+            this.currentImagery.attribution += " | " + this.imageryYearDG + " (" + this.stackingProfileDG + ")";
             this.updateDGWMSLayer();
+        } else if (this.currentProject.baseMapSource == "PlanetGlobalMosaic") {
+            this.currentImagery.attribution += " | " + this.imageryYearPlanet + "-" + this.imageryMonthPlanet;
+            this.updatePlanetLayer();
         }
     };
 

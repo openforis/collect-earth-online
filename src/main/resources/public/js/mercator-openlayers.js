@@ -306,11 +306,11 @@ mercator.getLayerConfigByTitle = function (mapConfig, layerTitle) {
 // [Side Effects] Finds the map layer with title == layerTitle and
 // applies transformer to its initial sourceConfig to create a new
 // source for the layer.
-mercator.updateLayerSource = function (mapConfig, layerTitle, transformer) {
+mercator.updateLayerSource = function (mapConfig, layerTitle, transformer, caller) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     var layerConfig = mercator.getLayerConfigByTitle(mapConfig, layerTitle);
     if (layer && layerConfig) {
-        layer.setSource(mercator.createSource(transformer.call(null, layerConfig.sourceConfig)));
+        layer.setSource(mercator.createSource(transformer.call(caller, layerConfig.sourceConfig)));
     }
 };
 

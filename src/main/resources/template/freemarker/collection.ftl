@@ -50,9 +50,10 @@
                     ng-model="collection.currentProject.baseMapSource" ng-change="collection.setBaseMapSource()">
                 <option ng-repeat="imagery in collection.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
             </select>
-            <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1"
-                    ng-model="collection.imageryYear" convert-to-number ng-change="collection.updateDGWMSLayer()"
+            <select class="form-control form-control-sm" id="dg-imagery-year" name="dg-imagery-year" size="1"
+                    ng-model="collection.imageryYearDG" convert-to-number ng-change="collection.updateDGWMSLayer()"
                     ng-show="collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'">
+                <option value="2018">2018</option>
                 <option value="2017">2017</option>
                 <option value="2016">2016</option>
                 <option value="2015">2015</option>
@@ -72,14 +73,37 @@
                 <option value="2001">2001</option>
                 <option value="2000">2000</option>
             </select>
-            <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1"
-                    ng-model="collection.stackingProfile" ng-change="collection.updateDGWMSLayer()"
+            <select class="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile" size="1"
+                    ng-model="collection.stackingProfileDG" ng-change="collection.updateDGWMSLayer()"
                     ng-show="collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'">
                 <option value="Accuracy_Profile">Accuracy Profile</option>
                 <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
                 <option value="Global_Currency_Profile">Global Currency Profile</option>
                 <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
                 <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+            </select>
+            <select class="form-control form-control-sm" id="planet-imagery-year" name="planet-imagery-year" size="1"
+                    ng-model="collection.imageryYearPlanet" convert-to-number ng-change="collection.updatePlanetLayer()"
+                    ng-show="collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'">
+                <option value="2018">2018</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+            </select>
+            <select class="form-control form-control-sm" id="planet-imagery-month" name="planet-imagery-month" size="1"
+                    ng-model="collection.imageryMonthPlanet" ng-change="collection.updatePlanetLayer()"
+                    ng-show="collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'">
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
             </select>
         </fieldset>
         <fieldset ng-repeat="sampleValueGroup in collection.currentProject.sampleValues"
