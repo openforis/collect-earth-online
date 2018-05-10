@@ -8,7 +8,7 @@
         <div class="bg-darkgreen">
             <h1>Project Dashboard</h1>
         </div>
-        <div id="project-map"></div>
+        <div id="project-map" style="height: 75%; width: 100%;"></div>
         <div class="row">
             <div id="project-stats" class="col-xl-6 col-lg-12">
                 <div class="row">

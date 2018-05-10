@@ -16,7 +16,7 @@
 ***
 *****************************************************************************/
 
-var mercator = {};
+var mercator1 = {};
 
 /*****************************************************************************
 ***
@@ -68,24 +68,15 @@ mercator.getViewExtent = function (mapConfig) {
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig
 // is invalid.
-mercator.createSource = function (sourceConfig) {
+mercator1.createSource = function (sourceConfig) {
     if (sourceConfig.type == "DigitalGlobe") {
-        return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
-                                  + "/{z}/{x}/{y}.png?access_token=" + sourceConfig.accessToken,
-                                  attribution: "© DigitalGlobe, Inc"});
-    } else if (sourceConfig.type == "Planet") {
-        return new ol.source.XYZ({url: "https://tiles0.planet.com/basemaps/v1/planet-tiles/global_monthly_"
-                                  + sourceConfig.year + "_" + sourceConfig.month + "_mosaic/gmap/{z}/{x}/{y}.png?api_key="
-                                  + sourceConfig.accessToken,
-                                  attribution: "© Planet Labs, Inc"});
-    } else if (sourceConfig.type == "BingMaps") {
-        return new ol.source.BingMaps({imagerySet: sourceConfig.imageryId,
-                                       key: sourceConfig.accessToken,
-                                       maxZoom: 19});
-    } else if (sourceConfig.type == "GeoServer") {
-        return new ol.source.TileWMS({serverType: "geoserver",
-                                      url: sourceConfig.geoserverUrl,
-                                      params: sourceConfig.geoserverParams});
+        return new google.maps.ImageMapType({
+            getTileUrl: function (tile, zoom) {
+                var url = 'https://{s}.tiles.mapbox.com/v4/{m}/{z}/{x}/{y}.png?access_token=' + sourceConfig.accessToken;
+                return url.replace('{s}', 'api').replace('{m}', sourceConfig.imageryId).replace('{z}', zoom).replace('{x}', tile.x).replace('{y}', tile.y);
+            },
+            tileSize : new google.maps.Size(256, 256)
+        });
     } else {
         return null;
     }
@@ -93,19 +84,22 @@ mercator.createSource = function (sourceConfig) {
 
 // [Pure] Returns a new ol.layer.Tile object or null if the
 // layerConfig is invalid.
-mercator.createLayer = function (layerConfig) {
-    var source = mercator.createSource(layerConfig.sourceConfig);
+mercator1.createLayer = function (layerConfig) {
+    var source = mercator1.createSource(layerConfig.sourceConfig);
     if (source == null) {
         return null;
     } else if (layerConfig.extent != null) {
-        return new ol.layer.Tile({title: layerConfig.title,
-                                  visible: false,
-                                  extent: layerConfig.extent,
-                                  source: source});
+        return {
+            title: layerConfig.title,
+            visible: false,
+            source: source
+        };
     } else {
-        return new ol.layer.Tile({title: layerConfig.title,
-                                  visible: false,
-                                  source: source});
+        return {
+            title: layerConfig.title,
+            visible: false,
+            source: source
+        };
     }
 };
 
@@ -191,39 +185,32 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                     geoserverParams: {VERSION: "1.1.1",
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
-mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
+mercator1.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
     var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
         return null;
     } else {
-        // Create each of the layers that will be shown in the map from layerConfigs
-        var layers = layerConfigs.map(mercator.createLayer);
 
-        // Add a scale line to the default map controls
-        var controls = ol.control.defaults().extend([new ol.control.ScaleLine()]);
+        var layers = layerConfigs.map(mercator1.createLayer);
 
-        // Create the map view using the passed in centerCoords and zoomLevel
-        var view = new ol.View({projection: "EPSG:3857",
-                                center: ol.proj.fromLonLat(centerCoords),
-                                extent: mercator.getFullExtent(),
-                                zoom: zoomLevel});
+        var map = new google.maps.Map(document.getElementById(divName), {
+            center: new google.maps.LatLng(centerCoords[1], centerCoords[0]),
+            layers: layers,
+            zoom: 8
+        });
 
-        // Create the new map object
-        var map = new ol.Map({target: divName,
-                              layers: layers,
-                              controls: controls,
-                              view: view});
+        return {
+            init: {
+                divName: divName,
+                centerCoords: centerCoords,
+                zoomLevel: zoomLevel,
+                layerConfigs: layerConfigs
+            },
+            layers: layers,
+            map: map
+        };
 
-        // Return the map configuration object
-        return {init: {divName: divName,
-                       centerCoords: centerCoords,
-                       zoomLevel: zoomLevel,
-                       layerConfigs: layerConfigs},
-                layers: map.getLayers(),
-                controls: controls,
-                view: view,
-                map: map};
     }
 };
 
@@ -253,9 +240,9 @@ mercator.destroyMap = function (mapConfig) {
 //
 // Example call:
 // var newMapConfig = mercator.resetMap(mapConfig);
-mercator.resetMap = function (mapConfig) {
+mercator1.resetMap = function (mapConfig) {
     mercator.destroyMap(mapConfig);
-    return mercator.createMap(mapConfig.init.divName,
+    return mercator1.createMap(mapConfig.init.divName,
                               mapConfig.init.centerCoords,
                               mapConfig.init.zoomLevel,
                               mapConfig.init.layerConfigs);
@@ -267,17 +254,21 @@ mercator.resetMap = function (mapConfig) {
 ***
 *****************************************************************************/
 
-// [Side Effects] Hides all raster layers in mapConfig except those
-// with title == layerTitle.
-mercator.setVisibleLayer = function (mapConfig, layerTitle) {
+// [Side Effects] Hides all map layers in mapConfig except that with
+// title == layerTitle.
+mercator1.setVisibleLayer = function (mapConfig, layerTitle) {
     mapConfig.layers.forEach(
         function (layer) {
-            if (layer.getVisible() == true && layer instanceof ol.layer.Tile) {
-                layer.setVisible(false);
-            }
-            if (layer.get("title") == layerTitle) {
-                layer.setVisible(true);
-            }
+        	if (layer != null) {
+	            if (layer.visible == true) {
+	                layer.visible = false;
+	                mapConfig.map.overlayMapTypes.clear();
+	            }
+	            if (layer.title == layerTitle) {
+	                layer.visible = true;
+	                mapConfig.map.overlayMapTypes.insertAt(0, layer.source);
+	            }
+        	}
         }
     );
     return mapConfig;
@@ -285,10 +276,10 @@ mercator.setVisibleLayer = function (mapConfig, layerTitle) {
 
 // [Pure] Returns the map layer with title == layerTitle or null if no
 // such layer exists.
-mercator.getLayerByTitle = function (mapConfig, layerTitle) {
+mercator1.getLayerByTitle = function (mapConfig, layerTitle) {
     return mapConfig.layers.getArray().find(
         function (layer) {
-            return layer.get("title") == layerTitle;
+            return layer.title == layerTitle;
         }
     );
 };
@@ -311,21 +302,25 @@ mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
     return mapConfig;
 };
 
-// [Side Effects] Zooms the map view to contain the passed in extent.
-mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
-    mapConfig.view.fit(extent,
-                       mapConfig.map.getSize(),
-                       {maxZoom: maxZoom || 19});
+// [Side Effects] Zooms the map view to contain the layer with
+// title == layerTitle.
+mercator1.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
+    mapConfig.map.fitBounds(mapConfig.bounds);
+    var zoomChangeBoundsListener = google.maps.event.addListenerOnce(mapConfig.map, 'idle', function(event) {
+        if (this.getZoom() > (maxZoom || 19)) {
+            this.setZoom(maxZoom || 19);
+        }
+    });
     return mapConfig;
 };
 
-// [Side Effects] Zooms the map view to contain the layer with
-// title == layerTitle.
-mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
-    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
-    if (layer) {
-        mercator.zoomMapToExtent(mapConfig, layer.getSource().getExtent(), maxZoom);
-    }
+mercator1.zoomMapToBounds = function (mapConfig, bounds, maxZoom) {
+    mapConfig.map.fitBounds(mapConfig.bounds);
+    var zoomChangeBoundsListener = google.maps.event.addListenerOnce(mapConfig.map, 'idle', function(event) {
+        if (this.getZoom() > (maxZoom || 19)) {
+            this.setZoom(maxZoom || 19);
+        }
+    });
     return mapConfig;
 };
 
@@ -341,23 +336,12 @@ mercator.getIconStyle = function (imageSrc) {
 };
 
 // [Pure] Returns a style object that displays a circle with the
-// specified radius, fillColor, borderColor, and borderWidth. If text
-// and textFillColor are also passed, they will be used to overlay
-// text on the circle.
-mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth, text, textFillColor) {
-    if (text == null || textFillColor == null) {
-        return new ol.style.Style({image: new ol.style.Circle({radius: radius,
-                                                               fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
-                                                               stroke: new ol.style.Stroke({color: borderColor,
-                                                                                            width: borderWidth})})});
-    } else {
-        return new ol.style.Style({image: new ol.style.Circle({radius: radius,
-                                                               fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
-                                                               stroke: new ol.style.Stroke({color: borderColor,
-                                                                                            width: borderWidth})}),
-                                   text: new ol.style.Text({text: text.toString(),
-                                                            fill: new ol.style.Fill({color: textFillColor})})});
-    }
+// specified radius, fillColor, borderColor, and borderWidth.
+mercator.getCircleStyle = function (radius, fillColor, borderColor, borderWidth) {
+    return new ol.style.Style({image: new ol.style.Circle({radius: radius,
+                                                           fill: fillColor ? new ol.style.Fill({color: fillColor}) : null,
+                                                           stroke: new ol.style.Stroke({color: borderColor,
+                                                                                        width: borderWidth})})});
 };
 
 // [Pure] Returns a style object that displays a shape with the
@@ -382,18 +366,19 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
                                                             width: borderWidth})});
 };
 
-var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
-                    ceoIcon:      mercator.getIconStyle("ceoicon.png"),
-                    redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
-                    bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
-                    redCircle:    mercator.getCircleStyle(5, null, "red", 2),
-                    yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
-                    greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
-                    redSquare:    mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
-                    yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
-                    greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
-                    cluster:      mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
-                    polygon:      mercator.getPolygonStyle(null, "#8b2323", 3)};
+var ceoMapStyles1 = {
+    icon:         mercator.getIconStyle("favicon.ico"),
+    ceoIcon:      "ceoicon.png",
+    redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
+    bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
+    redCircle:    mercator.getCircleStyle(5, null, "red", 2),
+    yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
+    greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
+    redSquare:    mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
+    yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
+    greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
+    polygon:      mercator.getPolygonStyle(null, "#8b2323", 3)
+};
 
 /*****************************************************************************
 ***
@@ -529,8 +514,8 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
-    var select = new ol.interaction.Select({layers: [layer]});
-    select.set("title", interactionTitle);
+    var select = new ol.interaction.Select({title: interactionTitle,
+                                            layers: [layer]});
     var action = function (event) {
         event.selected.forEach(function (feature) {
             featureStyles[feature] = feature.getStyle();
@@ -553,8 +538,8 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures) {
-    var dragBox = new ol.interaction.DragBox({condition: ol.events.condition.platformModifierKeyOnly});
-    dragBox.set("title", interactionTitle);
+    var dragBox = new ol.interaction.DragBox({title: interactionTitle,
+                                              condition: ol.events.condition.platformModifierKeyOnly});
     var boxstartAction = function () {
         selectedFeatures.clear();
     };
@@ -673,27 +658,60 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
 // [Side Effects] Adds a dragBox draw interaction to mapConfig's map
 // object associated with a newly created empty vector layer called
 // "dragBoxLayer".
-mercator.enableDragBoxDraw = function (mapConfig, callBack) {
+mercator1.enableDragBoxDraw = function (mapConfig, callBack) {
+	/*
     var drawLayer = new ol.layer.Vector({title: "dragBoxLayer",
                                          source: new ol.source.Vector({features: []}),
                                          style: ceoMapStyles.polygon});
     var dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
     mapConfig.map.addLayer(drawLayer);
     mapConfig.map.addInteraction(dragBox);
+    */
+    var drawingManager = new google.maps.drawing.DrawingManager({
+        drawingControl: true,
+        drawingControlOptions: {
+          position: google.maps.ControlPosition.TOP_CENTER,
+          drawingModes: ['rectangle']
+        },
+        rectangleOptions: {
+          fillOpacity: 0.0,
+          strokeWeight: 2,
+          strokeColor: 'red',
+          clickable: false,
+          editable: false,
+          zIndex: 1
+        }
+    });
+    google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+        if (event.type == google.maps.drawing.OverlayType.RECTANGLE) {
+            if (mapConfig['dragBoxOverlay'] !== undefined)
+                mapConfig['dragBoxOverlay'].setMap(null);
+            mapConfig['dragBoxOverlay'] = event.overlay;
+            callBack.call(null, event.overlay);
+        }
+    });
+    drawingManager.setMap(mapConfig.map);
+    mapConfig.drawingManager = drawingManager;
     return mapConfig;
 };
 
 // [Side Effects] Removes the dragBox draw interaction and its
 // associated layer from mapConfig's map object.
 mercator.disableDragBoxDraw = function (mapConfig) {
-    mercator.removeInteractionByTitle(mapConfig, "dragBoxDraw");
-    mercator.removeLayerByTitle(mapConfig, "dragBoxLayer");
+    //mercator.removeInteractionByTitle(mapConfig, "dragBoxDraw");
+    //mercator.removeLayerByTitle(mapConfig, "dragBoxLayer");
+    if (mapConfig.drawingManager !== undefined) mapConfig.drawingManager.setMap(null);
     return mapConfig;
 };
 
 //
-mercator.getDragBoxExtent = function (dragBox) {
-    return dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+mercator1.getDragBoxExtent = function (dragBox) {
+    var bounds = dragBox.getBounds();
+    var lon_min = bounds.getSouthWest().lng();
+    var lat_min = bounds.getSouthWest().lat();
+    var lon_max = bounds.getNorthEast().lng();
+    var lat_max = bounds.getNorthEast().lat();
+    return [lon_min, lat_min, lon_max, lat_max];
 };
 
 /*****************************************************************************
@@ -717,88 +735,34 @@ mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
     return mapConfig.map.getOverlayById(overlayTitle);
 };
 
-// [Pure] Returns true if the feature is a cluster, false otherwise.
-mercator.isCluster = function (feature) {
-    return feature && feature.get("features") && feature.get("features").length > 0;
-};
-
-// [Pure] Returns a string of HTML representing several table rows
-// that describe the passed in project.
-mercator.makeRows = function (documentRoot, project) {
-    var rowStart = "<tr class=\"d-flex\">";
-    var rowEnd = "</tr>";
-    var leftColStart = "<td class=\"small col-6 px-0 my-auto\">";
-    var rightColStart = "<td class=\"small col-6 pr-0\">";
-    var colEnd = "</td>";
-    var linkStart = "<a href=\"" + documentRoot + "/collection/" + project.get("projectId") + "\" "
-                  + "class=\"btn btn-sm btn-block btn-outline-lightgreen\" "
-                  + "style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis\">";
-    var linkEnd = "</a>";
-    return rowStart
-        + leftColStart + "Name" + colEnd
-        + rightColStart + linkStart + project.get("name") + linkEnd + colEnd
-        + rowEnd
-        + rowStart
-        + leftColStart + "Description" + colEnd
-        + rightColStart + (project.get("description") == "" ? "N/A" : project.get("description")) + colEnd
-        + rowEnd
-        + rowStart
-        + leftColStart + "Number of plots" + colEnd
-        + rightColStart + project.get("numPlots") + colEnd
-        + rowEnd;
-};
-
-// [Pure] Returns the minimum extent that bounds all of the
-// subfeatures in the passed in clusterFeature.
-mercator.getClusterExtent = function (clusterFeature) {
-    var clusterPoints = clusterFeature.get("features").map(
-        function (subFeature) {
-            return subFeature.getGeometry().getCoordinates();
-        }
-    );
-    return (new ol.geom.LineString(clusterPoints)).getExtent();
-};
-
-// [Pure] Returns a string of HTML to display in a popup box on the map.
-mercator.getPopupContent = function (documentRoot, feature) {
-    var title = "<div class=\"cTitle\"><h1>"
-              + (mercator.isCluster(feature) ? "Cluster info" : "Project info")
-              + "</h1></div>";
-    var contentStart = "<div class=\"cContent\">";
-    var tableStart = "<table class=\"table table-sm\"><tbody>";
-    var tableRows = mercator.isCluster(feature)
-        ? feature.get("features").map(mercator.makeRows.bind(null, documentRoot)).join("\n")
-        : mercator.makeRows(documentRoot, feature);
-    var tableEnd = "</tbody></table>";
-    var contentEnd = "</div>";
-
-    if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        var zoomLink = "<p><a onclick=\"mercator.zoomMapToExtent(angular.element('#home').scope().home.mapConfig, ["
-            + mercator.getClusterExtent(feature) + "])\" "
-            + "class=\"btn btn-block btn-sm btn-outline-lightgreen\" style=\"cursor:pointer; min-width:350px;\">"
-            + "Zoom to cluster</a></p>";
-        return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
-    } else {
-        return title + contentStart + tableStart + tableRows + tableEnd + contentEnd;
-    }
-};
-
 // [Side Effects] Updates the overlay element's innerHTML with fields
 // containing the feature's name, description, and numPlots fields as
 // well as a link to its data collection page and then displays the
 // overlay on the map at the feature's coordinates.
 mercator.showProjectPopup = function (overlay, documentRoot, feature) {
-    overlay.getElement().innerHTML = mercator.getPopupContent(documentRoot, feature);
-    overlay.setPosition(mercator.isCluster(feature)
-                        ? feature.get("features")[0].getGeometry().getCoordinates()
-                        : feature.getGeometry().getCoordinates());
+    var description = feature.get("description") == "" ? "N/A" : feature.get("description");
+    var html = "<div class=\"cTitle\"><h1>" + feature.get("name") + "</h1></div>";
+    html += "<div class=\"cContent\"><p><span class=\"pField\">Description: </span>" + description + "</p>";
+    html += "<p><span class=\"pField\">Number of plots: </span>" + feature.get("numPlots")  + "</p>";
+    html += "<a href=\"" + documentRoot + "/collection/" + feature.get("projectId") + "\" class=\"lnkStart\">Get Started</a></div>";
+    overlay.getElement().innerHTML = html;
+    overlay.setPosition(feature.getGeometry().getCoordinates());
+};
+
+mercator1.buildProjectPopup = function (feature, documentRoot) {
+    var description = feature["description"] == "" ? "N/A" : feature["description"];
+    var html = "<div class=\"cTitle\"><h1>" + feature["name"] + "</h1></div>";
+    html += "<div class=\"cContent\"><p><span class=\"pField\">Description: </span>" + description + "</p>";
+    html += "<p><span class=\"pField\">Number of plots: </span>" + feature["numPlots"]  + "</p>";
+    html += "<a href=\"" + documentRoot + "/collection/" + feature["projectId"] + "\" class=\"lnkStart\">Get Started</a></div>";
+    return html;
 };
 
 // [Pure] Returns a new vector source containing points for each of
 // the centers of the passed in projects. Features are constructed
 // from each project using its id, name, description, and numPlots
 // fields.
-mercator.projectsToVectorSource = function (projects) {
+mercator1.projectsToVectorSource = function (projects) {
     var features = projects.map(
         function (project) {
             var bounds = mercator.parseGeoJson(project.boundary, false).getExtent();
@@ -808,97 +772,97 @@ mercator.projectsToVectorSource = function (projects) {
             var maxY = bounds[3];
             var centerX = (minX + maxX) / 2;
             var centerY = (minY + maxY) / 2;
-            var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
-            return new ol.Feature({geometry:    geometry,
-                                   projectId:   project.id,
-                                   name:        project.name,
-                                   description: project.description,
-                                   numPlots:    project.numPlots});
+            //var geometry = new ol.geom.Point([centerX, centerY]).transform("EPSG:4326", "EPSG:3857");
+            var geometry = new google.maps.LatLng(centerY, centerX);
+            return {
+                geometry: geometry,
+                projectId:   project.id,
+                name:        project.name,
+                description: project.description,
+                numPlots:    project.numPlots
+            };
         }
     );
-    return new ol.source.Vector({features: features});
+    return {features: features};
 };
 
-// [Side Effects] Adds a new vector layer called "projectMarkers" to
-// mapConfig's map object containing icons at each of the project's
-// AOI centers. Also adds a dynamic overlay popup to the map which
-// shows a brief project description whenever a project icon is
-// clicked. If clusterDistance is not null, the new vector source will
-// cluster the projects. Finally, zooms the map view to the new
-// layer's extent.
-mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot, clusterDistance) {
-    var projectSource = mercator.projectsToVectorSource(projects);
+//[Side Effects] Adds a new vector layer called "projectMarkers" to
+//mapConfig's map object containing icons at each of the project's
+//AOI centers. Also adds a dynamic overlay popup to the map which
+//shows a brief project description whenever a project icon is
+//clicked.
+mercator1.addProjectMarkers = function (mapConfig, projects, documentRoot) {
+ mapConfig.markers = [];
+ mapConfig.bounds = new google.maps.LatLngBounds();
+ var vectorSource = mercator1.projectsToVectorSource(projects);
+ vectorSource.features.forEach(function(feature) {
+     var marker = new google.maps.Marker({
+         position: feature.geometry,
+         map: mapConfig.map,
+         title: 'Hello World!',
+         icon: ceoMapStyles1.ceoIcon
+     });
+     marker.addListener('click', function() {
+         var infowindow = new google.maps.InfoWindow({
+             content: mercator1.buildProjectPopup(feature, documentRoot)
+         })
+         infowindow.open(mapConfig.map, marker);
+     });
+     mapConfig.markers.push(marker);
+     mapConfig.bounds.extend(marker.position);
+ });
+ return mapConfig;
+};
 
-    if (clusterDistance == null) {
-        mercator.addVectorLayer(mapConfig,
-                                "projectMarkers",
-                                projectSource,
-                                ceoMapStyles.ceoIcon);
-    } else {
-        var clusterSource = new ol.source.Cluster({source:   projectSource,
-                                                   distance: clusterDistance});
-        mercator.addVectorLayer(mapConfig,
-                                "projectMarkers",
-                                clusterSource,
-                                function (feature) {
-                                    var numProjects = feature.get("features").length;
-                                    return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numProjects, "#ffffff");
-                                });
-    }
 
-    mercator.addOverlay(mapConfig, "projectPopup");
-    var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    mapConfig.map.on("click",
-                     function (event) {
-                         if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
-                             mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                                                 mercator.showProjectPopup.bind(null, overlay, documentRoot));
-                         } else {
-                             overlay.setPosition(undefined);
-                         }
-                     });
-
-    mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
+mercator1.drawPoint = function (mapConfig, point, options) {
+    var coords = mercator1.getPointCoords(point);
+    var gPoint = new google.maps.Circle({
+        center: new google.maps.LatLng(coords[0], coords[1]),
+        radius: 40
+    });
+    if (options !== undefined) gPoint.setOptions(options);
+    gPoint.setMap(mapConfig.map);
     return mapConfig;
-};
+}
 
-// [Side Effects] Adds a new vector layer called "currentPlots" to
-// mapConfig's map object that clusters the passed in plots. Clicking
-// on clusters with more than one plot zooms the map view to the
-// extent covered by these plots. If a cluster only contains one plot,
-// the callBack function will be called on the cluster feature.
-mercator.addPlotLayer = function (mapConfig, plots, callBack) {
-    var plotSource = mercator.plotsToVectorSource(plots);
-    var clusterSource = new ol.source.Cluster({source:   plotSource,
-                                               distance: 40});
-
-    mercator.addVectorLayer(mapConfig,
-                            "currentPlots",
-                            clusterSource,
-                            function (feature) {
-                                var numPlots = feature.get("features").length;
-                                return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numPlots, "#ffffff");
-                            });
-
-    var clickHandler = function (event) {
-        mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                            function (feature) {
-                                                if (mercator.isCluster(feature)) {
-                                                    if (feature.get("features").length > 1) {
-                                                        mercator.zoomMapToExtent(mapConfig,
-                                                                                 mercator.getClusterExtent(feature));
-                                                    } else {
-                                                        mercator.removeLayerByTitle(mapConfig, "currentPlots");
-                                                        mapConfig.map.un("click", clickHandler);
-                                                        callBack.call(null, feature);
-                                                    }
-                                                }
-                                            });
-    };
-    mapConfig.map.on("click", clickHandler);
-
+mercator1.drawPolygon = function (mapConfig, polygon, options) {
+    var coords = mercator1.getPolygonCoords(polygon);
+    var gPolygon = new google.maps.Polygon({
+        paths: coords
+    });
+    if (options !== undefined) gPolygon.setOptions(options);
+    gPolygon.setMap(mapConfig.map);
     return mapConfig;
-};
+}
+
+mercator1.getPointCoords = function (point) {
+    var parsedJson = JSON.parse(point);
+    var coords = [parsedJson.coordinates[1], parsedJson.coordinates[0]];
+    return coords;
+}
+
+mercator1.getPolygonCoords = function (polygon) {
+    var parsedJson = JSON.parse(polygon);
+    var coordinates = parsedJson.coordinates[0];
+    var coords = coordinates.map(currentValue => new Object({ lat: currentValue[1], lng: currentValue[0] }));
+    return coords;
+}
+
+/*
+mercator1.drawSquare = function (mapConfig, layerTitle, vectorSource, style) {
+    var circle = new google.maps.Circle({
+        center: latLng,
+        radius: side / 2
+    });
+    var square = new google.maps.Rectangle({
+        bounds: circle.getBounds()
+    });
+    if (options !== undefined) square.setOptions(options);
+    square.setMap(mapConfig.map);
+    return mapConfig;
+*/
+
 
 /*****************************************************************************
 ***
@@ -907,7 +871,6 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 *****************************************************************************/
 //
 // FIXME: Move ceoMapStyles out of Mercator.js
-// FIXME: Move mercator.getPopupContent() out of Mercator.js (it is hard-coded to CEO's home page)
 // FIXME: change calls from remove_plot_layer to mercator.removeLayerByTitle(mapConfig, layerTitle)
 // FIXME: change calls from draw_polygon to:
 //        mercator.removeLayerByTitle(mapConfig, "currentAOI");
@@ -930,7 +893,6 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 // FIXME: change calls from enable_selection to mercator.enableSelection
 // FIXME: change calls from disable_selection to mercator.disableSelection
 // FIXME: change calls from remove_sample_layer to mercator.removeLayerByTitle(mapConfig, "currentSamples");
-// FIXME: change calls from remove_plots_layer to mercator.removeLayerByTitle(mapConfig, "currentPlots");
 // FIXME: change calls from draw_points to:
 //        mercator.disableSelection(mapConfig);
 //        mercator.removeLayerByTitle(mapConfig, "currentSamples");
@@ -945,10 +907,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 // FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
-// FIXME: change calls from draw_project_markers to:
-//        mercator.addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance);
-//        mercator.zoomMapToLayer(mapConfig, "projectMarkers");
 // FIXME: change references to pID in home.js to projectId
-// FIXME: change calls from draw_project_points to:
-//        mercator.removeLayerByTitle(mapConfig, "currentPlots");
-//        mercator.addPlotLayer(mapConfig, plots);
+// FIXME: change calls from draw_project_markers to:
+//        mercator.addProjectMarkers(mapConfig, projects, documentRoot);
+//        mercator.zoomMapToLayer(mapConfig, "projectMarkers");
