@@ -28,23 +28,26 @@
         </div>
     </div>
     <div class="row mb-4 justify-content-center">
-        <div class="col-sm-3 text-center my-auto">
-            <img class="img-fluid" id="google" src="${root}/img/google-logo.png">
+        <div class="col-sm-4 text-center my-auto">
+            <a href="http://www.silvacarbon.org">
+                <img class="img-fluid" id="silvacarbon" src="${root}/img/SilvaCarbon.png">
+            </a>
         </div>
-        <div class="col-sm-3 text-center my-auto">
+        <div class="col-sm-4 text-center my-auto">
             <a href="http://www.sig-gis.com">
                 <img class="img-fluid" id="sig" src="${root}/img/sig-logo.png">
             </a>
         </div>
-        <div class="col-sm-3 text-center my-auto">
+        <div class="col-sm-4 text-center my-auto">
             <a href="https://servir.adpc.net">
                 <img class="img-fluid" id="servir-mekong" src="${root}/img/servir-mekong-logo.png">
             </a>
         </div>
-        <div class="col-sm-3 text-center my-auto">
-            <a href="http://www.silvacarbon.org">
-                <img class="img-fluid" id="silvacarbon" src="${root}/img/SilvaCarbon.png">
-            </a>
+        <div class="col-sm-4 text-center my-auto">
+            <img class="img-fluid" id="google" src="${root}/img/google-logo.png">
+        </div>
+        <div class="col-sm-4 text-center my-auto">
+            <img class="img-fluid" id="gtac" src="${root}/img/gtac-logo.png">
         </div>
     </div>
 </div>
