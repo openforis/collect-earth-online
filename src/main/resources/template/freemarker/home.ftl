@@ -37,7 +37,7 @@
 		                                    		<div class="col-11 my-auto">
 			                                    		<p class="tree_label text-white m-0" for="c{{ institution.id }}"><input type="checkbox" class="d-none" id="c{{ institution.id }}" /><span class="">{{ institution.name }}</span></p>
 			                                    </div>
-			                                    <div class="col-xs">
+			                                    <div class="col-xs v-center">
 				                                   	 <a class="institution_info btn btn-sm btn-outline-lightgreen" href="${root}/institution/{{ institution.id }}"><i class="fa fa-info" style="color:white;"></i></a>
 			                                   </div>
 										</div>

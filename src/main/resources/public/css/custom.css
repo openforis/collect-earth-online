@@ -17,6 +17,10 @@
     transform: translate(-50%, -50%);
     overflow: auto;
 }
+.v-center{
+	display: flex;
+	align-items: center;
+}
 .no-container-margin{
 		margin-left:-15px;
 		margin-right:-15px;	
@@ -294,7 +298,9 @@ a:hover{
 	background-color:#ecbc0d!important;
 	color:#white;
 }
-
+#lPanel .btn.bg-lightgreen, #lPanel .btn.btn-outline-lightgreen{
+	white-space: normal;
+	}
 
 
 @media (min-width: 1200px){
