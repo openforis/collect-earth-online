@@ -47,7 +47,7 @@
 	                               	          	<div class="col-9 pr-1">
 	                                           		 <a class="view-project btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
 												</div>	
-	                               	          	<div class="col-3 pl-0">
+	                               	          	<div class="col-3 pl-0 v-center">
 	                                          			<a ng-if="project.editable == true" class="edit-project btn btn-outline-yellow btn-sm btn-block" href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Edit</a>
 	                                    			</div>
 	                                        </div>
