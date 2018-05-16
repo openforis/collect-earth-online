@@ -213,6 +213,7 @@ public class Server implements SparkApplication {
     public static void main(String[] args) {
         // Load the SMTP settings for sending reset password emails
         JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
+        CeoConfig.baseUrl       = smtpSettings.get("baseUrl").getAsString();
         CeoConfig.smtpUser      = smtpSettings.get("smtpUser").getAsString();
         CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
         CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
