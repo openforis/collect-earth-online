@@ -13,6 +13,11 @@
   </context-param>
 
   <context-param>
+    <param-name>baseUrl</param-name>
+    <param-value>http://ceo.sig-gis.com/</param-value>
+  </context-param>
+
+  <context-param>
     <param-name>collectApiUrl</param-name>
     <param-value>http://127.0.0.1:8080/collect/api/</param-value>
   </context-param>
