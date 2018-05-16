@@ -1,9 +1,14 @@
 <div style="color:#eec922; background-color:#e63232; text-align:center; padding:5px;">
     <p style="margin:0px; padding:0px;">
-        Check out the new <a href="http://planet.com">Planet Labs</a> imagery
-        source on any project's data collection page. This layer
-        provides monthly global imagery from January 2016 - March
-        2018.
+        Google changed their security policies recently, which
+        temporarily prevented us from sending password reset emails.
+        We have made the necessary changes to our Google account to
+        address this issue, so password resets should be working
+        again. We apologize for the inconvenience.
+        <!-- Check out the new <a href="http://planet.com">Planet Labs</a> imagery
+          source on any project's data collection page. This layer
+          provides monthly global imagery from January 2016 - March
+          2018. -->
         <!-- A bug preventing the creation of new projects was accidentally
           introduced as part of the recent database merge. It has been
           identified and fixed. Thank you to the users who reported this
