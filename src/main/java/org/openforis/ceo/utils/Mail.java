@@ -32,6 +32,13 @@ public class Mail {
             properties.setProperty("mail.smtp.host", smtpServer);
             properties.setProperty("mail.smtp.port", smtpPort);
 
+            if (smtpPort.equals("465")) {
+                // Use the following if you need SSL
+                properties.put("mail.smtp.socketFactory.port", smtpPort);
+                properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+                properties.put("mail.smtp.socketFactory.fallback", "false");
+            }
+
             // Get the default Session object.
             Session session = Session.getInstance(properties,
                                                   new javax.mail.Authenticator() {

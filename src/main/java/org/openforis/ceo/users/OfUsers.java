@@ -29,6 +29,7 @@ import spark.Response;
 
 public class OfUsers {
 
+    private static final String BASE_URL = CeoConfig.baseUrl;
     private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
     private static final String SMTP_USER = CeoConfig.smtpUser;
     private static final String SMTP_SERVER = CeoConfig.smtpServer;
@@ -201,7 +202,7 @@ public class OfUsers {
                     + inputEmail
                     + ",\n\n"
                     + "  To reset your password, simply click the following link:\n\n"
-                    + "  http://ceo.sig-gis.com/password-reset?email="
+                    + "  " + BASE_URL + "password-reset?email="
                     + inputEmail
                     + "&password-reset-key="
                     + user.get("resetKey").getAsString();
