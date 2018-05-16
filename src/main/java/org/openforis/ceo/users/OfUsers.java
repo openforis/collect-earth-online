@@ -221,6 +221,7 @@ public class OfUsers {
         String inputResetKey = req.queryParams("password-reset-key");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
+
         // Validate input params and assign flash_messages if invalid
         if (inputPassword.length() < 8) {
             req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
@@ -228,13 +229,32 @@ public class OfUsers {
             req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
         } else {
             try {
-                GenericData data = new GenericData();
-                data.put("username", inputEmail);
-                data.put("resetKey", inputResetKey);
-                data.put("newPassword", inputPassword);
-                HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password request
+                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user");
+                userRequest.getUrl().put("username", inputEmail);
+                HttpResponse response = userRequest.execute();
                 if (response.isSuccessStatusCode()) {
-                    req.session().attribute("flash_messages", new String[]{"The password has been changed."});
+                    JsonArray foundUsers = getResponseAsJson(response).getAsJsonArray();
+                    if (foundUsers.size() != 1) {
+                        req.session().attribute("flash_messages", new String[]{"There is no user with that email address."});
+                    } else {
+                        JsonObject foundUser = foundUsers.get(0).getAsJsonObject();
+                        if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
+                            req.session().attribute("flash_messages", new String[]{"Invalid reset key for user " + inputEmail + "."});
+                        } else {
+                            GenericData data = new GenericData();
+                            data.put("username", inputEmail);
+                            data.put("resetKey", inputResetKey);
+                            data.put("newPassword", inputPassword);
+                            response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password request
+                            if (response.isSuccessStatusCode()) {
+                                req.session().attribute("flash_messages", new String[]{"The password has been changed."});
+                            } else {
+                                throw new IOException();
+                            }
+                        }
+                    }
+                } else {
+                    throw new IOException();
                 }
             } catch (IOException e) {
                 e.printStackTrace(); //TODO
