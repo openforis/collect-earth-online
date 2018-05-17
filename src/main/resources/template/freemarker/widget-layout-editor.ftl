@@ -68,18 +68,77 @@
 <script type="text/javascript" src="${root}/js/js.cookie.js"></script>
 <script type="text/javascript" src="${root}/js/geo-dash-widget-editor.js"></script>
 <div id="geodash" ng-app="geodash" ng-controller="GeodashWidgetEditorController as geodash" ng-init="geodash.initialize('${root}')">
+<<<<<<< HEAD
 <br style="clear:both;">
+=======
+<#include "geodash-navbar.ftl">
+
+>>>>>>> 1d53dfc5ce2c9bd2dab73e61fa20969b9cbee334
         <div class="container-fluid widgetEditor">
             <div class="row">
-                <div id="dashHolder" class="dashHolder widgetEditor">
+                <div id="dashHolder" class="dashHolder widgetEditor col-lg-6">
                     <div>
+<<<<<<< HEAD
 
                         <h1>Current Layout </h1>
+=======
+                        <h2 class="header mr-0">Current Layout </h2>
                     </div>
+                </div>
+                <div id="updateDashHolder" class="dashHolder widgetEditor col-lg-6">
+                    <div class="row">
+                         <h2 class="header col mx-0">New Layout</h2>
+					</div>
+ 					<div class="row mb-2">
+                       <div class="col-6 pl-0">
+                          <button class="btn btn-sm btn-outline-lightgreen btn-block update-widgets" name="update-widgets" value="Update" type="submit" onclick="gmodcdash.updateWidgets()"><i class="fa fa-sync-alt"></i> Update</button>
+                        </div>
+                       <div class="col-6 pr-0">
+                          <button class="btn btn-sm btn-outline-lightgreen btn-block update-widgets" name="create-widgets" value="Create" type="submit" onclick="gmodcdash.createWidgetDialog()"><i class="fa fa-plus-square"></i> Create</button>
+                        </div>
+					</div>
+                    <div class="row placeholders" id="replacementContainer" style="margin-right:-30px;">
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 1; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 1; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:7 /span 3; grid-row: 1; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:10 /span 3; grid-row: 1; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 2; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 2; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:7 /span 3; grid-row: 2; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:10 /span 3; grid-row: 2; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 3; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 3; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:7 /span 3; grid-row: 3; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:10 /span 3; grid-row: 3; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 4; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 4; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:7 /span 3; grid-row: 4; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:10 /span 3; grid-row: 4; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 5; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 5; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:7 /span 3; grid-row: 5; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:10 /span 3; grid-row: 5; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 6; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 6; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:7 /span 3; grid-row: 6; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:10 /span 3; grid-row: 6; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:1 /span 3; grid-row: 7; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:4 /span 3; grid-row: 7; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:7 /span 3; grid-row: 7; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+                        <div class="placeholder columnSpan3 rowSpan1" style="grid-column:10 /span 3; grid-row: 7; background-color:#0C4D48;" onclick="gmodcdash.togglePlacementSelection(this)"></div>
+>>>>>>> 1d53dfc5ce2c9bd2dab73e61fa20969b9cbee334
+                    </div>
+                    <div class="placeholder" style="display:none; grid-column:1 /span 3; grid-row: 1; " id="addholder"></div>
                 </div>
             </div>
         </div>
-        <div id="dialog-form" title="Create new widget" style="display:none;">
+                        <div id="dialog-form" title="Create new widget" style="display:none;">
             <p class="validateTips">All form fields are required.</p>
 
             <form name="form" id="form">
@@ -188,6 +247,7 @@
                     </fieldset>
                 </form>
         </div>
+<<<<<<< HEAD
         <div class="container-fluid widgetEditor">
                     <div class="row">
                         <div id="updateDashHolder" class="dashHolder widgetEditor">
@@ -237,9 +297,37 @@
                         </div>
                     </div>
                 </div>
+=======
+>>>>>>> 1d53dfc5ce2c9bd2dab73e61fa20969b9cbee334
     </div>
 
 </div>
+
+
+
+ <!-- Modals -->
+<div class="modal fade" id="confirmation-quit" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Confirmation</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to stop collecting data?
+      </div>
+      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+	        <button type="button" class="btn bg-lightgreen btn-sm" id="quit-button" onclick="window.location='${root}/home'">OK</button>
+      </div>
+    </div>
+  </div>
+</div><!-- end Modals -->
+
+
+
 
 <#include "end-content.ftl">
 <#include "footer.ftl">
