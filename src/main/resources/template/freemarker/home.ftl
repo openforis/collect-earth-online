@@ -71,8 +71,7 @@
                             </div>
                         </div>
                         <div class="col-xl-11 mr-0 ml-0 bg-lightgray">
-                            <div id="home-map-pane" style="width: 100%; height: 100%; position:fixed">
-	                       	 	</div>
+                            <div id="home-map-pane" style="width: 100%; height: 100%; position:fixed"></div>
                         </div>
                     </div>
                 </div>
