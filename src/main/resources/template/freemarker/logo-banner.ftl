@@ -48,6 +48,8 @@
                 <img class="img-fluid" id="servir-mekong" src="${root}/img/servir-mekong-logo.png">
             </a>
         </div>
+	</div>
+    <div class="row mb-4 justify-content-center">
         <div class="col-sm-4 text-center my-auto">
             <img class="img-fluid" id="google" src="${root}/img/google-logo.png">
         </div>

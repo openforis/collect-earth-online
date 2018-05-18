@@ -240,14 +240,14 @@ a:hover{
 @media (min-width: 992px) { 
 	#main-nav .nav-item.active, #main-nav .nav-item.active:hover{
 		border-top: solid 4px #31BAB0;
-	    margin-top: -9px;
-	    padding-top: 5px;
+	    margin-top: -10px;
+	    padding-top: 6px;
 	    }
 	
 	#main-nav .nav-item:hover{
 		border-top: solid 4px #FCCF07;	
-	    margin-top: -9px;
-	    padding-top: 5px;
+	    margin-top: -10px;
+	    padding-top: 6px;
 	    }
 	
 	#main-nav .nav-item#username, #main-nav .nav-item#login-button{

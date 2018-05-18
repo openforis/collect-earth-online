@@ -1,5 +1,5 @@
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white;" id="main-nav">
-	<a class="navbar-brand" href="home">    
+<nav class="navbar navbar-expand-lg navbar-light fixed-top py-0" style="background-color: white;" id="main-nav">
+	<a class="navbar-brand pt-1 pb-1" href="home">    
 		<img class= "img-fluid" id="ceo-site-logo" src="${root}/img/ceo-logo.png">
 	</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,14 +33,14 @@
 	      <ul id="login-info" class="navbar-nav mr-0">
         <#if username??>
 	            <#if navlink == "Logout">
-	            <li id="username" class="nav-item">
+	            <li id="username" class="nav-item my-auto">
 	            <span class="nav-link disabled">${username}</span> 
 	            </li>
    	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
            	      Logout
                  </button>	    
 	            <#else>
-	            <li id="username" class="nav-item">
+	            <li id="username" class="nav-item my-auto"">
 	            <span class="nav-link disabled">${username}</span> 
 	            </li>
    	            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href = '${root}/logout'">
