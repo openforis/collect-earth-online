@@ -329,10 +329,14 @@ a:hover{
     border: 1px solid rgba(0,0,0,.2);
     border-radius: .3rem;
 	background-color: white;
+	width:380px;
 }
 /* .ol-popup-content .cContent{ */
 .ol-overlay-container .cContent {
-	padding:15px;
+	padding:0 1rem;
+}
+.ol-overlay-container table {
+	margin:0;
 }
 a.ol-popup-closer.close{
 	font-size:1rem;
@@ -342,7 +346,8 @@ a.ol-popup-closer.close{
 	color:white;
 	font-family:inherit;
 	font-size:1rem;	
-	padding-bottom:0;
+	padding:.6rem;
+	margin-bottom:0;
 	font-weight: 400;
 }
 
@@ -350,6 +355,10 @@ a.ol-popup-closer.close{
 .ol-overlay-container .cTitle {
 	background-color:#31BAB0;
 }
+.ol-overlay-container td{border-top: none;}
+.ol-overlay-container tr{border-top: 1px solid #dee2e6;}
+.ol-overlay-container tr:first-child{border-top: none;margin-top:.3rem;}
+.ol-overlay-container tr:last-child{margin-bottom:0;}
 
 
 /*********************************************************************/

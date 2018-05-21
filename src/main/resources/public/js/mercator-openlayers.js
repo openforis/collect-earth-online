@@ -757,7 +757,7 @@ mercator.makeRows = function (documentRoot, project) {
                   + "style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis\">";
     var linkEnd = "</a>";
     return rowStart
-        + leftColStart + "Name" + colEnd
+        + leftColStart + "<h3 class=\"my-auto\">Name</h3>" + colEnd
         + rightColStart + linkStart + project.get("name") + linkEnd + colEnd
         + rowEnd
         + rowStart
@@ -795,10 +795,10 @@ mercator.getPopupContent = function (documentRoot, feature) {
     var contentEnd = "</div>";
 
     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        var zoomLink = "<p><a onclick=\"mercator.zoomMapToExtent(angular.element('#home').scope().home.mapConfig, ["
+        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(angular.element('#home').scope().home.mapConfig, ["
             + mercator.getClusterExtent(feature) + "])\" "
-            + "class=\"btn btn-block btn-sm btn-outline-lightgreen\" style=\"cursor:pointer; min-width:350px;\">"
-            + "Zoom to cluster</a></p>";
+            + "class=\"mt-0 mb-3 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
+            + "<i class=\"fa fa-search-plus\"></i> Zoom to cluster</button>";
         return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
     } else {
         return title + contentStart + tableStart + tableRows + tableEnd + contentEnd;
