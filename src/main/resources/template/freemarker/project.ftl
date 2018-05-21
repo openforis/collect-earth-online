@@ -6,7 +6,8 @@
      ng-init="project.initialize('${root}', '${project_id!0}', '${institution_id!0}')">
     <div id="project-design" class="col-xl-6 col-lg-8 border bg-lightgray mb-5">
  		<div class="bg-darkgreen mb-3 no-container-margin">
-      	 	<h1>Edit Project</h1>
+      	 		<h1 class="d-none">Create Project</h1>
+      	 		<h1>Edit Project</h1>
         </div>
         <div id="project-map" class="d-none"></div>
         <div class="row mb-3">
