@@ -211,6 +211,5 @@
     </#if>
 
 </div>
-
 <#include "end-content.ftl">
 <#include "footer.ftl">
