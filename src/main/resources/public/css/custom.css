@@ -330,10 +330,21 @@ a:hover{
     border-radius: .3rem;
 	background-color: white;
 	width:380px;
+	/* .ol-popup*/
+    display: block;
+    position: absolute;
+    background-color: white;
+    padding: 0px;
+    border: 1px solid #cccccc;
+    bottom: 12px;
+    left: -50px;
+    -webkit-box-shadow: 3px -10px 3px rgba(0,0,0,.35);
+    box-shadow: 3px 5px 3px rgba(0,0,0,.35);
+    border-radius: 5px;
 }
 /* .ol-popup-content .cContent{ */
 .ol-overlay-container .cContent {
-	padding:0 1rem;
+	padding:0 1rem 1rem 1rem;
 }
 .ol-overlay-container table {
 	margin:0;
@@ -358,7 +369,7 @@ a.ol-popup-closer.close{
 .ol-overlay-container td{border-top: none;}
 .ol-overlay-container tr{border-top: 1px solid #dee2e6;}
 .ol-overlay-container tr:first-child{border-top: none;margin-top:.3rem;}
-.ol-overlay-container tr:last-child{margin-bottom:0;}
+.ol-overlay-container tr:last-child{}
 
 
 /*********************************************************************/
