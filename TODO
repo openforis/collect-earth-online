@@ -79,6 +79,8 @@
 ** home.ftl
    1. Ask Jerome to fix the sidebar visibility toggling or remove it entirely.
    2. Shrink home-map-pane so we can see the scalebar.
+** support.ftl
+   1. Add tutorials and demo material from Karis' team.
 ** Projects.java
    1. Review the whole file.
 ** project.ftl
@@ -98,6 +100,7 @@
    2. Add this.date{Created,Published,Closed,Archived} to the JSON database and retrieve these with getProjectStats.
    3. Does the spinner appear correctly when creating a new project?
    4. Can we remove the reference image field from the sample values table yet?
+   5. Enable the invite-only option (provide a list of users who are members of this project with delete buttons next to them).
 ** collection.ftl
    1. Add the survey cards to the sidebar:
       - Replace surveyHTML on card-test page before calling CollectForms() constructor each time
@@ -133,12 +136,20 @@
    3. Remove this file once survey cards are added to the Project page.
 ** account.ftl
    1. Review the whole file.
+   2. Rename to Operator page.
+** account.js
+   1. Review the whole file.
+   2. Implement server-side endpoints to make Billy's user stats work correctly.
 ** institution.ftl
    1. Finish reviewing the whole file.
-   2. Fix new institution creation with OfGroups (CURRENTLY BROKEN).
+   2. Add maxlength=1000 to the description textarea.
    3. Allow users to view/edit the imagery parameters after a new layer has been added to an institution.
-   4. Add maxlength=1000 to the description textarea.
-   5. Fix broken logos on http://collect.earth and email all institution admins to re-upload their logos to the site.
+   4. Show total number of active and completed projects and highlight project buttons differently based on this.
+   5. Show the list of institution users only if the user is logged in and a member of the institution.
+   6. Add a more generic image server interface:
+      - Include Google Maps, Bing Maps, and DigitalGlobe Maps forms
+      - Include WMS server (e.g., Geoserver) form
+      - Give each entry a Public/Private button
 ** mercator-openlayers.js
    1. Remove ceoMapStyles.cluster (not using it)
    2. Change ceoMapStyles.ceoIcon to use "img/ceoicon.png" and move ceoicon.png into the public/img folder
@@ -178,7 +189,6 @@
    5. Get new About page text from Kel
    6. Update CEO Manual with Karis
    7. Add News page to navbar
-   8. Make Account page work correctly (and communicate with Billy about it)
    9. Ask Githika to test the new site on all devices
    10. Merge card-test page into Collection page and add Configure Survey button to Project page
        - sampleIds: they have to be numbers but the array can be an array of strings or numbers
@@ -956,46 +966,6 @@ Table of Contents
   - DG Docs:
     - CQL :: https://dgcsportal.readme.io/docs/4-common-query-language-wms
     - Stacking Profiles :: https://dgcsportal.readme.io/docs/11-existing-stacking-profiles and [[file:~/sig/projects/collect-earth-online/notes/Stacking_Profile_Samples.docx][Stacking_Profile_Samples.docx]]
-* TODOs by File (another one)
-** Server.java
-*** TODO Enable HTTPS site-wide: [expand]
-    1. Get deploy/clientkeystore signed by a certificate authority.
-    2. Include this in declareRoutes and declareRoutesForCollect: secure("deploy/clientkeystore", "ceocert", null, null);
-    Resources:
-    - https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
-    - https://spark.apache.org/docs/latest/security.html
-** Views.java
-*** TODO Make authenticateOrRedirect a more robust function not based on deprecated user roles
-** Imagery.java
-*** TODO In deleteInstitutionImagery, delete imagery entries from imagery-list.json once they are no longer referenced by any institution
-** CollectImagery.java
-*** TODO Implement getAllImagery, addInstitutionImagery, and deleteInstitutionImagery
-** Users.java
-*** TODO Phase out role attributes
-*** TODO Stop adding new users to the "All Users" institution (delete this institution since it isn't used)
-*** TODO Implement updateAccount, getPasswordResetKey, and resetPassword
-** OfUsers.java
-*** TODO Implement updateAccount, getPasswordResetKey, resetPassword, and updateInstitutionRole
-*** TODO CamelCase all references to reset_key and ip_addr fields in the of-users database
-*** TODO Exclude the superuser account (admin@sig-gis.com) from the list of users returned by getAllUsers
-*** TODO Raise a red flag when an error occurs in communicating with the database in getAllUsers, getInstitutionRoles, and requestInstitutionMembership
-*** TODO Reimplement requestInstitutionMembership to add the user to the selected userGroup's pending queue
-** Institutions.java
-** OfGroups.java
-*** TODO Replace for loops
-** Projects.java
-** CollectProjects.java
-*** TODO Implement dumpProjectRawData
-*** TODO Replace for loops
-** imagery-list.json
-*** TODO Make sure all fields are camelCased
-** user-list.json
-*** TODO Make sure all fields are camelCased
-** proj.json
-*** TODO Make sure no repeated project entries exist in proj.json
-** dash-*.json
-*** TODO Make sure all widgets fields are JSON arrays (not strings)
-*** TODO Delete all dash-*.json files that are not referenced in proj.json
 * From CEO_TASK_LIST_P1.csv
   |-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
   | Page        | Section                  | Task                                                                                           | Hours |
@@ -1153,41 +1123,3 @@ Table of Contents
   3. Export Project as Schema and Data Files in Collect Mobile Format (coordinate with Stefano and Daniel) (FAO P2)
      - Clone Project Button -> Switch to Design Project Mode and Pre-populate Form Fields (SIG P2)
      - Open Project - And increase the number of plots (SIG P2)
-* TODOs by File (even another one)
-** Home
-   - Enable user map w/ pushpins
-** About
-   - Add Disclaimers to bottom
-** Support
-   - Create tutorials and demo material
-** Account
-   - Rename to Operator page
-   - Restyle according to wireframes
-   - Make a div for each user with their name and stats (# of institutions the belong to, # of projects they belong to, # of sample points completed)
-   - Add location field (for homepage pushpin map)
-   - Implement backend account update functionality (on form submission)
-** Forgot Password
-   - Implement backend password retrieval system
-** Institution
-   - Show total number of active and completed projects and total number of users
-   - Show public projects and any the user has access to
-   - Show list of institution users only if the user is logged in and a member of the institution
-   - Add a button to request membership in this institution
-   - Include buttons to Add and Delete members from your institution (only show users who are currently members or who have requested access)
-   - Image Servers:
-     - Include Google Maps, Bing Maps, and DigitalGlobe Maps forms
-     - Include WMS server (e.g., Geoserver) form
-     - Each entry has an Enable button
-** Admin
-   - Rename to Project Management page
-   - Record institution # at project creation time
-   - Include Public/Institution/Invite-Only radio button
-   - If Invite-Only is selected, provide a list of users who are members of this project with delete buttons next to them
-   - Include an Add User button (must type in username)
-   - Pop out to Collect for the Entity Design stage
-   - Pop out to the GeoDash page for GEE Integration (Add/Remove widgets)
-   - Include a time selector for the WMS imagery
-   - Enable users to include their own WMS feeds as well as DigitalGlobe Maps, Bing Maps, or Google Maps authentication info
-** Dashboard
-   - Rename to Collection page
-   - Restyle according to the wireframes
