@@ -20,9 +20,9 @@
 ** ServerTest.java
    1. Write a unit test suite.
 ** Server.java
-   1. Use deploy/clientkeystore file to enable HTTPS sitewide in declareLocalStorageRoutes() and declareRemoteStorageRoutes().
-   2. Remove /card-test route from declareRemoteStorageRoutes() once survey cards are added to the Project page.
-   3. Remove /get-unanalyzed-plot-byid/:projid/:id route from both declare*StorageRoutes() functions.
+   1. Get deploy/clientkeystore signed by a certificate authority.
+   2. Add secure("deploy/clientkeystore", "ceocert", null, null); to declareLocalStorageRoutes() and declareRemoteStorageRoutes() to enable HTTPS sitewide. https://spark.apache.org/docs/latest/security.html
+   3. Remove /card-test route from declareRemoteStorageRoutes() once survey cards are added to the Project page.
 ** Views.java
    1. Make sure institution() works when OF_USERS_API_URL="";
    2. Remove the "role" attribute from Freemarker data.
@@ -50,8 +50,14 @@
    1. Include only the inexpensive (~$5/mo) imagery layers as default public layers (but get the access keys out of version control!).
 ** Users.java
    1. Remove all references to the role attribute.
-   2. getPasswordResetKey has the site URL (http://ceo.sig-gis.com) hard-coded in its email body.
-   3. The login() function's returnurl and querystring arguments expand recursively. (see login.ftl)
+   2. The login() function's returnurl and querystring arguments expand recursively. (see login.ftl)
+** OfUsers.java
+   1. Raise a red flag when an error occurs in communicating with the database in getAllUsers and getInstitutionRoles.
+** OfGroups.java
+   1. Replace for loops with stream constructs.
+   2. Raise a red flag when an error occurs in communicating with the database in getAllInstitutions, getInstitutionById, and archiveInstitution.
+** CollectProjects.java
+   1. Replace for loops with stream constructs.
 ** (*).java
    1. Use RequestUtils.getParam() and RequestUtils.getIntParam() instead of req.params() and req.queryParams().
 ** header.ftl
@@ -74,7 +80,7 @@
    1. Ask Jerome to fix the sidebar visibility toggling or remove it entirely.
    2. Shrink home-map-pane so we can see the scalebar.
 ** Projects.java
-   *IN PROGRESS*
+   1. Review the whole file.
 ** project.ftl
    1. Move the OpenLayers icon up onto the map by fixing its style.
    2. Enable the date-related project stats.
@@ -109,8 +115,8 @@
    4. Move the calls in loadRandomPlot() and loadPlotById() into a function in mercator-openlayers.js.
    5. Merge loadRandomPlot() and loadPlotById().
 ** card-test.ftl
-   *IN PROGRESS*
-   1. Make the survey cards behave correctly:
+   1. Finish reviewing the whole file.
+   2. Make the survey cards behave correctly:
       - When the page loads:
         1. [X] Show nothing in the sidebar for value selection.
       - When the user selects a plot:
@@ -124,15 +130,15 @@
         3. [X] Erase the plot-level survey cards.
         4. [X] Embed the subplot survey cards in the page.
         5. [X] Call CollectForms() with sampleIds = [the points I selected].
-   2. Remove this file once survey cards are added to the Project page.
+   3. Remove this file once survey cards are added to the Project page.
 ** account.ftl
-   *IN PROGRESS*
+   1. Review the whole file.
 ** institution.ftl
-   *IN PROGRESS*
-   1. Fix new institution creation with OfGroups (CURRENTLY BROKEN).
-   2. Allow users to view/edit the imagery parameters after a new layer has been added to an institution.
-   3. Add maxlength=1000 to the description textarea.
-   4. Fix broken logos on http://collect.earth and email all institution admins to re-upload their logos to the site.
+   1. Finish reviewing the whole file.
+   2. Fix new institution creation with OfGroups (CURRENTLY BROKEN).
+   3. Allow users to view/edit the imagery parameters after a new layer has been added to an institution.
+   4. Add maxlength=1000 to the description textarea.
+   5. Fix broken logos on http://collect.earth and email all institution admins to re-upload their logos to the site.
 ** mercator-openlayers.js
    1. Remove ceoMapStyles.cluster (not using it)
    2. Change ceoMapStyles.ceoIcon to use "img/ceoicon.png" and move ceoicon.png into the public/img folder
@@ -157,9 +163,9 @@
 ** mercator-test.html
    1. Delete this file.
 ** geo-dash.ftl
-   *IN PROGRESS*
+   1. Review the whole file.
 ** widget-layout-editor.ftl
-   *IN PROGRESS*
+   1. Review the whole file.
 * Unsorted TODOs
 ** High Priority
    1. BUG: Allow Quyen to only fill in values for one of her sample values on https://collect.earth
@@ -222,82 +228,6 @@
   - Review Githika's new spreadsheet and give her a new set of tasks
   - Move the CEO data directory to ~/.ceodb
   - Add logging with timestamps
-* TODOs by File (Old)
-** Server.java
-*** TODO Uncomment all Collect and OfUsers routes once they are completed
-*** TODO Enable HTTPS site-wide: [expand]
-    1. Get deploy/clientkeystore signed by a certificate authority.
-    2. Include this in declareRoutes and declareRoutesForCollect: secure("deploy/clientkeystore", "ceocert", null, null);
-    Resources:
-    - https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
-    - https://spark.apache.org/docs/latest/security.html
-*** TODO Rename get-unanalyzed-plot-byid/ route to use my standard conventions
-** Views.java
-*** TODO Make authenticateOrRedirect a more robust function not based on deprecated user roles
-** Imagery.java
-*** TODO In deleteInstitutionImagery, delete imagery entries from imagery-list.json once they are no longer referenced by any institution
-** CollectImagery.java
-*** TODO Implement getAllImagery, addInstitutionImagery, and deleteInstitutionImagery
-** Users.java
-*** TODO Phase out role attributes
-*** TODO Stop adding new users to the "All Users" institution (delete this institution since it isn't used)
-*** TODO Implement getPasswordResetKey, and resetPassword
-*** TODO Verify that all conditional branches end in a return statement
-** OfUsers.java
-*** TODO Why aren't all toplevel variables static final?
-*** TODO Review Roberto's implementations of updateAccount, getPasswordResetKey, resetPassword
-*** TODO Implement updateInstitutionRole
-*** TODO CamelCase all references to reset_key and ip_addr fields in the of-users database
-*** TODO Exclude the superuser account (admin@sig-gis.com) from the list of users returned by getAllUsers
-*** TODO Raise a red flag when an error occurs in communicating with the database in getAllUsers, getInstitutionRoles, and requestInstitutionMembership
-*** TODO Reimplement requestInstitutionMembership to add the user to the selected userGroup's pending queue
-*** TODO Verify that all conditional branches end in a return statement
-** Institutions.java
-*** TODO Review updateInstitution
-** OfGroups.java
-*** TODO Replace for loops
-*** TODO Raise a red flag when an error occurs in communicating with the database in getAllInstitutions, getInstitutionById, and archiveInstitution
-*** TODO Review updateInstitution
-*** TODO Review groupToInstitution, updateInstitutionRole, and requestInstitutionMembership
-** Projects.java
-*** TODO Review the whole file
-*** TODO Review and rename getUnanalyzedPlotByID -> getUnanalyzedPlotById
-** CollectProjects.java
-*** TODO Review the whole file
-*** TODO Run C-c C-r o to organize the imports
-*** TODO Implement dumpProjectRawData
-*** TODO Replace for loops
-** imagery-list.json
-*** TODO Make sure all fields are camelCased
-** user-list.json
-*** TODO Make sure all fields are camelCased
-** proj.json
-*** TODO Make sure no repeated project entries exist in proj.json
-** dash-*.json
-*** TODO Make sure all widgets fields are JSON arrays (not strings)
-*** TODO Delete all dash-*.json files that are not referenced in proj.json
-** collection.ftl
-*** TODO Review Billy's changes
-** project.ftl
-*** TODO Disable lat/lon fields (only allow drawing the bounding box)
-*** TODO Dave requests that I gray out the geodash button before the project is created
-** map-utils.js
-*** TODO Review Billy's implementation of draw_projects and draw_project_points and port to Mercator.js
-*** TODO Review Billy's changes to draw_point and draw_points port to Mercator.js
-*** TODO Add "red_fill" style to Mercator.js
-*** TODO remove_plots_layer
-*** TODO Remove unnecessary vars
-** collection.js
-*** TODO Remove console.* statements
-*** TODO Review Billy's changes to loadProjectPlots
-*** TODO toggleStats
-*** TODO getPlotDatabyId
-*** TODO loadPlotById
-*** TODO nextPlot
-*** TODO Remove unnecessary vars
-** home.js
-*** TODO Review the whole file
-*** TODO Remove unnecessary vars
 * Unsorted TODOs (Old)
   Stuff with Stefano:
   - [ ] project.js :: allow deleting sample value categories
