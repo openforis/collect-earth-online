@@ -1,10 +1,10 @@
-<div style="color:#eec922; background-color:#e63232; text-align:center; padding:5px;">
-    <p style="margin:0px; padding:0px;">
-        Google changed their security policies recently, which
-        temporarily prevented us from sending password reset emails.
-        We have made the necessary changes to our Google account to
-        address this issue, so password resets should be working
-        again. We apologize for the inconvenience.
+<!-- <div style="color:#eec922; background-color:#e63232; text-align:center; padding:5px;">
+  <p style="margin:0px; padding:0px;"> -->
+        <!-- Google changed their security policies recently, which
+          temporarily prevented us from sending password reset emails.
+          We have made the necessary changes to our Google account to
+          address this issue, so password resets should be working
+          again. We apologize for the inconvenience. -->
         <!-- Check out the new <a href="http://planet.com">Planet Labs</a> imagery
           source on any project's data collection page. This layer
           provides monthly global imagery from January 2016 - March
@@ -32,5 +32,5 @@
           server. If you have a user account on both servers, your
           password will remain the same on collect.earth. Please plan
           accordingly. Thank you. -->
-    </p>
-</div>
+<!-- </p>
+  </div> -->
