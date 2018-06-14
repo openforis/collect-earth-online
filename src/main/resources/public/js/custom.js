@@ -4,6 +4,3 @@ $('#togbutton').on('click',function(){
 	   $('#mapPanel').toggleClass('col-xl-12 col-xl-9');
 	   $('#tog-symb').children().toggleClass('fa-caret-left fa-caret-right')
 	   });
-
-
-//confirmation when leaving page
