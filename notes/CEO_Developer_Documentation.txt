@@ -2,12 +2,6 @@ The source code for CEO can be found on Github at this URL:
 
   https://github.com/openforis/collect-earth-online
 
-Switch to the collect-integration branch to see updates since
-October 2017. Note that much of the development on new features has
-slowed within CEO proper over the past few months as we have been
-working with FAO to complete their Collect and OfUsers gateways, which
-provide the new, more powerful persistent storage mechanism for CEO.
-
 Here is a high level description of CEO's system architecture:
 
 CEO, Collect, and OfUsers are three separate web applications written in
