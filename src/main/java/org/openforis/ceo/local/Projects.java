@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -343,11 +344,12 @@ public class Projects {
                                                        plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                                                        plotSummary.addProperty("sample_points", samples.size());
                                                        plotSummary.add("user_id", plot.get("user"));
+                                                       plotSummary.add("timestamp", plot.get("timestamp"));
                                                        plotSummary.add("distribution", getValueDistribution(samples, sampleValueTranslations));
                                                        return plotSummary;
                                                    });
 
-            String[] fields = {"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"};
+            String[] fields = {"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "timestamp"};
             String[] labels = getValueDistributionLabels(project);
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
@@ -389,6 +391,7 @@ public class Projects {
                                                              Boolean flagged = plot.get("flagged").getAsBoolean();
                                                              Integer analyses = plot.get("analyses").getAsInt();
                                                              JsonElement userId = plot.get("user");
+                                                             JsonElement timestamp = plot.get("timestamp");
                                                              JsonArray samples = plot.get("samples").getAsJsonArray();
                                                              return toStream(samples).map(sample -> {
                                                                      JsonObject center = parseJson(sample.get("point").getAsString()).getAsJsonObject();
@@ -401,6 +404,7 @@ public class Projects {
                                                                      sampleSummary.addProperty("flagged", flagged);
                                                                      sampleSummary.addProperty("analyses", analyses);
                                                                      sampleSummary.add("user_id", userId);
+                                                                     sampleSummary.add("timestamp", timestamp);
                                                                      sampleSummary.add("value", sample.get("value"));
                                                                      return sampleSummary;
                                                                  });
@@ -412,7 +416,7 @@ public class Projects {
                                           sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
                                           (a, b) -> b));
 
-            String[] fields = {"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"};
+            String[] fields = {"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "timestamp"};
             String[] labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
 
             String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
@@ -510,6 +514,7 @@ public class Projects {
                                                                         return sample;
                                                                     });
                             plot.add("samples", updatedSamples);
+                            plot.addProperty("timestamp", LocalDateTime.now().toString());
                             return plot;
                         } else {
                             return plot;
@@ -528,6 +533,7 @@ public class Projects {
                     plot -> {
                         if (plot.get("id").getAsString().equals(plotId)) {
                             plot.addProperty("flagged", true);
+                            plot.addProperty("timestamp", LocalDateTime.now().toString());
                             return plot;
                         } else {
                             return plot;
