@@ -321,7 +321,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                     userId: this.userName,
                     userSamples: this.userSamples})
             .then(angular.bind(this, function successCallback() {
-                alert("Your assignments have been saved to the database.");
+                // alert("Your assignments have been saved to the database.");
                 this.stats.analyzedPlots++;
                 this.nextPlot();
             }), function errorCallback(response) {
@@ -333,9 +333,10 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.flagPlot = function () {
         $http.post(this.root + "/flag-plot",
                    {projectId: this.projectId,
-                    plotId:    this.currentPlot.id})
+                    plotId:    this.currentPlot.id,
+                    userId:    this.userName})
             .then(angular.bind(this, function successCallback() {
-                alert("Plot " + this.currentPlot.id + " has been flagged.");
+                // alert("Plot " + this.currentPlot.id + " has been flagged.");
                 this.stats.flaggedPlots++;
                 this.nextPlot();
             }), function errorCallback(response) {

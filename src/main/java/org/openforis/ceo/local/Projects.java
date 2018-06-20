@@ -528,11 +528,13 @@ public class Projects {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
+        String userName = jsonInputs.get("userId").getAsString();
 
         mapJsonFile("plot-data-" + projectId + ".json",
                     plot -> {
                         if (plot.get("id").getAsString().equals(plotId)) {
                             plot.addProperty("flagged", true);
+                            plot.addProperty("user", userName);
                             plot.addProperty("timestamp", LocalDateTime.now().toString());
                             return plot;
                         } else {
