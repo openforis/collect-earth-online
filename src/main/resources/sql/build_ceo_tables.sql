@@ -1,4 +1,20 @@
 -- Create tables
+CREATE TABLE users (
+  id        serial primary key,
+  email     text not null,
+  password  text not null,
+  role      text not null,
+  reset_key text
+);
+
+CREATE TABLE institutions (
+  id            serial primary key,
+  name          text not null,
+  logo          text not null,
+  description   text not null,
+  url           text not null,
+  archived      boolean
+);
 
 CREATE TABLE projects (
   id                        serial primary key,
@@ -47,21 +63,9 @@ CREATE TABLE imagery (
     source_config   jsonb
 );
 
-CREATE TABLE users (
-  id        serial primary key,
-  email     text not null,
-  password  text not null,
-  role      text not null,
-  reset_key text
-);
-
-CREATE TABLE institutions (
-  id            serial primary key,
-  name          text not null,
-  logo          text not null,
-  description   text not null,
-  url           text not null,
-  archived      boolean
+CREATE TABLE roles (
+    id      serial primary key,
+    title   text not null
 );
 
 CREATE TABLE institution_users (
@@ -71,17 +75,12 @@ CREATE TABLE institution_users (
     role_id         integer not null references roles (id)
 );
 
-CREATE TABLE roles (
-    id      serial primary key,
-    title   text not null
-);
-
 CREATE TABLE user_plots(
 	id              serial primary key,
 	user_id         integer not null references users (id) on delete cascade on update cascade,
     plot_id         integer not null references plots (id) on delete cascade on update cascade,
     flagged         boolean default false,
-	confidence      integer default 0 for values from (0) to (100),
+	confidence      integer default 0 CHECK (confidence > 0 AND confidence < 100),
 	collection_time timestamp with time zone
 );
 
