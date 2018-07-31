@@ -1,50 +1,51 @@
-CREATE SCHEMA mapcha;
+CREATE SCHEMA ceo;
 
 -- Grant user privileges
 
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA mapcha to mapcha;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA ceo to ceo;
 
 -- Create tables
 
-CREATE TABLE mapcha.projects (
+CREATE TABLE ceo.projects (
   id                serial primary key,
+  institution       integer,
+  availability      text,
   name              text not null,
   description       text,
+  privacy_level     text,
   boundary          geometry(Polygon,4326),
-  sample_resolution double precision default -1.0,
-  imagery_id        integer not null references mapcha.imagery (id),
+  base_map_source   text,
+  plot_distribution text,
+  num_plots         integer,
+  plot_spacing      float,
+  plot_shape        text,
+  plot_size         integer,
+  sample_distribution text,
+  samples_per_plot  integer,
+  sample_resolution float,
+  sample_values     jsonb,
   archived          boolean default false
 );
 
-CREATE TABLE mapcha.plots (
+CREATE TABLE ceo.plots (
   id         serial primary key,
-  project_id integer not null references mapcha.projects (id) on delete cascade on update cascade,
+  project_id integer not null references ceo.projects (id) on delete cascade on update cascade,
   center     geometry(Point,4326),
-  radius     double precision not null,
+  user_id    integer,
   flagged    boolean default false,
   analyses   integer default 0
 );
 
-CREATE INDEX mapcha_plots_project_id ON mapcha.plots (project_id);
-CREATE INDEX mapcha_plots_analyses ON mapcha.plots (analyses);
+CREATE INDEX ceo_plots_project_id ON ceo.plots (project_id);
+CREATE INDEX ceo_plots_analyses ON ceo.plots (analyses);
 
-CREATE TABLE mapcha.samples (
+CREATE TABLE ceo.samples (
   id      serial primary key,
-  plot_id integer not null references mapcha.plots (id) on delete cascade on update cascade,
+  plot_id integer not null references ceo.plots (id) on delete cascade on update cascade,
   point   geometry(Point,4326)
 );
 
-CREATE INDEX mapcha_samples_plot_id ON mapcha.samples (plot_id);
-
-CREATE TABLE mapcha.sample_values (
-  id         serial primary key,
-  project_id integer not null references mapcha.projects (id) on delete cascade on update cascade,
-  value      text not null,
-  color      text not null,
-  image      text
-);
-
-CREATE INDEX mapcha_sample_values_project_id ON mapcha.sample_values (project_id);
+CREATE INDEX ceo_samples_plot_id ON ceo.samples (plot_id);
 
 CREATE TABLE mapcha.imagery (
   id          serial primary key,
