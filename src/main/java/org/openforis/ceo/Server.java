@@ -12,17 +12,13 @@ import com.google.gson.JsonObject;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
-import org.openforis.ceo.collect.CollectImagery;
-import org.openforis.ceo.collect.CollectProjects;
+
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.ext.GeoDash;
+import org.openforis.ceo.local.GeoDash;
 import org.openforis.ceo.local.Imagery;
 import org.openforis.ceo.local.Institutions;
 import org.openforis.ceo.local.Projects;
 import org.openforis.ceo.local.Users;
-import org.openforis.ceo.users.CeoAuthFilter;
-import org.openforis.ceo.users.OfGroups;
-import org.openforis.ceo.users.OfUsers;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
