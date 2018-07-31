@@ -2,7 +2,7 @@
 
 CREATE TABLE projects (
   id                serial primary key,
-  institution       integer,
+  institution_id       integer not null references institutions (id) on delete cascade on update cascade,
   availability      text,
   name              text not null,
   description       text,
