@@ -1,9 +1,3 @@
-CREATE SCHEMA ceo;
-
--- Grant user privileges
-
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA ceo to ceo;
-
 -- Create tables
 
 CREATE TABLE ceo.projects (
@@ -47,22 +41,43 @@ CREATE TABLE ceo.samples (
 
 CREATE INDEX ceo_samples_plot_id ON ceo.samples (plot_id);
 
-CREATE TABLE mapcha.imagery (
-  id          serial primary key,
-  title       text not null,
-  date        date,
-  url         text not null,
-  attribution text
+CREATE TABLE imagery (
+    id              serial primary key,
+    institution     integer not null references institutions.id,
+    visibility      text not null,
+    title           text not null,
+    attribution     text not null,
+    extent          geometry,
+    source_config   jsonb
 );
 
-CREATE TABLE mapcha.users (
+CREATE TABLE users (
   id        serial primary key,
   email     text not null,
   password  text not null,
   role      text not null,
-  reset_key text,
-  ip_addr   inet
+  reset_key text
 );
+
+CREATE TABLE institutions (
+  id            serial primary key,
+  name          text not null,
+  logo          text not null,
+  description   text not null,
+  url           text not null,
+  archived      boolean
+);
+
+CREATE TABLE institution_users{
+    institution_id  integer not null references institutions.id,
+    user_id         integer not null references users.id,
+    role            integer not null references roles.id
+};
+
+CREATE TABLE roles{
+    id      serial primary key,
+    title   text not null
+};
 
 CREATE INDEX mapcha_users_email ON mapcha.users (email);
 
