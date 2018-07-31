@@ -47,7 +47,7 @@ CREATE TABLE imagery (
     visibility      text not null,
     title           text not null,
     attribution     text not null,
-    extent          geometry,
+    extent          geometry(Polygon,4326),
     source_config   jsonb
 );
 
