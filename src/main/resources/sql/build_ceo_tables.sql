@@ -43,7 +43,7 @@ CREATE INDEX samples_plot_id ON samples (plot_id);
 
 CREATE TABLE imagery (
     id              serial primary key,
-    institution     integer not null references institutions.id,
+    institution     integer not null references institutions (id),
     visibility      text not null,
     title           text not null,
     attribution     text not null,
@@ -68,13 +68,14 @@ CREATE TABLE institutions (
   archived      boolean
 );
 
-CREATE TABLE institution_users{
-    institution_id  integer not null references institutions.id,
-    user_id         integer not null references users.id,
-    role            integer not null references roles.id
+CREATE TABLE institution_users {
+    id              serial primary key,
+    institution_id  integer not null references institutions (id),
+    user_id         integer not null references users (id),
+    role_id         integer not null references roles (id)
 };
 
-CREATE TABLE roles{
+CREATE TABLE roles {
     id      serial primary key,
     title   text not null
 };
