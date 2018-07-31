@@ -1,6 +1,6 @@
 -- Create tables
 
-CREATE TABLE ceo.projects (
+CREATE TABLE projects (
   id                serial primary key,
   institution       integer,
   availability      text,
@@ -21,25 +21,25 @@ CREATE TABLE ceo.projects (
   archived          boolean default false
 );
 
-CREATE TABLE ceo.plots (
+CREATE TABLE plots (
   id         serial primary key,
-  project_id integer not null references ceo.projects (id) on delete cascade on update cascade,
+  project_id integer not null references projects (id) on delete cascade on update cascade,
   center     geometry(Point,4326),
   user_id    integer,
   flagged    boolean default false,
   analyses   integer default 0
 );
 
-CREATE INDEX ceo_plots_project_id ON ceo.plots (project_id);
-CREATE INDEX ceo_plots_analyses ON ceo.plots (analyses);
+CREATE INDEX plots_project_id ON plots (project_id);
+CREATE INDEX plots_analyses ON plots (analyses);
 
-CREATE TABLE ceo.samples (
+CREATE TABLE samples (
   id      serial primary key,
-  plot_id integer not null references ceo.plots (id) on delete cascade on update cascade,
+  plot_id integer not null references plots (id) on delete cascade on update cascade,
   point   geometry(Point,4326)
 );
 
-CREATE INDEX ceo_samples_plot_id ON ceo.samples (plot_id);
+CREATE INDEX samples_plot_id ON samples (plot_id);
 
 CREATE TABLE imagery (
     id              serial primary key,
