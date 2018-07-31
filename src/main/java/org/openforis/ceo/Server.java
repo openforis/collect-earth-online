@@ -40,7 +40,7 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules
-    private static void declareRoutes(String databaseType) {
+    private static void declareRoutes(Projects projects, Users users, Institutions institutions, Imagery imagery, GeoDash geoDash) {
         // Create a configured FreeMarker renderer
         FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -69,51 +69,51 @@ public class Server implements SparkApplication {
         get("/password-reset",                        Views.passwordReset(freemarker));
 
         // Routing Table: HTML pages (with side effects)
-        post("/account/:id",                          (req, res) -> Views.account(freemarker).handle(Users.updateAccount(req, res), res));
-        post("/login",                                (req, res) -> Views.login(freemarker).handle(Users.login(req, res), res));
-        post("/register",                             (req, res) -> Views.register(freemarker).handle(Users.register(req, res), res));
-        post("/password",                             (req, res) -> Views.password(freemarker).handle(Users.getPasswordResetKey(req, res), res));
-        post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(Users.resetPassword(req, res), res));
-        get("/logout",                                (req, res) -> Views.home(freemarker).handle(Users.logout(req), res));
+        post("/account/:id",                          (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
+        post("/login",                                (req, res) -> Views.login(freemarker).handle(users.login(req, res), res));
+        post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
+        post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
+        post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
+        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req), res));
 
         // Routing Table: Projects API
-        get("/get-all-projects",                      Projects::getAllProjects);
-        get("/get-project-by-id/:id",                 Projects::getProjectById);
-        get("/get-project-plots/:id/:max",            Projects::getProjectPlots);
-        get("/get-project-stats/:id",                 Projects::getProjectStats);
-        get("/get-unanalyzed-plot/:id",               Projects::getUnanalyzedPlot);
-        get("/get-unanalyzed-plot-by-id/:projid/:id", Projects::getUnanalyzedPlotById);
-        get("/dump-project-aggregate-data/:id",       Projects::dumpProjectAggregateData);
-        get("/dump-project-raw-data/:id",             Projects::dumpProjectRawData);
-        post("/create-project",                       Projects::createProject);
-        post("/publish-project/:id",                  Projects::publishProject);
-        post("/close-project/:id",                    Projects::closeProject);
-        post("/archive-project/:id",                  Projects::archiveProject);
-        post("/add-user-samples",                     Projects::addUserSamples);
-        post("/flag-plot",                            Projects::flagPlot);
+        get("/get-all-projects",                      projects::getAllProjects);
+        get("/get-project-by-id/:id",                 projects::getProjectById);
+        get("/get-project-plots/:id/:max",            projects::getProjectPlots);
+        get("/get-project-stats/:id",                 projects::getProjectStats);
+        get("/get-unanalyzed-plot/:id",               projects::getUnanalyzedPlot);
+        get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnanalyzedPlotById);
+        get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
+        get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
+        post("/create-project",                       projects::createProject);
+        post("/publish-project/:id",                  projects::publishProject);
+        post("/close-project/:id",                    projects::closeProject);
+        post("/archive-project/:id",                  projects::archiveProject);
+        post("/add-user-samples",                     projects::addUserSamples);
+        post("/flag-plot",                            projects::flagPlot);
 
         // Routing Table: Users API
-        get("/get-all-users",                         Users::getAllUsers);
-        post("/update-user-institution-role",         Users::updateInstitutionRole);
-        post("/request-institution-membership",       Users::requestInstitutionMembership);
+        get("/get-all-users",                         users::getAllUsers);
+        post("/update-user-institution-role",         users::updateInstitutionRole);
+        post("/request-institution-membership",       users::requestInstitutionMembership);
 
         // Routing Table: Institutions API
-        get("/get-all-institutions",                  Institutions::getAllInstitutions);
-        get("/get-institution-details/:id",           Institutions::getInstitutionDetails);
-        post("/update-institution/:id",               Institutions::updateInstitution);
-        post("/archive-institution/:id",              Institutions::archiveInstitution);
+        get("/get-all-institutions",                  institutions::getAllInstitutions);
+        get("/get-institution-details/:id",           institutions::getInstitutionDetails);
+        post("/update-institution/:id",               institutions::updateInstitution);
+        post("/archive-institution/:id",              institutions::archiveInstitution);
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",                       Imagery::getAllImagery);
-        post("/add-institution-imagery",              Imagery::addInstitutionImagery);
-        post("/delete-institution-imagery",           Imagery::deleteInstitutionImagery);
+        get("/get-all-imagery",                       imagery::getAllImagery);
+        post("/add-institution-imagery",              imagery::addInstitutionImagery);
+        post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
 
         // Routing Table: GeoDash API
-        get("/geo-dash/id/:id",                       GeoDash::geodashId);
-        get("/geo-dash/update/id/:id",                GeoDash::updateDashBoardByID);
-        get("/geo-dash/createwidget/widget",          GeoDash::createDashBoardWidgetByID);
-        get("/geo-dash/updatewidget/widget/:id",      GeoDash::updateDashBoardWidgetByID);
-        get("/geo-dash/deletewidget/widget/:id",      GeoDash::deleteDashBoardWidgetByID);
+        get("/geo-dash/id/:id",                       geoDash::geodashId);
+        get("/geo-dash/update/id/:id",                geoDash::updateDashBoardByID);
+        get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetByID);
+        get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetByID);
+        get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetByID);
 
         // Routing Table: Page Not Found
         get("*",                                      Views.pageNotFound(freemarker));
@@ -220,14 +220,85 @@ public class Server implements SparkApplication {
         // Start the Jetty webserver on port 8080
         port(8080);
 
+        // Create objects of the classes that implement the passed-in databaseType
+        String databaseType = args[0];
+
+        // FIXME: Create these interfaces
+        Projects projects;
+        Users users;
+        Institutions institutions;
+        Imagery imagery;
+        GeoDash geoDash;
+
+        switch (databaseType) {
+        case "JSON":
+            projects = new JsonProjects();
+            users = new JsonUsers();
+            institutions = new JsonInstitutions();
+            imagery = new JsonImagery();
+            geoDash = new JsonGeoDash();
+            break;
+        case "POSTGRES":
+            projects = new PostgresProjects();
+            users = new PostgresUsers();
+            institutions = new PostgresInstitutions();
+            imagery = new PostgresImagery();
+            geoDash = new PostgresGeoDash();
+            break;
+        case "COLLECT":
+            projects = new CollectProjects();
+            users = new CollectUsers();
+            institutions = new CollectInstitutions();
+            imagery = new CollectImagery();
+            geoDash = new CollectGeoDash();
+            break;
+        default:
+            throw new RuntimeException();
+            break;
+        }
+
         // Set up the routing table
-        declareRoutes("FILE");
+        declareRoutes(projects, users, institutions, imagery, geoDash);
     }
 
     // Tomcat entry point
     public void init() {
+        // FIXME: Create these interfaces
+        Projects projects;
+        Users users;
+        Institutions institutions;
+        Imagery imagery;
+        GeoDash geoDash;
+
+        switch (databaseType) {
+        case "JSON":
+            projects = new JsonProjects();
+            users = new JsonUsers();
+            institutions = new JsonInstitutions();
+            imagery = new JsonImagery();
+            geoDash = new JsonGeoDash();
+            break;
+        case "POSTGRES":
+            projects = new PostgresProjects();
+            users = new PostgresUsers();
+            institutions = new PostgresInstitutions();
+            imagery = new PostgresImagery();
+            geoDash = new PostgresGeoDash();
+            break;
+        case "COLLECT":
+            projects = new CollectProjects();
+            users = new CollectUsers();
+            institutions = new CollectInstitutions();
+            imagery = new CollectImagery();
+            geoDash = new CollectGeoDash();
+            break;
+        default:
+            throw new RuntimeException();
+            break;
+        }
+
         // Set up the routing table
-        declareRoutes("COLLECT");
+        declareRoutes(projects, users, institutions, imagery, geoDash);
     }
 
 }

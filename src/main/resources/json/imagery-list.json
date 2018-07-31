@@ -6,8 +6,7 @@
   extent: null,
   sourceConfig: {type: "DigitalGlobe",
                  imageryId: "digitalglobe.nal0g75k",
-                 accessToken: "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNqM2RuZTE3dTAwMncyd3Bwanh4MHJ1cmgifQ.LNrR2h_I0kz6fra93XGP2g"}
-},
+                 accessToken: "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNqM2RuZTE3dTAwMncyd3Bwanh4MHJ1cmgifQ.LNrR2h_I0kz6fra93XGP2g"}},
  {id: 2,
   institution: 1,
   visibility: "public",
