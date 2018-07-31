@@ -43,13 +43,20 @@ CREATE INDEX samples_plot_id ON samples (plot_id);
 
 CREATE TABLE imagery (
     id              serial primary key,
-    institution     integer not null references institutions (id),
     visibility      text not null,
     title           text not null,
     attribution     text not null,
     extent          geometry,
     source_config   jsonb
 );
+
+CREATE TABLE institution_imagery(
+   id              serial primary key,
+   institution_id       integer not null references institutions (id) on delete cascade on update cascade,
+   imagery_id integer not null references imagery (id) on delete cascade on update cascade
+
+
+)
 
 CREATE TABLE users (
   id        serial primary key,
