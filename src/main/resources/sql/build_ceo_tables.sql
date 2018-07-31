@@ -1,87 +1,106 @@
-CREATE SCHEMA mapcha;
-
--- Grant user privileges
-
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA mapcha to mapcha;
-
 -- Create tables
 
-CREATE TABLE mapcha.projects (
-  id                serial primary key,
-  name              text not null,
-  description       text,
-  boundary          geometry(Polygon,4326),
-  sample_resolution double precision default -1.0,
-  imagery_id        integer not null references mapcha.imagery (id),
-  archived          boolean default false
+CREATE TABLE projects (
+  id                        serial primary key,
+  institution_id            integer not null references institutions (id) on delete cascade on update cascade,
+  availability              text,
+  name                      text not null,
+  description               text,
+  privacy_level             text,
+  boundary                  geometry(Polygon,4326),
+  base_map_source           text,
+  plot_distribution         text,
+  num_plots                 integer,
+  plot_spacing              float,
+  plot_shape                text,
+  plot_size                 integer,
+  sample_distribution       text,
+  samples_per_plot          integer,
+  sample_resolution         float,
+  sample_values             jsonb,
+  classification_start_date	date,
+  classification_end_date   date,
+  classification_timestep   integer
 );
 
-CREATE TABLE mapcha.plots (
+CREATE TABLE plots (
   id         serial primary key,
-  project_id integer not null references mapcha.projects (id) on delete cascade on update cascade,
+  project_id integer not null references projects (id) on delete cascade on update cascade,
   center     geometry(Point,4326),
-  radius     double precision not null,
-  flagged    boolean default false,
-  analyses   integer default 0
+  flagged    integer default 0,
+  assigned   integer default 0
 );
 
-CREATE INDEX mapcha_plots_project_id ON mapcha.plots (project_id);
-CREATE INDEX mapcha_plots_analyses ON mapcha.plots (analyses);
-
-CREATE TABLE mapcha.samples (
+CREATE TABLE samples (
   id      serial primary key,
-  plot_id integer not null references mapcha.plots (id) on delete cascade on update cascade,
+  plot_id integer not null references plots (id) on delete cascade on update cascade,
   point   geometry(Point,4326)
 );
 
-CREATE INDEX mapcha_samples_plot_id ON mapcha.samples (plot_id);
-
-CREATE TABLE mapcha.sample_values (
-  id         serial primary key,
-  project_id integer not null references mapcha.projects (id) on delete cascade on update cascade,
-  value      text not null,
-  color      text not null,
-  image      text
+CREATE TABLE imagery (
+    id              serial primary key,
+    institution_id  integer references institutions (id) on delete cascade on update cascade,
+    visibility      text not null,
+    title           text not null,
+    attribution     text not null,
+    extent          geometry(Polygon,4326),
+    source_config   jsonb
 );
 
-CREATE INDEX mapcha_sample_values_project_id ON mapcha.sample_values (project_id);
-
-CREATE TABLE mapcha.imagery (
-  id          serial primary key,
-  title       text not null,
-  date        date,
-  url         text not null,
-  attribution text
-);
-
-CREATE TABLE mapcha.users (
+CREATE TABLE users (
   id        serial primary key,
   email     text not null,
   password  text not null,
   role      text not null,
-  reset_key text,
-  ip_addr   inet
+  reset_key text
 );
 
-CREATE INDEX mapcha_users_email ON mapcha.users (email);
-
-CREATE TABLE mapcha.user_samples (
-  id           serial primary key,
-  user_id      integer not null references mapcha.users (id) on delete cascade on update cascade,
-  sample_id    integer not null references mapcha.samples (id) on delete cascade on update cascade,
-  value_id     integer not null references mapcha.sample_values (id) on delete cascade on update cascade,
-  imagery_id   integer not null references mapcha.imagery (id) on delete cascade on update cascade,
-  date         date
+CREATE TABLE institutions (
+  id            serial primary key,
+  name          text not null,
+  logo          text not null,
+  description   text not null,
+  url           text not null,
+  archived      boolean
 );
 
-CREATE INDEX mapcha_user_samples_user_id ON mapcha.user_samples (user_id);
-CREATE INDEX mapcha_user_samples_sample_id ON mapcha.user_samples (sample_id);
+CREATE TABLE institution_users (
+    id              serial primary key,
+    institution_id  integer not null references institutions (id),
+    user_id         integer not null references users (id),
+    role_id         integer not null references roles (id)
+);
 
--- Populate the mapcha.imagery table
+CREATE TABLE roles (
+    id      serial primary key,
+    title   text not null
+);
 
-INSERT INTO mapcha.imagery (title, date, url, attribution) VALUES
- ('DigitalGlobeRecentImagery', '2015-01-01'::date, 'http://api.tiles.mapbox.com/v4/digitalglobe.nal0g75k/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpcTJ3ZTlyZTAwOWNuam00ZWU3aTkxdWIifQ.9OFrmevVe0YB2dJokKhhdA', 'DigitalGlobe Maps API: Recent Imagery | June 2015 | © DigitalGlobe, Inc'),
- ('DigitalGlobeRecentImagery+Streets', '2015-01-01'::date, 'http://api.tiles.mapbox.com/v4/digitalglobe.nal0mpda/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpcTJ3ZTlyZTAwOWNuam00ZWU3aTkxdWIifQ.9OFrmevVe0YB2dJokKhhdA', 'DigitalGlobe Maps API: Recent Imagery+Streets | June 2015 | © DigitalGlobe, Inc'),
- ('BingAerial', '2016-11-04'::date, 'https://www.bingmapsportal.com', 'Bing Maps API: Aerial | © Microsoft Corporation'),
- ('BingAerialWithLabels', '2016-11-04'::date, 'https://www.bingmapsportal.com', 'Bing Maps API: Aerial with Labels | © Microsoft Corporation'),
- ('NASASERVIRChipset2002', '2002-01-01', 'http://pyrite.sig-gis.com/geoserver/wms', 'June 2002 Imagery Data Courtesy of DigitalGlobe');
+CREATE TABLE user_plots(
+	id              serial primary key,
+	user_id         integer not null references users (id) on delete cascade on update cascade,
+    plot_id         integer not null references plots (id) on delete cascade on update cascade,
+    flagged         boolean default false,
+	confidence      integer default 0 for values from (0) to (100),
+	collection_time timestamp with time zone
+);
+
+CREATE TABLE sample_values(
+	id             serial primary key,
+	user_plot_id   integer not null references user_plots (id) on delete cascade on update cascade,
+    sample_id      integer not null references samples (id) on delete cascade on update cascade,     
+	imagery_id     integer not null references imagery (id) on delete cascade on update cascade,
+	imagery_date   date,
+	value          jsonb
+);
+
+CREATE INDEX projects_id ON projects (id);
+CREATE INDEX plots_id ON plots (id);
+CREATE INDEX samples_id ON samples (id);
+CREATE INDEX imagery_id ON imagery (id);
+CREATE INDEX users_id ON users (id);
+CREATE INDEX institutions_id ON institutions (id);
+CREATE INDEX institution_users_id ON institution_users (id);
+CREATE INDEX roles_id ON roles (id);
+CREATE INDEX user_plots_id ON user_plots (id);
+CREATE INDEX sample_values_id ON sample_values (id);
