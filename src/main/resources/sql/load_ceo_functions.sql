@@ -285,49 +285,11 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_dashboard_id(_dashboard_id int
     $$
   LANGUAGE SQL;
 
--- Adds imagery to the database.
-CREATE FUNCTION insert_imagery(institution_id integer, visibility text, title text, attribution text, extent geometry(Polygon,4326), source_config jsonb) RETURNS integer AS $$
-	INSERT INTO imagery (institution_id, visibility, title, attribution, extent,source_config)
-	VALUES (institution_id, visibility, title, attribution, extent, source_config)
-	RETURNING id
-$$ LANGUAGE SQL;
-  
-  
--- Adds projects to the database.
-CREATE FUNCTION insert_projects (institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer,    plot_spacing float, plot_shape text, plot_size integer, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_values jsonb, classification_start_date date, classification_end_date date, 		    classification_timestep integer) RETURNS integer AS $$
-	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)
-	VALUES (institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
-	sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)
-	RETURNING id
-$$ LANGUAGE SQL;
-
--- Adds plots to the database.
-CREATE FUNCTION insert_plots(project_id integer, center geometry(Point,4326), flagged integer, assigned integer) RETURNS integer AS $$
-	INSERT INTO plots (project_id, center, flagged, assigned)
-	VALUES (project_id, center, flagged, assigned)
-	RETURNING id
-$$ LANGUAGE SQL;
-
--- Adds samples to the database.
-CREATE FUNCTION insert_samples(plot_id integer, point geometry(Point,4326)) RETURNS integer AS $$
-	INSERT INTO samples (plot_id, point)
-	VALUES (plot_id, point)
-	RETURNING id
-$$ LANGUAGE SQL;
-
--- Adds user_plots to the database.
-CREATE FUNCTION insert_user_plots(user_id integer, plot_id integer, flagged boolean, confidence integer, collection_time timestamp) RETURNS integer AS $$
-	INSERT INTO user_plots (user_id, plot_id, flagged, confidence, collection_time)
-	VALUES (user_id, plot_id, flagged, confidence, collection_time)
-	RETURNING id
-$$ LANGUAGE SQL;
-
-
--- Adds sample_values to the database.
-CREATE FUNCTION insert_sample_values(user_plot_id integer, sample_id integer, imagery_id integer, imagery_date date, value jsonb) RETURNS integer AS $$
-	INSERT INTO sample_values (user_plot_id, sample_id, imagery_id, imagery_date, value)
-	VALUES (user_plot_id, sample_id, imagery_id, imagery_date, value)
-	RETURNING id
+--Adds institution imagery  
+ CREATE FUNCTION add_institution_imagery(institution_id integer,visibility text, title text, attribution text, extent geometry(Polygon,4326), source_config jsonb) RETURNS integer AS $$
+	INSERT INTO imagery (institution_id,visibility,title,attribution,extent,source_config) 
+	VALUES (institution_id,visibility,title,attribution,extent,source_config)
+    RETURNING id	
 $$ LANGUAGE SQL;
 
 --Returns all rows in imagery for which visibility  =  "public".
