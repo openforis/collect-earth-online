@@ -91,7 +91,6 @@ CREATE OR REPLACE FUNCTION get_all_users()
     $$
         SELECT id, email, role, reset_key
         FROM users
-        WHERE email <> "admin@openforis.org"
     $$
   LANGUAGE SQL;
 
