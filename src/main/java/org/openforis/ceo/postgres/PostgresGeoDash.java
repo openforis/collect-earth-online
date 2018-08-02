@@ -12,11 +12,28 @@ import java.util.UUID;
 import static org.openforis.ceo.utils.JsonUtils.*;
 
 public class PostgresGeoDash {
-
+    private final String url = "jdbc:postgresql://localhost";
+    private final String user = "ceo";
+    private final String password = "ceo";
+    public Connection connect() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
+    }
     public String geodashId(Request req, Response res) {
         String projectId = req.params(":id");
         String projectTitle = req.queryParams("title");
         String callback = req.queryParams("callback");
+
+        CallableStatement proc = connect().prepareCall("{ ? = call get_project_widgets_by_project_id() }");
+        proc.setObject(2, (int)projectId, Types.INTEGER);
+        proc.registerOutParameter(1, Types.OTHER);
+        proc.execute();
+        ResultSet results = (ResultSet) proc.getObject(1);
+        while (results.next()) {
+            // build json to send to client
+        }
+        results.close();
+        proc.close();
+
 
         return "";
     }
