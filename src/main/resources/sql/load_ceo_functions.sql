@@ -623,6 +623,7 @@ CREATE FUNCTION select_unassigned_plots_by_plot_id(project_id integer,plot_id in
       AND assigned = 0
 $$ LANGUAGE SQL;
 
+
 --Returns project raw data
 CREATE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
 	(
@@ -663,4 +664,42 @@ CREATE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
 	WHERE id = project_id
 	ORDER BY sid
 	
+$$ LANGUAGE SQL;
+
+--Publish project
+CREATE FUNCTION publish_project(project_id integer) RETURNS integer AS $$
+	UPDATE projects
+	SET availability = "published"
+	WHERE id = project_id
+	RETURNING project_id
+	
+$$ LANGUAGE SQL;
+
+--Close project
+CREATE FUNCTION close_project(project_id integer) RETURNS integer AS $$
+	UPDATE projects
+	SET availability = "closed"
+	WHERE id = project_id
+	RETURNING project_id
+
+$$ LANGUAGE SQL;
+
+--Archive project
+CREATE FUNCTION archive_project(project_id integer) RETURNS integer AS $$
+	UPDATE projects
+	SET availability = "archived"
+	WHERE id = project_id
+	RETURNING project_id
+
+$$ LANGUAGE SQL;
+
+--Flag plot
+CREATE FUNCTION flag_plot(plot_id integer,user_id integer,collection_time timestamp) RETURNS integer AS $$
+	UPDATE user_plots
+	SET flagged = true
+	  AND user_id = user_id
+	  AND collection_time = collection_time
+	WHERE plot_id = plot_id 
+	RETURNING plot_id
+
 $$ LANGUAGE SQL;
