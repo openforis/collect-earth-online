@@ -23,6 +23,7 @@ dependencies {
     compile 'net.bull.javamelody:javamelody-core:1.68.1'
     compile 'com.lowagie:itext:2.1.7'
     compile 'javax.mail:mail:1.4'
+    compile 'org.postgresql:postgresql:42.2.2'
     testCompile 'junit:junit:4.12'
 }
 
