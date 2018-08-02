@@ -13,7 +13,7 @@ CREATE TABLE institutions (
   logo          text not null,
   description   text not null,
   url           text not null,
-  archived      boolean
+  archived      boolean default false
 );
 
 CREATE TABLE projects (
@@ -81,7 +81,7 @@ CREATE TABLE user_plots(
     plot_id         integer not null references plots (id) on delete cascade on update cascade,
     flagged         boolean default false,
 	confidence      integer default 0 CHECK (confidence > 0 AND confidence < 100),
-	collection_time timestamp with time zone
+	collection_time timestamp with time zone default now()
 );
 
 CREATE TABLE sample_values(

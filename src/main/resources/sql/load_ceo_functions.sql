@@ -703,3 +703,109 @@ CREATE FUNCTION flag_plot(plot_id integer,user_id integer,collection_time timest
 	RETURNING plot_id
 
 $$ LANGUAGE SQL;
+
+--Add user samples
+CREATE FUNCTION add_user_samples(project_id integer,plot_id integer,user_id integer,confidence  integer,value jsonb,imagery_id integer,imagery_date date) RETURNS integer AS $$
+	UPDATE plots
+	SET assigned = assigned + 1
+	WHERE plot_id = plot_id 
+	
+	WITH user_plot_table AS(
+		INSERT INTO user_plots(user_id,plot_id,confidence) VALUES (user_id,plot_id,confidence) 
+	    RETURNING id)
+	
+	INSERT INTO sample_values(user_plot_id,sample_id,imagery_id,imagery_date,value) 
+	
+	FROM (SELECT upt.id,s.id,imagery_id,imagery_date,value 
+		  FROM samples AS s
+		  CROSS JOIN user_plot_table AS upt
+		  WHERE s.plot_id = plot_id)
+	RETURNING count(sample_id)
+
+$$ LANGUAGE SQL;
+
+--Returns all institutions
+CREATE FUNCTION select_all_institutions() RETURNS TABLE
+    (
+	  id            integer,
+	  name          text,
+	  logo          text,
+	  description   text,
+	  url           text,
+	  archived      boolean
+	) AS $$
+	SELECT *
+	FROM institutions
+	WHERE archived = false
+$$ LANGUAGE SQL;
+
+--Returns one institution
+CREATE FUNCTION select_institution_by_id(institution_id integer) RETURNS TABLE
+    (
+	  id            integer,
+	  name          text,
+	  logo          text,
+	  description   text,
+	  url           text,
+	  archived      boolean
+	) AS $$
+	SELECT *
+	FROM institutions
+	WHERE institution_id = institution_id
+	   AND archived = false
+$$ LANGUAGE SQL;
+
+--Returns  institution details
+CREATE FUNCTION select_institution_details(institution_id integer) RETURNS TABLE    
+    (
+	  id            integer,
+	  name          text,
+	  logo          text,
+	  description   text,
+	  url           text,
+	  archived      boolean
+	)  AS $$
+	SELECT *
+	FROM institutions
+	WHERE institution_id = institution_id
+$$ LANGUAGE SQL;
+
+--Updates institution details
+CREATE FUNCTION update_institution(institution_id integer,name text,logo_path text, description text,url text) RETURNS integer AS $$
+	UPDATE institutions
+	SET name = name
+	   AND url = url
+	   AND description = description
+	   AND logo = logo_path
+	WHERE institution_id = institution_id
+	RETURNING id
+$$ LANGUAGE SQL;
+
+--Add institution details
+CREATE FUNCTION add_institution(user_id integer, name text,logo_path text, description text,url text) RETURNS integer AS $$
+	WITH institution_ids AS
+	(
+		INSERT INTO institutions(name, logo, description, url)
+	    VALUES (name,logo_path,description,url)
+		RETURNING id
+	),
+	 role_ids AS
+	  (
+		SELECT role.id
+		FROM roles
+		WHERE title = "admin"		
+	  )
+	INSERT INTO institution_users(institution_id,user_id,role_id)
+	FROM (SELECT iid.id, user_id, rid.id
+	      FROM institution_ids AS iid
+		  CROSS JOIN role_ids AS rid)
+    RETURNING institution_id
+$$ LANGUAGE SQL;
+
+--Archive  institution 
+CREATE FUNCTION archive_institution(institution_id integer) RETURNS integer AS $$
+	UPDATE institutions
+	SET archived = true
+	WHERE institution_id = institution_id
+	RETURNING institution_id
+$$ LANGUAGE SQL;
