@@ -93,6 +93,16 @@ CREATE TABLE sample_values(
 	value          jsonb
 );
 
+CREATE EXTENSION pgcrypto;
+
+CREATE TABLE project_widgets{
+    id  serial primary key,
+    project_id      integer not null references projects (id) on delete cascade on update cascade,
+    dashboard_id    uuid,
+    widget  jsonb
+}
+
+
 CREATE INDEX projects_id ON projects (id);
 CREATE INDEX plots_id ON plots (id);
 CREATE INDEX samples_id ON samples (id);
@@ -103,3 +113,5 @@ CREATE INDEX institution_users_id ON institution_users (id);
 CREATE INDEX roles_id ON roles (id);
 CREATE INDEX user_plots_id ON user_plots (id);
 CREATE INDEX sample_values_id ON sample_values (id);
+CREATE INDEX project_widgets_project_id ON project_widgets (project_id);
+CREATE INDEX project_widgets_dashboard_id ON project_widgets (dashboard_id);
