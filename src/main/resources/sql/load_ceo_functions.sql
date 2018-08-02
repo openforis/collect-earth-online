@@ -286,7 +286,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_dashboard_id(_dashboard_id int
   LANGUAGE SQL;
 
 -- Adds imagery to the database.
-CREATE FUNCTION insert_imagery(institution_id integer, visibility text, title text, attribution text, extent geometry(Polygon,4326), source_config jsonb) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION insert_imagery(institution_id integer, visibility text, title text, attribution text, extent geometry(Polygon,4326), source_config jsonb) RETURNS integer AS $$
 	INSERT INTO imagery (institution_id, visibility, title, attribution, extent,source_config)
 	VALUES (institution_id, visibility, title, attribution, extent, source_config)
 	RETURNING id
@@ -294,7 +294,7 @@ $$ LANGUAGE SQL;
   
   
 -- Adds projects to the database.
-CREATE FUNCTION insert_projects (institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer,    plot_spacing float, plot_shape text, plot_size integer, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_values jsonb, classification_start_date date, classification_end_date date, 		    classification_timestep integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION insert_projects (institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer,    plot_spacing float, plot_shape text, plot_size integer, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_values jsonb, classification_start_date date, classification_end_date date, 		    classification_timestep integer) RETURNS integer AS $$
 	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)
 	VALUES (institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
 	sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)
@@ -302,21 +302,21 @@ CREATE FUNCTION insert_projects (institution_id integer, availability text, name
 $$ LANGUAGE SQL;
 
 -- Adds plots to the database.
-CREATE FUNCTION insert_plots(project_id integer, center geometry(Point,4326), flagged integer, assigned integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION insert_plots(project_id integer, center geometry(Point,4326), flagged integer, assigned integer) RETURNS integer AS $$
 	INSERT INTO plots (project_id, center, flagged, assigned)
 	VALUES (project_id, center, flagged, assigned)
 	RETURNING id
 $$ LANGUAGE SQL;
 
 -- Adds samples to the database.
-CREATE FUNCTION insert_samples(plot_id integer, point geometry(Point,4326)) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION insert_samples(plot_id integer, point geometry(Point,4326)) RETURNS integer AS $$
 	INSERT INTO samples (plot_id, point)
 	VALUES (plot_id, point)
 	RETURNING id
 $$ LANGUAGE SQL;
 
 -- Adds user_plots to the database.
-CREATE FUNCTION insert_user_plots(user_id integer, plot_id integer, flagged boolean, confidence integer, collection_time timestamp) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION insert_user_plots(user_id integer, plot_id integer, flagged boolean, confidence integer, collection_time timestamp) RETURNS integer AS $$
 	INSERT INTO user_plots (user_id, plot_id, flagged, confidence, collection_time)
 	VALUES (user_id, plot_id, flagged, confidence, collection_time)
 	RETURNING id
@@ -324,14 +324,14 @@ $$ LANGUAGE SQL;
 
 
 -- Adds sample_values to the database.
-CREATE FUNCTION insert_sample_values(user_plot_id integer, sample_id integer, imagery_id integer, imagery_date date, value jsonb) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION insert_sample_values(user_plot_id integer, sample_id integer, imagery_id integer, imagery_date date, value jsonb) RETURNS integer AS $$
 	INSERT INTO sample_values (user_plot_id, sample_id, imagery_id, imagery_date, value)
 	VALUES (user_plot_id, sample_id, imagery_id, imagery_date, value)
 	RETURNING id
 $$ LANGUAGE SQL;
 
 --Returns all rows in imagery for which visibility  =  "public".
-CREATE FUNCTION select_public_imagery() RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_public_imagery() RETURNS TABLE
 	(
 		id              integer,
 		institution_id  integer,
@@ -346,8 +346,15 @@ CREATE FUNCTION select_public_imagery() RETURNS TABLE
 	WHERE visibility = "public"
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION delete_imagery(imagery_id integer)
+RETURNS integer AS $$
+        DELETE FROM imagery
+        WHERE id = _id
+        RETURNING id
+$$ LANGUAGE SQL;
+
 --Returns all rows in imagery for with an institution_id.
-CREATE FUNCTION select_institution_imagery(institution_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(institution_id integer) RETURNS TABLE
 	(
 		id              integer,
 		institution_id  integer,
@@ -358,12 +365,13 @@ CREATE FUNCTION select_institution_imagery(institution_id integer) RETURNS TABLE
 		source_config   jsonb	
 	) AS $$
 	SELECT * 
-	FROM imagery 
+	FROM select_public_imagery() 
 	WHERE institution_id = institution_id
 $$ LANGUAGE SQL;
 
+
 --Returns a row in projects by id.
-CREATE FUNCTION select_project(id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_project(id integer) RETURNS TABLE
 	(
 	  id                        integer,
 	  institution_id            integer,
@@ -392,7 +400,7 @@ CREATE FUNCTION select_project(id integer) RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Returns all rows in projects for a user_id.
-CREATE FUNCTION select_all_projects() RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_all_projects() RETURNS TABLE
 	(
 	  id                        integer,
 	  institution_id            integer,
@@ -424,7 +432,7 @@ CREATE FUNCTION select_all_projects() RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Returns all rows in projects for a user_id and institution_id.
-CREATE FUNCTION select_all_user_institution_projects(user_id integer,institution_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_all_user_institution_projects(user_id integer,institution_id integer) RETURNS TABLE
 	(
 	  id                        integer,
 	  institution_id            integer,
@@ -455,7 +463,7 @@ CREATE FUNCTION select_all_user_institution_projects(user_id integer,institution
 $$ LANGUAGE SQL;
 
 --Returns all rows in projects for a user_id with roles.
-CREATE FUNCTION select_all_user_projects(user_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_all_user_projects(user_id integer) RETURNS TABLE
 	(
 	  id                        integer,
 	  institution_id            integer,
@@ -507,7 +515,7 @@ $$ LANGUAGE SQL;
 
 
 --Returns all rows in projects for a user_id and institution_id with roles.
-CREATE FUNCTION select_institution_projects_with_roles(user_id integer,institution_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_institution_projects_with_roles(user_id integer,institution_id integer) RETURNS TABLE
 	(
 	  id                        integer,
 	  institution_id            integer,
@@ -537,7 +545,7 @@ CREATE FUNCTION select_institution_projects_with_roles(user_id integer,instituti
 $$ LANGUAGE SQL;
 
 --Returns project plots with a max value.
-CREATE FUNCTION select_project_plots(project_id integer,maximum integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_project_plots(project_id integer,maximum integer) RETURNS TABLE
 	(
 	  id         integer,
 	  project_id integer,
@@ -564,7 +572,7 @@ CREATE FUNCTION select_project_plots(project_id integer,maximum integer) RETURNS
 $$ LANGUAGE SQL;
 
 --Returns project users
-CREATE FUNCTION select_project_users(project_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_project_users(project_id integer) RETURNS TABLE
 	(
 		user_id integer
 	) AS $$
@@ -615,7 +623,7 @@ CREATE FUNCTION select_project_users(project_id integer) RETURNS TABLE
 $$ LANGUAGE SQL;
 	
 --Returns project statistics
-CREATE FUNCTION select_project_statistics(project_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_project_statistics(project_id integer) RETURNS TABLE
 	(
 		flagged_plots integer,
 		assigned_plots integer,
@@ -648,7 +656,7 @@ CREATE FUNCTION select_project_statistics(project_id integer) RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Returns unanalyzed plots
-CREATE FUNCTION select_unassigned_plot(project_id integer,plot_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_unassigned_plot(project_id integer,plot_id integer) RETURNS TABLE
 	(
 		plot text
 	) AS $$
@@ -668,7 +676,7 @@ CREATE FUNCTION select_unassigned_plot(project_id integer,plot_id integer) RETUR
 	LIMIT 1
 $$ LANGUAGE SQL;
 --Returns unanalyzed plots by plot id
-CREATE FUNCTION select_unassigned_plots_by_plot_id(project_id integer,plot_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(project_id integer,plot_id integer) RETURNS TABLE
 	(
 		plot text
 	) AS $$
@@ -688,7 +696,7 @@ $$ LANGUAGE SQL;
 
 
 --Returns project raw data
-CREATE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
 	(
 	       plot_id integer,
 	       lon float,
@@ -717,7 +725,7 @@ CREATE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Returns labels
-CREATE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
 	(
 		sid integer,
 		name text
@@ -730,7 +738,7 @@ CREATE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Publish project
-CREATE FUNCTION publish_project(project_id integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION publish_project(project_id integer) RETURNS integer AS $$
 	UPDATE projects
 	SET availability = "published"
 	WHERE id = project_id
@@ -739,7 +747,7 @@ CREATE FUNCTION publish_project(project_id integer) RETURNS integer AS $$
 $$ LANGUAGE SQL;
 
 --Close project
-CREATE FUNCTION close_project(project_id integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION close_project(project_id integer) RETURNS integer AS $$
 	UPDATE projects
 	SET availability = "closed"
 	WHERE id = project_id
@@ -748,7 +756,7 @@ CREATE FUNCTION close_project(project_id integer) RETURNS integer AS $$
 $$ LANGUAGE SQL;
 
 --Archive project
-CREATE FUNCTION archive_project(project_id integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION archive_project(project_id integer) RETURNS integer AS $$
 	UPDATE projects
 	SET availability = "archived"
 	WHERE id = project_id
@@ -757,7 +765,7 @@ CREATE FUNCTION archive_project(project_id integer) RETURNS integer AS $$
 $$ LANGUAGE SQL;
 
 --Flag plot
-CREATE FUNCTION flag_plot(plot_id integer,user_id integer,collection_time timestamp) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION flag_plot(plot_id integer,user_id integer,collection_time timestamp) RETURNS integer AS $$
 	UPDATE user_plots
 	SET flagged = true
 	  AND user_id = user_id
@@ -768,7 +776,7 @@ CREATE FUNCTION flag_plot(plot_id integer,user_id integer,collection_time timest
 $$ LANGUAGE SQL;
 
 --Add user samples
-CREATE FUNCTION add_user_samples(project_id integer,plot_id integer,user_id integer,confidence  integer,value jsonb,imagery_id integer,imagery_date date) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION add_user_samples(project_id integer,plot_id integer,user_id integer,confidence  integer,value jsonb,imagery_id integer,imagery_date date) RETURNS integer AS $$
 	UPDATE plots
 	SET assigned = assigned + 1
 	WHERE plot_id = plot_id 
@@ -788,7 +796,7 @@ CREATE FUNCTION add_user_samples(project_id integer,plot_id integer,user_id inte
 $$ LANGUAGE SQL;
 
 --Returns all institutions
-CREATE FUNCTION select_all_institutions() RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_all_institutions() RETURNS TABLE
     (
 	  id            integer,
 	  name          text,
@@ -803,7 +811,7 @@ CREATE FUNCTION select_all_institutions() RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Returns one institution
-CREATE FUNCTION select_institution_by_id(institution_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION select_institution_by_id(institution_id integer) RETURNS TABLE
     (
 	  id            integer,
 	  name          text,
@@ -819,7 +827,7 @@ CREATE FUNCTION select_institution_by_id(institution_id integer) RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Returns  institution details
-CREATE FUNCTION select_institution_details(institution_id integer) RETURNS TABLE    
+CREATE OR REPLACE FUNCTION select_institution_details(institution_id integer) RETURNS TABLE    
     (
 	  id            integer,
 	  name          text,
@@ -834,7 +842,7 @@ CREATE FUNCTION select_institution_details(institution_id integer) RETURNS TABLE
 $$ LANGUAGE SQL;
 
 --Updates institution details
-CREATE FUNCTION update_institution(institution_id integer,name text,logo_path text, description text,url text) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION update_institution(institution_id integer,name text,logo_path text, description text,url text) RETURNS integer AS $$
 	UPDATE institutions
 	SET name = name
 	   AND url = url
@@ -845,7 +853,7 @@ CREATE FUNCTION update_institution(institution_id integer,name text,logo_path te
 $$ LANGUAGE SQL;
 
 --Add institution details
-CREATE FUNCTION add_institution(user_id integer, name text,logo_path text, description text,url text) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION add_institution(user_id integer, name text,logo_path text, description text,url text) RETURNS integer AS $$
 	WITH institution_ids AS
 	(
 		INSERT INTO institutions(name, logo, description, url)
@@ -866,7 +874,7 @@ CREATE FUNCTION add_institution(user_id integer, name text,logo_path text, descr
 $$ LANGUAGE SQL;
 
 --Archive  institution 
-CREATE FUNCTION archive_institution(institution_id integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION archive_institution(institution_id integer) RETURNS integer AS $$
 	UPDATE institutions
 	SET archived = true
 	WHERE institution_id = institution_id
