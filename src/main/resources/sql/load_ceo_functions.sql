@@ -46,13 +46,14 @@ RETURNS text AS
     $$
   LANGUAGE 'sql'
 
--- Resets the password for the given user.
-CREATE OR REPLACE FUNCTION set_user_email(_email text, _password text)
+-- name: set-user-email-sql
+-- Resets the email for the given user.
+CREATE OR REPLACE FUNCTION set_user_email_and_password(_email text, _new_email text, _password text)
 RETURNS text AS
     $$
         UPDATE users
-        SET password = :password
-        WHERE email = :email
+        SET email = _new_email, password = _password
+        WHERE email = _email
         RETURNING email;
     $$
   LANGUAGE 'sql'
@@ -67,6 +68,50 @@ RETURNS text AS
         RETURNING email;
     $$
   LANGUAGE 'sql'
+
+-- Sets the password reset key for the given user. If one already exists, it is replaced.
+CREATE OR REPLACE FUNCTION update_password(_email text, _password text, _reset_key text)
+RETURNS text AS
+    $$
+        UPDATE users
+        SET password = _password, reset_key = null
+        WHERE email = _email
+        RETURNING email;
+    $$
+  LANGUAGE 'sql'
+
+-- Returns all of the user fields associated with the provided email.
+CREATE OR REPLACE FUNCTION get_all_users()
+    RETURNS TABLE(
+        id integer,
+        email text,
+        role text,
+        reset_key text
+    ) AS
+    $$
+        SELECT id, email, role, reset_key
+        FROM users
+        WHERE email <> "admin@openforis.org"
+    $$
+  LANGUAGE 'sql'
+
+CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integer)
+    RETURNS TABLE(
+        id integer,
+        email text,
+        role text,
+        reset_key text,
+        institution_role text
+    ) AS
+    $$
+        SELECT id, email, role, reset_key, title AS institution_role
+        FROM get_all_users() AS users
+        INNER JOIN institution_users ON users.id = institution_users.user_id
+        INNER JOIN roles on roles.id = institution_users.role_id
+        WHERE institution_users.institution_id = _institution_id
+    $$
+  LANGUAGE 'sql'
+
 
 -- Adds a new institution to the database.
 CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description text, _url text, _archived boolean)
