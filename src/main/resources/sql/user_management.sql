@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION insert_role(_title text)
         VALUES (_title)
         RETURNING id
     $$
-  LANGUAGE 'sql'
+LANGUAGE 'sql'
 
 -- Adds a new user to the database.
 CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _role_id integer, _reset_key text)

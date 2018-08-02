@@ -95,12 +95,12 @@ CREATE TABLE sample_values(
 
 CREATE EXTENSION pgcrypto;
 
-CREATE TABLE project_widgets{
+CREATE TABLE project_widgets(
     id  serial primary key,
     project_id      integer not null references projects (id) on delete cascade on update cascade,
     dashboard_id    uuid,
     widget  jsonb
-}
+);
 
 
 CREATE INDEX projects_id ON projects (id);
