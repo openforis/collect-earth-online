@@ -360,6 +360,7 @@ CREATE FUNCTION select_project_statistics(project_id integer) RETURNS TABLE
 	       count(contributors.user_id) AS contributors
 	FROM members, contributors	
 $$ LANGUAGE SQL;
+
 --Returns unanalyzed plots
 CREATE FUNCTION select_unassigned_plot(project_id integer,plot_id integer) RETURNS TABLE
 	(
@@ -398,22 +399,45 @@ CREATE FUNCTION select_unassigned_plots_by_plot_id(project_id integer,plot_id in
 	WHERE flagged = 0 
       AND assigned = 0
 $$ LANGUAGE SQL;
---Returns project aggregate database
-CREATE FUNCTION dump_project_aggregate_data(project_id integer) RETURNS TABLE
+
+--Returns project raw data
+CREATE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
 	(
+	       plot_id integer,
+	       lon float,
+	       lat float,
+		   flagged integer, 
+		   assigned integer, 
+		   samples_id integer, 
+		   user_id integer,
+		   collection_time timestamp,
+		   value jsonb
 	) AS $$
-	SELECT plot_id,ST_X(center) AS center_lon,ST_Y(center) AS center_lat,
-		   plot_size AS size_m, plot_shape AS shape, flagged, assigned, 
-	       count(samples.id) AS sample_points, 
+	SELECT plot_id,ST_X(center) AS lon,ST_Y(center) AS lat,
+		   flagged, assigned, 
+		   samples.id AS sample_id, 
 		   user_id AS user,
 		   collection_time AS timestamp
+		   value
 	FROM projects 
 	INNER JOIN plots
 	  ON projects.id=plots.project_id
 	INNER JOIN user_plots
 	  ON user_plots.plot_id=plots.id
-    INNER JOIN samples
+	INNER JOIN samples
 	  ON samples.plot_id=plots.id
 	WHERE project.id=project_id
+$$ LANGUAGE SQL;
+
+--Returns labels
+CREATE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
+	(
+		sid integer,
+		name text
+	) AS $$
+	SELECT (sample_values->>'id')::integer AS sid,sample_values->>'name' AS name
+	FROM projects
+	WHERE id = project_id
+	ORDER BY sid
 	
-$$ LANGUAGE $$
+$$ LANGUAGE SQL;
