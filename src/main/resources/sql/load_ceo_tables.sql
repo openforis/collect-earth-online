@@ -93,8 +93,6 @@ CREATE TABLE sample_values(
 	value          jsonb
 );
 
-CREATE EXTENSION pgcrypto;
-
 CREATE TABLE project_widgets(
     id  serial primary key,
     project_id      integer not null references projects (id) on delete cascade on update cascade,
