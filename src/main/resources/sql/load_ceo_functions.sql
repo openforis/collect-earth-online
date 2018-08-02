@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION insert_role(_title text)
         VALUES (_title)
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- Adds a new user to the database.
 CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _role_id integer, _reset_key text)
@@ -16,7 +16,7 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _role_id intege
         VALUES (_email, _password, _role_id, _reset_key);
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- name: get-user-info-sql
 -- Returns all of the user fields associated with the provided email.
@@ -33,7 +33,7 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
         FROM users
         WHERE email = _email
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 -- name: set-user-email-sql
 -- Resets the email for the given user.
 CREATE OR REPLACE FUNCTION set_user_email(_email text, _new_email text)
@@ -44,18 +44,19 @@ RETURNS text AS
         WHERE email = _email
         RETURNING email;
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
--- Resets the password for the given user.
-CREATE OR REPLACE FUNCTION set_user_email(_email text, _password text)
+-- name: set-user-email-sql
+-- Resets the email for the given user.
+CREATE OR REPLACE FUNCTION set_user_email_and_password(_email text, _new_email text, _password text)
 RETURNS text AS
     $$
         UPDATE users
-        SET password = :password
-        WHERE email = :email
+        SET email = _new_email, password = _password
+        WHERE email = _email
         RETURNING email;
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- Sets the password reset key for the given user. If one already exists, it is replaced.
 CREATE OR REPLACE FUNCTION set_password_reset_key(_email text, _reset_key text)
@@ -66,7 +67,50 @@ RETURNS text AS
         WHERE email = _email
         RETURNING email;
     $$
+  LANGUAGE SQL;
+
+-- Sets the password reset key for the given user. If one already exists, it is replaced.
+CREATE OR REPLACE FUNCTION update_password(_email text, _password text, _reset_key text)
+RETURNS text AS
+    $$
+        UPDATE users
+        SET password = _password, reset_key = null
+        WHERE email = _email
+        RETURNING email;
+    $$
+  LANGUAGE SQL;
+
+-- Returns all of the user fields associated with the provided email.
+CREATE OR REPLACE FUNCTION get_all_users()
+    RETURNS TABLE(
+        id integer,
+        email text,
+        role text,
+        reset_key text
+    ) AS
+    $$
+        SELECT id, email, role, reset_key
+        FROM users
+    $$
+  LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integer)
+    RETURNS TABLE(
+        id integer,
+        email text,
+        role text,
+        reset_key text,
+        institution_role text
+    ) AS
+    $$
+        SELECT id, email, role, reset_key, title AS institution_role
+        FROM get_all_users() AS users
+        INNER JOIN institution_users ON users.id = institution_users.user_id
+        INNER JOIN roles on roles.id = institution_users.role_id
+        WHERE institution_users.institution_id = _institution_id
+    $$
   LANGUAGE 'sql'
+
 
 -- Adds a new institution to the database.
 CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description text, _url text, _archived boolean)
@@ -93,24 +137,43 @@ CREATE OR REPLACE FUNCTION get_institution(_institution_id integer)
         FROM institutions
         WHERE institution_id = _institution_id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- Adds a returns institution user roles from the database.
-CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_id int)
+CREATE OR REPLACE FUNCTION get_institution_user_roles(_user_id integer)
     RETURNS TABLE(
         institution_id integer,
-        institution text,
         role text) AS
         $$
-            SELECT ti.id, ti.name, tr.title
-            FROM institution_user ti_user
-            INNER JOIN institutions ti
-                ON ti_user.institution_id = ti.id
-            INNER JOIN roles tr
-                ON ti_user.role_id = tr.id
-            WHERE ti_user.user_id = _user_id
+            SELECT institution_id, title AS role
+            FROM institution_user AS iu
+            INNER JOIN roles AS r
+                ON iu.role_id = r.id
+            WHERE iu.user_id = _user_id
         $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_role_id_by_role(role text)
+    RETURNS integer AS
+    $$
+        SELECT role_id
+        FROM roles
+        WHERE title = role
+    $$
+  LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION update_institution_user_role(_institution_id integer, _user_id integer, _role text)
+    RETURNS integer AS
+    $$
+        UPDATE institution_users
+        SET role_id = r.id
+        FROM roles AS r
+        WHERE institution_id = _institution_id
+          AND user_id = _user_id
+          AND title = _role
+        RETURNING id
+    $$
+  LANGUAGE SQL;
 
 -- Adds a update institution to the database.
 CREATE OR REPLACE FUNCTION update_institution(_id integer, _name text, _logo text, _description text, _url text, _archived boolean)
@@ -121,7 +184,7 @@ CREATE OR REPLACE FUNCTION update_institution(_id integer, _name text, _logo tex
         WHERE id = _id;
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- Adds a new institution_user to the database.
 CREATE OR REPLACE FUNCTION add_institution_user(_institution_id integer, _user_id integer, _role_id integer)
@@ -132,7 +195,7 @@ CREATE OR REPLACE FUNCTION add_institution_user(_institution_id integer, _user_i
 	    VALUES (_institution_id, _user_id, _role_id);
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- name: update-institution-user
 -- Adds a updates institution-user to the database.
@@ -145,7 +208,7 @@ CREATE OR REPLACE FUNCTION update_institution_user_role(_institution_id integer,
         WHERE institution_id = _institution_id AND user_id = _user_id
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- name: update-imagery
 --  updates imagery to the database.
@@ -157,7 +220,7 @@ CREATE OR REPLACE FUNCTION update_imagery(_id integer, _institution_id integer, 
         WHERE id = _id
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 --  deletes a delete_project_widget_by_widget_id from the database.
 CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_id integer)
@@ -167,18 +230,18 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_id integer)
         WHERE id = _id
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 --  updates a update_project_widget_by_widget_id from the database.
 CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_id integer, _widget  jsonb)
     RETURNS integer  AS
     $$
         UPDATE project_widget
-        SET widget = widget
+        SET widget = _widget
         WHERE id = _id
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- name: add-institution
 -- Adds a project_widget to the database.
@@ -189,7 +252,7 @@ CREATE OR REPLACE FUNCTION add_project_widget(_project_id integer, _dashboard_id
         VALUES (_project_id, _dashboard_id , _widget);
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- Gets project_widgets_by_project_id returns a project_widgets from the database.
 CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer)
@@ -204,7 +267,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer
         FROM project_widgets
         WHERE project_id = _project_id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 
 -- Gets project_widgets_by_dashboard_id returns a project_widgets from the database.
@@ -220,7 +283,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_dashboard_id(_dashboard_id int
         FROM project_widgets
         WHERE dashboard_id = _dashboard_id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 -- Adds imagery to the database.
 CREATE FUNCTION insert_imagery(institution_id integer, visibility text, title text, attribution text, extent geometry(Polygon,4326), source_config jsonb) RETURNS integer AS $$
