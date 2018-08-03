@@ -80,7 +80,7 @@ public class PostgresGeoDash {
         String dashboardId = req.queryParams("dashID");
         String widgetJson = req.queryParams("widgetJSON");
         String callback = req.queryParams("callback");
-        String SQL = "SELECT * FROM add_project_widget(?, ?, ?)";
+        String SQL = "SELECT * FROM add_project_widget(?, ?, ?::JSONB)";
 
         try (Connection conn = this.connect();
              PreparedStatement pstmt = conn.prepareStatement(SQL)) {
@@ -101,7 +101,7 @@ public class PostgresGeoDash {
         String widgetId = req.params(":id");
         String widgetJson = req.queryParams("widgetJSON");
         String callback = req.queryParams("callback");
-        String SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?)";
+        String SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?::JSONB)";
 
         try (Connection conn = this.connect();
             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
