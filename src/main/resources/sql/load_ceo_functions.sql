@@ -333,10 +333,26 @@ $$ LANGUAGE SQL;
 
 --Create project
 CREATE FUNCTION create_project(institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer, plot_spacing float, plot_shape text, plot_size integer, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_values jsonb, classification_start_date date, classification_end_date date, classification_timestep integer) RETURNS integer AS $$	
-	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)	
+	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)	
 	VALUES (institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,	
 	sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)	
 	RETURNING id	
+$$ LANGUAGE SQL;
+
+--Create project plots
+CREATE FUNCTION create_project_plots(project_id integer,plot_points text[]) RETURNS integer $$
+	INSERT INTO plots (project_id,center)
+    FROM (SELECT project_id,ST_PointFromText(point,4326)
+	      FROM unnest(plot_points) AS point)
+	RETURNING id
+$$ LANGUAGE SQL;
+
+--Create project plot samples
+CREATE FUNCTION create_project_plot_samples(plot_id integer, sample_points text[]) RETURNS integer $$
+	INSERT INTO samples (plot_id, point)
+	FROM (SELECT plot_id, ST_PointFromText(point,4326)
+	      FROM unnest(sample_points) AS point)
+	RETURNING id
 $$ LANGUAGE SQL;
 
 --Returns a row in projects by id.
@@ -663,9 +679,39 @@ CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(project_id integer
       AND assigned = 0
 $$ LANGUAGE SQL;
 
+--Returns labels
+CREATE OR REPLACE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
+	(
+		sid integer,
+		name text,
+		values jsonb
+	) AS $$
+	SELECT (sample_values->>'id')::integer AS sid,sample_values->>'name' AS name,sample_values->'values' AS values
+	FROM projects
+	WHERE id = project_id
+	ORDER BY sid
+$$ LANGUAGE SQL;
+
+--Returns project aggregate data
+CREATE OR REPLACE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
+	(
+	       plot_id integer,
+	       lon float,
+	       lat float,
+		   flagged integer, 
+		   assigned integer, 
+		   samples_id integer, 
+		   user_id integer,
+		   collection_time timestamp,
+		   value jsonb
+	) AS $$
+	SELECT 
+	FROM plots, get_project_sample_labels(project_id)
+	WHERE project_id = project_id
+$$ LANGUAGE SQL;
 
 --Returns project raw data
-CREATE OR REPLACE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
+CREATE OR REPLACE FUNCTION dump_project_sample_data(project_id integer) RETURNS TABLE
 	(
 	       plot_id integer,
 	       lon float,
@@ -693,18 +739,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(project_id integer) RETURNS TA
 	WHERE project.id=project_id
 $$ LANGUAGE SQL;
 
---Returns labels
-CREATE OR REPLACE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
-	(
-		sid integer,
-		name text
-	) AS $$
-	SELECT (sample_values->>'id')::integer AS sid,sample_values->>'name' AS name
-	FROM projects
-	WHERE id = project_id
-	ORDER BY sid
-	
-$$ LANGUAGE SQL;
+
 
 --Publish project
 CREATE OR REPLACE FUNCTION publish_project(project_id integer) RETURNS integer AS $$
