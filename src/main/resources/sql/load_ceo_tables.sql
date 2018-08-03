@@ -29,11 +29,11 @@ CREATE TABLE projects (
   num_plots                 integer,
   plot_spacing              float,
   plot_shape                text,
-  plot_size                 integer,
+  plot_size                 float,
   sample_distribution       text,
   samples_per_plot          integer,
   sample_resolution         float,
-  sample_values             jsonb,
+  sample_survey             jsonb,
   classification_start_date	date,
   classification_end_date   date,
   classification_timestep   integer
