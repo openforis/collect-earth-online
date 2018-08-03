@@ -86,7 +86,7 @@ public class PostgresGeoDash {
              PreparedStatement pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(projectId));
             pstmt.setString(2, dashboardId);
-            pstmt.setObject(3, widgetJson);
+            pstmt.setString(3, widgetJson);
             ResultSet rs = pstmt.executeQuery();
             return this.returnBlank(callback);
         } catch (SQLException e) {
@@ -106,7 +106,7 @@ public class PostgresGeoDash {
         try (Connection conn = this.connect();
             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
-            pstmt.setObject(2, widgetJson);
+            pstmt.setString(2, widgetJson);
             ResultSet rs = pstmt.executeQuery();
             return this.returnBlank(callback);
         } catch (SQLException e) {

@@ -286,7 +286,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_dashboard_id(_dashboard_id int
   LANGUAGE SQL;
 
 --Adds institution imagery  
- CREATE FUNCTION add_institution_imagery(institution_id integer,visibility text, title text, attribution text, extent geometry(Polygon,4326), source_config jsonb) RETURNS integer AS $$
+ CREATE FUNCTION add_institution_imagery(institution_id integer,visibility text, title text, attribution text, extent jsonb, source_config jsonb) RETURNS integer AS $$
 	INSERT INTO imagery (institution_id,visibility,title,attribution,extent,source_config) 
 	VALUES (institution_id,visibility,title,attribution,extent,source_config)
     RETURNING id	

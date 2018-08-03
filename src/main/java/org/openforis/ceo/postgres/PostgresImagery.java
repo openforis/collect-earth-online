@@ -8,6 +8,8 @@ import spark.Response;
 import java.sql.*;
 import java.util.UUID;
 
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+
 /**
  * Created by gtondapu on 7/31/2018.
  */
@@ -35,11 +37,10 @@ public class PostgresImagery {
             while(rs.next()) {
                 //create imagery json to send back
                 JsonObject newImagery = new JsonObject();
-                newImagery.addProperty("id", Integer.toString(rs.getInt("id")));
+                newImagery.addProperty("id", rs.getInt("id"));
                 newImagery.addProperty("visibility", rs.getString("visibility"));
                 newImagery.addProperty("title", rs.getString("title"));
                 newImagery.addProperty("attribution", rs.getString("attribution"));
-
                 newImagery.addProperty("extent", rs.getObject("extent").toString());
                 newImagery.addProperty("sourceConfig", rs.getObject("source_config").toString());
 
@@ -56,6 +57,40 @@ public class PostgresImagery {
 
     public String addInstitutionImagery(Request req, Response res) {
         try {
+            JsonObject jsonInputs        = parseJson(req.body()).getAsJsonObject();
+            int institutionId            = jsonInputs.get("institutionId").getAsInt();
+            String imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
+            String imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
+            String geoserverURL          = jsonInputs.get("geoserverURL").getAsString();
+            String layerName             = jsonInputs.get("layerName").getAsString();
+            String geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
+            JsonObject geoserverParams   = geoserverParamsString.equals("")
+                    ? new JsonObject()
+                    : parseJson(geoserverParamsString).getAsJsonObject();
+
+            // Add layerName to geoserverParams
+            geoserverParams.addProperty("LAYERS", layerName);
+            JsonObject sourceConfig = new JsonObject();
+            sourceConfig.addProperty("type", "GeoServer");
+            sourceConfig.addProperty("geoserverUrl", geoserverURL);
+            sourceConfig.add("geoserverParams", geoserverParams);
+
+            String SQL = "SELECT * FROM add_project_widget(?, ?, ?, ?, ?::JSONB, ?::JSONB)";
+
+            try (Connection conn = this.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+                pstmt.setInt(1, institutionId);
+                pstmt.setString(2, "private");
+                pstmt.setString(3, imageryTitle);
+                pstmt.setString(4, imageryAttribution);
+                pstmt.setString(5, ""); //This is the extent
+                pstmt.setString(6, sourceConfig.toString());
+                ResultSet rs = pstmt.executeQuery();
+                return "";
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+
             return "";
         } catch (Exception e) {
             // Indicate that an error occurred with imagery creation
@@ -64,7 +99,17 @@ public class PostgresImagery {
     }
 
     public synchronized String deleteInstitutionImagery(Request req, Response res) {
+        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
+        String imageryId      = jsonInputs.get("imageryId").getAsString();
+        String SQL = "SELECT * FROM delete_imagery(?)";
 
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+            pstmt.setInt(1, Integer.parseInt(imageryId));
+            ResultSet rs = pstmt.executeQuery();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
 
         return "";
     }
