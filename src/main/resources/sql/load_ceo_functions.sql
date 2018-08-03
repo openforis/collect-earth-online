@@ -9,11 +9,11 @@ CREATE OR REPLACE FUNCTION insert_role(_title text)
   LANGUAGE SQL;
 
 -- Adds a new user to the database.
-CREATE OR REPLACE FUNCTION add_user(_email text, _password text, _role_id integer, _reset_key text)
+CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
     RETURNS integer AS
     $$
-        INSERT INTO users(email, password, role_id, reset_key)
-        VALUES (_email, _password, _role_id, _reset_key);
+        INSERT INTO users(email, password)
+        VALUES (_email, _password);
         RETURNING id
     $$
   LANGUAGE SQL;
@@ -25,11 +25,11 @@ CREATE OR REPLACE FUNCTION get_user(_email text)
         id integer,
         identity text,
         password text,
-        role_id integer,
+        administrator boolean,
         reset_key text
     ) AS
     $$
-        SELECT id, email AS identity, password, role, reset_key
+        SELECT id, email AS identity, password, administrator, reset_key
         FROM users
         WHERE email = _email
     $$
@@ -48,12 +48,12 @@ RETURNS text AS
 
 -- name: set-user-email-sql
 -- Resets the email for the given user.
-CREATE OR REPLACE FUNCTION set_user_email_and_password(_email text, _new_email text, _password text)
+CREATE OR REPLACE FUNCTION set_user_email_and_password(user_id integer, _email text, _password text)
 RETURNS text AS
     $$
         UPDATE users
-        SET email = _new_email, password = _password
-        WHERE email = _email
+        SET email = _email, password = _password
+        WHERE user_id = user_id
         RETURNING email;
     $$
   LANGUAGE SQL;
@@ -70,7 +70,7 @@ RETURNS text AS
   LANGUAGE SQL;
 
 -- Sets the password reset key for the given user. If one already exists, it is replaced.
-CREATE OR REPLACE FUNCTION update_password(_email text, _password text, _reset_key text)
+CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
 RETURNS text AS
     $$
         UPDATE users
@@ -85,11 +85,11 @@ CREATE OR REPLACE FUNCTION get_all_users()
     RETURNS TABLE(
         id integer,
         email text,
-        role text,
+        administrator boolean,
         reset_key text
     ) AS
     $$
-        SELECT id, email, role, reset_key
+        SELECT id, email, administrator, reset_key
         FROM users
     $$
   LANGUAGE SQL;
@@ -98,18 +98,18 @@ CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integ
     RETURNS TABLE(
         id integer,
         email text,
-        role text,
+        administrator boolean,
         reset_key text,
         institution_role text
     ) AS
     $$
-        SELECT id, email, role, reset_key, title AS institution_role
+        SELECT id, email, administrator, reset_key, title AS institution_role
         FROM get_all_users() AS users
         INNER JOIN institution_users ON users.id = institution_users.user_id
         INNER JOIN roles on roles.id = institution_users.role_id
         WHERE institution_users.institution_id = _institution_id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
 
 
 -- Adds a new institution to the database.
@@ -414,6 +414,37 @@ CREATE OR REPLACE FUNCTION select_all_projects() RETURNS TABLE
 	WHERE archived  =  false
 	  AND privacy_level  =  "public"
 	  AND availability  =  "published"
+$$ LANGUAGE SQL;
+
+
+--Returns all rows in projects for institution_id.
+CREATE OR REPLACE FUNCTION select_all_institution_projects(institution_id integer) RETURNS TABLE
+	(
+	  id                        integer,
+	  institution_id            integer,
+	  availability              text,
+	  name                      text,
+	  description               text,
+	  privacy_level             text,
+	  boundary                  geometry(Polygon,4326),
+	  base_map_source           text,
+	  plot_distribution         text,
+	  num_plots                 integer,
+	  plot_spacing              float,
+	  plot_shape                text,
+	  plot_size                 float,
+	  sample_distribution       text,
+	  samples_per_plot          integer,
+	  sample_resolution         float,
+	  sample_survey             jsonb,
+	  classification_start_date	date,
+	  classification_end_date   date,
+	  classification_timestep   integer,
+	  editable					boolean
+	) AS $$
+	SELECT * 
+	FROM select_all_projects() 
+	WHERE institution_id = institution_id
 $$ LANGUAGE SQL;
 
 --Returns all rows in projects for a user_id and institution_id.

@@ -3,8 +3,8 @@ CREATE TABLE users (
   id        serial primary key,
   email     text not null,
   password  text not null,
-  role      text not null,
-  reset_key text
+  administrator boolean default false,
+  reset_key text default null
 );
 
 CREATE TABLE institutions (

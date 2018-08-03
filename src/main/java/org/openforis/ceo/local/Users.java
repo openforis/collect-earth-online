@@ -179,14 +179,14 @@ public class Users {
             try {
                 String resetKey = UUID.randomUUID().toString();
                 mapJsonFile("user-list.json",
-                            user -> {
-                                if (user.get("email").getAsString().equals(inputEmail)) {
-                                    user.addProperty("resetKey", resetKey);
-                                    return user;
-                                } else {
-                                    return user;
-                                }
-                            });
+                        user -> {
+                            if (user.get("email").getAsString().equals(inputEmail)) {
+                                user.addProperty("resetKey", resetKey);
+                                return user;
+                            } else {
+                                return user;
+                            }
+                        });
                 String body = "Hi "
                     + inputEmail
                     + ",\n\n"
