@@ -300,10 +300,10 @@ CREATE OR REPLACE FUNCTION select_public_imagery() RETURNS TABLE
 		visibility      text,
 		title           text,
 		attribution     text,
-		extent          geometry(Polygon,4326),
-		source_config   jsonb	
+		extent          json,
+		source_config   json
 	) AS $$
-	SELECT * 
+	SELECT id, institution_id, visibility, title, attribution, extent, source_config
 	FROM imagery 
 	WHERE visibility = "public"
 $$ LANGUAGE SQL;
@@ -323,8 +323,8 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(institution_id i
 		visibility      text,
 		title           text,
 		attribution     text,
-		extent          geometry(Polygon,4326),
-		source_config   jsonb	
+		extent          jsonb,
+		source_config   jsonb
 	) AS $$
 	SELECT * 
 	FROM select_public_imagery() 

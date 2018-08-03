@@ -80,13 +80,13 @@ public class PostgresGeoDash {
         String dashboardId = req.queryParams("dashID");
         String widgetJson = req.queryParams("widgetJSON");
         String callback = req.queryParams("callback");
-        String SQL = "SELECT * FROM add_project_widget(?, ?, ?)";
+        String SQL = "SELECT * FROM add_project_widget(?, ?, ?::JSONB)";
 
         try (Connection conn = this.connect();
              PreparedStatement pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(projectId));
             pstmt.setString(2, dashboardId);
-            pstmt.setString(3, widgetJson);
+            pstmt.setObject(3, widgetJson);
             ResultSet rs = pstmt.executeQuery();
             return this.returnBlank(callback);
         } catch (SQLException e) {
@@ -101,12 +101,12 @@ public class PostgresGeoDash {
         String widgetId = req.params(":id");
         String widgetJson = req.queryParams("widgetJSON");
         String callback = req.queryParams("callback");
-        String SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?)";
+        String SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?::JSONB)";
 
         try (Connection conn = this.connect();
             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
-            pstmt.setString(2, widgetJson);
+            pstmt.setObject(2, widgetJson);
             ResultSet rs = pstmt.executeQuery();
             return this.returnBlank(callback);
         } catch (SQLException e) {
