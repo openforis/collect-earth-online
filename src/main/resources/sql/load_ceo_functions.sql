@@ -332,10 +332,10 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(institution_id i
 $$ LANGUAGE SQL;
 
 --Create project
-CREATE FUNCTION create_project(institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer, plot_spacing float, plot_shape text, plot_size integer, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_values jsonb, classification_start_date date, classification_end_date date, classification_timestep integer) RETURNS integer AS $$	
-	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)	
+CREATE FUNCTION create_project(institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer, plot_spacing float, plot_shape text, plot_size float, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_survey jsonb, classification_start_date date, classification_end_date date, classification_timestep integer) RETURNS integer AS $$	
+	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)	
 	VALUES (institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,	
-	sample_resolution, sample_values, classification_start_date, classification_end_date, classification_timestep)	
+	sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)	
 	RETURNING id	
 $$ LANGUAGE SQL;
 
@@ -370,11 +370,11 @@ CREATE OR REPLACE FUNCTION select_project(id integer) RETURNS TABLE
 	  num_plots                 integer,
 	  plot_spacing              float,
 	  plot_shape                text,
-	  plot_size                 integer,
+	  plot_size                 float,
 	  sample_distribution       text,
 	  samples_per_plot          integer,
 	  sample_resolution         float,
-	  sample_values             jsonb,
+	  sample_survey             jsonb,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer
@@ -399,11 +399,11 @@ CREATE OR REPLACE FUNCTION select_all_projects() RETURNS TABLE
 	  num_plots                 integer,
 	  plot_spacing              float,
 	  plot_shape                text,
-	  plot_size                 integer,
+	  plot_size                 float,
 	  sample_distribution       text,
 	  samples_per_plot          integer,
 	  sample_resolution         float,
-	  sample_values             jsonb,
+	  sample_survey             jsonb,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -431,11 +431,11 @@ CREATE OR REPLACE FUNCTION select_all_user_institution_projects(user_id integer,
 	  num_plots                 integer,
 	  plot_spacing              float,
 	  plot_shape                text,
-	  plot_size                 integer,
+	  plot_size                 float,
 	  sample_distribution       text,
 	  samples_per_plot          integer,
 	  sample_resolution         float,
-	  sample_values             jsonb,
+	  sample_survey             jsonb,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -462,11 +462,11 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(user_id integer) RETURNS TAB
 	  num_plots                 integer,
 	  plot_spacing              float,
 	  plot_shape                text,
-	  plot_size                 integer,
+	  plot_size                 float,
 	  sample_distribution       text,
 	  samples_per_plot          integer,
 	  sample_resolution         float,
-	  sample_values             jsonb,
+	  sample_survey             jsonb,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -514,11 +514,11 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles(user_id intege
 	  num_plots                 integer,
 	  plot_spacing              float,
 	  plot_shape                text,
-	  plot_size                 integer,
+	  plot_size                 float,
 	  sample_distribution       text,
 	  samples_per_plot          integer,
 	  sample_resolution         float,
-	  sample_values             jsonb,
+	  sample_survey             jsonb,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -679,64 +679,91 @@ CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(project_id integer
       AND assigned = 0
 $$ LANGUAGE SQL;
 
---Returns labels
-CREATE OR REPLACE FUNCTION get_project_sample_labels(project_id integer) RETURNS TABLE
-	(
-		sid integer,
-		name text,
-		values jsonb
-	) AS $$
-	SELECT (sample_values->>'id')::integer AS sid,sample_values->>'name' AS name,sample_values->'values' AS values
-	FROM projects
-	WHERE id = project_id
-	ORDER BY sid
-$$ LANGUAGE SQL;
-
 --Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
-	(
+    (
 	       plot_id integer,
 	       lon float,
 	       lat float,
-		   flagged integer, 
-		   assigned integer, 
-		   samples_id integer, 
+		   plot_shape text,
+		   plot_size float,
 		   user_id integer,
+		   confidence integer, 
+		   flagged boolean, 
+		   assigned integer,
+		   sample_points integer,
 		   collection_time timestamp,
+		   imagery_title text,
+		   imagery_date date,
 		   value jsonb
 	) AS $$
-	SELECT 
-	FROM plots, get_project_sample_labels(project_id)
-	WHERE project_id = project_id
+	SELECT plots.id,
+		   ST_X(center) AS lon,
+		   ST_Y(center) AS lat,
+		   plot_shape,
+		   plot_size,
+		   user_id,
+		   confidence,
+		   user_plots.flagged AS flagged, 
+		   assigned integer,
+		   count(point) AS sample_points,
+		   collection_time,
+		   json_agg(title) AS imagery_title,
+		   json_agg(imagery_date),
+		   json_agg(value)
+	FROM projects
+	INNER JOIN plots
+		ON plots.project_id = projects.id
+	INNER JOIN user_plots
+		ON user_plots.plot_id = plots.id
+	INNER JOIN sample_values
+		ON sample_values.user_plot_id = user_plots.id
+	INNER JOIN samples
+		ON samples.id = sample_values.sample_id
+	INNER JOIN imagery
+		ON imagery.id = sample_values.imagery_id
+	WHERE projects.id = project_id
+	GROUP BY plots.id,center,plot_shape,plot_size,user_id,confidence,user_plots.flagged,assigned,collection_time
 $$ LANGUAGE SQL;
 
 --Returns project raw data
 CREATE OR REPLACE FUNCTION dump_project_sample_data(project_id integer) RETURNS TABLE
 	(
 	       plot_id integer,
+		   sample_id integer, 
 	       lon float,
 	       lat float,
-		   flagged integer, 
-		   assigned integer, 
-		   samples_id integer, 
 		   user_id integer,
+		   confidence integer, 
+		   flagged boolean, 
 		   collection_time timestamp,
+		   imagery_title text,
+		   imagery_date date,
 		   value jsonb
 	) AS $$
-	SELECT plot_id,ST_X(center) AS lon,ST_Y(center) AS lat,
-		   flagged, assigned, 
-		   samples.id AS sample_id, 
+	SELECT plots.id,
+	       samples.id AS sample_id,
+		   ST_X(point) AS lon,
+		   ST_Y(point) AS lat,
 		   user_id AS user,
-		   collection_time AS timestamp
+		   confidence,
+		   user_plots.flagged AS flagged, 
+		   collection_time,
+		   title AS imagery_title,
+		   imagery_date,
 		   value
-	FROM projects 
+	FROM projects
 	INNER JOIN plots
-	  ON projects.id=plots.project_id
+		ON plots.project_id = projects.id
 	INNER JOIN user_plots
-	  ON user_plots.plot_id=plots.id
+		ON user_plots.plot_id = plots.id
+	INNER JOIN sample_values
+		ON sample_values.user_plot_id = user_plots.id
 	INNER JOIN samples
-	  ON samples.plot_id=plots.id
-	WHERE project.id=project_id
+		ON samples.id = sample_values.sample_id
+	INNER JOIN imagery
+		ON imagery.id = sample_values.imagery_id
+	WHERE projects.id = project_id
 $$ LANGUAGE SQL;
 
 
