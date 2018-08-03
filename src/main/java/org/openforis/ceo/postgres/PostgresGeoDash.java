@@ -6,8 +6,10 @@ import spark.Request;
 import spark.Response;
 
 import java.net.URLDecoder;
+import java.sql.*;
 import java.util.Optional;
 import java.util.UUID;
+
 
 import static org.openforis.ceo.utils.JsonUtils.*;
 
@@ -22,19 +24,47 @@ public class PostgresGeoDash {
         String projectId = req.params(":id");
         String projectTitle = req.queryParams("title");
         String callback = req.queryParams("callback");
+        String SQL = "SELECT * FROM get_project_widgets_by_project_id(?)";
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
 
-        CallableStatement proc = connect().prepareCall("{ ? = call get_project_widgets_by_project_id() }");
-        proc.setObject(2, (int)projectId, Types.INTEGER);
-        proc.registerOutParameter(1, Types.OTHER);
-        proc.execute();
-        ResultSet results = (ResultSet) proc.getObject(1);
-        while (results.next()) {
-            // build json to send to client
+            pstmt.setInt(1, Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            if(rs.next()) {
+                JsonObject newDashboard = new JsonObject();
+                newDashboard.addProperty("projectID", projectId);
+                newDashboard.addProperty("projectTitle", projectTitle);
+                newDashboard.addProperty("dashboardID", rs.getString("dashboard_id"));
+
+                JsonArray widgets = new JsonArray();
+                do {
+                    String widgetJson = rs.getString("widget");
+                    widgets.add(widgetJson);
+                } while (rs.next());
+                newDashboard.add("widgets", widgets);
+                if (callback != null) {
+                    return callback + "(" + newDashboard.toString() + ")";
+                } else {
+                    return newDashboard.toString();
+                }
+            }
+            else{
+                //no widgets return empty dashboard
+                String newDashboardId = UUID.randomUUID().toString();
+                JsonObject newDashboard = new JsonObject();
+                newDashboard.addProperty("projectID", projectId);
+                newDashboard.addProperty("projectTitle", projectTitle);
+                newDashboard.addProperty("dashboardID", newDashboardId);
+                newDashboard.add("widgets", new JsonArray());
+                if (callback != null) {
+                    return callback + "(" + newDashboard.toString() + ")";
+                } else {
+                    return newDashboard.toString();
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
-        results.close();
-        proc.close();
-
-
         return "";
     }
 
