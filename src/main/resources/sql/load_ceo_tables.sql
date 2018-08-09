@@ -3,8 +3,8 @@ CREATE TABLE users (
   id        serial primary key,
   email     text not null,
   password  text not null,
-  role      text not null,
-  reset_key text
+  administrator boolean default false,
+  reset_key text default null
 );
 
 CREATE TABLE institutions (
@@ -29,11 +29,11 @@ CREATE TABLE projects (
   num_plots                 integer,
   plot_spacing              float,
   plot_shape                text,
-  plot_size                 integer,
+  plot_size                 float,
   sample_distribution       text,
   samples_per_plot          integer,
   sample_resolution         float,
-  sample_values             jsonb,
+  sample_survey             jsonb,
   classification_start_date	date,
   classification_end_date   date,
   classification_timestep   integer
@@ -59,7 +59,7 @@ CREATE TABLE imagery (
     visibility      text not null,
     title           text not null,
     attribution     text not null,
-    extent          geometry(Polygon,4326),
+    extent          jsonb,
     source_config   jsonb
 );
 

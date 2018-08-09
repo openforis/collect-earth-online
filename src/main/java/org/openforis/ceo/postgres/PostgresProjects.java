@@ -31,9 +31,11 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.Date;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
@@ -52,10 +54,113 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresProjects {
-
+    private final String url = "jdbc:postgresql://localhost";
+    private final String user = "ceo";
+    private final String password = "ceo";
     public  String getAllProjects(Request req, Response res) {
         String userId = req.queryParams("userId");
         String institutionId = req.queryParams("institutionId");
+        if (userId == null || userId.isEmpty()) {
+            JsonObject all_projects = new JsonObject();
+            PreparedStatement pstmt=null;
+            try {
+                Connection conn = this.connect();
+                if (institutionId == null || institutionId.isEmpty()) {
+                    String SQL = "SELECT * FROM select_all_projects()";
+                     pstmt = conn.prepareStatement(SQL) ;
+                } else {
+                    String SQL = "SELECT * FROM select_all_institution_projects(?)";
+                     pstmt = conn.prepareStatement(SQL) ;
+                    pstmt.setInt(1,Integer.parseInt(institutionId));
+                }
+
+                ResultSet rs = pstmt.executeQuery();
+                all_projects.addProperty("id",rs.getInt("id"));
+                all_projects.addProperty("institution_id",rs.getInt("institution_id"));
+                all_projects.addProperty("availability",rs.getString("availability"));
+                all_projects.addProperty("name",rs.getString("name"));
+                all_projects.addProperty("description",rs.getString("description"));
+                all_projects.addProperty("privacy_level",rs.getString("privacy_level"));
+                all_projects.addProperty("boundary",rs.getString("boundary"));
+                all_projects.addProperty("base_map_source",rs.getString("base_map_source"));
+                all_projects.addProperty("plot_distribution",rs.getString("plot_distribution"));
+                all_projects.addProperty("num_plots",rs.getInt("num_plots"));
+                all_projects.addProperty("plot_spacing",rs.getFloat("plot_spacing"));
+                all_projects.addProperty("plot_shape",rs.getString("plot_shape"));
+                all_projects.addProperty("plot_size",rs.getFloat("plot_size"));
+                all_projects.addProperty("sample_distribution",rs.getString("sample_distribution"));
+                all_projects.addProperty("samples_per_plot",rs.getInt("samples_per_plot"));
+                all_projects.addProperty("sample_resolution",rs.getFloat("sample_resolution"));
+                JsonArray sample_survey = new JsonArray();
+                String sample_surveyJson = rs.getString("sample_survey");
+                sample_survey.add(sample_surveyJson);
+                all_projects.add("sample_survey", sample_survey);
+                Date classification_start_date = rs.getDate("classification_start_date");
+                Date classification_end_date = rs.getDate("classification_end_date");
+
+                all_projects.addProperty("classification_start_date",classification_start_date.toString());
+                all_projects.addProperty("classification_end_date",classification_end_date.toString());
+                all_projects.addProperty("classification_timestep",rs.getInt("classification_timestep"));
+                all_projects.addProperty("editable",rs.getBoolean("editable"));
+                return  all_projects.toString();
+            }
+            catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        else{
+            try {
+                Connection conn = this.connect();
+
+                PreparedStatement pstmt_users = null;
+                if (institutionId == null || institutionId.isEmpty()) {
+                    String SQL = "SELECT * FROM select_all_user_projects(?)";
+                    pstmt_users = conn.prepareStatement(SQL) ;
+                    pstmt_users.setInt(1, Integer.parseInt(userId));
+
+                } else {
+                    String SQL = "SELECT * FROM select_all_user_institution_projects(?,?)";
+                    pstmt_users = conn.prepareStatement(SQL) ;
+                    pstmt_users.setInt(1,Integer.parseInt(userId));
+                    pstmt_users.setInt(2,Integer.parseInt(institutionId));
+
+                }
+                ResultSet rs = pstmt_users.executeQuery();
+
+                JsonObject all_projects = new JsonObject();
+                all_projects.addProperty("id",rs.getInt("id"));
+                all_projects.addProperty("institution_id",rs.getInt("institution_id"));
+                all_projects.addProperty("availability",rs.getString("availability"));
+                all_projects.addProperty("name",rs.getString("name"));
+                all_projects.addProperty("description",rs.getString("description"));
+                all_projects.addProperty("privacy_level",rs.getString("privacy_level"));
+                all_projects.addProperty("boundary",rs.getString("boundary"));
+                all_projects.addProperty("base_map_source",rs.getString("base_map_source"));
+                all_projects.addProperty("plot_distribution",rs.getString("plot_distribution"));
+                all_projects.addProperty("num_plots",rs.getInt("num_plots"));
+                all_projects.addProperty("plot_spacing",rs.getFloat("plot_spacing"));
+                all_projects.addProperty("plot_shape",rs.getString("plot_shape"));
+                all_projects.addProperty("plot_size",rs.getFloat("plot_size"));
+                all_projects.addProperty("sample_distribution",rs.getString("sample_distribution"));
+                all_projects.addProperty("samples_per_plot",rs.getInt("samples_per_plot"));
+                all_projects.addProperty("sample_resolution",rs.getFloat("sample_resolution"));
+                JsonArray sample_survey = new JsonArray();
+                String sample_surveyJson = rs.getString("sample_survey");
+                sample_survey.add(sample_surveyJson);
+                all_projects.add("sample_survey", sample_survey);
+                Date classification_start_date = rs.getDate("classification_start_date");
+                Date classification_end_date = rs.getDate("classification_end_date");
+
+                all_projects.addProperty("classification_start_date",classification_start_date.toString());
+                all_projects.addProperty("classification_end_date",classification_end_date.toString());
+                all_projects.addProperty("classification_timestep",rs.getInt("classification_timestep"));
+                all_projects.addProperty("editable",rs.getBoolean("editable"));
+                return  all_projects.toString();
+            } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        }
 
         return "";
     }
@@ -946,5 +1051,8 @@ public class PostgresProjects {
             throw new RuntimeException(e);
         }
     }
-
+    //Returns a connection to the database
+    private Connection connect() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
+    }
 }
