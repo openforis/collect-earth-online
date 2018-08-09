@@ -9,12 +9,13 @@ import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
 
-public class JsonImagery {
+public class JsonImagery implements Imagery {
 
-    public static String getAllImagery(Request req, Response res) {
+    public String getAllImagery(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
         JsonArray imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
         if (institutionId == null || institutionId.isEmpty()) {
@@ -27,7 +28,7 @@ public class JsonImagery {
         }
     }
 
-    public static synchronized String addInstitutionImagery(Request req, Response res) {
+    public synchronized String addInstitutionImagery(Request req, Response res) {
         try {
             JsonObject jsonInputs        = parseJson(req.body()).getAsJsonObject();
             int institutionId            = jsonInputs.get("institutionId").getAsInt();
@@ -76,7 +77,7 @@ public class JsonImagery {
         }
     }
 
-    public static synchronized String deleteInstitutionImagery(Request req, Response res) {
+    public synchronized String deleteInstitutionImagery(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String imageryId      = jsonInputs.get("imageryId").getAsString();
         String institutionId  = jsonInputs.get("institutionId").getAsString();
