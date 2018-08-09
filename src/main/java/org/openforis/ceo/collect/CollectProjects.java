@@ -22,6 +22,10 @@ import static org.openforis.ceo.utils.RequestUtils.getIntParam;
 import static org.openforis.ceo.utils.RequestUtils.getParam;
 import static spark.utils.StringUtils.isBlank;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,25 +43,18 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
+import org.openforis.ceo.db_api.Projects;
 import org.openforis.ceo.model.ProjectStats;
 import org.openforis.ceo.users.OfGroups;
 import org.openforis.ceo.users.OfUsers;
 import org.openforis.ceo.utils.JsonUtils;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 import spark.Request;
 import spark.Response;
 
-public class CollectProjects {
+public class CollectProjects implements Projects {
 
     private static final String ADMIN_USERNAME = "admin@openforis.org";
     private static final int MAX_PLOT_MEASUREMENTS = 3;
@@ -70,7 +67,7 @@ public class CollectProjects {
      * @param res
      * @return the JSON array of JSON objects (one per project) that match the relevant query filters
      */
-    public static String getAllProjects(Request req, Response res) {
+    public String getAllProjects(Request req, Response res) {
         Integer userId = getLoggedUserId(req);
         String institutionId = req.queryParams("institutionId");
         Map<String, Object> params = new HashMap<String, Object>();
@@ -139,7 +136,7 @@ public class CollectProjects {
      * @param res
      * @return the JSON object for project with matching id or an empty
      */
-    public static String getProjectById(Request req, Response res) {
+    public String getProjectById(Request req, Response res) {
         String projectId = req.params(":id");
         if ("0".equals(projectId)) {
             JsonElement el = JsonUtils.readJsonFile("default-project.json");
@@ -157,7 +154,7 @@ public class CollectProjects {
     // size maxPlots.
     //
     // ==> "[{},{},{}]" where [].length <= maxPlots
-    public static String getProjectPlots(Request req, Response res) {
+    public String getProjectPlots(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         int maxPlots = getIntParam(req, "max");
         String username = getLoggedUsername(req);
@@ -191,7 +188,7 @@ public class CollectProjects {
     // Return a JSON object with several computed integer fields
     //
     // ==> "{flaggedPlots:#,analyzedPlots:#,unanalyzedPlots:#,members:#,contributors:#}"
-    public static String getProjectStats(Request req, Response res) {
+    public String getProjectStats(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         Integer userId = getLoggedUserId(req);
         
@@ -213,7 +210,7 @@ public class CollectProjects {
     // plots exist in the database, return the string "done".
     //
     // ==> "{flagged:false,analyses:0,...}" | "done"
-    public static String getUnanalyzedPlot(Request req, Response res) {
+    public String getUnanalyzedPlot(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         String username = getLoggedUsername(req);
         Map<String, Object> params = new HashMap<String, Object>();
@@ -240,7 +237,7 @@ public class CollectProjects {
         }
     }
 
-    public static String getUnanalyzedPlotById(Request req, Response res) {
+    public String getUnanalyzedPlotById(Request req, Response res) {
         int projectId = getIntParam(req, "projid");
         String plotId = getParam(req, "id");
         String username = getLoggedUsername(req);
@@ -271,7 +268,7 @@ public class CollectProjects {
     // downloaded.
     //
     // ==> "/downloads/ceo-<projectName>-<currentDate>.csv"
-    public static HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
+    public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         String username = getLoggedUsername(req);
         
@@ -327,7 +324,7 @@ public class CollectProjects {
         }
     }
 
-    public static HttpServletResponse dumpProjectRawData(Request req, Response res) {
+    public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         String username = getLoggedUsername(req);
         
@@ -456,7 +453,7 @@ public class CollectProjects {
     // project with matching id. Return the empty string.
     //
     // ==> ""
-    public static synchronized String publishProject(Request req, Response res) {
+    public synchronized String publishProject(Request req, Response res) {
         String projectId = req.params(":id");
         postToCollect("survey/publish/" + projectId);
         return "";
@@ -468,7 +465,7 @@ public class CollectProjects {
     // project with matching id. Return the empty string.
     //
     // ==> ""
-    public static synchronized String closeProject(Request req, Response res) {
+    public synchronized String closeProject(Request req, Response res) {
         String projectId = req.params(":id");
         postToCollect("survey/close/" + projectId);
         return "";
@@ -481,7 +478,7 @@ public class CollectProjects {
     // id. Return the empty string.
     //
     // ==> ""
-    public static synchronized String archiveProject(Request req, Response res) {
+    public synchronized String archiveProject(Request req, Response res) {
         String projectId = req.params(":id");
         postToCollect("survey/archive/" + projectId);
         return "";
@@ -496,7 +493,7 @@ public class CollectProjects {
     // empty string.
     //
     // ==> ""
-    public static synchronized String addUserSamples(Request req, Response res) {
+    public synchronized String addUserSamples(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         int projectId = jsonInputs.get("projectId").getAsInt();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -551,7 +548,7 @@ public class CollectProjects {
     // matching id. Return the empty string.
     //
     // ==> ""
-    public static synchronized String flagPlot(Request req, Response res) {
+    public synchronized String flagPlot(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         int projectId = jsonInputs.get("projectId").getAsInt();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -571,7 +568,7 @@ public class CollectProjects {
     // string.
     //
     // ==> "<newProjectId>"
-    public static synchronized String createProject(Request req, Response res) {
+    public synchronized String createProject(Request req, Response res) {
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
@@ -984,7 +981,7 @@ public class CollectProjects {
             JsonArray users = OfUsers.getAllUsers(institutionId);
             return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
         } else {
-            JsonArray institutions = OfGroups.getAllInstitutions(null);
+            JsonArray institutions = (new OfGroups()).getAllInstitutions(null);
             Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
                                                                        institution ->
                                                                        institution.get("id").getAsString().equals(institutionId));
