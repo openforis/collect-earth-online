@@ -167,6 +167,49 @@ public class PostgresProjects {
 
     public String getProjectById(Request req, Response res) {
         String projectId = req.params(":id");
+        JsonObject all_projects = new JsonObject();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_project(?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            if(rs.next()) {
+                all_projects.addProperty("id", rs.getInt("id"));
+                all_projects.addProperty("institution_id", rs.getInt("institution_id"));
+                all_projects.addProperty("availability", rs.getString("availability"));
+                all_projects.addProperty("name", rs.getString("name"));
+                all_projects.addProperty("description", rs.getString("description"));
+                all_projects.addProperty("privacy_level", rs.getString("privacy_level"));
+                all_projects.addProperty("boundary", rs.getString("boundary"));
+                all_projects.addProperty("base_map_source", rs.getString("base_map_source"));
+                all_projects.addProperty("plot_distribution", rs.getString("plot_distribution"));
+                all_projects.addProperty("num_plots", rs.getInt("num_plots"));
+                all_projects.addProperty("plot_spacing", rs.getFloat("plot_spacing"));
+                all_projects.addProperty("plot_shape", rs.getString("plot_shape"));
+                all_projects.addProperty("plot_size", rs.getFloat("plot_size"));
+                all_projects.addProperty("sample_distribution", rs.getString("sample_distribution"));
+                all_projects.addProperty("samples_per_plot", rs.getInt("samples_per_plot"));
+                all_projects.addProperty("sample_resolution", rs.getFloat("sample_resolution"));
+                JsonArray sample_survey = new JsonArray();
+                String sample_surveyJson = rs.getString("sample_survey");
+                sample_survey.add(sample_surveyJson);
+                all_projects.add("sample_survey", sample_survey);
+                Date classification_start_date = rs.getDate("classification_start_date");
+                Date classification_end_date = rs.getDate("classification_end_date");
+
+                all_projects.addProperty("classification_start_date", classification_start_date.toString());
+                all_projects.addProperty("classification_end_date", classification_end_date.toString());
+                all_projects.addProperty("classification_timestep", rs.getInt("classification_timestep"));
+                all_projects.addProperty("editable", rs.getBoolean("editable"));
+                return all_projects.toString();
+            }
+            else return "";
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
 
     }
@@ -174,25 +217,116 @@ public class PostgresProjects {
     public  String getProjectPlots(Request req, Response res) {
         String projectId = req.params(":id");
         int maxPlots = Integer.parseInt(req.params(":max"));
-
+        JsonObject plots = new JsonObject();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_project_plots(?,?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            pstmt.setInt(2,maxPlots);
+            ResultSet rs = pstmt.executeQuery();
+            plots.addProperty("id",rs.getInt("id"));
+            plots.addProperty("projectId",rs.getInt("project_id"));
+            plots.addProperty("center",rs.getString("center"));
+            plots.addProperty("flagged",rs.getInt("flagged"));
+            plots.addProperty("assigned",rs.getInt("assigned"));
+            return  plots.toString();
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
     }
 
     private  String[] getProjectUsers(String projectId) {
-
-
-        return  new String[1];
+        JsonArray users = new JsonArray();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_project_users(?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            while(rs.next()){
+                users.add(Integer.toString((rs.getInt("user_id"))));
+            }
+            String[] users_arr=new String[users.size()];
+            for(int i=0; i<users_arr.length; i++) {
+                users_arr[i] = users.get(i).toString();
+            }
+            return users_arr;
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return  new String[]{};
     }
 
     public  String getProjectStats(Request req, Response res) {
-        return  "";
-    }
-
-    public  String getUnanalyzedPlot(Request req, Response res) {
+        String projectId = req.params(":id");
+        JsonObject stats = new JsonObject();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_project_statistics(?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            stats.addProperty("flagged_plots",rs.getInt("flagged_plots"));
+            stats.addProperty("assigned_plots",rs.getInt("assigned_plots"));
+            stats.addProperty("unassigned_plots",rs.getInt("unassigned_plots"));
+            stats.addProperty("members",rs.getInt("members"));
+            stats.addProperty("contributors",rs.getInt("contributors"));
+            return  stats.toString();
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
     }
 
-    public  String getUnanalyzedPlotById(Request req, Response res) {
+    public  String getUnassignedPlot(Request req, Response res) {
+        String projectId = req.params(":id");
+        String currentPlotId = req.queryParams("currentPlotId");
+        JsonObject unassigned_plot = new JsonObject();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_unassigned_plot(?,?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            pstmt.setInt(2,Integer.parseInt(currentPlotId));
+            ResultSet rs = pstmt.executeQuery();
+            unassigned_plot.addProperty("plot",rs.getString("plot"));
+
+            return  unassigned_plot.toString();
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return "";
+    }
+
+    public  String getUnassignedPlotById(Request req, Response res) {
+        String projectId = req.params(":id");
+        String currentPlotId = req.queryParams("currentPlotId");
+        JsonObject unassigned_plot = new JsonObject();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_unassigned_plots_by_plot_id(?,?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            pstmt.setInt(2,Integer.parseInt(currentPlotId));
+            ResultSet rs = pstmt.executeQuery();
+            unassigned_plot.addProperty("plot",rs.getString("plot"));
+
+            return  unassigned_plot.toString();
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
     }
 
@@ -200,6 +334,7 @@ public class PostgresProjects {
             Collectors.groupingBy(Function.identity(), Collectors.counting());
 
     private static String[] getValueDistributionLabels(JsonObject project) {
+
         return new String[0];
     }
 
@@ -675,19 +810,55 @@ public class PostgresProjects {
 
     public String publishProject(Request req, Response res) {
         String projectId = req.params(":id");
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM publish_project(?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            return ""+rs.getInt("project_id");
 
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
     }
 
     public String closeProject(Request req, Response res) {
         String projectId = req.params(":id");
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM close_project(?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            return ""+rs.getInt("project_id");
 
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
     }
 
     public String archiveProject(Request req, Response res) {
         String projectId = req.params(":id");
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM archive_project(?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            return ""+rs.getInt("project_id");
 
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
     }
 
@@ -695,18 +866,56 @@ public class PostgresProjects {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
-        String userName = jsonInputs.get("userId").getAsString();
-        JsonObject userSamples = jsonInputs.get("userSamples").getAsJsonObject();
+        String userId = jsonInputs.get("userId").getAsString();
+        String confidence = jsonInputs.get("confidence").getAsString();
+        String imagery_id = jsonInputs.get("imagery_id").getAsString();
+        Date imagery_date =new Date( jsonInputs.get("imagery_date").getAsLong());
+        JsonObject value = jsonInputs.get("value").getAsJsonObject();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM add_user_samples(?,?,?,?,?,?,?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            pstmt.setInt(2,Integer.parseInt(plotId));
+            pstmt.setInt(3,Integer.parseInt(userId));
+            pstmt.setInt(4,Integer.parseInt(confidence));
+            pstmt.setObject(5,value);
+            pstmt.setInt(6,Integer.parseInt(imagery_id));
+            pstmt.setDate(7,(java.sql.Date) imagery_date);
+
+            ResultSet rs = pstmt.executeQuery();
+            return ""+rs.getInt("count(sample_id)");
+
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
 
         return "";
     }
 
-    public static synchronized String flagPlot(Request req, Response res) {
+    public String flagPlot(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
-        String userName = jsonInputs.get("userId").getAsString();
+        Timestamp collection_time = Timestamp.valueOf(jsonInputs.get("collection_time").getAsString());
+        String userId = jsonInputs.get("userId").getAsString();
+        PreparedStatement pstmt=null;
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM flag_plot(?,?,?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(plotId));
+            pstmt.setInt(2,Integer.parseInt(userId));
+            pstmt.setTimestamp(3,collection_time);
 
+            ResultSet rs = pstmt.executeQuery();
+            return ""+rs.getInt("plot_id");
+
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return "";
     }
 
@@ -891,7 +1100,7 @@ public class PostgresProjects {
         return obj.get(field).isJsonNull() ? new JsonPrimitive(0) : obj.get(field);
     }
 
-    private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
+    private JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         double lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
         double latMin =             getOrZero(newProject,"latMin").getAsDouble();
@@ -937,35 +1146,21 @@ public class PostgresProjects {
                 : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
                 : csvPoints;
         IntSupplier plotIndexer = makeCounter();
-        JsonArray newPlots = Arrays.stream(newPlotCenters)
-                .map(plotCenter -> {
-                    JsonObject newPlot = new JsonObject();
-                    newPlot.addProperty("id", plotIndexer.getAsInt());
-                    newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                    newPlot.addProperty("flagged", false);
-                    newPlot.addProperty("analyses", 0);
-                    newPlot.add("user", null);
+        PreparedStatement pstmt=null;
 
-                    Double[][] newSamplePoints = sampleDistribution.equals("gridded")
-                            ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
-                            : createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot);
-                    IntSupplier sampleIndexer = makeCounter();
-                    JsonArray newSamples = Arrays.stream(newSamplePoints)
-                            .map(point -> {
-                                JsonObject newSample = new JsonObject();
-                                newSample.addProperty("id", sampleIndexer.getAsInt());
-                                newSample.addProperty("point", makeGeoJsonPoint(point[0], point[1]).toString());
-                                return newSample;
-                            })
-                            .collect(intoJsonArray);
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM create_project_plots(?,?)";
+            pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,newProject.get("id").getAsInt());
+            pstmt.setInt(2,Integer.parseInt(userId));
 
-                    newPlot.add("samples", newSamples);
-                    return newPlot;
-                })
-                .collect(intoJsonArray);
-
-        // Write the plot data to a new plot-data-<id>.json file
-        writeJsonFile("plot-data-" + newProject.get("id").getAsString() + ".json", newPlots);
+            ResultSet rs = pstmt.executeQuery();
+            int newPlotId= rs.getInt("id");
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
 
         // Update numPlots and samplesPerPlot to match the numbers that were generated
         newProject.addProperty("numPlots", newPlots.size());
@@ -975,7 +1170,7 @@ public class PostgresProjects {
         return newProject;
     }
 
-    public static synchronized String createProject(Request req, Response res) {
+    public String createProject(Request req, Response res) {
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
@@ -987,69 +1182,50 @@ public class PostgresProjects {
                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
                             "samples-per-plot", "sample-resolution", "sample-values"});
-
             // Manually add the name and description fields since they may be invalid JSON
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
-
-            // Read in the existing project list
-            JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
-
-            // Generate a new project id
-            int newProjectId = getNextId(projects);
-            newProject.addProperty("id", newProjectId);
-
-            // Upload the plot-distribution-csv-file if one was provided
-            if (newProject.get("plotDistribution").getAsString().equals("csv")) {
-                String csvFileName = writeFilePart(req, "plot-distribution-csv-file", expandResourcePath("/csv"), "project-" + newProjectId);
-                newProject.addProperty("csv", csvFileName);
-            } else {
-                newProject.add("csv", null);
-            }
-
-            // Add ids to the sampleValueGroups and sampleValues and clean up some of their unnecessary fields
-            JsonArray sampleValueGroups = newProject.get("sampleValues").getAsJsonArray();
-            IntSupplier sampleValueGroupIndexer = makeCounter();
-            JsonArray updatedSampleValueGroups = mapJsonArray(sampleValueGroups,
-                    sampleValueGroup -> {
-                        sampleValueGroup.addProperty("id", sampleValueGroupIndexer.getAsInt());
-                        sampleValueGroup.remove("$$hashKey");
-                        sampleValueGroup.remove("object");
-                        JsonArray sampleValues = sampleValueGroup.get("values").getAsJsonArray();
-                        IntSupplier sampleValueIndexer = makeCounter();
-                        JsonArray updatedSampleValues = mapJsonArray(sampleValues,
-                                sampleValue -> {
-                                    sampleValue.addProperty("id",
-                                            sampleValueIndexer.getAsInt());
-                                    sampleValue.remove("$$hashKey");
-                                    sampleValue.remove("object");
-                                    if (sampleValue.get("image").getAsString().equals("")) {
-                                        sampleValue.add("image", null);
-                                    }
-                                    return sampleValue;
-                                });
-                        sampleValueGroup.add("values", updatedSampleValues);
-                        return sampleValueGroup;
-                    });
-            newProject.add("sampleValues", updatedSampleValueGroups);
-
-            // Add some missing fields that don't come from the web UI
-            newProject.addProperty("archived", false);
             newProject.addProperty("availability", "unpublished");
+            PreparedStatement pstmt = null;
+            try {
+                Connection conn = this.connect();
+                String SQL = "SELECT * FROM create_project(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                pstmt = conn.prepareStatement(SQL);
+                pstmt.setInt(1,newProject.get("institution").getAsInt());
+                pstmt.setString(2 ,newProject.get("availability").getAsString());
+                pstmt.setString(3,newProject.get("name").getAsString());
+                pstmt.setString(4, newProject.get("description").getAsString());
+                pstmt.setString(5, newProject.get("privacy-level").getAsString());
+                pstmt.setString(6, newProject.get("boundary").getAsString());
+                pstmt.setString(7, newProject.get("base-map-source").getAsString());
+                pstmt.setString(8, newProject.get("plot-distribution").getAsString());
+                pstmt.setInt(9, newProject.get("num-plots").getAsInt());
+                pstmt.setFloat(10, newProject.get("plot-spacing").getAsFloat());
+                pstmt.setString(11, newProject.get("plot-shape").getAsString());
+                pstmt.setFloat(12,  newProject.get("plot-size").getAsFloat());
+                pstmt.setString(13, newProject.get("sample-distribution").getAsString());
+                pstmt.setInt(14, newProject.get("samples-per-plot").getAsInt());
+                pstmt.setFloat(15,newProject.get("sample-resolution").getAsFloat());
+                pstmt.setObject(16, newProject.get("sample-values"));
+                pstmt.setString(17, newProject.get("classification_start_date"));
+                pstmt.setString(18, newProject.get("classification_end_date"));
+                pstmt.setInt(19, newProject.get("classification_timestep")));
+                ResultSet rs = pstmt.executeQuery();
+                int newProjectId = rs.getInt("id");
 
-            // Create the requested plot set and write it to plot-data-<newProjectId>.json
-            JsonObject newProjectUpdated = createProjectPlots(newProject);
-
-            // Write the new entry to project-list.json
-            projects.add(newProjectUpdated);
-            writeJsonFile("project-list.json", projects);
-
-            // Indicate that the project was created successfully
-            return newProjectId + "";
-        } catch (Exception e) {
+                // Create the requested plot set and write it to plot-data-<newProjectId>.json
+                JsonObject newProjectUpdated = createProjectPlots(newProject);
+                // Indicate that the project was created successfully
+                return newProjectId + "";
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    catch (Exception e) {
             // Indicate that an error occurred with project creation
             throw new RuntimeException(e);
         }
+        return "";
     }
     //Returns a connection to the database
     private Connection connect() throws SQLException {
