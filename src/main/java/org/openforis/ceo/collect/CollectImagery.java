@@ -12,21 +12,20 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 import static spark.utils.StringUtils.isBlank;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
+import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
 
-public class CollectImagery {
+public class CollectImagery implements Imagery {
 
     private static final String IMAGERY_RESOURCE_TYPE = "IMAGERY";
 
-    public static String getAllImagery(Request req, Response res) throws IOException {
+    public String getAllImagery(Request req, Response res) throws IOException {
         String institutionId = req.queryParams("institutionId");
         JsonArray imageryList = getFromCollect("imagery").getAsJsonArray();
         forEachInJsonArray(imageryList, imagery -> {
@@ -44,7 +43,7 @@ public class CollectImagery {
             .toString();
     }
 
-    public static synchronized String addInstitutionImagery(Request req, Response res) throws IOException {
+    public synchronized String addInstitutionImagery(Request req, Response res) throws IOException {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         Integer institutionId = jsonInputs.get("institutionId").getAsInt();
         String imageryTitle = jsonInputs.get("imageryTitle").getAsString();
@@ -87,7 +86,7 @@ public class CollectImagery {
     }
 
     // FIXME: Delete imagery entries from imagery-list.json once they are no longer referenced by any institution
-    public static synchronized String deleteInstitutionImagery(Request req, Response res) throws IOException {
+    public synchronized String deleteInstitutionImagery(Request req, Response res) throws IOException {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         int institutionId = jsonInputs.get("institutionId").getAsInt();
         String imageryId = jsonInputs.get("imageryId").getAsString();
