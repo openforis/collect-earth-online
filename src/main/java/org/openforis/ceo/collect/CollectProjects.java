@@ -105,7 +105,7 @@ public class CollectProjects {
                 });
         } else {
         	//logged in
-            Map<Integer, String> institutionRoles = OfUsers.getInstitutionRoles(userId);
+            Map<Integer, String> institutionRoles = (new OfUsers()).getInstitutionRoles(userId);
             filteredProjects = filteredProjects.filter(project -> {
                         String role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
                         String privacyLevel = project.get("privacyLevel").getAsString();

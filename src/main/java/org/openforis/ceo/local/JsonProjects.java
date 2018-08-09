@@ -79,7 +79,7 @@ public class JsonProjects implements Projects {
                     .toString();
             }
         } else {
-            Map<Integer, String> institutionRoles = JsonUsers.getInstitutionRoles(Integer.parseInt(userId));
+            Map<Integer, String> institutionRoles = (new JsonUsers()).getInstitutionRoles(Integer.parseInt(userId));
             Stream<JsonObject> filteredProjects = toStream(projects)
                 .filter(project -> project.get("archived").getAsBoolean() == false)
                 .filter(project -> {

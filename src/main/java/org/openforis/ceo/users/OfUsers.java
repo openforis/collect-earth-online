@@ -380,7 +380,7 @@ public class OfUsers implements Users {
         return group;
     }
 
-    public Optional<JsonObject> updateInstitutionRole(Request req, Response res) {
+    public String updateInstitutionRole(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String userId = jsonInputs.get("userId").getAsString();
         String groupId = jsonInputs.get("institutionId").getAsString();
@@ -420,8 +420,8 @@ public class OfUsers implements Users {
             e.printStackTrace(); //TODO
             req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
         }
-        JsonObject group = groupToInstitution(groupId);
-        return Optional.ofNullable(group);
+
+        return "";
     }
 
     public String requestInstitutionMembership(Request req, Response res) {

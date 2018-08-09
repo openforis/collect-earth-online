@@ -108,6 +108,8 @@ public class PostgresInstitutions implements Institutions {
             String name = partToString(req.raw().getPart("institution-name"));
             String url = partToString(req.raw().getPart("institution-url"));
             String description = partToString(req.raw().getPart("institution-description"));
+
+            int newInstitutionId = 0;
             String logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
             String logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
