@@ -132,7 +132,7 @@ public class OfUsers implements Users {
         return req;
     }
 
-    public static Request logout(Request req, Response res) {
+    public Request logout(Request req, Response res) {
         GenericData data = new GenericData();
         data.put("username", req.session().attribute("username"));
         data.put("token", req.session().attribute("token"));

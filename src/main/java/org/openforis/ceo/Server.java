@@ -95,7 +95,7 @@ public class Server implements SparkApplication {
         post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
         post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
         post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
-        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req), res));
+        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
 
         // Routing Table: Projects API
         get("/get-all-projects",                      projects::getAllProjects);

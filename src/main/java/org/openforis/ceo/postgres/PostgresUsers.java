@@ -131,7 +131,7 @@ public class PostgresUsers implements Users {
         return req;
     }
 
-    public Request logout(Request req) {
+    public Request logout(Request req, Response res) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
