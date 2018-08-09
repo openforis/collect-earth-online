@@ -52,8 +52,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
+import org.openforis.ceo.db_api.Projects;
 
-public class PostgresProjects {
+public class PostgresProjects implements Projects {
     private final String url = "jdbc:postgresql://localhost";
     private final String user = "ceo";
     private final String password = "ceo";
@@ -896,6 +897,7 @@ public class PostgresProjects {
     }
 
     public String flagPlot(Request req, Response res) {
+
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String plotId = jsonInputs.get("plotId").getAsString();
         Timestamp collection_time = Timestamp.valueOf(jsonInputs.get("collection_time").getAsString());
@@ -1169,6 +1171,7 @@ public class PostgresProjects {
         // Return the updated project object
         return newProject;
     }
+
 
     public String createProject(Request req, Response res) {
         try {

@@ -12,12 +12,13 @@ import com.google.gson.JsonObject;
 import java.net.URLDecoder;
 import java.util.Optional;
 import java.util.UUID;
+import org.openforis.ceo.db_api.GeoDash;
 import spark.Request;
 import spark.Response;
 
-public class GeoDash {
+public class JsonGeoDash implements GeoDash {
 
-    public static synchronized String geodashId(Request req, Response res) {
+    public synchronized String geodashId(Request req, Response res) {
         String projectId = req.params(":id");
         String projectTitle = req.queryParams("title");
         String callback = req.queryParams("callback");
@@ -77,12 +78,12 @@ public class GeoDash {
         }
     }
 
-    public static synchronized String updateDashBoardByID(Request req, Response res) {
+    public synchronized String updateDashBoardByID(Request req, Response res) {
         /* Code will go here to update dashboard*/
         return "";
     }
 
-    public static synchronized String createDashBoardWidgetByID(Request req, Response res) {
+    public synchronized String createDashBoardWidgetByID(Request req, Response res) {
         String dashboardId = req.queryParams("dashID");
         String widgetJson = req.queryParams("widgetJSON");
         String callback = req.queryParams("callback");
@@ -107,7 +108,7 @@ public class GeoDash {
         }
     }
 
-    public static synchronized String updateDashBoardWidgetByID(Request req, Response res) {
+    public synchronized String updateDashBoardWidgetByID(Request req, Response res) {
         String dashboardId = req.queryParams("dashID");
         String widgetId = req.params(":id");
         String widgetJson = req.queryParams("widgetJSON");
@@ -138,7 +139,7 @@ public class GeoDash {
         }
     }
 
-    public static synchronized String deleteDashBoardWidgetByID(Request req, Response res) {
+    public synchronized String deleteDashBoardWidgetByID(Request req, Response res) {
         String dashboardId = req.queryParams("dashID");
         String widgetId = req.params(":id");
         String callback = req.queryParams("callback");

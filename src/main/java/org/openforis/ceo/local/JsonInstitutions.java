@@ -16,12 +16,13 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 import javax.servlet.MultipartConfigElement;
+import org.openforis.ceo.db_api.Institutions;
 import spark.Request;
 import spark.Response;
 
-public class Institutions {
+public class JsonInstitutions implements Institutions {
 
-    public static String getAllInstitutions(Request req, Response res) {
+    public String getAllInstitutions(Request req, Response res) {
         JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
         return filterJsonArray(institutions, institution -> institution.get("archived").getAsBoolean() == false).toString();
     }
@@ -32,7 +33,7 @@ public class Institutions {
                                                          && institution.get("archived").getAsBoolean() == false);
     }
 
-    public static String getInstitutionDetails(Request req, Response res) {
+    public String getInstitutionDetails(Request req, Response res) {
         int institutionId = Integer.parseInt(req.params(":id"));
         Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
@@ -52,7 +53,7 @@ public class Institutions {
         }
     }
 
-    public static synchronized String updateInstitution(Request req, Response res) {
+    public synchronized String updateInstitution(Request req, Response res) {
         try {
             String institutionId = req.params(":id");
 
@@ -136,7 +137,7 @@ public class Institutions {
         }
     }
 
-    public static synchronized String archiveInstitution(Request req, Response res) {
+    public synchronized String archiveInstitution(Request req, Response res) {
         String institutionId = req.params(":id");
 
         mapJsonFile("institution-list.json",

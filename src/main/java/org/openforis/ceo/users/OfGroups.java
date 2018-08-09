@@ -27,21 +27,22 @@ import java.util.Map;
 import java.util.Optional;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
+import org.openforis.ceo.db_api.Institutions;
 import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 import spark.utils.IOUtils;
 
-public class OfGroups {
+public class OfGroups implements Institutions {
 
     private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
 
-    public static String getAllInstitutions(Request req, Response res) {
+    public String getAllInstitutions(Request req, Response res) {
         String username = (String) req.raw().getSession().getAttribute("username");
 		return getAllInstitutions(username).toString();
     }
         
-    public static JsonArray getAllInstitutions(String username) {
+    public JsonArray getAllInstitutions(String username) {
         try {
             String url = OF_USERS_API_URL + "group";
             HttpResponse response = prepareGetRequest(url).execute(); // get all groups
@@ -118,7 +119,7 @@ public class OfGroups {
     	}
     }
 
-    public static String getInstitutionDetails(Request req, Response res) {
+    public String getInstitutionDetails(Request req, Response res) {
         int institutionId = Integer.parseInt(req.params(":id"));
         Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
@@ -134,7 +135,7 @@ public class OfGroups {
         }
     }
 
-    public static String updateInstitution(Request req, Response res) {
+    public String updateInstitution(Request req, Response res) {
         try {
             String institutionId = req.params(":id");
 
@@ -266,7 +267,7 @@ public class OfGroups {
         return "";
     }
 
-    public static String archiveInstitution(Request req, Response res) {
+    public String archiveInstitution(Request req, Response res) {
         String institutionId = req.params(":id");
         String url = String.format(OF_USERS_API_URL + "group/%s", institutionId);
         GenericData data = new GenericData();

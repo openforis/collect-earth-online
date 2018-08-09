@@ -19,11 +19,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 
-public class Users {
+public class JsonUsers implements Users {
 
     private static final String BASE_URL      = CeoConfig.baseUrl;
     private static final String SMTP_USER     = CeoConfig.smtpUser;
@@ -31,7 +32,7 @@ public class Users {
     private static final String SMTP_PORT     = CeoConfig.smtpPort;
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
 
-    public static Request login(Request req, Response res) {
+    public Request login(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputReturnURL = req.queryParams("returnurl");
@@ -66,7 +67,7 @@ public class Users {
         }
     }
 
-    public static synchronized Request register(Request req, Response res) {
+    public synchronized Request register(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
@@ -114,14 +115,14 @@ public class Users {
         }
     }
 
-    public static Request logout(Request req) {
+    public Request logout(Request req, Response res) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
         return req;
     }
 
-    public static Request updateAccount(Request req, Response res) {
+    public Request updateAccount(Request req, Response res) {
         String userId = req.session().attribute("userid");
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
@@ -168,7 +169,7 @@ public class Users {
         }
     }
 
-    public static Request getPasswordResetKey(Request req, Response res) {
+    public Request getPasswordResetKey(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
         Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
@@ -205,7 +206,7 @@ public class Users {
         }
     }
 
-    public static Request resetPassword(Request req, Response res) {
+    public Request resetPassword(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputResetKey = req.queryParams("password-reset-key");
         String inputPassword = req.queryParams("password");
@@ -247,7 +248,7 @@ public class Users {
         }
     }
 
-    public static String getAllUsers(Request req, Response res) {
+    public String getAllUsers(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
         JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
 
@@ -292,7 +293,7 @@ public class Users {
         }
     }
 
-    public static Map<Integer, String> getInstitutionRoles(int userId) {
+    public Map<Integer, String> getInstitutionRoles(int userId) {
         JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
         JsonPrimitive userIdJson = new JsonPrimitive(userId);
         return toStream(institutions)
@@ -311,7 +312,7 @@ public class Users {
                                       (a, b) -> b));
     }
 
-    public static synchronized String updateInstitutionRole(Request req, Response res) {
+    public synchronized String updateInstitutionRole(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         JsonElement userId = jsonInputs.get("userId");
         String institutionId = jsonInputs.get("institutionId").getAsString();
@@ -360,7 +361,7 @@ public class Users {
         return "";
     }
 
-    public static synchronized String requestInstitutionMembership(Request req, Response res) {
+    public synchronized String requestInstitutionMembership(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         JsonElement userId = jsonInputs.get("userId");
         String institutionId = jsonInputs.get("institutionId").getAsString();

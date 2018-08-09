@@ -47,14 +47,15 @@ import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
+import org.openforis.ceo.db_api.Projects;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
 
-public class Projects {
+public class JsonProjects implements Projects {
 
-    public static String getAllProjects(Request req, Response res) {
+    public String getAllProjects(Request req, Response res) {
         String userId = req.queryParams("userId");
         String institutionId = req.queryParams("institutionId");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -78,7 +79,7 @@ public class Projects {
                     .toString();
             }
         } else {
-            Map<Integer, String> institutionRoles = Users.getInstitutionRoles(Integer.parseInt(userId));
+            Map<Integer, String> institutionRoles = (new JsonUsers()).getInstitutionRoles(Integer.parseInt(userId));
             Stream<JsonObject> filteredProjects = toStream(projects)
                 .filter(project -> project.get("archived").getAsBoolean() == false)
                 .filter(project -> {
@@ -114,7 +115,7 @@ public class Projects {
         }
     }
 
-    public static String getProjectById(Request req, Response res) {
+    public String getProjectById(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
@@ -125,7 +126,7 @@ public class Projects {
         }
     }
 
-    public static String getProjectPlots(Request req, Response res) {
+    public String getProjectPlots(Request req, Response res) {
         String projectId = req.params(":id");
         int maxPlots = Integer.parseInt(req.params(":max"));
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
@@ -194,7 +195,7 @@ public class Projects {
         }
     }
 
-    public static String getProjectStats(Request req, Response res) {
+    public String getProjectStats(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
         JsonArray flaggedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == true);
@@ -215,7 +216,7 @@ public class Projects {
         return stats.toString();
     }
 
-    public static String getUnanalyzedPlot(Request req, Response res) {
+    public String getUnanalyzedPlot(Request req, Response res) {
         String projectId = req.params(":id");
         String currentPlotId = req.queryParams("currentPlotId");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
@@ -231,7 +232,7 @@ public class Projects {
         }
     }
 
-    public static String getUnanalyzedPlotById(Request req, Response res) {
+    public String getUnanalyzedPlotById(Request req, Response res) {
         String projectId = req.params(":projid");
         String plotId = req.params(":id");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
@@ -320,7 +321,7 @@ public class Projects {
         return response;
     }
 
-    public static HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
+    public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
@@ -376,7 +377,7 @@ public class Projects {
         }
     }
 
-    public static HttpServletResponse dumpProjectRawData(Request req, Response res) {
+    public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         String projectId = req.params(":id");
         JsonArray projects = readJsonFile("project-list.json").getAsJsonArray();
         Optional<JsonObject> matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
@@ -450,7 +451,7 @@ public class Projects {
         }
     }
 
-    public static synchronized String publishProject(Request req, Response res) {
+    public synchronized String publishProject(Request req, Response res) {
         String projectId = req.params(":id");
         mapJsonFile("project-list.json",
                     project -> {
@@ -464,7 +465,7 @@ public class Projects {
         return "";
     }
 
-    public static synchronized String closeProject(Request req, Response res) {
+    public synchronized String closeProject(Request req, Response res) {
         String projectId = req.params(":id");
         mapJsonFile("project-list.json",
                     project -> {
@@ -478,7 +479,7 @@ public class Projects {
         return "";
     }
 
-    public static synchronized String archiveProject(Request req, Response res) {
+    public synchronized String archiveProject(Request req, Response res) {
         String projectId = req.params(":id");
         mapJsonFile("project-list.json",
                     project -> {
@@ -493,7 +494,7 @@ public class Projects {
         return "";
     }
 
-    public static synchronized String addUserSamples(Request req, Response res) {
+    public synchronized String addUserSamples(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -524,7 +525,7 @@ public class Projects {
         return "";
     }
 
-    public static synchronized String flagPlot(Request req, Response res) {
+    public synchronized String flagPlot(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -810,7 +811,7 @@ public class Projects {
         return newProject;
     }
 
-    public static synchronized String createProject(Request req, Response res) {
+    public synchronized String createProject(Request req, Response res) {
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.

@@ -250,6 +250,10 @@ a:hover{
 /*********************************************************************/
 /* HOME PAGE */
 /*********************************************************************/
+#home-map-pane {
+    height: 100%;
+}
+
 #home #ceo-description {
     position: relative;
     top: 0;
@@ -260,6 +264,13 @@ a:hover{
     overflow: auto;
     display: none;
 }
+
+#lPanel {
+    height: calc(100vh - 76px);
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
 #lPanel ul {
 	padding-left:0;
 	list-style:none;
@@ -270,8 +281,6 @@ a:hover{
 	background-color:#ecbc0d!important;
 	color:#white;
 }
-
-
 
 @media (min-width: 1200px){
 	#mapPanel .col-xl-1 {

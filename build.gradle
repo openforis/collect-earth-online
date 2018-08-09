@@ -34,6 +34,12 @@ compileJava {
     options.compilerArgs << '-Xlint:unchecked'
 }
 
+run {
+    if (project.hasProperty('runArgs')) {
+       args findProperty('runArgs')
+    }
+}
+
 war {
     baseName = 'collect-earth-online'
     version = '1.0.0-SNAPSHOT'

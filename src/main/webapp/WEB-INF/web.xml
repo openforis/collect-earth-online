@@ -14,7 +14,7 @@
 
   <context-param>
     <param-name>baseUrl</param-name>
-    <param-value>http://ceo.sig-gis.com/</param-value>
+    <param-value>http://collect.earth/</param-value>
   </context-param>
 
   <context-param>

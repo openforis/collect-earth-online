@@ -9,11 +9,11 @@ import java.net.URLDecoder;
 import java.sql.*;
 import java.util.Optional;
 import java.util.UUID;
-
+import org.openforis.ceo.db_api.GeoDash;
 
 import static org.openforis.ceo.utils.JsonUtils.*;
 
-public class PostgresGeoDash {
+public class PostgresGeoDash implements GeoDash {
     private final String url = "jdbc:postgresql://localhost";
     private final String user = "ceo";
     private final String password = "ceo";
