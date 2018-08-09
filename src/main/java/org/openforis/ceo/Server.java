@@ -53,7 +53,6 @@ public class Server implements SparkApplication {
         }
     }
 
-    // FIXME: Make all API method references non-static
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes(String databaseType, Projects projects, Imagery imagery, Users users, Institutions institutions, GeoDash geoDash) {
         // Create a configured FreeMarker renderer
@@ -145,6 +144,36 @@ public class Server implements SparkApplication {
 
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
+        String usageMessage = "Usage (option 1): mvn compile exec:java -Dexec.args=<JSON|POSTGRES>\n" +
+                              "Usage (option 2): gradle run -Dexec.args=<JSON|POSTGRES>";
+
+        if (args.length == 1 && args[0].equals("JSON")) {
+            // Start the Jetty webserver on port 8080
+            port(8080);
+
+            // Set up the routing table to use the JSON backend
+            declareRoutes("JSON",
+                          new JsonProjects(),
+                          new JsonImagery(),
+                          new JsonUsers(),
+                          new JsonInstitutions(),
+                          new JsonGeoDash());
+        } else if (args.length == 1 && args[0].equals("POSTGRES")) {
+            // Start the Jetty webserver on port 8080
+            port(8080);
+
+            // Set up the routing table to use the POSTGRES backend
+            declareRoutes("POSTGRES",
+                          new PostgresProjects(),
+                          new PostgresImagery(),
+                          new PostgresUsers(),
+                          new PostgresInstitutions(),
+                          new PostgresGeoDash());
+        } else {
+            System.out.println(usageMessage);
+            System.exit(1);
+        }
+
         // Load the SMTP settings for sending reset password emails
         JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
         CeoConfig.baseUrl       = smtpSettings.get("baseUrl").getAsString();
@@ -152,43 +181,10 @@ public class Server implements SparkApplication {
         CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
         CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
         CeoConfig.smtpPassword  = smtpSettings.get("smtpPassword").getAsString();
-
-        // Set up the routing table
-        String databaseType = args[0]; // Should be either "JSON" or "POSTGRES"
-
-        if (databaseType.equals("JSON")) {
-            declareRoutes(databaseType,
-                          new JsonProjects(),
-                          new JsonImagery(),
-                          new JsonUsers(),
-                          new JsonInstitutions(),
-                          new JsonGeoDash());
-        } else if (databaseType.equals("POSTGRES")) {
-            declareRoutes(databaseType,
-                          new PostgresProjects(),
-                          new PostgresImagery(),
-                          new PostgresUsers(),
-                          new PostgresInstitutions(),
-                          new PostgresGeoDash());
-        } else {
-            System.out.println("Usage: gradle run <JSON|POSTGRES>");
-            System.exit(1);
-        }
-
-        // Start the Jetty webserver on port 8080
-        port(8080);
     }
 
     // Tomcat entry point
     public void init() {
-        // FIXME: Create and import these interfaces
-        // FIXME: deadgrep for all uses of Projects., Imagery., Users., Groups., and GeoDash. and replace them with Json*.
-        Projects projects = new CollectProjects();
-        Imagery imagery = new CollectImagery();
-        Users users = new OfUsers();
-        Institutions institutions = new OfGroups();
-        GeoDash geoDash = new JsonGeoDash();
-
         // Set up the routing table
         declareRoutes("COLLECT",
                       new CollectProjects(),
