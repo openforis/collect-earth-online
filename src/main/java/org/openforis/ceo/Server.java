@@ -145,7 +145,7 @@ public class Server implements SparkApplication {
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
         String usageMessage = "Usage (option 1): mvn compile exec:java -Dexec.args=<JSON|POSTGRES>\n" +
-                              "Usage (option 2): gradle run -Dexec.args=<JSON|POSTGRES>";
+                              "Usage (option 2): gradle run -PrunArgs=<JSON|POSTGRES>";
 
         if (args.length == 1 && args[0].equals("JSON")) {
             // Start the Jetty webserver on port 8080
@@ -171,7 +171,7 @@ public class Server implements SparkApplication {
                           new PostgresGeoDash());
         } else {
             System.out.println(usageMessage);
-            System.exit(1);
+            System.exit(0);
         }
 
         // Load the SMTP settings for sending reset password emails
