@@ -15,7 +15,7 @@ import java.util.UUID;
 import spark.Request;
 import spark.Response;
 
-public class GeoDash {
+public class JsonGeoDash {
 
     public static synchronized String geodashId(Request req, Response res) {
         String projectId = req.params(":id");

@@ -19,7 +19,7 @@ import javax.servlet.MultipartConfigElement;
 import spark.Request;
 import spark.Response;
 
-public class Institutions {
+public class JsonInstitutions {
 
     public static String getAllInstitutions(Request req, Response res) {
         JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();

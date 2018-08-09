@@ -12,7 +12,7 @@ import com.google.gson.JsonObject;
 import spark.Request;
 import spark.Response;
 
-public class Imagery {
+public class JsonImagery {
 
     public static String getAllImagery(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");

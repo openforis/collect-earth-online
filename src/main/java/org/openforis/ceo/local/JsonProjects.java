@@ -52,7 +52,7 @@ import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
 
-public class Projects {
+public class JsonProjects {
 
     public static String getAllProjects(Request req, Response res) {
         String userId = req.queryParams("userId");
@@ -78,7 +78,7 @@ public class Projects {
                     .toString();
             }
         } else {
-            Map<Integer, String> institutionRoles = Users.getInstitutionRoles(Integer.parseInt(userId));
+            Map<Integer, String> institutionRoles = JsonUsers.getInstitutionRoles(Integer.parseInt(userId));
             Stream<JsonObject> filteredProjects = toStream(projects)
                 .filter(project -> project.get("archived").getAsBoolean() == false)
                 .filter(project -> {

@@ -23,7 +23,7 @@ import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 
-public class Users {
+public class JsonUsers {
 
     private static final String BASE_URL      = CeoConfig.baseUrl;
     private static final String SMTP_USER     = CeoConfig.smtpUser;

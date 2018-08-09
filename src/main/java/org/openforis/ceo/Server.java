@@ -14,11 +14,25 @@ import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
 
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.local.GeoDash;
-import org.openforis.ceo.local.Imagery;
-import org.openforis.ceo.local.Institutions;
-import org.openforis.ceo.local.Projects;
-import org.openforis.ceo.local.Users;
+
+import org.openforis.ceo.local.JsonProjects;
+import org.openforis.ceo.local.JsonImagery;
+import org.openforis.ceo.local.JsonUsers;
+import org.openforis.ceo.local.JsonInstitutions;
+import org.openforis.ceo.local.JsonGeoDash;
+
+import org.openforis.ceo.postgres.PostgresProjects;
+import org.openforis.ceo.postgres.PostgresImagery;
+import org.openforis.ceo.postgres.PostgresUsers;
+import org.openforis.ceo.postgres.PostgresInstitutions;
+import org.openforis.ceo.postgres.PostgresGeoDash;
+
+import org.openforis.ceo.collect.CollectProjects;
+import org.openforis.ceo.collect.CollectImagery;
+import org.openforis.ceo.users.OfUsers;
+import org.openforis.ceo.users.OfGroups;
+
+import org.openforis.ceo.users.CeoAuthFilter;
 import spark.servlet.SparkApplication;
 import spark.template.freemarker.FreeMarkerEngine;
 
