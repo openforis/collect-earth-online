@@ -52,8 +52,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import spark.Request;
 import spark.Response;
+import org.openforis.ceo.db_api.Projects;
 
-public class PostgresProjects {
+public class PostgresProjects implements Projects {
     private final String url = "jdbc:postgresql://localhost";
     private final String user = "ceo";
     private final String password = "ceo";
@@ -701,7 +702,7 @@ public class PostgresProjects {
         return "";
     }
 
-    public static synchronized String flagPlot(Request req, Response res) {
+    public synchronized String flagPlot(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String projectId = jsonInputs.get("projectId").getAsString();
         String plotId = jsonInputs.get("plotId").getAsString();
@@ -975,7 +976,7 @@ public class PostgresProjects {
         return newProject;
     }
 
-    public static synchronized String createProject(Request req, Response res) {
+    public synchronized String createProject(Request req, Response res) {
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.

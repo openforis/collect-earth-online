@@ -13,11 +13,12 @@ import java.util.Optional;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+import org.openforis.ceo.db_api.Institutions;
 
 /**
  * Created by gtondapu on 7/31/2018.
  */
-public class PostgresInstitutions {
+public class PostgresInstitutions implements Institutions {
     private static final String url = "jdbc:postgresql://localhost";
     private static final String user = "ceo";
     private static final String password = "ceo";
@@ -171,7 +172,7 @@ public class PostgresInstitutions {
         return "";
     }
     //Returns a connection to the database
-    private static Connection connect() throws SQLException {
+    private Connection connect() throws SQLException {
         return DriverManager.getConnection(url, user, password);
     }
 

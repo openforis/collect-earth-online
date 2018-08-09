@@ -8,16 +8,17 @@ import spark.Response;
 import java.sql.*;
 import java.util.UUID;
 
+import org.openforis.ceo.db_api.Imagery;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 /**
  * Created by gtondapu on 7/31/2018.
  */
-public class PostgresImagery {
+public class PostgresImagery implements Imagery {
     private static final String url = "jdbc:postgresql://localhost";
     private static final String user = "ceo";
     private static final String password = "ceo";
-    public static String getAllImagery(Request req, Response res) {
+    public String getAllImagery(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
         String SQL = "";
         boolean hasInstitutionId = false;
@@ -115,7 +116,7 @@ public class PostgresImagery {
     }
 
     //Returns a connection to the database
-    private static Connection connect() throws SQLException {
+    private Connection connect() throws SQLException {
         return DriverManager.getConnection(url, user, password);
     }
 

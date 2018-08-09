@@ -22,8 +22,9 @@ import java.util.stream.Collectors;
 import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
+import org.openforis.ceo.db_api.Users;
 
-public class PostgresUsers {
+public class PostgresUsers implements Users {
     private final String url = "jdbc:postgresql://localhost";
     private final String user = "ceo";
     private final String password = "ceo";
@@ -130,7 +131,7 @@ public class PostgresUsers {
         return req;
     }
 
-    public static Request logout(Request req) {
+    public Request logout(Request req) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
@@ -329,7 +330,7 @@ public class PostgresUsers {
 
     }
 
-    public Map<Integer, String> getInstitutionRoles1(int userId){
+    public Map<Integer, String> getInstitutionRoles(int userId){
             Map<Integer, String> inst =new HashMap<Integer,String>() ;
             String SQL = "SELECT * FROM get_institution_user_roles(?)";
             try (Connection conn = this.connect();

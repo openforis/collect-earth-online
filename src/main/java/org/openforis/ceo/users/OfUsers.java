@@ -23,11 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 
-public class OfUsers {
+public class OfUsers implements Users {
 
     private static final String BASE_URL = CeoConfig.baseUrl;
     private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
@@ -43,7 +44,7 @@ public class OfUsers {
      * @param res
      * @return
      */
-    public static Request login(Request req, Response res) {
+    public Request login(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         try {
@@ -78,7 +79,7 @@ public class OfUsers {
         return req;
     }
 
-    public static Request register(Request req, Response res) {
+    public Request register(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
@@ -149,7 +150,7 @@ public class OfUsers {
         return req;
     }
 
-    public static Request updateAccount(Request req, Response res) {
+    public Request updateAccount(Request req, Response res) {
         String userId = req.session().attribute("userid");
         String inputEmail = req.queryParams("email");
         String inputPassword = req.queryParams("password");
@@ -190,7 +191,7 @@ public class OfUsers {
         return req;
     }
 
-    public static Request getPasswordResetKey(Request req, Response res) {
+    public Request getPasswordResetKey(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         try {
             GenericData data = new GenericData();
@@ -216,7 +217,7 @@ public class OfUsers {
         return req;
     }
 
-    public static Request resetPassword(Request req, Response res) {
+    public Request resetPassword(Request req, Response res) {
         String inputEmail = req.queryParams("email");
         String inputResetKey = req.queryParams("password-reset-key");
         String inputPassword = req.queryParams("password");
@@ -264,7 +265,7 @@ public class OfUsers {
         return req;
     }
 
-    public static String getAllUsers(Request req, Response res) {
+    public String getAllUsers(Request req, Response res) {
         String institutionId = req.queryParams("institutionId");
         try {
         	return getAllUsers(institutionId).toString();
@@ -323,7 +324,7 @@ public class OfUsers {
         }
     }
 
-    public static Map<Integer, String> getInstitutionRoles(int userId) {
+    public Map<Integer, String> getInstitutionRoles(int userId) {
         try {
             String url = String.format(OF_USERS_API_URL + "user/%d/groups", userId);
             HttpResponse response = prepareGetRequest(url).execute(); // get user's groups
@@ -379,7 +380,7 @@ public class OfUsers {
         return group;
     }
 
-    public static Optional<JsonObject> updateInstitutionRole(Request req, Response res) {
+    public Optional<JsonObject> updateInstitutionRole(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String userId = jsonInputs.get("userId").getAsString();
         String groupId = jsonInputs.get("institutionId").getAsString();
@@ -423,7 +424,7 @@ public class OfUsers {
         return Optional.ofNullable(group);
     }
 
-    public static String requestInstitutionMembership(Request req, Response res) {
+    public String requestInstitutionMembership(Request req, Response res) {
         JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
         String userId = jsonInputs.get("userId").getAsString();
         String groupId = jsonInputs.get("institutionId").getAsString();
