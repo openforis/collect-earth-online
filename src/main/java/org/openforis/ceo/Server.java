@@ -101,8 +101,8 @@ public class Server implements SparkApplication {
         get("/get-project-by-id/:id",                 projects::getProjectById);
         get("/get-project-plots/:id/:max",            projects::getProjectPlots);
         get("/get-project-stats/:id",                 projects::getProjectStats);
-        get("/get-unanalyzed-plot/:id",               projects::getUnanalyzedPlot);
-        get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnanalyzedPlotById);
+        get("/get-unanalyzed-plot/:id",               projects::getUnassignedPlot);
+        get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnassignedPlotById);
         get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
         get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
         post("/create-project",                       projects::createProject);
