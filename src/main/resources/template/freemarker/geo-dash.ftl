@@ -16,7 +16,7 @@
 	         </ul>
 
 	     <ul class="navbar-nav mr-0">
-        <#if username??>
+        <#if username != "">
 	            <#if navlink == "Logout">
 	            <li id="username" class="nav-item my-auto">
 	            <span class="nav-link disabled">${username}</span>
@@ -69,7 +69,7 @@
             padding: 4px;
         ">
         <div id="login-info">
-                <#if username??>
+                <#if username != "">
                     <#if navlink == "Logout">
                          <span>${username}</span> <a class="active-link" href="${root}/logout">Logout</a>
                     <#else>

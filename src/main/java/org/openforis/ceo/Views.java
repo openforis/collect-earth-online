@@ -46,7 +46,12 @@ public class Views {
                                       e -> {
                                           Object value = e.getValue();
                                           if (value instanceof Function) {
-                                              return ((Function<Request, String>) value).apply(req);
+                                              String result = ((Function<Request, String>) value).apply(req);
+                                              if (result == null) {
+                                                  return "";
+                                              } else {
+                                                  return result;
+                                              }
                                           } else {
                                               return value.toString();
                                           }}));

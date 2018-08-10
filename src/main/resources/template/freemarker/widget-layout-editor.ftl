@@ -23,7 +23,7 @@
          	    <input class="btn btn-outline-lightgreen btn-sm" name="update-widgets" value="Update" type="submit" onclick="gmodcdash.updateWidgets()">
             </li>
 
-        <#if username??>
+        <#if username != "">
 	            <#if navlink == "Logout">
 	            <li id="username" class="nav-item my-auto">
 	            <span class="nav-link disabled">${username}</span>

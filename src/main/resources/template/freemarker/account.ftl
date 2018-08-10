@@ -59,8 +59,8 @@
         </div>
         <div id="account-form" class="col-xl-4 col-md-5">
             <h3>Account Settings</h3>
-            <h1>${username!""}</h1>
-            <#if userid?? && userid == account_id>
+            <h1>${username}</h1>
+            <#if userid == account_id>
                 <form action="${root}/account/${account_id}" method="post">
   				    <div class="form-group">
                         <label for="email">Reset email</label>

@@ -5,7 +5,7 @@
 <script type="text/javascript" src="${root}/js/institution.js"></script>
 
 <div id="institution" ng-app="institution" ng-controller="InstitutionController as institution"
-     ng-init="institution.initialize('${root}', '${userid!""}', '${institution_id}')">
+     ng-init="institution.initialize('${root}', '${userid}', '${institution_id}')">
     <div id="institution-details" class="row justify-content-center">
         <div id="institution-view" class="col-xl-6 col-lg-8 " ng-show="institution.pageMode == 'view'">
       		<div class="row">
@@ -44,7 +44,7 @@
         </div>
 
     </div>
-     <#if role??>
+     <#if role != "">
          <div class="row justify-content-center mb-2" id="institution-controls">
          		<div class="col-2">
          		<div class="btn-group btn-block">

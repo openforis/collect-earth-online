@@ -7,9 +7,9 @@
             <p class="header">Enter your reset info</p>
             <form action="${root}/password-reset" method="post">
                 <input class="form-control mb-1" autocomplete="off" id="email" name="email"
-                       placeholder="Email" type="email" value=${email!""}>
+                       placeholder="Email" type="email" value=${email}>
                 <input class="form-control mb-1" autocomplete="off" id="password-reset-key" name="password-reset-key"
-                       placeholder="Password reset key" type="text" value=${password_reset_key!""}>
+                       placeholder="Password reset key" type="text" value=${password_reset_key}>
                 <input class="form-control mb-1" autocomplete="off" id="password" name="password"
                        placeholder="New password" value="" type="password">
                 <input class="form-control mb-1" autocomplete="off" id="password-confirmation" name="password-confirmation"

@@ -2,8 +2,14 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <script type="text/javascript" src="${root}/js/project.js"></script>
+<#if project_id == "">
+    <#assign project_id = "0">
+</#if>
+<#if institution_id == "">
+    <#assign institution_id = "0">
+</#if>
 <div id="project" class="row" ng-app="project" ng-controller="ProjectController as project"
-     ng-init="project.initialize('${root}', '${project_id!0}', '${institution_id!0}')">
+     ng-init="project.initialize('${root}', '${project_id}', '${institution_id}')">
     <div id="project-dashboard" class="col-md-6">
         <div class="bg-darkgreen">
             <h1>Project Dashboard</h1>

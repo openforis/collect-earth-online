@@ -1,6 +1,4 @@
 <section id="content" class="container-fluid">
 <#if flash_message != "">
-    <div class="alert">
-        <p>${flash_message}</p>
-    </div>
+    <p class="alert">${flash_message}</p>
 </#if>

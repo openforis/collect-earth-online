@@ -3,7 +3,7 @@
 <#include "announcements.ftl">
 <#include "start-content.ftl">
 <script type="text/javascript" src="${root}/js/home.js"></script>
-<div id="home" ng-app="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid!""}')">
+<div id="home" ng-app="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid}')">
     <div id="bcontainer">
         <span id="mobilespan"></span>
         <div class="Wrapper">
@@ -15,7 +15,7 @@
                         </h1>
                     </div>
                     <ul class="tree">
-                        <#if username??>
+                        <#if username != "">
                             <a class="create-institution" href="${root}/institution/0">
                                 <li class="bg-yellow text-center p-2"><i class="fa fa-file"></i> Create New Institution</li>
                             </a>
