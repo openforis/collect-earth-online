@@ -1,8 +1,6 @@
 <section id="content" class="container-fluid">
-<#list flash_messages>
+<#if flash_message != "">
     <div class="alert">
-        <#items as flash_message>
-            <p>${flash_message}</p>
-        </#items>
+        <p>${flash_message}</p>
     </div>
-</#list>
+</#if>

@@ -70,11 +70,11 @@ public class OfUsers implements Users {
                 res.redirect(CeoConfig.documentRoot + "/home");
             } else {
                 // Authentication failed
-                req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
+                req.session().attribute("flash_message", "Invalid email/password combination.");
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            req.session().attribute("flash_message", "An error occurred. Please try again later.");
         }
         return req;
     }
@@ -84,13 +84,13 @@ public class OfUsers implements Users {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         try {
-            // Validate input params and assign flash_messages if invalid
+            // Validate input params and assign flash_message if invalid
             if (!isEmail(inputEmail)) {
-                req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+                req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
             } else if (inputPassword.length() < 8) {
-                req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+                req.session().attribute("flash_message", "Password must be at least 8 characters.");
             } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-                req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+                req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             } else {
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
@@ -98,7 +98,7 @@ public class OfUsers implements Users {
                 if (response.isSuccessStatusCode()) {
                     JsonArray users = getResponseAsJson(response).getAsJsonArray();
                     if (users.size() > 0) {
-                        req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
+                        req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                     } else {
                         // Add a new user to the database
                         GenericData data = new GenericData();
@@ -127,7 +127,7 @@ public class OfUsers implements Users {
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            req.session().attribute("flash_message", "An error occurred. Please try again later.");
         }
         return req;
     }
@@ -156,13 +156,13 @@ public class OfUsers implements Users {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
         String inputCurrentPassword = req.queryParams("current-password");
-        // Validate input params and assign flash_messages if invalid
+        // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
-            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
         } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+            req.session().attribute("flash_message", "Password must be at least 8 characters.");
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
         } else {
             try {
                 GenericData data = new GenericData();
@@ -179,13 +179,13 @@ public class OfUsers implements Users {
                     data.put("newPassword", inputPassword);
                     preparePostRequest(OF_USERS_API_URL + "change-password", data).execute();
                     req.session().attribute("username", inputEmail);
-                    req.session().attribute("flash_messages", new String[]{"The user has been updated."});
+                    req.session().attribute("flash_message", "The user has been updated.");
                 } else {
-                    req.session().attribute("flash_messages", new String[]{"Invalid password."});
+                    req.session().attribute("flash_message", "Invalid password.");
                 }
             } catch (IOException e) {
                 e.printStackTrace(); //TODO
-                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+                req.session().attribute("flash_message", "An error occurred. Please try again later.");
             }
         }
         return req;
@@ -208,11 +208,11 @@ public class OfUsers implements Users {
                     + "&password-reset-key="
                     + user.get("resetKey").getAsString();
                 sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
-                req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
+                req.session().attribute("flash_message", "The reset key has been sent to your email.");
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            req.session().attribute("flash_message", "An error occurred. Please try again later.");
         }
         return req;
     }
@@ -223,11 +223,11 @@ public class OfUsers implements Users {
         String inputPassword = req.queryParams("password");
         String inputPasswordConfirmation = req.queryParams("password-confirmation");
 
-        // Validate input params and assign flash_messages if invalid
+        // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
-            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+            req.session().attribute("flash_message", "Password must be at least 8 characters.");
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
         } else {
             try {
                 HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user");
@@ -236,11 +236,11 @@ public class OfUsers implements Users {
                 if (response.isSuccessStatusCode()) {
                     JsonArray foundUsers = getResponseAsJson(response).getAsJsonArray();
                     if (foundUsers.size() != 1) {
-                        req.session().attribute("flash_messages", new String[]{"There is no user with that email address."});
+                        req.session().attribute("flash_message", "There is no user with that email address.");
                     } else {
                         JsonObject foundUser = foundUsers.get(0).getAsJsonObject();
                         if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
-                            req.session().attribute("flash_messages", new String[]{"Invalid reset key for user " + inputEmail + "."});
+                            req.session().attribute("flash_message", "Invalid reset key for user " + inputEmail + ".");
                         } else {
                             GenericData data = new GenericData();
                             data.put("username", inputEmail);
@@ -248,7 +248,7 @@ public class OfUsers implements Users {
                             data.put("newPassword", inputPassword);
                             response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password request
                             if (response.isSuccessStatusCode()) {
-                                req.session().attribute("flash_messages", new String[]{"The password has been changed."});
+                                req.session().attribute("flash_message", "The password has been changed.");
                             } else {
                                 throw new IOException();
                             }
@@ -259,7 +259,7 @@ public class OfUsers implements Users {
                 }
             } catch (IOException e) {
                 e.printStackTrace(); //TODO
-                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+                req.session().attribute("flash_message", "An error occurred. Please try again later.");
             }
         }
         return req;
@@ -270,7 +270,7 @@ public class OfUsers implements Users {
         try {
         	return getAllUsers(institutionId).toString();
         } catch (Exception e) {
-        	req.session().attribute("flash_messages", new String[]{e.getMessage()});
+        	req.session().attribute("flash_message", e.getMessage());
         	return new JsonArray().toString();
         }
     }
@@ -413,12 +413,12 @@ public class OfUsers implements Users {
                     preparePostRequest(url, data).execute(); // add user to a group (as accepted)
                 } else {
                     e.printStackTrace(); //TODO
-                    req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+                    req.session().attribute("flash_message", "An error occurred. Please try again later.");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            req.session().attribute("flash_message", "An error occurred. Please try again later.");
         }
 
         return "";
@@ -437,7 +437,7 @@ public class OfUsers implements Users {
             return "";
         } catch (IOException e) {
             e.printStackTrace(); //TODO
-            req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+            req.session().attribute("flash_message", "An error occurred. Please try again later.");
             return "";
         }
     }

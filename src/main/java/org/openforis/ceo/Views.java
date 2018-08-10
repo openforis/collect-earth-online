@@ -23,16 +23,16 @@ public class Views {
     }
 
     private static Map<String, Object> getBaseModel(Request req, String navlink) {
-        Map<String, Object> model = Map.of("root",           CeoConfig.documentRoot,
-                                           "navlink",        navlink,
-                                           "userid",         fromSession(req, "userid"),
-                                           "username",       fromSession(req, "username"),
-                                           "role",           fromSession(req, "role"),
-                                           "flash_messages", fromSession(req, "flash_messages"));
+        Map<String, Object> model = Map.of("root",          CeoConfig.documentRoot,
+                                           "navlink",       navlink,
+                                           "userid",        fromSession(req, "userid"),
+                                           "username",      fromSession(req, "username"),
+                                           "role",          fromSession(req, "role"),
+                                           "flash_message", fromSession(req, "flash_message"));
 
         // FIXME: Is this necessary?
-        if (req.session().attribute("flash_messages") != null) {
-            req.session().removeAttribute("flash_messages");
+        if (req.session().attribute("flash_message") != null) {
+            req.session().removeAttribute("flash_message");
         }
 
         return model;
