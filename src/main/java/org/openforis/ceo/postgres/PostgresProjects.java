@@ -1147,27 +1147,26 @@ public class PostgresProjects implements Projects {
         Double[][] newPlotCenters = plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
                 : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
                 : csvPoints;
-        IntSupplier plotIndexer = makeCounter();
-        PreparedStatement pstmt=null;
-
         try {
             Connection conn = this.connect();
-            String SQL = "SELECT * FROM create_project_plots(?,?)";
-            pstmt = conn.prepareStatement(SQL) ;
-            pstmt.setInt(1,newProject.get("id").getAsInt());
-            pstmt.setInt(2,Integer.parseInt(userId));
+            //update plots
+            String SQL_plots = "SELECT * FROM create_project_plots(?,?)";
+            PreparedStatement pstmt_plots = conn.prepareStatement(SQL_plots) ;
+            pstmt_plots.setInt(1,newProject.get("id").getAsInt());
+            pstmt_plots.setObject(2,newPlotCenters);
+            ResultSet rs_plots = pstmt_plots.executeQuery();
+            int newPlotId= rs_plots.getInt("id");
 
-            ResultSet rs = pstmt.executeQuery();
-            int newPlotId= rs.getInt("id");
+            //update samples
+            String SQL_samples = "SELECT * FROM create_project_plot_samples(?,?)";
+            PreparedStatement pstmt_samples = conn.prepareStatement(SQL_samples) ;
+            pstmt_samples.setInt(1,newPlotId);
+            pstmt_samples.setObject(2,newPlotCenters);
+            ResultSet rs_samples = pstmt_samples.executeQuery();
         }
         catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-
-        // Update numPlots and samplesPerPlot to match the numbers that were generated
-        newProject.addProperty("numPlots", newPlots.size());
-        newProject.addProperty("samplesPerPlot", newPlots.get(0).getAsJsonObject().getAsJsonArray("samples").size());
-
         // Return the updated project object
         return newProject;
     }
@@ -1184,7 +1183,7 @@ public class PostgresProjects implements Projects {
                     new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                            "samples-per-plot", "sample-resolution", "sample-values"});
+                            "samples-per-plot", "sample-resolution", "sample-values","classification_start_date","classification_end_date","classification_timestep"});
             // Manually add the name and description fields since they may be invalid JSON
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
@@ -1210,9 +1209,9 @@ public class PostgresProjects implements Projects {
                 pstmt.setInt(14, newProject.get("samples-per-plot").getAsInt());
                 pstmt.setFloat(15,newProject.get("sample-resolution").getAsFloat());
                 pstmt.setObject(16, newProject.get("sample-values"));
-                pstmt.setString(17, newProject.get("classification_start_date"));
-                pstmt.setString(18, newProject.get("classification_end_date"));
-                pstmt.setInt(19, newProject.get("classification_timestep")));
+                pstmt.setDate(17,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
+                pstmt.setDate(18, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
+                pstmt.setInt(19, newProject.get("classification_timestep").getAsInt());
                 ResultSet rs = pstmt.executeQuery();
                 int newProjectId = rs.getInt("id");
 

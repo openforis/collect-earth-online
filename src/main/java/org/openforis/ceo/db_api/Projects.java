@@ -10,8 +10,8 @@ public interface Projects {
     String getProjectById(Request req, Response res);
     String getProjectPlots(Request req, Response res);
     String getProjectStats(Request req, Response res);
-    String getUnanalyzedPlot(Request req, Response res);
-    String getUnanalyzedPlotById(Request req, Response res);
+    String getUnassignedPlot(Request req, Response res);
+    String getUnassignedPlotById(Request req, Response res);
     HttpServletResponse dumpProjectAggregateData(Request req, Response res);
     HttpServletResponse dumpProjectRawData(Request req, Response res);
     String publishProject(Request req, Response res);

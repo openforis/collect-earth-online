@@ -216,7 +216,7 @@ public class JsonProjects implements Projects {
         return stats.toString();
     }
 
-    public String getUnanalyzedPlot(Request req, Response res) {
+    public String getUnassignedPlot(Request req, Response res) {
         String projectId = req.params(":id");
         String currentPlotId = req.queryParams("currentPlotId");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
@@ -232,7 +232,7 @@ public class JsonProjects implements Projects {
         }
     }
 
-    public String getUnanalyzedPlotById(Request req, Response res) {
+    public String getUnassignedPlotById(Request req, Response res) {
         String projectId = req.params(":projid");
         String plotId = req.params(":id");
         JsonArray plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
