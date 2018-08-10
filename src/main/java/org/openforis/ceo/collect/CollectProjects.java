@@ -210,7 +210,7 @@ public class CollectProjects implements Projects {
     // plots exist in the database, return the string "done".
     //
     // ==> "{flagged:false,analyses:0,...}" | "done"
-    public String getUnanalyzedPlot(Request req, Response res) {
+    public String getUnassignedPlot(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         String username = getLoggedUsername(req);
         Map<String, Object> params = new HashMap<String, Object>();
@@ -237,7 +237,7 @@ public class CollectProjects implements Projects {
         }
     }
 
-    public String getUnanalyzedPlotById(Request req, Response res) {
+    public String getUnassignedPlotById(Request req, Response res) {
         int projectId = getIntParam(req, "projid");
         String plotId = getParam(req, "id");
         String username = getLoggedUsername(req);
