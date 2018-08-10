@@ -431,382 +431,54 @@ public class PostgresProjects implements Projects {
 
     public  HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         String projectId = req.params(":id");
-      return new HttpServletResponse() {
-          @Override
-          public void addCookie(Cookie cookie) {
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_project(?)";
+            PreparedStatement pstmt= conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
 
-          }
+                String SQL_dump = "SELECT * FROM dump_project_plot_data(?)";
+                PreparedStatement pstmt_dump = conn.prepareStatement(SQL_dump) ;
+                pstmt_dump.setInt(1,Integer.parseInt(projectId));
+                ResultSet rs_dump = pstmt_dump.executeQuery();
+            } else {
+                res.raw().setStatus(SC_NO_CONTENT);
+                return res.raw();
+            }
 
-          @Override
-          public boolean containsHeader(String s) {
-              return false;
-          }
-
-          @Override
-          public String encodeURL(String s) {
-              return null;
-          }
-
-          @Override
-          public String encodeRedirectURL(String s) {
-              return null;
-          }
-
-          @Override
-          public String encodeUrl(String s) {
-              return null;
-          }
-
-          @Override
-          public String encodeRedirectUrl(String s) {
-              return null;
-          }
-
-          @Override
-          public void sendError(int i, String s) throws IOException {
-
-          }
-
-          @Override
-          public void sendError(int i) throws IOException {
-
-          }
-
-          @Override
-          public void sendRedirect(String s) throws IOException {
-
-          }
-
-          @Override
-          public void setDateHeader(String s, long l) {
-
-          }
-
-          @Override
-          public void addDateHeader(String s, long l) {
-
-          }
-
-          @Override
-          public void setHeader(String s, String s1) {
-
-          }
-
-          @Override
-          public void addHeader(String s, String s1) {
-
-          }
-
-          @Override
-          public void setIntHeader(String s, int i) {
-
-          }
-
-          @Override
-          public void addIntHeader(String s, int i) {
-
-          }
-
-          @Override
-          public void setStatus(int i) {
-
-          }
-
-          @Override
-          public void setStatus(int i, String s) {
-
-          }
-
-          @Override
-          public int getStatus() {
-              return 0;
-          }
-
-          @Override
-          public String getHeader(String s) {
-              return null;
-          }
-
-          @Override
-          public Collection<String> getHeaders(String s) {
-              return null;
-          }
-
-          @Override
-          public Collection<String> getHeaderNames() {
-              return null;
-          }
-
-          @Override
-          public String getCharacterEncoding() {
-              return null;
-          }
-
-          @Override
-          public String getContentType() {
-              return null;
-          }
-
-          @Override
-          public ServletOutputStream getOutputStream() throws IOException {
-              return null;
-          }
-
-          @Override
-          public PrintWriter getWriter() throws IOException {
-              return null;
-          }
-
-          @Override
-          public void setCharacterEncoding(String s) {
-
-          }
-
-          @Override
-          public void setContentLength(int i) {
-
-          }
-
-          @Override
-          public void setContentLengthLong(long l) {
-
-          }
-
-          @Override
-          public void setContentType(String s) {
-
-          }
-
-          @Override
-          public void setBufferSize(int i) {
-
-          }
-
-          @Override
-          public int getBufferSize() {
-              return 0;
-          }
-
-          @Override
-          public void flushBuffer() throws IOException {
-
-          }
-
-          @Override
-          public void resetBuffer() {
-
-          }
-
-          @Override
-          public boolean isCommitted() {
-              return false;
-          }
-
-          @Override
-          public void reset() {
-
-          }
-
-          @Override
-          public void setLocale(Locale locale) {
-
-          }
-
-          @Override
-          public Locale getLocale() {
-              return null;
-          }
-      };
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return res.raw();
     }
 
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         String projectId = req.params(":id");
-        return new HttpServletResponse() {
-            @Override
-            public void addCookie(Cookie cookie) {
+        try {
+            Connection conn = this.connect();
+            String SQL = "SELECT * FROM select_project(?)";
+            PreparedStatement pstmt= conn.prepareStatement(SQL) ;
+            pstmt.setInt(1,Integer.parseInt(projectId));
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
 
+                String SQL_dump = "SELECT * FROM dump_project_sample_data(?)";
+                PreparedStatement pstmt_dump = conn.prepareStatement(SQL_dump) ;
+                pstmt_dump.setInt(1,Integer.parseInt(projectId));
+                ResultSet rs_dump = pstmt_dump.executeQuery();
+            } else {
+                res.raw().setStatus(SC_NO_CONTENT);
+                return res.raw();
             }
 
-            @Override
-            public boolean containsHeader(String s) {
-                return false;
-            }
-
-            @Override
-            public String encodeURL(String s) {
-                return null;
-            }
-
-            @Override
-            public String encodeRedirectURL(String s) {
-                return null;
-            }
-
-            @Override
-            public String encodeUrl(String s) {
-                return null;
-            }
-
-            @Override
-            public String encodeRedirectUrl(String s) {
-                return null;
-            }
-
-            @Override
-            public void sendError(int i, String s) throws IOException {
-
-            }
-
-            @Override
-            public void sendError(int i) throws IOException {
-
-            }
-
-            @Override
-            public void sendRedirect(String s) throws IOException {
-
-            }
-
-            @Override
-            public void setDateHeader(String s, long l) {
-
-            }
-
-            @Override
-            public void addDateHeader(String s, long l) {
-
-            }
-
-            @Override
-            public void setHeader(String s, String s1) {
-
-            }
-
-            @Override
-            public void addHeader(String s, String s1) {
-
-            }
-
-            @Override
-            public void setIntHeader(String s, int i) {
-
-            }
-
-            @Override
-            public void addIntHeader(String s, int i) {
-
-            }
-
-            @Override
-            public void setStatus(int i) {
-
-            }
-
-            @Override
-            public void setStatus(int i, String s) {
-
-            }
-
-            @Override
-            public int getStatus() {
-                return 0;
-            }
-
-            @Override
-            public String getHeader(String s) {
-                return null;
-            }
-
-            @Override
-            public Collection<String> getHeaders(String s) {
-                return null;
-            }
-
-            @Override
-            public Collection<String> getHeaderNames() {
-                return null;
-            }
-
-            @Override
-            public String getCharacterEncoding() {
-                return null;
-            }
-
-            @Override
-            public String getContentType() {
-                return null;
-            }
-
-            @Override
-            public ServletOutputStream getOutputStream() throws IOException {
-                return null;
-            }
-
-            @Override
-            public PrintWriter getWriter() throws IOException {
-                return null;
-            }
-
-            @Override
-            public void setCharacterEncoding(String s) {
-
-            }
-
-            @Override
-            public void setContentLength(int i) {
-
-            }
-
-            @Override
-            public void setContentLengthLong(long l) {
-
-            }
-
-            @Override
-            public void setContentType(String s) {
-
-            }
-
-            @Override
-            public void setBufferSize(int i) {
-
-            }
-
-            @Override
-            public int getBufferSize() {
-                return 0;
-            }
-
-            @Override
-            public void flushBuffer() throws IOException {
-
-            }
-
-            @Override
-            public void resetBuffer() {
-
-            }
-
-            @Override
-            public boolean isCommitted() {
-                return false;
-            }
-
-            @Override
-            public void reset() {
-
-            }
-
-            @Override
-            public void setLocale(Locale locale) {
-
-            }
-
-            @Override
-            public Locale getLocale() {
-                return null;
-            }
-        };
+        }
+        catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return res.raw();
     }
 
     public String publishProject(Request req, Response res) {
