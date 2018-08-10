@@ -98,12 +98,12 @@ public class PostgresProjects implements Projects {
                 all_projects.add("sample_survey", sample_survey);
                 Date classification_start_date = rs.getDate("classification_start_date");
                 Date classification_end_date = rs.getDate("classification_end_date");
-
                 all_projects.addProperty("classification_start_date",classification_start_date.toString());
                 all_projects.addProperty("classification_end_date",classification_end_date.toString());
                 all_projects.addProperty("classification_timestep",rs.getInt("classification_timestep"));
                 all_projects.addProperty("editable",rs.getBoolean("editable"));
-                return  all_projects.toString();
+                return all_projects.toString();
+
             }
             catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -120,7 +120,7 @@ public class PostgresProjects implements Projects {
                     pstmt_users.setInt(1, Integer.parseInt(userId));
 
                 } else {
-                    String SQL = "SELECT * FROM select_all_user_institution_projects(?,?)";
+                    String SQL = "SELECT * FROM select_institution_projects_with_roles(?,?)";
                     pstmt_users = conn.prepareStatement(SQL) ;
                     pstmt_users.setInt(1,Integer.parseInt(userId));
                     pstmt_users.setInt(2,Integer.parseInt(institutionId));
