@@ -1,8 +1,9 @@
 package org.openforis.ceo;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
 import org.openforis.ceo.env.CeoConfig;
 import spark.ModelAndView;
 import spark.Request;
@@ -12,22 +13,59 @@ import spark.template.freemarker.FreeMarkerEngine;
 
 public class Views {
 
-    private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
+    private static String fromSession(Request req, String attr) {
+        String value = req.session().attribute(attr);
+        if (value == null) {
+            return "";
+        } else {
+            return value;
+        }
+    }
 
     private static Map<String, Object> getBaseModel(Request req, String navlink) {
-        Map<String, Object> model = new HashMap<String, Object>();
-        model.put("root", CeoConfig.documentRoot);
-        model.put("navlink", navlink);
-        model.put("userid", req.session().attribute("userid"));
-        model.put("username", req.session().attribute("username"));
-        model.put("role", req.session().attribute("role"));
+        Map<String, Object> model = Map.of("root",           CeoConfig.documentRoot,
+                                           "navlink",        navlink,
+                                           "userid",         fromSession(req, "userid"),
+                                           "username",       fromSession(req, "username"),
+                                           "role",           fromSession(req, "role"),
+                                           "flash_messages", fromSession(req, "flash_messages"));
+
+        // FIXME: Is this necessary?
         if (req.session().attribute("flash_messages") != null) {
-            model.put("flash_messages", req.session().attribute("flash_messages"));
             req.session().removeAttribute("flash_messages");
-        } else {
-            model.put("flash_messages", new String[]{});
         }
+
         return model;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> mergeParams(Map<String, Object> model, Map<String, Object> extraParams, Request req) {
+        return Stream.concat(model.entrySet().stream(),
+                             extraParams.entrySet().stream())
+            .collect(Collectors.toMap(e -> e.getKey(),
+                                      e -> {
+                                          Object value = e.getValue();
+                                          if (value instanceof Function) {
+                                              return ((Function<Request, String>) value).apply(req);
+                                          } else {
+                                              return value.toString();
+                                          }}));
+    }
+
+    private static Route makeRoute(String navlink, FreeMarkerEngine freemarker) {
+        String templateFileName = navlink.toLowerCase() + ".ftl";
+        return (req, res) -> {
+            Map<String, Object> model = getBaseModel(req, navlink);
+            return freemarker.render(new ModelAndView(model, templateFileName));
+        };
+    }
+
+    private static Route makeRoute(String navlink, FreeMarkerEngine freemarker, Map<String, Object> extraParams) {
+        String templateFileName = navlink.toLowerCase() + ".ftl";
+        return (req, res) -> {
+            Map<String, Object> model = mergeParams(getBaseModel(req, navlink), extraParams, req);
+            return freemarker.render(new ModelAndView(model, templateFileName));
+        };
     }
 
     private static void authenticateOrRedirect(Request req, Response res) {
@@ -36,37 +74,15 @@ public class Views {
         }
     }
 
-    // FIXME: Replace loop with a more elegant construct
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> mergeParams(Map<String, Object> model, Object[] extraParams, Request req) {
-        for (int i=0; i<extraParams.length; i+=2) {
-            String key = extraParams[i].toString();
-            Object value = extraParams[i+1];
-            if (value instanceof Function) {
-                model.put(key, ((Function<Request, String>) value).apply(req));
-            } else {
-                model.put(key, value);
-            }
-        }
-        return model;
+    private static Route makeAuthenticatedRoute(String navlink, FreeMarkerEngine freemarker) {
+        Route baseRoute = makeRoute(navlink, freemarker);
+        return (req, res) -> {
+            authenticateOrRedirect(req, res);
+            return baseRoute.handle(req, res);
+        };
     }
 
-    private static Route makeRoute(String navlink, FreeMarkerEngine freemarker, Object... extraParams) {
-        String templateFileName = navlink.toLowerCase() + ".ftl";
-        if (extraParams.length == 0) {
-            return (req, res) -> {
-                Map<String, Object> model = getBaseModel(req, navlink);
-                return freemarker.render(new ModelAndView(model, templateFileName));
-            };
-        } else {
-            return (req, res) -> {
-                Map<String, Object> model = mergeParams(getBaseModel(req, navlink), extraParams, req);
-                return freemarker.render(new ModelAndView(model, templateFileName));
-            };
-        }
-    }
-
-    private static Route makeAuthenticatedRoute(String navlink, FreeMarkerEngine freemarker, Object... extraParams) {
+    private static Route makeAuthenticatedRoute(String navlink, FreeMarkerEngine freemarker, Map<String, Object> extraParams) {
         Route baseRoute = makeRoute(navlink, freemarker, extraParams);
         return (req, res) -> {
             authenticateOrRedirect(req, res);
@@ -89,15 +105,15 @@ public class Views {
     public static Route account(FreeMarkerEngine freemarker) {
         Function<Request, String> getAccountId = (req) -> req.params(":id");
         return makeAuthenticatedRoute("Account", freemarker,
-                                      "account_id", getAccountId);
+                                      Map.of("account_id", getAccountId));
     }
 
     public static Route institution(FreeMarkerEngine freemarker, String storage) {
         Function<Request, String> getInstitutionId = (req) -> req.params(":id");
         Route baseRoute = makeRoute("Institution", freemarker,
-                                    "of_users_api_url", OF_USERS_API_URL,
-                                    "institution_id", getInstitutionId,
-                                    "storage", storage);
+                                    Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
+                                           "institution_id", getInstitutionId,
+                                           "storage", storage));
         return (req, res) -> {
             if (req.params(":id").equals("0")) {
                 authenticateOrRedirect(req, res);
@@ -109,15 +125,15 @@ public class Views {
     public static Route collection(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
         return makeRoute("Collection", freemarker,
-                         "project_id", getProjectId);
+                         Map.of("project_id", getProjectId));
     }
 
     public static Route project(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
         return makeAuthenticatedRoute("Project", freemarker,
-                                      "project_id", getProjectId,
-                                      "institution_id", getInstitutionId);
+                                      Map.of("project_id", getProjectId,
+                                             "institution_id", getInstitutionId));
     }
 
     public static Route login(FreeMarkerEngine freemarker) {
@@ -130,8 +146,8 @@ public class Views {
             return (psssQuery == null || psssQuery.isEmpty()) ? "empty" : psssQuery;
         };
         return makeRoute("Login", freemarker,
-                         "returnurl", getReturnUrl,
-                         "querystring", getQueryString);
+                         Map.of("returnurl", getReturnUrl,
+                                "querystring", getQueryString));
     }
 
     public static Route register(FreeMarkerEngine freemarker) {
@@ -146,20 +162,20 @@ public class Views {
         Function<Request, String> getEmail = (req) -> req.queryParams("email");
         Function<Request, String> getPasswordResetKey = (req) -> req.queryParams("password-reset-key");
         return makeRoute("Password-Reset", freemarker,
-                         "email", getEmail,
-                         "password_reset_key", getPasswordResetKey);
+                         Map.of("email", getEmail,
+                                "password_reset_key", getPasswordResetKey));
     }
 
     public static Route geodash(FreeMarkerEngine freemarker) {
         Function<Request, String> getEditable = (req) -> req.queryParams("editable");
         return makeRoute("Geo-Dash", freemarker,
-                         "editable", getEditable);
+                         Map.of("editable", getEditable));
     }
 
     public static Route editWidgetLayout(FreeMarkerEngine freemarker) {
         Function<Request, String> getPid = (req) -> req.queryParams("pid");
         return makeAuthenticatedRoute("Widget-Layout-Editor", freemarker,
-                                      "project_id", getPid);
+                                      Map.of("project_id", getPid));
     }
 
     public static Route cardTest(FreeMarkerEngine freemarker) {
