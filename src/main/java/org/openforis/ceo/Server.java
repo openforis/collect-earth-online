@@ -42,7 +42,7 @@ public class Server implements SparkApplication {
     // *.ftl files from src/main/resources/template/freemarker/
     private static Configuration getConfiguration() {
         try {
-            Configuration cfg = new Configuration(Configuration.VERSION_2_3_23);
+            var cfg = new Configuration(Configuration.VERSION_2_3_23);
             cfg.setDirectoryForTemplateLoading(new File(Server.class.getResource("/template/freemarker").toURI()));
             cfg.setDefaultEncoding("UTF-8");
             cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER); // or RETHROW_HANDLER
@@ -56,7 +56,7 @@ public class Server implements SparkApplication {
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes(String databaseType, Projects projects, Imagery imagery, Users users, Institutions institutions, GeoDash geoDash) {
         // Create a configured FreeMarker renderer
-        FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
+        var freemarker = new FreeMarkerEngine(getConfiguration());
 
         // FIXME: Get deploy/clientkeystore signed by a certificate authority.
         // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
@@ -144,8 +144,8 @@ public class Server implements SparkApplication {
 
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
-        String usageMessage = "Usage (option 1): mvn compile exec:java -Dexec.args=<JSON|POSTGRES>\n" +
-                              "Usage (option 2): gradle run -PrunArgs=<JSON|POSTGRES>";
+        var usageMessage = "Usage (option 1): mvn compile exec:java -Dexec.args=<JSON|POSTGRES>\n" +
+                           "Usage (option 2): gradle run -PrunArgs=<JSON|POSTGRES>";
 
         if (args.length == 1 && args[0].equals("JSON")) {
             // Start the Jetty webserver on port 8080
@@ -175,7 +175,7 @@ public class Server implements SparkApplication {
         }
 
         // Load the SMTP settings for sending reset password emails
-        JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
+        var smtpSettings        = readJsonFile("mail-config.json").getAsJsonObject();
         CeoConfig.baseUrl       = smtpSettings.get("baseUrl").getAsString();
         CeoConfig.smtpUser      = smtpSettings.get("smtpUser").getAsString();
         CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();

@@ -22,13 +22,13 @@ public class Views {
         }
     }
 
-    private static Map<String, Object> getBaseModel(Request req, String navlink) {
-        Map<String, Object> model = Map.of("root",          CeoConfig.documentRoot,
-                                           "navlink",       navlink,
-                                           "userid",        fromSession(req, "userid"),
-                                           "username",      fromSession(req, "username"),
-                                           "role",          fromSession(req, "role"),
-                                           "flash_message", fromSession(req, "flash_message"));
+    private static Map<String, String> getBaseModel(Request req, String navlink) {
+        var model = Map.of("root",          CeoConfig.documentRoot,
+                           "navlink",       navlink,
+                           "userid",        fromSession(req, "userid"),
+                           "username",      fromSession(req, "username"),
+                           "role",          fromSession(req, "role"),
+                           "flash_message", fromSession(req, "flash_message"));
 
         // FIXME: Is this necessary?
         if (req.session().attribute("flash_message") != null) {
@@ -39,14 +39,14 @@ public class Views {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> mergeParams(Map<String, Object> model, Map<String, Object> extraParams, Request req) {
+    private static Map<String, String> mergeParams(Map<String, String> model, Map<String, Object> extraParams, Request req) {
         return Stream.concat(model.entrySet().stream(),
                              extraParams.entrySet().stream())
             .collect(Collectors.toMap(e -> e.getKey(),
                                       e -> {
-                                          Object value = e.getValue();
+                                          var value = e.getValue();
                                           if (value instanceof Function) {
-                                              String result = ((Function<Request, String>) value).apply(req);
+                                              var result = ((Function<Request, String>) value).apply(req);
                                               if (result == null) {
                                                   return "";
                                               } else {
@@ -58,17 +58,17 @@ public class Views {
     }
 
     private static Route makeRoute(String navlink, FreeMarkerEngine freemarker) {
-        String templateFileName = navlink.toLowerCase() + ".ftl";
+        var templateFileName = navlink.toLowerCase() + ".ftl";
         return (req, res) -> {
-            Map<String, Object> model = getBaseModel(req, navlink);
+            var model = getBaseModel(req, navlink);
             return freemarker.render(new ModelAndView(model, templateFileName));
         };
     }
 
     private static Route makeRoute(String navlink, FreeMarkerEngine freemarker, Map<String, Object> extraParams) {
-        String templateFileName = navlink.toLowerCase() + ".ftl";
+        var templateFileName = navlink.toLowerCase() + ".ftl";
         return (req, res) -> {
-            Map<String, Object> model = mergeParams(getBaseModel(req, navlink), extraParams, req);
+            var model = mergeParams(getBaseModel(req, navlink), extraParams, req);
             return freemarker.render(new ModelAndView(model, templateFileName));
         };
     }
@@ -80,7 +80,7 @@ public class Views {
     }
 
     private static Route makeAuthenticatedRoute(String navlink, FreeMarkerEngine freemarker) {
-        Route baseRoute = makeRoute(navlink, freemarker);
+        var baseRoute = makeRoute(navlink, freemarker);
         return (req, res) -> {
             authenticateOrRedirect(req, res);
             return baseRoute.handle(req, res);
@@ -88,7 +88,7 @@ public class Views {
     }
 
     private static Route makeAuthenticatedRoute(String navlink, FreeMarkerEngine freemarker, Map<String, Object> extraParams) {
-        Route baseRoute = makeRoute(navlink, freemarker, extraParams);
+        var baseRoute = makeRoute(navlink, freemarker, extraParams);
         return (req, res) -> {
             authenticateOrRedirect(req, res);
             return baseRoute.handle(req, res);
@@ -115,7 +115,7 @@ public class Views {
 
     public static Route institution(FreeMarkerEngine freemarker, String storage) {
         Function<Request, String> getInstitutionId = (req) -> req.params(":id");
-        Route baseRoute = makeRoute("Institution", freemarker,
+        var baseRoute = makeRoute("Institution", freemarker,
                                     Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
                                            "institution_id", getInstitutionId,
                                            "storage", storage));
@@ -143,11 +143,11 @@ public class Views {
 
     public static Route login(FreeMarkerEngine freemarker) {
         Function<Request, String> getReturnUrl = (req) -> {
-            String inputReturnURL = req.queryParams("returnurl");
+            var inputReturnURL = req.queryParams("returnurl");
             return (inputReturnURL == null || inputReturnURL.isEmpty()) ? "home" : inputReturnURL;
         };
         Function<Request, String> getQueryString = (req) -> {
-            String psssQuery = req.queryString();
+            var psssQuery = req.queryString();
             return (psssQuery == null || psssQuery.isEmpty()) ? "empty" : psssQuery;
         };
         return makeRoute("Login", freemarker,
