@@ -27,8 +27,8 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-sourceCompatibility = 1.9
-targetCompatibility = 1.9
+sourceCompatibility = 1.10
+targetCompatibility = 1.10
 
 compileJava {
     options.compilerArgs << '-Xlint:unchecked'
