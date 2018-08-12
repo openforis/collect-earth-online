@@ -40,7 +40,7 @@ public class RequestUtils {
     }
 
     public static int getIntParam(Request req, String param, int defaultValue) {
-        String val = getParam(req, param);
+        var val = getParam(req, param);
         return val == null || val.isEmpty() ? defaultValue : Integer.parseInt(val);
     }
 
@@ -100,7 +100,7 @@ public class RequestUtils {
         if (params == null) {
             return null;
         } else if (params instanceof JsonObject) {
-            Map<?,?> mapData = new Gson().fromJson((JsonObject) params, Map.class);
+            var mapData = (new Gson()).fromJson((JsonObject) params, Map.class);
             return new JsonHttpContent(JSON_FACTORY, mapData);
         } else {
             return new JsonHttpContent(JSON_FACTORY, params);

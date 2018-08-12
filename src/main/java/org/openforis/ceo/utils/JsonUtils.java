@@ -32,7 +32,7 @@ public class JsonUtils {
 
 	public static String expandResourcePath(String filename) {
         try {
-            URI uri = JsonUtils.class.getResource(filename).toURI();
+            var uri = JsonUtils.class.getResource(filename).toURI();
             return Paths.get(uri).toFile().getAbsolutePath();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -44,12 +44,12 @@ public class JsonUtils {
     }
     
     public static String toJson(Object obj) {
-    	return new Gson().toJson(obj);
+    	return (new Gson()).toJson(obj);
     }
 
     public static JsonElement readJsonFile(String filename) {
-        String jsonDataDir = expandResourcePath("/json/");
-        try (FileReader fileReader = new FileReader(new File(jsonDataDir, filename))) {
+        var jsonDataDir = expandResourcePath("/json/");
+        try (var fileReader = new FileReader(new File(jsonDataDir, filename))) {
             return (new JsonParser()).parse(fileReader);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -57,8 +57,8 @@ public class JsonUtils {
     }
 
     public static void writeJsonFile(String filename, JsonElement data) {
-        String jsonDataDir = expandResourcePath("/json/");
-        try (FileWriter fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
+        var jsonDataDir = expandResourcePath("/json/");
+        try (var fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
             fileWriter.write(data.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -117,22 +117,22 @@ public class JsonUtils {
     }
 
 	public static JsonArray singletonArray(JsonElement el) {
-		JsonArray array = new JsonArray();
+		var array = new JsonArray();
 		array.add(el);
 		return array;
 	}
 
     // Note: The JSON file must contain an array of objects.
     public static void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
-        JsonArray array = readJsonFile(filename).getAsJsonArray();
-        JsonArray updatedArray = mapJsonArray(array, mapper);
+        var array = readJsonFile(filename).getAsJsonArray();
+        var updatedArray = mapJsonArray(array, mapper);
         writeJsonFile(filename, updatedArray);
     }
 
     // Note: The JSON file must contain an array of objects.
     public static void filterJsonFile(String filename, Predicate<JsonObject> predicate) {
-        JsonArray array = readJsonFile(filename).getAsJsonArray();
-        JsonArray updatedArray = filterJsonArray(array, predicate);
+        var array = readJsonFile(filename).getAsJsonArray();
+        var updatedArray = filterJsonArray(array, predicate);
         writeJsonFile(filename, updatedArray);
     }
 
@@ -140,23 +140,23 @@ public class JsonUtils {
         if (pathParts.peekFirst() == null) {
             return currentEl;
         } else {
-            String pathPart = pathParts.removeFirst();
+            var pathPart = pathParts.removeFirst();
             if (currentEl instanceof JsonObject) {
-                JsonObject currentObj = (JsonObject) currentEl;
-                Pattern arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
-                Matcher arrayIndexMatcher = arrayIndexPattern.matcher(pathPart);
+                var currentObj = (JsonObject) currentEl;
+                var arrayIndexPattern = Pattern.compile("(\\w+)\\[(\\d+)\\]");
+                var arrayIndexMatcher = arrayIndexPattern.matcher(pathPart);
                 if (arrayIndexMatcher.matches()) {
-                    String arrayObjName = arrayIndexMatcher.group(1);
-                    String arrayIdxStr = arrayIndexMatcher.group(2);
-                    JsonArray array = currentObj.get(arrayObjName).getAsJsonArray();
-                    JsonElement nextEl = array.get(Integer.parseInt(arrayIdxStr));
+                    var arrayObjName = arrayIndexMatcher.group(1);
+                    var arrayIdxStr = arrayIndexMatcher.group(2);
+                    var array = currentObj.get(arrayObjName).getAsJsonArray();
+                    var nextEl = array.get(Integer.parseInt(arrayIdxStr));
                     return walkJsonPath(nextEl, path, pathParts);
                 } else {
-                    Pattern propertyNamePattern = Pattern.compile("\\w+");
-                    Matcher propertyNameMatcher = propertyNamePattern.matcher(pathPart);
+                    var propertyNamePattern = Pattern.compile("\\w+");
+                    var propertyNameMatcher = propertyNamePattern.matcher(pathPart);
                     if (propertyNameMatcher.matches()) {
-                        String propertyName = propertyNameMatcher.group();
-                        JsonElement nextEl = currentObj.get(propertyName);
+                        var propertyName = propertyNameMatcher.group();
+                        var nextEl = currentObj.get(propertyName);
                         return walkJsonPath(nextEl, path, pathParts);
                     } else {
                         throw new IllegalArgumentException("Unexpected path part for a JSON object : " + pathPart);
@@ -169,13 +169,13 @@ public class JsonUtils {
     }
 
     public static JsonElement findElement(JsonObject jsonObj, String path) {
-        LinkedList<String> pathParts = new LinkedList<String>(Arrays.asList(path.split("\\.")));
+        var pathParts = new LinkedList<String>(Arrays.asList(path.split("\\.")));
         return walkJsonPath(jsonObj, path, pathParts);
     }
 
     @SuppressWarnings("unchecked")
 	public static <T> T getMemberValue(JsonObject obj, String property, Class<T> type) {
-    	JsonElement el = findElement(obj, property);
+    	var el = findElement(obj, property);
     	if (el == null || el.isJsonNull()) {
     		return (T) null;
     	} else if (type == String.class) {
@@ -192,12 +192,12 @@ public class JsonUtils {
     }
     
     public static String getDateAsString(JsonObject obj, String property) {
-    	JsonElement el = findElement(obj, property);
+    	var el = findElement(obj, property);
     	if (el.isJsonNull()) {
     		return null;
     	} else {
-    		String dateStr = el.getAsString();
-			Date date = new Date(Long.parseLong(dateStr));
+    		var dateStr = el.getAsString();
+			var date = new Date(Long.parseLong(dateStr));
 			return DATE_FORMATTER.format(date);
     	}
     }

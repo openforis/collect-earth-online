@@ -13,7 +13,7 @@ import javax.mail.internet.MimeMessage;
 public class Mail {
 
     public static boolean isEmail(String email) {
-        String emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
+        var emailPattern = "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+" +
             "(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*" +
             "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+" +
             "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
@@ -24,7 +24,7 @@ public class Mail {
                                 String smtpPassword, String subject, String body) {
         try {
             // Get system properties
-            Properties properties = new Properties();
+            var properties = new Properties();
 
             // Setup mail server
             properties.setProperty("mail.smtp.auth", "true");
@@ -40,15 +40,15 @@ public class Mail {
             }
 
             // Get the default Session object.
-            Session session = Session.getInstance(properties,
-                                                  new javax.mail.Authenticator() {
-                                                      protected PasswordAuthentication getPasswordAuthentication() {
-                                                          return new PasswordAuthentication(from, smtpPassword);
-                                                      }
-                                                  });
+            var session = Session.getInstance(properties,
+                                              new javax.mail.Authenticator() {
+                                                  protected PasswordAuthentication getPasswordAuthentication() {
+                                                      return new PasswordAuthentication(from, smtpPassword);
+                                                  }
+                                              });
 
             // Create a default MimeMessage object.
-            MimeMessage message = new MimeMessage(session);
+            var message = new MimeMessage(session);
 
             // Set From: header field of the header.
             message.setFrom(new InternetAddress(from));

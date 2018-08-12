@@ -9,7 +9,7 @@ public class CeoSparkFilter extends SparkFilter {
 
     // Read context parameters from webapp/WEB-INF/web.xml
     public void init(FilterConfig filterConfig) throws ServletException {
-        ServletContext context  = filterConfig.getServletContext();
+        var context             = filterConfig.getServletContext();
         CeoConfig.documentRoot  = context.getInitParameter("documentRoot");
         CeoConfig.baseUrl       = context.getInitParameter("baseUrl");
         CeoConfig.collectApiUrl = context.getInitParameter("collectApiUrl");
