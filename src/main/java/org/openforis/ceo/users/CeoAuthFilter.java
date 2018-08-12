@@ -21,23 +21,23 @@ public class CeoAuthFilter implements Filter {
     private static final String OF_USERS_API_URL = CeoConfig.ofUsersApiUrl;
 
     public void handle(Request req, Response res) {
-        String userIdStr = req.session().attribute("userid");
+        var userIdStr = req.session().attribute("userid");
         if (userIdStr == null) {
-            String tokenStr = req.cookie("token");
+            var tokenStr = req.cookie("token");
             if (tokenStr != null) {
-                GenericData data = new GenericData();
+                var data = new GenericData();
                 data.put("token", tokenStr);
                 try {
-                    HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user/" + tokenStr).execute();
+                    var response = prepareGetRequest(OF_USERS_API_URL + "user/" + tokenStr).execute();
                     if (response.isSuccessStatusCode()) {
-                        JsonObject user = getResponseAsJson(response).getAsJsonObject();
-                        String userId = user.get("id").getAsString();
-                        String userEmail = user.get("username").getAsString();
-                        HttpRequest roleRequest = prepareGetRequest(OF_USERS_API_URL + "user/" + userId + "/groups");
-                        JsonArray jsonRoles = getResponseAsJson(roleRequest.execute()).getAsJsonArray();
-                        Optional<JsonObject> matchingRole = findInJsonArray(jsonRoles,
-                                jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
-                        String role = matchingRole.isPresent() ? "admin" : "user";
+                        var user = getResponseAsJson(response).getAsJsonObject();
+                        var userId = user.get("id").getAsString();
+                        var userEmail = user.get("username").getAsString();
+                        var roleRequest = prepareGetRequest(OF_USERS_API_URL + "user/" + userId + "/groups");
+                        var jsonRoles = getResponseAsJson(roleRequest.execute()).getAsJsonArray();
+                        var matchingRole = findInJsonArray(jsonRoles,
+                                                           jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
+                        var role = matchingRole.isPresent() ? "admin" : "user";
                         req.session().attribute("userid", userId);
                         req.session().attribute("username", userEmail);
                         req.session().attribute("role", role);

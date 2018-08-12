@@ -14,7 +14,7 @@ import spark.template.freemarker.FreeMarkerEngine;
 public class Views {
 
     private static String fromSession(Request req, String attr) {
-        String value = req.session().attribute(attr);
+        var value = (String) req.session().attribute(attr);
         if (value == null) {
             return "";
         } else {

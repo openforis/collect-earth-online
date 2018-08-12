@@ -981,7 +981,7 @@ public class CollectProjects implements Projects {
             JsonArray users = OfUsers.getAllUsers(institutionId);
             return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
         } else {
-            JsonArray institutions = (new OfGroups()).getAllInstitutions(null);
+            JsonArray institutions = OfGroups.getAllInstitutions(null);
             Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
                                                                        institution ->
                                                                        institution.get("id").getAsString().equals(institutionId));
