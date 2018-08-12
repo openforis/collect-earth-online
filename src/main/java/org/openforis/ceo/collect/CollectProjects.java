@@ -187,7 +187,7 @@ public class CollectProjects implements Projects {
     //
     // Return a JSON object with several computed integer fields
     //
-    // ==> "{flaggedPlots:#,analyzedPlots:#,unanalyzedPlots:#,members:#,contributors:#}"
+    // ==> "{flaggedPlots:#,assignedPlots:#,unassignedPlots:#,members:#,contributors:#}"
     public String getProjectStats(Request req, Response res) {
         int projectId = getIntParam(req, "id");
         Integer userId = getLoggedUserId(req);
@@ -196,8 +196,8 @@ public class CollectProjects implements Projects {
         
         int totalPlots = countCollectSamplingPointItems(projectId, 0, null);
         stats.setFlaggedPlots(countCollectSamplingPointItems(projectId, 0, Arrays.asList("true")));
-        stats.setAnalyzedPlots(countCollectRecords(projectId, true, userId));
-        stats.setUnanalyzedPlots(totalPlots - stats.getAnalyzedPlots() - stats.getFlaggedPlots());
+        stats.setAssignedPlots(countCollectRecords(projectId, true, userId));
+        stats.setUnassignedPlots(totalPlots - stats.getAssignedPlots() - stats.getFlaggedPlots());
         stats.setContributors(countCollectContributors(projectId));
         stats.setMembers(getProjectUsers(projectId).length);
         return JsonUtils.toJson(stats);
