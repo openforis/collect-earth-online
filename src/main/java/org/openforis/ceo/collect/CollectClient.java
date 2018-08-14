@@ -26,7 +26,7 @@ public class CollectClient {
 
     public static JsonElement getFromCollect(String url, Map<String, Object> params) {
         try {
-            HttpRequest request = prepareGetRequest(COLLECT_API_URL + url);
+            var request = prepareGetRequest(COLLECT_API_URL + url);
             if (!(params == null || params.isEmpty())) {
                 request.getUrl().putAll(params);
             }
@@ -62,9 +62,9 @@ public class CollectClient {
 
     public static JsonElement sendToCollect(String method, String url, Object params) {
         try {
-            HttpRequestFactory requestFactory = createRequestFactory();
-            HttpContent content = toRequestContent(params);
-            HttpRequest request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
+            var requestFactory = createRequestFactory();
+            var content = toRequestContent(params);
+            var request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
             request.setConnectTimeout(CONNECTION_TIMEOUT);
             return getResponseAsJson(request.execute());
         } catch (IOException e) {

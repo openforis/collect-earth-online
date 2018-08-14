@@ -45,24 +45,24 @@ public class OfUsers implements Users {
      * @return
      */
     public Request login(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
         try {
-            GenericData data = new GenericData();
+            var data = new GenericData();
             data.put("username", inputEmail);
             data.put("rawPassword", inputPassword);
-            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login
+            var response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login
             if (response.isSuccessStatusCode()) {
                 // Authentication successful
-                String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
+                var token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
                 setAuthenticationToken(req, res, token);
-                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
+                var userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
-                String userId = getResponseAsJson(userRequest.execute()).getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
-                HttpRequest roleRequest = prepareGetRequest(OF_USERS_API_URL + "user/" + userId + "/groups"); // get roles
-                JsonArray jsonRoles = getResponseAsJson(roleRequest.execute()).getAsJsonArray();
-                Optional<JsonObject> matchingRole = findInJsonArray(jsonRoles, jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
-                String role = matchingRole.isPresent() ? "admin" : "user";
+                var userId = getResponseAsJson(userRequest.execute()).getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
+                var roleRequest = prepareGetRequest(OF_USERS_API_URL + "user/" + userId + "/groups"); // get roles
+                var jsonRoles = getResponseAsJson(roleRequest.execute()).getAsJsonArray();
+                var matchingRole = findInJsonArray(jsonRoles, jsonRole -> jsonRole.get("groupId").getAsString().equals("1"));
+                var role = matchingRole.isPresent() ? "admin" : "user";
                 req.session().attribute("token", token);
                 req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
@@ -80,9 +80,9 @@ public class OfUsers implements Users {
     }
 
     public Request register(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
         try {
             // Validate input params and assign flash_message if invalid
             if (!isEmail(inputEmail)) {
@@ -92,21 +92,21 @@ public class OfUsers implements Users {
             } else if (!inputPassword.equals(inputPasswordConfirmation)) {
                 req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             } else {
-                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
+                var userRequest = prepareGetRequest(OF_USERS_API_URL + "user"); // get user
                 userRequest.getUrl().put("username", inputEmail);
-                HttpResponse response = userRequest.execute();
+                var response = userRequest.execute();
                 if (response.isSuccessStatusCode()) {
-                    JsonArray users = getResponseAsJson(response).getAsJsonArray();
+                    var users = getResponseAsJson(response).getAsJsonArray();
                     if (users.size() > 0) {
                         req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                     } else {
                         // Add a new user to the database
-                        GenericData data = new GenericData();
+                        var data = new GenericData();
                         data.put("username", inputEmail);
                         data.put("rawPassword", inputPassword);
                         response = preparePostRequest(OF_USERS_API_URL + "user", data).execute(); // register
                         if (response.isSuccessStatusCode()) {
-                            String newUserId = getResponseAsJson(response).getAsJsonObject().get("id").getAsString();
+                            var newUserId = getResponseAsJson(response).getAsJsonObject().get("id").getAsString();
                             // Assign the username and role session attributes
                             req.session().attribute("userid", newUserId);
                             req.session().attribute("username", inputEmail);
@@ -114,7 +114,7 @@ public class OfUsers implements Users {
                             response = preparePostRequest(OF_USERS_API_URL + "login", data).execute(); // login
                             if (response.isSuccessStatusCode()) {
                                 // Authentication successful
-                                String token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
+                                var token = getResponseAsJson(response).getAsJsonObject().get("token").getAsString();
                                 setAuthenticationToken(req, res, token);
                             }
                             // Redirect to the Home page
@@ -133,7 +133,7 @@ public class OfUsers implements Users {
     }
 
     public Request logout(Request req, Response res) {
-        GenericData data = new GenericData();
+        var data = new GenericData();
         data.put("username", req.session().attribute("username"));
         data.put("token", req.session().attribute("token"));
         try {
@@ -151,11 +151,11 @@ public class OfUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        String userId = req.session().attribute("userid");
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
-        String inputCurrentPassword = req.queryParams("current-password");
+        var userId = (String) req.session().attribute("userid");
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputCurrentPassword = req.queryParams("current-password");
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
             req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
@@ -165,14 +165,14 @@ public class OfUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
         } else {
             try {
-                GenericData data = new GenericData();
+                var data = new GenericData();
                 data.put("username", inputEmail);
                 data.put("rawPassword", inputCurrentPassword);
-                HttpResponse response = preparePostRequest(OF_USERS_API_URL + "login", data).execute();
+                var response = preparePostRequest(OF_USERS_API_URL + "login", data).execute();
                 if (response.isSuccessStatusCode()) {
                     data = new GenericData();
                     data.put("username", inputEmail);
-                    String url = String.format(OF_USERS_API_URL + "user/%s", userId);
+                    var url = String.format(OF_USERS_API_URL + "user/%s", userId);
                     preparePatchRequest(url, data).execute();
                     data = new GenericData();
                     data.put("username", inputEmail);
@@ -192,14 +192,14 @@ public class OfUsers implements Users {
     }
 
     public Request getPasswordResetKey(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
+        var inputEmail = req.queryParams("email");
         try {
-            GenericData data = new GenericData();
+            var data = new GenericData();
             data.put("username", inputEmail);
-            HttpResponse response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password key request
+            var response = preparePostRequest(OF_USERS_API_URL + "reset-password", data).execute(); // reset password key request
             if (response.isSuccessStatusCode()) {
-                JsonObject user = getResponseAsJson(response).getAsJsonObject();
-                String body = "Hi "
+                var user = getResponseAsJson(response).getAsJsonObject();
+                var body = "Hi "
                     + inputEmail
                     + ",\n\n"
                     + "  To reset your password, simply click the following link:\n\n"
@@ -218,10 +218,10 @@ public class OfUsers implements Users {
     }
 
     public Request resetPassword(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputResetKey = req.queryParams("password-reset-key");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputEmail = req.queryParams("email");
+        var inputResetKey = req.queryParams("password-reset-key");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
 
         // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
@@ -230,19 +230,19 @@ public class OfUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
         } else {
             try {
-                HttpRequest userRequest = prepareGetRequest(OF_USERS_API_URL + "user");
+                var userRequest = prepareGetRequest(OF_USERS_API_URL + "user");
                 userRequest.getUrl().put("username", inputEmail);
-                HttpResponse response = userRequest.execute();
+                var response = userRequest.execute();
                 if (response.isSuccessStatusCode()) {
-                    JsonArray foundUsers = getResponseAsJson(response).getAsJsonArray();
+                    var foundUsers = getResponseAsJson(response).getAsJsonArray();
                     if (foundUsers.size() != 1) {
                         req.session().attribute("flash_message", "There is no user with that email address.");
                     } else {
-                        JsonObject foundUser = foundUsers.get(0).getAsJsonObject();
+                        var foundUser = foundUsers.get(0).getAsJsonObject();
                         if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
                             req.session().attribute("flash_message", "Invalid reset key for user " + inputEmail + ".");
                         } else {
-                            GenericData data = new GenericData();
+                            var data = new GenericData();
                             data.put("username", inputEmail);
                             data.put("resetKey", inputResetKey);
                             data.put("newPassword", inputPassword);
@@ -266,7 +266,7 @@ public class OfUsers implements Users {
     }
 
     public String getAllUsers(Request req, Response res) {
-        String institutionId = req.queryParams("institutionId");
+        var institutionId = req.queryParams("institutionId");
         try {
         	return getAllUsers(institutionId).toString();
         } catch (Exception e) {
@@ -278,10 +278,10 @@ public class OfUsers implements Users {
     public static JsonArray getAllUsers(String institutionId) {
         try {
             if (institutionId != null) {
-                String url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
-                HttpResponse response = prepareGetRequest(url).execute(); // get group's users
+                var url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
+                var response = prepareGetRequest(url).execute(); // get group's users
                 if (response.isSuccessStatusCode()) {
-                    JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
+                    var groupUsers = getResponseAsJson(response).getAsJsonArray();
                     return toStream(groupUsers)
                         .map(groupUser -> {
                                 groupUser.getAsJsonObject("user").addProperty("institutionRole",
@@ -303,9 +303,9 @@ public class OfUsers implements Users {
                     throw new RuntimeException("An error occurred. Please try again later.");
                 }
             } else {
-                HttpResponse response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
+                var response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
                 if (response.isSuccessStatusCode()) {
-                    JsonArray users = getResponseAsJson(response).getAsJsonArray();
+                    var users = getResponseAsJson(response).getAsJsonArray();
                     return toStream(users)
                             .map(user -> {
                                     user.addProperty("email", user.get("username").getAsString());
@@ -326,14 +326,14 @@ public class OfUsers implements Users {
 
     public Map<Integer, String> getInstitutionRoles(int userId) {
         try {
-            String url = String.format(OF_USERS_API_URL + "user/%d/groups", userId);
-            HttpResponse response = prepareGetRequest(url).execute(); // get user's groups
+            var url = String.format(OF_USERS_API_URL + "user/%d/groups", userId);
+            var response = prepareGetRequest(url).execute(); // get user's groups
             if (response.isSuccessStatusCode()) {
-                JsonArray userGroups = getResponseAsJson(response).getAsJsonArray();
+                var userGroups = getResponseAsJson(response).getAsJsonArray();
                 return toStream(userGroups)
                     .collect(Collectors.toMap(userGroup -> userGroup.get("groupId").getAsInt(),
                                               userGroup -> {
-                                            	  String roleCode = userGroup.get("roleCode").getAsString();
+                                            	  var roleCode = userGroup.get("roleCode").getAsString();
                                             	  return roleCode.equals("ADM") || roleCode.equals("OWN") ? "admin" 
                                             		  : roleCode.equals("OPR") || roleCode.equals("VWR") ? "member"
                                         			  : "not-member";},
@@ -350,19 +350,18 @@ public class OfUsers implements Users {
     }
 
     private static JsonObject groupToInstitution(String groupId) {
-        JsonObject group = new JsonObject();
-        String url = String.format(OF_USERS_API_URL + "group/%s", groupId);
-        HttpResponse response;
+        var group = new JsonObject();
+        var url = String.format(OF_USERS_API_URL + "group/%s", groupId);
         try {
-            response = prepareGetRequest(url).execute();
+            var response = prepareGetRequest(url).execute();
             if (response.isSuccessStatusCode()) {
                 group = getResponseAsJson(response).getAsJsonObject();
                 url = String.format(OF_USERS_API_URL + "group/%s/users", groupId);
                 response = prepareGetRequest(url).execute();
-                JsonArray groupUsers = getResponseAsJson(response).getAsJsonArray();
-                JsonArray members = new JsonArray();
-                JsonArray admins = new JsonArray();
-                JsonArray pending = new JsonArray();
+                var groupUsers = getResponseAsJson(response).getAsJsonArray();
+                var members = new JsonArray();
+                var admins = new JsonArray();
+                var pending = new JsonArray();
                 toStream(groupUsers).forEach(groupUser -> {
                     if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
                     else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
@@ -381,23 +380,23 @@ public class OfUsers implements Users {
     }
 
     public String updateInstitutionRole(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        String userId = jsonInputs.get("userId").getAsString();
-        String groupId = jsonInputs.get("institutionId").getAsString();
-        String role = jsonInputs.get("role").getAsString();
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var userId = jsonInputs.get("userId").getAsString();
+        var groupId = jsonInputs.get("institutionId").getAsString();
+        var role = jsonInputs.get("role").getAsString();
         try {
-            String url = String.format(OF_USERS_API_URL + "group/%s/user/%s", groupId, userId);
+            var url = String.format(OF_USERS_API_URL + "group/%s/user/%s", groupId, userId);
             try {
-                HttpResponse response = prepareGetRequest(url).execute();
+                var response = prepareGetRequest(url).execute();
                 if (response.isSuccessStatusCode()) {
-                    String newRoleCode = "";
+                    var newRoleCode = "";
                     if (role.equals("member")) {
                         newRoleCode = "OPR";
                     } else if (role.equals("admin")) {
                         newRoleCode = "ADM";
                     }
                     if (!newRoleCode.isEmpty()) {
-                        GenericData data = new GenericData();
+                        var data = new GenericData();
                         data.put("roleCode", newRoleCode);
                         data.put("statusCode", "A");
                         preparePatchRequest(url, data).execute();
@@ -407,7 +406,7 @@ public class OfUsers implements Users {
                 }
             } catch (HttpResponseException e) {
                 if (e.getStatusCode() == 404) {
-                    GenericData data = new GenericData();
+                    var data = new GenericData();
                     data.put("roleCode", "OPR");
                     data.put("statusCode", "A");
                     preparePostRequest(url, data).execute(); // add user to a group (as accepted)
@@ -425,12 +424,12 @@ public class OfUsers implements Users {
     }
 
     public String requestInstitutionMembership(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        String userId = jsonInputs.get("userId").getAsString();
-        String groupId = jsonInputs.get("institutionId").getAsString();
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var userId = jsonInputs.get("userId").getAsString();
+        var groupId = jsonInputs.get("institutionId").getAsString();
         try {
-            String url = String.format(OF_USERS_API_URL + "group/%s/user/%s", groupId, userId);
-            GenericData data = new GenericData();
+            var url = String.format(OF_USERS_API_URL + "group/%s/user/%s", groupId, userId);
+            var data = new GenericData();
             data.put("roleCode", "OPR");
             data.put("statusCode", "P");
             preparePostRequest(url, data).execute(); // add user to a group (as pending)
@@ -443,7 +442,7 @@ public class OfUsers implements Users {
     }
 
     private static void setAuthenticationToken(Request req, Response res, String token) {
-        String host = req.host();
+        var host = req.host();
         if (host.indexOf(':') > -1) {
             host = host.substring(0, host.lastIndexOf(':')); //remove port from host
         }
