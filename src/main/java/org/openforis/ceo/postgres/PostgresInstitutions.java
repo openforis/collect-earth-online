@@ -1,19 +1,21 @@
 package org.openforis.ceo.postgres;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import spark.Request;
-import spark.Response;
-
-import javax.servlet.MultipartConfigElement;
-
-import java.sql.*;
-import java.util.Optional;
-
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Optional;
+import javax.servlet.MultipartConfigElement;
 import org.openforis.ceo.db_api.Institutions;
+import spark.Request;
+import spark.Response;
 
 /**
  * Created by gtondapu on 7/31/2018.
@@ -22,17 +24,18 @@ public class PostgresInstitutions implements Institutions {
     private static final String url = "jdbc:postgresql://localhost";
     private static final String user = "ceo";
     private static final String password = "ceo";
+
     public String getAllInstitutions(Request req, Response res) {
-        String SQL = "SELECT * FROM select_all_institutions()";
+        var SQL = "SELECT * FROM select_all_institutions()";
 
-        try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement(SQL)) {
 
-            JsonArray institutionArray = new JsonArray();
-            ResultSet rs = pstmt.executeQuery();
+            var institutionArray = new JsonArray();
+            var rs = pstmt.executeQuery();
             while(rs.next()) {
                 //create institution json to send back
-                JsonObject newInstitution = new JsonObject();
+                var newInstitution = new JsonObject();
                 newInstitution.addProperty("id", rs.getInt("id"));
                 newInstitution.addProperty("name", rs.getString("name"));
                 newInstitution.addProperty("logo", rs.getString("logo"));
@@ -51,13 +54,13 @@ public class PostgresInstitutions implements Institutions {
     }
 
     private Optional<JsonObject> getInstitutionById(int institutionId) {
-        String SQL = "SELECT * FROM select_all_institutions(?)";
+        var SQL = "SELECT * FROM select_all_institutions(?)";
 
-        try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, institutionId);
-            JsonObject newInstitution = new JsonObject();
-            ResultSet rs = pstmt.executeQuery();
+            var newInstitution = new JsonObject();
+            var rs = pstmt.executeQuery();
             rs.next();
                 //create institution json to send back
 
@@ -77,12 +80,12 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String getInstitutionDetails(Request req, Response res) {
-        int institutionId = Integer.parseInt(req.params(":id"));
-        Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
+        var institutionId = Integer.parseInt(req.params(":id"));
+        var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             return matchingInstitution.get().toString();
         } else {
-            JsonObject noInstitutionFound = new JsonObject();
+            var noInstitutionFound = new JsonObject();
             noInstitutionFound.addProperty("id"         , -1);
             noInstitutionFound.addProperty("name"       , "No institution with ID=" + institutionId);
             noInstitutionFound.addProperty("logo"       , "");
@@ -98,59 +101,57 @@ public class PostgresInstitutions implements Institutions {
 
     public String updateInstitution(Request req, Response res) {
         try {
-            String institutionId = req.params(":id");
+            var institutionId = req.params(":id");
 
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
             req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
 
-            int userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
-            String name = partToString(req.raw().getPart("institution-name"));
-            String url = partToString(req.raw().getPart("institution-url"));
-            String description = partToString(req.raw().getPart("institution-description"));
+            var userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
+            var name = partToString(req.raw().getPart("institution-name"));
+            var url = partToString(req.raw().getPart("institution-url"));
+            var description = partToString(req.raw().getPart("institution-description"));
 
-            int newInstitutionId = 0;
-            String logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
-            String logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+            var newInstitutionId = 0;
+            var logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
+            var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
             if (institutionId.equals("0")) {
                 // NOTE: This branch creates a new institution
 
-                String SQL = "SELECT * FROM add_institution(?, ?, ?, ?, ?)";
+                var SQL = "SELECT * FROM add_institution(?, ?, ?, ?, ?)";
 
-                try (Connection conn = this.connect();
-                     PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+                try (var conn = this.connect();
+                     var pstmt = conn.prepareStatement(SQL)) {
                     pstmt.setInt(1, userid);
                     pstmt.setString(2, name);
                     pstmt.setString(3, logoPath);
                     pstmt.setString(4, description);
                     pstmt.setString(5, url); //This is the extent
                     pstmt.setBoolean(6, false);
-                    ResultSet rs = pstmt.executeQuery();
+                    var rs = pstmt.executeQuery();
                     return "";
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
                 }
 
-
                 return "";
             } else {
                 // NOTE: This branch edits an existing institution
-                String SQL = "SELECT * FROM update_institution(?, ?, ?, ?)";
+                var SQL = "SELECT * FROM update_institution(?, ?, ?, ?)";
 
-                try (Connection conn = this.connect();
-                     PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+                try (var conn = this.connect();
+                     var pstmt = conn.prepareStatement(SQL)) {
                     pstmt.setInt(1, Integer.parseInt(institutionId));
                     pstmt.setString(2, name);
                     pstmt.setString(3, logoPath);
                     pstmt.setString(4, description);
                     pstmt.setString(5, url);
-                    ResultSet rs = pstmt.executeQuery();
+                    var rs = pstmt.executeQuery();
                     return "";
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
                 }
-
 
                 return "";
             }
@@ -160,13 +161,13 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String archiveInstitution(Request req, Response res) {
-        String institutionId = req.params(":id");
-        String SQL = "SELECT * FROM archive_institution(?)";
+        var institutionId = req.params(":id");
+        var SQL = "SELECT * FROM archive_institution(?)";
 
-        try (Connection conn = this.connect();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+        try (var conn = this.connect();
+             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(institutionId));
-            ResultSet rs = pstmt.executeQuery();
+            var rs = pstmt.executeQuery();
             return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
