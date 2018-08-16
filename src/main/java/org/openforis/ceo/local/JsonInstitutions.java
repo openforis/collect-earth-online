@@ -23,23 +23,23 @@ import spark.Response;
 public class JsonInstitutions implements Institutions {
 
     public String getAllInstitutions(Request req, Response res) {
-        JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
         return filterJsonArray(institutions, institution -> institution.get("archived").getAsBoolean() == false).toString();
     }
 
     private static Optional<JsonObject> getInstitutionById(int institutionId) {
-        JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
         return findInJsonArray(institutions, institution -> institution.get("id").getAsInt() == institutionId
                                                          && institution.get("archived").getAsBoolean() == false);
     }
 
     public String getInstitutionDetails(Request req, Response res) {
-        int institutionId = Integer.parseInt(req.params(":id"));
-        Optional<JsonObject> matchingInstitution = getInstitutionById(institutionId);
+        var institutionId = Integer.parseInt(req.params(":id"));
+        var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
             return matchingInstitution.get().toString();
         } else {
-            JsonObject noInstitutionFound = new JsonObject();
+            var noInstitutionFound = new JsonObject();
             noInstitutionFound.addProperty("id"         , -1);
             noInstitutionFound.addProperty("name"       , "No institution with ID=" + institutionId);
             noInstitutionFound.addProperty("logo"       , "");
@@ -55,33 +55,33 @@ public class JsonInstitutions implements Institutions {
 
     public synchronized String updateInstitution(Request req, Response res) {
         try {
-            String institutionId = req.params(":id");
+            var institutionId = req.params(":id");
 
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
             req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
 
-            int userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
-            String name = partToString(req.raw().getPart("institution-name"));
-            String url = partToString(req.raw().getPart("institution-url"));
-            String description = partToString(req.raw().getPart("institution-description"));
+            var userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
+            var name = partToString(req.raw().getPart("institution-name"));
+            var url = partToString(req.raw().getPart("institution-url"));
+            var description = partToString(req.raw().getPart("institution-description"));
 
             if (institutionId.equals("0")) {
                 // NOTE: This branch creates a new institution
 
                 // Read in the existing institution list
-                JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
+                var institutions = readJsonFile("institution-list.json").getAsJsonArray();
 
                 // Generate a new institution id
-                int newInstitutionId = getNextId(institutions);
+                var newInstitutionId = getNextId(institutions);
 
                 // Upload the logo image if one was provided
-                String logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
-                String logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+                var logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
+                var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
-                JsonArray members = new JsonArray();
-                JsonArray admins = new JsonArray();
-                JsonArray pending = new JsonArray();
+                var members = new JsonArray();
+                var admins = new JsonArray();
+                var pending = new JsonArray();
 
                 // Make the current user and the admin user (id=1) members and admins of the new institution
                 members.add(1);
@@ -91,7 +91,7 @@ public class JsonInstitutions implements Institutions {
                     admins.add(userid);
                 }
 
-                JsonObject newInstitution = new JsonObject();
+                var newInstitution = new JsonObject();
                 newInstitution.addProperty("id", newInstitutionId);
                 newInstitution.addProperty("name", name);
                 newInstitution.addProperty("logo", logoPath);
@@ -110,8 +110,11 @@ public class JsonInstitutions implements Institutions {
                 // NOTE: This branch edits an existing institution
 
                 // Upload the logo image if one was provided
-                String logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + institutionId);
-                String logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+                var logoFileName = writeFilePart(req,
+                                                 "institution-logo",
+                                                 expandResourcePath("/public/img/institution-logos"),
+                                                 "institution-" + institutionId);
+                var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
                 mapJsonFile("institution-list.json", institution -> {
                         if (institution.get("id").getAsString().equals(institutionId)) {
@@ -127,7 +130,7 @@ public class JsonInstitutions implements Institutions {
                         }
                     });
 
-                JsonObject updatedInstitution = new JsonObject();
+                var updatedInstitution = new JsonObject();
                 updatedInstitution.addProperty("id", institutionId);
                 updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
                 return updatedInstitution.toString();
@@ -138,7 +141,7 @@ public class JsonInstitutions implements Institutions {
     }
 
     public synchronized String archiveInstitution(Request req, Response res) {
-        String institutionId = req.params(":id");
+        var institutionId = req.params(":id");
 
         mapJsonFile("institution-list.json",
                     institution -> {

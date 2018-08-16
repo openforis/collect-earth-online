@@ -19,18 +19,18 @@ import spark.Response;
 public class JsonGeoDash implements GeoDash {
 
     public synchronized String geodashId(Request req, Response res) {
-        String projectId = req.params(":id");
-        String projectTitle = req.queryParams("title");
-        String callback = req.queryParams("callback");
+        var projectId = req.params(":id");
+        var projectTitle = req.queryParams("title");
+        var callback = req.queryParams("callback");
 
-        JsonArray projects = readJsonFile("proj.json").getAsJsonArray();
-        Optional<JsonObject> matchingProject = findInJsonArray(projects,
+        var projects = readJsonFile("proj.json").getAsJsonArray();
+        var matchingProject = findInJsonArray(projects,
             project -> project.get("projectID").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
-            JsonObject project = matchingProject.get();
-            String dashboardId = project.get("dashboard").getAsString();
+            var project = matchingProject.get();
+            var dashboardId = project.get("dashboard").getAsString();
             try {
-                String dashboardJson = readJsonFile("dash-" + dashboardId + ".json").toString();
+                var dashboardJson = readJsonFile("dash-" + dashboardId + ".json").toString();
                 if (callback != null) {
                     return callback + "(" + dashboardJson + ")";
                 } else {
@@ -38,7 +38,7 @@ public class JsonGeoDash implements GeoDash {
                 }
             } catch (Exception e) {
                 // The dash-<dashboardId>.json file doesn't exist, so we need to create a blank one.
-                JsonObject newDashboard = new JsonObject();
+                var newDashboard = new JsonObject();
                 newDashboard.addProperty("projectID", projectId);
                 newDashboard.addProperty("projectTitle", projectTitle);
                 newDashboard.add("widgets", new JsonArray());
@@ -53,16 +53,16 @@ public class JsonGeoDash implements GeoDash {
                 }
             }
         } else {
-            String newDashboardId = UUID.randomUUID().toString();
+            var newDashboardId = UUID.randomUUID().toString();
 
-            JsonObject newProject = new JsonObject();
+            var newProject = new JsonObject();
             newProject.addProperty("projectID", projectId);
             newProject.addProperty("dashboard", newDashboardId);
             projects.add(newProject);
 
             writeJsonFile("proj.json", projects);
 
-            JsonObject newDashboard = new JsonObject();
+            var newDashboard = new JsonObject();
             newDashboard.addProperty("projectID", projectId);
             newDashboard.addProperty("projectTitle", projectTitle);
             newDashboard.add("widgets", new JsonArray());
@@ -84,15 +84,15 @@ public class JsonGeoDash implements GeoDash {
     }
 
     public synchronized String createDashBoardWidgetByID(Request req, Response res) {
-        String dashboardId = req.queryParams("dashID");
-        String widgetJson = req.queryParams("widgetJSON");
-        String callback = req.queryParams("callback");
+        var dashboardId = req.queryParams("dashID");
+        var widgetJson = req.queryParams("widgetJSON");
+        var callback = req.queryParams("callback");
 
-        JsonObject dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
-        JsonArray widgets = dashboard.getAsJsonArray("widgets");
+        var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
+        var widgets = dashboard.getAsJsonArray("widgets");
 
         try {
-            JsonObject newWidget = parseJson(URLDecoder.decode(widgetJson, "UTF-8")).getAsJsonObject();
+            var newWidget = parseJson(URLDecoder.decode(widgetJson, "UTF-8")).getAsJsonObject();
             widgets.add(newWidget);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -109,15 +109,15 @@ public class JsonGeoDash implements GeoDash {
     }
 
     public synchronized String updateDashBoardWidgetByID(Request req, Response res) {
-        String dashboardId = req.queryParams("dashID");
-        String widgetId = req.params(":id");
-        String widgetJson = req.queryParams("widgetJSON");
-        String callback = req.queryParams("callback");
+        var dashboardId = req.queryParams("dashID");
+        var widgetId = req.params(":id");
+        var widgetJson = req.queryParams("widgetJSON");
+        var callback = req.queryParams("callback");
 
-        JsonObject dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
-        JsonArray widgets = dashboard.getAsJsonArray("widgets");
+        var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
+        var widgets = dashboard.getAsJsonArray("widgets");
 
-        JsonArray updatedWidgets = mapJsonArray(widgets, widget -> {
+        var updatedWidgets = mapJsonArray(widgets, widget -> {
                 if (widget.get("id").getAsString().equals(widgetId)) {
                     try {
                         return parseJson(URLDecoder.decode(widgetJson, "UTF-8")).getAsJsonObject();
@@ -140,14 +140,14 @@ public class JsonGeoDash implements GeoDash {
     }
 
     public synchronized String deleteDashBoardWidgetByID(Request req, Response res) {
-        String dashboardId = req.queryParams("dashID");
-        String widgetId = req.params(":id");
-        String callback = req.queryParams("callback");
+        var dashboardId = req.queryParams("dashID");
+        var widgetId = req.params(":id");
+        var callback = req.queryParams("callback");
 
-        JsonObject dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
-        JsonArray widgets = dashboard.getAsJsonArray("widgets");
+        var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
+        var widgets = dashboard.getAsJsonArray("widgets");
 
-        JsonArray updatedWidgets = filterJsonArray(widgets, widget -> !widget.get("id").getAsString().equals(widgetId));
+        var updatedWidgets = filterJsonArray(widgets, widget -> !widget.get("id").getAsString().equals(widgetId));
 
         dashboard.add("widgets", updatedWidgets);
         writeJsonFile("dash-" + dashboardId + ".json", dashboard);

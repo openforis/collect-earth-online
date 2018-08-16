@@ -33,25 +33,25 @@ public class JsonUsers implements Users {
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
 
     public Request login(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputReturnURL = req.queryParams("returnurl");
-        String returnURL = (inputReturnURL != null && !inputReturnURL.isEmpty()) ?
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputReturnURL = req.queryParams("returnurl");
+        var returnURL = (inputReturnURL != null && !inputReturnURL.isEmpty()) ?
             CeoConfig.documentRoot + "/" + inputReturnURL + "?" + req.queryString() :
             CeoConfig.documentRoot + "/home";
 
         // Check if email exists
-        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-        Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
             req.session().attribute("flash_message", "No account with email " + inputEmail + " exists.");
             return req;
         } else {
             // Check if password matches
-            JsonObject user = matchingUser.get();
-            String storedId = user.get("id").getAsString();
-            String storedPassword = user.get("password").getAsString();
-            String storedRole = user.get("role").getAsString();
+            var user = matchingUser.get();
+            var storedId = user.get("id").getAsString();
+            var storedPassword = user.get("password").getAsString();
+            var storedRole = user.get("role").getAsString();
             if (!inputPassword.equals(storedPassword)) {
                 // Authentication failed
                 req.session().attribute("flash_message", "Invalid email/password combination.");
@@ -68,9 +68,9 @@ public class JsonUsers implements Users {
     }
 
     public synchronized Request register(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
@@ -83,17 +83,17 @@ public class JsonUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (matchingUser.isPresent()) {
                 req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                 return req;
             } else {
                 // Add a new user to user-list.json
-                int newUserId = getNextId(users);
-                String newUserRole = "user";
+                var newUserId = getNextId(users);
+                var newUserRole = "user";
 
-                JsonObject newUser = new JsonObject();
+                var newUser = new JsonObject();
                 newUser.addProperty("id", newUserId);
                 newUser.addProperty("email", inputEmail);
                 newUser.addProperty("password", inputPassword);
@@ -123,11 +123,11 @@ public class JsonUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        String userId = req.session().attribute("userid");
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
-        String inputCurrentPassword = req.queryParams("current-password");
+        var userId = req.session().attribute("userid");
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputCurrentPassword = req.queryParams("current-password");
 
         // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
@@ -140,13 +140,13 @@ public class JsonUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
+            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
             if (!matchingUser.isPresent()) {
                 req.session().attribute("flash_message", "The requested user account does not exist.");
                 return req;
             } else {
-                JsonObject foundUser = matchingUser.get();
+                var foundUser = matchingUser.get();
                 if (!foundUser.get("password").getAsString().equals(inputCurrentPassword)) {
                     req.session().attribute("flash_message", "Invalid password.");
                     return req;
@@ -170,15 +170,15 @@ public class JsonUsers implements Users {
     }
 
     public Request getPasswordResetKey(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-        Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+        var inputEmail = req.queryParams("email");
+        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
             req.session().attribute("flash_message", "There is no user with that email address.");
             return req;
         } else {
             try {
-                String resetKey = UUID.randomUUID().toString();
+                var resetKey = UUID.randomUUID().toString();
                 mapJsonFile("user-list.json",
                         user -> {
                             if (user.get("email").getAsString().equals(inputEmail)) {
@@ -188,7 +188,7 @@ public class JsonUsers implements Users {
                                 return user;
                             }
                         });
-                String body = "Hi "
+                var body = "Hi "
                     + inputEmail
                     + ",\n\n"
                     + "  To reset your password, simply click the following link:\n\n"
@@ -207,10 +207,10 @@ public class JsonUsers implements Users {
     }
 
     public Request resetPassword(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputResetKey = req.queryParams("password-reset-key");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputEmail = req.queryParams("email");
+        var inputResetKey = req.queryParams("password-reset-key");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
 
         // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
@@ -220,13 +220,13 @@ public class JsonUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (!matchingUser.isPresent()) {
                 req.session().attribute("flash_message", "There is no user with that email address.");
                 return req;
             } else {
-                JsonObject foundUser = matchingUser.get();
+                var foundUser = matchingUser.get();
                 if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
                     req.session().attribute("flash_message", "Invalid reset key for user " + inputEmail + ".");
                     return req;
@@ -249,8 +249,8 @@ public class JsonUsers implements Users {
     }
 
     public String getAllUsers(Request req, Response res) {
-        String institutionId = req.queryParams("institutionId");
-        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+        var institutionId = req.queryParams("institutionId");
+        var users = readJsonFile("user-list.json").getAsJsonArray();
 
         if (institutionId == null || institutionId.isEmpty()) {
             return toStream(users)
@@ -262,14 +262,14 @@ public class JsonUsers implements Users {
                 .collect(intoJsonArray)
                 .toString();
         } else {
-            JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
+            var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+            var matchingInstitution = findInJsonArray(institutions,
                 institution -> institution.get("id").getAsString().equals(institutionId));
             if (matchingInstitution.isPresent()) {
-                JsonObject institution = matchingInstitution.get();
-                JsonArray members = institution.getAsJsonArray("members");
-                JsonArray admins = institution.getAsJsonArray("admins");
-                JsonArray pending = institution.getAsJsonArray("pending");
+                var institution = matchingInstitution.get();
+                var members = institution.getAsJsonArray("members");
+                var admins = institution.getAsJsonArray("admins");
+                var pending = institution.getAsJsonArray("pending");
                 return toStream(users)
                     .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
                     .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
@@ -294,13 +294,13 @@ public class JsonUsers implements Users {
     }
 
     public Map<Integer, String> getInstitutionRoles(int userId) {
-        JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-        JsonPrimitive userIdJson = new JsonPrimitive(userId);
+        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var userIdJson = new JsonPrimitive(userId);
         return toStream(institutions)
             .collect(Collectors.toMap(institution -> institution.get("id").getAsInt(),
                                       institution -> {
-                                          JsonArray members = institution.getAsJsonArray("members");
-                                          JsonArray admins = institution.getAsJsonArray("admins");
+                                          var members = institution.getAsJsonArray("members");
+                                          var admins = institution.getAsJsonArray("admins");
                                           if (admins.contains(userIdJson)) {
                                               return "admin";
                                           } else if (members.contains(userIdJson)) {
@@ -313,17 +313,17 @@ public class JsonUsers implements Users {
     }
 
     public synchronized String updateInstitutionRole(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        JsonElement userId = jsonInputs.get("userId");
-        String institutionId = jsonInputs.get("institutionId").getAsString();
-        String role = jsonInputs.get("role").getAsString();
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var userId = jsonInputs.get("userId");
+        var institutionId = jsonInputs.get("institutionId").getAsString();
+        var role = jsonInputs.get("role").getAsString();
 
         mapJsonFile("institution-list.json",
                     institution -> {
                         if (institution.get("id").getAsString().equals(institutionId)) {
-                            JsonArray members = institution.getAsJsonArray("members");
-                            JsonArray admins = institution.getAsJsonArray("admins");
-                            JsonArray pending = institution.getAsJsonArray("pending");
+                            var members = institution.getAsJsonArray("members");
+                            var admins = institution.getAsJsonArray("admins");
+                            var pending = institution.getAsJsonArray("pending");
                             if (role.equals("member")) {
                                 if (!members.contains(userId)) {
                                     members.add(userId);
@@ -362,15 +362,15 @@ public class JsonUsers implements Users {
     }
 
     public synchronized String requestInstitutionMembership(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        JsonElement userId = jsonInputs.get("userId");
-        String institutionId = jsonInputs.get("institutionId").getAsString();
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var userId = jsonInputs.get("userId");
+        var institutionId = jsonInputs.get("institutionId").getAsString();
 
         mapJsonFile("institution-list.json",
                     institution -> {
                         if (institution.get("id").getAsString().equals(institutionId)) {
-                            JsonArray members = institution.getAsJsonArray("members");
-                            JsonArray pending = institution.getAsJsonArray("pending");
+                            var members = institution.getAsJsonArray("members");
+                            var pending = institution.getAsJsonArray("pending");
                             if (!members.contains(userId) && !pending.contains(userId)) {
                                 pending.add(userId);
                             }
