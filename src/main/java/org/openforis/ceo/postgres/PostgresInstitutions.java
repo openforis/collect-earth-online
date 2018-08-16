@@ -1,5 +1,6 @@
 package org.openforis.ceo.postgres;
 
+import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
@@ -21,10 +22,6 @@ import spark.Response;
  * Created by gtondapu on 7/31/2018.
  */
 public class PostgresInstitutions implements Institutions {
-    private static final String url = "jdbc:postgresql://localhost";
-    private static final String user = "ceo";
-    private static final String password = "ceo";
-
     public String getAllInstitutions(Request req, Response res) {
         var SQL = "SELECT * FROM select_all_institutions()";
 
@@ -121,7 +118,7 @@ public class PostgresInstitutions implements Institutions {
 
                 var SQL = "SELECT * FROM add_institution(?, ?, ?, ?, ?)";
 
-                try (var conn = this.connect();
+                try (var conn = connect();
                      var pstmt = conn.prepareStatement(SQL)) {
                     pstmt.setInt(1, userid);
                     pstmt.setString(2, name);
@@ -140,7 +137,7 @@ public class PostgresInstitutions implements Institutions {
                 // NOTE: This branch edits an existing institution
                 var SQL = "SELECT * FROM update_institution(?, ?, ?, ?)";
 
-                try (var conn = this.connect();
+                try (var conn = connect();
                      var pstmt = conn.prepareStatement(SQL)) {
                     pstmt.setInt(1, Integer.parseInt(institutionId));
                     pstmt.setString(2, name);
@@ -164,7 +161,7 @@ public class PostgresInstitutions implements Institutions {
         var institutionId = req.params(":id");
         var SQL = "SELECT * FROM archive_institution(?)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(institutionId));
             var rs = pstmt.executeQuery();
@@ -173,10 +170,6 @@ public class PostgresInstitutions implements Institutions {
             System.out.println(e.getMessage());
         }
         return "";
-    }
-    //Returns a connection to the database
-    private Connection connect() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
     }
 
 }

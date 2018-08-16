@@ -1,5 +1,6 @@
 package org.openforis.ceo.postgres;
 
+import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 import com.google.gson.JsonArray;
@@ -17,10 +18,6 @@ import spark.Response;
  * Created by gtondapu on 7/31/2018.
  */
 public class PostgresImagery implements Imagery {
-    private static final String url = "jdbc:postgresql://localhost";
-    private static final String user = "ceo";
-    private static final String password = "ceo";
-
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
         var SQL = "";
@@ -82,7 +79,7 @@ public class PostgresImagery implements Imagery {
 
             var SQL = "SELECT * FROM add_project_widget(?, ?, ?, ?, ?::JSONB, ?::JSONB)";
 
-            try (var conn = this.connect();
+            try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 pstmt.setInt(1, institutionId);
                 pstmt.setString(2, "private");
@@ -108,7 +105,7 @@ public class PostgresImagery implements Imagery {
         var imageryId = jsonInputs.get("imageryId").getAsString();
         var SQL = "SELECT * FROM delete_imagery(?)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(imageryId));
             var rs = pstmt.executeQuery();
@@ -117,11 +114,6 @@ public class PostgresImagery implements Imagery {
         }
 
         return "";
-    }
-
-    //Returns a connection to the database
-    private Connection connect() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
     }
 
 }

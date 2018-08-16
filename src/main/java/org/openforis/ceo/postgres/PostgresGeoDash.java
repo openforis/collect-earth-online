@@ -1,5 +1,7 @@
 package org.openforis.ceo.postgres;
 
+import static org.openforis.ceo.utils.DatabaseUtils.connect;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.Connection;
@@ -13,10 +15,6 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresGeoDash implements GeoDash {
-    private static final String url = "jdbc:postgresql://localhost";
-    private static final String user = "ceo";
-    private static final String password = "ceo";
-
     // returns either the dashboard for a project or an empty dashboard if it has not been configured
     public String geodashId(Request req, Response res) {
         var projectId = req.params(":id");
@@ -24,7 +22,7 @@ public class PostgresGeoDash implements GeoDash {
         var callback = req.queryParams("callback");
         var SQL = "SELECT * FROM get_project_widgets_by_project_id(?)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
@@ -81,7 +79,7 @@ public class PostgresGeoDash implements GeoDash {
         var callback = req.queryParams("callback");
         var SQL = "SELECT * FROM add_project_widget(?, ?, ?::JSONB)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(projectId));
             pstmt.setString(2, dashboardId);
@@ -102,7 +100,7 @@ public class PostgresGeoDash implements GeoDash {
         var callback = req.queryParams("callback");
         var SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?::JSONB)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
             pstmt.setString(2, widgetJson);
@@ -121,7 +119,7 @@ public class PostgresGeoDash implements GeoDash {
         var callback = req.queryParams("callback");
         var SQL = "SELECT * FROM delete_project_widget_by_widget_id(?)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
             var rs = pstmt.executeQuery();
@@ -141,10 +139,5 @@ public class PostgresGeoDash implements GeoDash {
         } else {
             return "";
         }
-    }
-
-    //Returns a connection to the database
-    private Connection connect() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
     }
 }

@@ -1,6 +1,7 @@
 package org.openforis.ceo.postgres;
 
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
+import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -62,13 +63,8 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresProjects implements Projects {
-    private static final String url = "jdbc:postgresql://localhost";
-    private static final String user = "ceo";
-    private static final String password = "ceo";
-
     private static PreparedStatement prepareGetAllProjectsQuery(String userId, String institutionId) {
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             if (userId == null || userId.isEmpty()) {
                 if (institutionId == null || institutionId.isEmpty()) {
                     var SQL = "SELECT * FROM select_all_projects()";
@@ -150,8 +146,7 @@ public class PostgresProjects implements Projects {
         var projectId = req.params(":id");
         var allProjects = new JsonObject();
 
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project(?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -199,8 +194,7 @@ public class PostgresProjects implements Projects {
         var maxPlots = Integer.parseInt(req.params(":max"));
         var plots = new JsonObject();
 
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project_plots(?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -220,8 +214,7 @@ public class PostgresProjects implements Projects {
 
     private  String[] getProjectUsers(String projectId) {
         var users = new JsonArray();
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project_users(?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -243,8 +236,7 @@ public class PostgresProjects implements Projects {
     public String getProjectStats(Request req, Response res) {
         var projectId = req.params(":id");
         var stats = new JsonObject();
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project_statistics(?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -265,8 +257,7 @@ public class PostgresProjects implements Projects {
         var projectId = req.params(":id");
         var currentPlotId = req.queryParams("currentPlotId");
         var unassignedPlot = new JsonObject();
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_unassigned_plot(?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -284,8 +275,7 @@ public class PostgresProjects implements Projects {
         var projectId = req.params(":id");
         var currentPlotId = req.queryParams("currentPlotId");
         var unassignedPlot = new JsonObject();
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_unassigned_plots_by_plot_id(?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -338,8 +328,7 @@ public class PostgresProjects implements Projects {
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         var projectId = req.params(":id");
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project(?)";
             var pstmt = conn.prepareStatement(SQL);
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -362,8 +351,7 @@ public class PostgresProjects implements Projects {
 
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         var projectId = req.params(":id");
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project(?)";
             var pstmt= conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -386,8 +374,7 @@ public class PostgresProjects implements Projects {
 
     public String publishProject(Request req, Response res) {
         var projectId = req.params(":id");
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM publish_project(?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -401,8 +388,7 @@ public class PostgresProjects implements Projects {
 
     public String closeProject(Request req, Response res) {
         var projectId = req.params(":id");
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM close_project(?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -416,8 +402,7 @@ public class PostgresProjects implements Projects {
 
     public String archiveProject(Request req, Response res) {
         var projectId = req.params(":id");
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM archive_project(?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -438,8 +423,7 @@ public class PostgresProjects implements Projects {
         var imageryId = jsonInputs.get("imagery_id").getAsString();
         var imageryDate = new Date(jsonInputs.get("imagery_date").getAsLong());
         var value = jsonInputs.get("value").getAsJsonObject();
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM add_user_samples(?,?,?,?,?,?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1, Integer.parseInt(projectId));
@@ -463,8 +447,7 @@ public class PostgresProjects implements Projects {
         var plotId = jsonInputs.get("plotId").getAsString();
         var collectionTime = Timestamp.valueOf(jsonInputs.get("collection_time").getAsString());
         var userId = jsonInputs.get("userId").getAsString();
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             var SQL = "SELECT * FROM flag_plot(?,?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(plotId));
@@ -705,8 +688,7 @@ public class PostgresProjects implements Projects {
         var newPlotCenters = plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
             : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
             : csvPoints;
-        try {
-            var conn = connect();
+        try (var conn = connect()) {
             //update plots
             var SqlPlots = "SELECT * FROM create_project_plots(?,?)";
             var pstmtPlots = conn.prepareStatement(SqlPlots) ;
@@ -750,8 +732,7 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
             newProject.addProperty("availability", "unpublished");
-            try {
-                var conn = connect();
+            try (var conn = connect()) {
                 var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 var pstmt = conn.prepareStatement(SQL);
                 pstmt.setInt(1,newProject.get("institution").getAsInt());
@@ -792,8 +773,4 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    //Returns a connection to the database
-    private static Connection connect() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
-    }
 }

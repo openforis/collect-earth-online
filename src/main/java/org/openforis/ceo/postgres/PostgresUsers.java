@@ -1,5 +1,6 @@
 package org.openforis.ceo.postgres;
 
+import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
@@ -21,9 +22,6 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresUsers implements Users {
-    private static final String url           = "jdbc:postgresql://localhost";
-    private static final String user          = "ceo";
-    private static final String password      = "ceo";
     private static final String BASE_URL      = CeoConfig.baseUrl;
     private static final String SMTP_USER     = CeoConfig.smtpUser;
     private static final String SMTP_SERVER   = CeoConfig.smtpServer;
@@ -38,7 +36,7 @@ public class PostgresUsers implements Users {
             ? CeoConfig.documentRoot + "/" + inputReturnURL + "?" + req.queryString()
             : CeoConfig.documentRoot + "/home";
         var SQL = "SELECT * FROM get_user(?)";
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setString(1, inputEmail);
             var rs = pstmt.executeQuery();
@@ -89,7 +87,7 @@ public class PostgresUsers implements Users {
             return req;
         } else {
             var SQL_user = "SELECT * FROM get_user(?)";
-            try (var conn = this.connect();
+            try (var conn = connect();
                  var pstmt_user = conn.prepareStatement(SQL_user)) {
                 pstmt_user.setString(1, inputEmail);
                 var rs_user = pstmt_user.executeQuery();
@@ -147,7 +145,7 @@ public class PostgresUsers implements Users {
             return req;
         } else {
             var SQL_user = "SELECT * FROM get_user(?)";
-            try (var conn = this.connect();
+            try (var conn = connect();
                  var pstmt_user = conn.prepareStatement(SQL_user)) {
                 pstmt_user.setString(1, inputEmail);
                 var rs_user = pstmt_user.executeQuery();
@@ -181,7 +179,7 @@ public class PostgresUsers implements Users {
     public Request getPasswordResetKey(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var SQL_user = "SELECT * FROM get_user(?)";
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt_user = conn.prepareStatement(SQL_user)) {
             pstmt_user.setString(1, inputEmail);
             var rs_user = pstmt_user.executeQuery();
@@ -233,7 +231,7 @@ public class PostgresUsers implements Users {
             return req;
         } else {
             var SQL_user = "SELECT * FROM get_user(?)";
-            try (var conn = this.connect();
+            try (var conn = connect();
                  var pstmt_user = conn.prepareStatement(SQL_user)) {
                 pstmt_user.setString(1, inputEmail);
                 var rs_user = pstmt_user.executeQuery();
@@ -270,7 +268,7 @@ public class PostgresUsers implements Users {
         var institutionId = req.queryParams("institutionId");
         if (institutionId == null || institutionId.isEmpty()) {
             var SQL_users = "SELECT * FROM get_all_users()";
-            try (var conn = this.connect();
+            try (var conn = connect();
                  var pstmt_users = conn.prepareStatement(SQL_users)) {
                 var rs_users = pstmt_users.executeQuery();
                 var all_users = new JsonObject();
@@ -285,7 +283,7 @@ public class PostgresUsers implements Users {
             }
         } else {
             var SQL = "SELECT * FROM get_all_users_by_institution_id(?)";
-            try (var conn = this.connect();
+            try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 pstmt.setString(1, institutionId);
                 var rs = pstmt.executeQuery();
@@ -311,7 +309,7 @@ public class PostgresUsers implements Users {
     public Map<Integer, String> getInstitutionRoles(int userId) {
         var inst = new HashMap<Integer,String>();
         var SQL = "SELECT * FROM get_institution_user_roles(?)";
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, userId);
             var rs = pstmt.executeQuery();
@@ -331,7 +329,7 @@ public class PostgresUsers implements Users {
         var role = jsonInputs.get("role").getAsString();
         var SQL = "SELECT * FROM update_institution_user_role(?,?,?)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1,Integer.parseInt(institutionId));
             pstmt.setInt(2,Integer.parseInt(userId.toString()));
@@ -349,7 +347,7 @@ public class PostgresUsers implements Users {
         var institutionId = jsonInputs.get("institutionId").getAsString();
         var SQL = "SELECT * FROM update_institution_user_role(?,?,?)";
 
-        try (var conn = this.connect();
+        try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1,Integer.parseInt(institutionId));
             pstmt.setInt(2,Integer.parseInt(userId.toString()));
@@ -360,10 +358,6 @@ public class PostgresUsers implements Users {
             System.out.println(e.getMessage());
         }
         return "";
-    }
-    //Returns a connection to the database
-    private Connection connect() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
     }
 
 }
