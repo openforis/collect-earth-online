@@ -6,10 +6,7 @@ import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 import static org.openforis.ceo.utils.RequestUtils.toRequestContent;
 
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpMethods;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.google.gson.JsonElement;
 import java.io.IOException;
 import java.util.Map;

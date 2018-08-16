@@ -4,13 +4,8 @@ import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.RequestUtils.getResponseAsJson;
 import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
 import com.google.api.client.util.GenericData;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.io.IOException;
-import java.util.Optional;
 import org.openforis.ceo.env.CeoConfig;
 import spark.Filter;
 import spark.Request;

@@ -15,7 +15,6 @@ import static spark.utils.StringUtils.isBlank;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.io.IOException;
-import java.util.List;
 import java.util.stream.Collectors;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;

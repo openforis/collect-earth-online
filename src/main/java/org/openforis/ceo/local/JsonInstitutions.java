@@ -12,7 +12,6 @@ import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 import javax.servlet.MultipartConfigElement;

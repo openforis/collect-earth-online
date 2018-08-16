@@ -5,10 +5,6 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;

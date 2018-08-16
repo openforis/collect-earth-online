@@ -7,7 +7,6 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.openforis.ceo.db_api.Imagery;
 import spark.Request;

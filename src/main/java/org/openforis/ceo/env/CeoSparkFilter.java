@@ -1,7 +1,6 @@
 package org.openforis.ceo.env;
 
 import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import spark.servlet.SparkFilter;
 

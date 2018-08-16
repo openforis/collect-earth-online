@@ -12,8 +12,6 @@ import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 import static org.openforis.ceo.utils.RequestUtils.preparePatchRequest;
 import static org.openforis.ceo.utils.RequestUtils.preparePostRequest;
 
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.util.GenericData;
 import com.google.gson.JsonArray;
@@ -21,7 +19,6 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;

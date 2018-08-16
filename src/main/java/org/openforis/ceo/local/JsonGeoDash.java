@@ -10,7 +10,6 @@ import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.net.URLDecoder;
-import java.util.Optional;
 import java.util.UUID;
 import org.openforis.ceo.db_api.GeoDash;
 import spark.Request;

@@ -7,10 +7,6 @@ import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 import javax.servlet.MultipartConfigElement;
