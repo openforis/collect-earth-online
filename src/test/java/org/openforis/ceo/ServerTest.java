@@ -33,14 +33,14 @@ public class ServerTest extends TestCase {
     }
 
     public void testFindElement() {
-        JsonObject a = new JsonObject();
-        JsonArray b = new JsonArray();
-        JsonObject c = new JsonObject();
+        var a = new JsonObject();
+        var b = new JsonArray();
+        var c = new JsonObject();
         a.add("array", b);
         b.add(c);
         c.addProperty("field", "storedValue");
 
-        String storedValue = findElement(a, "array[0].field").getAsString();
+        var storedValue = findElement(a, "array[0].field").getAsString();
         assert(storedValue.equals("storedValue"));
     }
 
