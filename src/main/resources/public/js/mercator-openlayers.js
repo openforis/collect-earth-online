@@ -149,13 +149,13 @@ mercator.verifyLayerConfigs = function (layerConfigs) {
 // [Pure] Returns the first error message generated while testing the
 // input arguments or null if all tests pass.
 mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConfigs) {
-    if (! mercator.verifyDivName(divName)) {
+    if (!mercator.verifyDivName(divName)) {
         return "Invalid divName -> " + divName;
-    } else if (! mercator.verifyCenterCoords(centerCoords)) {
+    } else if (!mercator.verifyCenterCoords(centerCoords)) {
         return "Invalid centerCoords -> " + centerCoords;
-    } else if (! mercator.verifyZoomLevel(zoomLevel)) {
+    } else if (!mercator.verifyZoomLevel(zoomLevel)) {
         return "Invalid zoomLevel -> " + zoomLevel;
-    } else if (! mercator.verifyLayerConfigs(layerConfigs)) {
+    } else if (!mercator.verifyLayerConfigs(layerConfigs)) {
         return "Invalid layerConfigs -> " + layerConfigs;
     } else {
         return null;

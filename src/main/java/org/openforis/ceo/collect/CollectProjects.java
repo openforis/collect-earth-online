@@ -79,10 +79,10 @@ public class CollectProjects implements Projects {
             .map(s -> convertToCeoProject((JsonObject) s));
 
         //consider only not archived projects
-        var filteredProjects = allProjects.filter(project -> ! project.get("archived").getAsBoolean());
+        var filteredProjects = allProjects.filter(project -> !project.get("archived").getAsBoolean());
 
         //filter by institution
-        if (! isBlank(institutionId)) {
+        if (!isBlank(institutionId)) {
             filteredProjects = filteredProjects.filter(project -> project.get("institution").getAsString().equals(institutionId));
         }
 
@@ -635,7 +635,7 @@ public class CollectProjects implements Projects {
         var collectSurveyPrivacyLevel = collectSurvey.get("privacyLevel").getAsString().toLowerCase();
         p.addProperty("privacyLevel", collectSurveyPrivacyLevel.equals("group") ? "institution": collectSurveyPrivacyLevel);
         var ceoApplicationOptionsEl = collectSurvey.get("ceoApplicationOptions");
-        if (! ceoApplicationOptionsEl.isJsonNull()) {
+        if (!ceoApplicationOptionsEl.isJsonNull()) {
             var ceoApplicationOptions = ceoApplicationOptionsEl.getAsJsonObject();
             p.add("baseMapSource", ceoApplicationOptions.get("baseMapSource"));
 

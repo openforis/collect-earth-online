@@ -282,7 +282,7 @@ public class JsonProjects implements Projects {
     //  "Land Cover:Impervious": 50.0}
     private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueTranslations) {
         var firstSample = samples.get(0).getAsJsonObject();
-        if (! firstSample.has("value")) {
+        if (!firstSample.has("value")) {
             return new JsonObject();
         } else if (firstSample.get("value").isJsonPrimitive()) {
             var valueCounts = toStream(samples)
