@@ -14,6 +14,7 @@ import spark.Response;
  * Created by gtondapu on 7/31/2018.
  */
 public class PostgresImagery implements Imagery {
+
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
         var SQL = "";
@@ -113,4 +114,3 @@ public class PostgresImagery implements Imagery {
     }
 
 }
-

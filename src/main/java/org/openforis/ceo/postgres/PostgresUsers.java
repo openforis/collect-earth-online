@@ -17,6 +17,7 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresUsers implements Users {
+
     private static final String BASE_URL      = CeoConfig.baseUrl;
     private static final String SMTP_USER     = CeoConfig.smtpUser;
     private static final String SMTP_SERVER   = CeoConfig.smtpServer;

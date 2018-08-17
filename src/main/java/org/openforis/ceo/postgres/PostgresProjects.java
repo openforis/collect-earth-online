@@ -39,6 +39,7 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresProjects implements Projects {
+
     private static PreparedStatement prepareGetAllProjectsQuery(String userId, String institutionId) {
         try (var conn = connect()) {
             if (userId == null || userId.isEmpty()) {

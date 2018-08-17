@@ -30,7 +30,6 @@ public class Views {
                            "role",          fromSession(req, "role"),
                            "flash_message", fromSession(req, "flash_message"));
 
-        // FIXME: Is this necessary?
         if (req.session().attribute("flash_message") != null) {
             req.session().removeAttribute("flash_message");
         }

@@ -11,6 +11,7 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresGeoDash implements GeoDash {
+
     // returns either the dashboard for a project or an empty dashboard if it has not been configured
     public String geodashId(Request req, Response res) {
         var projectId = req.params(":id");
@@ -126,14 +127,15 @@ public class PostgresGeoDash implements GeoDash {
 
         return this.returnBlank(callback);
     }
+
     /* Helper functions */
     // Returns the appended callback string or ""
-    private String returnBlank(String callback)
-    {
+    private String returnBlank(String callback) {
         if (callback != null) {
             return callback + "()";
         } else {
             return "";
         }
     }
+
 }

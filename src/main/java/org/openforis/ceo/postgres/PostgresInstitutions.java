@@ -18,6 +18,7 @@ import spark.Response;
  * Created by gtondapu on 7/31/2018.
  */
 public class PostgresInstitutions implements Institutions {
+
     public String getAllInstitutions(Request req, Response res) {
         var SQL = "SELECT * FROM select_all_institutions()";
 

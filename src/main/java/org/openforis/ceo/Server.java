@@ -53,7 +53,8 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules
-    private static void declareRoutes(String databaseType, Projects projects, Imagery imagery, Users users, Institutions institutions, GeoDash geoDash) {
+    private static void declareRoutes(String databaseType, Projects projects, Imagery imagery,
+                                      Users users, Institutions institutions, GeoDash geoDash) {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
