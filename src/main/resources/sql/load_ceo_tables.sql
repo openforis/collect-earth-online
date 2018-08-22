@@ -198,3 +198,16 @@ CREATE TABLE ts_image_preference (
 DROP INDEX IF EXISTS image_ppi;
 CREATE INDEX image_ppi ON ts_image_preference USING btree (project_id, ts_plotid, image_year);
 
+
+CREATE INDEX projects_id ON projects (id);
+CREATE INDEX plots_id ON plots (id);
+CREATE INDEX samples_id ON samples (id);
+CREATE INDEX imagery_id ON imagery (id);
+CREATE INDEX users_id ON users (id);
+CREATE INDEX institutions_id ON institutions (id);
+CREATE INDEX institution_users_id ON institution_users (id);
+CREATE INDEX roles_id ON roles (id);
+CREATE INDEX user_plots_id ON user_plots (id);
+CREATE INDEX sample_values_id ON sample_values (id);
+CREATE INDEX project_widgets_project_id ON project_widgets (project_id);
+CREATE INDEX project_widgets_dashboard_id ON project_widgets (dashboard_id);
