@@ -34,16 +34,19 @@ CREATE TABLE projects (
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
-  classification_start_date	date,
-  classification_end_date   date,
-  classification_timestep   integer
+  ceo_start_date	        date,
+  ceo_end_date              date,
+  ceo_timestep              integer,
+  ts_start_year             integer,
+  ts_end_year               integer,
+  ts_target_day             integer
 );
 
 CREATE TABLE plots (
   id         serial primary key,
   project_id integer not null references projects (id) on delete cascade on update cascade,
   center     geometry(Point,4326),
-  flagged    integer default 0,
+  flagged    integer default 0,  --NOTE: there is also a flag in user_plots, do we need both?
   assigned   integer default 0
 );
 
@@ -52,6 +55,13 @@ CREATE TABLE samples (
   plot_id integer not null references plots (id) on delete cascade on update cascade,
   point   geometry(Point,4326)
 );
+
+CREATE TABLE packets (
+  id                        serial primary key,
+  project_id                integer not null references projects(id) on delete cascade on update cascade,
+  packet_id                 integer,
+  plot_id                   integer not null references plots (id) on delete cascade on update cascade
+)
 
 CREATE TABLE imagery (
     id              serial primary key,
