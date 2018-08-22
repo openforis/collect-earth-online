@@ -51,9 +51,10 @@ angular.module("home", []).controller("HomeController", ["$http", function HomeC
     };
 
     this.initialize = function (documentRoot, userId) {
+        alert(documentRoot);
         if (this.institutionList == null) {
-            // Load the institutionList
-            this.getInstitutionList(documentRoot, userId);
+                // Load the institutionList
+                this.getInstitutionList(documentRoot, userId);
         } else if (this.projectList == null) {
             // Load the projectList
             this.getProjectList(documentRoot, userId);
