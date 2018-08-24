@@ -2,17 +2,25 @@ class Home extends  React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            projects:[],
         };
     }
+    componentDidMount() {
+        //get projects
+        fetch(testRoot + "/get-all-projects?userId=" + testUserId)
+            .then(response => response.json())
+            .then(data => this.setState({projects: data}));
+    }
     render() {
+        const projects =this.state.projects;
 
         return (
             <div id="bcontainer">
                 <span id="mobilespan"></span>
                 <div className="Wrapper">
                     <div className="row tog-effect">
-                        <SideBar/>
-                        <MapPanel/>
+                        <SideBar projects={projects}/>
+                        <MapPanel projects={projects}/>
                     </div>
                 </div>
             </div>
@@ -23,8 +31,14 @@ class MapPanel extends  React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            imagery: [],
         };
     }
+    componentDidMount() {
+        //get projects
+        fetch(testRoot + "/get-all-imagery")
+            .then(response => response.json())
+            .then(data => this.setState({imagery: data}));    }
     render() {
 
         return (
@@ -53,19 +67,18 @@ class SideBar extends  React.Component {
         };
     }
     render() {
+const projects=this.props.projects;
 
         return (
-            <Institution/>
+            <InstitutionList projects={projects}/>
         );
     }
 }
-
-class Institution extends React.Component {
-
+class InstitutionList extends  React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            institutions:[],
+            institutions: [],
         };
     }
 
@@ -73,9 +86,12 @@ class Institution extends React.Component {
         //get institutions
         fetch(testRoot + "/get-all-institutions")
             .then(response => response.json())
-            .then(data => this.setState({ institutions: data }));
+            .then(data => this.setState({institutions: data}));
     }
+
     render() {
+        const projects = this.props.projects;
+
         return (
 
             <div id="lPanel" className="col-lg-3 pr-0 pl-0">
@@ -84,33 +100,9 @@ class Institution extends React.Component {
                         Institutions
                     </h1>
                 </div>
-                <ul class="tree">
+                <ul className="tree">
                     {this.state.institutions.map(institution =>
-                        <li key={institution.id}>
-
-                            <div className="btn bg-lightgreen btn-block m-0 p-2 rounded-0"
-                                 data-toggle="collapse"
-                                 href={"#collapse" + institution.id} role="button"
-                                 aria-expanded="false">
-                                <div className="row">
-                                    <div className="col-lg-10 my-auto">
-                                        <p className="tree_label text-white m-0"
-                                           htmlFor={institution.id}>
-                                            <input type="checkbox" className="d-none"
-                                                   id={institution.id}/>
-                                            <span className="">{institution.name}</span>
-                                        </p>
-                                    </div>
-                                    <div className="col-lg-1">
-                                        <a className="institution_info btn btn-sm btn-outline-lightgreen"
-                                           href={testRoot + institution.id}>
-                                            <i className="fa fa-info" style={{color: 'white'}}></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <Project id={institution.id}/>
-                        </li>
+                        <Institution id={institution.id} name={institution.name} projects={projects}/>
                     )}
                 </ul>
 
@@ -120,65 +112,134 @@ class Institution extends React.Component {
         );
     }
 }
-class Project extends React.Component {
-    constructor() {
-        super();
+
+class Institution extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+
+    render() {
+        const institutionId = this.props.id;
+        const projects = this.props.projects;
+        const institutionName = this.props.name;
+
+        return (
+            <li key={institutionId}>
+
+                <div className="btn bg-lightgreen btn-block m-0 p-2 rounded-0"
+                     data-toggle="collapse"
+                     href={"#collapse" + institutionId} role="button"
+                     aria-expanded="false">
+                    <div className="row">
+                        <div className="col-lg-10 my-auto">
+                            <p className="tree_label text-white m-0"
+                               htmlFor={institutionId}>
+                                <input type="checkbox" className="d-none"
+                                       id={institutionId}/>
+                                <span className="">{institutionName}</span>
+                            </p>
+                        </div>
+                        <div className="col-lg-1">
+                            <a className="institution_info btn btn-sm btn-outline-lightgreen"
+                               href={testRoot + "/institution/" + institutionId}>
+                                <i className="fa fa-info" style={{color: 'white'}}></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <ProjectList id={institutionId} projects={projects}/>
+            </li>
+
+        );
+    }
+}
+class ProjectList extends React.Component {
+    constructor(props) {
+        super(props);
         this.state = {
-            projects: [],
         };
     }
 
 
-    componentDidMount() {
-        //get projects
-        fetch(testRoot + "/get-all-projects?userId=" + testUserId)
-            .then(response => response.json())
-            .then(data => this.setState({projects: data}));    }
-
-
     render() {
+
+        const institutionId=this.props.id;
+
         return (
-            <div  className="collapse" id={"collapse" + this.props.id}>
-                {this.state.projects.map(project => {
-                        if(project.editable == true) {
-                            return(
-                                <div>
-                                    <div
-                                        className="bg-lightgrey text-center p-1 row px-auto">
+            <div  className="collapse" id={"collapse" + institutionId}>
+                {this.props.projects.map(project =>
 
-                                        <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
-                                           href={testRoot + "/collection/" + project.id}>{project.name}</a>
-                                    </div>
-
-                                    <div className="col-lg-3 pl-lg-0">
-                                        <a className="edit-project btn btn-outline-yellow btn-sm btn-block"
-                                           href={testRoot + "/project/" + project.id}>
-                                            < i
-                                                className="fa fa-edit"> </i> Edit</a>
-                                    </div>
-
-                                </div>
-                            );
-                        }
-                        if(project.editable==false) {
-                            return(
-                                <div className="bg-lightgrey text-center p-1 row">
-
-                                    <div className="col mb-1 mx-0">
-                                        <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                                           href={testRoot + "/collection/" + project.id}>{project.name}</a>
-                                    </div>
-                                </div>
-                            );
-                        }
-                    }
+                      <Project id={project.id} editable={project.editable} name={project.name}/>
 
                 )}
             </div>
         );
+
+    }
+
+
+    }
+class Project extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+
+
+    render() {
+        if (this.props.editable == true) {
+
+            return (
+                <div class="bg-lightgrey text-center p-1 row px-auto">
+                    <div class="col-lg-9 pr-lg-1">
+
+                        <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
+                           href={testRoot + "/collection/" + this.props.id}>{this.props.name}</a>
+                    </div>
+
+                    <div className="col-lg-3 pl-lg-0">
+                        <a className="edit-project btn btn-outline-yellow btn-sm btn-block"
+                           href={testRoot + "/project/" + this.props.id}>
+                            < i
+                                className="fa fa-edit"> </i> Edit</a>
+                    </div>
+
+                </div>
+            );
+        }
+        if (this.props.editable == false) {
+
+
+            return (
+                <div className="bg-lightgrey text-center p-1 row">
+
+                    <div className="col mb-1 mx-0">
+                        <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                           href={testRoot + "/collection/" + this.props.id}>{this.props.name}</a>
+                    </div>
+                </div>
+            );
+        }
+
+
+    }
+}
+class ProjectEditable extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {};
     }
 }
 
+class ProjectUneditable extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+}
 
 //=========================================
 // Render Root Component
