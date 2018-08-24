@@ -869,8 +869,7 @@ public class CollectProjects implements Projects {
     }
 
     private static int getCollectRecordsCountByPlotId(String username, int projectId, String plotId) {
-        var summaries = getCollectRecordSummariesByPlotId(username, projectId, plotId, false, null, "CLEANSING");
-        return summaries.size();
+        return getCollectRecordSummariesByPlotId(username, projectId, plotId, false, null, "CLEANSING").size();
     }
 
     private static boolean isFlagged(JsonObject samplingPointItem) {
@@ -892,41 +891,38 @@ public class CollectProjects implements Projects {
     }
 
     private static JsonArray getCollectSamplingPointItems(int projectId, String plotId, boolean onlyParentItem) {
-        var params = new HashMap<String, Object>();
-        if (plotId != null) {
-            params.put("parent_keys", plotId);
-        }
-        params.put("only_parent_item", onlyParentItem);
-        var sampleItems = getFromCollect(format("survey/%d/sampling_point_data", projectId), params)
+        return getFromCollect(format("survey/%d/sampling_point_data", projectId),
+                              (plotId == null)
+                              ? Map.of("only_parent_item", onlyParentItem)
+                              : Map.of("only_parent_item", onlyParentItem,
+                                       "parent_keys", plotId))
             .getAsJsonArray();
-        return sampleItems;
     }
 
     private static JsonObject getCollectPlotSamplingPointItem(int projectId, String plotId) {
-        var plotSamplingPointItems = getCollectSamplingPointItems(projectId, plotId, true);
-        return plotSamplingPointItems.get(0).getAsJsonObject();
+        return getCollectSamplingPointItems(projectId, plotId, true).get(0).getAsJsonObject();
     }
 
     private static int countCollectSamplingPointItems(int projectId, int levelIndex, List<String> infoAttributes) {
-        var params = Map.of("level",           levelIndex,
-                            "info_attributes", infoAttributes);
-        var count = getFromCollect(format("survey/%d/count/sampling_point_data", projectId), params).getAsInt();
-        return count;
+        return getFromCollect(format("survey/%d/count/sampling_point_data", projectId),
+                              Map.of("level",           levelIndex,
+                                     "info_attributes", infoAttributes))
+            .getAsInt();
     }
 
     private static int countCollectRecords(int projectId, boolean ignoreMeasurements, Integer userId) {
-        var params = Map.of("ignore_measurements", (Object) ignoreMeasurements,
-                            "user_id",             (Object) userId);
-        var count = getFromCollect(format("survey/%d/data/count/records", projectId), params).getAsInt();
-        return count;
+        return getFromCollect(format("survey/%d/data/count/records", projectId),
+                              Map.of("ignore_measurements", (Object) ignoreMeasurements,
+                                     "user_id",             (Object) userId))
+            .getAsInt();
     }
 
     private static JsonObject createNewCollectRecord(int projectId, String username, String plotId, int measurement) {
-        var newRecordParams = Map.of("username",               username,
-                                     "recordKey",              Arrays.asList(plotId, measurement),
-                                     "addSecondLevelEntities", true);
-        var newRecord = postToCollect(String.format("survey/%s/data/records", projectId), newRecordParams).getAsJsonObject();
-        return newRecord;
+        return postToCollect(String.format("survey/%s/data/records", projectId),
+                             Map.of("username",               username,
+                                    "recordKey",              Arrays.asList(plotId, measurement),
+                                    "addSecondLevelEntities", true))
+            .getAsJsonObject();
     }
 
     private static int countCollectContributors(int projectId) {
