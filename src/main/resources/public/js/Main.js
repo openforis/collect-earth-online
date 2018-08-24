@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 class Institution extends React.Component {
     constructor(props) {
         super(props);
