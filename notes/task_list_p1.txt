@@ -1,0 +1,62 @@
+* Register Page:
+1. Operator Metadata-Affiliations (business, university, individual)
+
+* Operator Page:
+1. Operator Summary Statistics:
+   - Projects Worked on So Far (latest and time graph) 
+   - Plots Completed per Project 
+   - Plots Completed Total (latest and time graph) 
+   - Speed Score per Project 
+   - Speed Score Total (latest and time graph) 
+   - Accuracy Score per Project (based on the project's training data) 
+   - Accuracy Score Total (latest and time graph) 
+
+* Institution Page:
+1. User Management: (only if institution admin)
+   - Affiliated Users (see and update user roles)
+   - Pending Affiliation Requests (see and approve)
+   - Invite Users
+   - Ban Users (see current list and add new banned users)
+   - Add request affiliation button (redirects to login and sends request to institution page)
+
+2. Project Management:
+   - List All Projects (label as featured/public/private for everyone, update label if admin)
+   - List Contributor by Project (see and add/remove users if admin)
+
+3. Image Servers: 
+   - List All WMS Feeds (see and update featured/public/private permissions if admin)
+
+* Project Management Page:
+1. Select AOI:
+   - Upload Polygon (CSV, KML, SHP, GeoJSON)
+
+2. Specify Record Attributes:
+   - Import Plot Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes (SIG P0) (Plot Design Spatial Distribution: Upload From Template)
+     - Auto Generate AOI Boundary
+
+3. Entity Level:
+   - Specify Attributes: (allow assigning shortcut keys to each attribute)
+     - Use Collect Web (Multi-Attribute Assignment - http://openforis.org/collect/editSurvey.htm)
+
+4. Select Basemap Imagery: (allow selecting multiple imagery sources per project)
+   - Define Time Period Range with Slider
+     - Specify multiple image windows (e.g., winter, summer for year x)
+
+5. Download All Sample Data:
+   - CSV (Aggregated and raw data)
+
+6. Overview Maps: (use drop down menu to select what plot value is shown)
+   - Sampling Status (green = complete, yellow = partially complete, red = incomplete)
+   - Sample Values (pick an attribute and show its most commonly assigned value per plot)
+   - QA/QC Values (show user performance per plot)
+
+* Collection Page:
+1. Sidebar: (float over a full screen map like in ecodash and surface-water tools)
+   - Skip Button
+   - User Timer (count up)
+   - User Statistics:
+     - #/# and % Plots Completed
+     - Current Accuracy Score (based on the project's training data)
+   - Go back to old plots:
+     - Choose from a Record History List (include Record ID and timestamp of when record was saved)
+     - Dynamically Show Completed Plots in the Map Interface and Allow Click Selection

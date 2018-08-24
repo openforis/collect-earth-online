@@ -1,0 +1,48 @@
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Page        | Section                  | Task                                                                                           | Hours |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Register    | Operator Metadata        | Add Business, University, and Individual Affiliation fields                                    |     2 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Operator    | Summary Statistics       | Projects Worked on So Far (latest and time graph)                                              |     3 |
+| Operator    | Summary Statistics       | Plots Completed per Project                                                                    |     2 |
+| Operator    | Summary Statistics       | Plots Completed Total (latest and time graph)                                                  |     2 |
+| Operator    | Summary Statistics       | Speed Score per Project                                                                        |     4 |
+| Operator    | Summary Statistics       | Speed Score Total (latest and time graph)                                                      |     4 |
+| Operator    | Summary Statistics       | Accuracy Score per Project (based on the project's training data)                              |     3 |
+| Operator    | Summary Statistics       | Accuracy Score Total (latest and time graph)                                                   |     3 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Institution | User Management          | Add request affiliation button                                                                 |     2 |
+| Institution | User Management          | Affiliated Users (see and update user roles if admin)                                          |     3 |
+| Institution | User Management          | Pending Affiliation Requests (see and approve if admin)                                        |     2 |
+| Institution | User Management          | Invite Users if admin                                                                          |     2 |
+| Institution | User Management          | Ban Users (see current list and add new banned users if admin)                                 |     2 |
+| Institution | Project Management       | Label Projects as featured/public/private with icon                                            |     1 |
+| Institution | Project Management       | List Contributor by Project                                                                    |     2 |
+| Institution | Project Management       | See and add/remove users if admin                                                              |     4 |
+| Institution | Image Servers            | List All WMS Feeds                                                                             |     4 |
+| Institution | Image Servers            | See and update featured/public/private permissions if admin                                    |     2 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Project     | Select AOI               | Upload Polygon (CSV, KML, SHP, GeoJSON)                                                        |     4 |
+| Project     | Record Level             | Import Plot Locations (CSV, KML, SHP, GeoJSON) with centroid and shape attributes              |     3 |
+| Project     | Record Level             | Auto Generate AOI Boundary                                                                     |     1 |
+| Project     | Entity Level             | Allow assigning shortcut keys to each attribute                                                |     2 |
+| Project     | Entity Level             | Use Collect Web for Multi-Attribute Assignment - http://openforis.org/collect/editSurvey.htm   |       |
+| Project     | Select Basemap Imagery   | Allow selecting multiple imagery sources per project                                           |     5 |
+| Project     | Select Basemap Imagery   | Define Time Period Range with Sliders                                                          |     4 |
+| Project     | Select Basemap Imagery   | Specify multiple image windows (e.g., winter, summer for year x))                              |     3 |
+| Project     | Download All Sample Data | CSV (Aggregated and raw data)                                                                  |     3 |
+| Project     | Overview Maps            | Use drop down menu to select what plot value is shown                                          |     3 |
+| Project     | Overview Maps            | Option 1: Sampling Status (green = complete, yellow = partially complete, red = incomplete)    |     2 |
+| Project     | Overview Maps            | Option 2: Sample Values (pick an attribute and show its most commonly assigned value per plot) |     2 |
+| Project     | Overview Maps            | Option 3: QA/QC Values (show user performance per plot)                                        |     2 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Collection  | Sidebar                  | Float over a full screen map like in ecodash and surface-water tools                           |     3 |
+| Collection  | Sidebar                  | Skip Button                                                                                    |     1 |
+| Collection  | Sidebar                  | User Timer (count up)                                                                          |     1 |
+| Collection  | Sidebar                  | User Statistics - #/# and % Plots Completed                                                    |     2 |
+| Collection  | Sidebar                  | User Statistics - Current Accuracy Score (based on the project's training data)                |     2 |
+| Collection  | Sidebar                  | Go Back - Dropdown list of previous plots by ID and timestamp                                  |     4 |
+| Collection  | Sidebar                  | Go Back - Dynamically Show Completed Plots in the Map Interface and Allow Click Selection      |     6 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|
+| Total       |                          |                                                                                                |   100 |
+|-------------+--------------------------+------------------------------------------------------------------------------------------------+-------|

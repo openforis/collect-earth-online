@@ -1,0 +1,5 @@
+{baseUrl: "",
+ smtpUser: "collectearth.mail@gmail.com",
+ smtpServer: "smtp.gmail.com",
+ smtpPort: "587",
+ smtpPassword: ""}

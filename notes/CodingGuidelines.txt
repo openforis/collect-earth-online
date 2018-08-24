@@ -1,0 +1,48 @@
+Coding guidelines for CEO's Java code base:
+
+1. AJAX endpoint functions have signature "public static String
+   <functionName>(Request req, Response res) { ... }". They always
+   return a JSON string.
+
+2. If any AJAX endpoint function should modify the Request object,
+   they must return it, so that it can be consumed by another function
+   higher up the call chain.
+
+3. Arguments passed via req.params(), req.queryParams(), or req.body()
+   should be extracted first in the function body and converted to the
+   appropriate types needed in that function.
+
+4. Any JSON datastructures that are not simply passed unmodified to
+   the function's caller as JSON strings should be re-ified as
+   JsonArray, JsonObject, JsonElement, or JsonPrimitive objects using
+   the GSON library.
+
+5. Sequential operations on datastructures should use the Java 8
+   Streams API rather than loops. For operations on JsonArrays, I have
+   provided a library of stream functions in JsonUtils.java.
+
+6. Conditionals (i.e., if else blocks) should NOT be used to modify
+   state in existing local variables. They should be used to delineate
+   flow control to a final return statement. In other words, use if
+   else blocks to create control flow trees in which all of their
+   leaves end with a return statement.
+
+7. Whenever possible, refactor logical units of functionality into
+   private static functions to keep the public static API functions
+   more concise.
+
+8. Minimize the creation of local variables. Whenever possible, prefer
+   inlining a sequence of operations and storing the result in a
+   single local variable. This prevents pollution of the scope with
+   one-off variables and reduces the need to create lots of names for
+   temporary variables (e.g., foo, tmp, temp, tempFoo).
+
+9. DO NOT CREATE NON-STATIC METHODS OR CLASS ATTRIBUTES. No CEO
+   classes are ever meant to be instantiated (except for Server.java,
+   which contains only one non-static method "init", which is
+   necessary for running under Tomcat).
+
+10. Please try to keep the indentation and spacing consistent
+    throughout the codebase. Consider replacing tabs with 4 spaces in
+    your editor as this ensures identical indentation levels across
+    different editors.

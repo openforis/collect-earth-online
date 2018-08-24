@@ -1,0 +1,117 @@
+The source code for CEO can be found on Github at this URL:
+
+  https://github.com/openforis/collect-earth-online
+
+Here is a high level description of CEO's system architecture:
+
+CEO, Collect, and OfUsers are three separate web applications written in
+Java+Javascript and deployed as WAR files, which are to be run together
+within a single application server, such as Tomcat. To install and
+configure all of these applications on your development machine, follow
+the instructions in the repository's toplevel README.org file.
+
+HTTP requests are received by Tomcat and passed to the appropriate
+application based on the url path.
+
+http://server.domain/ceo      -> CEO
+http://server.domain/collect  -> Collect
+http://server.domain/of-users -> OfUsers
+
+On the back end, CEO uses the Spark framework for request routing and
+the Freemarker Template Language (FTL) for rendering dynamic HTML from
+templates. On the front end, CEO's web UI is written in HTML5, CSS3, and
+Javascript with the AngularJS framework (v1). Dynamic maps are embedded
+in the browser with OpenLayers 3.
+
+Here are the relevant directories:
+
+|----------------+------------+----------------------------------------|
+| Part of System | Language   | Directory                              |
+|----------------+------------+----------------------------------------|
+| Tomcat         | XML        | src/main/webapp                        |
+| Back end       | Java       | src/main/java/org/openforis/ceo        |
+| Back end       | FTL        | src/main/resources/template/freemarker |
+| Front end      | CSS        | src/main/resources/public/css          |
+| Front end      | Javascript | src/main/resources/public/js           |
+|----------------+------------+----------------------------------------|
+
+The Java files under src/main/java/org/openforis/ceo are separated
+into 7 packages below org.openforis.ceo. Here's the breakdown for
+future reference:
+
+|---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
+| Package | Maintainer | Description                                                                                                                               |
+|---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
+| collect | Stefano    | Files used for communicating with OpenForis Collect                                                                                       |
+| env     | Gary       | Sitewide environment variables and their Tomcat initialization routines                                                                   |
+| ext     | Billy      | Extensions to CEO (e.g., GeoDash and TimeSync)                                                                                            |
+| local   | Gary       | Files used for managing local file-based storage of users, groups, projects, and imagery, allowing CEO to run as a standalone application |
+| model   | Stefano    | Classes used for reifying concrete JSON messages that will be passed between CEO and other applications, including the client             |
+| users   | Roberto    | Files used for communicating with OpenForis Users                                                                                         |
+| utils   | Gary       | Utility functions that are used by both the standalone and networked versions of CEO                                                      |
+|---------+------------+-------------------------------------------------------------------------------------------------------------------------------------------|
+
+CEO's entry point is CeoSparkFilter.java, which extracts some runtime
+configuration values from src/main/webapp/WEB-INF/web.xml and assigns
+them to attributes in CeoConfig.java. After that, control is passed to
+Server.java's init() method, which simply calls
+Server.declareRemoteStorageRoutes(). This function uses Spark's static
+get() and post() functions to setup the routing table for all future
+incoming HTTP requests.
+
+Requests for viewable pages respond with calls to the relevant method
+within Views.java. All other requests are API calls to be used by the
+client side of the application, generally returning JSON to front end
+callback functions.
+
+TimeSync integration with CEO will likely follow the same path as the
+GeoDash integration:
+
+1. Clone the CEO repository from Github and create a new branch called
+   "timesync" on which to apply your changes.
+
+2. Create a new Freemarker Template Language file at
+   src/main/resources/template/freemarker/timesync.ftl to hold your page
+   layout. Remember to include header.ftl, start-content.ftl,
+   end-content.ftl, and footer.ftl.
+
+3. Place the relevant styles for your page in a new CSS file at
+   src/main/resources/public/css/timesync.css.
+
+4. Use a Freemarker conditional block to load css/timesync.css in
+   src/main/resources/template/freemarker/header.ftl:
+
+   <#if navlink == "TimeSync">
+   <link rel="stylesheet" type="text/css" href="${root}/css/timesync.css">
+   </#if>
+
+5. Add a route for your new page to Server.java's
+   declareLocalStorageRoutes() and declareRemoteStorageRoutes()
+   functions:
+
+   get("/timesync", (req, res) -> { return freemarker.render(Views.timesync(req, res)); });
+
+6. Add a new timesync function to Views.java:
+
+   public static ModelAndView timesync(Request req, Response res) {
+        Map<String, Object> model = getBaseModel(req, "TimeSync");
+        // Pass server-side parameters to your FTL template...
+        model.put("some_variable", req.queryParams("some_value"));
+        return new ModelAndView(model, "timesync.ftl");
+    }
+
+7. Place the Javascript for your page in a new file in
+   src/main/resources/public/js/timesync.js.
+
+8. Add a script tag in the body of your timesync.ftl file to load
+   timesync.js:
+
+   <script type="text/javascript" src="${root}/js/timesync.js"></script>
+
+9. Keep editing the contents of timesync.ftl, timesync.css, and
+   timesync.js until you are satisfied with the results.
+
+10. Add links to the Project (project.ftl) and Collection
+    (collection.ftl) pages to display "/timesync" in its own tab.
+
+You're done!
