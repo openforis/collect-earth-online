@@ -97,7 +97,7 @@ public class PostgresImagery implements Imagery {
         }
     }
 
-    public synchronized String deleteInstitutionImagery(Request req, Response res) {
+    public String deleteInstitutionImagery(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var imageryId = jsonInputs.get("imageryId").getAsString();
         var SQL = "SELECT * FROM delete_imagery(?)";

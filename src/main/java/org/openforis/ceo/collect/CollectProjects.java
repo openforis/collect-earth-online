@@ -466,7 +466,7 @@ public class CollectProjects implements Projects {
     // project with matching id. Return the empty string.
     //
     // ==> ""
-    public synchronized String publishProject(Request req, Response res) {
+    public String publishProject(Request req, Response res) {
         var projectId = req.params(":id");
         postToCollect("survey/publish/" + projectId);
         return "";
@@ -478,7 +478,7 @@ public class CollectProjects implements Projects {
     // project with matching id. Return the empty string.
     //
     // ==> ""
-    public synchronized String closeProject(Request req, Response res) {
+    public String closeProject(Request req, Response res) {
         var projectId = req.params(":id");
         postToCollect("survey/close/" + projectId);
         return "";
@@ -491,7 +491,7 @@ public class CollectProjects implements Projects {
     // id. Return the empty string.
     //
     // ==> ""
-    public synchronized String archiveProject(Request req, Response res) {
+    public String archiveProject(Request req, Response res) {
         var projectId = req.params(":id");
         postToCollect("survey/archive/" + projectId);
         return "";
@@ -515,7 +515,7 @@ public class CollectProjects implements Projects {
     // empty string.
     //
     // ==> ""
-    public synchronized String addUserSamples(Request req, Response res) {
+    public String addUserSamples(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var projectId = jsonInputs.get("projectId").getAsInt();
         var plotId = jsonInputs.get("plotId").getAsString();
@@ -562,7 +562,7 @@ public class CollectProjects implements Projects {
     // matching id. Return the empty string.
     //
     // ==> ""
-    public synchronized String flagPlot(Request req, Response res) {
+    public String flagPlot(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var projectId = jsonInputs.get("projectId").getAsInt();
         var plotId = jsonInputs.get("plotId").getAsString();
@@ -582,7 +582,7 @@ public class CollectProjects implements Projects {
     // string.
     //
     // ==> "<newProjectId>"
-    public synchronized String createProject(Request req, Response res) {
+    public String createProject(Request req, Response res) {
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.

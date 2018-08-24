@@ -44,7 +44,7 @@ public class CollectImagery implements Imagery {
             .toString();
     }
 
-    public synchronized String addInstitutionImagery(Request req, Response res) throws IOException {
+    public String addInstitutionImagery(Request req, Response res) throws IOException {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var institutionId = jsonInputs.get("institutionId").getAsInt();
         var imageryTitle = jsonInputs.get("imageryTitle").getAsString();
@@ -86,8 +86,7 @@ public class CollectImagery implements Imagery {
         }
     }
 
-    // FIXME: Delete imagery entries from imagery-list.json once they are no longer referenced by any institution
-    public synchronized String deleteInstitutionImagery(Request req, Response res) throws IOException {
+    public String deleteInstitutionImagery(Request req, Response res) throws IOException {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var institutionId = jsonInputs.get("institutionId").getAsInt();
         var imageryId = jsonInputs.get("imageryId").getAsString();
