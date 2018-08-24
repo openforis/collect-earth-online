@@ -76,6 +76,7 @@
     </div>
     </div>
 </nav>
+
 <script type="text/babel" src="${root}/js/geodashreact.js"></script>
 <br style="clear:both;">
     <div id="fulldiv" class="full">
