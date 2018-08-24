@@ -63,13 +63,13 @@ public class PostgresGeoDash implements GeoDash {
     }
 
     // will be removed once confirmed it is abandoned and not needed
-    public String updateDashBoardByID(Request req, Response res) {
+    public String updateDashBoardById(Request req, Response res) {
         /* Code will go here to update dashboard*/
         return "";
     }
 
     // Creates a dashboard widget for a specific project
-    public String createDashBoardWidgetByID(Request req, Response res) {
+    public String createDashBoardWidgetById(Request req, Response res) {
         var projectId = req.queryParams("pID");
         var dashboardId = req.queryParams("dashID");
         var widgetJson = req.queryParams("widgetJSON");
@@ -91,7 +91,7 @@ public class PostgresGeoDash implements GeoDash {
     }
 
     // Updates a dashboard widget by widget_id
-    public String updateDashBoardWidgetByID(Request req, Response res) {
+    public String updateDashBoardWidgetById(Request req, Response res) {
         var widgetId = req.params(":id");
         var widgetJson = req.queryParams("widgetJSON");
         var callback = req.queryParams("callback");
@@ -111,7 +111,7 @@ public class PostgresGeoDash implements GeoDash {
     }
 
     // Deletes a dashboard widget by widget_id
-    public String deleteDashBoardWidgetByID(Request req, Response res) {
+    public String deleteDashBoardWidgetById(Request req, Response res) {
         var widgetId = req.params(":id");
         var callback = req.queryParams("callback");
         var SQL = "SELECT * FROM delete_project_widget_by_widget_id(?)";
