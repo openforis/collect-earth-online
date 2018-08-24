@@ -38,7 +38,9 @@ class Widgets extends React.Component {
 class Widget extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {  }
+        this.state = {  };
+        this.imageCollectionList = ["addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI"];
+        this.graphControlList = ["timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
     }
     render() {
         const {key, widget} = this.props;
@@ -47,17 +49,21 @@ class Widget extends React.Component {
     getWidgetHtml(widget){
         if(widget.gridcolumn)
         {
-            return (<div className="placeholder columnSpan6 rowSpan1"
+            return (<div className={ this.getClassNames(widget.gridcolumn, widget.gridrow) }
                         style={{gridColumn:widget.gridcolumn, gridRow:widget.gridrow}}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
                             <li style={{display: "inline"}}>{widget.name}</li>
                             <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen"
-                                                           role="button" title="Toggle Fullscreen"></a></li>
+                                                           role="button" title="Toggle Fullscreen"><i className="fas fa-expand-arrows-alt" style={{color: "#31BAB0"}}></i></a></li>
                         </ul>
                     </div>
-                    <div id="widget-container_1" className="widget-container"></div>
+                    <div id={"widget-container_" + widget.id} className="widget-container">
+
+                            {this.getWidgetInnerHtml(widget)}
+
+                    </div>
                 </div>
             </div>);
         }
@@ -66,57 +72,39 @@ class Widget extends React.Component {
                     </div>;
         }
     }
-}
-
-/*
-{if(widget.gridcolumn)
+    getClassNames(c, r)
+    {
+        let classnames = 'placeholder';
+        classnames += c.includes("span 12")? " fullcolumnspan": c.includes("span 9")? " columnSpan9": c.includes("span 6")? " columnSpan6": " columnSpan3";
+        classnames += r.includes("span 2")? " rowSpan2": r.includes("span 3")? " rowSpan3": " rowSpan1";
+        return classnames;
+    }
+    getWidgetInnerHtml(widget){
+        let wtext = widget.properties[0];
+        let control;
+        let slider;
+        if(this.imageCollectionList.includes(wtext))
         {
-            <div className="row placeholders">
-                <div className="grid-sizer">
-                    <div className="col-xs-6 col-sm-3 placeholder">
-
-                        var hasSpan = false;
-                        if(widget.gridcolumn){
-                        var classnames = "";
-                        if (widget.gridcolumn.includes("span 12"))
-                    {
-                        classnames = "placeholder fullcolumnspan";
-                    }
-                        else if (widget.gridcolumn.includes("span 9"))
-                    {
-                        classnames = "placeholder columnSpan9";
-                    }
-                        else if (widget.gridcolumn.includes("span 6"))
-                    {
-                        classnames = "placeholder columnSpan6";
-                    }
-                        else{
-                        classnames = "placeholder columnSpan3";
-                    }
-                        if(widget.gridrow.includes("span 2")){
-                        classnames += " rowSpan2";
-                        hasSpan = true;
-                    }
-                        else if(widget.gridrow.includes("span 3")){
-                        classnames += " rowSpan3";
-                        hasSpan = true;
-                    }
-                        else{
-                        classnames += " rowSpan1";
-                    }
-                        <div className={classnames} style= "grid-column: {widget.gridcolumn}; grid-row: {widget.gridrow}">
-                        </div>
-                    </div>
-                </div>
+            return <div className="front"><h1>Image Collection Control</h1>
+                <input type = "range" className = "mapRange" id = {"rangeWidget_" + widget.id}
+                       value = ".9"
+                       min = "0"
+                       max = "1"
+                       step = ".01"
+                       onChange = {"gmodcdash.setOpacity(this.value, 'widgetmap_" + widget.id + "')"}
+                       onInput = {"gmodcdash.setOpacity(this.value, 'widgetmap_" + widget.id + "')"} />
             </div>
+        }else if (this.graphControlList.includes(wtext)) {
+            return <div className="front"><h1>Graph Control</h1></div>
+        }else if (wtext === "getStats") {
+            return <div className="front"><h1>Stats Control</h1></div>
         }
-        else{
-            <div className="row placeholdersOld">
-            </div>
+        else {
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200"className="img-responsive" />;
         }
-        }
+    }
 
- */
+}
 
 ReactDOM.render(
     <Geodash/>,
