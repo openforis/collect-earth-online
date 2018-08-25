@@ -942,3 +942,9 @@ CREATE OR REPLACE FUNCTION archive_institution(institution_id integer) RETURNS i
 	WHERE institution_id = institution_id
 	RETURNING institution_id
 $$ LANGUAGE SQL;
+
+
+-- Add packet
+CREATE OR REPLACE FUNCTION add_packet(str_values text) RETURNS void AS $$
+	INSERT INTO ts_packets (project_id, packet_id, ts_plotid) values str_values
+$$ LANGUAGE SQL;
