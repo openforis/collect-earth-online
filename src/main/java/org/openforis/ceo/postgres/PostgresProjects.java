@@ -189,7 +189,7 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private  String[] getProjectUsers(String projectId) {
+    private static String[] getProjectUsers(String projectId) {
         var users = new JsonArray();
         try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project_users(?)";
@@ -620,7 +620,7 @@ public class PostgresProjects implements Projects {
         return obj.get(field).isJsonNull() ? new JsonPrimitive(0) : obj.get(field);
     }
 
-    private JsonObject createProjectPlots(JsonObject newProject) {
+    private static JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
         var latMin =             getOrZero(newProject,"latMin").getAsDouble();

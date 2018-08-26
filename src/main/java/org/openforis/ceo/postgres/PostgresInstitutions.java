@@ -47,7 +47,7 @@ public class PostgresInstitutions implements Institutions {
         return "";
     }
 
-    private Optional<JsonObject> getInstitutionById(int institutionId) {
+    private static Optional<JsonObject> getInstitutionById(int institutionId) {
         var SQL = "SELECT * FROM select_all_institutions(?)";
 
         try (var conn = connect();

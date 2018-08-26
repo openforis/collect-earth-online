@@ -12,7 +12,16 @@ import spark.Response;
 
 public class PostgresGeoDash implements GeoDash {
 
-    // returns either the dashboard for a project or an empty dashboard if it has not been configured
+    // Returns the appended callback string or ""
+    private static String returnBlank(String callback) {
+        if (callback != null) {
+            return callback + "()";
+        } else {
+            return "";
+        }
+    }
+
+    // Returns either the dashboard for a project or an empty dashboard if it has not been configured
     public String geodashId(Request req, Response res) {
         var projectId = req.params(":id");
         var projectTitle = req.queryParams("title");
@@ -42,7 +51,7 @@ public class PostgresGeoDash implements GeoDash {
                 }
             }
             else{
-                //no widgets return empty dashboard
+                //No widgets return empty dashboard
                 var newDashboardId = UUID.randomUUID().toString();
                 var newDashboard = new JsonObject();
                 newDashboard.addProperty("projectID", projectId);
@@ -59,10 +68,10 @@ public class PostgresGeoDash implements GeoDash {
             System.out.println(e.getMessage());
         }
 
-        return this.returnBlank(callback);
+        return returnBlank(callback);
     }
 
-    // will be removed once confirmed it is abandoned and not needed
+    // Will be removed once confirmed it is abandoned and not needed
     public String updateDashBoardById(Request req, Response res) {
         /* Code will go here to update dashboard*/
         return "";
@@ -82,12 +91,12 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setString(2, dashboardId);
             pstmt.setString(3, widgetJson);
             var rs = pstmt.executeQuery();
-            return this.returnBlank(callback);
+            return returnBlank(callback);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
-        return this.returnBlank(callback);
+        return returnBlank(callback);
     }
 
     // Updates a dashboard widget by widget_id
@@ -102,12 +111,12 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setInt(1, Integer.parseInt(widgetId));
             pstmt.setString(2, widgetJson);
             var rs = pstmt.executeQuery();
-            return this.returnBlank(callback);
+            return returnBlank(callback);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
-        return this.returnBlank(callback);
+        return returnBlank(callback);
     }
 
     // Deletes a dashboard widget by widget_id
@@ -120,22 +129,12 @@ public class PostgresGeoDash implements GeoDash {
             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
             var rs = pstmt.executeQuery();
-            return this.returnBlank(callback);
+            return returnBlank(callback);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
-        return this.returnBlank(callback);
-    }
-
-    /* Helper functions */
-    // Returns the appended callback string or ""
-    private String returnBlank(String callback) {
-        if (callback != null) {
-            return callback + "()";
-        } else {
-            return "";
-        }
+        return returnBlank(callback);
     }
 
 }
