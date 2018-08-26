@@ -2,14 +2,14 @@
 
 /Crowdsourced visual interpretation of on-demand satellite imagery/
 
-This is a Java 9 application written with the Spark web framework
+This is a Java 10 application written with the Spark web framework
 (http://sparkjava.com).
 
 ** Installation
 
 In order to build and run Collect Earth Online, you will need:
 
-- Java Development Kit 1.9+
+- Java Development Kit 1.10+
 - Either Maven 3.3.9+ or Gradle 3.3+
 - Tomcat 8+ (optional)
 
