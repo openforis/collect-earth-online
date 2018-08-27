@@ -102,7 +102,7 @@ public class JsonUsers implements Users {
                 writeJsonFile("user-list.json", users);
 
                 // Assign the username and role session attributes
-                req.session().attribute("userid", newUserId);
+                req.session().attribute("userid", newUserId + "");
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", newUserRole);
 
@@ -121,7 +121,7 @@ public class JsonUsers implements Users {
     }
 
     public synchronized Request updateAccount(Request req, Response res) {
-        var userId = req.session().attribute("userid");
+        var userId = (String) req.session().attribute("userid");
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");
