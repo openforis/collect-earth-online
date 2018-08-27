@@ -439,11 +439,6 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private static IntSupplier makeCounter() {
-        var counter = new int[]{0}; // Have to use an array to move the value onto the heap
-        return () -> { counter[0] += 1; return counter[0]; };
-    }
-
     private static JsonObject makeGeoJsonPoint(double lon, double lat) {
         var coordinates = new JsonArray();
         coordinates.add(lon);

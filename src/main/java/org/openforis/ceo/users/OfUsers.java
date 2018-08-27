@@ -347,33 +347,20 @@ public class OfUsers implements Users {
     }
 
     private static JsonObject groupToInstitution(String groupId) {
-        var group = new JsonObject();
-        var url = String.format(OF_USERS_API_URL + "group/%s", groupId);
         try {
+            var url = String.format(OF_USERS_API_URL + "group/%s", groupId);
             var response = prepareGetRequest(url).execute();
             if (response.isSuccessStatusCode()) {
-                group = getResponseAsJson(response).getAsJsonObject();
-                url = String.format(OF_USERS_API_URL + "group/%s/users", groupId);
-                response = prepareGetRequest(url).execute();
-                var groupUsers = getResponseAsJson(response).getAsJsonArray();
-                var members = new JsonArray();
-                var admins = new JsonArray();
-                var pending = new JsonArray();
-                toStream(groupUsers).forEach(groupUser -> {
-                    if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
-                    else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
-                    else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
-                    else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
-                    else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
-                });
-                group.add("admins", admins);
-                group.add("members", members);
-                group.add("pending", pending);
+                var group = getResponseAsJson(response).getAsJsonObject();
+                OfGroups.addUsersInGroup(Integer.parseInt(groupId), group);
+                return group;
+            } else {
+                return new JsonObject();
             }
         } catch (IOException e) {
             e.printStackTrace();
+            return new JsonObject();
         }
-        return group;
     }
 
     public String updateInstitutionRole(Request req, Response res) {

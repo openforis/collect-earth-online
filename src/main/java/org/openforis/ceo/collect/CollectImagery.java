@@ -7,7 +7,7 @@ import static org.openforis.ceo.users.OfGroups.disassociateResource;
 import static org.openforis.ceo.users.OfGroups.getResourceIds;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findElement;
-import static org.openforis.ceo.utils.JsonUtils.forEachInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 import static spark.utils.StringUtils.isBlank;
@@ -26,21 +26,23 @@ public class CollectImagery implements Imagery {
 
     public String getAllImagery(Request req, Response res) throws IOException {
         var institutionId = req.queryParams("institutionId");
-        var imageryList = getFromCollect("imagery").getAsJsonArray();
-        forEachInJsonArray(imageryList, imagery -> {
-            imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
-            imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
-        });
-        var institutionImageryIdsArray = isBlank(institutionId)
-            ? new JsonArray()
-            : getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE);
-        var institutionImageryIds = toElementStream(institutionImageryIdsArray)
-            .map(idEl -> idEl.getAsInt())
+
+        var imageryList = mapJsonArray(getFromCollect("imagery").getAsJsonArray(),
+                                       imagery -> {
+                                           imagery.add("sourceConfig", parseJson(imagery.get("sourceConfig").getAsString()));
+                                           imagery.addProperty("visibility", imagery.get("visibility").getAsString().toLowerCase());
+                                           return imagery;
+                                       });
+
+        var institutionImageryIds = toElementStream(isBlank(institutionId)
+                                                    ? new JsonArray()
+                                                    : getResourceIds(Integer.parseInt(institutionId), IMAGERY_RESOURCE_TYPE))
+            .map(elem -> elem.getAsInt())
             .collect(Collectors.toList());
-        return filterJsonArray(imageryList, imagery -> 
-                imagery.get("visibility").getAsString().equals("public")
-                    || institutionImageryIds.contains(imagery.get("id").getAsInt())
-            )
+
+        return filterJsonArray(imageryList,
+                               imagery -> imagery.get("visibility").getAsString().equals("public")
+                               || institutionImageryIds.contains(imagery.get("id").getAsInt()))
             .toString();
     }
 
