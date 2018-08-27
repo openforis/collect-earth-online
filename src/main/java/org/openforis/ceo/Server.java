@@ -53,7 +53,8 @@ public class Server implements SparkApplication {
     }
 
     // Sets up Spark's routing table and exception handling rules
-    private static void declareRoutes(String databaseType, Projects projects, Imagery imagery, Users users, Institutions institutions, GeoDash geoDash) {
+    private static void declareRoutes(String databaseType, Projects projects, Imagery imagery,
+                                      Users users, Institutions institutions, GeoDash geoDash) {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -129,10 +130,10 @@ public class Server implements SparkApplication {
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                       geoDash::geodashId);
-        get("/geo-dash/update/id/:id",                geoDash::updateDashBoardByID);
-        get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetByID);
-        get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetByID);
-        get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetByID);
+        get("/geo-dash/update/id/:id",                geoDash::updateDashBoardById);
+        get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetById);
+        get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
+        get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);
 
         // Routing Table: Page Not Found
         get("*",                                      Views.pageNotFound(freemarker));

@@ -102,7 +102,7 @@ public class JsonUsers implements Users {
                 writeJsonFile("user-list.json", users);
 
                 // Assign the username and role session attributes
-                req.session().attribute("userid", newUserId);
+                req.session().attribute("userid", newUserId + "");
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", newUserRole);
 
@@ -120,8 +120,8 @@ public class JsonUsers implements Users {
         return req;
     }
 
-    public Request updateAccount(Request req, Response res) {
-        var userId = req.session().attribute("userid");
+    public synchronized Request updateAccount(Request req, Response res) {
+        var userId = (String) req.session().attribute("userid");
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");
@@ -167,7 +167,7 @@ public class JsonUsers implements Users {
         }
     }
 
-    public Request getPasswordResetKey(Request req, Response res) {
+    public synchronized Request getPasswordResetKey(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var users = readJsonFile("user-list.json").getAsJsonArray();
         var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
@@ -204,7 +204,7 @@ public class JsonUsers implements Users {
         }
     }
 
-    public Request resetPassword(Request req, Response res) {
+    public synchronized Request resetPassword(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputResetKey = req.queryParams("password-reset-key");
         var inputPassword = req.queryParams("password");

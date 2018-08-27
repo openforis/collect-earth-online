@@ -18,6 +18,7 @@ import spark.Response;
  * Created by gtondapu on 7/31/2018.
  */
 public class PostgresInstitutions implements Institutions {
+
     public String getAllInstitutions(Request req, Response res) {
         var SQL = "SELECT * FROM select_all_institutions()";
 
@@ -46,7 +47,7 @@ public class PostgresInstitutions implements Institutions {
         return "";
     }
 
-    private Optional<JsonObject> getInstitutionById(int institutionId) {
+    private static Optional<JsonObject> getInstitutionById(int institutionId) {
         var SQL = "SELECT * FROM select_all_institutions(?)";
 
         try (var conn = connect();

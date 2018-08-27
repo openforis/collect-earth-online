@@ -15,11 +15,7 @@ public class Views {
 
     private static String fromSession(Request req, String attr) {
         var value = (String) req.session().attribute(attr);
-        if (value == null) {
-            return "";
-        } else {
-            return value;
-        }
+        return (value == null) ? "" : value;
     }
 
     private static Map<String, String> getBaseModel(Request req, String navlink) {
@@ -30,7 +26,6 @@ public class Views {
                            "role",          fromSession(req, "role"),
                            "flash_message", fromSession(req, "flash_message"));
 
-        // FIXME: Is this necessary?
         if (req.session().attribute("flash_message") != null) {
             req.session().removeAttribute("flash_message");
         }
@@ -47,11 +42,7 @@ public class Views {
                                           var value = e.getValue();
                                           if (value instanceof Function) {
                                               var result = ((Function<Request, String>) value).apply(req);
-                                              if (result == null) {
-                                                  return "";
-                                              } else {
-                                                  return result;
-                                              }
+                                              return (result == null) ? "" : result;
                                           } else {
                                               return value.toString();
                                           }}));

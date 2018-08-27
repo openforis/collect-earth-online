@@ -39,6 +39,7 @@ import spark.Request;
 import spark.Response;
 
 public class PostgresProjects implements Projects {
+
     private static PreparedStatement prepareGetAllProjectsQuery(String userId, String institutionId) {
         try (var conn = connect()) {
             if (userId == null || userId.isEmpty()) {
@@ -188,7 +189,7 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private  String[] getProjectUsers(String projectId) {
+    private static String[] getProjectUsers(String projectId) {
         var users = new JsonArray();
         try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project_users(?)";
@@ -438,11 +439,6 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private static IntSupplier makeCounter() {
-        var counter = new int[]{0}; // Have to use an array to move the value onto the heap
-        return () -> { counter[0] += 1; return counter[0]; };
-    }
-
     private static JsonObject makeGeoJsonPoint(double lon, double lat) {
         var coordinates = new JsonArray();
         coordinates.add(lon);
@@ -619,7 +615,7 @@ public class PostgresProjects implements Projects {
         return obj.get(field).isJsonNull() ? new JsonPrimitive(0) : obj.get(field);
     }
 
-    private JsonObject createProjectPlots(JsonObject newProject) {
+    private static JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
         var latMin =             getOrZero(newProject,"latMin").getAsDouble();
