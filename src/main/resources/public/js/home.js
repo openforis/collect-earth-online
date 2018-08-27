@@ -101,9 +101,9 @@ function CreateInstitutionButton(props) {
         if(props.username != "") {
             return (
                 <ul className="tree">
-                                <a className="create-institution" href={props.documentRoot + "/institution/0"}>
-                                    <li className="bg-yellow text-center p-2"><i className="fa fa-file"></i> Create New Institution</li>
-                                </a>
+                    <a className="create-institution" href={props.documentRoot + "/institution/0"}>
+                        <li className="bg-yellow text-center p-2"><i className="fa fa-file"></i> Create New Institution</li>
+                    </a>
                 </ul>
             );
         }
