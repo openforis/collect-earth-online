@@ -17,6 +17,14 @@
     transform: translate(-50%, -50%);
     overflow: auto;
 }
+.v-center{
+	display: flex;
+	align-items: center;
+}
+.no-container-margin{
+		margin-left:-15px;
+		margin-right:-15px;	
+}
 /* Fonts */
 /*************/
 @font-face {
@@ -38,7 +46,7 @@ url('../fonts/CaviarDreams_Bold.svg') format('svg');
 /* Typography */
 /*************/
 
-h1, h2, h3, h4, h5, h6{
+h1, h2{
 	font-family:'CaviarDreams';
 	color:#707070;
 	text-align:center;
@@ -229,24 +237,44 @@ a:hover{
 /*********************************************************************/
 /* NAV */
 /*********************************************************************/
-
-#main-nav .nav-item.active, #main-nav .nav-item.active:hover{
-	border-top: solid 4px #31BAB0;
-    margin-top: -9px;
-    padding-top: 5px;
-    }
-
-#main-nav .nav-item:hover{
-	border-top: solid 4px #FCCF07;	
-    margin-top: -9px;
-    padding-top: 5px;}
-
-#main-nav .nav-item#username, #main-nav .nav-item#login-button{
-	border:none;
-	padding-top:0;
+@media (min-width: 992px) { 
+	#main-nav .nav-item.active, #main-nav .nav-item.active:hover{
+		border-top: solid 4px #31BAB0;
+	    margin-top: -10px;
+	    padding-top: 6px;
+	    }
+	
+	#main-nav .nav-item:hover{
+		border-top: solid 4px #FCCF07;	
+	    margin-top: -10px;
+	    padding-top: 6px;
+	    }
+	
+	#main-nav .nav-item#username, #main-nav .nav-item#login-button{
+		border:none;
+		padding-top:0;
+	}
 }
-
-
+@media (max-width: 992px) {
+	.navbar .collapse.show{
+	padding-bottom:1rem;
+	}
+		#main-nav .nav-item.active, #main-nav .nav-item.active:hover{
+		border-left: solid 4px #31BAB0;
+		margin-left: -9px;
+	    padding-left: 5px;
+		}
+		#main-nav .nav-item:hover{
+		border-left: solid 4px #FCCF07;	
+		margin-left: -9px;
+	    padding-left: 5px;
+	    }
+	    #main-nav .nav-item#username, #main-nav .nav-item#login-button{
+		border:none;
+		padding-left:0;
+		margin-left:0;
+	}
+} 
 /*********************************************************************/
 /* HOME PAGE */
 /*********************************************************************/
@@ -277,9 +305,13 @@ a:hover{
     margin-bottom: 0;
 }
 
-#lPanel a li.bg-yellow:hover{
+#lPanel a li.bg-yellow:hover {
 	background-color:#ecbc0d!important;
 	color:#white;
+}
+
+#lPanel .btn.bg-lightgreen, #lPanel .btn.btn-outline-lightgreen {
+	white-space: normal;
 }
 
 @media (min-width: 1200px){
@@ -308,10 +340,25 @@ a:hover{
     border: 1px solid rgba(0,0,0,.2);
     border-radius: .3rem;
 	background-color: white;
+	width:380px;
+	/* .ol-popup*/
+    display: block;
+    position: absolute;
+    background-color: white;
+    padding: 0px;
+    border: 1px solid #cccccc;
+    bottom: 12px;
+    left: -50px;
+    -webkit-box-shadow: 3px -10px 3px rgba(0,0,0,.35);
+    box-shadow: 3px 5px 3px rgba(0,0,0,.35);
+    border-radius: 5px;
 }
 /* .ol-popup-content .cContent{ */
 .ol-overlay-container .cContent {
-	padding:15px;
+	padding:0 1rem 1rem 1rem;
+}
+.ol-overlay-container table {
+	margin:0;
 }
 a.ol-popup-closer.close{
 	font-size:1rem;
@@ -321,7 +368,8 @@ a.ol-popup-closer.close{
 	color:white;
 	font-family:inherit;
 	font-size:1rem;	
-	padding-bottom:0;
+	padding:.6rem;
+	margin-bottom:0;
 	font-weight: 400;
 }
 
@@ -329,6 +377,10 @@ a.ol-popup-closer.close{
 .ol-overlay-container .cTitle {
 	background-color:#31BAB0;
 }
+.ol-overlay-container td{border-top: none;}
+.ol-overlay-container tr{border-top: 1px solid #dee2e6;}
+.ol-overlay-container tr:first-child{border-top: none;margin-top:.3rem;}
+.ol-overlay-container tr:last-child{}
 
 
 /*********************************************************************/
@@ -338,11 +390,14 @@ a.ol-popup-closer.close{
 	border:solid 1px #31BAB0;
 
 }
-#login .header, #register-form .header, #password-form .header{
+h2.header{
 	color:white;
 	background:#31BAB0;
 	margin: 0 -15px 10px -15px;;
 	padding:1rem;
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+	font-size:1.1rem;
+	font-weight:500;
 }
 .modal-header{
 	color:white;
@@ -364,13 +419,28 @@ a.ol-popup-closer.close{
     border-radius: 0.5rem;
     margin: 0rem auto;
 }
+
+#project-design.bg-lightgray:hover, #account-page.bg-lightgray:hover{
+		background-color:#ECEEEF!important;
+}
+#project-design h3{
+	margin-top:1rem;
+}
+#project-design p{
+	    margin-bottom: 0rem;
+	    font-size:80%;
+	    margin-top:0.5rem;
+}
+#project-design-form .header{
+	margin-left:-8px;
+	margin-right:-8px;
+}
 /*********************************************************************/
 /* COLLECTION PAGE */
 /*********************************************************************/
 ul#samplevalue{
-	padding-left:0;
+	padding-left:0; 
  	column-count: 2;
-	
 	}
 #samplevalue li{
 	list-style:none;
@@ -385,4 +455,64 @@ ul#samplevalue{
 .ce-forms-container div.steps.wizard div.steps,
 .ce-forms-container div.actions.clearfix {
 	display: none; 
+}
+/*********************************************************************/
+/* INSTITUTION PAGE */
+/*********************************************************************/
+#institution .header{margin:1rem 0;}
+#institution .badge-light{
+	color: #31BAB0;
+    background-color: #f8f9fa;
+}
+/*********************************************************************/
+/* GEO DASH PAGE */
+/*********************************************************************/
+.panel-default {
+    perspective: 1000px;
+    height: 100%;
+        webkit-box-shadow: none;
+    box-shadow: none;
+}
+.panel-default > .panel-heading {
+    min-height: 45px;
+    background-color: #31BAB0;!important
+    border-color: #ddd;
+    	color: white;
+}
+.panel-heading {
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.panel-fullscreen{
+    cursor:pointer;
+}
+
+#geodash .row {
+    /*display: grid;*/
+    margin-right: -15px;
+    margin-left: -15px;
+}
+.placeholders {
+    margin-bottom: 30px;
+    text-align: center;
+         /*display: grid;
+         grid-gap: 10px;*/
+         grid-template-columns: 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33%;
+        /* background-color: #fff;
+         color: #444;*/
+}
+
+
+/*********************************************************************/
+/* GEO DASH WIDGET EDITOR PAGE */
+/*********************************************************************/
+.container-fluid.widgetEditor{
+	width:100%;!important
+}
+.active-widget{
+	opacity: .5;
+    outline: 4px dotted #ecbc0d;
+    outline-offset: 5px;
 }
