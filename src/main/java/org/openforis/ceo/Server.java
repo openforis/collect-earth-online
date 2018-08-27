@@ -11,6 +11,7 @@ import static spark.Spark.staticFileLocation;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
+import java.util.List;
 import org.openforis.ceo.collect.CollectImagery;
 import org.openforis.ceo.collect.CollectProjects;
 import org.openforis.ceo.db_api.GeoDash;
@@ -147,29 +148,7 @@ public class Server implements SparkApplication {
         var usageMessage = "Usage (option 1): mvn compile exec:java -Dexec.args=<JSON|POSTGRES>\n" +
                            "Usage (option 2): gradle run -PrunArgs=<JSON|POSTGRES>";
 
-        if (args.length == 1 && args[0].equals("JSON")) {
-            // Start the Jetty webserver on port 8080
-            port(8080);
-
-            // Set up the routing table to use the JSON backend
-            declareRoutes("JSON",
-                          new JsonProjects(),
-                          new JsonImagery(),
-                          new JsonUsers(),
-                          new JsonInstitutions(),
-                          new JsonGeoDash());
-        } else if (args.length == 1 && args[0].equals("POSTGRES")) {
-            // Start the Jetty webserver on port 8080
-            port(8080);
-
-            // Set up the routing table to use the POSTGRES backend
-            declareRoutes("POSTGRES",
-                          new PostgresProjects(),
-                          new PostgresImagery(),
-                          new PostgresUsers(),
-                          new PostgresInstitutions(),
-                          new PostgresGeoDash());
-        } else {
+        if (args.length != 1 || !List.of("JSON", "POSTGRES").contains(args[0])) {
             System.out.println(usageMessage);
             System.exit(0);
         }
@@ -181,6 +160,27 @@ public class Server implements SparkApplication {
         CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
         CeoConfig.smtpPort      = smtpSettings.get("smtpPort").getAsString();
         CeoConfig.smtpPassword  = smtpSettings.get("smtpPassword").getAsString();
+
+        // Start the Jetty webserver on port 8080
+        port(8080);
+
+        if (args[0].equals("JSON")) {
+            // Set up the routing table to use the JSON backend
+            declareRoutes("JSON",
+                          new JsonProjects(),
+                          new JsonImagery(),
+                          new JsonUsers(),
+                          new JsonInstitutions(),
+                          new JsonGeoDash());
+        } else {
+            // Set up the routing table to use the POSTGRES backend
+            declareRoutes("POSTGRES",
+                          new PostgresProjects(),
+                          new PostgresImagery(),
+                          new PostgresUsers(),
+                          new PostgresInstitutions(),
+                          new PostgresGeoDash());
+        }
     }
 
     // Tomcat entry point
