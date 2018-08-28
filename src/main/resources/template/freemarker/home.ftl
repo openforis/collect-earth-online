@@ -40,18 +40,18 @@
                             </div>
                             <div class="collapse" id="collapse{{ institution.id }}">
                                 <div class="bg-lightgrey text-center p-1 row px-auto" ng-if="project.editable == true"
-                                     ng-repeat="project in home.projectList | filter : {institution: institution.id }">
-                                    <div class="col-lg-9 pr-lg-1">
+                                     ng-repeat="project in home.projectList | filter : { institution: institution.id }">
+                                    <div class="col-lg-8 pr-lg-1">
                                         <a class="view-project btn btn-sm btn-outline-lightgreen btn-block"
                                            href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
                                     </div>
-                                    <div class="col-lg-3 pl-lg-0">
-                                        <a class="edit-project btn btn-outline-yellow btn-sm btn-block"
-                                           href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Edit</a>
+                                    <div class="col-lg-4 pl-lg-0">
+                                        <a class="edit-project btn btn-sm btn-outline-yellow btn-block"
+                                           href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Review</a>
                                     </div>
                                 </div>
                                 <div class="bg-lightgrey text-center p-1 row" ng-if="project.editable == false"
-                                     ng-repeat="project in home.projectList | filter : {institution: institution.id }">
+                                     ng-repeat="project in home.projectList | filter : { institution: institution.id }">
                                     <div class="col mb-1 mx-0">
                                         <a class="btn btn-sm btn-outline-lightgreen btn-block"
                                            href="${root}/collection/{{ project.id }}">{{ project.name }}</a>

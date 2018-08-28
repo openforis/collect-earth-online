@@ -154,14 +154,14 @@
 				</div>
 	          </div>
 	          <div class="row mb-1" ng-if="institution.isAdmin == true" ng-repeat="project in institution.projectList">
-	          	<div class="col-10 pr-1">
+	          	<div class="col-9 pr-1">
 	             	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">
 	             		{{ project.name }}
 	             	</a>
               	</div>
-				<div class="col-2 pl-0">
+				<div class="col-3 pl-0">
               		<a class="btn btn-sm btn-outline-lightgreen btn-block" class="edit-project" href="${root}/project/{{ project.id }}">
-              		<span class="d-xl-none"><i class="fa fa-edit"></i></span><span class="d-none d-xl-block"> Edit</span></a>
+              		<span class="d-xl-none"><i class="fa fa-edit"></i></span><span class="d-none d-xl-block"> Review</span></a>
               	</div>
 	          </div>
 	          <div class="row" ng-if="institution.isAdmin == false" ng-repeat="project in institution.projectList">

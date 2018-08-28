@@ -12,13 +12,16 @@
      ng-init="project.initialize('${root}', '${project_id}', '${institution_id}')">
     <div id="project-design" class="col-xl-6 col-lg-8 border bg-lightgray mb-5">
  		<div class="bg-darkgreen mb-3 no-container-margin">
-      	 	<h1 class="d-none">Create Project</h1>
-      	 	<h1>Edit Project</h1>
+            <#if project_id == "0">
+                <h1>Create Project</h1>
+            <#else>
+                <h1>Review Project</h1>
+            </#if>
         </div>
-        <div id="project-map" class="d-none"></div>
         <div class="row mb-3">
-	        <div id="project-stats" class="col">
-	            <button class="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse" href="#project-stats-collapse" role="button" aria-expanded="false" aria-controls="project-stats-collapse">
+	        <div id="project-stats" class="col {{ project.details.id != 0 ? 'visible' : 'd-none' }}">
+	            <button class="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                        href="#project-stats-collapse" role="button" aria-expanded="false" aria-controls="project-stats-collapse">
 					Project Stats
             	</button>
 	            <div class="collapse col-xl-12" id="project-stats-collapse">
