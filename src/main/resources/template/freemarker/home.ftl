@@ -62,7 +62,7 @@
                     </ul>
                 </div>
                 <div id="mapPanel" class="col-lg-9 col-md-12 pl-0 pr-0">
-                    <div class="row no-gutters full-height">
+                    <div class="row no-gutters ceo-map-toggle">
                         <div id="togbutton" class="button col-xl-1 bg-lightgray d-none d-xl-block">
                             <div class="row h-100">
                                 <div class="col-lg-12 my-auto no-gutters text-center">

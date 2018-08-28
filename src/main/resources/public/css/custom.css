@@ -10,6 +10,12 @@
 .full-height{
 	height: calc(100vh - 76px);
 }
+
+.ceo-map-toggle{
+    position:fixed;
+	height: calc(100vh - 60px);
+}
+
 .absolute-center{
 	position: absolute;
     top: 50%;
@@ -291,12 +297,6 @@ a:hover{
     border-bottom: 2px solid darkgray;
     overflow: auto;
     display: none;
-}
-
-#lPanel {
-    height: calc(100vh - 76px);
-    overflow-y: scroll;
-    overflow-x: hidden;
 }
 
 #lPanel ul {
