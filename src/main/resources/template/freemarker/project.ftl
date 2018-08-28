@@ -102,11 +102,12 @@
 		            </div>
 	            </div>
 			</div>
-			<div class="row d-none">
+			<div class="row">
 	 			<div class="col">
 	                <h2 class="header px-0">Project AOI</h2>
 			        <div id="project-aoi">
-			            <div class="row">
+                        <div id="project-map"></div>
+			            <div class="row {{ project.details.id == 0 ? 'visible' : 'd-none' }}">
 							<div class="col small text-center mb-2">Hold CTRL and click-and-drag a bounding box on the map</div>
 			            </div>
               			<div class="form-group mx-4">
