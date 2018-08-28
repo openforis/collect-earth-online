@@ -21,13 +21,13 @@ application will be available at http://localhost:8080.
 *** With Maven
 
 #+begin_src sh
-mvn compile exec:java
+mvn compile exec:java -Dexec.args=<JSON|POSTGRES>
 #+end_src
 
 *** With Gradle
 
 #+begin_src sh
-gradle run
+gradle run -PrunArgs=<JSON|POSTGRES>
 #+end_src
 
 ** Running inside Tomcat
@@ -186,6 +186,7 @@ sudo $TOMCAT_HOME/bin/startup.sh
 - Gary W. Johnson (SIG)
 - David S. Saah (SIG)
 - Billy Ashmall (NASA)
+- Githika Tondapu (NASA)
 - Stefano Ricci (FAO)
 - Roberto Fontanarosa (FAO)
 - Alfonso SanchezPausDiaz (FAO)
@@ -195,6 +196,7 @@ sudo $TOMCAT_HOME/bin/startup.sh
 - gjohnson@sig-gis.com
 - dsaah@sig-gis.com
 - billy.ashmall@nasa.gov
+- githika.tondapu@nasa.gov
 - stefano.ricci@fao.org
 - roberto.fontanarosa@fao.org
 - alfonso.sanchezpausdiaz@fao.org

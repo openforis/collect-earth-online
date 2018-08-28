@@ -10,3 +10,4 @@ collect-earth-online.iml
 /src/main/resources/public/downloads/*.csv
 /target/
 .idea/
+.DS_Store
