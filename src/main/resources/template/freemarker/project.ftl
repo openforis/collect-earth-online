@@ -29,9 +29,9 @@
 		                <tbody>
 		                    <tr>
 		                        <td>Members</td>
-		                        <td>{{ project.members }}</td>
+		                        <td>{{ project.stats.members }}</td>
 		                        <td>Contributors</td>
-		                        <td>{{ project.contributors }}</td>
+		                        <td>{{ project.stats.contributors }}</td>
 		                    </tr>
 		                    <tr>
 		                        <td>Total Plots</td>
@@ -41,19 +41,19 @@
 		                    </tr>
 		                    <tr>
 		                        <td>Flagged Plots</td>
-		                        <td>{{ project.flaggedPlots }}</td>
+		                        <td>{{ project.stats.flaggedPlots }}</td>
 		                        <td>Date Published</td>
 		                        <td>{{ project.datePublished }}</td>
 		                    </tr>
 		                    <tr>
 		                        <td>Analyzed Plots</td>
-		                        <td>{{ project.analyzedPlots }}</td>
+		                        <td>{{ project.stats.analyzedPlots }}</td>
 		                        <td>Date Closed</td>
 		                        <td>{{ project.dateClosed }}</td>
 		                    </tr>
 		                    <tr>
 		                        <td>Unanalyzed Plots</td>
-		                        <td>{{ project.unanalyzedPlots }}</td>
+		                        <td>{{ project.stats.unanalyzedPlots }}</td>
 		                        <td>Date Archived</td>
 		                        <td>{{ project.dateArchived }}</td>
 		                    </tr>
