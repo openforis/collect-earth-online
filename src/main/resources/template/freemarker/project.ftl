@@ -219,48 +219,58 @@
 			                <input class="form-control form-control-sm" type="number" id="sample-resolution" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="project.details.sampleResolution" disabled>
 		                </div>
 		            </div>
-	           </div>           
+	            </div>
 			</div>
             <div class="sample-value-info" ng-repeat="sampleValueGroup in project.details.sampleValues">
-                <h2 class="header px-0">Sample Value: {{ sampleValueGroup.name }}</h2>
+                <h2 class="header px-0">
+                    <input id="remove-sample-value-group" type="button" class="button" value="-"
+                           ng-click="project.removeSampleValueGroup(sampleValueGroup.name)"
+                           style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                    Sample Value Group: {{ sampleValueGroup.name }}
+                </h2>
                 <table class="table table-sm">
                     <thead>
                         <tr>
                             <th scope="col"></th>
                             <th scope="col">Name</th>
                             <th scope="col">Color</th>
-                            <th scope="col">Reference Image</th>
+                            <!-- <th scope="col">Reference Image</th> -->
                         </tr>
                     </thead>
                     <tbody>
                         <tr ng-repeat="sampleValue in sampleValueGroup.values">
                             <td>
-                                <input type="button" class="button" value="-" ng-click="project.removeSampleValueRow(sampleValueGroup.name, sampleValue.name)"
+                                <input type="button" class="button" value="-"
+                                       ng-click="project.removeSampleValueRow(sampleValueGroup.name, sampleValue.name)"
                                        style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
                             </td>
                             <td>
                                 {{ sampleValue.name }}
                             </td>
                             <td>
-                                <div class="circle" style="background-color: {{ sampleValue.color }};border:solid 1px; "></div>
+                                <div class="circle" style="background-color: {{ sampleValue.color }};border:solid 1px;"></div>
                             </td>
-                            <td>
-                                {{ sampleValue.image }}
-                            </td>
+                            <!-- <td>
+                              {{ sampleValue.image }}
+                              </td> -->
                         </tr>
                         <tr class="{{ project.details.id == 0 ? 'visible' : 'd-none' }}">
                             <td>
-                                <input type="button" class="button" value="+" ng-click="project.addSampleValueRow(sampleValueGroup.name)">
+                                <input type="button" class="button" value="+"
+                                       ng-click="project.addSampleValueRow(sampleValueGroup.name)">
                             </td>
                             <td>
-                                <input type="text" class="value-name" autocomplete="off" ng-model="project.newValueEntry[sampleValueGroup.name].name">
+                                <input type="text" class="value-name" autocomplete="off"
+                                       ng-model="project.newValueEntry[sampleValueGroup.name].name">
                             </td>
                             <td>
-                                <input type="color" class="value-color" ng-model="project.newValueEntry[sampleValueGroup.name].color">
+                                <input type="color" class="value-color"
+                                       ng-model="project.newValueEntry[sampleValueGroup.name].color">
                             </td>
-                            <td>
-                                <input type="file" class="value-image" accept="image/*" ng-model="project.newValueEntry[sampleValueGroup.name].image">
-                            </td>
+                            <!-- <td>
+                              <input type="file" class="value-image" accept="image/*"
+                              ng-model="project.newValueEntry[sampleValueGroup.name].image">
+                              </td> -->
                         </tr>
                     </tbody>
                 </table>
