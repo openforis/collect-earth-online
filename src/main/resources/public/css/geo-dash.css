@@ -300,6 +300,9 @@ a.list-inline.panel-actions.panel-fullscreen{
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+.bodyfull{
+    overflow: hidden;
+}
 .full {
     position: fixed;
     top: 0;
@@ -308,7 +311,14 @@ a.list-inline.panel-actions.panel-fullscreen{
     height: 100%;
     text-align: center;
 }
-
+.fullwidget{
+    position: absolute;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+    left: 0;
+}
 .fullmapwidget {
     height: -webkit-calc(100% - 124px);
     height: -moz-calc(100% - 124px);
@@ -323,22 +333,22 @@ display:none;
     min-height: 200px;
     height: calc(100% - 98px);
 }
-#geodash .mapRange {
+.mapRange {
   -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
   width: 100%; /* Specific width is required for Firefox. */
   background: transparent; /* Otherwise white in Chrome */
   padding:20px 10px;
 }
 
-#geodash .mapRange::-webkit-slider-thumb {
+.mapRange::-webkit-slider-thumb {
   -webkit-appearance: none;
 }
 
-#geodash .mapRange:focus {
+.mapRange:focus {
   outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
 }
 
-#geodash .mapRange::-ms-track {
+.mapRange::-ms-track {
   width: 100%;
   cursor: pointer;
 
@@ -348,7 +358,7 @@ display:none;
   color: transparent;
 }
     /* Special styling for WebKit/Blink */
-#geodash .mapRange::-webkit-slider-thumb {
+.mapRange::-webkit-slider-thumb {
   -webkit-appearance: none;
   border: 1px solid #000000;
   height: 36px;
@@ -361,7 +371,7 @@ display:none;
 }
 
 /* All the same stuff for Firefox */
-#geodash .mapRange::-moz-range-thumb {
+.mapRange::-moz-range-thumb {
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
   border: 1px solid #000000;
   height: 36px;
@@ -372,7 +382,7 @@ display:none;
 }
 
 /* All the same stuff for IE */
-#geodash .mapRange::-ms-thumb {
+.mapRange::-ms-thumb {
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
   border: 1px solid #000000;
   height: 36px;
@@ -381,7 +391,7 @@ display:none;
   background: #ffffff;
   cursor: pointer;
 }
-    #geodash .mapRange::-webkit-slider-runnable-track {
+.mapRange::-webkit-slider-runnable-track {
   width: 100%;
   height: 8.4px;
   cursor: pointer;
@@ -391,11 +401,11 @@ display:none;
   border: 0.2px solid #010101;
 }
 
-#geodash .mapRange:focus::-webkit-slider-runnable-track {
+.mapRange:focus::-webkit-slider-runnable-track {
   background: #31BAB0;
 }
 
-#geodash .mapRange::-moz-range-track {
+.mapRange::-moz-range-track {
   width: 100%;
   height: 8.4px;
   cursor: pointer;
@@ -405,7 +415,7 @@ display:none;
   border: 0.2px solid #010101;
 }
 
-#geodash .mapRange::-ms-track {
+.mapRange::-ms-track {
   width: 100%;
   height: 8.4px;
   cursor: pointer;
@@ -414,22 +424,22 @@ display:none;
   border-width: 16px 0;
   color: transparent;
 }
-#geodash .mapRange::-ms-fill-lower {
+.mapRange::-ms-fill-lower {
   background: #2a6495;
   border: 0.2px solid #010101;
   border-radius: 2.6px;
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
 }
-#geodash .mapRange:focus::-ms-fill-lower {
+.mapRange:focus::-ms-fill-lower {
   background: #3071a9;
 }
-#geodash .mapRange::-ms-fill-upper {
+.mapRange::-ms-fill-upper {
   background: #3071a9;
   border: 0.2px solid #010101;
   border-radius: 2.6px;
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
 }
-#geodash .mapRange:focus::-ms-fill-upper {
+.mapRange:focus::-ms-fill-upper {
   background: #367ebd;
 }
 

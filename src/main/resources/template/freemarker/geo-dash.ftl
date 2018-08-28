@@ -76,12 +76,8 @@
     </div>
     </div>
 </nav>
-
 <script type="text/babel" src="${root}/js/geodashreact.js"></script>
 <br style="clear:both;">
-    <div id="fulldiv" class="full">
-        <div id="fullholder" ></div>
-    </div>
 
     <div class="container-fluid">
         <div class="row">
