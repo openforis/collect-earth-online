@@ -2,6 +2,7 @@ package org.openforis.ceo.users;
 
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getMemberValue;
+import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.partToString;
@@ -90,25 +91,29 @@ public class OfGroups implements Institutions {
         }
     }
 
-    private static void addUsersInGroup(int institutionId, JsonObject group) {
+    private static JsonArray getUserIds(JsonArray groupUsers) {
+        return toStream(groupUsers).map(groupUser -> groupUser.get("userId")).collect(intoJsonArray);
+    }
+
+    public static void addUsersInGroup(int institutionId, JsonObject group) {
     	try {
 	        var groupUsersUrl = String.format(OF_USERS_API_URL + "group/%d/users", institutionId);
 	        var groupUsersResponse = prepareGetRequest(groupUsersUrl).execute(); // get group's users
 	        var groupUsers = getResponseAsJson(groupUsersResponse).getAsJsonArray();
-	        var members = new JsonArray();
-	        var admins = new JsonArray();
-	        var pending = new JsonArray();
-	        toStream(groupUsers)
-	            .forEach(groupUser -> {
-	                    if (groupUser.get("statusCode").getAsString().equals("P")) pending.add(groupUser.get("userId"));
-	                    else if (groupUser.get("roleCode").getAsString().equals("ADM")) admins.add(groupUser.get("userId"));
-	                    else if (groupUser.get("roleCode").getAsString().equals("OWN")) admins.add(groupUser.get("userId"));
-	                    else if (groupUser.get("roleCode").getAsString().equals("OPR")) members.add(groupUser.get("userId"));
-	                    else if (groupUser.get("roleCode").getAsString().equals("VWR")) members.add(groupUser.get("userId"));
-	                });
-	        group.add("admins", admins);
-	        group.add("members", members);
-	        group.add("pending", pending);
+            var pending = filterJsonArray(groupUsers, groupUser -> groupUser.get("statusCode").getAsString().equals("P"));
+            var members = filterJsonArray(groupUsers,
+                                          groupUser -> {
+                                              var roleCode = groupUser.get("roleCode").getAsString();
+                                              return roleCode.equals("OPR") || roleCode.equals("VWR");
+                                          });
+            var admins = filterJsonArray(groupUsers,
+                                          groupUser -> {
+                                              var roleCode = groupUser.get("roleCode").getAsString();
+                                              return roleCode.equals("ADM") || roleCode.equals("OWN");
+                                          });
+	        group.add("pending", getUserIds(pending));
+	        group.add("members", getUserIds(members));
+            group.add("admins", getUserIds(admins));
     	} catch (IOException e) {
     		throw new RuntimeException(e);
     	}

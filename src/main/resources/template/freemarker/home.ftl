@@ -2,15 +2,16 @@
 <#include "navbar.ftl">
 <#include "announcements.ftl">
 <#include "start-content.ftl">
-<script>
-    let testRoot="${root}";
-    let testUserId="${userid}";
-
-</script>
-<script type="text/babel" src="${root}/js/Main.js">
-</script>
-
 <div id="home"></div>
-
+<script type="text/babel" src="${root}/js/home.js"></script>
+<script type="text/javascript">
+$(function() {initialize();});
+function initialize() {
+    if(typeof(renderHome)=="undefined")
+        setTimeout(initialize,250);
+    else
+        renderHome("${root}", "${userid}","${username}");
+}
+</script>
 <#include "end-content.ftl">
 <#include "footer.ftl">

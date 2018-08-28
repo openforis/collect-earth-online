@@ -25,6 +25,9 @@ import spark.Request;
 
 public class RequestUtils {
 
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+
     public static String getParam(Request req, String param) {
         return getParam(req, param, null);
     }
@@ -43,9 +46,6 @@ public class RequestUtils {
         var val = getParam(req, param);
         return val == null || val.isEmpty() ? defaultValue : Integer.parseInt(val);
     }
-
-    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     public static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {

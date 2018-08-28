@@ -77,12 +77,12 @@ public class JsonGeoDash implements GeoDash {
         }
     }
 
-    public synchronized String updateDashBoardByID(Request req, Response res) {
+    public synchronized String updateDashBoardById(Request req, Response res) {
         /* Code will go here to update dashboard*/
         return "";
     }
 
-    public synchronized String createDashBoardWidgetByID(Request req, Response res) {
+    public synchronized String createDashBoardWidgetById(Request req, Response res) {
         var dashboardId = req.queryParams("dashID");
         var widgetJson = req.queryParams("widgetJSON");
         var callback = req.queryParams("callback");
@@ -107,7 +107,7 @@ public class JsonGeoDash implements GeoDash {
         }
     }
 
-    public synchronized String updateDashBoardWidgetByID(Request req, Response res) {
+    public synchronized String updateDashBoardWidgetById(Request req, Response res) {
         var dashboardId = req.queryParams("dashID");
         var widgetId = req.params(":id");
         var widgetJson = req.queryParams("widgetJSON");
@@ -138,7 +138,7 @@ public class JsonGeoDash implements GeoDash {
         }
     }
 
-    public synchronized String deleteDashBoardWidgetByID(Request req, Response res) {
+    public synchronized String deleteDashBoardWidgetById(Request req, Response res) {
         var dashboardId = req.queryParams("dashID");
         var widgetId = req.params(":id");
         var callback = req.queryParams("callback");
