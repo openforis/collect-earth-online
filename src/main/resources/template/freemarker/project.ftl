@@ -298,10 +298,10 @@
 	            <input type="button" id="change-availability" class="btn btn-outline-danger btn-sm btn-block"
 	                   name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
 	                   ng-click="project.changeAvailability()">		                   
-             </div>
+                <div id="spinner"></div>
+            </div>
         </div>
     </div>
-    <div id="spinner"></div>
 </div>
 <#include "end-content.ftl">
 <#include "footer.ftl">

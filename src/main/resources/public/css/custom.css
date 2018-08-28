@@ -504,10 +504,10 @@ ul#samplevalue{
          color: #444;*/
 }
 
-
 /*********************************************************************/
 /* GEO DASH WIDGET EDITOR PAGE */
 /*********************************************************************/
+
 .container-fluid.widgetEditor{
 	width:100%;!important
 }
@@ -516,3 +516,26 @@ ul#samplevalue{
     outline: 4px dotted #ecbc0d;
     outline-offset: 5px;
 }
+
+/****************************/
+/* Project Creation Spinner */
+/****************************/
+
+#spinner {
+    position: absolute;
+    left: calc(50% - 2rem);
+    width: 4rem;
+    height: 4rem;
+    border-radius: 2rem;
+    border-bottom: 0.5rem solid #3fabc6;
+    visibility: hidden;
+    animation: sweep 1s infinite linear;
+    -o-animation: sweep 1s infinite linear;
+    -moz-animation: sweep 1s infinite linear;
+    -webkit-animation: sweep 1s infinite linear;
+}
+
+@keyframes         sweep { to { transform:rotate(360deg); } }
+@-o-keyframes      sweep { to { -o-transform:rotate(360deg); } }
+@-moz-keyframes    sweep { to { -moz-transform:rotate(360deg); } }
+@-webkit-keyframes sweep { to { -webkit-transform:rotate(360deg); } }
