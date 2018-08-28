@@ -35,11 +35,13 @@
                 <li id="username" class="nav-item my-auto">
                     <span class="nav-link disabled">${username}</span>
                 </li>
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href='${root}/logout'">
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                        onclick="location.href='${root}/logout'">
                     Logout
                 </button>
             <#else>
-                <button type="button" class="btn bg-lightgreen btn-sm" onclick="location.href='${root}/login'">
+                <button type="button" class="btn bg-lightgreen btn-sm"
+                        onclick="location.href='${root}/login?returnurl=${uri}'">
                     Login/Register
                 </button>
             </#if>
