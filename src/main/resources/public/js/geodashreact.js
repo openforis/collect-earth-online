@@ -45,7 +45,19 @@ class Geodash extends React.Component {
         this.setState({ widgets });
     };
 }
-
+$( window ).resize(function() {
+    if($(".placeholder.fullwidget").length > 0)
+    {
+        var id = $(".placeholder.fullwidget")[0].childNodes[0].id.substring($(".placeholder.fullwidget")[0].childNodes[0].id.indexOf('_') + 1);
+        if(graphWidgetArray["widgetgraph_" + id] != null)
+        {
+            graphWidgetArray['widgetgraph_' + id].setSize($('#widgetgraph_' + id).outerWidth(), $('#widgetgraph_' + id).outerHeight(), true);
+        }
+        else if(mapWidgetArray["widgetgraph_" + id] != null){
+            mapWidgetArray["widgetmap_" + id].updateSize();
+        }
+    }
+});
 function updateSize(which, type)
 {
     $('body').toggleClass('bodyfull');
@@ -61,9 +73,6 @@ function updateSize(which, type)
         ptop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
         window.scrollTo(0,0);
     }
-
-
-
     if(type === 'mapwidget'){
     mapWidgetArray["widgetmap_" + which.id].updateSize();
     }
@@ -101,8 +110,6 @@ class Widget extends React.Component {
         return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue) }</React.Fragment>);
     }
     getWidgetHtml(widget, onOpacityChanged, opacityValue){
-       // if(widget.gridcolumn)
-      //  {
             return (<div className={ this.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: '', widget.gridrow != null? widget.gridrow: '') }
                         style={{gridColumn:widget.gridcolumn, gridRow:widget.gridrow}}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
@@ -120,12 +127,6 @@ class Widget extends React.Component {
                     </div>
                 </div>
             </div>);
-      //  }
-        //else{
-        //    return  <div className="row placeholdersOld">
-        //                <span>I have to build out the support for legacy widgets still</span>
-       //             </div>;
-        //}
     }
     getWidgetType(wtext)
     {
@@ -537,8 +538,6 @@ function addTileServer (imageid, token, mapdiv) {
 };
 function setOpacity (value, layerID) {
     try{
-    console.log("value");
-    console.log(layerID);
     var id = layerID;
     var theLayers = mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
         if (id == lyr.get('id')) {
