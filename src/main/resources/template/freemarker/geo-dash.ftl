@@ -35,7 +35,6 @@
 	     	<h1>GEO-DASH</h1>
 	     </li>
 	         </ul>
-
 	     <ul class="navbar-nav mr-0">
         <#if username != "">
 	            <#if navlink == "Logout">
@@ -78,7 +77,6 @@
 </nav>
 <script type="text/babel" src="${root}/js/geodashreact.js"></script>
 <br style="clear:both;">
-
     <div class="container-fluid">
         <div class="row">
             <div id="dashHolder" class="dashHolder" style="width:100%">
