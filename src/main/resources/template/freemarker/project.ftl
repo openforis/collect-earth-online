@@ -286,7 +286,7 @@
 	            <input type="button" id="configure-geo-dash" class="btn btn-outline-lightgreen btn-sm btn-block"
 	                   name="configure-geo-dash" value="Configure Geo-Dash"
 	                   ng-click="project.configureGeoDash()"
-                       style="display: {{ project.details.availability == 'unpublished' ? 'block' : 'none' }}">
+                       style="display: {{ project.details.availability == 'unpublished' || project.details.availability == 'published' ? 'block' : 'none' }}">
 	            <input type="button" id="download-plot-data" class="btn btn-outline-lightgreen btn-sm btn-block"
 	                   name="download-plot-data" value="Download Plot Data"
 	                   ng-click="project.downloadPlotData()"
