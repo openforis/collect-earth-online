@@ -68,7 +68,7 @@ class MapPanel extends React.Component {
         this.showProjectMap();
         return (
             <div id="mapPanel" className="col-lg-9 col-md-12 pl-0 pr-0">
-                <div className="row no-gutters full-height">
+                <div className="row no-gutters ceo-map-toggle">
                     <div id="togbutton" className="button col-xl-1 bg-lightgray d-none d-xl-block">
                         <div className="row h-100">
                             <div className="col-lg-12 my-auto no-gutters text-center">
@@ -77,7 +77,7 @@ class MapPanel extends React.Component {
                         </div>
                     </div>
                     <div className="col-xl-11 mr-0 ml-0 bg-lightgray">
-                        <div id="home-map-pane"></div>
+                        <div id="home-map-pane" style={{width: '100%', height: '100%', position:'fixed'}}></div>
                     </div>
                 </div>
             </div>
@@ -91,8 +91,12 @@ function SideBar(props) {
             <div className="bg-darkgreen">
                 <h1 className="tree_label" id="panelTitle">Institutions</h1>
             </div>
+            <ul className="tree">
+
             <CreateInstitutionButton username={props.username} documentRoot={props.documentRoot}/>
             <InstitutionList projects={props.projects} documentRoot={props.documentRoot}/>
+            </ul>
+
         </div>
     );
 }
@@ -100,11 +104,9 @@ function SideBar(props) {
 function CreateInstitutionButton(props) {
         if(props.username != "") {
             return (
-                <ul className="tree">
                     <a className="create-institution" href={props.documentRoot + "/institution/0"}>
                         <li className="bg-yellow text-center p-2"><i className="fa fa-file"></i> Create New Institution</li>
                     </a>
-                </ul>
             );
         }
         else{
@@ -132,13 +134,11 @@ class InstitutionList extends React.Component {
         const projects = this.props.projects;
 
         return (
-            <ul className="tree">
-            {
+
                 this.state.institutions.map(
                     institution => <Institution id={institution.id} name={institution.name} projects={projects} documentRoot={this.state.documentRoot}/>
                 )
-            }
-            </ul>
+
         );
     }
 }
@@ -157,9 +157,9 @@ function Institution(props) {
                 <div className="row">
                     <div className="col-lg-10 my-auto">
                         <p className="tree_label text-white m-0"
-                            htmlFor={institutionId}>
+                            htmlFor={"c"+institutionId}>
                             <input type="checkbox" className="d-none"
-                                id={institutionId}/>
+                                id={"c"+institutionId}/>
                             <span className="">{institutionName}</span>
                        </p>
                     </div>
@@ -182,7 +182,7 @@ function ProjectList(props) {
         <div className="collapse" id={"collapse" + institutionId}>
             {
                 props.projects.map(
-                    project => <Project id={project.id} editable={project.editable} name={project.name} documentRoot={props.documentRoot}/>
+                    project => <Project id={project.id} institutionId={institutionId} editable={project.editable} name={project.name} documentRoot={props.documentRoot} institution={parseInt(project.institution)}/>
                 )
             }
         </div>
@@ -190,35 +190,39 @@ function ProjectList(props) {
 }
 
 function Project(props) {
-    if (props.editable == true) {
-        return (
-            <div class="bg-lightgrey text-center p-1 row px-auto">
-                <div class="col-lg-9 pr-lg-1">
-                    <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
-                       href={props.documentRoot + "/collection/" + props.id}>
-                        {props.name}
-                    </a>
+    if(props.institution==props.institutionId) {
+        if (props.editable == true) {
+            return (
+                <div class="bg-lightgrey text-center p-1 row px-auto">
+                    <div class="col-lg-9 pr-lg-1">
+                        <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
+                           href={props.documentRoot + "/collection/" + props.id}>
+                            {props.name}
+                        </a>
+                    </div>
+                    <div className="col-lg-3 pl-lg-0">
+                        <a className="edit-project btn btn-outline-yellow btn-sm btn-block"
+                           href={props.documentRoot + "/project/" + props.id}>
+                            <i className="fa fa-edit"> </i> Edit
+                        </a>
+                    </div>
                 </div>
-                <div className="col-lg-3 pl-lg-0">
-                    <a className="edit-project btn btn-outline-yellow btn-sm btn-block"
-                       href={props.documentRoot + "/project/" + props.id}>
-                        <i className="fa fa-edit"> </i> Edit
-                    </a>
+            );
+        } else {
+            return (
+                <div className="bg-lightgrey text-center p-1 row">
+                    <div className="col mb-1 mx-0">
+                        <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                           href={props.documentRoot + "/collection/" + props.id}>
+                            {props.name}
+                        </a>
+                    </div>
                 </div>
-            </div>
-        );
-    } else {
-        return (
-            <div className="bg-lightgrey text-center p-1 row">
-                <div className="col mb-1 mx-0">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={props.documentRoot + "/collection/" + props.id}>
-                        {props.name}
-                    </a>
-                </div>
-            </div>
-        );
+            );
+        }
     }
+    else
+        return(<span></span>);
 }
 //=========================================
 // Render Root Component
