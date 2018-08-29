@@ -182,7 +182,7 @@ function ProjectList(props) {
         <div className="collapse" id={"collapse" + institutionId}>
             {
                 props.projects.map(
-                    project => <Project id={project.id} editable={project.editable} name={project.name} documentRoor={props.documentRoot}/>
+                    project => <Project id={project.id} editable={project.editable} name={project.name} documentRoot={props.documentRoot}/>
                 )
             }
         </div>

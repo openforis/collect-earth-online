@@ -44,6 +44,11 @@ public class OfUsers implements Users {
     public Request login(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
+        var inputReturnURL = req.queryParams("returnurl");
+        var returnURL = (inputReturnURL == null || inputReturnURL.isEmpty())
+            ? CeoConfig.documentRoot + "/home"
+            : inputReturnURL;
+
         try {
             var data = new GenericData();
             data.put("username", inputEmail);
@@ -64,7 +69,7 @@ public class OfUsers implements Users {
                 req.session().attribute("userid", userId);
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", role);
-                res.redirect(CeoConfig.documentRoot + "/home");
+                res.redirect(returnURL);
             } else {
                 // Authentication failed
                 req.session().attribute("flash_message", "Invalid email/password combination.");

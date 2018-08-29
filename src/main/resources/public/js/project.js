@@ -184,6 +184,14 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
+    this.removeSampleValueGroup = function(sampleValueGroupName) {
+        this.details.sampleValues = this.details.sampleValues.filter(
+            function (sampleValueGroup) {
+                return sampleValueGroup.name != sampleValueGroupName;
+            }
+        );
+    };
+
     this.getSampleValueGroupByName = function (sampleValueGroupName) {
         return this.details.sampleValues.find(
             function (sampleValueGroup) {
