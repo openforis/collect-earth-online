@@ -28,6 +28,7 @@
         </div>
     </div>
     <div id="sidebar" class="col-xl-3" old_ng-show="collection.showSideBar">
+    	<h2 class="header">{{ collection.currentProject.name }}</h2>
         <fieldset class="mb-3 text-center">
             <h3>Plot Navigation</h3>
             <div class="row">

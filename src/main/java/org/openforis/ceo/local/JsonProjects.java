@@ -742,12 +742,12 @@ public class JsonProjects implements Projects {
         var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
         var latMax =             getOrZero(newProject,"latMax").getAsDouble();
         var plotDistribution =   newProject.get("plotDistribution").getAsString();
-        var numPlots =              getOrZero(newProject,"numPlots").getAsInt();
+        var numPlots =           getOrZero(newProject,"numPlots").getAsInt();
         var plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
         var plotShape =          newProject.get("plotShape").getAsString();
         var plotSize =           newProject.get("plotSize").getAsDouble();
         var sampleDistribution = newProject.get("sampleDistribution").getAsString();
-        var samplesPerPlot =        getOrZero(newProject,"samplesPerPlot").getAsInt();
+        var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
         var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
 
         // If plotDistribution is csv, calculate the lat/lon bounds from the csv contents

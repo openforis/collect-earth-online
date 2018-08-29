@@ -28,9 +28,10 @@ public class PostgresUsers implements Users {
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputReturnURL = req.queryParams("returnurl");
-        var returnURL = (inputReturnURL != null && !inputReturnURL.isEmpty())
-            ? CeoConfig.documentRoot + "/" + inputReturnURL + "?" + req.queryString()
-            : CeoConfig.documentRoot + "/home";
+        var returnURL = (inputReturnURL == null || inputReturnURL.isEmpty())
+            ? CeoConfig.documentRoot + "/home"
+            : inputReturnURL;
+
         var SQL = "SELECT * FROM get_user(?)";
         try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {

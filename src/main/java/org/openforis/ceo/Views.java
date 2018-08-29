@@ -21,6 +21,7 @@ public class Views {
     private static Map<String, String> getBaseModel(Request req, String navlink) {
         var model = Map.of("root",          CeoConfig.documentRoot,
                            "navlink",       navlink,
+                           "uri",           req.uri(),
                            "userid",        fromSession(req, "userid"),
                            "username",      fromSession(req, "username"),
                            "role",          fromSession(req, "role"),
@@ -133,17 +134,9 @@ public class Views {
     }
 
     public static Route login(FreeMarkerEngine freemarker) {
-        Function<Request, String> getReturnUrl = (req) -> {
-            var inputReturnURL = req.queryParams("returnurl");
-            return (inputReturnURL == null || inputReturnURL.isEmpty()) ? "home" : inputReturnURL;
-        };
-        Function<Request, String> getQueryString = (req) -> {
-            var psssQuery = req.queryString();
-            return (psssQuery == null || psssQuery.isEmpty()) ? "empty" : psssQuery;
-        };
+        Function<Request, String> getReturnUrl = (req) -> req.queryParams("returnurl");
         return makeRoute("Login", freemarker,
-                         Map.of("returnurl", getReturnUrl,
-                                "querystring", getQueryString));
+                         Map.of("returnurl", getReturnUrl));
     }
 
     public static Route register(FreeMarkerEngine freemarker) {
