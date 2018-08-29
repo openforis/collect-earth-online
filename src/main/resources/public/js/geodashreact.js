@@ -313,8 +313,16 @@ class GraphWidget extends React.Component {
         var collectionName = widget.properties[1];
         var indexName = widget.properties[4];
         var date = new Date();
+        var url = '';
+        if(collectionName.trim().length > 0)
+        {
+            url = "http://collect.earth:8888/timeSeriesIndex";
+        }
+        else{
+            url = "http://collect.earth:8888/timeSeriesIndex2";
+        }
         $.ajax({
-            url: "http://collect.earth:8888/timeSeriesIndex",
+            url: url,
             type: "POST",
             async: true,
             indexVal: widget.id,
