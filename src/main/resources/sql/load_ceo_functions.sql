@@ -952,8 +952,13 @@ CREATE OR REPLACE FUNCTION add_ts_packet(project_id integer, packet_id integer, 
 	SELECT project_id, packet_id, u.* FROM unnest(ts_plots) u;
 $$ LANGUAGE SQL;
 
--- Assign a project (and packets if there is any) to a user 
-CREATE OR REPLACE FUNCTION assign_project_to_user(user_id integer, project_id integer, packet_ids integer[]) RETURN VOID as $$
+-- Assign a project (and packets if there is any) to a user
+CREATE OR REPLACE FUNCTION assign_project_to_user(user_id integer, project_id integer) RETURNS VOID as $$
+	INSERT INTO ts_project_user (project_id, user_id)
+	VALUES (project_id, user_id);
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION assign_project_to_user(user_id integer, project_id integer, packet_ids integer[]) RETURNS VOID as $$
 	INSERT INTO ts_project_user (project_id, user_id, packet_id)
 	SELECT project_id, user_id, u.* FROM unnest(packet_ids) u;
 $$ LANGUAGE SQL;
@@ -984,14 +989,155 @@ CREATE OR REPLACE FUNCTION get_project_for_user(interpreter integer) RETURNS TAB
 $$ LANGUAGE SQL;
 
 -- Get all plots from a project for a user
-CREATE OR REPLACE FUNCTION get_project_plots_for_user(project_id integer, interpreter integer, packet_id integer default 0) RETURNS TABLE
+CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interpreter_id integer) RETURNS TABLE
 (
+	project_id integer,
+	plot_id	integer,
+	lng float,
+	lat float,
+	is_complete integer,
+	is_example integer,
+	packet_id integer
+) AS $$
+    SELECT plots.project_id, plots.id as plot_id,
+       ST_X(center) as lng, ST_Y(center) as lat,
+       is_complete, is_example, -1 as packet_id
+    FROM plots left outer join ts_plot_comments
+    ON plots.id = ts_plot_comments.plot_id
+    	AND plots.project_id = ts_plot_comments.project_id
+    	AND ts_plot_comments.interpreter = interpreter_id
+    WHERE plots.project_id=prj_id
+		AND ts_plot_comments.packet_id = -1
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interpreter_id integer, packet integer) RETURNS TABLE
+(
+	project_id integer,
+	plot_id	integer,
+	lng float,
+	lat float,
+	is_complete integer,
+	is_example integer,
+	packet_id integer
+) AS $$
+	SELECT plots.project_id, plots.id as plot_id,
+		   ST_X(center) as lng, ST_Y(center) as lat,
+		   is_complete, is_example, packet_id
+	FROM plots inner join ts_packets
+	ON plots.project_id = ts_packets.project_id
+		AND plots.id = ts_packets.plot_id
+	LEFT OUTER JOIN ts_plot_comments
+	ON plots.id = ts_plot_comments.plot_id
+		AND plots.project_id = ts_plot_comments.project_id
+		AND ts_plot_comments.interpreter = interpreter_id
+	WHERE plots.project_id = prj_id
+		AND ts_packets.packet_id = packet
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_plot_comments(interpreter_id integer, prj_id integer, plotid integer, packet integer) RETURNS TABLE
+(
+	project_id integer,
+	plot_id integer,
+	interpreter integer,
+	comment text,
+	is_complete integer,
+	is_example integer,
+	is_wetland integer,
+	uncertainty integer
 
 ) AS $$
-	IF packet_id > 0 THEN
+	SELECT project_id, plot_id, interpreter,
+		   comment, is_complete, is_example,
+		   is_wetland, uncertainty
+	FROM ts_plot_comments
+	WHERE project_id = prj_id
+	AND plot_id = plotid
+	AND packet_id = packet
+	AND interpreter = interpreter_id
+$$ LANGUAGE SQL;
 
-	ELSE
+CREATE OR REPLACE FUNCTION create_plot_comments(interpreter integer, project_id integer, plot_id integer, packet_id integer,
+	comments text, complete integer default 0, example integer default 0, wetland integer default 0, certainty integer default 0)
+	RETURNS BIGINT
+AS $$
+	INSERT INTO ts_plot_comments
+		(project_id, plot_id, interpreter, packet_id, comment, is_complete, is_example, is_wetland, uncertainty)
+		VALUES (project_id, plot_id, interpreter, packet_id, comments, complete, example, wetland, certainty)
+	ON CONFLICT (project_id, plot_id, interpreter, packet_id) DO UPDATE
+	SET comment = comments,
+		is_example=example,
+		is_complete=complete,
+		is_wetland=wetland,
+		uncertainty=certainty
 
-	END IF
+	RETURNING id;
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_plot_vertices_for_project(prj_id integer) RETURNS TABLE
+(
+	project_id integer,
+	plot_id integer,
+	image_year integer,
+	image_julday integer,
+	dominant_landuse text,
+	dominant_landuse_notes text,
+	dominant_landcover text,
+	dominant_landcover_notes text,
+	change_process text,
+	change_process_notes text,
+	interpreter integer,
+	packet_id integer
+) AS $$
+	SELECT project_id,
+		plot_id,
+		image_year,
+		image_julday,
+		dominant_landuse,
+		coalesce(dominant_landuse_notes, '') as dominant_landuse_notes,
+		dominant_landcover,
+		coalesce(dominant_landcover_notes,'') as dominant_landcover_notes,
+		change_process,
+		coalesce(change_process_notes,'') as change_process_notes,
+		interpreter,
+		packet_id
+	FROM ts_vertex
+	WHERE project_id = prj_id
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_plot_vertices(interpreter_id integer, prj_id integer, plotid integer, packet integer) RETURNS TABLE
+(
+	project_id integer,
+	plot_id integer,
+	image_year integer,
+	image_julday integer,
+	dominant_landuse text,
+	dominant_landuse_notes text,
+	dominant_landcover text,
+	dominant_landcover_notes text,
+	change_process text,
+	change_process_notes text,
+	interpreter integer,
+	packet_id integer
+) AS $$
+	SELECT project_id,
+		plot_id,
+		image_year,
+		image_julday,
+		dominant_landuse,
+		dominant_landuse_notes,
+		dominant_landcover,
+		dominant_landcover_notes,
+		change_process,
+		change_process_notes,
+		interpreter,
+		packet_id
+	FROM get_plot_vertices_for_project(prj_id)
+	WHERE plot_id = plotid
+		AND interpreter = interpreter_id
+		AND packet_id = packet
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION create_vertices(vertices jsonb) RETURNS VOID 
+AS $$
 
 $$ LANGUAGE SQL;

@@ -158,14 +158,15 @@ CREATE TABLE ts_plot_comments (
   plot_id               integer not null references user_plots (id) on delete cascade on update cascade,
   interpreter           integer not null references users (id) on update cascade,
   comment               text,
-  is_example            bit DEFAULT NULL,
-  is_complete           bit DEFAULT NULL,
-  is_wetland            bit DEFAULT NULL,
-  uncertainty           smallint DEFAULT NULL,
-  last_modified_date    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  is_example            integer DEFAULT NULL,
+  is_complete           integer DEFAULT NULL,
+  is_wetland            integer DEFAULT NULL,
+  uncertainty           integer DEFAULT NULL,
+  last_modified_date    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  packet_id             integer default -1
 );
 DROP INDEX IF EXISTS comments_ppi;
-CREATE INDEX comments_ppi ON ts_plot_comments USING btree (project_id, plot_id, interpreter);
+CREATE UNIQUE INDEX comments_ppi ON ts_plot_comments USING btree (project_id, plot_id, interpreter, packet_id);
 
 
 DROP TABLE IF EXISTS ts_vertex cascade;
@@ -189,7 +190,8 @@ CREATE TABLE ts_vertex (
   comments                  varchar(255) DEFAULT NULL,
   interpreter               integer not null references users (id) on update cascade,
   last_modified             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  history_flag              integer DEFAULT 0
+  history_flag              integer DEFAULT 0,
+  packet_id                 integer DEFAULT -1;
 );
 DROP INDEX IF EXISTS vertex_ptp;
 CREATE INDEX vertex_ptp ON ts_vertex USING btree (project_id, plot_id, interpreter);
@@ -203,7 +205,8 @@ CREATE TABLE ts_image_preference (
     image_year      integer not null,
     image_julday    integer not null,
     interpreter     integer not null references users (id) on update cascade,
-    "priority"      integer not null
+    "priority"      integer not null,
+    packet_id       integer default -1
 );
 DROP INDEX IF EXISTS image_ppii;
 CREATE INDEX image_ppii ON ts_image_preference USING btree (project_id, plot_id, image_year, interpreter);
