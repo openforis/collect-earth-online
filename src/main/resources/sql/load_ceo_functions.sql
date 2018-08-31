@@ -942,3 +942,56 @@ CREATE OR REPLACE FUNCTION archive_institution(institution_id integer) RETURNS i
 	WHERE institution_id = institution_id
 	RETURNING institution_id
 $$ LANGUAGE SQL;
+
+
+--TS related functions
+-- Add packet to a project.
+-- Not every project needs packet. If no packet is defined, there is no need to create packet for that project.
+CREATE OR REPLACE FUNCTION add_ts_packet(project_id integer, packet_id integer, plots integer[]) RETURNS VOID AS $$
+	INSERT INTO ts_packets (project_id, packet_id, plot_id)
+	SELECT project_id, packet_id, u.* FROM unnest(ts_plots) u;
+$$ LANGUAGE SQL;
+
+-- Assign a project (and packets if there is any) to a user 
+CREATE OR REPLACE FUNCTION assign_project_to_user(user_id integer, project_id integer, packet_ids integer[]) RETURN VOID as $$
+	INSERT INTO ts_project_user (project_id, user_id, packet_id)
+	SELECT project_id, user_id, u.* FROM unnest(packet_ids) u;
+$$ LANGUAGE SQL;
+
+-- Get project and packet if any assigned to a user
+CREATE OR REPLACE FUNCTION get_project_for_user(interpreter integer) RETURNS TABLE
+(
+  project_id    integer,
+  name          text,
+  description   text,
+  interpreter   integer,
+  ts_plot_size  integer,
+  ts_start_year integer,
+  ts_end_year   integer,
+  ts_target_day integer,
+  packet_ids    text
+) AS $$
+	SELECT projects.id as project_id, projects.name, projects.description,
+		users.id as interpreter, ts_plot_size, ts_start_year, ts_end_year, ts_target_day,
+		array_to_string(array_agg(packet_id), ',') as packet_ids
+	FROM projects, users, ts_project_user
+	WHERE projects.id = ts_project_user.project_id
+		AND ts_project_user.user_id = users.id
+		AND users.id = interpreter
+	GROUP BY projects.id, projects.name, projects.description,
+		users.id, ts_plot_size, ts_start_year, ts_end_year, ts_target_day
+	ORDER BY projects.id, packet_ids
+$$ LANGUAGE SQL;
+
+-- Get all plots from a project for a user
+CREATE OR REPLACE FUNCTION get_project_plots_for_user(project_id integer, interpreter integer, packet_id integer default 0) RETURNS TABLE
+(
+
+) AS $$
+	IF packet_id > 0 THEN
+
+	ELSE
+
+	END IF
+
+$$ LANGUAGE SQL;
