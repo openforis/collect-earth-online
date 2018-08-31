@@ -187,10 +187,33 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
+    this.getParentSampleValues = function (sampleValues) {
+        return sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.parent == null || sampleValue.parent == "";
+            }
+        );
+    };
+
+    this.topoSort = function (sampleValues) {
+        var parentSampleValues = this.getParentSampleValues(sampleValues);
+        var parentChildGroups = parentSampleValues.map(
+            function (parentSampleValue) {
+                var childSampleValues = sampleValues.filter(
+                    function (sampleValue) {
+                        return sampleValue.parent == parentSampleValue.name;
+                    }
+                );
+                return [parentSampleValue].concat(childSampleValues);
+            }
+        );
+        return [].concat.apply([], parentChildGroups);
+    };
+
     this.addSampleValueGroup = function () {
         var groupName = this.newSampleValueGroupName;
         if (groupName != "") {
-            this.newValueEntry[groupName] = {name: "", color: "#000000", image: ""};
+            this.newValueEntry[groupName] = {name: "", color: "#000000", image: "", parent: ""};
             this.details.sampleValues.push({name: groupName, values: []});
             this.newSampleValueGroupName = "";
         } else {
@@ -218,7 +241,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
         sampleValueGroup.values = sampleValueGroup.values.filter(
             function (sampleValue) {
-                return sampleValue.name != sampleValueName;
+                return sampleValue.name != sampleValueName && sampleValue.parent != sampleValueName;
             }
         );
     };
@@ -227,10 +250,11 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         var entry = this.newValueEntry[sampleValueGroupName];
         if (entry.name != "") {
             var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
-            sampleValueGroup.values.push({name: entry.name, color: entry.color, image: entry.image});
+            sampleValueGroup.values.push({name: entry.name, color: entry.color, image: entry.image, parent: entry.parent});
             entry.name = "";
             entry.color = "#000000";
             entry.image = "";
+            entry.parent = "";
         } else {
             alert("A sample value must possess both a name and a color.");
         }
