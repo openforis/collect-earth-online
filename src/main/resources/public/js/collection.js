@@ -282,6 +282,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         mercator.removeLayerByTitle(this.mapConfig, "currentPlots");
         mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
         this.currentPlot = null;
+        this.currentParentSampleValue = null;
         this.userSamples = {};
         this.loadRandomPlot();
     };
@@ -348,11 +349,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 utils.enable_element("save-values-button");
                 utils.disable_element("new-plot-button");
             }
-            if (sampleValueGroup.values.some(
-                function (value) {
-                    return value.parent == sampleValue.name;
-                }
-            )) {
+            if (sampleValue.parent == null || sampleValue.parent == "") {
                 this.currentParentSampleValue = sampleValue.name;
             }
         } else {
