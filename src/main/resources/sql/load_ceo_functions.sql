@@ -944,7 +944,21 @@ CREATE OR REPLACE FUNCTION archive_institution(institution_id integer) RETURNS i
 $$ LANGUAGE SQL;
 
 
--- Add packet
-CREATE OR REPLACE FUNCTION add_packet(str_values text) RETURNS void AS $$
-	INSERT INTO ts_packets (project_id, packet_id, ts_plotid) values str_values
+-- Add packet to a project.
+-- Not every project needs packet. If no packet is defined, there is no need to create packet for that project.
+CREATE OR REPLACE FUNCTION add_ts_packet(project_id integer, packet_id integer, ts_plots integer[]) RETURNS VOID AS $$
+	INSERT INTO ts_packets (project_id, packet_id, ts_plotid)
+	SELECT project_id, packet_id, u.* FROM unnest(ts_plots) u;
+$$ LANGUAGE SQL;
+
+-- Assign a project (and packets if there is any) to a user 
+CREATE OR REPLACE FUNCTION assign_project_to_user(user_id integer, project_id integer, packet_ids integer[]) RETURN VOID as $$
+	INSERT INTO ts_project_user (project_id, user_id, packet_id)
+	SELECT project_id, user_id, u.* FROM unnest(packet_ids) u;
+$$ LANGUAGE SQL;
+
+-- Get project and packet if any assigned to a user
+CREATE OR REPLACE FUNCTION get_project_for_user(user_id integer) RETURNS TABLE $$
+
+
 $$ LANGUAGE SQL;
