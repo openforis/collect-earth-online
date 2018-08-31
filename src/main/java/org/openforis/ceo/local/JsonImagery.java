@@ -7,16 +7,16 @@ import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.openforis.ceo.db_api.Imagery;
 import spark.Request;
 import spark.Response;
 
-public class Imagery {
+public class JsonImagery implements Imagery {
 
-    public static String getAllImagery(Request req, Response res) {
-        String institutionId = req.queryParams("institutionId");
-        JsonArray imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+    public String getAllImagery(Request req, Response res) {
+        var institutionId = req.queryParams("institutionId");
+        var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
         if (institutionId == null || institutionId.isEmpty()) {
             return filterJsonArray(imageryList,
                                    imagery -> imagery.get("visibility").getAsString().equals("public")).toString();
@@ -27,36 +27,36 @@ public class Imagery {
         }
     }
 
-    public static synchronized String addInstitutionImagery(Request req, Response res) {
+    public synchronized String addInstitutionImagery(Request req, Response res) {
         try {
-            JsonObject jsonInputs        = parseJson(req.body()).getAsJsonObject();
-            int institutionId            = jsonInputs.get("institutionId").getAsInt();
-            String imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
-            String imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
-            String geoserverURL          = jsonInputs.get("geoserverURL").getAsString();
-            String layerName             = jsonInputs.get("layerName").getAsString();
-            String geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
-            JsonObject geoserverParams   = geoserverParamsString.equals("")
-                                               ? new JsonObject()
-                                               : parseJson(geoserverParamsString).getAsJsonObject();
+            var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+            var institutionId         = jsonInputs.get("institutionId").getAsInt();
+            var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
+            var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
+            var geoserverURL          = jsonInputs.get("geoserverURL").getAsString();
+            var layerName             = jsonInputs.get("layerName").getAsString();
+            var geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
+            var geoserverParams       = geoserverParamsString.equals("")
+                                            ? new JsonObject()
+                                            : parseJson(geoserverParamsString).getAsJsonObject();
 
             // Add layerName to geoserverParams
             geoserverParams.addProperty("LAYERS", layerName);
 
             // Read in the existing imagery list
-            JsonArray imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+            var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
 
             // Generate a new imagery id
-            int newImageryId = getNextId(imageryList);
+            var newImageryId = getNextId(imageryList);
 
             // Create a new source configuration for this imagery
-            JsonObject sourceConfig = new JsonObject();
+            var sourceConfig = new JsonObject();
             sourceConfig.addProperty("type", "GeoServer");
             sourceConfig.addProperty("geoserverUrl", geoserverURL);
             sourceConfig.add("geoserverParams", geoserverParams);
 
             // Create a new imagery object
-            JsonObject newImagery = new JsonObject();
+            var newImagery = new JsonObject();
             newImagery.addProperty("id", newImageryId);
             newImagery.addProperty("institution", institutionId);
             newImagery.addProperty("visibility", "private");
@@ -76,10 +76,10 @@ public class Imagery {
         }
     }
 
-    public static synchronized String deleteInstitutionImagery(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        String imageryId      = jsonInputs.get("imageryId").getAsString();
-        String institutionId  = jsonInputs.get("institutionId").getAsString();
+    public synchronized String deleteInstitutionImagery(Request req, Response res) {
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var imageryId = jsonInputs.get("imageryId").getAsString();
+        var institutionId = jsonInputs.get("institutionId").getAsString();
 
         filterJsonFile("imagery-list.json",
                        imagery -> !imagery.get("id").getAsString().equals(imageryId)

@@ -2,14 +2,14 @@
 
 /Crowdsourced visual interpretation of on-demand satellite imagery/
 
-This is a Java 8 application written with the Spark web framework
+This is a Java 10 application written with the Spark web framework
 (http://sparkjava.com).
 
 ** Installation
 
 In order to build and run Collect Earth Online, you will need:
 
-- Java Development Kit 1.8+
+- Java Development Kit 1.10+
 - Either Maven 3.3.9+ or Gradle 3.3+
 - Tomcat 8+ (optional)
 
@@ -21,13 +21,13 @@ application will be available at http://localhost:8080.
 *** With Maven
 
 #+begin_src sh
-mvn compile exec:java
+mvn compile exec:java -Dexec.args=<JSON|POSTGRES>
 #+end_src
 
 *** With Gradle
 
 #+begin_src sh
-gradle run
+gradle run -PrunArgs=<JSON|POSTGRES>
 #+end_src
 
 ** Running inside Tomcat
@@ -186,6 +186,7 @@ sudo $TOMCAT_HOME/bin/startup.sh
 - Gary W. Johnson (SIG)
 - David S. Saah (SIG)
 - Billy Ashmall (NASA)
+- Githika Tondapu (NASA)
 - Stefano Ricci (FAO)
 - Roberto Fontanarosa (FAO)
 - Alfonso SanchezPausDiaz (FAO)
@@ -195,6 +196,7 @@ sudo $TOMCAT_HOME/bin/startup.sh
 - gjohnson@sig-gis.com
 - dsaah@sig-gis.com
 - billy.ashmall@nasa.gov
+- githika.tondapu@nasa.gov
 - stefano.ricci@fao.org
 - roberto.fontanarosa@fao.org
 - alfonso.sanchezpausdiaz@fao.org

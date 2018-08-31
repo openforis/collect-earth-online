@@ -1,6 +1,6 @@
-apply plugin: 'java'
-apply plugin: 'war'
-apply plugin: 'application'
+apply plugin: "java"
+apply plugin: "war"
+apply plugin: "application"
 
 repositories {
     maven {
@@ -10,32 +10,39 @@ repositories {
 }
 
 dependencies {
-    compile 'com.sparkjava:spark-core:2.7.1'
-    compile 'com.sparkjava:spark-template-freemarker:2.7.1'
-    compile 'org.freemarker:freemarker:2.3.23'
-    compile 'org.slf4j:slf4j-simple:1.7.21'
-    compile 'com.google.code.gson:gson:2.8.2'
-    compile 'com.google.http-client:google-http-client:1.22.0'
-    compile 'com.google.http-client:google-http-client-jackson2:1.22.0'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.5.2'
-    compile 'org.geotools:gt-shapefile:15.1'
-    compile 'org.geotools:gt-epsg-hsql:15.1'
-    compile 'net.bull.javamelody:javamelody-core:1.68.1'
-    compile 'com.lowagie:itext:2.1.7'
-    compile 'javax.mail:mail:1.4'
-    testCompile 'junit:junit:4.12'
+    compile "com.sparkjava:spark-core:2.7.1"
+    compile "com.sparkjava:spark-template-freemarker:2.7.1"
+    compile "org.freemarker:freemarker:2.3.23"
+    compile "org.slf4j:slf4j-simple:1.7.21"
+    compile "com.google.code.gson:gson:2.8.2"
+    compile "com.google.http-client:google-http-client:1.22.0"
+    compile "com.google.http-client:google-http-client-jackson2:1.22.0"
+    compile "com.fasterxml.jackson.core:jackson-core:2.5.2"
+    compile "org.geotools:gt-shapefile:19.2"
+    compile "org.geotools:gt-epsg-hsql:19.2"
+    compile "net.bull.javamelody:javamelody-core:1.68.1"
+    compile "com.lowagie:itext:2.1.7"
+    compile "javax.mail:mail:1.4"
+    compile "org.postgresql:postgresql:42.2.2"
+    testCompile "junit:junit:4.12"
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.10
+targetCompatibility = 1.10
 
 compileJava {
-    options.compilerArgs << '-Xlint:unchecked'
+    options.compilerArgs << "-Xlint:unchecked"
+}
+
+run {
+    if (project.hasProperty("runArgs")) {
+       args findProperty("runArgs")
+    }
 }
 
 war {
-    baseName = 'collect-earth-online'
-    version = '1.0.0-SNAPSHOT'
+    baseName = "collect-earth-online"
+    version = "1.0.0-SNAPSHOT"
 }
 
-mainClassName = 'org.openforis.ceo.Server'
+mainClassName = "org.openforis.ceo.Server"

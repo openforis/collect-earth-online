@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#include "start-content.ftl">
 <#include "geodash-navbar.ftl">
-<#if role?? && editable == "true">
+<#if role != "" && editable == "true">
 	<script type="text/javascript" src="${root}/js/geo-dash-admin.js"></script>
 	<div id="geodash" ng-app="geodashadmin" ng-controller="GeodashAdminController as geodash" ng-init="geodash.initialize('${root}')">
 <#else>

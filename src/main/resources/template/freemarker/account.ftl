@@ -63,8 +63,8 @@
 	        </div>
 	        <div id="account-form" class="col mb-3">
 				<h2 class="header px-0">Account Settings</h2>
-	            <h1>${username!""}</h1>
-	            <#if userid?? && userid == account_id>
+	            <h1>${username}</h1>
+	            <#if userid == account_id>
 	                <form action="${root}/account/${account_id}" method="post">
 	  				    <div class="form-group">
 	                        <label for="email">Reset email</label>

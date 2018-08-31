@@ -3,7 +3,7 @@
 <#include "announcements.ftl">
 <#include "start-content.ftl">
 <script type="text/javascript" src="${root}/js/home.js"></script>
-<div id="home" ng-app="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid!""}')">
+<div id="home" ng-app="home" ng-controller="HomeController as home" ng-init="home.initialize('${root}', '${userid}')">
     <div id="bcontainer">
         <span id="mobilespan"></span>
         <div class="Wrapper">
@@ -15,7 +15,7 @@
                         </h1>
                     </div>
                     <ul class="tree">
-                        <#if username??>
+                        <#if username != "">
                             <a class="create-institution" href="${root}/institution/0">
                                 <li class="bg-yellow text-center p-2"><i class="fa fa-file"></i> Create New Institution</li>
                             </a>
@@ -40,18 +40,18 @@
                             </div>
                             <div class="collapse" id="collapse{{ institution.id }}">
                                 <div class="bg-lightgrey text-center p-1 row px-auto" ng-if="project.editable == true"
-                                     ng-repeat="project in home.projectList | filter : {institution: institution.id }">
-                                    <div class="col-lg-9 pr-lg-1">
+                                     ng-repeat="project in home.projectList | filter : { institution: institution.id }">
+                                    <div class="col-lg-8 pr-lg-1">
                                         <a class="view-project btn btn-sm btn-outline-lightgreen btn-block"
                                            href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
                                     </div>
-                                    <div class="col-lg-3 pl-lg-0">
-                                        <a class="edit-project btn btn-outline-yellow btn-sm btn-block"
-                                           href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Edit</a>
+                                    <div class="col-lg-4 pl-lg-0">
+                                        <a class="edit-project btn btn-sm btn-outline-yellow btn-block"
+                                           href="${root}/project/{{ project.id }}"><i class="fa fa-edit"></i> Review</a>
                                     </div>
                                 </div>
                                 <div class="bg-lightgrey text-center p-1 row" ng-if="project.editable == false"
-                                     ng-repeat="project in home.projectList | filter : {institution: institution.id }">
+                                     ng-repeat="project in home.projectList | filter : { institution: institution.id }">
                                     <div class="col mb-1 mx-0">
                                         <a class="btn btn-sm btn-outline-lightgreen btn-block"
                                            href="${root}/collection/{{ project.id }}">{{ project.name }}</a>
@@ -62,7 +62,7 @@
                     </ul>
                 </div>
                 <div id="mapPanel" class="col-lg-9 col-md-12 pl-0 pr-0">
-                    <div class="row no-gutters full-height">
+                    <div class="row no-gutters ceo-map-toggle">
                         <div id="togbutton" class="button col-xl-1 bg-lightgray d-none d-xl-block">
                             <div class="row h-100">
                                 <div class="col-lg-12 my-auto no-gutters text-center">

@@ -5,7 +5,7 @@
 <script type="text/javascript" src="${root}/js/institution.js"></script>
 
 <div id="institution" ng-app="institution" ng-controller="InstitutionController as institution"
-     ng-init="institution.initialize('${root}', '${userid!""}', '${institution_id}')">
+     ng-init="institution.initialize('${root}', '${userid}', '${institution_id}')">
     <div id="institution-details" class="row justify-content-center">
         <div id="institution-view" class="col-xl-6 col-lg-8 " ng-show="institution.pageMode == 'view'">
       		<div class="row">
@@ -68,7 +68,7 @@
         </div>
 
     </div>
-     <#if role??>
+     <#if role != "">
          <div class="row justify-content-center mb-2" id="institution-controls">
          		<div class="col-3">
 		             <button id="edit-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-block mt-0"
@@ -154,14 +154,14 @@
 				</div>
 	          </div>
 	          <div class="row mb-1" ng-if="institution.isAdmin == true" ng-repeat="project in institution.projectList">
-	          	<div class="col-10 pr-1">
+	          	<div class="col-9 pr-1">
 	             	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">
 	             		{{ project.name }}
 	             	</a>
               	</div>
-				<div class="col-2 pl-0">
+				<div class="col-3 pl-0">
               		<a class="btn btn-sm btn-outline-lightgreen btn-block" class="edit-project" href="${root}/project/{{ project.id }}">
-              		<span class="d-xl-none"><i class="fa fa-edit"></i></span><span class="d-none d-xl-block"> Edit</span></a>
+              		<span class="d-xl-none"><i class="fa fa-edit"></i></span><span class="d-none d-xl-block"> Review</span></a>
               	</div>
 	          </div>
 	          <div class="row" ng-if="institution.isAdmin == false" ng-repeat="project in institution.projectList">

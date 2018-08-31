@@ -25,6 +25,9 @@ import spark.Request;
 
 public class RequestUtils {
 
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+
     public static String getParam(Request req, String param) {
         return getParam(req, param, null);
     }
@@ -40,12 +43,9 @@ public class RequestUtils {
     }
 
     public static int getIntParam(Request req, String param, int defaultValue) {
-        String val = getParam(req, param);
+        var val = getParam(req, param);
         return val == null || val.isEmpty() ? defaultValue : Integer.parseInt(val);
     }
-
-    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     public static HttpRequestFactory createRequestFactory() {
         return HTTP_TRANSPORT.createRequestFactory((HttpRequest request) -> {
@@ -100,7 +100,7 @@ public class RequestUtils {
         if (params == null) {
             return null;
         } else if (params instanceof JsonObject) {
-            Map<?,?> mapData = new Gson().fromJson((JsonObject) params, Map.class);
+            var mapData = (new Gson()).fromJson((JsonObject) params, Map.class);
             return new JsonHttpContent(JSON_FACTORY, mapData);
         } else {
             return new JsonHttpContent(JSON_FACTORY, params);

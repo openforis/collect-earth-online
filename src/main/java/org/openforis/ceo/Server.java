@@ -8,18 +8,28 @@ import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.staticFileLocation;
 
-import com.google.gson.JsonObject;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
+import java.util.List;
 import org.openforis.ceo.collect.CollectImagery;
 import org.openforis.ceo.collect.CollectProjects;
+import org.openforis.ceo.db_api.GeoDash;
+import org.openforis.ceo.db_api.Imagery;
+import org.openforis.ceo.db_api.Institutions;
+import org.openforis.ceo.db_api.Projects;
+import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
-import org.openforis.ceo.ext.GeoDash;
-import org.openforis.ceo.local.Imagery;
-import org.openforis.ceo.local.Institutions;
-import org.openforis.ceo.local.Projects;
-import org.openforis.ceo.local.Users;
+import org.openforis.ceo.local.JsonGeoDash;
+import org.openforis.ceo.local.JsonImagery;
+import org.openforis.ceo.local.JsonInstitutions;
+import org.openforis.ceo.local.JsonProjects;
+import org.openforis.ceo.local.JsonUsers;
+import org.openforis.ceo.postgres.PostgresGeoDash;
+import org.openforis.ceo.postgres.PostgresImagery;
+import org.openforis.ceo.postgres.PostgresInstitutions;
+import org.openforis.ceo.postgres.PostgresProjects;
+import org.openforis.ceo.postgres.PostgresUsers;
 import org.openforis.ceo.users.CeoAuthFilter;
 import org.openforis.ceo.users.OfGroups;
 import org.openforis.ceo.users.OfUsers;
@@ -32,7 +42,7 @@ public class Server implements SparkApplication {
     // *.ftl files from src/main/resources/template/freemarker/
     private static Configuration getConfiguration() {
         try {
-            Configuration cfg = new Configuration(Configuration.VERSION_2_3_23);
+            var cfg = new Configuration(Configuration.VERSION_2_3_23);
             cfg.setDirectoryForTemplateLoading(new File(Server.class.getResource("/template/freemarker").toURI()));
             cfg.setDefaultEncoding("UTF-8");
             cfg.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER); // or RETHROW_HANDLER
@@ -43,10 +53,11 @@ public class Server implements SparkApplication {
         }
     }
 
-    // Sets up Spark's routing table and exception handling rules for the Maven/Gradle entry point
-    private static void declareLocalStorageRoutes() {
+    // Sets up Spark's routing table and exception handling rules
+    private static void declareRoutes(String databaseType, Projects projects, Imagery imagery,
+                                      Users users, Institutions institutions, GeoDash geoDash) {
         // Create a configured FreeMarker renderer
-        FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
+        var freemarker = new FreeMarkerEngine(getConfiguration());
 
         // FIXME: Get deploy/clientkeystore signed by a certificate authority.
         // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
@@ -56,163 +67,94 @@ public class Server implements SparkApplication {
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
 
-        // Routing Table: HTML pages
-        get("/",                (req, res) -> { return freemarker.render(Views.home(req, res)); });
-        get("/home",            (req, res) -> { return freemarker.render(Views.home(req, res)); });
-        get("/about",           (req, res) -> { return freemarker.render(Views.about(req, res)); });
-        get("/support",         (req, res) -> { return freemarker.render(Views.support(req, res)); });
-        get("/account/:id",     (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        post("/account/:id",    (req, res) -> { return freemarker.render(Views.account(Users.updateAccount(req, res), res)); });
-        get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res, "local")); });
-        get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
-        get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
-        get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
-        get("/project/:id",     (req, res) -> { return freemarker.render(Views.project(req, res)); });
-        get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
-        post("/login",          (req, res) -> { return freemarker.render(Views.login(Users.login(req, res), res)); });
-        get("/register",        (req, res) -> { return freemarker.render(Views.register(req, res)); });
-        post("/register",       (req, res) -> { return freemarker.render(Views.register(Users.register(req, res), res)); });
-        get("/password",        (req, res) -> { return freemarker.render(Views.password(req, res)); });
-        post("/password",       (req, res) -> { return freemarker.render(Views.password(Users.getPasswordResetKey(req, res), res)); });
-        get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
-        post("/password-reset", (req, res) -> { return freemarker.render(Views.passwordReset(Users.resetPassword(req, res), res)); });
-        get("/logout",          (req, res) -> { return freemarker.render(Views.home(Users.logout(req), res)); });
+        // Allow token-based authentication if users are not logged in and we are using the COLLECT database
+        if (databaseType.equals("COLLECT")) {
+            before("/*", new CeoAuthFilter());
+        }
+
+        // Routing Table: HTML pages (with no side effects)
+        get("/",                                      Views.home(freemarker));
+        get("/home",                                  Views.home(freemarker));
+        get("/about",                                 Views.about(freemarker));
+        get("/support",                               Views.support(freemarker));
+        get("/account/:id",                           Views.account(freemarker));
+        get("/institution/:id",                       Views.institution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/collection/:id",                        Views.collection(freemarker));
+        get("/geo-dash",                              Views.geodash(freemarker));
+        get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
+        get("/project/:id",                           Views.project(freemarker));
+        get("/login",                                 Views.login(freemarker));
+        get("/register",                              Views.register(freemarker));
+        get("/password",                              Views.password(freemarker));
+        get("/password-reset",                        Views.passwordReset(freemarker));
+        get("/card-test",                             Views.cardTest(freemarker));
+
+        // Routing Table: HTML pages (with side effects)
+        post("/account/:id",                          (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
+        post("/login",                                (req, res) -> Views.login(freemarker).handle(users.login(req, res), res));
+        post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
+        post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
+        post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
+        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
 
         // Routing Table: Projects API
-        get("/get-all-projects",                (req, res) -> { return Projects.getAllProjects(req, res); });
-        get("/get-project-by-id/:id",           (req, res) -> { return Projects.getProjectById(req, res); });
-        get("/get-project-plots/:id/:max",      (req, res) -> { return Projects.getProjectPlots(req, res); });
-        get("/get-project-stats/:id",           (req, res) -> { return Projects.getProjectStats(req, res); });
-        get("/get-unanalyzed-plot/:id",         (req, res) -> { return Projects.getUnanalyzedPlot(req, res); });
-        get("/get-unanalyzed-plot-by-id/:projid/:id", (req, res) -> { return Projects.getUnanalyzedPlotById(req, res); });
-        get("/dump-project-aggregate-data/:id", (req, res) -> { return Projects.dumpProjectAggregateData(req, res); });
-        get("/dump-project-raw-data/:id",       (req, res) -> { return Projects.dumpProjectRawData(req, res); });
-        post("/create-project",                 (req, res) -> { return Projects.createProject(req, res); });
-        post("/publish-project/:id",            (req, res) -> { return Projects.publishProject(req, res); });
-        post("/close-project/:id",              (req, res) -> { return Projects.closeProject(req, res); });
-        post("/archive-project/:id",            (req, res) -> { return Projects.archiveProject(req, res); });
-        post("/add-user-samples",               (req, res) -> { return Projects.addUserSamples(req, res); });
-        post("/flag-plot",                      (req, res) -> { return Projects.flagPlot(req, res); });
+        get("/get-all-projects",                      projects::getAllProjects);
+        get("/get-project-by-id/:id",                 projects::getProjectById);
+        get("/get-project-plots/:id/:max",            projects::getProjectPlots);
+        get("/get-project-stats/:id",                 projects::getProjectStats);
+        get("/get-unanalyzed-plot/:id",               projects::getUnassignedPlot);
+        get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnassignedPlotById);
+        get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
+        get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
+        post("/create-project",                       projects::createProject);
+        post("/publish-project/:id",                  projects::publishProject);
+        post("/close-project/:id",                    projects::closeProject);
+        post("/archive-project/:id",                  projects::archiveProject);
+        post("/add-user-samples",                     projects::addUserSamples);
+        post("/flag-plot",                            projects::flagPlot);
 
         // Routing Table: Users API
-        get("/get-all-users",                   (req, res) -> { return Users.getAllUsers(req, res); });
-        post("/update-user-institution-role",   (req, res) -> { return Users.updateInstitutionRole(req, res); });
-        post("/request-institution-membership", (req, res) -> { return Users.requestInstitutionMembership(req, res); });
+        get("/get-all-users",                         users::getAllUsers);
+        post("/update-user-institution-role",         users::updateInstitutionRole);
+        post("/request-institution-membership",       users::requestInstitutionMembership);
 
         // Routing Table: Institutions API
-        get("/get-all-institutions",        (req, res) -> { return Institutions.getAllInstitutions(req, res); });
-        get("/get-institution-details/:id", (req, res) -> { return Institutions.getInstitutionDetails(req, res); });
-        post("/update-institution/:id",     (req, res) -> { return Institutions.updateInstitution(req, res); });
-        post("/archive-institution/:id",    (req, res) -> { return Institutions.archiveInstitution(req, res); });
+        get("/get-all-institutions",                  institutions::getAllInstitutions);
+        get("/get-institution-details/:id",           institutions::getInstitutionDetails);
+        post("/update-institution/:id",               institutions::updateInstitution);
+        post("/archive-institution/:id",              institutions::archiveInstitution);
 
         // Routing Table: Imagery API
-        get("/get-all-imagery",             (req, res) -> { return Imagery.getAllImagery(req, res); });
-        post("/add-institution-imagery",    (req, res) -> { return Imagery.addInstitutionImagery(req, res); });
-        post("/delete-institution-imagery", (req, res) -> { return Imagery.deleteInstitutionImagery(req, res); });
+        get("/get-all-imagery",                       imagery::getAllImagery);
+        post("/add-institution-imagery",              imagery::addInstitutionImagery);
+        post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
 
         // Routing Table: GeoDash API
-        get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
-        get("/geo-dash/update/id/:id",           (req, res) -> { return GeoDash.updateDashBoardByID(req, res); });
-        get("/geo-dash/createwidget/widget",     (req, res) -> { return GeoDash.createDashBoardWidgetByID(req, res); });
-        get("/geo-dash/updatewidget/widget/:id", (req, res) -> { return GeoDash.updateDashBoardWidgetByID(req, res); });
-        get("/geo-dash/deletewidget/widget/:id", (req, res) -> { return GeoDash.deleteDashBoardWidgetByID(req, res); });
+        get("/geo-dash/id/:id",                       geoDash::geodashId);
+        get("/geo-dash/update/id/:id",                geoDash::updateDashBoardById);
+        get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetById);
+        get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
+        get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);
 
         // Routing Table: Page Not Found
-        get("*", (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });
+        get("*",                                      Views.pageNotFound(freemarker));
 
         // Handle Exceptions
-        exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
-    }
-
-    // Sets up Spark's routing table and exception handling rules for use with Collect and Of-Users
-    private static void declareRemoteStorageRoutes() {
-        // Create a configured FreeMarker renderer
-        FreeMarkerEngine freemarker = new FreeMarkerEngine(getConfiguration());
-
-        // FIXME: Get deploy/clientkeystore signed by a certificate authority.
-        // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
-        // https://spark.apache.org/docs/latest/security.html
-        // secure("deploy/clientkeystore", "ceocert", null, null);
-
-        // Serve static files from src/main/resources/public/
-        staticFileLocation("/public");
-
-        // Allow token-based authentication if users are not logged in
-        before("/*", new CeoAuthFilter());
-
-        // Routing Table: HTML pages
-        get("/",                (req, res) -> { return freemarker.render(Views.home(req, res)); });
-        get("/home",            (req, res) -> { return freemarker.render(Views.home(req, res)); });
-        get("/about",           (req, res) -> { return freemarker.render(Views.about(req, res)); });
-        get("/support",         (req, res) -> { return freemarker.render(Views.support(req, res)); });
-        get("/account/:id",     (req, res) -> { return freemarker.render(Views.account(req, res)); });
-        post("/account/:id",    (req, res) -> { return freemarker.render(Views.account(OfUsers.updateAccount(req, res), res)); });
-        get("/institution/:id", (req, res) -> { return freemarker.render(Views.institution(req, res, "remote")); });
-        get("/collection/:id",  (req, res) -> { return freemarker.render(Views.collection(req, res)); });
-        get("/geo-dash",        (req, res) -> { return freemarker.render(Views.geodash(req, res)); });
-        get("/widget-layout-editor", (req, res) -> { return freemarker.render(Views.editWidgetLayout(req, res)); });
-        get("/project/:id",     (req, res) -> { return freemarker.render(Views.project(req, res)); });
-        get("/login",           (req, res) -> { return freemarker.render(Views.login(req, res)); });
-        post("/login",          (req, res) -> { return freemarker.render(Views.login(OfUsers.login(req, res), res)); });
-        get("/register",        (req, res) -> { return freemarker.render(Views.register(req, res)); });
-        post("/register",       (req, res) -> { return freemarker.render(Views.register(OfUsers.register(req, res), res)); });
-        get("/password",        (req, res) -> { return freemarker.render(Views.password(req, res)); });
-        post("/password",       (req, res) -> { return freemarker.render(Views.password(OfUsers.getPasswordResetKey(req, res), res)); });
-        get("/password-reset",  (req, res) -> { return freemarker.render(Views.passwordReset(req, res)); });
-        post("/password-reset", (req, res) -> { return freemarker.render(Views.passwordReset(OfUsers.resetPassword(req, res), res)); });
-        get("/card-test",       (req, res) -> { return freemarker.render(Views.cardTest(req, res)); });
-        get("/logout",          (req, res) -> { return freemarker.render(Views.home(OfUsers.logout(req, res), res)); });
-
-        // Routing Table: Projects API
-        get("/get-all-projects",                (req, res) -> { return CollectProjects.getAllProjects(req, res); });
-        get("/get-project-by-id/:id",           (req, res) -> { return CollectProjects.getProjectById(req, res); });
-        get("/get-project-plots/:id/:max",      (req, res) -> { return CollectProjects.getProjectPlots(req, res); });
-        get("/get-project-stats/:id",           (req, res) -> { return CollectProjects.getProjectStats(req, res); });
-        get("/get-unanalyzed-plot/:id",         (req, res) -> { return CollectProjects.getUnanalyzedPlot(req, res); });
-        get("/get-unanalyzed-plot-by-id/:projid/:id", (req, res) -> { return CollectProjects.getUnanalyzedPlotById(req, res); });
-        get("/dump-project-aggregate-data/:id", (req, res) -> { return CollectProjects.dumpProjectAggregateData(req, res); });
-        get("/dump-project-raw-data/:id",       (req, res) -> { return CollectProjects.dumpProjectRawData(req, res); });
-        post("/create-project",                 (req, res) -> { return CollectProjects.createProject(req, res); });
-        post("/publish-project/:id",            (req, res) -> { return CollectProjects.publishProject(req, res); });
-        post("/close-project/:id",              (req, res) -> { return CollectProjects.closeProject(req, res); });
-        post("/archive-project/:id",            (req, res) -> { return CollectProjects.archiveProject(req, res); });
-        post("/add-user-samples",               (req, res) -> { return CollectProjects.addUserSamples(req, res); });
-        post("/flag-plot",                      (req, res) -> { return CollectProjects.flagPlot(req, res); });
-
-        // Routing Table: Users API
-        get("/get-all-users",                   (req, res) -> { return OfUsers.getAllUsers(req, res); });
-        post("/update-user-institution-role",   (req, res) -> { return OfUsers.updateInstitutionRole(req, res); });
-        post("/request-institution-membership", (req, res) -> { return OfUsers.requestInstitutionMembership(req, res); });
-
-        // Routing Table: Institutions API
-        get("/get-all-institutions",        (req, res) -> { return OfGroups.getAllInstitutions(req, res); });
-        get("/get-institution-details/:id", (req, res) -> { return OfGroups.getInstitutionDetails(req, res); });
-        post("/update-institution/:id",     (req, res) -> { return OfGroups.updateInstitution(req, res); });
-        post("/archive-institution/:id",    (req, res) -> { return OfGroups.archiveInstitution(req, res); });
-
-        // Routing Table: Imagery API
-        get("/get-all-imagery",             (req, res) -> { return CollectImagery.getAllImagery(req, res); });
-        post("/add-institution-imagery",    (req, res) -> { return CollectImagery.addInstitutionImagery(req, res); });
-        post("/delete-institution-imagery", (req, res) -> { return CollectImagery.deleteInstitutionImagery(req, res); });
-
-        // Routing Table: GeoDash API
-        get("/geo-dash/id/:id",                  (req, res) -> { return GeoDash.geodashId(req, res); });
-        get("/geo-dash/update/id/:id",           (req, res) -> { return GeoDash.updateDashBoardByID(req, res); });
-        get("/geo-dash/createwidget/widget",     (req, res) -> { return GeoDash.createDashBoardWidgetByID(req, res); });
-        get("/geo-dash/updatewidget/widget/:id", (req, res) -> { return GeoDash.updateDashBoardWidgetByID(req, res); });
-        get("/geo-dash/deletewidget/widget/:id", (req, res) -> { return GeoDash.deleteDashBoardWidgetByID(req, res); });
-
-        // Routing Table: Page Not Found
-        get("*", (req, res) -> { return freemarker.render(Views.pageNotFound(req, res)); });
-
-        // Handle Exceptions
-        exception(Exception.class, (e, req, rsp) -> e.printStackTrace());
+        exception(Exception.class, (e, req, res) -> e.printStackTrace());
     }
 
     // Maven/Gradle entry point for running with embedded Jetty webserver
     public static void main(String[] args) {
+        var usageMessage = "Usage (option 1): mvn compile exec:java -Dexec.args=<JSON|POSTGRES>\n" +
+                           "Usage (option 2): gradle run -PrunArgs=<JSON|POSTGRES>";
+
+        if (args.length != 1 || !List.of("JSON", "POSTGRES").contains(args[0])) {
+            System.out.println(usageMessage);
+            System.exit(0);
+        }
+
         // Load the SMTP settings for sending reset password emails
-        JsonObject smtpSettings = readJsonFile("mail-config.json").getAsJsonObject();
+        var smtpSettings        = readJsonFile("mail-config.json").getAsJsonObject();
         CeoConfig.baseUrl       = smtpSettings.get("baseUrl").getAsString();
         CeoConfig.smtpUser      = smtpSettings.get("smtpUser").getAsString();
         CeoConfig.smtpServer    = smtpSettings.get("smtpServer").getAsString();
@@ -222,14 +164,34 @@ public class Server implements SparkApplication {
         // Start the Jetty webserver on port 8080
         port(8080);
 
-        // Set up the routing table
-        declareLocalStorageRoutes();
+        if (args[0].equals("JSON")) {
+            // Set up the routing table to use the JSON backend
+            declareRoutes("JSON",
+                          new JsonProjects(),
+                          new JsonImagery(),
+                          new JsonUsers(),
+                          new JsonInstitutions(),
+                          new JsonGeoDash());
+        } else {
+            // Set up the routing table to use the POSTGRES backend
+            declareRoutes("POSTGRES",
+                          new PostgresProjects(),
+                          new PostgresImagery(),
+                          new PostgresUsers(),
+                          new PostgresInstitutions(),
+                          new PostgresGeoDash());
+        }
     }
 
     // Tomcat entry point
     public void init() {
         // Set up the routing table
-        declareRemoteStorageRoutes();
+        declareRoutes("COLLECT",
+                      new CollectProjects(),
+                      new CollectImagery(),
+                      new OfUsers(),
+                      new OfGroups(),
+                      new JsonGeoDash());
     }
 
 }

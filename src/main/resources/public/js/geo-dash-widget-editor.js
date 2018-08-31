@@ -426,6 +426,7 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 dataType: "jsonp",
                 widget: JSON.stringify(which),
                 data: {
+                    pID: gpid,
                     dashID: this.dashboardID,
                     widgetJSON: JSON.stringify(which)
                 },

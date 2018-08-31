@@ -6,7 +6,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -18,7 +17,7 @@ import spark.Request;
 public class PartUtils {
 
     public static String camelCase(String kebabString) {
-        String camelString = Arrays.stream(kebabString.split("-"))
+        var camelString = Arrays.stream(kebabString.split("-"))
             .map(word -> word.substring(0,1).toUpperCase() + word.substring(1))
             .collect(Collectors.joining(""));
         return camelString.substring(0,1).toLowerCase() + camelString.substring(1);
@@ -28,7 +27,7 @@ public class PartUtils {
         if (part == null) {
             return null;
         } else {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
+            try (var reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
                 return reader.lines().collect(Collectors.joining("\n"));
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -40,7 +39,7 @@ public class PartUtils {
         if (part == null) {
             return null;
         } else {
-            try (JsonReader reader = new JsonReader(new InputStreamReader(part.getInputStream()))) {
+            try (var reader = new JsonReader(new InputStreamReader(part.getInputStream()))) {
                 return (new JsonParser()).parse(reader);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -49,7 +48,7 @@ public class PartUtils {
     }
 
     public static JsonObject partsToJsonObject(Request req, String[] fields) {
-        JsonObject obj = new JsonObject();
+        var obj = new JsonObject();
         Arrays.stream(fields)
             .forEach(field -> {
                     try {
@@ -63,18 +62,18 @@ public class PartUtils {
     public static String writeFilePart(Request req, String partName, String outputDirectory, String outputFilePrefix) {
         try {
             // Extract the part from the request
-            Part part = req.raw().getPart(partName);
+            var part = req.raw().getPart(partName);
 
-            String inputFileName = part.getSubmittedFileName();
+            var inputFileName = part.getSubmittedFileName();
             if (inputFileName == null) {
                 return null;
             } else {
                 // Append the uploaded file extension to outputFilePrefix
-                String inputFileType = inputFileName.substring(inputFileName.lastIndexOf(".") + 1);
-                String outputFileName = outputFilePrefix + "." + inputFileType;
+                var inputFileType = inputFileName.substring(inputFileName.lastIndexOf(".") + 1);
+                var outputFileName = outputFilePrefix + "." + inputFileType;
 
                 // Write the file to outputDirectory and return the filename
-                try (InputStream input = part.getInputStream()) {
+                try (var input = part.getInputStream()) {
                     Files.copy(input, (new File(outputDirectory, outputFileName)).toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
                 return outputFileName;

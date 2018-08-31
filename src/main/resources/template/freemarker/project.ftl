@@ -2,17 +2,33 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <script type="text/javascript" src="${root}/js/project.js"></script>
+<#if project_id == "">
+    <#assign project_id = "0">
+</#if>
+<#if institution_id == "">
+    <#assign institution_id = "0">
+</#if>
+<#if project_id == "0">
+    <#assign project_stats_visibility = "d-none">
+    <#assign project_template_visibility = "visible">
+<#else>
+    <#assign project_stats_visibility = "visible">
+    <#assign project_template_visibility = "d-none">
+</#if>
 <div id="project" class="row justify-content-center" ng-app="project" ng-controller="ProjectController as project"
-     ng-init="project.initialize('${root}', '${project_id!0}', '${institution_id!0}')">
+     ng-init="project.initialize('${root}', '${userid}', '${project_id}', '${institution_id}')">
     <div id="project-design" class="col-xl-6 col-lg-8 border bg-lightgray mb-5">
  		<div class="bg-darkgreen mb-3 no-container-margin">
-      	 		<h1 class="d-none">Create Project</h1>
-      	 		<h1>Edit Project</h1>
+            <#if project_id == "0">
+                <h1>Create Project</h1>
+            <#else>
+                <h1>Review Project</h1>
+            </#if>
         </div>
-        <div id="project-map" class="d-none"></div>
         <div class="row mb-3">
-	        <div id="project-stats" class="col">
-	            <button class="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse" href="#project-stats-collapse" role="button" aria-expanded="false" aria-controls="project-stats-collapse">
+	        <div id="project-stats" class="col ${project_stats_visibility}">
+	            <button class="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                        href="#project-stats-collapse" role="button" aria-expanded="false" aria-controls="project-stats-collapse">
 					Project Stats
             	</button>
 	            <div class="collapse col-xl-12" id="project-stats-collapse">
@@ -20,9 +36,9 @@
 		                <tbody>
 		                    <tr>
 		                        <td>Members</td>
-		                        <td>{{ project.members }}</td>
+		                        <td>{{ project.stats.members }}</td>
 		                        <td>Contributors</td>
-		                        <td>{{ project.contributors }}</td>
+		                        <td>{{ project.stats.contributors }}</td>
 		                    </tr>
 		                    <tr>
 		                        <td>Total Plots</td>
@@ -32,19 +48,19 @@
 		                    </tr>
 		                    <tr>
 		                        <td>Flagged Plots</td>
-		                        <td>{{ project.flaggedPlots }}</td>
+		                        <td>{{ project.stats.flaggedPlots }}</td>
 		                        <td>Date Published</td>
 		                        <td>{{ project.datePublished }}</td>
 		                    </tr>
 		                    <tr>
 		                        <td>Analyzed Plots</td>
-		                        <td>{{ project.analyzedPlots }}</td>
+		                        <td>{{ project.stats.analyzedPlots }}</td>
 		                        <td>Date Closed</td>
 		                        <td>{{ project.dateClosed }}</td>
 		                    </tr>
 		                    <tr>
 		                        <td>Unanalyzed Plots</td>
-		                        <td>{{ project.unanalyzedPlots }}</td>
+		                        <td>{{ project.stats.unanalyzedPlots }}</td>
 		                        <td>Date Archived</td>
 		                        <td>{{ project.dateArchived }}</td>
 		                    </tr>
@@ -54,6 +70,20 @@
         	</div>
    		</div>
         <form id="project-design-form" class="px-2 pb-2" method="post" action="${root}/create-project" enctype="multipart/form-data">
+        	<div class="row ${project_template_visibility}">
+	 			<div class="col">
+	 				<h2 class="header px-0">Use Project Template (Optional)</h2>
+	        		<div id="project-template-selector">
+	  					<div class="form-group">
+			                <h3 for="project-template">Select Project</h3>
+		                    <select class="form-control form-control-sm" id="project-template" name="project-template"
+                                    size="1" ng-model="project.templateId" ng-change="project.setProjectTemplate()">
+		                        <option ng-repeat="proj in project.projectList" value="{{ proj.id }}">{{ proj.name }}</option>
+		                    </select>
+			            </div>
+		            </div>
+	            </div>
+            </div>
         	<div class="row">
 	 			<div class="col">
 	 				<h2 class="header px-0">Project Info</h2>
@@ -93,13 +123,16 @@
 		            </div>
 	            </div>
 			</div>
-			<div class="row d-none">
+			<div class="row">
 	 			<div class="col">
 	                <h2 class="header px-0">Project AOI</h2>
 			        <div id="project-aoi">
-			            <div class="row">
-							<div class="col small text-center mb-2">Hold CTRL and click-and-drag a bounding box on the map</div>
-			            </div>
+                        <div id="project-map"></div>
+                        <#if project_id == "0">
+			                <div class="row">
+							    <div class="col small text-center mb-2">Hold CTRL and click-and-drag a bounding box on the map</div>
+			                </div>
+                        </#if>
               			<div class="form-group mx-4">
 			                <div class="row">  
 			                	<div class="col-md-6 offset-md-3">
@@ -127,46 +160,12 @@
 	 			<div class="col">
 	                <h2 class="header px-0">Project Imagery</h2>
 		            <div id="project-imagery">
-		              <div class="form-group mb-1">
-		                <h3  for="base-map-source">Basemap Source</h3>
-		                <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1" ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
-		                    <option ng-repeat="imagery in project.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
-		                </select>
+		                <div class="form-group mb-1">
+		                    <h3 for="base-map-source">Basemap Source</h3>
+		                    <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1" ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
+		                        <option ng-repeat="imagery in project.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
+		                    </select>
 	               		</div>
-						<div class="form-group mb-1 {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'd-none' }}">
-		                	<p  for="imagery-year" >Imagery Year</p>
-			                <select class="form-control form-control-sm" id="imagery-year" name="imagery-year" size="1" ng-model="project.details.imageryYear" convert-to-number ng-change="project.updateDGWMSLayer()"
-			                        style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-			                    <option value="2016">2016</option>
-			                    <option value="2015">2015</option>
-			                    <option value="2014">2014</option>
-			                    <option value="2013">2013</option>
-			                    <option value="2012">2012</option>
-			                    <option value="2011">2011</option>
-			                    <option value="2010">2010</option>
-			                    <option value="2009">2009</option>
-			                    <option value="2008">2008</option>
-			                    <option value="2007">2007</option>
-			                    <option value="2006">2006</option>
-			                    <option value="2005">2005</option>
-			                    <option value="2004">2004</option>
-			                    <option value="2003">2003</option>
-			                    <option value="2002">2002</option>
-			                    <option value="2001">2001</option>
-			                    <option value="2000">2000</option>
-			                </select>
-						</div>
-		                <div class="form-group mb-1  {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'd-none' }}" >
-		               		<p for="stacking-profile">Stacking Profile</p>
-			                <select class="form-control form-control-sm" id="stacking-profile" name="stacking-profile" size="1" ng-model="project.details.stackingProfile" ng-change="project.updateDGWMSLayer()"
-			                        style="visibility: {{ project.details.baseMapSource == 'DigitalGlobeWMSImagery' ? 'visible' : 'hidden' }}">
-			                    <option value="Accuracy_Profile">Accuracy Profile</option>
-			                    <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
-			                    <option value="Global_Currency_Profile">Global Currency Profile</option>
-			                    <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
-			                    <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
-			                </select>
-		                </div>
 		            </div>
 	            </div>
 			</div>
@@ -243,78 +242,103 @@
 			                <input class="form-control form-control-sm" type="number" id="sample-resolution" name="sample-resolution" autocomplete="off" min="0.0" step="any" ng-model="project.details.sampleResolution" disabled>
 		                </div>
 		            </div>
-	           </div>           
+	            </div>
 			</div>
             <div class="sample-value-info" ng-repeat="sampleValueGroup in project.details.sampleValues">
-                <h2 class="header px-0">Sample Value: {{ sampleValueGroup.name }}</h2>
+                <h2 class="header px-0">
+                    <#if project_id == "0">
+                        <input id="remove-sample-value-group" type="button" class="button" value="-"
+                               ng-click="project.removeSampleValueGroup(sampleValueGroup.name)">
+                    </#if>
+                    Sample Value Group: {{ sampleValueGroup.name }}
+                </h2>
                 <table class="table table-sm">
                     <thead>
                         <tr>
                             <th scope="col"></th>
                             <th scope="col">Name</th>
                             <th scope="col">Color</th>
-                            <th scope="col">Reference Image</th>
+                            <!-- <th scope="col">Reference Image</th> -->
                         </tr>
                     </thead>
                     <tbody>
                         <tr ng-repeat="sampleValue in sampleValueGroup.values">
                             <td>
-                                <input type="button" class="button" value="-" ng-click="project.removeSampleValueRow(sampleValueGroup.name, sampleValue.name)"
-                                       style="visibility: {{ project.details.id == 0 ? 'visible' : 'hidden' }}">
+                                <#if project_id == "0">
+                                    <input type="button" class="button" value="-"
+                                           ng-click="project.removeSampleValueRow(sampleValueGroup.name, sampleValue.name)">
+                                <#else>
+                                    &nbsp;
+                                </#if>
                             </td>
                             <td>
                                 {{ sampleValue.name }}
                             </td>
                             <td>
-                                <div class="circle" style="background-color: {{ sampleValue.color }};border:solid 1px; "></div>
+                                <div class="circle" style="background-color: {{ sampleValue.color }};border:solid 1px;"></div>
                             </td>
-                            <td>
-                                {{ sampleValue.image }}
-                            </td>
+                            <!-- <td>
+                              {{ sampleValue.image }}
+                              </td> -->
                         </tr>
-                        <tr class="{{ project.details.id == 0 ? 'visible' : 'd-none' }}">
-                            <td>
-                                <input type="button" class="button" value="+" ng-click="project.addSampleValueRow(sampleValueGroup.name)">
-                            </td>
-                            <td>
-                                <input type="text" class="value-name" autocomplete="off" ng-model="project.newValueEntry[sampleValueGroup.name].name">
-                            </td>
-                            <td>
-                                <input type="color" class="value-color" ng-model="project.newValueEntry[sampleValueGroup.name].color">
-                            </td>
-                            <td>
-                                <input type="file" class="value-image" accept="image/*" ng-model="project.newValueEntry[sampleValueGroup.name].image">
-                            </td>
-                        </tr>
+                        <#if project_id == "0">
+                            <tr>
+                                <td>
+                                    <input type="button" class="button" value="+"
+                                           ng-click="project.addSampleValueRow(sampleValueGroup.name)">
+                                </td>
+                                <td>
+                                    <input type="text" class="value-name" autocomplete="off"
+                                           ng-model="project.newValueEntry[sampleValueGroup.name].name">
+                                </td>
+                                <td>
+                                    <input type="color" class="value-color"
+                                           ng-model="project.newValueEntry[sampleValueGroup.name].color">
+                                </td>
+                                <!-- <td>
+                                  <input type="file" class="value-image" accept="image/*"
+                                  ng-model="project.newValueEntry[sampleValueGroup.name].image">
+                                  </td> -->
+                            </tr>
+                        </#if>
                     </tbody>
                 </table>
             </div>
-            <div id="add-sample-value-group" class="{{ project.details.id == 0 ? 'visible' : 'd-none' }}">
-                <input type="button" class="button" value="Add Sample Value Group" ng-click="project.addSampleValueGroup()">
-                <input type="text" autocomplete="off" ng-model="project.newSampleValueGroupName">
-            </div>
+            <#if project_id == "0">
+                <div id="add-sample-value-group">
+                    <input type="button" class="button" value="Add Sample Value Group" ng-click="project.addSampleValueGroup()">
+                    <input type="text" autocomplete="off" ng-model="project.newSampleValueGroupName">
+                </div>
+            </#if>
         </form>
         <div id="project-management" class="col mb-3">
 			<h2 class="header px-0">Project Management</h2>
            	<div class="row">
-	            <input type="button" id="configure-geo-dash" class="btn btn-outline-lightgreen btn-sm btn-block"
-	                   name="configure-geo-dash" value="Configure Geo-Dash"
-	                   ng-click="project.configureGeoDash()">
-	            <input type="button" id="download-plot-data" class="btn btn-outline-lightgreen btn-sm btn-block"
-	                   name="download-plot-data" value="Download Plot Data"
-	                   ng-click="project.downloadPlotData()"
-	                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
-	            <input type="button" id="download-sample-data" class="btn btn-outline-lightgreen btn-sm btn-block"
-	                   name="download-sample-data" value="Download Sample Data"
-	                   ng-click="project.downloadSampleData()"
-	                   style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
-	            <input type="button" id="change-availability" class="btn btn-outline-danger btn-sm btn-block"
-	                   name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
-	                   ng-click="project.changeAvailability()">		                   
-             </div>
+                <#if project_id == "0">
+	                <input type="button" id="create-project" class="btn btn-outline-danger btn-sm btn-block"
+	                       name="create-project" value="Create Project"
+	                       ng-click="project.createProject()">
+                    <div id="spinner"></div>
+                <#else>
+	                <input type="button" id="configure-geo-dash" class="btn btn-outline-lightgreen btn-sm btn-block"
+	                       name="configure-geo-dash" value="Configure Geo-Dash"
+	                       ng-click="project.configureGeoDash()"
+                           style="display: {{ project.details.availability == 'unpublished' || project.details.availability == 'published' ? 'block' : 'none' }}">
+	                <input type="button" id="download-plot-data" class="btn btn-outline-lightgreen btn-sm btn-block"
+	                       name="download-plot-data" value="Download Plot Data"
+	                       ng-click="project.downloadPlotData()"
+	                       style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
+	                <input type="button" id="download-sample-data" class="btn btn-outline-lightgreen btn-sm btn-block"
+	                       name="download-sample-data" value="Download Sample Data"
+	                       ng-click="project.downloadSampleData()"
+	                       style="display: {{ project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none' }}">
+	                <input type="button" id="change-availability" class="btn btn-outline-danger btn-sm btn-block"
+	                       name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
+	                       ng-click="project.changeAvailability()">
+                </#if>
+            </div>
         </div>
     </div>
-    <div id="spinner"></div>
 </div>
 <#include "end-content.ftl">
 <#include "footer.ftl">

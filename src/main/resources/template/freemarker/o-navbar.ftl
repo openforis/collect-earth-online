@@ -12,7 +12,7 @@
                 <li><a href="${root}/${url?lower_case}">${url}</a></li>
             </#if>
         </#list>
-        <#if userid??>
+        <#if userid != "">
             <#if navlink == "Account">
                 <li><a class="active-link" href="${root}/account/${userid}">Account</a></li>
             <#else>
@@ -20,7 +20,7 @@
             </#if>
         </#if>
         <li class="mobileLogin" id="mobileLogin">
-            <#if username??>
+            <#if username != "">
                 <#if navlink == "Logout">
                     <p> ${username} </p><br><a class="active-link" href="${root}/logout">Logout</a>
                 <#else>
@@ -37,7 +37,7 @@
         <li class="icon"> <a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="menuControls()">&#9776;</a></li>
     </ul>
     <div id="login-info">
-        <#if username??>
+        <#if username != "">
             <#if navlink == "Logout">
                 <span>${username}</span> <a class="active-link" href="${root}/logout">Logout</a>
             <#else>

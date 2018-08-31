@@ -24,7 +24,7 @@
                     </li>
                 </#if>
             </#list>
-            <#if userid??>
+            <#if userid != "">
                 <#if navlink == "Account">
                     <li class="nav-item active">
                         <a class="nav-link" href="${root}/account/${userid}">Account</a>
@@ -37,7 +37,7 @@
             </#if>
         </ul>
         <ul id="login-info" class="navbar-nav mr-0">
-            <#if username??>
+            <#if username != "">
                 <li id="username" class="nav-item my-auto">
                     <span class="nav-link disabled">${username}</span>
                 </li>

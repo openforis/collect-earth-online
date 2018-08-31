@@ -12,18 +12,17 @@ import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
 import spark.Request;
 import spark.Response;
 
-public class Users {
+public class JsonUsers implements Users {
 
     private static final String BASE_URL      = CeoConfig.baseUrl;
     private static final String SMTP_USER     = CeoConfig.smtpUser;
@@ -31,29 +30,29 @@ public class Users {
     private static final String SMTP_PORT     = CeoConfig.smtpPort;
     private static final String SMTP_PASSWORD = CeoConfig.smtpPassword;
 
-    public static Request login(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputReturnURL = req.queryParams("returnurl");
-        String returnURL = (inputReturnURL != null && !inputReturnURL.isEmpty()) ?
-            CeoConfig.documentRoot + "/" + inputReturnURL + "?" + req.queryString() :
-            CeoConfig.documentRoot + "/home";
+    public Request login(Request req, Response res) {
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputReturnURL = req.queryParams("returnurl");
+        var returnURL = (inputReturnURL == null || inputReturnURL.isEmpty())
+            ? CeoConfig.documentRoot + "/home"
+            : inputReturnURL;
 
         // Check if email exists
-        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-        Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
-            req.session().attribute("flash_messages", new String[]{"No account with email " + inputEmail + " exists."});
+            req.session().attribute("flash_message", "No account with email " + inputEmail + " exists.");
             return req;
         } else {
             // Check if password matches
-            JsonObject user = matchingUser.get();
-            String storedId = user.get("id").getAsString();
-            String storedPassword = user.get("password").getAsString();
-            String storedRole = user.get("role").getAsString();
+            var user = matchingUser.get();
+            var storedId = user.get("id").getAsString();
+            var storedPassword = user.get("password").getAsString();
+            var storedRole = user.get("role").getAsString();
             if (!inputPassword.equals(storedPassword)) {
                 // Authentication failed
-                req.session().attribute("flash_messages", new String[]{"Invalid email/password combination."});
+                req.session().attribute("flash_message", "Invalid email/password combination.");
                 return req;
             } else {
                 // Authentication successful
@@ -66,33 +65,33 @@ public class Users {
         }
     }
 
-    public static synchronized Request register(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+    public synchronized Request register(Request req, Response res) {
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
 
-        // Validate input params and assign flash_messages if invalid
+        // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
-            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
             return req;
         } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+            req.session().attribute("flash_message", "Password must be at least 8 characters.");
             return req;
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (matchingUser.isPresent()) {
-                req.session().attribute("flash_messages", new String[]{"Account " + inputEmail + " already exists."});
+                req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                 return req;
             } else {
                 // Add a new user to user-list.json
-                int newUserId = getNextId(users);
-                String newUserRole = "user";
+                var newUserId = getNextId(users);
+                var newUserRole = "user";
 
-                JsonObject newUser = new JsonObject();
+                var newUser = new JsonObject();
                 newUser.addProperty("id", newUserId);
                 newUser.addProperty("email", inputEmail);
                 newUser.addProperty("password", inputPassword);
@@ -103,7 +102,7 @@ public class Users {
                 writeJsonFile("user-list.json", users);
 
                 // Assign the username and role session attributes
-                req.session().attribute("userid", newUserId);
+                req.session().attribute("userid", newUserId + "");
                 req.session().attribute("username", inputEmail);
                 req.session().attribute("role", newUserRole);
 
@@ -114,40 +113,40 @@ public class Users {
         }
     }
 
-    public static Request logout(Request req) {
+    public Request logout(Request req, Response res) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
         return req;
     }
 
-    public static Request updateAccount(Request req, Response res) {
-        String userId = req.session().attribute("userid");
-        String inputEmail = req.queryParams("email");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
-        String inputCurrentPassword = req.queryParams("current-password");
+    public synchronized Request updateAccount(Request req, Response res) {
+        var userId = (String) req.session().attribute("userid");
+        var inputEmail = req.queryParams("email");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
+        var inputCurrentPassword = req.queryParams("current-password");
 
-        // Validate input params and assign flash_messages if invalid
+        // Validate input params and assign flash_message if invalid
         if (!isEmail(inputEmail)) {
-            req.session().attribute("flash_messages", new String[]{inputEmail + " is not a valid email address."});
+            req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
             return req;
         } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+            req.session().attribute("flash_message", "Password must be at least 8 characters.");
             return req;
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
+            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
             if (!matchingUser.isPresent()) {
-                req.session().attribute("flash_messages", new String[]{"The requested user account does not exist."});
+                req.session().attribute("flash_message", "The requested user account does not exist.");
                 return req;
             } else {
-                JsonObject foundUser = matchingUser.get();
+                var foundUser = matchingUser.get();
                 if (!foundUser.get("password").getAsString().equals(inputCurrentPassword)) {
-                    req.session().attribute("flash_messages", new String[]{"Invalid password."});
+                    req.session().attribute("flash_message", "Invalid password.");
                     return req;
                 } else {
                     mapJsonFile("user-list.json",
@@ -161,33 +160,33 @@ public class Users {
                                     }
                                 });
                     req.session().attribute("username", inputEmail);
-                    req.session().attribute("flash_messages", new String[]{"The user has been updated."});
+                    req.session().attribute("flash_message", "The user has been updated.");
                     return req;
                 }
             }
         }
     }
 
-    public static Request getPasswordResetKey(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-        Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+    public synchronized Request getPasswordResetKey(Request req, Response res) {
+        var inputEmail = req.queryParams("email");
+        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
-            req.session().attribute("flash_messages", new String[]{"There is no user with that email address."});
+            req.session().attribute("flash_message", "There is no user with that email address.");
             return req;
         } else {
             try {
-                String resetKey = UUID.randomUUID().toString();
+                var resetKey = UUID.randomUUID().toString();
                 mapJsonFile("user-list.json",
-                            user -> {
-                                if (user.get("email").getAsString().equals(inputEmail)) {
-                                    user.addProperty("resetKey", resetKey);
-                                    return user;
-                                } else {
-                                    return user;
-                                }
-                            });
-                String body = "Hi "
+                        user -> {
+                            if (user.get("email").getAsString().equals(inputEmail)) {
+                                user.addProperty("resetKey", resetKey);
+                                return user;
+                            } else {
+                                return user;
+                            }
+                        });
+                var body = "Hi "
                     + inputEmail
                     + ",\n\n"
                     + "  To reset your password, simply click the following link:\n\n"
@@ -196,38 +195,38 @@ public class Users {
                     + "&password-reset-key="
                     + resetKey;
                 sendMail(SMTP_USER, inputEmail, SMTP_SERVER, SMTP_PORT, SMTP_PASSWORD, "Password reset on CEO", body);
-                req.session().attribute("flash_messages", new String[]{"The reset key has been sent to your email."});
+                req.session().attribute("flash_message", "The reset key has been sent to your email.");
                 return req;
             } catch (Exception e) {
-                req.session().attribute("flash_messages", new String[]{"An error occurred. Please try again later."});
+                req.session().attribute("flash_message", "An error occurred. Please try again later.");
                 return req;
             }
         }
     }
 
-    public static Request resetPassword(Request req, Response res) {
-        String inputEmail = req.queryParams("email");
-        String inputResetKey = req.queryParams("password-reset-key");
-        String inputPassword = req.queryParams("password");
-        String inputPasswordConfirmation = req.queryParams("password-confirmation");
+    public synchronized Request resetPassword(Request req, Response res) {
+        var inputEmail = req.queryParams("email");
+        var inputResetKey = req.queryParams("password-reset-key");
+        var inputPassword = req.queryParams("password");
+        var inputPasswordConfirmation = req.queryParams("password-confirmation");
 
-        // Validate input params and assign flash_messages if invalid
+        // Validate input params and assign flash_message if invalid
         if (inputPassword.length() < 8) {
-            req.session().attribute("flash_messages", new String[]{"Password must be at least 8 characters."});
+            req.session().attribute("flash_message", "Password must be at least 8 characters.");
             return req;
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_messages", new String[]{"Password and Password confirmation do not match."});
+            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
+            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (!matchingUser.isPresent()) {
-                req.session().attribute("flash_messages", new String[]{"There is no user with that email address."});
+                req.session().attribute("flash_message", "There is no user with that email address.");
                 return req;
             } else {
-                JsonObject foundUser = matchingUser.get();
+                var foundUser = matchingUser.get();
                 if (!foundUser.get("resetKey").getAsString().equals(inputResetKey)) {
-                    req.session().attribute("flash_messages", new String[]{"Invalid reset key for user " + inputEmail + "."});
+                    req.session().attribute("flash_message", "Invalid reset key for user " + inputEmail + ".");
                     return req;
                 } else {
                     mapJsonFile("user-list.json",
@@ -240,16 +239,16 @@ public class Users {
                                         return user;
                                     }
                                 });
-                    req.session().attribute("flash_messages", new String[]{"Your password has been changed."});
+                    req.session().attribute("flash_message", "Your password has been changed.");
                     return req;
                 }
             }
         }
     }
 
-    public static String getAllUsers(Request req, Response res) {
-        String institutionId = req.queryParams("institutionId");
-        JsonArray users = readJsonFile("user-list.json").getAsJsonArray();
+    public String getAllUsers(Request req, Response res) {
+        var institutionId = req.queryParams("institutionId");
+        var users = readJsonFile("user-list.json").getAsJsonArray();
 
         if (institutionId == null || institutionId.isEmpty()) {
             return toStream(users)
@@ -261,14 +260,14 @@ public class Users {
                 .collect(intoJsonArray)
                 .toString();
         } else {
-            JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-            Optional<JsonObject> matchingInstitution = findInJsonArray(institutions,
+            var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+            var matchingInstitution = findInJsonArray(institutions,
                 institution -> institution.get("id").getAsString().equals(institutionId));
             if (matchingInstitution.isPresent()) {
-                JsonObject institution = matchingInstitution.get();
-                JsonArray members = institution.getAsJsonArray("members");
-                JsonArray admins = institution.getAsJsonArray("admins");
-                JsonArray pending = institution.getAsJsonArray("pending");
+                var institution = matchingInstitution.get();
+                var members = institution.getAsJsonArray("members");
+                var admins = institution.getAsJsonArray("admins");
+                var pending = institution.getAsJsonArray("pending");
                 return toStream(users)
                     .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
                     .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
@@ -292,14 +291,14 @@ public class Users {
         }
     }
 
-    public static Map<Integer, String> getInstitutionRoles(int userId) {
-        JsonArray institutions = readJsonFile("institution-list.json").getAsJsonArray();
-        JsonPrimitive userIdJson = new JsonPrimitive(userId);
+    public Map<Integer, String> getInstitutionRoles(int userId) {
+        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var userIdJson = new JsonPrimitive(userId);
         return toStream(institutions)
             .collect(Collectors.toMap(institution -> institution.get("id").getAsInt(),
                                       institution -> {
-                                          JsonArray members = institution.getAsJsonArray("members");
-                                          JsonArray admins = institution.getAsJsonArray("admins");
+                                          var members = institution.getAsJsonArray("members");
+                                          var admins = institution.getAsJsonArray("admins");
                                           if (admins.contains(userIdJson)) {
                                               return "admin";
                                           } else if (members.contains(userIdJson)) {
@@ -311,18 +310,18 @@ public class Users {
                                       (a, b) -> b));
     }
 
-    public static synchronized String updateInstitutionRole(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        JsonElement userId = jsonInputs.get("userId");
-        String institutionId = jsonInputs.get("institutionId").getAsString();
-        String role = jsonInputs.get("role").getAsString();
+    public synchronized String updateInstitutionRole(Request req, Response res) {
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var userId = jsonInputs.get("userId");
+        var institutionId = jsonInputs.get("institutionId").getAsString();
+        var role = jsonInputs.get("role").getAsString();
 
         mapJsonFile("institution-list.json",
                     institution -> {
                         if (institution.get("id").getAsString().equals(institutionId)) {
-                            JsonArray members = institution.getAsJsonArray("members");
-                            JsonArray admins = institution.getAsJsonArray("admins");
-                            JsonArray pending = institution.getAsJsonArray("pending");
+                            var members = institution.getAsJsonArray("members");
+                            var admins = institution.getAsJsonArray("admins");
+                            var pending = institution.getAsJsonArray("pending");
                             if (role.equals("member")) {
                                 if (!members.contains(userId)) {
                                     members.add(userId);
@@ -360,16 +359,16 @@ public class Users {
         return "";
     }
 
-    public static synchronized String requestInstitutionMembership(Request req, Response res) {
-        JsonObject jsonInputs = parseJson(req.body()).getAsJsonObject();
-        JsonElement userId = jsonInputs.get("userId");
-        String institutionId = jsonInputs.get("institutionId").getAsString();
+    public synchronized String requestInstitutionMembership(Request req, Response res) {
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var userId = jsonInputs.get("userId");
+        var institutionId = jsonInputs.get("institutionId").getAsString();
 
         mapJsonFile("institution-list.json",
                     institution -> {
                         if (institution.get("id").getAsString().equals(institutionId)) {
-                            JsonArray members = institution.getAsJsonArray("members");
-                            JsonArray pending = institution.getAsJsonArray("pending");
+                            var members = institution.getAsJsonArray("members");
+                            var pending = institution.getAsJsonArray("pending");
                             if (!members.contains(userId) && !pending.contains(userId)) {
                                 pending.add(userId);
                             }

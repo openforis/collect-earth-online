@@ -2,8 +2,11 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <script type="text/javascript" src="${root}/js/collection.js"></script>
+<#if username == "">
+    <#assign username = "guest">
+</#if>
 <div id="collection" class="row" ng-app="collection" ng-controller="CollectionController as collection"
-     ng-init="collection.initialize('${root}', '${username!"guest"}', '${project_id}')">
+     ng-init="collection.initialize('${root}', '${username}', '${project_id}')">
     <div id="image-analysis-pane" ng-class="collection.map" class="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
         <div class="buttonHolder d-none">
             <div ng-hide="collection.showSideBar">
@@ -25,7 +28,7 @@
         </div>
     </div>
     <div id="sidebar" class="col-xl-3" old_ng-show="collection.showSideBar">
-    	<h2 class="header">Project title</h2>
+    	<h2 class="header">{{ collection.currentProject.name }}</h2>
         <fieldset class="mb-3 text-center">
             <h3>Plot Navigation</h3>
             <div class="row">

@@ -54,7 +54,6 @@
         <!-- Gary's custom styles and scripts -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/stylesheet.css"> -->
         <script type="text/javascript" src="${root}/js/mercator-openlayers.js"></script>
-        <script type="text/javascript" src="${root}/js/map-utils.js"></script>
         <script type="text/javascript" src="${root}/js/utils.js"></script>
 
         <!-- Jerome's custom styles and scripts -->

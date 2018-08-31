@@ -1,5 +1,6 @@
 angular.module("project", []).controller("ProjectController", ["$http", function ProjectController($http) {
     this.root = "";
+    this.userId = "";
     this.institution = "";
     this.details = null;
     this.stats = null;
@@ -12,6 +13,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
     this.latMax = "";
     this.newSampleValueGroupName = "";
     this.newValueEntry = {};
+    this.projectList = null;
+    this.templateId = "0";
 
     // FIXME: Add these attributes to the JSON database
     this.dateCreated = null;
@@ -136,6 +139,17 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         window.open(this.root + "/dump-project-raw-data/" + this.details.id, "_blank");
     };
 
+    this.setProjectTemplate = function () {
+        const templateProject = this.projectList.find(
+            function (project) {
+                return project.id == this.templateId;
+            },
+            this
+        );
+        this.details = JSON.parse(JSON.stringify(templateProject)); // clone project
+        this.updateUnmanagedComponents(this.templateId);
+    };
+
     this.setPrivacyLevel = function (privacyLevel) {
         this.details.privacyLevel = privacyLevel;
     };
@@ -184,6 +198,14 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         }
     };
 
+    this.removeSampleValueGroup = function(sampleValueGroupName) {
+        this.details.sampleValues = this.details.sampleValues.filter(
+            function (sampleValueGroup) {
+                return sampleValueGroup.name != sampleValueGroupName;
+            }
+        );
+    };
+
     this.getSampleValueGroupByName = function (sampleValueGroupName) {
         return this.details.sampleValues.find(
             function (sampleValueGroup) {
@@ -223,9 +245,9 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 } else {
                     this.details = response.data;
                     if (this.details.id == 0) {
-                        this.initialize(this.root, projectId, this.institution);
+                        this.initialize(this.root, this.userId, projectId, this.institution);
                     } else {
-                        this.initialize(this.root, projectId, this.details.institution);
+                        this.initialize(this.root, this.userId, projectId, this.details.institution);
                     }
                 }
             }), function errorCallback(response) {
@@ -234,11 +256,23 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             });
     };
 
+    this.getProjectList = function (userId, projectId) {
+        $http.get(this.root + "/get-all-projects?userId=" + userId)
+            .then(angular.bind(this, function successCallback(response) {
+                this.projectList = response.data;
+                this.projectList.unshift(JSON.parse(JSON.stringify(this.details)));
+                this.initialize(this.root, userId, projectId, this.institution);
+            }), function errorCallback(response) {
+                console.log(response);
+                alert("Error retrieving the project list. See console for details.");
+            });
+    };
+
     this.getProjectStats = function (projectId) {
         $http.get(this.root + "/get-project-stats/" + projectId)
             .then(angular.bind(this, function successCallback(response) {
                 this.stats = response.data;
-                this.initialize(this.root, projectId, this.institution);
+                this.initialize(this.root, this.userId, projectId, this.institution);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving project stats. See console for details.");
@@ -249,7 +283,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         $http.get(this.root + "/get-all-imagery?institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.imageryList = response.data;
-                this.initialize(this.root, this.details.id, this.institution);
+                this.initialize(this.root, this.userId, this.details.id, this.institution);
             }), function errorCallback(response) {
                 console.log(response);
                 alert("Error retrieving the imagery list. See console for details.");
@@ -273,13 +307,18 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             this.getPlotList(projectId, maxPlots);
         } else {
             // Draw the plot shapes on the map
+            mercator.removeLayerByTitle(this.mapConfig, "flaggedPlots");
+            mercator.removeLayerByTitle(this.mapConfig, "analyzedPlots");
+            mercator.removeLayerByTitle(this.mapConfig, "unanalyzedPlots");
             mercator.addPlotOverviewLayers(this.mapConfig, this.plotList, this.details.plotShape);
         }
     };
 
     this.showProjectMap = function (projectId) {
         // Initialize the basemap
-        this.mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.imageryList);
+        if (this.mapConfig == null) {
+            this.mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.imageryList);
+        }
         mercator.setVisibleLayer(this.mapConfig, this.details.baseMapSource);
 
         if (this.details.id == 0) {
@@ -292,6 +331,11 @@ angular.module("project", []).controller("ProjectController", ["$http", function
                 document.getElementById("lon-max").value = extent[2];
                 document.getElementById("lat-max").value = extent[3];
             };
+            mercator.removeLayerByTitle(this.mapConfig, "currentAOI");
+            mercator.removeLayerByTitle(this.mapConfig, "flaggedPlots");
+            mercator.removeLayerByTitle(this.mapConfig, "analyzedPlots");
+            mercator.removeLayerByTitle(this.mapConfig, "unanalyzedPlots");
+            mercator.disableDragBoxDraw(this.mapConfig);
             mercator.enableDragBoxDraw(this.mapConfig, displayDragBoxBounds);
         } else {
             // Extract bounding box coordinates from the project boundary and show on the map
@@ -302,25 +346,56 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             this.latMax = boundaryExtent[3];
 
             // Display a bounding box with the project's AOI on the map and zoom to it
+            mercator.removeLayerByTitle(this.mapConfig, "currentAOI");
             mercator.addVectorLayer(this.mapConfig,
                                     "currentAOI",
                                     mercator.geometryToVectorSource(mercator.parseGeoJson(this.details.boundary, true)),
                                     ceoMapStyles.polygon);
             mercator.zoomMapToLayer(this.mapConfig, "currentAOI");
 
+            // Force reloading of the plotList
+            this.plotList = null;
+
             // Show the plot centers on the map (but constrain to <= 100 points)
             this.showPlotCenters(projectId, 100);
         }
     };
 
-    this.initialize = function (documentRoot, projectId, institutionId) {
-        // Make the documentRoot and institutionId globally available
+    this.updateUnmanagedComponents = function (projectId) {
+        // Check the radio button values for this project
+        document.getElementById("privacy-" + this.details.privacyLevel).checked = true;
+        document.getElementById("plot-distribution-" + this.details.plotDistribution).checked = true;
+        document.getElementById("plot-shape-" + this.details.plotShape).checked = true;
+        document.getElementById("sample-distribution-" + this.details.sampleDistribution).checked = true;
+
+        // Enable the input fields that are connected to the radio buttons if their values are not null
+        if (this.details.plotDistribution == "gridded") {
+            utils.enable_element("plot-spacing");
+        }
+        if (this.details.sampleDistribution == "gridded") {
+            utils.enable_element("sample-resolution");
+        }
+
+        if (this.imageryList.length > 0) {
+            // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
+            this.details.baseMapSource = this.details.baseMapSource || this.imageryList[0].title;
+
+            // Draw a map with the project AOI and a sampling of its plots
+            this.showProjectMap(projectId);
+        }
+    };
+
+    this.initialize = function (documentRoot, userId, projectId, institutionId) {
+        // Make the documentRoot, userId, and institutionId globally available
         this.root = documentRoot;
+        this.userId = userId;
         this.institution = institutionId;
 
         if (this.details == null) {
             // Load the project details
             this.getProjectById(projectId);
+        } else if (this.details.id == 0 && this.projectList == null) {
+            this.getProjectList(userId, projectId);
         } else if (this.details.id != 0 && this.stats == null) {
             // Load the project stats
             this.getProjectStats(projectId);
@@ -328,27 +403,8 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             // Load the imageryList
             this.getImageryList(this.institution);
         } else {
-            // Check the radio button values for this project
-            document.getElementById("privacy-" + this.details.privacyLevel).checked = true;
-            document.getElementById("plot-distribution-" + this.details.plotDistribution).checked = true;
-            document.getElementById("plot-shape-" + this.details.plotShape).checked = true;
-            document.getElementById("sample-distribution-" + this.details.sampleDistribution).checked = true;
-
-            // Enable the input fields that are connected to the radio buttons if their values are not null
-            if (this.details.plotDistribution == "gridded") {
-                utils.enable_element("plot-spacing");
-            }
-            if (this.details.sampleDistribution == "gridded") {
-                utils.enable_element("sample-resolution");
-            }
-
-            if (this.imageryList.length > 0) {
-                // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-                this.details.baseMapSource = this.details.baseMapSource || this.imageryList[0].title;
-
-                // Draw a map with the project AOI and a sampling of its plots
-                this.showProjectMap(projectId);
-            }
+            // Set the radio buttons and checkboxes and load the project map
+            this.updateUnmanagedComponents(projectId);
         }
     };
 

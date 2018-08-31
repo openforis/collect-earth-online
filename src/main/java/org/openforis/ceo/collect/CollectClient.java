@@ -6,10 +6,7 @@ import static org.openforis.ceo.utils.RequestUtils.prepareGetRequest;
 import static org.openforis.ceo.utils.RequestUtils.toRequestContent;
 
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpMethods;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.google.gson.JsonElement;
 import java.io.IOException;
 import java.util.Map;
@@ -26,7 +23,7 @@ public class CollectClient {
 
     public static JsonElement getFromCollect(String url, Map<String, Object> params) {
         try {
-            HttpRequest request = prepareGetRequest(COLLECT_API_URL + url);
+            var request = prepareGetRequest(COLLECT_API_URL + url);
             if (!(params == null || params.isEmpty())) {
                 request.getUrl().putAll(params);
             }
@@ -62,9 +59,9 @@ public class CollectClient {
 
     public static JsonElement sendToCollect(String method, String url, Object params) {
         try {
-            HttpRequestFactory requestFactory = createRequestFactory();
-            HttpContent content = toRequestContent(params);
-            HttpRequest request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
+            var requestFactory = createRequestFactory();
+            var content = toRequestContent(params);
+            var request = requestFactory.buildRequest(method, new GenericUrl(COLLECT_API_URL + url), content);
             request.setConnectTimeout(CONNECTION_TIMEOUT);
             return getResponseAsJson(request.execute());
         } catch (IOException e) {
