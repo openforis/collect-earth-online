@@ -191,7 +191,7 @@ CREATE TABLE ts_vertex (
   interpreter               integer not null references users (id) on update cascade,
   last_modified             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   history_flag              integer DEFAULT 0,
-  packet_id                 integer DEFAULT -1;
+  packet_id                 integer DEFAULT -1
 );
 DROP INDEX IF EXISTS vertex_ptp;
 CREATE INDEX vertex_ptp ON ts_vertex USING btree (project_id, plot_id, interpreter);
