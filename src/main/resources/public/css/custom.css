@@ -438,11 +438,11 @@ h2.header{
 /*********************************************************************/
 /* COLLECTION PAGE */
 /*********************************************************************/
-ul#samplevalue{
+ul.samplevalue{
 	padding-left:0; 
  	column-count: 2;
 	}
-#samplevalue li{
+.samplevalue li{
 	list-style:none;
 	margin-bottom:1rem;
 -webkit-column-break-inside: avoid;

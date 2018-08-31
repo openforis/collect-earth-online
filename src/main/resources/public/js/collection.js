@@ -13,6 +13,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
     this.imageryMonthPlanet = "03";
     this.mapConfig = null;
     this.currentPlot = null;
+    this.currentParentSampleValue = null;
     this.userSamples = {};
     this.statClass = "projNoStats";
     this.arrowState = "arrow-down";
@@ -285,6 +286,44 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         this.loadRandomPlot();
     };
 
+    this.onlyUnique = function (value, index, self) {
+        return self.indexOf(value) === index;
+    };
+
+    this.getActualParentSampleValues = function (sampleValues) {
+        var allParents = sampleValues
+            .map(
+                function (sampleValue) {
+                    return sampleValue.parent;
+                }
+            ).filter(
+                function (name) {
+                    return name != null && name != "";
+                }
+            ).filter(this.onlyUnique);
+        return sampleValues.filter(
+            function (sampleValue) {
+                return allParents.includes(sampleValue.name);
+            }
+        );
+    };
+
+    this.getParentSampleValues = function (sampleValues) {
+        return sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.parent == null || sampleValue.parent == "";
+            }
+        );
+    };
+
+    this.getChildSampleValues = function (sampleValues, parentSampleValue) {
+        return sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.parent == parentSampleValue.name;
+            }
+        );
+    };
+
     this.setCurrentValue = function (sampleValueGroup, sampleValue) {
         var selectedFeatures = mercator.getSelectedSamples(this.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
@@ -308,6 +347,13 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
                 // FIXME: What is the minimal set of these that I can execute?
                 utils.enable_element("save-values-button");
                 utils.disable_element("new-plot-button");
+            }
+            if (sampleValueGroup.values.some(
+                function (value) {
+                    return value.parent == sampleValue.name;
+                }
+            )) {
+                this.currentParentSampleValue = sampleValue.name;
             }
         } else {
             alert("No sample points selected. Please click some first.");

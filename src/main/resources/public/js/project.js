@@ -195,17 +195,22 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         );
     };
 
+    this.getChildSampleValues = function (sampleValues, parentSampleValue) {
+        return sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.parent == parentSampleValue.name;
+            }
+        );
+    };
+
     this.topoSort = function (sampleValues) {
         var parentSampleValues = this.getParentSampleValues(sampleValues);
         var parentChildGroups = parentSampleValues.map(
             function (parentSampleValue) {
-                var childSampleValues = sampleValues.filter(
-                    function (sampleValue) {
-                        return sampleValue.parent == parentSampleValue.name;
-                    }
-                );
+                var childSampleValues = this.getChildSampleValues(sampleValues, parentSampleValue);
                 return [parentSampleValue].concat(childSampleValues);
-            }
+            },
+            this
         );
         return [].concat.apply([], parentChildGroups);
     };
