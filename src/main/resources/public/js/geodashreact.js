@@ -85,7 +85,6 @@ function updateSize(which, type)
 class Widgets extends React.Component {
     render() {
         return ( <div className="row placeholders">
-            <div className="grid-sizer"></div>
             {this.props.widgets.map(widget => (
                 <Widget
                     key={widget.id}
@@ -110,8 +109,8 @@ class Widget extends React.Component {
         return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue) }</React.Fragment>);
     }
     getWidgetHtml(widget, onOpacityChanged, opacityValue){
-            return (<div className={ this.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: '', widget.gridrow != null? widget.gridrow: '') }
-                        style={{gridColumn:widget.gridcolumn, gridRow:widget.gridrow}}>
+            return (<div className={ this.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: '', widget.gridrow != null? widget.gridrow: widget.layout != null? 'span ' + widget.layout.h: '') }
+                        style={{gridColumn:widget.gridcolumn != null? widget.gridcolumn: this.generategridcolumn(widget.layout.x, widget.layout.w), gridRow:widget.gridrow != null? widget.gridrow: this.generategridrow(widget.layout.y, widget.layout.h)}}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
@@ -127,6 +126,12 @@ class Widget extends React.Component {
                     </div>
                 </div>
             </div>);
+    }
+    generategridcolumn(x, w){
+        return (x + 1) + ' / span ' + w;
+    }
+    generategridrow(x, h){
+        return (x + 1) + ' / span ' + h;
     }
     getWidgetType(wtext)
     {

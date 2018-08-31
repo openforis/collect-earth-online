@@ -117,7 +117,7 @@
     grid-column-end: span 6;
 }
 .columnSpan3{
-    max-width:90%!important;
+    max-width:calc(100% - 20px)!important;
     grid-column-end: span 3;
 }
 .colStart1{
@@ -150,10 +150,27 @@
 .widgetEditor .rowSpan3{
     height:590px;
 }
+.widgetEditor.title{
+    background-color: #31bab0;
+    color: white;
+    line-height: 26px;
+}
+
+.widgetEditor .remove {
+    float: right;
+    margin-right: 10px;
+    cursor: pointer;
+}
 .container-fluid.widgetEditor{
     float:left;
     margin-right: unset;
     margin-left: unset;
+}
+.widgetEditor-widgetBackground{
+    background-size: cover!important;
+    background-repeat: no-repeat!important;
+    background-position: 50% 50%!important;
+    text-align:center;
 }
 .active-link.apply{
     margin-left: 3.2px;

@@ -27,6 +27,6 @@
     <div class="container-fluid">
         <div id="dashHolder"></div>
     </div>
-</div>
+
 <#include "end-content.ftl">
 <#include "footer.ftl">
