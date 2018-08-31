@@ -334,7 +334,6 @@
 	                <input type="button" id="create-project" class="btn btn-outline-danger btn-sm btn-block"
 	                       name="create-project" value="Create Project"
 	                       ng-click="project.createProject()">
-                    <div id="spinner"></div>
                 <#else>
 	                <input type="button" id="configure-geo-dash" class="btn btn-outline-lightgreen btn-sm btn-block"
 	                       name="configure-geo-dash" value="Configure Geo-Dash"
@@ -352,6 +351,7 @@
 	                       name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
 	                       ng-click="project.changeAvailability()">
                 </#if>
+                <div id="spinner"></div>
             </div>
         </div>
     </div>
