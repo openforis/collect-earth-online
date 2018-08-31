@@ -162,7 +162,8 @@
 		            <div id="project-imagery">
 		                <div class="form-group mb-1">
 		                    <h3 for="base-map-source">Basemap Source</h3>
-		                    <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1" ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
+		                    <select class="form-control form-control-sm" id="base-map-source" name="base-map-source" size="1"
+                                    ng-model="project.details.baseMapSource" ng-change="project.setBaseMapSource()">
 		                        <option ng-repeat="imagery in project.imageryList" value="{{ imagery.title }}">{{ imagery.title }}</option>
 		                    </select>
 	               		</div>
@@ -259,10 +260,11 @@
                             <th scope="col">Name</th>
                             <th scope="col">Color</th>
                             <!-- <th scope="col">Reference Image</th> -->
+                            <th scope="col">&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="sampleValue in sampleValueGroup.values">
+                        <tr ng-repeat="sampleValue in project.topoSort(sampleValueGroup.values)">
                             <td>
                                 <#if project_id == "0">
                                     <input type="button" class="button" value="-"
@@ -271,15 +273,20 @@
                                     &nbsp;
                                 </#if>
                             </td>
-                            <td>
+                            <td style="{{ sampleValue.parent == null || sampleValue.parent == ''
+                                          ? 'font-style:normal'
+                                          : 'font-style:italic;text-indent:10px' }}">
                                 {{ sampleValue.name }}
                             </td>
                             <td>
-                                <div class="circle" style="background-color: {{ sampleValue.color }};border:solid 1px;"></div>
+                                <div class="circle" style="background-color:{{ sampleValue.color }};border:solid 1px;"></div>
                             </td>
                             <!-- <td>
                               {{ sampleValue.image }}
                               </td> -->
+                            <td>
+                                &nbsp;
+                            </td>
                         </tr>
                         <#if project_id == "0">
                             <tr>
@@ -299,6 +306,15 @@
                                   <input type="file" class="value-image" accept="image/*"
                                   ng-model="project.newValueEntry[sampleValueGroup.name].image">
                                   </td> -->
+                                <td>
+                                    <label for="value-parent">Parent:</label>
+                                    <select id="value-parent" class="form-control form-control-sm" size="1"
+                                            ng-model="project.newValueEntry[sampleValueGroup.name].parent">
+                                        <option value="">None</option>
+                                        <option ng-repeat="parentSampleValue in project.getParentSampleValues(sampleValueGroup.values)"
+                                                value="{{ parentSampleValue.name }}">{{ parentSampleValue.name }}</option>
+                                    </select>
+                                </td>
                             </tr>
                         </#if>
                     </tbody>
@@ -318,7 +334,6 @@
 	                <input type="button" id="create-project" class="btn btn-outline-danger btn-sm btn-block"
 	                       name="create-project" value="Create Project"
 	                       ng-click="project.createProject()">
-                    <div id="spinner"></div>
                 <#else>
 	                <input type="button" id="configure-geo-dash" class="btn btn-outline-lightgreen btn-sm btn-block"
 	                       name="configure-geo-dash" value="Configure Geo-Dash"
@@ -336,6 +351,7 @@
 	                       name="change-availability" value="{{ project.stateTransitions[project.details.availability] }} Project"
 	                       ng-click="project.changeAvailability()">
                 </#if>
+                <div id="spinner"></div>
             </div>
         </div>
     </div>

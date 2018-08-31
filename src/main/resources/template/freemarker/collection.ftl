@@ -113,8 +113,21 @@
         <fieldset ng-repeat="sampleValueGroup in collection.currentProject.sampleValues"
                   class="mb-1 justify-content-center text-center">
             <h3 class="text-center">Sample Value: {{ sampleValueGroup.name }}</h3>
-            <ul id="samplevalue" class="justify-content-center">
-                <li class="mb-1" ng-repeat="sampleValue in sampleValueGroup.values">
+            <ul class="samplevalue justify-content-center">
+                <li class="mb-1" ng-repeat="sampleValue in collection.getParentSampleValues(sampleValueGroup.values)">
+                    <button type="button" class="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                            id="{{ sampleValue.name + '_' + sampleValue.id }}" name="{{ sampleValue.name + '_' + sampleValue.id }}"
+                            ng-click="collection.setCurrentValue(sampleValueGroup, sampleValue)">
+                        <div class="circle" style="background-color:{{ sampleValue.color }}; border:solid 1px; float: left;
+                                    margin-top: 4px;"></div>
+                        <span class="small">{{ sampleValue.name }}</span>
+                    </button>
+                </li>
+            </ul>
+            <ul class="samplevalue justify-content-center {{ collection.currentParentSampleValue == parentSampleValue.name ? 'visible' : 'd-none' }}"
+                ng-repeat="parentSampleValue in collection.getActualParentSampleValues(sampleValueGroup.values)">
+                <li class="mb-1"
+                    ng-repeat="sampleValue in collection.getChildSampleValues(sampleValueGroup.values, parentSampleValue)">
                     <button type="button" class="btn btn-outline-darkgray btn-sm btn-block pl-1"
                             id="{{ sampleValue.name + '_' + sampleValue.id }}" name="{{ sampleValue.name + '_' + sampleValue.id }}"
                             ng-click="collection.setCurrentValue(sampleValueGroup, sampleValue)">
