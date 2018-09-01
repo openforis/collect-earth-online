@@ -144,12 +144,14 @@ CREATE TABLE ts_project_user (
 
 DROP TABLE IF EXISTS ts_response_design cascade;
 CREATE TABLE ts_response_design (
-    id_design       serial primary key,
+    id       serial primary key,
     project_id      integer not null references projects(id) on delete cascade on update cascade,
     landuse         text NOT NULL,
     landcover       text NOT NULL,
     change_process  text NOT NULL
 );
+DROP INDEX IF EXISTS prjid;
+CREATE UNIQUE INDEX prjid on ts_response_design (project_id);
 
 DROP TABLE IF EXISTS ts_plot_comments cascade;
 CREATE TABLE ts_plot_comments (
@@ -176,6 +178,7 @@ CREATE TABLE ts_vertex (
   plot_id                   integer not null references user_plots (id) on delete cascade on update cascade,
   image_year                integer DEFAULT NULL,
   image_julday              integer DEFAULT NULL,
+  image_id                  text,
   dominant_landuse          varchar(50) DEFAULT NULL,
   secondary_landuse         varchar(50) DEFAULT NULL,
   dominant_landuse_notes    text,
@@ -198,15 +201,17 @@ CREATE INDEX vertex_ptp ON ts_vertex USING btree (project_id, plot_id, interpret
 
 
 DROP TABLE IF EXISTS ts_image_preference cascade;
+--TODO: with GEE as the backend, is it still necessary to keep image_year, image_julday, and priority
 CREATE TABLE ts_image_preference (
     id              serial primary key,
     project_id      integer not null references projects(id) on delete cascade on update cascade,
     plot_id         integer not null,
+    image_id        text,
     image_year      integer not null,
     image_julday    integer not null,
     interpreter     integer not null references users (id) on update cascade,
     "priority"      integer not null,
     packet_id       integer default -1
 );
-DROP INDEX IF EXISTS image_ppii;
-CREATE INDEX image_ppii ON ts_image_preference USING btree (project_id, plot_id, image_year, interpreter);
+DROP INDEX IF EXISTS image_uindex_pppiip;
+CREATE UNIQUE INDEX image_uindex_pppiip ON public.ts_image_preference (project_id, plot_id, image_year, interpreter, packet_id);
