@@ -6,7 +6,8 @@
 <script type="text/javascript">
 	let nonPendingUsers="";
 	let pageMode = "view";
-	
+    let imageryMode = "view";
+    let isAdmin=false;
     $(function() {initialize();});
     function initialize() {
         if(typeof(renderInstitution)=="undefined")
@@ -15,88 +16,8 @@
             renderInstitution("${root}", "${userid}","${institution_id}","${of_users_api_url}","${role}","${storage}",nonPendingUsers,pageMode);
     }
 </script>
-<script type="text/javascript" src="${root}/js/institution.js"></script>
 
-<div id="institution" ng-app="institution" ng-controller="InstitutionController as institution"
-     ng-init="institution.initialize('${root}', '${userid}', '${institution_id}')">
-    <div id="institution-details" class="row justify-content-center">
-        <div id="institution-view" class="col-xl-6 col-lg-8 " ng-show="institution.pageMode == 'view'">
-      		<div class="row">
-	            <div class="col-md-3" id="institution-logo-container">
-	                <a href="{{ institution.details.url }}">
-                        <#if storage?has_content && storage?is_string && storage=="local">
-                            <img class="img-fluid" src="${root}/{{ institution.details.logo }}" alt="logo">
-                        <#else>
-                            <img class="img-fluid" src="${of_users_api_url}/group/logo/${institution_id}" alt="logo">
-                        </#if>
-	                </a>
-	            </div>
-	            <h1 class="col-md-9"><a href="{{ institution.details.url }}">{{ institution.details.name }}</a></h1>
-            </div>
-            <div class="row">
-            		<div class="col">
-            		            <p>{{ institution.details.description }}</p>
-            		</div>
-            </div>
-        </div>
-        <div id="institution-edit" class="col-xl-6 col-lg-6 border pb-3 mb-2"  ng-show="institution.pageMode == 'edit'">
-	        <form>
-	        	    	 <h2 class="header">					
-		        	    	<span ng-show="institution.details.id > 0">Edit  Institution</span>
-					<span ng-show="institution.details.id == 0">Create New Institution</span> 
-        			</h2>	
-	        		<div class="form-group">
-		            <label id="institution-name" for="institution-details-name">Name</label>
-					<input id="institution-details-name" class="form-control mb-1 mr-sm-2" type="text" ng-model="institution.details.name">
-	        		</div>
-	        		<div class="form-group">
-		            <label id="institution-url" for="institution-details-url">URL</label>
-		            <input id="" type="text" class="form-control mb-1 mr-sm-2" ng-model="institution.details.url">
-	        		</div>
-	        		<div class="form-group">
-		            <label id="institution-logo-selector" for="institution-logo">Logo</label>
-		            <input id="institution-logo" class="form-control mb-1 mr-sm-2" type="file" accept="image/*">
-	        		</div>
-	        		<div class="form-group">
-		            <label id="institution-description" for="institution-details-description">Description</label>
-		            <textarea id="institution-details-description" class="form-control"  ng-model="institution.details.description" rows="4"></textarea>
-	        		</div>	
- 				<button id="create-institution" class="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-		                     ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id == 0">
-		            <i class="fa fa-plus-square"></i> Create Institution
-				</button>
-				<div class="row">	
-					<div class="col-6">	
-					<button class="btn btn-sm btn-outline-lightgreen btn-block mt-0" ng-click="institution.togglePageMode()" ng-show="institution.pageMode == 'edit' && institution.details.id > 0">
-						<i class="fa fa-save"></i> Save Changes
-					</button>
-					</div>
-					<div class="col-6">	
-					<button class="btn btn-sm btn-outline-danger btn-block mt-0" ng-click="institution.cancelChanges()" ng-show="institution.pageMode == 'edit' && institution.details.id > 0">
-						<i class="fa fa-ban"></i> Cancel Changes
-					</button>
-					</div>
-		        	</div>		        		
-	      	</form>
-        </div>
-
-    </div>
-     <#if role != "">
-         <div class="row justify-content-center mb-2" id="institution-controls">
-         		<div class="col-3">
-		             <button id="edit-institution" type="button"  class="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-		                     ng-click="institution.togglePageMode()" ng-show="institution.details.id > 0 && institution.isAdmin && institution.pageMode == 'view'">
-					<i class="fa fa-edit"></i> Edit
-					</button>		
-					</div>
-					<div class="col-3">		                     
-              		<button id="delete-institution" type="button" class="btn btn-sm btn-outline-danger btn-block mt-0"
-                     ng-click="institution.deleteInstitution()" ng-show="institution.details.id > 0 && institution.isAdmin && institution.pageMode == 'view'">
-                    <i class="fa fa-trash-alt"></i> Delete
-                     </button>
-         		</div>
-         </div>
-     </#if>
+<div id="institution">
     <div class="row">
 	    <div id="imagery-list" class="col-lg-4 col-xs-12" >
 	        <h2 class="header">Imagery <span class="badge badge-pill badge-light">{{ institution.imageryList.length }}</span></h2>
