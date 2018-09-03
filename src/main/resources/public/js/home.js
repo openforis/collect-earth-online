@@ -215,10 +215,8 @@ function Project(props) {
                         </a>
                     </div>
                     <div className="col-lg-3 pl-lg-0">
-                        <a className="edit-project btn btn-outline-yellow btn-sm btn-block"
-                           href={props.documentRoot + "/project/" + props.id}>
-                            <i className="fa fa-edit"> </i> Edit
-                        </a>
+                        <a className="edit-project btn btn-sm btn-outline-yellow btn-block"
+                           href={props.documentRoot+"/project/"+ props.id }><i className="fa fa-edit"></i> Review</a>
                     </div>
                 </div>
             );
