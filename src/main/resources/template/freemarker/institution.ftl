@@ -18,35 +18,6 @@
 <div id="institution">
     <div class="row">
 
-	  <div id="project-list" class="col-lg-4 col-xs-12">
-	      <h2 class="header">Projects <span class="badge badge-pill  badge-light">{{ institution.projectList.length }}</span></h2>
-	          <div class="row mb-1" ng-if="institution.isAdmin == true">
-		          <div class="col">
-		          	<button id="create-project" type="button" class="btn btn-sm btn-block btn-outline-yellow"
-		                     ng-click="institution.createProject()" >
-		                     <i class="fa fa-plus-square"></i> Create New Project
-	                </button>
-				</div>
-	          </div>
-	          <div class="row mb-1" ng-if="institution.isAdmin == true" ng-repeat="project in institution.projectList">
-	          	<div class="col-9 pr-1">
-	             	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">
-	             		{{ project.name }}
-	             	</a>
-              	</div>
-				<div class="col-3 pl-0">
-              		<a class="btn btn-sm btn-outline-lightgreen btn-block" class="edit-project" href="${root}/project/{{ project.id }}">
-              		<span class="d-xl-none"><i class="fa fa-edit"></i></span><span class="d-none d-xl-block"> Review</span></a>
-              	</div>
-	          </div>
-	          <div class="row" ng-if="institution.isAdmin == false" ng-repeat="project in institution.projectList">
-	          	<div class="col mb-1 pr-1">
-	             	<a class="btn btn-sm btn-outline-lightgreen btn-block" href="${root}/collection/{{ project.id }}">
-	             		{{ project.name }}
-	             	</a>
-              	</div>
-            	</div>
-	  </div>
     <div id="user-list" class="col-lg-4 col-xs-12">
         <h2 ng-if="institution.isAdmin == true" class="header">Users <span class="badge badge-pill  badge-light">{{ institution.userList.length }}</span></h2>
         <h2 ng-if="institution.isAdmin == false" class="header">Users <span class="badge badge-pill  badge-light">{{ institution.nonPendingUsers }}</span></h2>
