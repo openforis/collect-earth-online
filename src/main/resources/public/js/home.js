@@ -25,7 +25,7 @@ class Home extends React.Component {
                 <div className="Wrapper">
                     <div className="row tog-effect">
                         <SideBar projects={projects} documentRoot={this.state.documentRoot} username={this.state.username}/>
-                        <MapPanel projects={projects} documentRoot={this.state.documentRoot}/>
+                        <MapPanel projects={projects} documentRoot={this.state.documentRoot} userId={this.state.userId}/>
                     </div>
                 </div>
             </div>
@@ -37,13 +37,17 @@ class MapPanel extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projects:props.projects,
+            projects:[],
             documentRoot:props.documentRoot,
             imagery: [],
         };
     }
 
     componentDidMount() {
+        //get projects
+        fetch(this.state.documentRoot + "/get-all-projects?userId=" + this.props.userId)
+            .then(response => response.json())
+            .then(data => this.setState({projects: data}));
         //get imagery
         fetch(this.state.documentRoot + "/get-all-imagery")
             .then(response => response.json())
@@ -51,21 +55,23 @@ class MapPanel extends React.Component {
     }
 
 
-    showProjectMap() {
-        if (this.state.imagery.length > 0) {
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.state.imagery);
-            mercator.setVisibleLayer(mapConfig, this.state.imagery[0].title);
-            if (this.state.projects.length > 0) {
+    showProjectMap(projects,imagery,documentRoot) {
+        if (imagery.length > 0) {
+            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, imagery);
+            mercator.setVisibleLayer(mapConfig, imagery[0].title);
+            if (projects.length > 0) {
+                console.log(mapConfig);
+
                 mercator.addProjectMarkersAndZoom(mapConfig,
-                                                  this.state.projects,
-                                                  this.state.documentRoot,
+                                                  projects,
+                                                  documentRoot,
                                                   40); // clusterDistance = 40, use null to disable clustering
             }
         }
     }
 
     render() {
-        this.showProjectMap();
+        {this.showProjectMap(this.state.projects,this.state.imagery,this.state.documentRoot)};
         return (
             <div id="mapPanel" className="col-lg-9 col-md-12 pl-0 pr-0">
                 <div className="row no-gutters ceo-map-toggle">
@@ -78,6 +84,8 @@ class MapPanel extends React.Component {
                     </div>
                     <div className="col-xl-11 mr-0 ml-0 bg-lightgray">
                         <div id="home-map-pane" style={{width: '100%', height: '100%', position:'fixed'}}></div>
+
+
                     </div>
                 </div>
             </div>
