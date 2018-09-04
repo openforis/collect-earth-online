@@ -109,7 +109,7 @@ class Institution extends React.Component {
                             className="badge badge-pill  badge-light">{projects.length}</span>
                         </h2>
                         <ProjectList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
-                                     projects={this.state.projects} isAdmin={isAdmin}/>
+                                     projects={this.state.projects} isAdmin={isAdmin} institutionId={this.state.institutionId}/>
                     </div>
                     <div id="user-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Users <span
@@ -134,10 +134,13 @@ class InstitutionDescription extends React.Component {
             users: [],
             imagery: [],
             usersCompleteList: [],
+            isAdmin:this.props.isAdmin,
+            logo:this.props.institution.logo,
         }
         this.togglePageMode = this.togglePageMode.bind(this);
         this.deleteInstitution = this.deleteInstitution.bind(this);
         this.updateInstitution = this.updateInstitution.bind(this);
+        this.getData=this.getData.bind(this);
     }
 
     componentDidMount() {
@@ -149,16 +152,34 @@ class InstitutionDescription extends React.Component {
     cancelChanges() {
         this.setState({pageMode: "view"});
     }
+getData(institutionId){
+        console.log("jffng");
+    fetch(this.state.documentRoot + "/get-all-users?institutionId=" + institutionId)
+        .then(response => response.json())
+        .then(data => this.setState({users: data}));
+    fetch(this.state.documentRoot + "/get-all-users")
+        .then(response => response.json())
+        .then(data => this.setState({usersCompleteList: data}));
+    fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+        .then(response => response.json())
+        .then(data => this.setState({imagery: data}));
+}
+    updateInstitution(getData) {
+        let institutionId=this.props.institutionId;
+        let isAdmin=this.state.isAdmin;
+        let logo=this.props.institution.logo;
+        let userId=this.props.userId;
+        let documentRoot=this.props.documentRoot;
+        console.log("in up");
 
-    updateInstitution() {
         $.ajax({
-            url: this.props.documentRoot + "/update-institution/" + this.props.institutionId,
+            url: documentRoot + "/update-institution/" + institutionId,
             type: "POST",
             async: true,
             crossDomain: true,
             contentType: "application/json",
             data: JSON.stringify({
-                userId: this.props.userId,
+                userId: userId,
                 institutionName: document.getElementById("institution-details-name").value,
                 institutionLogo: document.getElementById("institution-logo").files[0],
                 institutionUrl: document.getElementById("institution-details-url").value,
@@ -168,26 +189,22 @@ class InstitutionDescription extends React.Component {
             alert("Error updating institution details. See console for details.");
 
         }).done(function (data) {
-            if (this.props.institutionId == 0) {
-                window.location = this.props.documentRoot + "/institution/" + data.id;
+            console.log("in success");
+
+            if (institutionId == 0) {
+                window.location = documentRoot + "/institution/" + data.id;
             } else {
-                this.props.institutionId = data.id;
-                this.props.details.id = data.id;
-                this.props.isAdmin = true;
+               institutionId = data.id;
+                isAdmin = true;
                 if (data.logo != "") {
-                    this.props.institution.logo = data.logo;
+                  logo = data.logo;
                 }
-                fetch(this.state.documentRoot + "/get-all-users?institutionId=" + this.props.institutionId)
-                    .then(response => response.json())
-                    .then(data => this.setState({users: data}));
-                fetch(this.state.documentRoot + "/get-all-users")
-                    .then(response => response.json())
-                    .then(data => this.setState({usersCompleteList: data}));
-                fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
-                    .then(response => response.json())
-                    .then(data => this.setState({imagery: data}));
+              getData(institutionId);
             }
         });
+        this.setState({isAdmin: isAdmin});
+        this.setState({logo: logo});
+
     }
 
     togglePageMode() {
@@ -195,7 +212,7 @@ class InstitutionDescription extends React.Component {
         if (this.state.pageMode == "view") {
             this.setState({pageMode: "edit"});
         } else {
-            this.updateInstitution();
+            this.updateInstitution(this.getData);
             this.setState({pageMode: "view"});
         }
     }
@@ -656,6 +673,7 @@ class ProjectList extends React.Component {
     }
 
     createProject() {
+        console.log("in create");
         if (this.props.institutionId == 0) {
             alert("Please finish creating the institution before adding projects to it.");
         } else if (this.props.institutionId == -1) {
@@ -672,7 +690,7 @@ class ProjectList extends React.Component {
             if (this.props.isAdmin == true) {
                 return (
                     <React.Fragment>
-                        <ProjectButton/>
+                        <ProjectButton createProject={this.createProject}/>
 
                         {
                             this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
@@ -738,12 +756,12 @@ function Project(props) {
     }
 }
 
-function ProjectButton(){
+function ProjectButton(props){
     return(
         <div className="row mb-1">
             <div className="col">
                 <button id="create-project" type="button" className="btn btn-sm btn-block btn-outline-yellow"
-                        onClick={()=>this.createProject}>
+                        onClick={props.createProject}>
                     <i className="fa fa-plus-square"></i> Create New Project
                 </button>
             </div>
