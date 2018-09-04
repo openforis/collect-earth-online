@@ -102,7 +102,7 @@ class Institution extends React.Component {
                         <ImageryList userId={this.state.userId} documentRoot={this.state.documentRoot}
                                      institution={this.state.institution} isAdmin={isAdmin}
                                      institutionId={this.state.institutionId} details={this.state.details}
-                                     imagery={this.state.imagery} pageMode={this.state.pageMode}/>
+                                     imagery={imagery} pageMode={this.state.pageMode}/>
                     </div>
                     <div id="project-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Projects <span
@@ -114,7 +114,7 @@ class Institution extends React.Component {
                     <div id="user-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Users <span
                             className="badge badge-pill  badge-light">{usersLength}</span></h2>
-                        <UserList documentRoot={this.state.documentRoot} institution={this.state.institution}
+                        <UserList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
                                   institutionId={this.state.institutionId} users={this.state.users} isAdmin={isAdmin}
                                   pageMode={this.state.pageMode}/>
                     </div>
@@ -153,7 +153,6 @@ class InstitutionDescription extends React.Component {
         this.setState({pageMode: "view"});
     }
 getData(institutionId){
-        console.log("jffng");
     fetch(this.state.documentRoot + "/get-all-users?institutionId=" + institutionId)
         .then(response => response.json())
         .then(data => this.setState({users: data}));
@@ -170,8 +169,6 @@ getData(institutionId){
         let logo=this.props.institution.logo;
         let userId=this.props.userId;
         let documentRoot=this.props.documentRoot;
-        console.log("in up");
-
         $.ajax({
             url: documentRoot + "/update-institution/" + institutionId,
             type: "POST",
@@ -189,8 +186,6 @@ getData(institutionId){
             alert("Error updating institution details. See console for details.");
 
         }).done(function (data) {
-            console.log("in success");
-
             if (institutionId == 0) {
                 window.location = documentRoot + "/institution/" + data.id;
             } else {
@@ -411,7 +406,7 @@ class ImageryList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            imagery: [],
+            imagery: this.props.imagery,
             institutionId: this.props.institutionId,
             documentRoot: this.props.documentRoot,
             imageryMode: "view",
@@ -428,12 +423,7 @@ class ImageryList extends React.Component {
         this.getUsers = this.getUsers.bind(this);
     };
 
-    componentDidMount() {
-        //get imagery
-        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
-            .then(response => response.json())
-            .then(data => this.setState({imagery: data}));
-    }
+
 
     getUsers() {
         fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
@@ -481,7 +471,6 @@ class ImageryList extends React.Component {
     }
 
     toggleImageryMode(imageryMode) {
-
         if (imageryMode == "view") {
             this.setState({imageryMode: "edit"});
         } else {
@@ -531,77 +520,81 @@ class ImageryList extends React.Component {
         const institution = this.props.institution;
         const isAdmin = this.props.isAdmin;
         const imageryMode = this.state.imageryMode;
-        if (imageryMode == 'view') {
+        if(this.props.imagery.length>0) {
+            if (imageryMode == 'view') {
 
-            return (
-                <React.Fragment>
+                return (
+                    <React.Fragment>
 
-                    <ImageryButton institution={institution}
-                                   toggleImageryMode={() => this.toggleImageryMode(imageryMode)}
-                                   isAdmin={isAdmin}/>
+                        <ImageryButton institution={institution}
+                                       toggleImageryMode={() => this.toggleImageryMode(imageryMode)}
+                                       isAdmin={isAdmin}/>
 
-                    {
-                        this.state.imagery.map(
-                            imageryItem => <Imagery institution={institution} title={imageryItem.title}
-                                                    imageryId={imageryItem.id} isAdmin={isAdmin}
-                                                    deleteImagery={() => this.deleteImagery(this.props.documentRoot, imageryItem.id, this.props.institution.name, this.props.institutionId, this.getUsers)}/>
-                        )
-                    }
-                </React.Fragment>
+                        {
+                            this.props.imagery.map(
+                                imageryItem => <Imagery institution={institution} title={imageryItem.title}
+                                                        imageryId={imageryItem.id} isAdmin={isAdmin}
+                                                        deleteImagery={() => this.deleteImagery(this.props.documentRoot, imageryItem.id, this.props.institution.name, this.props.institutionId, this.getUsers)}/>
+                            )
+                        }
+                    </React.Fragment>
 
-            );
+                );
 
 
-        }
-        else if (isAdmin == true && imageryMode == 'edit') {
-            return (
-                <div className="row" id="add-imagery">
-                    <div className="col">
-                        <form className="mb-2 p-2 border rounded">
-                            <div className="form-group">
-                                <label htmlFor="newImageryTitle">Title</label>
-                                <input className="form-control" id="newImageryTitle" type="text"
-                                       name="imagery-title" autoComplete="off"
-                                       onChange={this.handleChange} defaultValue={this.state.newImageryTitle}/>
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="newImageryAttribution">Attribution</label>
-                                <input className="form-control" id="newImageryAttribution" type="text"
-                                       name="imagery-attribution" autoComplete="off"
-                                       onChange={this.handleChange} defaultValue={this.state.newImageryAttribution}/>
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="newGeoServerURL">GeoServer URL</label>
-                                <input className="form-control" id="newGeoServerURL" type="text"
-                                       name="imagery-geoserver-url" autoComplete="off"
-                                       onChange={this.handleChange} defaultValue={institution.newGeoServerURL}/>
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="newLayerName">GeoServer Layer Name</label>
-                                <input className="form-control" id="newLayerName" type="text"
-                                       name="imagery-layer-name" autoComplete="off"
-                                       onChange={this.handleChange} defaultValue={this.state.newLayerName}/>
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="newGeoServerParams">GeoServer Params<br/>(as JSON string)</label>
-                                <input className="form-control" id="newGeoServerParams" type="text"
-                                       name="imagery-geoserver-params" autoComplete="off"
-                                       onChange={this.handleChange} defaultValue={this.state.newGeoServerParams}/>
-                            </div>
-                            <div className="btn-group-vertical btn-block">
-                                <button id="add-imagery-button"
-                                        className="btn btn-sm btn-block btn-outline-yellow btn-group"
-                                        onClick={() => this.toggleImageryMode(imageryMode)}>
-                                    <i className="fa fa-plus-square"></i> Add New Imagery
-                                </button>
-                                <button className="btn btn-sm btn-block btn-outline-danger btn-group"
-                                        onClick={() => this.cancelAddCustomImagery}>Cancel
-                                </button>
-                            </div>
-                        </form>
+            }
+            else if (isAdmin == true && imageryMode == 'edit') {
+                return (
+                    <div className="row" id="add-imagery">
+                        <div className="col">
+                            <form className="mb-2 p-2 border rounded">
+                                <div className="form-group">
+                                    <label htmlFor="newImageryTitle">Title</label>
+                                    <input className="form-control" id="newImageryTitle" type="text"
+                                           name="imagery-title" autoComplete="off"
+                                           onChange={this.handleChange} defaultValue={this.state.newImageryTitle}/>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="newImageryAttribution">Attribution</label>
+                                    <input className="form-control" id="newImageryAttribution" type="text"
+                                           name="imagery-attribution" autoComplete="off"
+                                           onChange={this.handleChange}
+                                           defaultValue={this.state.newImageryAttribution}/>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="newGeoServerURL">GeoServer URL</label>
+                                    <input className="form-control" id="newGeoServerURL" type="text"
+                                           name="imagery-geoserver-url" autoComplete="off"
+                                           onChange={this.handleChange} defaultValue={this.state.newGeoServerURL}/>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="newLayerName">GeoServer Layer Name</label>
+                                    <input className="form-control" id="newLayerName" type="text"
+                                           name="imagery-layer-name" autoComplete="off"
+                                           onChange={this.handleChange} defaultValue={this.state.newLayerName}/>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="newGeoServerParams">GeoServer Params<br/>(as JSON string)</label>
+                                    <input className="form-control" id="newGeoServerParams" type="text"
+                                           name="imagery-geoserver-params" autoComplete="off"
+                                           onChange={this.handleChange} defaultValue={this.state.newGeoServerParams}/>
+                                </div>
+                                <div className="btn-group-vertical btn-block">
+                                    <button id="add-imagery-button"
+                                            className="btn btn-sm btn-block btn-outline-yellow btn-group"
+                                            onClick={() => this.toggleImageryMode(imageryMode)}>
+                                        <i className="fa fa-plus-square"></i> Add New Imagery
+                                    </button>
+                                    <button className="btn btn-sm btn-block btn-outline-danger btn-group"
+                                            onClick={() => this.cancelAddCustomImagery}>Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            );
+                );
+            }
+
         }
         else {
             return (<span></span>);
@@ -643,7 +636,7 @@ function Imagery(props) {
 function ImageryButton(props) {
     if(props.isAdmin == true) {
         return (
-            <div className="row mb-1">
+            <div className="row">
                 <div className="col-lg-12 mb-1">
 
                 <button type="button" id="add-imagery-button"
@@ -673,7 +666,6 @@ class ProjectList extends React.Component {
     }
 
     createProject() {
-        console.log("in create");
         if (this.props.institutionId == 0) {
             alert("Please finish creating the institution before adding projects to it.");
         } else if (this.props.institutionId == -1) {
@@ -775,7 +767,8 @@ class UserList extends React.Component {
         this.state = {
             users: this.props.users,
             institutionId: this.props.institutionId,
-
+            isAdmin: this.props.isAdmin,
+            pageMode: this.props.pageMode,
         };
         this.updateUserInstitutionRole = this.updateUserInstitutionRole.bind(this);
     };
@@ -783,8 +776,11 @@ class UserList extends React.Component {
 
     updateUserInstitutionRole(userId, email, role) {
 
+        let userOldId = this.props.userId;
+        let isAdmin = this.props.isAdmin;
+        let documentRoot = this.props.documentRoot;
         $.ajax({
-            url: this.props.documentRoot + "/update-user-institution-role",
+            url: documentRoot + "/update-user-institution-role",
             type: "POST",
             async: true,
             crossDomain: true,
@@ -801,29 +797,34 @@ class UserList extends React.Component {
 
         }).done(function (data) {
             alert("User " + email + " has been given role '" + role + "'.");
-            if (userId == this.props.userId && role != "admin") {
-                this.props.pageMode = "view";
-                this.props.isAdmin = false;
+            if (userId == userOldId && role != "admin") {
+                pageMode = "view";
+                isAdmin = false;
             }
-            //get users
-            fetch(this.state.documentRoot + "/get-all-users?institutionId=" + this.props.institutionId)
-                .then(response => response.json())
-                .then(data => this.setState({users: data}));
+
 
         });
+        //get users
+        fetch(documentRoot + "/get-all-users?institutionId=" + this.props.institutionId)
+            .then(response => response.json())
+            .then(data => this.setState({users: data}));
+        this.setState({pageMode: pageMode});
+        this.setState({isAdmin: isAdmin});
     }
 
     render() {
-
         return (
             <React.Fragment>
-                <UserButton institution={this.props.institution} isAdmin={this.props.isAdmin}/>
+                <UserButton userId={this.props.userId} documentRoot={this.props.documentRoot}
+                            institutionId={this.props.institutionId} institution={this.props.institution}
+                            isAdmin={this.props.isAdmin} users={this.state.users}
+                            updateUserInstitutionRole={() => this.updateUserInstitutionRole}/>
 
                 {
                     this.props.users.map(user => <User documentRoot={this.props.documentRoot} user={user}
-                                                       institution={this.props.institution} isAdmin={this.props.isAdmin}
-                                                       pageMode={this.props.pageMode}
-                                                       updateUserInstitutionRole={() => this.updateUserInstitutionRole(user.id, user.email, user.institutionRole)}/>
+                                                       institution={this.props.institution} isAdmin={this.state.isAdmin}
+                                                       pageMode={this.state.pageMode}
+                                                       updateUserInstitutionRole={() => this.updateUserInstitutionRole(user.id, user.email, document.getElementsByName("user-institution-role")[0].options[document.getElementsByName("user-institution-role")[0].selectedIndex].value)}/>
                     )}
             </React.Fragment>
         );
@@ -833,7 +834,6 @@ class UserList extends React.Component {
 
 function User(props) {
     const user = props.user;
-    const institution = props.institution;
     const documentRoot = props.documentRoot;
 
     if (props.isAdmin == false && user.institutionRole != 'pending') {
@@ -852,18 +852,18 @@ function User(props) {
             <React.Fragment>
                 <div className="row">
 
-                <div className="col-lg-9 mb-1 pr-1">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={documentRoot + "/account/" + user.id}>{user.email}</a>
-                </div>
-                <div className="col-lg-3 mb-1 pl-0">
-                    <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
-                            onChange={props.updateUserInstitutionRole}>
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                        <option value="not-member">Remove</option>
-                    </select>
-                </div>
+                    <div className="col-lg-9 mb-1 pr-1">
+                        <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                           href={documentRoot + "/account/" + user.id}>{user.email}</a>
+                    </div>
+                    <div className="col-lg-3 mb-1 pl-0">
+                        <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
+                                onChange={props.updateUserInstitutionRole}>
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                            <option value="not-member">Remove</option>
+                        </select>
+                    </div>
                 </div>
             </React.Fragment>
         );
@@ -900,22 +900,37 @@ class UserButton extends React.Component {
         super(props);
         this.state = {
             newUserEmail: "",
-            userList: [],
+            userList: this.props.users,
             userListComplete: [],
         };
         this.addUser = this.addUser.bind(this);
+        this.handleChange=this.handleChange.bind(this);
+        this.isInstitutionMember=this.isInstitutionMember.bind(this);
+        this.handleChange=this.handleChange.bind(this);
     }
-
+    handleChange(event) {
+        const target = event.target;
+        const value = target.value;
+        this.setState({
+            newUserEmail: value
+        });
+    }
+    componentDidMount(){
+        fetch(this.props.documentRoot + "/get-all-users")
+            .then(response => response.json())
+            .then(data => this.setState({userListComplete: data}));
+    }
     addUser() {
+
         if (this.state.newUserEmail == "") {
             alert("Please enter an existing user's email address.");
-        } else if (this.findUserByEmail(this.state.userList, this.state.newUserEmail)) {
+        } else if (this.findUserByEmail(this.props.users, this.state.newUserEmail)) {
             alert(this.state.newUserEmail + " is already a member of this institution.");
         } else {
             let newUser = this.findUserByEmail(this.state.userListComplete, this.state.newUserEmail);
             if (newUser) {
-                this.updateUserInstitutionRole(newUser.id, newUser.email, "member");
-                this.state.newUserEmail = "";
+                this.props.updateUserInstitutionRole(newUser.id, newUser.email, "member");
+                this.setState({newUserEmail : ""});
             } else {
                 alert(this.state.newUserEmail + " is not an existing user's email address.");
             }
@@ -929,6 +944,35 @@ class UserButton extends React.Component {
             }
         );
     }
+    isInstitutionMember(userId) {
+        return userId == 1
+            || this.props.users.some(
+                function (user) {
+                    return user.id == userId;
+                }
+            );
+    }
+    requestMembership(userId,institutionId,documentRoot) {
+        $.ajax({
+            url: documentRoot + "/request-institution-membership",
+            type: "POST",
+            async: true,
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify
+            ({
+                    institutionId: institutionId,
+                    userId: parseInt(userId)
+                }
+            )
+        }).fail(function () {
+            alert("Error requesting institution membership. See console for details.");
+        }).done(function (data) {
+            alert("Membership requested for user " + userId + ".");
+            utils.disable_element("request-membership-button");
+
+        });
+    }
 
     render() {
         const institution = this.props.institution;
@@ -939,11 +983,11 @@ class UserButton extends React.Component {
                         <div className="col-9 pr-1">
                             <input className="form-control form-control-sm" type="email" name="new-institution-user"
                                    autoComplete="off"
-                                   placeholder="Email" defaultValue={this.state.newUserEmail}/>
+                                   placeholder="Email" onChange={this.handleChange} defaultValue={this.state.newUserEmail}/>
                         </div>
                         <div className="col-3 pl-0">
                             <button className="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user"
-                                    onClick={() => this.addUser}><span className="d-xl-none">
+                                    onClick={this.addUser}><span className="d-xl-none">
                             <i className="fa fa-plus-square"></i></span>
                                 <span className="d-none d-xl-block"> Add User</span></button>
 
@@ -952,14 +996,14 @@ class UserButton extends React.Component {
                 </React.Fragment>
             );
         }
-        else return (<span></span>)
-        if (this.props.userId != '' && this.props.institutionId > 0 && !institution.isInstitutionMember(institution.userId)) {
+        else return (<span></span>);
+        if (this.props.userId != '' && this.props.institutionId > 0 && !this.isInstitutionMember(this.props.userId)) {
             return (
 
                 <React.Fragment>
                     <div>
                         <button className="btn btn-sm btn-outline-yellow btn-block mb-2" id="request-membership-button"
-                                name="request-membership-button" onClick={this.requestMembership}>
+                                name="request-membership-button" onClick={this.requestMembership(this.props.userId,this.props.institutionId,this.props.documentRoot)}>
                             <i className="fa fa-plus-square"></i> Request membership
                         </button>
 
