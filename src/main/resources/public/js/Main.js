@@ -100,7 +100,8 @@ class Institution extends React.Component {
                                      projects={this.state.projects} isAdmin={isAdmin}/>
                     </div>
                     <div id="user-list" className="col-lg-4 col-xs-12">
-                        <h2>Users <span className="badge badge-pill bg-lightgreen">{usersLength}</span></h2>
+                        <h2 className="header">Users <span
+                            className="badge badge-pill  badge-light">{usersLength}</span></h2>
                         <UserList documentRoot={this.state.documentRoot} institution={this.state.institution}
                                   institutionId={this.state.institutionId} users={this.state.users} isAdmin={isAdmin}
                                   pageMode={this.state.pageMode}/>
@@ -442,9 +443,6 @@ class ImageryList extends React.Component {
     toggleImageryMode(imageryMode){
 
         if (imageryMode == "view") {
-
-            console.log(imageryMode);
-
             this.setState({imageryMode :"edit"});
         } else {
             this.addCustomImagery();
@@ -482,9 +480,7 @@ class ImageryList extends React.Component {
         const institution=this.props.institution;
         const isAdmin=this.props.isAdmin;
         const imageryMode=this.state.imageryMode;
-        console.log(isAdmin);
-        console.log(imageryMode);
-        if(isAdmin==false && imageryMode == 'view') {
+        if(imageryMode == 'view') {
 
             return (
                 <div>
@@ -565,6 +561,7 @@ class ImageryList extends React.Component {
 }
 
 function Imagery(props){
+    console.log(props.isAdmin);
     if(props.isAdmin == false) {
         return (
             <div className="row mb-1">
@@ -576,8 +573,8 @@ function Imagery(props){
     }
     else {
         return (
-            <React.Fragment>
-                <div className="col-10 pr-1 ">
+            <div className="row mb-1">
+                <div className="col-10 pr-1">
                     <button className="btn btn-outline-lightgreen btn-sm btn-block">{props.title}</button>
                 </div>
 
@@ -589,7 +586,7 @@ function Imagery(props){
                         <span className="d-xl-none"><i className="fa fa-trash-alt"></i></span>
                     </button>
                 </div>
-            </React.Fragment>
+            </div>
 
         );
     }
@@ -628,6 +625,7 @@ class ProjectList extends React.Component {
         };
         this.createProject = this.createProject.bind(this);
     }
+
     createProject() {
         if (this.props.institutionId == 0) {
             alert("Please finish creating the institution before adding projects to it.");
@@ -646,36 +644,32 @@ class ProjectList extends React.Component {
                 return (
                     <React.Fragment>
                         <ProjectButton/>
-                        <div className="row mb-1">
-                        {
-                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
-                                                                        proj={project}
-                                                                        institution={institution} isAdmin={this.props.isAdmin}/>)
-                        }
-                    </div>
-                    </React.Fragment>
-                );
-            }
-            else {
-                return (
-                    <div className="row">
-                        <div className="col mb-1 pr-1">
+
                         {
                             this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
                                                                         proj={project}
                                                                         institution={institution}
                                                                         isAdmin={this.props.isAdmin}/>)
                         }
-                        </div>
-                    </div>
+
+                    </React.Fragment>
+                );
+            }
+            else {
+                return (
+                    <React.Fragment>
+                        {
+                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
+                                                                        proj={project}
+                                                                        institution={institution}
+                                                                        isAdmin={this.props.isAdmin}/>)
+                        }
+                    </React.Fragment>
                 );
             }
         }
-        else return(<span></span>);
-
-        }
-
-
+        else return (<span></span>);
+    }
 }
 
 function Project(props) {
@@ -685,7 +679,7 @@ function Project(props) {
     const institution = props.institution;
     if (props.isAdmin == true) {
         return (
-            <React.Fragment>
+            <div className="row mb-1">
                 <div className="col-9 pr-1">
                     <a className="btn btn-sm btn-outline-lightgreen btn-block"
                        href={documentRoot + "/collection/" + project.id}>
@@ -698,16 +692,18 @@ function Project(props) {
                         <span className="d-xl-none"><i className="fa fa-edit"></i></span><span
                         className="d-none d-xl-block"> Review</span></a>
                 </div>
-            </React.Fragment>
+            </div>
         );
     } else {
         return (
-            <React.Fragment>
+            <div className="row">
+                <div className="col mb-1 pr-1">
                     <a className="btn btn-sm btn-outline-lightgreen btn-block"
                        href={documentRoot + "/collection/" + project.id}>
                         {project.name}
                     </a>
-            </React.Fragment>
+                </div>
+            </div>
 
         );
     }
@@ -767,11 +763,14 @@ class UserList extends React.Component {
         {
 
             return (
-                <UserButton institution={this.props.institution} isAdmin={this.props.isAdmin}/>,
+                <div class="row">
+                <UserButton institution={this.props.institution} isAdmin={this.props.isAdmin}/>
+                    {
                     this.state.users.map(user => <User documentRoot={this.props.documentRoot} user={user}
                                                        institution={this.props.institution} isAdmin={this.props.isAdmin}
                                                        pageMode={this.props.pageMode}/>
-                    )
+                    )}
+                </div>
 
             );
         }
@@ -781,55 +780,58 @@ class UserList extends React.Component {
 function User(props) {
     const user = props.user;
     const institution = props.institution;
-    const documentRoot=props.documentRoot;
+    const documentRoot = props.documentRoot;
 
     if (props.isAdmin == false && user.institutionRole != 'pending') {
         return (
 
             <div className="col mb-1">
-            <a className="btn btn-sm btn-outline-lightgreen btn-block"
-               href={documentRoot+"/account/"+ user.id }>{user.email}</a>
-        </div>
+                <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                   href={documentRoot + "/account/" + user.id}>{user.email}</a>
+            </div>
         );
     }
     if (props.isAdmin == true) {
         return (
+            <React.Fragment>
 
-            <div className="col-lg-9 mb-1 pr-1">
-            <a className="btn btn-sm btn-outline-lightgreen btn-block"
-               href={documentRoot + "/account/" + user.id}>{user.email}</a>
-        </div>
-        );
-    }
-    if (props.isAdmin == true) {
-        return (
-
-            <div className="col-lg-3 mb-1 pl-0">
-            <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
-                    onChange={this.updateUserInstitutionRole(user.id, user.email, user.institutionRole)}>
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-                <option value="not-member">Remove</option>
-            </select>
-        </div>
+                <div className="col-lg-9 mb-1 pr-1">
+                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                       href={documentRoot + "/account/" + user.id}>{user.email}</a>
+                </div>
+                <div className="col-lg-3 mb-1 pl-0">
+                    <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
+                            onChange={this.updateUserInstitutionRole(user.id, user.email, user.institutionRole)}>
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                        <option value="not-member">Remove</option>
+                    </select>
+                </div>
+            </React.Fragment>
         );
     }
     else if (props.isAdmin == true && user.institutionRole == 'pending') {
         return (
+            <React.Fragment>
 
-            <div className="col-lg-3 mb-1 pl-0">
-            <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
-                    onChange={this.updateUserInstitutionRole(user.id, user.email, user.institutionRole)}>
-                <option value="pending">Pending</option>
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-                <option value="not-member">Remove</option>
-            </select>
-        </div>
+                <div className="col-lg-9 mb-1 pr-1">
+                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                       href={documentRoot + "/account/" + user.id}>{user.email}</a>
+                </div>
+                <div className="col-lg-3 mb-1 pl-0">
+                    <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
+                            onChange={this.updateUserInstitutionRole(user.id, user.email, user.institutionRole)}>
+                        <option value="pending">Pending</option>
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                        <option value="not-member">Remove</option>
+                    </select>
+                </div>
+            </React.Fragment>
         );
     }
-    else{
-        return(<span></span>);
+    else {
+        return (<span></span>);
     }
 }
 class UserButton extends React.Component{
@@ -867,32 +869,43 @@ class UserButton extends React.Component{
     }
     render()
     {
-        const institution = props.institution;
-        if (props.isAdmin == true) {
+        const institution = this.props.institution;
+        if (this.props.isAdmin == true) {
             return (
-                <div className="row">
-                    <div className="col-lg-9 mb-1 pr-1">
+                <React.Fragment>
+                <div className="row mb-1">
+                    <div className="col-9 pr-1">
                         <input className="form-control form-control-sm" type="email" name="new-institution-user"
                                autoComplete="off"
-                               placeholder="Email"/>
+                               placeholder="Email" defaultValue={institution.newUserEmail}/>
                     </div>
-                    <div className="col-lg-3 mb-1 pl-0">
+                    <div className="col-3 pl-0">
                         <button className="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user"
-                                onClick={this.addUser}>Add User
-                        </button>
+                                onClick={()=>this.addUser}><span className="d-xl-none">
+                            <i className="fa fa-plus-square"></i></span>
+                            <span className="d-none d-xl-block">Add User</span></button>
+
                     </div>
                 </div>
+            </React.Fragment>
             );
         }
-        if (institution.userId != '' && institution.details.id > 0 && !institution.isInstitutionMember(institution.userId)) {
+        else return(<span></span>)
+        if (this.props.userId != '' && this.props.institutionId > 0 && !institution.isInstitutionMember(institution.userId)) {
             return (
+
+                <React.Fragment>
                 <div>
-                    <input type="button" className="button" id="request-membership-button"
-                           name="request-membership-button"
-                           value="Request Membership" onClick={this.requestMembership}/>
+                    <button className="btn btn-sm btn-outline-yellow btn-block mb-2" id="request-membership-button"
+                            name="request-membership-button" onClick={this.requestMembership}>
+                        <i className="fa fa-plus-square"></i> Request membership
+                    </button>
+
                 </div>
+                </React.Fragment>
             );
         }
+        else return(<span></span>);
     }
 }
 
