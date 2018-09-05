@@ -11,7 +11,15 @@ class BasicLayout extends React.Component{
     constructor(props) {
         super(props);
         this.state = {  layout: {},
-                        widgets: [ ]
+                        widgets: [ ],
+                        isEditing: false,
+                        selectedWidgetType: -1,
+                        selectedDataType: -1,
+                        WidgetTitle: '',
+                        startDate:'',
+                        endDate:'',
+                        FormReady: false
+
                       };
         gObject = this;
     }
@@ -113,8 +121,7 @@ class BasicLayout extends React.Component{
                 widgetJSON: JSON.stringify(widget)
             },
             success: function () {
-                //window.location = window.location.href;
-                console.log('it updated');
+                // no action needed
             },
             error: function (xhr) {
                 console.log('it failed');
@@ -141,17 +148,212 @@ class BasicLayout extends React.Component{
                 <span className="text text-danger">Sample Image</span></div>;
         });
     }
+    onWidgetTypeSelectChanged = event => {
+        this.setState({
+            selectedWidgetType: event.target.value,
+            selectedDataType: '-1',
+            WidgetTitle: '',
+            FormReady: false
+
+        });
+    }
+
+    onDataTypeSelectChanged = event => {
+        this.setState({
+            selectedDataType: event.target.value
+        });
+    };
+    onCancelNewWidget = event =>{
+        console.log('need to reset form values to defaults');
+        this.setState({
+            selectedWidgetType: '-1',
+            isEditing: false,
+            selectedDataType: '-1',
+            WidgetTitle: '',
+            FormReady: false
+        });
+    };
+    onCreateNewWidget = event =>{
+        console.log('need to create the defined widget');
+        console.log('need to reset form values to defaults');
+        this.setState({
+            isEditing: false
+        });
+    };
+    onWidgetTitleChange = event => {
+        this.setState({WidgetTitle: event.target.value});
+    };
+    onStartDateChanged = date => {
+        console.log(date);
+        this.setState({startDate: date});
+    };
+    onEndDateChanged = date => {
+        console.log('####################################')
+        this.setState({endDate: date});
+        this.checkDates();
+    };
+    checkDates() {
+        var ed = new Date(this.state.endDate);
+        var sd = new Date(this.state.startDate);
+        if(ed > sd && this.state.FormReady != true)
+        {
+            this.setState({FormReady: true})
+        }
+        else{
+            if(this.state.FormReady == true)
+            {
+                this.setState({FormReady: false})
+            }
+        }
+
+    };
+    getNewWidgetForm() {
+        if(this.state.isEditing)
+        {
+            return  <React.Fragment>
+                <div className="modal fade show" style={{display: 'block'}}>
+                    <div className="modal-dialog" role="document">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title" id="exampleModalLabel">Create Widget</h5>
+                                <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.onCancelNewWidget}>
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <form>
+                                    <div className="form-group">
+                                        <label htmlFor="widgetTypeSelect">Type</label>
+                                        <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={this.onWidgetTypeSelectChanged}>
+                                                 <option value="-1">Please select type</option>
+                                                <option label="Image Collection" value="imageCollection">Image Collection</option>
+                                                <option label="Time Series Graph" value="timeSeries">Time Series Graph</option>
+                                                <option label="Statistics" value="statistics">Statistics</option>
+                                        </select>
+                                    </div>
+                                        {this.getDataType()}
+                                        {this.getDataForm()}
+                                </form>
+                            </div>
+                            <div className="modal-footer">
+                                {
+                                    this.getFormButtons()
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div className="modal-backdrop fade show"> </div>
+            </React.Fragment>
+        }
+        else{
+            return
+        }
+    }
+    getFormButtons(){
+        //need to check if form is ready, if not just add the cancel button, or disable the create?
+        return <React.Fragment>
+                <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Cancel</button>
+                <button type="button" className="btn btn-primary" onClick={this.onCreateNewWidget} disabled={!this.state.FormReady}>Create</button>
+            </React.Fragment>
+
+    }
+    getDataType()
+    {
+        console.log('getting datatype');
+        if(this.state.selectedWidgetType == '-1')
+        {
+            console.log('Blank');
+            return
+        }
+        else if(this.state.selectedWidgetType == 'statistics')
+        {
+            if(this.state.FormReady != true){
+                this.setState({
+                    FormReady: true
+                });
+            }
+            return <React.Fragment>
+                        <div className="form-group">
+                            <label htmlFor="widgetTitle">Title</label>
+                            <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
+                        </div>
+                    </React.Fragment>
+        }
+        else{
+            return <React.Fragment>
+                        <label htmlFor="widgetIndicesSelect">Data</label>
+                        <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                            <option value="-1" className="" >Please select type</option>
+                            <option label="NDVI" value="NDVI">NDVI</option>
+                            <option label="EVI" value="EVI">EVI</option>
+                            <option label="EVI 2" value="EVI2">EVI 2</option>
+                            <option label="NDMI" value="NDMI">NDMI</option>
+                            <option label="NDWI" value="NDWI">NDWI</option>
+                            <option label="Custom widget" value="Custom">Custom widget</option>
+                        </select>
+                    </React.Fragment>
+        }
+    }
+    // makeDatePicker(element) {
+    //     var date = new Date();
+    //     date.setDate(date.getDate() - 1);
+    //
+    //     $(element).datepicker({
+    //         autoclose: true,
+    //         changeMonth: true,
+    //         changeYear: true,
+    //         dateFormat: "yy-mm-dd",
+    //         startDate: date
+    //     });
+    // }
+    getDataForm()
+    {
+        if(this.state.selectedDataType == '-1')
+        {
+            console.log('Blank');
+            return
+        }
+        else{
+            setTimeout(() => {$(".input-daterange input").each(function () {
+                try {
+                    console.log('init: ' + this.id);
+                    var bindEvt = this.id == 'sDate_new_cooked'? gObject.onStartDateChanged: gObject.onEndDateChanged;
+                    $(this).datepicker({
+                        changeMonth: true,
+                        changeYear: true,
+                        dateFormat: "yy-mm-dd",
+                        onSelect: function(dateText){console.log(dateText); bindEvt(this.value);}
+                    });
+                } catch (e) {
+                    console.warn(e.message);
+                }
+            });},250)
+            return <React.Fragment>
+                        <div className="form-group">
+                            <label htmlFor="widgetTitle">Title</label>
+                            <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
+                        </div>
+                        <label>Select the Date Range you would like</label>
+                        <div className="input-group input-daterange" id="range_new_cooked">
+
+                            <input type="text"  className="form-control" value={this.state.startDate} id="sDate_new_cooked" />
+                                <div className="input-group-addon">to</div>
+                                <input type="text"  className="form-control" value={this.state.endDate} id="eDate_new_cooked" />
+                        </div>
+                    </React.Fragment>
+        }
+
+    }
 
     onRemoveItem(i) {
-        console.log("removing", i);
         var removedWidget = _.filter(this.state.widgets, function(w){
             return w.layout.i == i;
         });
         gremovedWidget = removedWidget;
         this.deleteWidgetFromServer(removedWidget);
         this.setState({ widgets: _.reject(this.state.widgets, function(widget){
-            console.log('widget.layout.i: ' + widget.layout.i);
-            console.log('i: ' + i);
             return widget.layout.i == i; }) });
     }
 
@@ -171,12 +373,9 @@ class BasicLayout extends React.Component{
     }
     generateLayout() {
         var w = this.state.widgets;
-        console.log('i think the length is: ' + w.length);
-
         var xrow = 0;
         var yrow = 0;
         return _.map(w, function(item, i) {
-            console.log( item.id.toString() );
             item.layout.i = i;
             item.layout.minW = 3;
             item.layout.w = item.layout.w >= 3? item.layout.w: 3;
@@ -186,51 +385,33 @@ class BasicLayout extends React.Component{
 
     onLayoutChange = (layout) => {
         this.setState({layout: layout});
-        console.log('Need to update widget state and send to server');
-        // where layout.i == widget.id
-        //widget.layout = layout
-        // try {
-        // var widgets;
-        //      if (haveWidgets) {
-        //         widgets = _.map(this.state.widgets, function (widget, i) {
-        //
-        //             widget.layout = layout[i];
-        //             console.log('i = ' + i + ' layout: ' + layout[i]);
-        //             return widget;
-        //         });
-        //
-        //         //this.setState({widgets: widgets});
-        //         //this.updateServerWidgets();
-        //     }
-        // }
-        // catch(e){}
-        try{
-        console.log('w = ' + layout[0].w);
-        }
-        catch(e){}
+
         //var updatedLayout = this.state.layout;
         if (haveWidgets) {
             var w = this.state.widgets;
-            console.log('got here');
             layout.forEach(function (lay, i) {
-                console.log('in foreach and i = ' + 1);
-                console.log('this should be the width: ' + lay.w);
                 w[i].layout = lay;
             });
-            console.log('should be setting widget state');
             this.setState({widgets: w},this.updateServerWidgets);
         }
-
     }
-
+    onAddItem = (evt) => {
+        this.setState({isEditing : true});
+    }
     render() {
         const {layout} = this.state;
         return (
+            <React.Fragment>
+                <button id="addWidget" onClick={this.onAddItem} className="btn btn-outline-lightgreen btn-sm" style={{display: 'none'}}>Add Widget</button>
             <RGL {...this.props}
                  layout={layout}
                  onLayoutChange={this.onLayoutChange}>
+
+
                 {this.generateDOM()}
             </RGL>
+                {this.getNewWidgetForm()}
+            </React.Fragment>
         );
     }
 }

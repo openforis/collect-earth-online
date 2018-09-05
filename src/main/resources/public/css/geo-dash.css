@@ -154,6 +154,7 @@
     background-color: #31bab0;
     color: white;
     line-height: 26px;
+    cursor: move;
 }
 
 .widgetEditor .remove {
@@ -171,6 +172,13 @@
     background-repeat: no-repeat!important;
     background-position: 50% 50%!important;
     text-align:center;
+}
+.modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
 }
 .active-link.apply{
     margin-left: 3.2px;
@@ -485,7 +493,11 @@ display:none;
 }
 
 .btn.btn-primary {
-    backface-visibility: auto !important;
+    backface-visibility: unset !important;
+}
+
+.btn-primary.disabled, .btn-primary:disabled{
+    cursor: not-allowed;
 }
 
 
@@ -519,7 +531,7 @@ display:none;
     overflow: auto;
 }
 div#ui-datepicker-div{
-    z-index: 102 !important;
+    z-index: 2002 !important;
 }
 
 .ui-datepicker .ui-datepicker-prev {
@@ -538,25 +550,34 @@ div#ui-datepicker-div{
     width: 100%;
 }
 }
-@media (max-width: 600px){
-#geodash .row{
-display:block;
-}
-.dashHolder.widgetEditor
-{
-    width:100%;
-}
-.fullcolumnspan, .columnSpan12{
-    max-width:98%!important;
-}
-.columnSpan9{
-    max-width:98%!important;
-}
-.columnSpan6{
-    max-width:98%!important;
-}
-.columnSpan3{
-    max-width:98%!important;
-}
+@media (max-width: 600px) {
+
+    #geodash .row {
+        display: block;
+    }
+
+    .row.placeholders {
+        display: block;
+    }
+
+    .dashHolder.widgetEditor {
+        width: 100%;
+    }
+
+    .fullcolumnspan, .columnSpan12 {
+        max-width: 98% !important;
+    }
+
+    .columnSpan9 {
+        max-width: 98% !important;
+    }
+
+    .columnSpan6 {
+        max-width: 98% !important;
+    }
+
+    .columnSpan3 {
+        max-width: 98% !important;
+    }
 
 }

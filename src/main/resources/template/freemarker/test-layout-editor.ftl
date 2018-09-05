@@ -8,6 +8,8 @@
 <script src="${root}/js/react-addons-pure-render-mixin.min.js"></script>
 <script type="text/javascript" src="https://rawgit.com/STRML/react-grid-layout/master/dist/react-grid-layout.min.js"></script>
 <script type="text/babel" src="${root}/js/test-layout-editor.js"></script>
+
+
 <script>
     let theURL="${root}" + "/geo-dash";
     var pid = this.getParameterByName("pid");

@@ -48,6 +48,9 @@
 	                	</li>
 	            	</#if>
 	        	</#if>
+				 <#if navlink != "Geo-Dash">
+					<li class="nav-item my-auto ml-1"><button class="btn btn-outline-lightgreen btn-sm" onclick="$('#addWidget' ).click();">Add Widget</button></li>
+				 </#if>
         	     <#--<li class="nav-item my-auto ml-1">                   -->
 		     	 	<#--<input type="submit" id="btnNewWidget" value="New Widget" class="btn btn-outline-lightgreen btn-sm" ng-click="geodash.createNewWidget()" style="float:right;" data-toggle="modal" data-target="#dialog-form">-->
 		     	<#--</li>-->
