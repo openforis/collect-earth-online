@@ -163,10 +163,10 @@ getData(institutionId){
         .then(response => response.json())
         .then(data => this.setState({imagery: data}));
 }
-    updateInstitution(getData) {
+    updateInstitution() {
         let institutionId=this.props.institutionId;
         let isAdmin=this.state.isAdmin;
-        let logo=this.props.institution.logo;
+        let logo=this.state.logo;
         let userId=this.props.userId;
         let documentRoot=this.props.documentRoot;
         $.ajax({
@@ -194,9 +194,9 @@ getData(institutionId){
                 if (data.logo != "") {
                   logo = data.logo;
                 }
-              getData(institutionId);
             }
         });
+        this.getData(institutionId);
         this.setState({isAdmin: isAdmin});
         this.setState({logo: logo});
 
@@ -207,7 +207,7 @@ getData(institutionId){
         if (this.state.pageMode == "view") {
             this.setState({pageMode: "edit"});
         } else {
-            this.updateInstitution(this.getData);
+            this.updateInstitution();
             this.setState({pageMode: "view"});
         }
     }
