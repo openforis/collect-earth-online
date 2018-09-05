@@ -34,7 +34,7 @@ class Home extends React.Component {
         );
     }
 }
-
+var gMapPanel;
 class MapPanel extends React.Component {
     constructor(props) {
         super(props);
@@ -43,6 +43,7 @@ class MapPanel extends React.Component {
             documentRoot: props.documentRoot,
             imagery: [],
         };
+        gMapPanel = this;
     }
 
     componentDidMount() {
@@ -54,6 +55,9 @@ class MapPanel extends React.Component {
         fetch(this.state.documentRoot + "/get-all-imagery")
             .then(response => response.json())
             .then(data => this.setState({imagery: data}));
+        setTimeout(() => {
+            this.showProjectMap(this.state.projects, this.state.imagery, this.state.documentRoot);
+        }, 250);
     }
 
 
@@ -71,10 +75,10 @@ class MapPanel extends React.Component {
     }
 
     render() {
-        {
-            this.showProjectMap(this.state.projects, this.state.imagery, this.state.documentRoot)
-        }
-        ;
+        // {
+        //     this.showProjectMap(this.state.projects, this.state.imagery, this.state.documentRoot)
+        // }
+       // ;
         return (
             <div id="mapPanel" className="col-lg-9 col-md-12 pl-0 pr-0">
                 <div className="row no-gutters ceo-map-toggle">
