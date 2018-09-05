@@ -904,10 +904,11 @@ class UserButton extends React.Component {
             userListComplete: [],
         };
         this.addUser = this.addUser.bind(this);
-        this.handleChange=this.handleChange.bind(this);
-        this.isInstitutionMember=this.isInstitutionMember.bind(this);
-        this.handleChange=this.handleChange.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.isInstitutionMember = this.isInstitutionMember.bind(this);
+        this.handleChange = this.handleChange.bind(this);
     }
+
     handleChange(event) {
         const target = event.target;
         const value = target.value;
@@ -915,11 +916,13 @@ class UserButton extends React.Component {
             newUserEmail: value
         });
     }
-    componentDidMount(){
+
+    componentDidMount() {
         fetch(this.props.documentRoot + "/get-all-users")
             .then(response => response.json())
             .then(data => this.setState({userListComplete: data}));
     }
+
     addUser() {
 
         if (this.state.newUserEmail == "") {
@@ -930,7 +933,7 @@ class UserButton extends React.Component {
             let newUser = this.findUserByEmail(this.state.userListComplete, this.state.newUserEmail);
             if (newUser) {
                 this.props.updateUserInstitutionRole(newUser.id, newUser.email, "member");
-                this.setState({newUserEmail : ""});
+                this.setState({newUserEmail: ""});
             } else {
                 alert(this.state.newUserEmail + " is not an existing user's email address.");
             }
@@ -944,6 +947,7 @@ class UserButton extends React.Component {
             }
         );
     }
+
     isInstitutionMember(userId) {
         return userId == 1
             || this.props.users.some(
@@ -952,7 +956,8 @@ class UserButton extends React.Component {
                 }
             );
     }
-    requestMembership(userId,institutionId,documentRoot) {
+
+    requestMembership(userId, institutionId, documentRoot) {
         $.ajax({
             url: documentRoot + "/request-institution-membership",
             type: "POST",
@@ -976,40 +981,45 @@ class UserButton extends React.Component {
 
     render() {
         const institution = this.props.institution;
-        if (this.props.isAdmin == true) {
-            return (
-                <React.Fragment>
-                    <div className="row mb-1">
-                        <div className="col-9 pr-1">
-                            <input className="form-control form-control-sm" type="email" name="new-institution-user"
-                                   autoComplete="off"
-                                   placeholder="Email" onChange={this.handleChange} defaultValue={this.state.newUserEmail}/>
-                        </div>
-                        <div className="col-3 pl-0">
-                            <button className="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user"
-                                    onClick={this.addUser}><span className="d-xl-none">
+        if (this.props.users.length > 0) {
+            if (this.props.isAdmin == true) {
+                return (
+                    <React.Fragment>
+                        <div className="row mb-1">
+                            <div className="col-9 pr-1">
+                                <input className="form-control form-control-sm" type="email" name="new-institution-user"
+                                       autoComplete="off"
+                                       placeholder="Email" onChange={this.handleChange}
+                                       defaultValue={this.state.newUserEmail}/>
+                            </div>
+                            <div className="col-3 pl-0">
+                                <button className="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user"
+                                        onClick={this.addUser}><span className="d-xl-none">
                             <i className="fa fa-plus-square"></i></span>
-                                <span className="d-none d-xl-block"> Add User</span></button>
+                                    <span className="d-none d-xl-block"> Add User</span></button>
+
+                            </div>
+                        </div>
+                    </React.Fragment>
+                );
+            }
+            else return (<span></span>);
+            if (this.props.userId != '' && this.props.institutionId > 0 && !this.isInstitutionMember(this.props.userId)) {
+                return (
+
+                    <React.Fragment>
+                        <div>
+                            <button className="btn btn-sm btn-outline-yellow btn-block mb-2"
+                                    id="request-membership-button"
+                                    name="request-membership-button"
+                                    onClick={this.requestMembership(this.props.userId, this.props.institutionId, this.props.documentRoot)}>
+                                <i className="fa fa-plus-square"></i> Request membership
+                            </button>
 
                         </div>
-                    </div>
-                </React.Fragment>
-            );
-        }
-        else return (<span></span>);
-        if (this.props.userId != '' && this.props.institutionId > 0 && !this.isInstitutionMember(this.props.userId)) {
-            return (
-
-                <React.Fragment>
-                    <div>
-                        <button className="btn btn-sm btn-outline-yellow btn-block mb-2" id="request-membership-button"
-                                name="request-membership-button" onClick={this.requestMembership(this.props.userId,this.props.institutionId,this.props.documentRoot)}>
-                            <i className="fa fa-plus-square"></i> Request membership
-                        </button>
-
-                    </div>
-                </React.Fragment>
-            );
+                    </React.Fragment>
+                );
+            }
         }
         else return (<span></span>);
     }
