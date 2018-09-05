@@ -177,18 +177,20 @@ class BasicLayout extends React.Component{
         console.log('need to create the defined widget');
         console.log('need to reset form values to defaults');
         this.setState({
-            isEditing: false
+            selectedWidgetType: '-1',
+            isEditing: false,
+            selectedDataType: '-1',
+            WidgetTitle: '',
+            FormReady: false,
         });
     };
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
     };
     onStartDateChanged = date => {
-        console.log(date);
         this.setState({startDate: date});
     };
     onEndDateChanged = date => {
-        console.log('####################################')
         this.setState({endDate: date});
         this.checkDates();
     };
@@ -296,18 +298,6 @@ class BasicLayout extends React.Component{
                     </React.Fragment>
         }
     }
-    // makeDatePicker(element) {
-    //     var date = new Date();
-    //     date.setDate(date.getDate() - 1);
-    //
-    //     $(element).datepicker({
-    //         autoclose: true,
-    //         changeMonth: true,
-    //         changeYear: true,
-    //         dateFormat: "yy-mm-dd",
-    //         startDate: date
-    //     });
-    // }
     getDataForm()
     {
         if(this.state.selectedDataType == '-1')
