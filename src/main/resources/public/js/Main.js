@@ -176,8 +176,8 @@ getData(institutionId){
             crossDomain: true,
             contentType: "application/json",
             data: JSON.stringify({
-                userId: userId,
-                institutionName: document.getElementById("institution-details-name").value,
+                userid: userId,
+                ["institution-name"]: document.getElementById("institution-details-name").value,
                 institutionLogo: document.getElementById("institution-logo").files[0],
                 institutionUrl: document.getElementById("institution-details-url").value,
                 institutionDescription: document.getElementById("institution-details-description").value
