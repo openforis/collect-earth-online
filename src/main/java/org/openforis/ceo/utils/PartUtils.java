@@ -4,15 +4,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import javax.servlet.http.Part;
 import spark.Request;
+
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 public class PartUtils {
 

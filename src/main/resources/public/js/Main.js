@@ -59,6 +59,9 @@ class Institution extends React.Component {
             }
         ).length;
         this.setState({nonPendingUsers : count});
+        let detailsNew=this.state.details;
+        detailsNew.id= this.state.institutionId;
+        this.setState({details: detailsNew});
 
     }
 
@@ -85,6 +88,7 @@ class Institution extends React.Component {
                 }
             ).length;;
         }
+
 
         return (
             <React.Fragment>
@@ -136,69 +140,95 @@ class InstitutionDescription extends React.Component {
             usersCompleteList: [],
             isAdmin:this.props.isAdmin,
             logo:this.props.institution.logo,
+            institutionId:this.props.institutionId,
+            details:this.props.details,
         }
         this.togglePageMode = this.togglePageMode.bind(this);
         this.deleteInstitution = this.deleteInstitution.bind(this);
         this.updateInstitution = this.updateInstitution.bind(this);
         this.getData=this.getData.bind(this);
+        this.handleChange=this.handleChange.bind(this);
     }
 
     componentDidMount() {
-        if (this.state.pageMode == "view" && this.props.institutionId == "0") {
-            this.setState({pageMode: "edit"});
-        }
     }
+    handleChange(event) {
+        const target = event.target;
+        const value = target.value;
+        let detailsNew=this.state.details;
+        if (target.id == "institution-details-name") {
+            detailsNew.name = value;
+        }
+
+        if (target.id == "institution-details-url") {
+            detailsNew.url = value;
+        }
+        if (target.id == "institution-details-description") {
+            detailsNew.description = value;
+
+        }
+        this.setState({details: detailsNew});
+    }
+
 
     cancelChanges() {
         this.setState({pageMode: "view"});
     }
 getData(institutionId){
-    fetch(this.state.documentRoot + "/get-all-users?institutionId=" + institutionId)
+    fetch(this.props.documentRoot + "/get-all-users?institutionId=" + institutionId)
         .then(response => response.json())
         .then(data => this.setState({users: data}));
-    fetch(this.state.documentRoot + "/get-all-users")
+    fetch(this.props.documentRoot + "/get-all-users")
         .then(response => response.json())
         .then(data => this.setState({usersCompleteList: data}));
-    fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+    fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
         .then(response => response.json())
         .then(data => this.setState({imagery: data}));
 }
     updateInstitution() {
-        let institutionId=this.props.institutionId;
-        let isAdmin=this.state.isAdmin;
-        let logo=this.state.logo;
-        let userId=this.props.userId;
-        let documentRoot=this.props.documentRoot;
+        let institutionId = this.props.institutionId;
+        let isAdmin = this.state.isAdmin;
+        let logo = this.state.logo;
+        let userId = this.props.userId;
+        let documentRoot = this.props.documentRoot;
+        let formData = new FormData();
+        var holdRef = this;
+        formData.append("userid", userId);
+        formData.append("institution-name", holdRef.state.details.name);
+        formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
+        formData.append("institution-url", holdRef.state.details.url);
+        formData.append("institution-description", holdRef.state.details.description);
         $.ajax({
             url: documentRoot + "/update-institution/" + institutionId,
             type: "POST",
             async: true,
             crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify({
-                userid: userId,
-                ["institution-name"]: document.getElementById("institution-details-name").value,
-                institutionLogo: document.getElementById("institution-logo").files[0],
-                institutionUrl: document.getElementById("institution-details-url").value,
-                institutionDescription: document.getElementById("institution-details-description").value
-            })
+            contentType: false,
+            processData: false,
+            data: formData
         }).fail(function () {
             alert("Error updating institution details. See console for details.");
 
         }).done(function (data) {
+            var parsedData = JSON.parse(data);
             if (institutionId == 0) {
-                window.location = documentRoot + "/institution/" + data.id;
+                window.location = documentRoot + "/institution/" + parsedData.id;
             } else {
-               institutionId = data.id;
+                let detailsNew = holdRef.state.details;
+                detailsNew.id = parsedData.id;
+                holdRef.setState({details: detailsNew});
+                institutionId = parsedData.id;
                 isAdmin = true;
-                if (data.logo != "") {
-                  logo = data.logo;
+                if (parsedData.logo != "") {
+                    detailsNew.logo = parsedData.logo;
+                    holdRef.setState({details: detailsNew});
                 }
+                holdRef.getData(institutionId);
+                holdRef.setState({isAdmin: isAdmin});
+                holdRef.setState({logo: logo});
+                holdRef.setState({institutionId: institutionId});
             }
         });
-        this.getData(institutionId);
-        this.setState({isAdmin: isAdmin});
-        this.setState({logo: logo});
 
     }
 
@@ -206,23 +236,34 @@ getData(institutionId){
 
         if (this.state.pageMode == "view") {
             this.setState({pageMode: "edit"});
+            console.log(this.state.details);
+
         } else {
             this.updateInstitution();
             this.setState({pageMode: "view"});
         }
+
     }
 
     deleteInstitution() {
+        let institutionId=this.state.institutionId;
+        let name=this.props.institution.name;
+        let documentRoot=this.props.documentRoot;
         if (confirm("Do you REALLY want to delete this institution?!")) {
-            fetch(this.props.documentRoot + "/archive-institution/" + this.props.institutionId)
-                .then(response => {
-                    if (response.ok) {
-                        alert("Institution " + this.props.details.name + " has been deleted.");
-                        window.location = this.props.documentRoot + "/home";
-                    } else {
-                        alert("Error deleting institution. See console for details.");
-                    }
-                });
+            $.ajax({
+                url: documentRoot + "/archive-institution/" + institutionId,
+                type: "POST",
+                async: true,
+                crossDomain: true,
+                contentType: false,
+                processData: false,
+            }).fail(function () {
+                alert("Error deleting institution. See console for details.");
+
+            }).done(function () {
+                alert("Institution " + name + " has been deleted.");
+                window.location = documentRoot + "/home";
+            });
         }
     }
 
@@ -372,12 +413,12 @@ getData(institutionId){
                             <div className="form-group">
                                 <label id="institution-name" htmlFor="institution-details-name">Name</label>
                                 <input id="institution-details-name" className="form-control mb-1 mr-sm-2"
-                                       type="text" defaultValue={institution.name}/>
+                                       type="text" defaultValue={institution.name} onChange={this.handleChange}/>
                             </div>
                             <div className="form-group">
                                 <label id="institution-url" htmlFor="institution-details-url">URL</label>
                                 <input id="institution-details-url" type="text" className="form-control mb-1 mr-sm-2"
-                                       defaultValue={institution.url}/>
+                                       defaultValue={institution.url} onChange={this.handleChange}/>
                             </div>
                             <div className="form-group">
                                 <label id="institution-logo-selector" htmlFor="institution-logo">Logo</label>
@@ -388,7 +429,7 @@ getData(institutionId){
                                 <label id="institution-description"
                                        htmlFor="institution-details-description">Description</label>
                                 <textarea id="institution-details-description" className="form-control"
-                                          rows="4">{institution.description}</textarea>
+                                          rows="4" onChange={this.handleChange}>{institution.description}</textarea>
                             </div>
 
                             {this.renderButtons(institutionId, institution, pageMode, this.togglePageMode, this.cancelChanges)}
@@ -981,7 +1022,6 @@ class UserButton extends React.Component {
 
     render() {
         const institution = this.props.institution;
-        if (this.props.users.length > 0) {
             if (this.props.isAdmin == true) {
                 return (
                     <React.Fragment>
@@ -1020,8 +1060,7 @@ class UserButton extends React.Component {
                     </React.Fragment>
                 );
             }
-        }
-        else return (<span></span>);
+
     }
 }
 

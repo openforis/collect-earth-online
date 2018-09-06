@@ -37,7 +37,7 @@ angular.module("institution", []).controller("InstitutionController", ["$http", 
             });
     };
 
-    this.getProjectList = function (userId, institutionIdinstitutionId) {
+    this.getProjectList = function (userId, institutionId) {
         $http.get(this.root + "/get-all-projects?userId=" + userId + "&institutionId=" + institutionId)
             .then(angular.bind(this, function successCallback(response) {
                 this.projectList = response.data;
