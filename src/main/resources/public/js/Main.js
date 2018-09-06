@@ -23,7 +23,14 @@ class Institution extends React.Component {
                 description: "",
                 admins: []
             },
-        }
+        };
+        this.togglePageMode = this.togglePageMode.bind(this);
+        this.updateInstitution = this.updateInstitution.bind(this);
+        this.getData = this.getData.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.deleteInstitution = this.deleteInstitution.bind(this);
+        this.getImagery = this.getImagery.bind(this);
+
     };
 
     componentDidMount() {
@@ -53,14 +60,141 @@ class Institution extends React.Component {
                 .then(response => response.json())
                 .then(data => this.setState({usersCompleteList: data}));
         }
-        let count=this.state.users.filter(
+        let count = this.state.users.filter(
             function (user) {
                 return user.institutionRole != "pending";
             }
         ).length;
-        this.setState({nonPendingUsers : count});
+        this.setState({nonPendingUsers: count});
+        let detailsNew = this.state.details;
+        detailsNew.id = this.state.institutionId;
+        this.setState({details: detailsNew});
 
     }
+
+    getImagery() {
+        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
+            .then(response => response.json())
+            .then(data => this.setState({imagery: data}));
+
+    }
+
+    updateInstitution() {
+
+        let institutionId = this.state.institutionId;
+        let isAdmin = this.state.isAdmin;
+        let userId = this.state.userId;
+        let documentRoot = this.state.documentRoot;
+        let formData = new FormData();
+        var holdRef = this;
+        formData.append("userid", userId);
+        formData.append("institution-name", holdRef.state.details.name);
+        formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
+        formData.append("institution-url", holdRef.state.details.url);
+        formData.append("institution-description", holdRef.state.details.description);
+        $.ajax({
+            url: documentRoot + "/update-institution/" + institutionId,
+            type: "POST",
+            async: true,
+            crossDomain: true,
+            contentType: false,
+            processData: false,
+            data: formData
+        }).fail(function () {
+            alert("Error updating institution details. See console for details.");
+
+        }).done(function (data) {
+            var parsedData = JSON.parse(data);
+            if (institutionId == 0) {
+                window.location = documentRoot + "/institution/" + parsedData.id;
+            } else {
+                let detailsNew = holdRef.state.details;
+                detailsNew.id = parsedData.id;
+                institutionId = parsedData.id;
+                isAdmin = true;
+                if (parsedData.logo != "") {
+                    detailsNew.logo = parsedData.logo;
+                }
+                holdRef.setState({details: detailsNew});
+                holdRef.getData(institutionId);
+                holdRef.setState({isAdmin: isAdmin});
+                holdRef.setState({institutionId: institutionId});
+            }
+        });
+
+    }
+
+    togglePageMode() {
+
+        if (this.state.pageMode == "view") {
+            this.setState({pageMode: "edit"});
+
+        } else {
+            this.updateInstitution();
+            this.setState({pageMode: "view"});
+        }
+
+    }
+
+    getData(institutionId) {
+        fetch(this.state.documentRoot + "/get-institution-details/" + institutionId)
+            .then(response => response.json())
+            .then(data => this.setState({institution: data}));
+        fetch(this.state.documentRoot + "/get-all-users?institutionId=" + institutionId)
+            .then(response => response.json())
+            .then(data => this.setState({users: data}));
+        fetch(this.state.documentRoot + "/get-all-users")
+            .then(response => response.json())
+            .then(data => this.setState({usersCompleteList: data}));
+        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+            .then(response => response.json())
+            .then(data => this.setState({imagery: data}));
+    }
+
+    handleChange(event) {
+        const target = event.target;
+        const value = target.value;
+        let detailsNew = this.state.details;
+        if (target.id == "institution-details-name") {
+            detailsNew.name = value;
+        }
+
+        if (target.id == "institution-details-url") {
+            detailsNew.url = value;
+        }
+        if (target.id == "institution-details-description") {
+            detailsNew.description = value;
+
+        }
+        this.setState({details: detailsNew});
+    }
+
+    deleteInstitution() {
+        let institutionId = this.state.institutionId;
+        let name = this.props.institution.name;
+        let documentRoot = this.props.documentRoot;
+        if (confirm("Do you REALLY want to delete this institution?!")) {
+            $.ajax({
+                url: documentRoot + "/archive-institution/" + institutionId,
+                type: "POST",
+                async: true,
+                crossDomain: true,
+                contentType: false,
+                processData: false,
+            }).fail(function () {
+                alert("Error deleting institution. See console for details.");
+
+            }).done(function () {
+                alert("Institution " + name + " has been deleted.");
+                window.location = documentRoot + "/home";
+            });
+        }
+    }
+
+    cancelChanges() {
+        this.setState({pageMode: "view"});
+    }
+
 
     render() {
         let isAdmin = false;
@@ -71,8 +205,8 @@ class Institution extends React.Component {
         if (this.state.userId != "") {
             isAdmin = this.state.details.admins.includes(parseInt(this.state.userId));
         }
-        if(this.state.role=="admin"){
-            isAdmin=true;
+        if (this.state.role == "admin") {
+            isAdmin = true;
         }
 
         if (isAdmin == true) {
@@ -83,7 +217,8 @@ class Institution extends React.Component {
                 function (user) {
                     return user.institutionRole != "pending";
                 }
-            ).length;;
+            ).length;
+            ;
         }
 
         return (
@@ -93,7 +228,9 @@ class Institution extends React.Component {
                                         of_users_api_url={this.state.of_users_api_url}
                                         institutionId={this.state.institutionId} role={this.state.role}
                                         storage={this.state.storage} pageMode={this.state.pageMode}
-                                        details={this.state.details}/>
+                                        details={this.state.details} togglePageMode={this.togglePageMode}
+                                        handleChange={this.handleChange} cancelChanges={this.cancelChanges}
+                                        deleteInstitution={this.deleteInstitution}/>
                 <div className="row">
                     <div id="imagery-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Imagery <span
@@ -102,19 +239,22 @@ class Institution extends React.Component {
                         <ImageryList userId={this.state.userId} documentRoot={this.state.documentRoot}
                                      institution={this.state.institution} isAdmin={isAdmin}
                                      institutionId={this.state.institutionId} details={this.state.details}
-                                     imagery={imagery} pageMode={this.state.pageMode}/>
+                                     imagery={imagery} pageMode={this.state.pageMode} getImagery={this.getImagery}/>
                     </div>
                     <div id="project-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Projects <span
                             className="badge badge-pill  badge-light">{projects.length}</span>
                         </h2>
-                        <ProjectList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
-                                     projects={this.state.projects} isAdmin={isAdmin} institutionId={this.state.institutionId}/>
+                        <ProjectList userId={this.state.userId} documentRoot={this.state.documentRoot}
+                                     institution={this.state.institution}
+                                     projects={this.state.projects} isAdmin={isAdmin}
+                                     institutionId={this.state.institutionId}/>
                     </div>
                     <div id="user-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Users <span
                             className="badge badge-pill  badge-light">{usersLength}</span></h2>
-                        <UserList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
+                        <UserList userId={this.state.userId} documentRoot={this.state.documentRoot}
+                                  institution={this.state.institution}
                                   institutionId={this.state.institutionId} users={this.state.users} isAdmin={isAdmin}
                                   pageMode={this.state.pageMode}/>
                     </div>
@@ -130,99 +270,14 @@ class InstitutionDescription extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            pageMode: props.pageMode,
+            pageMode: this.props.pageMode,
             users: [],
             imagery: [],
             usersCompleteList: [],
-            isAdmin:this.props.isAdmin,
-            logo:this.props.institution.logo,
-        }
-        this.togglePageMode = this.togglePageMode.bind(this);
-        this.deleteInstitution = this.deleteInstitution.bind(this);
-        this.updateInstitution = this.updateInstitution.bind(this);
-        this.getData=this.getData.bind(this);
-    }
-
-    componentDidMount() {
-        if (this.state.pageMode == "view" && this.props.institutionId == "0") {
-            this.setState({pageMode: "edit"});
-        }
-    }
-
-    cancelChanges() {
-        this.setState({pageMode: "view"});
-    }
-getData(institutionId){
-    fetch(this.state.documentRoot + "/get-all-users?institutionId=" + institutionId)
-        .then(response => response.json())
-        .then(data => this.setState({users: data}));
-    fetch(this.state.documentRoot + "/get-all-users")
-        .then(response => response.json())
-        .then(data => this.setState({usersCompleteList: data}));
-    fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
-        .then(response => response.json())
-        .then(data => this.setState({imagery: data}));
-}
-    updateInstitution(getData) {
-        let institutionId=this.props.institutionId;
-        let isAdmin=this.state.isAdmin;
-        let logo=this.props.institution.logo;
-        let userId=this.props.userId;
-        let documentRoot=this.props.documentRoot;
-        $.ajax({
-            url: documentRoot + "/update-institution/" + institutionId,
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify({
-                userid: userId,
-                ["institution-name"]: document.getElementById("institution-details-name").value,
-                institutionLogo: document.getElementById("institution-logo").files[0],
-                institutionUrl: document.getElementById("institution-details-url").value,
-                institutionDescription: document.getElementById("institution-details-description").value
-            })
-        }).fail(function () {
-            alert("Error updating institution details. See console for details.");
-
-        }).done(function (data) {
-            if (institutionId == 0) {
-                window.location = documentRoot + "/institution/" + data.id;
-            } else {
-               institutionId = data.id;
-                isAdmin = true;
-                if (data.logo != "") {
-                  logo = data.logo;
-                }
-              getData(institutionId);
-            }
-        });
-        this.setState({isAdmin: isAdmin});
-        this.setState({logo: logo});
-
-    }
-
-    togglePageMode() {
-
-        if (this.state.pageMode == "view") {
-            this.setState({pageMode: "edit"});
-        } else {
-            this.updateInstitution(this.getData);
-            this.setState({pageMode: "view"});
-        }
-    }
-
-    deleteInstitution() {
-        if (confirm("Do you REALLY want to delete this institution?!")) {
-            fetch(this.props.documentRoot + "/archive-institution/" + this.props.institutionId)
-                .then(response => {
-                    if (response.ok) {
-                        alert("Institution " + this.props.details.name + " has been deleted.");
-                        window.location = this.props.documentRoot + "/home";
-                    } else {
-                        alert("Error deleting institution. See console for details.");
-                    }
-                });
+            isAdmin: this.props.isAdmin,
+            logo: this.props.institution.logo,
+            institutionId: this.props.institutionId,
+            details: this.props.details,
         }
     }
 
@@ -307,7 +362,7 @@ getData(institutionId){
     render() {
 
         const {institution, documentRoot, institutionId, role, of_users_api_url, storage, isAdmin, details} = this.props;
-        let pageMode = this.state.pageMode;
+        let pageMode = this.props.pageMode;
         if (pageMode == "view") {
 
             if (storage != null && typeof(storage) == "string" && storage == "local") {
@@ -331,7 +386,7 @@ getData(institutionId){
                                 </div>
                             </div>
                         </div>
-                        {this.renderComp(role, pageMode, institution, isAdmin, this.togglePageMode, this.deleteInstitution)}
+                        {this.renderComp(role, pageMode, institution, isAdmin, this.props.togglePageMode, this.props.deleteInstitution)}
                     </React.Fragment>
                 );
             }
@@ -357,7 +412,7 @@ getData(institutionId){
                                 </div>
                             </div>
                         </div>
-                        {this.renderComp(role, pageMode, institution, isAdmin, this.togglePageMode, this.deleteInstitution)}
+                        {this.renderComp(role, pageMode, institution, isAdmin, this.props.togglePageMode, this.props.deleteInstitution)}
                     </React.Fragment>
                 );
             }
@@ -372,12 +427,12 @@ getData(institutionId){
                             <div className="form-group">
                                 <label id="institution-name" htmlFor="institution-details-name">Name</label>
                                 <input id="institution-details-name" className="form-control mb-1 mr-sm-2"
-                                       type="text" defaultValue={institution.name}/>
+                                       type="text" defaultValue={institution.name} onChange={this.props.handleChange}/>
                             </div>
                             <div className="form-group">
                                 <label id="institution-url" htmlFor="institution-details-url">URL</label>
                                 <input id="institution-details-url" type="text" className="form-control mb-1 mr-sm-2"
-                                       defaultValue={institution.url}/>
+                                       defaultValue={institution.url} onChange={this.props.handleChange}/>
                             </div>
                             <div className="form-group">
                                 <label id="institution-logo-selector" htmlFor="institution-logo">Logo</label>
@@ -388,10 +443,11 @@ getData(institutionId){
                                 <label id="institution-description"
                                        htmlFor="institution-details-description">Description</label>
                                 <textarea id="institution-details-description" className="form-control"
-                                          rows="4">{institution.description}</textarea>
+                                          rows="4"
+                                          onChange={this.props.handleChange}>{institution.description}</textarea>
                             </div>
 
-                            {this.renderButtons(institutionId, institution, pageMode, this.togglePageMode, this.cancelChanges)}
+                            {this.renderButtons(institutionId, institution, pageMode, this.props.togglePageMode, this.props.cancelChanges)}
 
 
                         </form>
@@ -420,24 +476,12 @@ class ImageryList extends React.Component {
         this.addCustomImagery = this.addCustomImagery.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.deleteImagery = this.deleteImagery.bind(this);
-        this.getUsers = this.getUsers.bind(this);
     };
 
-
-
-    getUsers() {
-        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
-            .then(response => response.json())
-            .then(data => this.setState({imagery: data}));
-
-    }
-
-    addCustomImagery(getUsers) {
+    addCustomImagery() {
         let newImageryTitle = this.state.newImageryTitle;
-        let details = this.props.details;
-        let institutionId = this.props.institutionId;
-        let documentRoot = this.state.documentRoot;
         const institution = this.props.institution;
+        var ref=this;
         $.ajax({
             url: this.props.documentRoot + "/add-institution-imagery",
             type: "POST",
@@ -457,12 +501,10 @@ class ImageryList extends React.Component {
 
         }).done(function (data) {
                 alert("Imagery " + newImageryTitle + " has been added to institution " + institution.name + ".");
-                getUsers();
+                ref.props.getImagery();
 
             }
         );
-
-
         this.setState({newImageryTitle: ""});
         this.setState({newImageryAttribution: ""});
         this.setState({newGeoServerURL: ""});
@@ -474,13 +516,13 @@ class ImageryList extends React.Component {
         if (imageryMode == "view") {
             this.setState({imageryMode: "edit"});
         } else {
-            this.addCustomImagery(this.getUsers);
+            this.addCustomImagery(this.props.getImagery);
             this.setState({imageryMode: "view"});
         }
     }
-
-    deleteImagery(documentRoot, imageryId, name, institutionId, getUsers) {
+    deleteImagery(documentRoot, imageryId, name, institutionId) {
         if (confirm("Do you REALLY want to delete this imagery?!")) {
+            var ref=this;
             $.ajax({
                 url: documentRoot + "/delete-institution-imagery",
                 type: "POST",
@@ -495,12 +537,9 @@ class ImageryList extends React.Component {
                 alert("Error deleting imagery from institution. See console for details.");
             }).done(function (data) {
                 alert("Imagery " + imageryId + " has been deleted from institution " + name + ".");
-                getUsers();
+                ref.props.getImagery();
             });
-
         }
-
-
     }
 
     cancelAddCustomImagery() {
@@ -520,7 +559,7 @@ class ImageryList extends React.Component {
         const institution = this.props.institution;
         const isAdmin = this.props.isAdmin;
         const imageryMode = this.state.imageryMode;
-        if(this.props.imagery.length>0) {
+        if (this.props.imagery.length > 0) {
             if (imageryMode == 'view') {
 
                 return (
@@ -534,7 +573,7 @@ class ImageryList extends React.Component {
                             this.props.imagery.map(
                                 imageryItem => <Imagery institution={institution} title={imageryItem.title}
                                                         imageryId={imageryItem.id} isAdmin={isAdmin}
-                                                        deleteImagery={() => this.deleteImagery(this.props.documentRoot, imageryItem.id, this.props.institution.name, this.props.institutionId, this.getUsers)}/>
+                                                        deleteImagery={() => this.deleteImagery(this.props.documentRoot, imageryItem.id, this.props.institution.name, this.props.institutionId)}/>
                             )
                         }
                     </React.Fragment>
@@ -634,23 +673,23 @@ function Imagery(props) {
 }
 
 function ImageryButton(props) {
-    if(props.isAdmin == true) {
+    if (props.isAdmin == true) {
         return (
             <div className="row">
                 <div className="col-lg-12 mb-1">
 
-                <button type="button" id="add-imagery-button"
+                    <button type="button" id="add-imagery-button"
                             className="btn btn-sm btn-block btn-outline-yellow"
                             onClick={props.toggleImageryMode}>
-                    <i className="fa fa-plus-square"></i>Add New Imagery
+                        <i className="fa fa-plus-square"></i>Add New Imagery
                     </button>
 
                 </div>
             </div>
         );
     }
-    else{
-        return(
+    else {
+        return (
             <span></span>
         );
     }
@@ -678,36 +717,33 @@ class ProjectList extends React.Component {
     render() {
         const institution = this.props.institution;
 
-        if (this.props.projects.length > 0) {
-            if (this.props.isAdmin == true) {
-                return (
-                    <React.Fragment>
-                        <ProjectButton createProject={this.createProject}/>
+        if (this.props.isAdmin == true) {
+            return (
+                <React.Fragment>
+                    <ProjectButton createProject={this.createProject}/>
 
-                        {
-                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
-                                                                        proj={project}
-                                                                        institution={institution}
-                                                                        isAdmin={this.props.isAdmin}/>)
-                        }
+                    {
+                        this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
+                                                                    proj={project}
+                                                                    institution={institution}
+                                                                    isAdmin={this.props.isAdmin}/>)
+                    }
 
-                    </React.Fragment>
-                );
-            }
-            else {
-                return (
-                    <React.Fragment>
-                        {
-                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
-                                                                        proj={project}
-                                                                        institution={institution}
-                                                                        isAdmin={this.props.isAdmin}/>)
-                        }
-                    </React.Fragment>
-                );
-            }
+                </React.Fragment>
+            );
         }
-        else return (<span></span>);
+        else {
+            return (
+                <React.Fragment>
+                    {
+                        this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
+                                                                    proj={project}
+                                                                    institution={institution}
+                                                                    isAdmin={this.props.isAdmin}/>)
+                    }
+                </React.Fragment>
+            );
+        }
     }
 }
 
@@ -773,9 +809,7 @@ class UserList extends React.Component {
         this.updateUserInstitutionRole = this.updateUserInstitutionRole.bind(this);
     };
 
-
     updateUserInstitutionRole(userId, email, role) {
-
         let userOldId = this.props.userId;
         let isAdmin = this.props.isAdmin;
         let documentRoot = this.props.documentRoot;
@@ -801,8 +835,6 @@ class UserList extends React.Component {
                 pageMode = "view";
                 isAdmin = false;
             }
-
-
         });
         //get users
         fetch(documentRoot + "/get-all-users?institutionId=" + this.props.institutionId)
@@ -817,7 +849,7 @@ class UserList extends React.Component {
             <React.Fragment>
                 <UserButton userId={this.props.userId} documentRoot={this.props.documentRoot}
                             institutionId={this.props.institutionId} institution={this.props.institution}
-                            isAdmin={this.props.isAdmin} users={this.state.users}
+                            isAdmin={this.props.isAdmin} users={this.props.users}
                             updateUserInstitutionRole={() => this.updateUserInstitutionRole}/>
 
                 {
@@ -924,7 +956,6 @@ class UserButton extends React.Component {
     }
 
     addUser() {
-
         if (this.state.newUserEmail == "") {
             alert("Please enter an existing user's email address.");
         } else if (this.findUserByEmail(this.props.users, this.state.newUserEmail)) {
@@ -981,7 +1012,6 @@ class UserButton extends React.Component {
 
     render() {
         const institution = this.props.institution;
-        if (this.props.users.length > 0) {
             if (this.props.isAdmin == true) {
                 return (
                     <React.Fragment>
@@ -1020,8 +1050,7 @@ class UserButton extends React.Component {
                     </React.Fragment>
                 );
             }
-        }
-        else return (<span></span>);
+
     }
 }
 
