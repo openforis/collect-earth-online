@@ -237,7 +237,7 @@ class MapWidget extends React.Component {
         var collectionName = widget.properties[1];
         var dateFrom = widget.properties[2];
         var dateTo = widget.properties[3];
-        var requestedIndex = widget.properties[0] === "ImageCollectionNDVI"? 'NDVI': widget.properties[0] === "ImageCollectionEVI"? 'EVI': widget.properties[0] === "ImageCollectionEVI2"? 'EVI@': widget.properties[0] === "ImageCollectionNDMI"? 'NDMI': widget.properties[0] === "ImageCollectionNDWI"? 'NDWI': '';
+        var requestedIndex = widget.properties[0] === "ImageCollectionNDVI"? 'NDVI': widget.properties[0] === "ImageCollectionEVI"? 'EVI': widget.properties[0] === "ImageCollectionEVI2"? 'EVI2': widget.properties[0] === "ImageCollectionNDMI"? 'NDMI': widget.properties[0] === "ImageCollectionNDWI"? 'NDWI': '';
         var url = '';
         if(collectionName.trim().length > 0)
         {

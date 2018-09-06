@@ -6,6 +6,7 @@ var theLayout = [];
 var dashboardID;
 var gObject;
 var haveWidgets = false;
+var backwidget;
 class BasicLayout extends React.Component{
 
     constructor(props) {
@@ -101,10 +102,6 @@ class BasicLayout extends React.Component{
         var holdRef = this;
         this.state.widgets.forEach(function(widget) {
             let ajaxurl = theURL + "/updatewidget/widget/" + widget.id;
-
-            // if(widget.layout) {
-            //     delete widget.layout['i'];
-            // }
             holdRef.serveItUp(ajaxurl, widget);
 
         });
@@ -139,7 +136,7 @@ class BasicLayout extends React.Component{
         var layout = this.state.layout;
         var holdRef = this;
         return _.map(this.state.widgets, function(widget, i) {
-            return <div key={i} data-grid={layout[i]} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + holdRef.getImageByType(widget.properties[0]) +")"}}>
+            return <div key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + holdRef.getImageByType(widget.properties[0]) +")"}}>
                 <h3 className="widgetEditor title">{widget.name}
                     <span  onClick={holdRef.onRemoveItem.bind(holdRef, i)} className="remove">
                     x
@@ -153,6 +150,8 @@ class BasicLayout extends React.Component{
             selectedWidgetType: event.target.value,
             selectedDataType: '-1',
             WidgetTitle: '',
+            startDate:'',
+            endDate:'',
             FormReady: false
 
         });
@@ -170,19 +169,76 @@ class BasicLayout extends React.Component{
             isEditing: false,
             selectedDataType: '-1',
             WidgetTitle: '',
+            startDate:'',
+            endDate:'',
             FormReady: false
         });
     };
     onCreateNewWidget = event =>{
         console.log('need to create the defined widget');
         console.log('need to reset form values to defaults');
-        this.setState({
-            selectedWidgetType: '-1',
-            isEditing: false,
-            selectedDataType: '-1',
-            WidgetTitle: '',
-            FormReady: false,
+        var widget = {};
+        var id = this.state.widgets.length > 0?(Math.max.apply(Math, this.state.widgets.map(function(o) { return o.id; }))) + 1: 0;
+        var name = this.state.WidgetTitle;
+        var wType = this.state.selectedWidgetType == 'TimeSeries'?  this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType: this.state.selectedWidgetType == 'ImageCollection'? this.state.selectedWidgetType + this.state.selectedDataType: this.state.selectedWidgetType == 'statistics'? 'getStats': 'custom';
+        var prop1 = '';
+        var properties = [];
+        var prop4 = this.state.selectedDataType != null? this.state.selectedDataType: '';
+
+        if(wType == 'custom')
+        {
+            //more work to do to label the type and add
+        }
+        properties[0] = wType;
+        properties[1] = prop1;
+        properties[2] = this.state.startDate;
+        properties[3] = this.state.endDate;
+        properties[4] = prop4;
+
+        widget.id = id;
+        widget.name = name;
+        widget.properties = properties;
+        widget.layout = {
+            i: id,
+            x: 0,
+            y: (Math.max.apply(Math, this.state.widgets.map(function(o) { return o.layout.y; }))) + 1, // puts it at the bottom
+            w: 3,
+            h: 1,
+            minW:3
+        }
+
+
+
+        var holdRef = this;
+
+        $.ajax({
+            url: theURL + "/createwidget/widget",
+            type: "get",
+            dataType: "jsonp",
+            widget: JSON.stringify(widget),
+            data: {
+                pID: pid,
+                dashID: dashboardID,
+                widgetJSON: JSON.stringify(widget)
+            },
+            success: function () {
+                var myWidget = JSON.parse(this.widget);
+                backwidget = myWidget;
+                holdRef.setState({
+                    widgets: holdRef.state.widgets.concat(myWidget),
+                    selectedWidgetType: '-1',
+                    isEditing: false,
+                    selectedDataType: '-1',
+                    WidgetTitle: '',
+                    startDate:'',
+                    endDate:'',
+                    FormReady: false
+                });
+            },
+            error: function (xhr) {
+            }
         });
+
     };
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
@@ -228,8 +284,8 @@ class BasicLayout extends React.Component{
                                         <label htmlFor="widgetTypeSelect">Type</label>
                                         <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={this.onWidgetTypeSelectChanged}>
                                                  <option value="-1">Please select type</option>
-                                                <option label="Image Collection" value="imageCollection">Image Collection</option>
-                                                <option label="Time Series Graph" value="timeSeries">Time Series Graph</option>
+                                                <option label="Image Collection" value="ImageCollection">Image Collection</option>
+                                                <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
                                                 <option label="Statistics" value="statistics">Statistics</option>
                                         </select>
                                     </div>
@@ -342,9 +398,12 @@ class BasicLayout extends React.Component{
             return w.layout.i == i;
         });
         gremovedWidget = removedWidget;
-        this.deleteWidgetFromServer(removedWidget);
+        this.deleteWidgetFromServer(removedWidget[0]);
         this.setState({ widgets: _.reject(this.state.widgets, function(widget){
-            return widget.layout.i == i; }) });
+            return widget.layout.i == i; }),
+        layout: _.reject(this.state.layout, function(layout){
+            return layout.i == i; })
+        });
     }
 
     getImageByType(which){
@@ -374,16 +433,24 @@ class BasicLayout extends React.Component{
     }
 
     onLayoutChange = (layout) => {
-        this.setState({layout: layout});
 
-        //var updatedLayout = this.state.layout;
+
+        console.log('Widgets length: ' + this.state.widgets.length);
+        console.log('layouts length: ' + this.state.layout.length);
         if (haveWidgets) {
             var w = this.state.widgets;
             layout.forEach(function (lay, i) {
-                w[i].layout = lay;
+                    w[i].layout = lay;
             });
-            this.setState({widgets: w},this.updateServerWidgets);
+            console.log('Post layout loop: ' + JSON.stringify(w[w.length -1]));
+            this.setState({widgets: w,
+                layout: layout},this.updateServerWidgets);
         }
+        else{
+            this.setState({layout: layout});
+        }
+
+
     }
     onAddItem = (evt) => {
         this.setState({isEditing : true});
