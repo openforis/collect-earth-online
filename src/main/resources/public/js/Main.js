@@ -796,7 +796,6 @@ function ProjectButton(props){
         </div>
     );
 }
-var userg;
 class UserList extends React.Component {
     constructor(props) {
         super(props);
@@ -807,7 +806,6 @@ class UserList extends React.Component {
             pageMode: this.props.pageMode,
             institutionRole:"",
         };
-        userg=this;
         this.updateUserInstitutionRole = this.updateUserInstitutionRole.bind(this);
     };
 
@@ -828,12 +826,25 @@ class UserList extends React.Component {
         let institutionId=this.props.institutionId;
 
         var ref=this;
+        var rolee=e.target.value;
+
+        console.log(e.target.value);
 
          bob={
             userId: userId,
             institutionId:institutionId,
             role: e.target.value
         };
+        //ref.setState({institutionRole:rolee });
+        let usersNew=ref.props.users;
+        let userLst=usersNew.map(user=>{
+            if(user.id==userId)
+            {
+;                user.institutionRole=rolee;
+            }
+            return user;
+        });
+        ref.setState({users:userLst});
 
         $.ajax({
             url: documentRoot + "/update-user-institution-role",
@@ -848,15 +859,16 @@ class UserList extends React.Component {
             alert("Error updating user institution role. See console for details.");
 
         }).done(function (data) {
-            alert("User " + email + " has been given role '" + role + "'.");
-            if (userId == userOldId && ref.state.institutionRole != "admin") {
+            alert("User " + email + " has been given role '" + rolee + "'.");
+            if (userId == userOldId && rolee  != "admin") {
                 ref.setState({pageMode: pageMode});
                 ref.setState({isAdmin: isAdmin});
             }
-            //get users
-            fetch(documentRoot + "/get-all-users?institutionId=" + ref.props.institutionId)
-                .then(response => response.json())
-                .then(data => ref.setState({users: data}));
+
+            // //get users
+            // fetch(documentRoot + "/get-all-users?institutionId=" + ref.props.institutionId)
+            //     .then(response => response.json())
+            //     .then(data => ref.setState({users: data}));
         });
 
     }
@@ -874,9 +886,9 @@ class UserList extends React.Component {
 
                 {
                     this.props.users.map(user => <User documentRoot={this.props.documentRoot} user={user}
-                                                       institution={this.props.institution} isAdmin={this.state.isAdmin} institutionRole={user.institutionRole}
+                                                       institution={this.props.institution} isAdmin={this.state.isAdmin} institutionRole={this.state.institutionRole}
                                                        pageMode={this.state.pageMode}
-                                                       updateUserInstitutionRole={()=>this.updateUserInstitutionRole} id={user.id} email={user.email}/>
+                                                       updateUserInstitutionRole={this.updateUserInstitutionRole}/>
                     )}
             </React.Fragment>
         );
@@ -892,6 +904,7 @@ class User extends React.Component {
         };
 
     }
+
 
     render() {
 
@@ -920,9 +933,9 @@ class User extends React.Component {
                                    href={documentRoot + "/account/" + user.id}>{user.email}</a>
                             </div>
                             <div className="col-lg-3 mb-1 pl-0">
-                                <select value={this.state.institutionRole} className="custom-select custom-select-sm"
+                                <select value={user.institutionRole} className="custom-select custom-select-sm"
                                         name="user-institution-role" size="1"
-                                        onChange={(e)=>this.props.updateUserInstitutionRole(this.props.id, this,props.email, user.institutionRole,e)}>
+                                        onChange={(e)=>this.props.updateUserInstitutionRole(user.id, user.email, user.institutionRole,e)}>
                                     <option value="pending">Pending</option>
                                     <option value="member">Member</option>
                                     <option value="admin">Admin</option>
@@ -943,9 +956,9 @@ class User extends React.Component {
                                    href={documentRoot + "/account/" + user.id}>{user.email}</a>
                             </div>
                             <div className="col-lg-3 mb-1 pl-0">
-                                <select value={this.state.institutionRole} className="custom-select custom-select-sm"
+                                <select value={user.institutionRole} className="custom-select custom-select-sm"
                                         name="user-institution-role" size="1"
-                                         onChange={(e)=>this.props.updateUserInstitutionRole(this.props.id, this.props.email, user.institutionRole,e)}>
+                                        onChange={(e)=>this.props.updateUserInstitutionRole(user.id, user.email,user.institutionRole,e)}>
                                     <option value="member">Member</option>
                                     <option value="admin">Admin</option>
                                     <option value="not-member">Remove</option>
