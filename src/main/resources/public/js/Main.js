@@ -79,7 +79,6 @@ class Institution extends React.Component {
 
     }
     updateInstitution() {
-
         let institutionId = this.state.institutionId;
         let isAdmin = this.state.isAdmin;
         let userId = this.state.userId;
@@ -821,12 +820,21 @@ class UserList extends React.Component {
     //         },this.updateUserInstitutionRole(userId, email,role));
     //     }
     // }
-    updateUserInstitutionRole(userId, email,role) {
+
+    updateUserInstitutionRole(userId, email,role,e) {
         let userOldId = this.props.userId;
         let isAdmin = this.props.isAdmin;
         let documentRoot = this.props.documentRoot;
         let institutionId=this.props.institutionId;
+
         var ref=this;
+
+         bob={
+            userId: userId,
+            institutionId:institutionId,
+            role: e.target.value
+        };
+
         $.ajax({
             url: documentRoot + "/update-user-institution-role",
             type: "POST",
@@ -834,11 +842,8 @@ class UserList extends React.Component {
             crossDomain: true,
             contentType: "application/json",
             data: JSON.stringify
-            ({
-                userId: userId,
-                institutionId:institutionId,
-                role: role
-            })
+            (bob)
+
     }).fail(function () {
             alert("Error updating user institution role. See console for details.");
 
@@ -869,77 +874,91 @@ class UserList extends React.Component {
 
                 {
                     this.props.users.map(user => <User documentRoot={this.props.documentRoot} user={user}
-                                                       institution={this.props.institution} isAdmin={this.state.isAdmin} institutionRole={this.state.institutionRole}
+                                                       institution={this.props.institution} isAdmin={this.state.isAdmin} institutionRole={user.institutionRole}
                                                        pageMode={this.state.pageMode}
-                                                       updateUserInstitutionRole={()=>this.updateUserInstitutionRole}/>
+                                                       updateUserInstitutionRole={()=>this.updateUserInstitutionRole} id={user.id} email={user.email}/>
                     )}
             </React.Fragment>
         );
     }
 }
+var bob;
 
+class User extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            institutionRole: this.props.institutionRole,
+        };
 
-function User(props) {
-    const user = props.user;
-    const documentRoot = props.documentRoot;
-
-    if (props.isAdmin == false && user.institutionRole != 'pending') {
-        return (
-            <div className="row">
-
-            <div className="col mb-1">
-                <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                   href={documentRoot + "/account/" + user.id}>{user.email}</a>
-            </div>
-            </div>
-        );
     }
 
-    if (props.isAdmin == true && user.institutionRole == 'pending') {
-        return (
-            <React.Fragment>
+    render() {
+
+        const user = this.props.user;
+        const documentRoot = this.props.documentRoot;
+
+        if (this.props.isAdmin == false && user.institutionRole != 'pending') {
+            return (
                 <div className="row">
 
-                <div className="col-lg-9 mb-1 pr-1">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={documentRoot + "/account/" + user.id}>{user.email}</a>
-                </div>
-                <div className="col-lg-3 mb-1 pl-0">
-                    <select value={this.state.institutionRole} className="custom-select custom-select-sm" name="user-institution-role" size="1"
-                            onChange={props.updateUserInstitutionRole(user.id,user.email,props.institutionRole)}>
-                        <option value="pending">Pending</option>
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                        <option value="not-member">Remove</option>
-                    </select>
-                </div>
-                </div>
-            </React.Fragment>
-        );
-    }
-    else if (props.isAdmin == true) {
-        return (
-            <React.Fragment>
-                <div className="row">
-
-                    <div className="col-lg-9 mb-1 pr-1">
+                    <div className="col mb-1">
                         <a className="btn btn-sm btn-outline-lightgreen btn-block"
                            href={documentRoot + "/account/" + user.id}>{user.email}</a>
                     </div>
-                    <div className="col-lg-3 mb-1 pl-0">
-                        <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
-                                onChange={props.updateUserInstitutionRole(user.id,user.email,props.institutionRole)}>
-                            <option value="member">Member</option>
-                            <option value="admin">Admin</option>
-                            <option value="not-member">Remove</option>
-                        </select>
-                    </div>
                 </div>
-            </React.Fragment>
-        );
-    }
-    else {
-        return (<span></span>);
+            );
+        }
+        if (this.props.isAdmin == true) {
+            if (user.institutionRole == 'pending') {
+                return (
+                    <React.Fragment>
+                        <div className="row">
+
+                            <div className="col-lg-9 mb-1 pr-1">
+                                <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                                   href={documentRoot + "/account/" + user.id}>{user.email}</a>
+                            </div>
+                            <div className="col-lg-3 mb-1 pl-0">
+                                <select value={this.state.institutionRole} className="custom-select custom-select-sm"
+                                        name="user-institution-role" size="1"
+                                        onChange={(e)=>this.props.updateUserInstitutionRole(this.props.id, this,props.email, user.institutionRole,e)}>
+                                    <option value="pending">Pending</option>
+                                    <option value="member">Member</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="not-member">Remove</option>
+                                </select>
+                            </div>
+                        </div>
+                    </React.Fragment>
+                );
+            }
+            else {
+                return (
+                    <React.Fragment>
+                        <div className="row">
+
+                            <div className="col-lg-9 mb-1 pr-1">
+                                <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                                   href={documentRoot + "/account/" + user.id}>{user.email}</a>
+                            </div>
+                            <div className="col-lg-3 mb-1 pl-0">
+                                <select value={this.state.institutionRole} className="custom-select custom-select-sm"
+                                        name="user-institution-role" size="1"
+                                         onChange={(e)=>this.props.updateUserInstitutionRole(this.props.id, this.props.email, user.institutionRole,e)}>
+                                    <option value="member">Member</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="not-member">Remove</option>
+                                </select>
+                            </div>
+                        </div>
+                    </React.Fragment>
+                );
+            }
+        }
+        else {
+            return (<span></span>);
+        }
     }
 }
 
