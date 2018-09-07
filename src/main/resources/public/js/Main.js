@@ -1,3 +1,4 @@
+var instg;
 class Institution extends React.Component {
     constructor(props) {
         super(props);
@@ -6,7 +7,6 @@ class Institution extends React.Component {
             imagery: [],
             projects: [],
             users: [],
-            usersCompleteList: [],
             userId: props.userId,
             documentRoot: props.documentRoot,
             institutionId: props.institutionId,
@@ -24,10 +24,11 @@ class Institution extends React.Component {
                 admins: []
             },
         };
+        instg=this;
         this.togglePageMode = this.togglePageMode.bind(this);
         this.updateInstitution = this.updateInstitution.bind(this);
-        this.getData = this.getData.bind(this);
-        this.handleChange = this.handleChange.bind(this);
+        this.getData=this.getData.bind(this);
+        this.handleChange=this.handleChange.bind(this);
         this.deleteInstitution = this.deleteInstitution.bind(this);
         this.getImagery = this.getImagery.bind(this);
 
@@ -60,25 +61,23 @@ class Institution extends React.Component {
                 .then(response => response.json())
                 .then(data => this.setState({usersCompleteList: data}));
         }
-        let count = this.state.users.filter(
+        let count=this.state.users.filter(
             function (user) {
                 return user.institutionRole != "pending";
             }
         ).length;
-        this.setState({nonPendingUsers: count});
-        let detailsNew = this.state.details;
-        detailsNew.id = this.state.institutionId;
+        this.setState({nonPendingUsers : count});
+        let detailsNew=this.state.details;
+        detailsNew.id= this.state.institutionId;
         this.setState({details: detailsNew});
 
     }
-
     getImagery() {
         fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
             .then(response => response.json())
             .then(data => this.setState({imagery: data}));
 
     }
-
     updateInstitution() {
 
         let institutionId = this.state.institutionId;
@@ -135,8 +134,7 @@ class Institution extends React.Component {
         }
 
     }
-
-    getData(institutionId) {
+    getData(institutionId){
         fetch(this.state.documentRoot + "/get-institution-details/" + institutionId)
             .then(response => response.json())
             .then(data => this.setState({institution: data}));
@@ -150,11 +148,10 @@ class Institution extends React.Component {
             .then(response => response.json())
             .then(data => this.setState({imagery: data}));
     }
-
     handleChange(event) {
         const target = event.target;
         const value = target.value;
-        let detailsNew = this.state.details;
+        let detailsNew=this.state.details;
         if (target.id == "institution-details-name") {
             detailsNew.name = value;
         }
@@ -168,11 +165,10 @@ class Institution extends React.Component {
         }
         this.setState({details: detailsNew});
     }
-
     deleteInstitution() {
-        let institutionId = this.state.institutionId;
-        let name = this.props.institution.name;
-        let documentRoot = this.props.documentRoot;
+        let institutionId=this.state.institutionId;
+        let name=this.state.institution.name;
+        let documentRoot=this.state.documentRoot;
         if (confirm("Do you REALLY want to delete this institution?!")) {
             $.ajax({
                 url: documentRoot + "/archive-institution/" + institutionId,
@@ -190,7 +186,6 @@ class Institution extends React.Component {
             });
         }
     }
-
     cancelChanges() {
         this.setState({pageMode: "view"});
     }
@@ -205,8 +200,8 @@ class Institution extends React.Component {
         if (this.state.userId != "") {
             isAdmin = this.state.details.admins.includes(parseInt(this.state.userId));
         }
-        if (this.state.role == "admin") {
-            isAdmin = true;
+        if(this.state.role=="admin"){
+            isAdmin=true;
         }
 
         if (isAdmin == true) {
@@ -217,8 +212,7 @@ class Institution extends React.Component {
                 function (user) {
                     return user.institutionRole != "pending";
                 }
-            ).length;
-            ;
+            ).length;;
         }
 
         return (
@@ -228,9 +222,7 @@ class Institution extends React.Component {
                                         of_users_api_url={this.state.of_users_api_url}
                                         institutionId={this.state.institutionId} role={this.state.role}
                                         storage={this.state.storage} pageMode={this.state.pageMode}
-                                        details={this.state.details} togglePageMode={this.togglePageMode}
-                                        handleChange={this.handleChange} cancelChanges={this.cancelChanges}
-                                        deleteInstitution={this.deleteInstitution}/>
+                                        details={this.state.details} togglePageMode={this.togglePageMode} handleChange={this.handleChange} cancelChanges={this.cancelChanges} deleteInstitution={this.deleteInstitution}/>
                 <div className="row">
                     <div id="imagery-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Imagery <span
@@ -245,17 +237,14 @@ class Institution extends React.Component {
                         <h2 className="header">Projects <span
                             className="badge badge-pill  badge-light">{projects.length}</span>
                         </h2>
-                        <ProjectList userId={this.state.userId} documentRoot={this.state.documentRoot}
-                                     institution={this.state.institution}
-                                     projects={this.state.projects} isAdmin={isAdmin}
-                                     institutionId={this.state.institutionId}/>
+                        <ProjectList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
+                                     projects={this.state.projects} isAdmin={isAdmin} institutionId={this.state.institutionId}/>
                     </div>
                     <div id="user-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Users <span
                             className="badge badge-pill  badge-light">{usersLength}</span></h2>
-                        <UserList userId={this.state.userId} documentRoot={this.state.documentRoot}
-                                  institution={this.state.institution}
-                                  institutionId={this.state.institutionId} users={this.state.users} isAdmin={isAdmin}
+                        <UserList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
+                                  institutionId={this.state.institutionId} users={this.state.users} isAdmin={isAdmin} usersCompleteList={this.state.usersCompleteList}
                                   pageMode={this.state.pageMode}/>
                     </div>
 
@@ -279,6 +268,7 @@ class InstitutionDescription extends React.Component {
             institutionId: this.props.institutionId,
             details: this.props.details,
         }
+
     }
 
     renderComp(role, pageMode, institution, isAdmin, togglePageMode, deleteInstitution) {
@@ -363,6 +353,7 @@ class InstitutionDescription extends React.Component {
 
         const {institution, documentRoot, institutionId, role, of_users_api_url, storage, isAdmin, details} = this.props;
         let pageMode = this.props.pageMode;
+
         if (pageMode == "view") {
 
             if (storage != null && typeof(storage) == "string" && storage == "local") {
@@ -478,8 +469,14 @@ class ImageryList extends React.Component {
         this.deleteImagery = this.deleteImagery.bind(this);
     };
 
+
+
+
     addCustomImagery() {
         let newImageryTitle = this.state.newImageryTitle;
+        let details = this.props.details;
+        let institutionId = this.props.institutionId;
+        let documentRoot = this.state.documentRoot;
         const institution = this.props.institution;
         var ref=this;
         $.ajax({
@@ -505,6 +502,8 @@ class ImageryList extends React.Component {
 
             }
         );
+
+
         this.setState({newImageryTitle: ""});
         this.setState({newImageryAttribution: ""});
         this.setState({newGeoServerURL: ""});
@@ -520,6 +519,7 @@ class ImageryList extends React.Component {
             this.setState({imageryMode: "view"});
         }
     }
+
     deleteImagery(documentRoot, imageryId, name, institutionId) {
         if (confirm("Do you REALLY want to delete this imagery?!")) {
             var ref=this;
@@ -717,33 +717,34 @@ class ProjectList extends React.Component {
     render() {
         const institution = this.props.institution;
 
-        if (this.props.isAdmin == true) {
-            return (
-                <React.Fragment>
-                    <ProjectButton createProject={this.createProject}/>
+            if (this.props.isAdmin == true) {
+                return (
+                    <React.Fragment>
+                        <ProjectButton createProject={this.createProject}/>
 
-                    {
-                        this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
-                                                                    proj={project}
-                                                                    institution={institution}
-                                                                    isAdmin={this.props.isAdmin}/>)
-                    }
+                        {
+                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
+                                                                        proj={project}
+                                                                        institution={institution}
+                                                                        isAdmin={this.props.isAdmin}/>)
+                        }
 
-                </React.Fragment>
-            );
-        }
-        else {
-            return (
-                <React.Fragment>
-                    {
-                        this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
-                                                                    proj={project}
-                                                                    institution={institution}
-                                                                    isAdmin={this.props.isAdmin}/>)
-                    }
-                </React.Fragment>
-            );
-        }
+                    </React.Fragment>
+                );
+            }
+            else {
+                return (
+                    <React.Fragment>
+                        {
+                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
+                                                                        proj={project}
+                                                                        institution={institution}
+                                                                        isAdmin={this.props.isAdmin}/>)
+                        }
+                    </React.Fragment>
+                );
+            }
+
     }
 }
 
@@ -796,7 +797,7 @@ function ProjectButton(props){
         </div>
     );
 }
-
+var userg;
 class UserList extends React.Component {
     constructor(props) {
         super(props);
@@ -805,14 +806,27 @@ class UserList extends React.Component {
             institutionId: this.props.institutionId,
             isAdmin: this.props.isAdmin,
             pageMode: this.props.pageMode,
+            institutionRole:"",
         };
+        userg=this;
         this.updateUserInstitutionRole = this.updateUserInstitutionRole.bind(this);
     };
 
-    updateUserInstitutionRole(userId, email, role) {
+    // handleChange(userId, email,role,event) {
+    //     const target = event.target;
+    //     if(target.name=="user-institution-role") {
+    //         const value = target.value;
+    //         this.setState({
+    //             institutionRole: value
+    //         },this.updateUserInstitutionRole(userId, email,role));
+    //     }
+    // }
+    updateUserInstitutionRole(userId, email,role) {
         let userOldId = this.props.userId;
         let isAdmin = this.props.isAdmin;
         let documentRoot = this.props.documentRoot;
+        let institutionId=this.props.institutionId;
+        var ref=this;
         $.ajax({
             url: documentRoot + "/update-user-institution-role",
             type: "POST",
@@ -821,42 +835,43 @@ class UserList extends React.Component {
             contentType: "application/json",
             data: JSON.stringify
             ({
-                    userId: userId,
-                    institutionId: this.props.institutionId,
-                    role: role
-                }
-            )
-        }).fail(function () {
+                userId: userId,
+                institutionId:institutionId,
+                role: role
+            })
+    }).fail(function () {
             alert("Error updating user institution role. See console for details.");
 
         }).done(function (data) {
             alert("User " + email + " has been given role '" + role + "'.");
-            if (userId == userOldId && role != "admin") {
-                pageMode = "view";
-                isAdmin = false;
+            if (userId == userOldId && ref.state.institutionRole != "admin") {
+                ref.setState({pageMode: pageMode});
+                ref.setState({isAdmin: isAdmin});
             }
+            //get users
+            fetch(documentRoot + "/get-all-users?institutionId=" + ref.props.institutionId)
+                .then(response => response.json())
+                .then(data => ref.setState({users: data}));
         });
-        //get users
-        fetch(documentRoot + "/get-all-users?institutionId=" + this.props.institutionId)
-            .then(response => response.json())
-            .then(data => this.setState({users: data}));
-        this.setState({pageMode: pageMode});
-        this.setState({isAdmin: isAdmin});
+
     }
 
     render() {
+        console.log(this.state.institutionRole);
+
         return (
             <React.Fragment>
                 <UserButton userId={this.props.userId} documentRoot={this.props.documentRoot}
                             institutionId={this.props.institutionId} institution={this.props.institution}
                             isAdmin={this.props.isAdmin} users={this.props.users}
-                            updateUserInstitutionRole={() => this.updateUserInstitutionRole}/>
+                            usersCompleteList={this.props.usersCompleteList}
+                            updateUserInstitutionRole={()=>this.updateUserInstitutionRole}/>
 
                 {
                     this.props.users.map(user => <User documentRoot={this.props.documentRoot} user={user}
-                                                       institution={this.props.institution} isAdmin={this.state.isAdmin}
+                                                       institution={this.props.institution} isAdmin={this.state.isAdmin} institutionRole={this.state.institutionRole}
                                                        pageMode={this.state.pageMode}
-                                                       updateUserInstitutionRole={() => this.updateUserInstitutionRole(user.id, user.email, document.getElementsByName("user-institution-role")[0].options[document.getElementsByName("user-institution-role")[0].selectedIndex].value)}/>
+                                                       updateUserInstitutionRole={()=>this.updateUserInstitutionRole}/>
                     )}
             </React.Fragment>
         );
@@ -879,7 +894,30 @@ function User(props) {
             </div>
         );
     }
-    if (props.isAdmin == true) {
+
+    if (props.isAdmin == true && user.institutionRole == 'pending') {
+        return (
+            <React.Fragment>
+                <div className="row">
+
+                <div className="col-lg-9 mb-1 pr-1">
+                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
+                       href={documentRoot + "/account/" + user.id}>{user.email}</a>
+                </div>
+                <div className="col-lg-3 mb-1 pl-0">
+                    <select value={this.state.institutionRole} className="custom-select custom-select-sm" name="user-institution-role" size="1"
+                            onChange={props.updateUserInstitutionRole(user.id,user.email,props.institutionRole)}>
+                        <option value="pending">Pending</option>
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                        <option value="not-member">Remove</option>
+                    </select>
+                </div>
+                </div>
+            </React.Fragment>
+        );
+    }
+    else if (props.isAdmin == true) {
         return (
             <React.Fragment>
                 <div className="row">
@@ -890,34 +928,12 @@ function User(props) {
                     </div>
                     <div className="col-lg-3 mb-1 pl-0">
                         <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
-                                onChange={props.updateUserInstitutionRole}>
+                                onChange={props.updateUserInstitutionRole(user.id,user.email,props.institutionRole)}>
                             <option value="member">Member</option>
                             <option value="admin">Admin</option>
                             <option value="not-member">Remove</option>
                         </select>
                     </div>
-                </div>
-            </React.Fragment>
-        );
-    }
-    else if (props.isAdmin == true && user.institutionRole == 'pending') {
-        return (
-            <React.Fragment>
-                <div className="row">
-
-                <div className="col-lg-9 mb-1 pr-1">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={documentRoot + "/account/" + user.id}>{user.email}</a>
-                </div>
-                <div className="col-lg-3 mb-1 pl-0">
-                    <select className="custom-select custom-select-sm" name="user-institution-role" size="1"
-                            onChange={props.updateUserInstitutionRole}>
-                        <option value="pending">Pending</option>
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                        <option value="not-member">Remove</option>
-                    </select>
-                </div>
                 </div>
             </React.Fragment>
         );
@@ -933,7 +949,6 @@ class UserButton extends React.Component {
         this.state = {
             newUserEmail: "",
             userList: this.props.users,
-            userListComplete: [],
         };
         this.addUser = this.addUser.bind(this);
         this.handleChange = this.handleChange.bind(this);
@@ -949,20 +964,18 @@ class UserButton extends React.Component {
         });
     }
 
-    componentDidMount() {
-        fetch(this.props.documentRoot + "/get-all-users")
-            .then(response => response.json())
-            .then(data => this.setState({userListComplete: data}));
-    }
-
     addUser() {
         if (this.state.newUserEmail == "") {
             alert("Please enter an existing user's email address.");
         } else if (this.findUserByEmail(this.props.users, this.state.newUserEmail)) {
             alert(this.state.newUserEmail + " is already a member of this institution.");
         } else {
-            let newUser = this.findUserByEmail(this.state.userListComplete, this.state.newUserEmail);
+            console.log("in add user else");
+
+            let newUser = this.findUserByEmail(this.props.usersCompleteList, this.state.newUserEmail);
             if (newUser) {
+                console.log("in if");
+                console.log(newUser);
                 this.props.updateUserInstitutionRole(newUser.id, newUser.email, "member");
                 this.setState({newUserEmail: ""});
             } else {
@@ -1027,7 +1040,6 @@ class UserButton extends React.Component {
                                         onClick={this.addUser}><span className="d-xl-none">
                             <i className="fa fa-plus-square"></i></span>
                                     <span className="d-none d-xl-block"> Add User</span></button>
-
                             </div>
                         </div>
                     </React.Fragment>
@@ -1050,7 +1062,6 @@ class UserButton extends React.Component {
                     </React.Fragment>
                 );
             }
-
     }
 }
 
