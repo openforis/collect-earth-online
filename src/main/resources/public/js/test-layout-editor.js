@@ -257,7 +257,7 @@ class BasicLayout extends React.Component{
         {
             this.setState({FormReady: true})
         }
-        else{
+        else if(ed < sd) {
             if(this.state.FormReady == true)
             {
                 this.setState({FormReady: false})
