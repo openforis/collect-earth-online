@@ -2,7 +2,7 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 
-<script type="text/babel" src="${root}/js/Main.js"></script>
+<script type="text/babel" src="${root}/js/institution.js"></script>
 <script type="text/javascript">
 	let nonPendingUsers="";
 	let pageMode = "view";
