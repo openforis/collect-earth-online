@@ -834,7 +834,6 @@ class UserList extends React.Component {
         var ref = this;
         if (e != undefined) {
             role = e.target.value;
-            console.log(e.target.value);
         }
         jsonStr = {
             userId: userId,
@@ -1004,12 +1003,8 @@ class UserButton extends React.Component {
         } else if (this.findUserByEmail(this.props.users, this.state.newUserEmail)) {
             alert(this.state.newUserEmail + " is already a member of this institution.");
         } else {
-            console.log("in add user else");
-
             let newUser = this.findUserByEmail(this.props.usersCompleteList, this.state.newUserEmail);
             if (newUser) {
-                console.log("in if");
-                console.log(newUser);
                 this.props.updateUserInstitutionRole(newUser.id, newUser.email, "member");
                 this.setState({newUserEmail: ""});
             } else {
