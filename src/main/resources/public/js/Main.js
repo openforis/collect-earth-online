@@ -171,6 +171,8 @@ class SideBar extends React.Component {
 
 class SideBarFieldSet extends React.Component {
     render() {
+        const collection=this.props.collection;
+
         return (
             <React.Fragment>
                 <fieldset className="mb-3 text-center">
@@ -179,19 +181,19 @@ class SideBarFieldSet extends React.Component {
                         <div className="col" id="go-to-first-plot">
                             <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="new-plot" value="Go to first plot" onClick="collection.nextPlot()"/>
+                                   name="new-plot" value="Go to first plot" onClick={collection.nextPlot()}/>
                         </div>
                     </div>
                     <div className="row d-none" id="plot-nav">
                         <div className="col-sm-6 pr-2">
                             <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="new-plot" value="Skip" onClick="collection.nextPlot()"/>
+                                   name="new-plot" value="Skip" onClick={collection.nextPlot()}/>
                         </div>
                         <div className="col-sm-6 pl-2">
                             <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="flag-plot" value="Flag Plot as Bad" onClick="collection.flagPlot()"
+                                   name="flag-plot" value="Flag Plot as Bad" onClick={collection.flagPlot()}
                                    style="opacity:0.5" disabled/>
                         </div>
                     </div>
@@ -200,15 +202,15 @@ class SideBarFieldSet extends React.Component {
                     <h3>Imagery Options</h3>
                     <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                             size="1"
-                            value="collection.currentProject.baseMapSource" onChange="collection.setBaseMapSource()">
+                            value={collection.currentProject.baseMapSource} onChange={collection.setBaseMapSource()}>
                         <option ng-repeat="imagery in collection.imageryList"
-                                value="{ imagery.title }">{imagery.title}</option>
+                                value={ imagery.title }>{imagery.title}</option>
                     </select>
+                    if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
                     <select className="form-control form-control-sm" id="dg-imagery-year" name="dg-imagery-year"
                             size="1"
-                            value="collection.imageryYearDG" convert-to-number
-                            onChange="collection.updateDGWMSLayer()"
-                            ng-show="collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'">
+                            value={collection.imageryYearDG} convert-to-number
+                            onChange={collection.updateDGWMSLayer()}>
                         <option value="2018">2018</option>
                         <option value="2017">2017</option>
                         <option value="2016">2016</option>
@@ -229,29 +231,32 @@ class SideBarFieldSet extends React.Component {
                         <option value="2001">2001</option>
                         <option value="2000">2000</option>
                     </select>
+                }
+                if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
                     <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
                             size="1"
-                            ng-model="collection.stackingProfileDG" onChange="collection.updateDGWMSLayer()"
-                            ng-show="collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'">
+                            ng-model="collection.stackingProfileDG" onChange={collection.updateDGWMSLayer()}>
                         <option value="Accuracy_Profile">Accuracy Profile</option>
                         <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
                         <option value="Global_Currency_Profile">Global Currency Profile</option>
                         <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
                         <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
                     </select>
+                }
+                if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
                     <select className="form-control form-control-sm" id="planet-imagery-year" name="planet-imagery-year"
                             size="1"
-                            value="collection.imageryYearPlanet" convert-to-number
-                            onChange="collection.updatePlanetLayer()"
-                            ng-show="collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'">
+                            value={collection.imageryYearPlanet} convert-to-number
+                            onChange={collection.updatePlanetLayer()}>
                         <option value="2018">2018</option>
                         <option value="2017">2017</option>
                         <option value="2016">2016</option>
                     </select>
+                }
+                if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
                     <select className="form-control form-control-sm" id="planet-imagery-month"
                             name="planet-imagery-month" size="1"
-                            value="collection.imageryMonthPlanet" onChange="collection.updatePlanetLayer()"
-                            ng-show="collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'">
+                            value={collection.imageryMonthPlanet} onChange={collection.updatePlanetLayer()}>
                         <option value="01">January</option>
                         <option value="02">February</option>
                         <option value="03">March</option>
@@ -265,30 +270,38 @@ class SideBarFieldSet extends React.Component {
                         <option value="11">November</option>
                         <option value="12">December</option>
                     </select>
+                }
                 </fieldset>
-                <fieldset ng-repeat="sampleValueGroup in collection.currentProject.sampleValues"
-                          className="mb-1 justify-content-center text-center">
-                    <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
-                    <ul id="samplevalue" className="justify-content-center">
-                        <li className="mb-1" ng-repeat="sampleValue in sampleValueGroup.values">
-                            <button type="button" className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                    id="{{ sampleValue.name + '_' + sampleValue.id }}"
-                                    name="{{ sampleValue.name + '_' + sampleValue.id }}"
-                                    onClick="collection.setCurrentValue(sampleValueGroup, sampleValue)">
-                                <div className="circle" style="background-color:{{ sampleValue.color }}; border:solid 1px; float: left;
-                                    margin-top: 4px;"></div>
-                                <span className="small">{sampleValue.name}</span>
-                            </button>
-                        </li>
-                    </ul>
-                </fieldset>
+                {
+                    collection.currentProject.sampleValues.map(sampleValueGroup=>
+                        <fieldset className="mb-1 justify-content-center text-center">
+                            <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
+                            <ul id="samplevalue" className="justify-content-center">
+                                {
+                                sampleValueGroup.values.map(sampleValue=>
+                                <li className="mb-1">
+                                    <button type="button" className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                            id={ sampleValue.name + '_' + sampleValue.id }
+                                            name={ sampleValue.name + '_' + sampleValue.id }
+                                            onClick={collection.setCurrentValue(sampleValueGroup, sampleValue)}>
+                                        <div className="circle" style={{"background-color": sampleValue.color , border:"solid 1px", float: "left","margin-top": "4px"}}></div>
+                                        <span className="small">{sampleValue.name}</span>
+                                    </button>
+                                </li>
+                                )
+                                }
+                            </ul>
+                        </fieldset>
+                    )
+                }
+
             </React.Fragment>
 
         );
     }
 }
 
-function renderCollection(documentRoot, username, projectId,of_users_api_url,role,storage,nonPendingUsers,pageMode) {
+function renderCollection(documentRoot, username, projectId) {
     ReactDOM.render(
         <Institution documentRoot={documentRoot} userName={username} projectId={projectId}/>,
         document.getElementById("collection")
