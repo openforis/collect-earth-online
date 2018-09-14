@@ -22,6 +22,207 @@ class Collection extends React.Component {
         };
     };
 
+     getProjectById(projectId) {
+        fetch(this.state.documentRoot + "/get-project-by-id/" + projectId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error retrieving the project info. See console for details.");
+                }
+            })
+            .then(data => {
+                    if (data == null || data.id == 0) {
+                        alert("No project found with ID " + projectId + ".");
+                        window.location = this.state.documentRoot + "/home";
+                    } else {
+                        this.setState({currentProject: data});
+                        this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+                    }
+                }
+            );
+
+    }
+    getProjectStats() {
+        fetch(this.state.documentRoot + "/get-project-stats/" + this.props.projectId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error getting project stats. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({stats: data});
+                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+            });
+    }
+
+    getProjectPlots() {
+        fetch(this.state.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error loading plot data. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({plotList: data});
+                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+            })
+    }
+
+    getImageryList(institutionId) {
+        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error retrieving the imagery list. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({imageryList :data});
+                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+            });
+    }
+    getImageryByTitle(imageryTitle) {
+        return this.state.imageryList.find(
+            function (imagery) {
+                return imagery.title == imageryTitle;
+            }
+        );
+    }
+
+    updateDGWMSLayer() {
+        mercator.updateLayerWmsParams(this.state.mapConfig,
+            "DigitalGlobeWMSImagery",
+            {
+                COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.state.imageryYearDG + "-01-01')"
+                    + "AND(acquisition_date<='" + this.state.imageryYearDG + "-12-31')",
+                FEATUREPROFILE: this.state.stackingProfileDG
+            });
+    }
+    updatePlanetLayer() {
+        mercator.updateLayerSource(this.state.mapConfig,
+            "PlanetGlobalMosaic",
+            function (sourceConfig) {
+                sourceConfig.month = this.state.imageryMonthPlanet;
+                sourceConfig.year = this.state.imageryYearPlanet;
+                return sourceConfig;
+            },
+            this);
+    }
+    setBaseMapSource = function () {
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
+        this.state.currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        if (this.state.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
+            this.state.currentImagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
+            this.updateDGWMSLayer();
+        } else if (this.state.currentProject.baseMapSource == "PlanetGlobalMosaic") {
+            this.state.currentImagery.attribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+            this.updatePlanetLayer();
+        }
+    }
+    showProjectPlots() {
+        mercator.addPlotLayer(this.mapConfig,
+            this.plotList,
+            angular.bind(this, function (feature) {
+                // FIXME: These three assignments don't appear to do anything
+                this.showSideBar = true;
+                this.mapClass = "sidemap";
+                this.quitClass = "quit-side";
+                this.loadPlotById(feature.get("features")[0].get("plotId"));
+            }));
+    }
+    showProjectMap() {
+        // Initialize the base map
+        this.state.mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
+        this.setBaseMapSource();
+
+        // Show the project's boundary
+        mercator.addVectorLayer(this.state.mapConfig,
+            "currentAOI",
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+            ceoMapStyles.polygon);
+        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+
+        // Draw the project plots as clusters on the map
+        this.showProjectPlots();
+    }
+
+    getPlotDataById(plotId) {
+        fetch(this.state.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                }
+            })
+            .then(data => {
+                if (data == "done") {
+                    this.state.currentPlot = null;
+                    this.showProjectPlots();
+                    alert("This plot has already been analyzed.");
+                } else if (response.data == "not found") {
+                    this.state.currentPlot = null;
+                    this.showProjectPlots();
+                    alert("No plot with ID " + plotId + " found.");
+                } else {
+                    this.state.currentPlot = data;
+                    this.loadPlotById(plotId);
+                }
+            });
+    }
+
+    loadPlotById(plotId) {
+        if (this.state.currentPlot == null) {
+            this.getPlotDataById(plotId);
+        } else {
+            // FIXME: What is the minimal set of these that I can execute?
+            utils.enable_element("new-plot-button");
+            utils.enable_element("flag-plot-button");
+            utils.disable_element("save-values-button");
+            // FIXME: These classes should be handled with an ng-if in collection.ftl
+           document.getElementById("#go-to-first-plot-button").addClass("d-none");
+            document.getElementById("#plot-nav").removeClass("d-none");
+            // FIXME: These three assignments don't appear to do anything
+            this.state.showSideBar = true;
+            this.state.mapClass = "sidemap";
+            this.state.quitClass = "quit-side";
+
+            // FIXME: Move these calls into a function in mercator-openlayers.js
+            mercator.disableSelection(this.state.mapConfig);
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.state.mapConfig,
+                "currentSamples",
+                mercator.samplesToVectorSource(this.state.currentPlot.samples),
+                ceoMapStyles.redPoint);
+            mercator.enableSelection(this.state.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
+
+            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
+                + encodeURIComponent("title=" + this.state.currentProject.name
+                    + "&pid=" + this.state.projectId
+                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
+                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
+                    + "&bradius=" + this.state.currentProject.plotSize / 2),
+                "_geo-dash");
+        }
+    };
+
     render() {
         return (
             <React.Fragment>
@@ -104,7 +305,7 @@ class SideBar extends React.Component {
                     <div className="col-sm-12 btn-block">
                         <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                 type="button"
-                                name="save-values" onClick="collection.saveValues()" style="opacity:0.5" disabled>
+                                name="save-values" onClick={collection.saveValues()} style="opacity:0.5" disabled>
                             Save
                         </button>
                         <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
@@ -203,8 +404,13 @@ class SideBarFieldSet extends React.Component {
                     <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                             size="1"
                             value={collection.currentProject.baseMapSource} onChange={collection.setBaseMapSource()}>
-                        <option ng-repeat="imagery in collection.imageryList"
-                                value={ imagery.title }>{imagery.title}</option>
+                        {
+                        collection.imageryList.map(imagery=>
+                            <option value={imagery.title}>{imagery.title}</option>
+                            )
+                        }
+
+
                     </select>
                     if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
                     <select className="form-control form-control-sm" id="dg-imagery-year" name="dg-imagery-year"
