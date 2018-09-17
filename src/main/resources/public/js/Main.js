@@ -1,1092 +1,515 @@
-var instg;
-class Institution extends React.Component {
+class Collection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            institution: [],
-            imagery: [],
-            projects: [],
-            users: [],
-            userId: props.userId,
-            documentRoot: props.documentRoot,
-            institutionId: props.institutionId,
-            of_users_api_url: props.of_users_api_url,
-            role: props.role,
-            storage: props.storage,
-            nonPendingUsers: props.nonPendingUsers,
-            pageMode: props.pageMode,
-            details: {
-                id: "-1",
-                name: "",
-                logo: "",
-                url: "",
-                description: "",
-                admins: []
-            },
+            currentProject : null,
+            stats : null,
+            plotList : null,
+            imageryList : null,
+            currentImagery : {attribution: ""},
+            imageryYearDG : 2009,
+            stackingProfileDG : "Accuracy_Profile",
+            imageryYearPlanet : 2018,
+            imageryMonthPlanet : "03",
+            mapConfig : null,
+            currentPlot : null,
+            userSamples : {},
+            statClass : "projNoStats",
+            arrowState : "arrow-down",
+            showSideBar : false,
+            mapClass : "fullmap",
+            quitClass : "quit-full",
         };
-        instg=this;
-        this.togglePageMode = this.togglePageMode.bind(this);
-        this.updateInstitution = this.updateInstitution.bind(this);
-        this.getData=this.getData.bind(this);
-        this.handleChange=this.handleChange.bind(this);
-        this.deleteInstitution = this.deleteInstitution.bind(this);
-        this.getImagery = this.getImagery.bind(this);
-
     };
 
-    componentDidMount() {
-        if (this.state.institutionId == "0") {
-            this.setState({pageMode: "edit"});
-
-        }
-        else {
-            //get institutions
-            fetch(this.state.documentRoot + "/get-institution-details/" + this.state.institutionId)
-                .then(response => response.json())
-                .then(data => this.setState({institution: data}));
-            //get imagery
-            fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
-                .then(response => response.json())
-                .then(data => this.setState({imagery: data}));
-            //get projects
-            fetch(this.state.documentRoot + "/get-all-projects?userId=" + this.state.userId + "&institutionId=" + this.props.institutionId)
-                .then(response => response.json())
-                .then(data => this.setState({projects: data}));
-            //get users
-            fetch(this.state.documentRoot + "/get-all-users?institutionId=" + this.state.institutionId)
-                .then(response => response.json())
-                .then(data => this.setState({users: data}));
-            //get users complete list
-            fetch(this.state.documentRoot + "/get-all-users")
-                .then(response => response.json())
-                .then(data => this.setState({usersCompleteList: data}));
-        }
-        let count=this.state.users.filter(
-            function (user) {
-                return user.institutionRole != "pending";
-            }
-        ).length;
-        this.setState({nonPendingUsers : count});
-        let detailsNew=this.state.details;
-        detailsNew.id= this.state.institutionId;
-        this.setState({details: detailsNew});
-
-    }
-    getImagery() {
-        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionId)
-            .then(response => response.json())
-            .then(data => this.setState({imagery: data}));
-
-    }
-    updateInstitution() {
-        let institutionId = this.state.institutionId;
-        let isAdmin = this.state.isAdmin;
-        let userId = this.state.userId;
-        let documentRoot = this.state.documentRoot;
-        let formData = new FormData();
-        var holdRef = this;
-        formData.append("userid", userId);
-        formData.append("institution-name", holdRef.state.details.name);
-        formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
-        formData.append("institution-url", holdRef.state.details.url);
-        formData.append("institution-description", holdRef.state.details.description);
-        $.ajax({
-            url: documentRoot + "/update-institution/" + institutionId,
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: false,
-            processData: false,
-            data: formData
-        }).fail(function () {
-            alert("Error updating institution details. See console for details.");
-
-        }).done(function (data) {
-            var parsedData = JSON.parse(data);
-            if (institutionId == 0) {
-                window.location = documentRoot + "/institution/" + parsedData.id;
-            } else {
-                let detailsNew = holdRef.state.details;
-                detailsNew.id = parsedData.id;
-                institutionId = parsedData.id;
-                isAdmin = true;
-                if (parsedData.logo != "") {
-                    detailsNew.logo = parsedData.logo;
+     getProjectById(projectId) {
+        fetch(this.state.documentRoot + "/get-project-by-id/" + projectId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
                 }
-                holdRef.setState({details: detailsNew});
-                holdRef.getData(institutionId);
-                holdRef.setState({isAdmin: isAdmin});
-                holdRef.setState({institutionId: institutionId});
-            }
-        });
+                else {
+                    console.log(response);
+                    alert("Error retrieving the project info. See console for details.");
+                }
+            })
+            .then(data => {
+                    if (data == null || data.id == 0) {
+                        alert("No project found with ID " + projectId + ".");
+                        window.location = this.state.documentRoot + "/home";
+                    } else {
+                        this.setState({currentProject: data});
+                        this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+                    }
+                }
+            );
 
     }
-
-    togglePageMode() {
-
-        if (this.state.pageMode == "view") {
-            this.setState({pageMode: "edit"});
-
-        } else {
-            this.updateInstitution();
-            this.setState({pageMode: "view"});
-        }
-
-    }
-    getData(institutionId){
-        fetch(this.state.documentRoot + "/get-institution-details/" + institutionId)
-            .then(response => response.json())
-            .then(data => this.setState({institution: data}));
-        fetch(this.state.documentRoot + "/get-all-users?institutionId=" + institutionId)
-            .then(response => response.json())
-            .then(data => this.setState({users: data}));
-        fetch(this.state.documentRoot + "/get-all-users")
-            .then(response => response.json())
-            .then(data => this.setState({usersCompleteList: data}));
-        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
-            .then(response => response.json())
-            .then(data => this.setState({imagery: data}));
-    }
-    handleChange(event) {
-        const target = event.target;
-        const value = target.value;
-        let detailsNew=this.state.details;
-        if (target.id == "institution-details-name") {
-            detailsNew.name = value;
-        }
-
-        if (target.id == "institution-details-url") {
-            detailsNew.url = value;
-        }
-        if (target.id == "institution-details-description") {
-            detailsNew.description = value;
-
-        }
-        this.setState({details: detailsNew});
-    }
-    deleteInstitution() {
-        let institutionId=this.state.institutionId;
-        let name=this.state.institution.name;
-        let documentRoot=this.state.documentRoot;
-        if (confirm("Do you REALLY want to delete this institution?!")) {
-            $.ajax({
-                url: documentRoot + "/archive-institution/" + institutionId,
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: false,
-                processData: false,
-            }).fail(function () {
-                alert("Error deleting institution. See console for details.");
-
-            }).done(function () {
-                alert("Institution " + name + " has been deleted.");
-                window.location = documentRoot + "/home";
+    getProjectStats() {
+        fetch(this.state.documentRoot + "/get-project-stats/" + this.props.projectId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error getting project stats. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({stats: data});
+                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
             });
-        }
-    }
-    cancelChanges() {
-        this.setState({pageMode: "view"});
     }
 
+    getProjectPlots() {
+        fetch(this.state.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error loading plot data. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({plotList: data});
+                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+            })
+    }
+
+    getImageryList(institutionId) {
+        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error retrieving the imagery list. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({imageryList :data});
+                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+            });
+    }
+    getImageryByTitle(imageryTitle) {
+        return this.state.imageryList.find(
+            function (imagery) {
+                return imagery.title == imageryTitle;
+            }
+        );
+    }
+
+    updateDGWMSLayer() {
+        mercator.updateLayerWmsParams(this.state.mapConfig,
+            "DigitalGlobeWMSImagery",
+            {
+                COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.state.imageryYearDG + "-01-01')"
+                    + "AND(acquisition_date<='" + this.state.imageryYearDG + "-12-31')",
+                FEATUREPROFILE: this.state.stackingProfileDG
+            });
+    }
+    updatePlanetLayer() {
+        mercator.updateLayerSource(this.state.mapConfig,
+            "PlanetGlobalMosaic",
+            function (sourceConfig) {
+                sourceConfig.month = this.state.imageryMonthPlanet;
+                sourceConfig.year = this.state.imageryYearPlanet;
+                return sourceConfig;
+            },
+            this);
+    }
+    setBaseMapSource = function () {
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
+        this.state.currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        if (this.state.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
+            this.state.currentImagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
+            this.updateDGWMSLayer();
+        } else if (this.state.currentProject.baseMapSource == "PlanetGlobalMosaic") {
+            this.state.currentImagery.attribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+            this.updatePlanetLayer();
+        }
+    }
+    showProjectPlots() {
+        mercator.addPlotLayer(this.mapConfig,
+            this.plotList,
+            angular.bind(this, function (feature) {
+                // FIXME: These three assignments don't appear to do anything
+                this.showSideBar = true;
+                this.mapClass = "sidemap";
+                this.quitClass = "quit-side";
+                this.loadPlotById(feature.get("features")[0].get("plotId"));
+            }));
+    }
+    showProjectMap() {
+        // Initialize the base map
+        this.state.mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
+        this.setBaseMapSource();
+
+        // Show the project's boundary
+        mercator.addVectorLayer(this.state.mapConfig,
+            "currentAOI",
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+            ceoMapStyles.polygon);
+        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+
+        // Draw the project plots as clusters on the map
+        this.showProjectPlots();
+    }
+
+    getPlotDataById(plotId) {
+        fetch(this.state.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                }
+            })
+            .then(data => {
+                if (data == "done") {
+                    this.state.currentPlot = null;
+                    this.showProjectPlots();
+                    alert("This plot has already been analyzed.");
+                } else if (response.data == "not found") {
+                    this.state.currentPlot = null;
+                    this.showProjectPlots();
+                    alert("No plot with ID " + plotId + " found.");
+                } else {
+                    this.state.currentPlot = data;
+                    this.loadPlotById(plotId);
+                }
+            });
+    }
+
+    loadPlotById(plotId) {
+        if (this.state.currentPlot == null) {
+            this.getPlotDataById(plotId);
+        } else {
+            // FIXME: What is the minimal set of these that I can execute?
+            utils.enable_element("new-plot-button");
+            utils.enable_element("flag-plot-button");
+            utils.disable_element("save-values-button");
+            // FIXME: These classes should be handled with an ng-if in collection.ftl
+           document.getElementById("#go-to-first-plot-button").addClass("d-none");
+            document.getElementById("#plot-nav").removeClass("d-none");
+            // FIXME: These three assignments don't appear to do anything
+            this.state.showSideBar = true;
+            this.state.mapClass = "sidemap";
+            this.state.quitClass = "quit-side";
+
+            // FIXME: Move these calls into a function in mercator-openlayers.js
+            mercator.disableSelection(this.state.mapConfig);
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.state.mapConfig,
+                "currentSamples",
+                mercator.samplesToVectorSource(this.state.currentPlot.samples),
+                ceoMapStyles.redPoint);
+            mercator.enableSelection(this.state.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
+
+            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
+                + encodeURIComponent("title=" + this.state.currentProject.name
+                    + "&pid=" + this.state.projectId
+                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
+                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
+                    + "&bradius=" + this.state.currentProject.plotSize / 2),
+                "_geo-dash");
+        }
+    };
 
     render() {
-        let isAdmin = false;
-        let usersLength;
-        const imagery = this.state.imagery;
-        const projects = this.state.projects;
-        const users = this.state.users;
-        if (this.state.userId != "") {
-            isAdmin = this.state.details.admins.includes(parseInt(this.state.userId));
-        }
-        if(this.state.role=="admin"){
-            isAdmin=true;
-        }
-
-        if (isAdmin == true) {
-            usersLength = users.length;
-        }
-        else {
-            usersLength = this.state.users.filter(
-                function (user) {
-                    return user.institutionRole != "pending";
-                }
-            ).length;;
-        }
-
         return (
             <React.Fragment>
-                <InstitutionDescription userId={this.state.userId} institution={this.state.institution}
-                                        documentRoot={this.state.documentRoot}
-                                        of_users_api_url={this.state.of_users_api_url}
-                                        institutionId={this.state.institutionId} role={this.state.role}
-                                        storage={this.state.storage} pageMode={this.state.pageMode}
-                                        details={this.state.details} togglePageMode={this.togglePageMode} handleChange={this.handleChange} cancelChanges={this.cancelChanges} deleteInstitution={this.deleteInstitution}/>
-                <div className="row">
-                    <div id="imagery-list" className="col-lg-4 col-xs-12">
-                        <h2 className="header">Imagery <span
-                            className="badge badge-pill badge-light">{imagery.length}</span>
-                        </h2>
-                        <ImageryList userId={this.state.userId} documentRoot={this.state.documentRoot}
-                                     institution={this.state.institution} isAdmin={isAdmin}
-                                     institutionId={this.state.institutionId} details={this.state.details}
-                                     imagery={imagery} pageMode={this.state.pageMode} getImagery={this.getImagery}/>
+                <ImageAnalysisPane />
+                <SideBar/>
+                <div className="modal fade" id="confirmation-quit" tabIndex="-1" role="dialog"
+                     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div className="modal-dialog modal-dialog-centered" role="document">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title" id="exampleModalLongTitle">Confirmation</h5>
+                                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                Are you sure you want to stop collecting data?
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close
+                                </button>
+                                <button type="button" className="btn bg-lightgreen btn-sm" id="quit-button"
+                                        onClick=${"window.location='" + this.state.documentRoot + "/home'"}>OK
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="project-list" className="col-lg-4 col-xs-12">
-                        <h2 className="header">Projects <span
-                            className="badge badge-pill  badge-light">{projects.length}</span>
-                        </h2>
-                        <ProjectList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
-                                     projects={this.state.projects} isAdmin={isAdmin} institutionId={this.state.institutionId}/>
-                    </div>
-                    <div id="user-list" className="col-lg-4 col-xs-12">
-                        <h2 className="header">Users <span
-                            className="badge badge-pill  badge-light">{usersLength}</span></h2>
-                        <UserList userId={this.state.userId} documentRoot={this.state.documentRoot} institution={this.state.institution}
-                                  institutionId={this.state.institutionId} users={this.state.users} isAdmin={isAdmin} usersCompleteList={this.state.usersCompleteList}
-                                  pageMode={this.state.pageMode}/>
-                    </div>
-
                 </div>
+            </React.Fragment>
+        );
+    }
+}
+
+class ImageAnalysisPane extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+    render() {
+        var showSidebar;
+        if(this.props.showSideBar){
+            showSidebar=<div>
+                <span id="action-button" name="collection-actioncall" title="Click a plot to analyze:"
+                      alt="Click a plot to analyze">Click a plot to analyze, or:<p></p><br/>
+                    <span className="button" onClick="collection.nextPlot()">Analyze random plot</span>
+                    <br style="clear:both;"/>
+                    <br style="clear:both;"/>
+                </span>
+            </div>
+        }
+        else{
+            showSidebar=<div style="position:relative;">
+                <span id="action-button" name="collection-actioncall" title="Select each plot to choose value"
+                      alt="Select each plot to choose value">Select each dot to choose value
+                </span>
+            </div>
+        }
+        return (
+            <div id="image-analysis-pane" className="collection.map"
+                 className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
+                <div className="buttonHolder d-none">
+                    {showSidebar}
+                </div>
+                <div id="imagery-info" className="row d-none">
+                    <p className="col small">{this.props.currentImagery.attribution}</p>
+                </div>
+            </div>
+        );
+    }
+}
+
+class SideBar extends React.Component {
+
+    render() {
+        const collection=this.props.collection;
+        return (
+            <React.Fragment>
+                <h2 className="header">{collection.currentProject.name}</h2>
+                <SideBarFieldSet/>
+                <div className="row">
+                    <div className="col-sm-12 btn-block">
+                        <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                                type="button"
+                                name="save-values" onClick={collection.saveValues()} style="opacity:0.5" disabled>
+                            Save
+                        </button>
+                        <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                                href="#project-stats-collapse" role="button" aria-expanded="false"
+                                aria-controls="project-stats-collapse">
+                            Project Stats
+                        </button>
+                        <div className="row justify-content-center mb-1 text-center">
+                            <div className="col-lg-12">
+                                <fieldset id="projStats" className="collection.statClass" className="text-center">
+                                    <div className="collapse" id="project-stats-collapse">
+                                        <table className="table table-sm">
+                                            <tbody>
+                                            <tr>
+                                                <td className="small">Project</td>
+                                                <td className="small">{collection.currentProject.name}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="small">Plots Assigned</td>
+                                                <td className="small">
+                                                    {collection.stats.analyzedPlots}
+                                                    ({collection.assignedPercentage()}%)
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="small">Plots Flagged</td>
+                                                <td className="small">
+                                                    {collection.stats.flaggedPlots}
+                                                    ({collection.flaggedPercentage()}%)
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="small">Plots Completed</td>
+                                                <td className="small">
+                                                    {collection.stats.analyzedPlots + collection.stats.flaggedPlots}
+                                                    ({collection.completedPercentage()}%)
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="small">Plots Total</td>
+                                                <td className="small">{collection.currentProject.numPlots}</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
+                                type="button"
+                                name="collection-quit" className="collection.quitClass" data-toggle="modal"
+                                data-target="#confirmation-quit">
+                            Quit
+                        </button>
+                    </div>
+                </div>
+
             </React.Fragment>
 
         );
     }
+
 }
 
-class InstitutionDescription extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            pageMode: this.props.pageMode,
-            users: [],
-            imagery: [],
-            usersCompleteList: [],
-            isAdmin: this.props.isAdmin,
-            logo: this.props.institution.logo,
-            institutionId: this.props.institutionId,
-            details: this.props.details,
-        }
+class SideBarFieldSet extends React.Component {
+    render() {
+        const collection=this.props.collection;
 
-    }
-
-    renderComp(role, pageMode, institution, isAdmin, togglePageMode, deleteInstitution) {
-        if (role != "") {
-            if (institution.id > 0 && role == "admin" && pageMode == 'view') {
-                return (
-                    <div className="row justify-content-center mb-2" id="institution-controls">
-                        <div className="col-3">
-                            <button id="edit-institution" type="button"
-                                    class="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                    onClick={togglePageMode}>
-                                <i className="fa fa-edit"></i> Edit
-                            </button>
-                        </div>
-                        <div className="col-3">
-                            <button id="delete-institution" type="button"
-                                    className="btn btn-sm btn-outline-danger btn-block mt-0"
-                                    onClick={deleteInstitution}>
-                                <i className="fa fa-trash-alt"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-        }
-    }
-
-    renderHeader(institutionId) {
-
-        if (institutionId > 0) {
-            return (
-                <h2 className="header">
-                    <span>Edit  Institution</span>
-                </h2>
-
-            );
-        }
-        else if (institutionId == 0) {
-            return (
-                <h2 className="header">
-                    <span>Create New Institution</span>
-                </h2>
-            );
-        }
-    }
-
-    renderButtons(institutionId, institution, pageMode, togglePageMode, cancelChanges) {
-        if (pageMode == 'edit' && institutionId == 0) {
-            return (
-                <button id="create-institution"
-                        className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                        onClick={togglePageMode}>
-                    <i className="fa fa-plus-square"></i> Create Institution
-                </button>
-            );
-        }
-        else if (pageMode == 'edit' && institutionId > 0) {
-            return (
-                <React.Fragment>
+        return (
+            <React.Fragment>
+                <fieldset className="mb-3 text-center">
+                    <h3>Plot Navigation</h3>
                     <div className="row">
-                        <div className="col-6">
-                            <button className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                    onClick={togglePageMode}>
-                                <i className="fa fa-save"></i> Save Changes
-                            </button>
-                        </div>
-                        <div className="col-6">
-                            <button className="btn btn-sm btn-outline-danger btn-block mt-0"
-                                    onClick={cancelChanges}>
-                                <i className="fa fa-ban"></i> Cancel Changes
-                            </button>
+                        <div className="col" id="go-to-first-plot">
+                            <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                                   type="button"
+                                   name="new-plot" value="Go to first plot" onClick={collection.nextPlot()}/>
                         </div>
                     </div>
-
-                </React.Fragment>
-
-            );
-        }
-    }
-
-    render() {
-
-        const {institution, documentRoot, institutionId, role, of_users_api_url, storage, isAdmin, details} = this.props;
-        let pageMode = this.props.pageMode;
-
-        if (pageMode == "view") {
-
-            if (storage != null && typeof(storage) == "string" && storage == "local") {
-                return (<React.Fragment>
-                        <div id="institution-details" className="row justify-content-center">
-                            <div id="institution-view" className="col-xl-6 col-lg-8 ">
-                                <div className="row">
-                                    <div className="col-md-3" id="institution-logo-container">
-                                        <a href={institution.url}>
-                                            <img className="img-fluid" src={documentRoot + "/" + institution.logo}
-                                                 alt="logo"/>
-                                        </a>
-                                    </div>
-                                    <h1 className="col-md-9"><a href={institution.url}>{institution.name}</a>
-                                    </h1>
-                                </div>
-                                <div className="row">
-                                    <div className="col">
-                                        <p>{institution.description}</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <div className="row d-none" id="plot-nav">
+                        <div className="col-sm-6 pr-2">
+                            <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                                   type="button"
+                                   name="new-plot" value="Skip" onClick={collection.nextPlot()}/>
                         </div>
-                        {this.renderComp(role, pageMode, institution, isAdmin, this.props.togglePageMode, this.props.deleteInstitution)}
-                    </React.Fragment>
-                );
-            }
-            else {
-                return (<React.Fragment>
-                        <div id="institution-details" className="row justify-content-center">
-                            <div id="institution-view" className="col-xl-6 col-lg-8 ">
-                                <div className="row">
-                                    <div className="col-md-3" id="institution-logo-container">
-                                        <a href={institution.url}>
-                                            <img className="img-fluid"
-                                                 src={of_users_api_url + "/group/logo/" + institution.id}
-                                                 alt="logo"/>
-                                        </a>
-                                    </div>
-                                    <h1 className="col-md-9"><a href={institution.url}>{institution.name}</a>
-                                    </h1>
-                                </div>
-                                <div className="row">
-                                    <div className="col">
-                                        <p>{institution.description}</p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="col-sm-6 pl-2">
+                            <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                                   type="button"
+                                   name="flag-plot" value="Flag Plot as Bad" onClick={collection.flagPlot()}
+                                   style="opacity:0.5" disabled/>
                         </div>
-                        {this.renderComp(role, pageMode, institution, isAdmin, this.props.togglePageMode, this.props.deleteInstitution)}
-                    </React.Fragment>
-                );
-            }
-
-        }
-        else if (pageMode == 'edit') {
-            return (
-                <div id="institution-details" className="row justify-content-center">
-                    <div id="institution-edit" className="col-xl-6 col-lg-6 border pb-3 mb-2">
-                        <form>
-                            <React.Fragment>{this.renderHeader(institutionId)}</React.Fragment>
-                            <div className="form-group">
-                                <label id="institution-name" htmlFor="institution-details-name">Name</label>
-                                <input id="institution-details-name" className="form-control mb-1 mr-sm-2"
-                                       type="text" defaultValue={institution.name} onChange={this.props.handleChange}/>
-                            </div>
-                            <div className="form-group">
-                                <label id="institution-url" htmlFor="institution-details-url">URL</label>
-                                <input id="institution-details-url" type="text" className="form-control mb-1 mr-sm-2"
-                                       defaultValue={institution.url} onChange={this.props.handleChange}/>
-                            </div>
-                            <div className="form-group">
-                                <label id="institution-logo-selector" htmlFor="institution-logo">Logo</label>
-                                <input id="institution-logo" className="form-control mb-1 mr-sm-2" type="file"
-                                       accept="image/*"/>
-                            </div>
-                            <div className="form-group">
-                                <label id="institution-description"
-                                       htmlFor="institution-details-description">Description</label>
-                                <textarea id="institution-details-description" className="form-control"
-                                          rows="4"
-                                          onChange={this.props.handleChange}>{institution.description}</textarea>
-                            </div>
-
-                            {this.renderButtons(institutionId, institution, pageMode, this.props.togglePageMode, this.props.cancelChanges)}
-
-
-                        </form>
                     </div>
-                </div>
-            );
-        }
-    }
-}
-
-class ImageryList extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            imagery: this.props.imagery,
-            institutionId: this.props.institutionId,
-            documentRoot: this.props.documentRoot,
-            imageryMode: "view",
-            newImageryTitle: "",
-            newImageryAttribution: "",
-            newGeoServerURL: "",
-            newLayerName: "",
-            newGeoServerParams: "",
-        }
-        this.toggleImageryMode = this.toggleImageryMode.bind(this);
-        this.addCustomImagery = this.addCustomImagery.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-        this.deleteImagery = this.deleteImagery.bind(this);
-    };
-
-
-
-
-    addCustomImagery() {
-        let newImageryTitle = this.state.newImageryTitle;
-        let details = this.props.details;
-        let institutionId = this.props.institutionId;
-        let documentRoot = this.state.documentRoot;
-        const institution = this.props.institution;
-        var ref=this;
-        $.ajax({
-            url: this.props.documentRoot + "/add-institution-imagery",
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify({
-                institutionId: this.props.institutionId,
-                imageryTitle: this.state.newImageryTitle,
-                imageryAttribution: this.state.newImageryAttribution,
-                geoserverURL: this.state.newGeoServerURL,
-                layerName: this.state.newLayerName,
-                geoserverParams: this.state.newGeoServerParams
-            })
-        }).fail(function () {
-            alert("Error adding custom imagery to institution. See console for details.");
-
-        }).done(function (data) {
-                alert("Imagery " + newImageryTitle + " has been added to institution " + institution.name + ".");
-                ref.props.getImagery();
-
-            }
-        );
-
-
-        this.setState({newImageryTitle: ""});
-        this.setState({newImageryAttribution: ""});
-        this.setState({newGeoServerURL: ""});
-        this.setState({newLayerName: ""});
-        this.setState({newGeoServerParams: ""});
-    }
-
-    toggleImageryMode(imageryMode) {
-        if (imageryMode == "view") {
-            this.setState({imageryMode: "edit"});
-        } else {
-            this.addCustomImagery(this.props.getImagery);
-            this.setState({imageryMode: "view"});
-        }
-    }
-
-    deleteImagery(documentRoot, imageryId, name, institutionId) {
-        if (confirm("Do you REALLY want to delete this imagery?!")) {
-            var ref=this;
-            $.ajax({
-                url: documentRoot + "/delete-institution-imagery",
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: "application/json",
-                data: JSON.stringify({
-                    institutionId: institutionId,
-                    imageryId: imageryId
-                })
-            }).fail(function () {
-                alert("Error deleting imagery from institution. See console for details.");
-            }).done(function (data) {
-                alert("Imagery " + imageryId + " has been deleted from institution " + name + ".");
-                ref.props.getImagery();
-            });
-        }
-    }
-
-    cancelAddCustomImagery() {
-        this.setState({imageryMode: "view"});
-    }
-
-    handleChange(event) {
-        const target = event.target;
-        const value = target.value;
-        const name = target.id;
-        this.setState({
-            [name]: value
-        });
-    }
-
-    render() {
-        const institution = this.props.institution;
-        const isAdmin = this.props.isAdmin;
-        const imageryMode = this.state.imageryMode;
-        if (this.props.imagery.length > 0) {
-            if (imageryMode == 'view') {
-
-                return (
-                    <React.Fragment>
-
-                        <ImageryButton institution={institution}
-                                       toggleImageryMode={() => this.toggleImageryMode(imageryMode)}
-                                       isAdmin={isAdmin}/>
-
+                </fieldset>
+                <fieldset className="mb-3 justify-content-center text-center">
+                    <h3>Imagery Options</h3>
+                    <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
+                            size="1"
+                            value={collection.currentProject.baseMapSource} onChange={collection.setBaseMapSource()}>
                         {
-                            this.props.imagery.map(
-                                imageryItem => <Imagery institution={institution} title={imageryItem.title}
-                                                        imageryId={imageryItem.id} isAdmin={isAdmin}
-                                                        deleteImagery={() => this.deleteImagery(this.props.documentRoot, imageryItem.id, this.props.institution.name, this.props.institutionId)}/>
+                        collection.imageryList.map(imagery=>
+                            <option value={imagery.title}>{imagery.title}</option>
                             )
                         }
-                    </React.Fragment>
-
-                );
 
 
-            }
-            else if (isAdmin == true && imageryMode == 'edit') {
-                return (
-                    <div className="row" id="add-imagery">
-                        <div className="col">
-                            <form className="mb-2 p-2 border rounded">
-                                <div className="form-group">
-                                    <label htmlFor="newImageryTitle">Title</label>
-                                    <input className="form-control" id="newImageryTitle" type="text"
-                                           name="imagery-title" autoComplete="off"
-                                           onChange={this.handleChange} defaultValue={this.state.newImageryTitle}/>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="newImageryAttribution">Attribution</label>
-                                    <input className="form-control" id="newImageryAttribution" type="text"
-                                           name="imagery-attribution" autoComplete="off"
-                                           onChange={this.handleChange}
-                                           defaultValue={this.state.newImageryAttribution}/>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="newGeoServerURL">GeoServer URL</label>
-                                    <input className="form-control" id="newGeoServerURL" type="text"
-                                           name="imagery-geoserver-url" autoComplete="off"
-                                           onChange={this.handleChange} defaultValue={this.state.newGeoServerURL}/>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="newLayerName">GeoServer Layer Name</label>
-                                    <input className="form-control" id="newLayerName" type="text"
-                                           name="imagery-layer-name" autoComplete="off"
-                                           onChange={this.handleChange} defaultValue={this.state.newLayerName}/>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="newGeoServerParams">GeoServer Params<br/>(as JSON string)</label>
-                                    <input className="form-control" id="newGeoServerParams" type="text"
-                                           name="imagery-geoserver-params" autoComplete="off"
-                                           onChange={this.handleChange} defaultValue={this.state.newGeoServerParams}/>
-                                </div>
-                                <div className="btn-group-vertical btn-block">
-                                    <button id="add-imagery-button"
-                                            className="btn btn-sm btn-block btn-outline-yellow btn-group"
-                                            onClick={() => this.toggleImageryMode(imageryMode)}>
-                                        <i className="fa fa-plus-square"></i> Add New Imagery
-                                    </button>
-                                    <button className="btn btn-sm btn-block btn-outline-danger btn-group"
-                                            onClick={() => this.cancelAddCustomImagery}>Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                );
-            }
-
-        }
-        else {
-            return (<span></span>);
-        }
-    }
-}
-
-function Imagery(props) {
-    if (props.isAdmin == false) {
-        return (
-            <div className="row mb-1">
-                <div className="col mb-1">
-                    <button className="btn btn-outline-lightgreen btn-sm btn-block">{props.title}</button>
-                </div>
-            </div>
-        );
-    }
-    else {
-        return (
-            <div className="row mb-1">
-                <div className="col-10 pr-1">
-                    <button className="btn btn-outline-lightgreen btn-sm btn-block">{props.title}</button>
-                </div>
-
-
-                <div className="col-2 pl-0">
-                    <button className="btn btn-outline-danger btn-sm btn-block" id="delete-imagery" type="button"
-                            onClick={props.deleteImagery}>
-                        <span className="d-none d-xl-block"> Delete </span>
-                        <span className="d-xl-none"><i className="fa fa-trash-alt"></i></span>
-                    </button>
-                </div>
-            </div>
-
-        );
-    }
-}
-
-function ImageryButton(props) {
-    if (props.isAdmin == true) {
-        return (
-            <div className="row">
-                <div className="col-lg-12 mb-1">
-
-                    <button type="button" id="add-imagery-button"
-                            className="btn btn-sm btn-block btn-outline-yellow"
-                            onClick={props.toggleImageryMode}>
-                        <i className="fa fa-plus-square"></i>Add New Imagery
-                    </button>
-
-                </div>
-            </div>
-        );
-    }
-    else {
-        return (
-            <span></span>
-        );
-    }
-}
-
-class ProjectList extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            projects: this.props.projects,
-        };
-        this.createProject = this.createProject.bind(this);
-    }
-
-    createProject() {
-        if (this.props.institutionId == 0) {
-            alert("Please finish creating the institution before adding projects to it.");
-        } else if (this.props.institutionId == -1) {
-            alert("Projects cannot be created without first selecting an institution.");
-        } else {
-            window.location = this.props.documentRoot + "/project/0?institution=" + this.props.institutionId;
-        }
-    };
-
-    render() {
-        const institution = this.props.institution;
-
-            if (this.props.isAdmin == true) {
-                return (
-                    <React.Fragment>
-                        <ProjectButton createProject={this.createProject}/>
-
-                        {
-                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
-                                                                        proj={project}
-                                                                        institution={institution}
-                                                                        isAdmin={this.props.isAdmin}/>)
-                        }
-
-                    </React.Fragment>
-                );
-            }
-            else {
-                return (
-                    <React.Fragment>
-                        {
-                            this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
-                                                                        proj={project}
-                                                                        institution={institution}
-                                                                        isAdmin={this.props.isAdmin}/>)
-                        }
-                    </React.Fragment>
-                );
-            }
-
-    }
-}
-
-function Project(props) {
-
-    const documentRoot = props.documentRoot;
-    const project = props.proj;
-    const institution = props.institution;
-    if (props.isAdmin == true) {
-        return (
-            <div className="row mb-1">
-                <div className="col-9 pr-1">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={documentRoot + "/collection/" + project.id}>
-                        {project.name}
-                    </a>
-                </div>
-                <div className="col-3 pl-0">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={documentRoot+"/project/"+ project.id }>
-                        <span className="d-xl-none"><i className="fa fa-edit"></i></span><span
-                        className="d-none d-xl-block"> Review</span></a>
-                </div>
-            </div>
-        );
-    } else {
-        return (
-            <div className="row">
-                <div className="col mb-1 pr-1">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={documentRoot + "/collection/" + project.id}>
-                        {project.name}
-                    </a>
-                </div>
-            </div>
-
-        );
-    }
-}
-
-function ProjectButton(props){
-    return(
-        <div className="row mb-1">
-            <div className="col">
-                <button id="create-project" type="button" className="btn btn-sm btn-block btn-outline-yellow"
-                        onClick={props.createProject}>
-                    <i className="fa fa-plus-square"></i> Create New Project
-                </button>
-            </div>
-        </div>
-    );
-}
-var userg;
-class UserList extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            users: this.props.users,
-            institutionId: this.props.institutionId,
-            isAdmin: this.props.isAdmin,
-            pageMode: this.props.pageMode,
-            institutionRole:"",
-        };
-        userg=this;
-        this.updateUserInstitutionRole = this.updateUserInstitutionRole.bind(this);
-    };
-
-    // handleChange(userId, email,role,event) {
-    //     const target = event.target;
-    //     if(target.name=="user-institution-role") {
-    //         const value = target.value;
-    //         this.setState({
-    //             institutionRole: value
-    //         },this.updateUserInstitutionRole(userId, email,role));
-    //     }
-    // }
-
-    updateUserInstitutionRole(userId, email,role,e) {
-        let userOldId = this.props.userId;
-        let isAdmin = this.props.isAdmin;
-        let documentRoot = this.props.documentRoot;
-        let institutionId=this.props.institutionId;
-
-        var ref=this;
-
-         bob={
-            userId: userId,
-            institutionId:institutionId,
-            role: e.target.value
-        };
-
-        $.ajax({
-            url: documentRoot + "/update-user-institution-role",
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify
-            (bob)
-
-    }).fail(function () {
-            alert("Error updating user institution role. See console for details.");
-
-        }).done(function (data) {
-            alert("User " + email + " has been given role '" + role + "'.");
-            if (userId == userOldId && ref.state.institutionRole != "admin") {
-                ref.setState({pageMode: pageMode});
-                ref.setState({isAdmin: isAdmin});
-            }
-            //get users
-            fetch(documentRoot + "/get-all-users?institutionId=" + ref.props.institutionId)
-                .then(response => response.json())
-                .then(data => ref.setState({users: data}));
-        });
-
-    }
-
-    render() {
-        console.log(this.state.institutionRole);
-
-        return (
-            <React.Fragment>
-                <UserButton userId={this.props.userId} documentRoot={this.props.documentRoot}
-                            institutionId={this.props.institutionId} institution={this.props.institution}
-                            isAdmin={this.props.isAdmin} users={this.props.users}
-                            usersCompleteList={this.props.usersCompleteList}
-                            updateUserInstitutionRole={()=>this.updateUserInstitutionRole}/>
-
+                    </select>
+                    if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
+                    <select className="form-control form-control-sm" id="dg-imagery-year" name="dg-imagery-year"
+                            size="1"
+                            value={collection.imageryYearDG} convert-to-number
+                            onChange={collection.updateDGWMSLayer()}>
+                        <option value="2018">2018</option>
+                        <option value="2017">2017</option>
+                        <option value="2016">2016</option>
+                        <option value="2015">2015</option>
+                        <option value="2014">2014</option>
+                        <option value="2013">2013</option>
+                        <option value="2012">2012</option>
+                        <option value="2011">2011</option>
+                        <option value="2010">2010</option>
+                        <option value="2009">2009</option>
+                        <option value="2008">2008</option>
+                        <option value="2007">2007</option>
+                        <option value="2006">2006</option>
+                        <option value="2005">2005</option>
+                        <option value="2004">2004</option>
+                        <option value="2003">2003</option>
+                        <option value="2002">2002</option>
+                        <option value="2001">2001</option>
+                        <option value="2000">2000</option>
+                    </select>
+                }
+                if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
+                    <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
+                            size="1"
+                            ng-model="collection.stackingProfileDG" onChange={collection.updateDGWMSLayer()}>
+                        <option value="Accuracy_Profile">Accuracy Profile</option>
+                        <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
+                        <option value="Global_Currency_Profile">Global Currency Profile</option>
+                        <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
+                        <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+                    </select>
+                }
+                if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
+                    <select className="form-control form-control-sm" id="planet-imagery-year" name="planet-imagery-year"
+                            size="1"
+                            value={collection.imageryYearPlanet} convert-to-number
+                            onChange={collection.updatePlanetLayer()}>
+                        <option value="2018">2018</option>
+                        <option value="2017">2017</option>
+                        <option value="2016">2016</option>
+                    </select>
+                }
+                if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
+                    <select className="form-control form-control-sm" id="planet-imagery-month"
+                            name="planet-imagery-month" size="1"
+                            value={collection.imageryMonthPlanet} onChange={collection.updatePlanetLayer()}>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                }
+                </fieldset>
                 {
-                    this.props.users.map(user => <User documentRoot={this.props.documentRoot} user={user}
-                                                       institution={this.props.institution} isAdmin={this.state.isAdmin} institutionRole={user.institutionRole}
-                                                       pageMode={this.state.pageMode}
-                                                       updateUserInstitutionRole={()=>this.updateUserInstitutionRole} id={user.id} email={user.email}/>
-                    )}
+                    collection.currentProject.sampleValues.map(sampleValueGroup=>
+                        <fieldset className="mb-1 justify-content-center text-center">
+                            <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
+                            <ul id="samplevalue" className="justify-content-center">
+                                {
+                                sampleValueGroup.values.map(sampleValue=>
+                                <li className="mb-1">
+                                    <button type="button" className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                            id={ sampleValue.name + '_' + sampleValue.id }
+                                            name={ sampleValue.name + '_' + sampleValue.id }
+                                            onClick={collection.setCurrentValue(sampleValueGroup, sampleValue)}>
+                                        <div className="circle" style={{"background-color": sampleValue.color , border:"solid 1px", float: "left","margin-top": "4px"}}></div>
+                                        <span className="small">{sampleValue.name}</span>
+                                    </button>
+                                </li>
+                                )
+                                }
+                            </ul>
+                        </fieldset>
+                    )
+                }
+
             </React.Fragment>
+
         );
     }
 }
-var bob;
 
-class User extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            institutionRole: this.props.institutionRole,
-        };
-
-    }
-
-    render() {
-
-        const user = this.props.user;
-        const documentRoot = this.props.documentRoot;
-
-        if (this.props.isAdmin == false && user.institutionRole != 'pending') {
-            return (
-                <div className="row">
-
-                    <div className="col mb-1">
-                        <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                           href={documentRoot + "/account/" + user.id}>{user.email}</a>
-                    </div>
-                </div>
-            );
-        }
-        if (this.props.isAdmin == true) {
-            if (user.institutionRole == 'pending') {
-                return (
-                    <React.Fragment>
-                        <div className="row">
-
-                            <div className="col-lg-9 mb-1 pr-1">
-                                <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                                   href={documentRoot + "/account/" + user.id}>{user.email}</a>
-                            </div>
-                            <div className="col-lg-3 mb-1 pl-0">
-                                <select value={this.state.institutionRole} className="custom-select custom-select-sm"
-                                        name="user-institution-role" size="1"
-                                        onChange={(e)=>this.props.updateUserInstitutionRole(this.props.id, this,props.email, user.institutionRole,e)}>
-                                    <option value="pending">Pending</option>
-                                    <option value="member">Member</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="not-member">Remove</option>
-                                </select>
-                            </div>
-                        </div>
-                    </React.Fragment>
-                );
-            }
-            else {
-                return (
-                    <React.Fragment>
-                        <div className="row">
-
-                            <div className="col-lg-9 mb-1 pr-1">
-                                <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                                   href={documentRoot + "/account/" + user.id}>{user.email}</a>
-                            </div>
-                            <div className="col-lg-3 mb-1 pl-0">
-                                <select value={this.state.institutionRole} className="custom-select custom-select-sm"
-                                        name="user-institution-role" size="1"
-                                         onChange={(e)=>this.props.updateUserInstitutionRole(this.props.id, this.props.email, user.institutionRole,e)}>
-                                    <option value="member">Member</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="not-member">Remove</option>
-                                </select>
-                            </div>
-                        </div>
-                    </React.Fragment>
-                );
-            }
-        }
-        else {
-            return (<span></span>);
-        }
-    }
-}
-
-class UserButton extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            newUserEmail: "",
-            userList: this.props.users,
-        };
-        this.addUser = this.addUser.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-        this.isInstitutionMember = this.isInstitutionMember.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-    }
-
-    handleChange(event) {
-        const target = event.target;
-        const value = target.value;
-        this.setState({
-            newUserEmail: value
-        });
-    }
-
-    addUser() {
-        if (this.state.newUserEmail == "") {
-            alert("Please enter an existing user's email address.");
-        } else if (this.findUserByEmail(this.props.users, this.state.newUserEmail)) {
-            alert(this.state.newUserEmail + " is already a member of this institution.");
-        } else {
-            console.log("in add user else");
-
-            let newUser = this.findUserByEmail(this.props.usersCompleteList, this.state.newUserEmail);
-            if (newUser) {
-                console.log("in if");
-                console.log(newUser);
-                this.props.updateUserInstitutionRole(newUser.id, newUser.email, "member");
-                this.setState({newUserEmail: ""});
-            } else {
-                alert(this.state.newUserEmail + " is not an existing user's email address.");
-            }
-        }
-    }
-
-    findUserByEmail(userList, email) {
-        return userList.find(
-            function (user) {
-                return user.email == email;
-            }
-        );
-    }
-
-    isInstitutionMember(userId) {
-        return userId == 1
-            || this.props.users.some(
-                function (user) {
-                    return user.id == userId;
-                }
-            );
-    }
-
-    requestMembership(userId, institutionId, documentRoot) {
-        $.ajax({
-            url: documentRoot + "/request-institution-membership",
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify
-            ({
-                    institutionId: institutionId,
-                    userId: parseInt(userId)
-                }
-            )
-        }).fail(function () {
-            alert("Error requesting institution membership. See console for details.");
-        }).done(function (data) {
-            alert("Membership requested for user " + userId + ".");
-            utils.disable_element("request-membership-button");
-
-        });
-    }
-
-    render() {
-        const institution = this.props.institution;
-            if (this.props.isAdmin == true) {
-                return (
-                    <React.Fragment>
-                        <div className="row mb-1">
-                            <div className="col-9 pr-1">
-                                <input className="form-control form-control-sm" type="email" name="new-institution-user"
-                                       autoComplete="off"
-                                       placeholder="Email" onChange={this.handleChange}
-                                       defaultValue={this.state.newUserEmail}/>
-                            </div>
-                            <div className="col-3 pl-0">
-                                <button className="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user"
-                                        onClick={this.addUser}><span className="d-xl-none">
-                            <i className="fa fa-plus-square"></i></span>
-                                    <span className="d-none d-xl-block"> Add User</span></button>
-                            </div>
-                        </div>
-                    </React.Fragment>
-                );
-            }
-            else return (<span></span>);
-            if (this.props.userId != '' && this.props.institutionId > 0 && !this.isInstitutionMember(this.props.userId)) {
-                return (
-
-                    <React.Fragment>
-                        <div>
-                            <button className="btn btn-sm btn-outline-yellow btn-block mb-2"
-                                    id="request-membership-button"
-                                    name="request-membership-button"
-                                    onClick={this.requestMembership(this.props.userId, this.props.institutionId, this.props.documentRoot)}>
-                                <i className="fa fa-plus-square"></i> Request membership
-                            </button>
-
-                        </div>
-                    </React.Fragment>
-                );
-            }
-    }
-}
-
-function renderInstitution(documentRoot, userId, institutionId,of_users_api_url,role,storage,nonPendingUsers,pageMode) {
+function renderCollection(documentRoot, username, projectId) {
     ReactDOM.render(
-        <Institution documentRoot={documentRoot} userId={userId} institutionId={institutionId} of_users_api_url={of_users_api_url} role={role} storage={storage} nonPendingUsers={nonPendingUsers} pageMode={pageMode}/>,
-        document.getElementById("institution")
+        <Institution documentRoot={documentRoot} userName={username} projectId={projectId}/>,
+        document.getElementById("collection")
     );
 }
