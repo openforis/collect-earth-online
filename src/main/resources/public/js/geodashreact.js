@@ -109,6 +109,8 @@ class Widget extends React.Component {
         return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue) }</React.Fragment>);
     }
     getWidgetHtml(widget, onOpacityChanged, opacityValue){
+        if(widget.gridcolumn || widget.layout)
+        {
             return (<div className={ this.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: '', widget.gridrow != null? widget.gridrow: widget.layout != null? 'span ' + widget.layout.h: '') }
                         style={{gridColumn:widget.gridcolumn != null? widget.gridcolumn: this.generategridcolumn(widget.layout.x, widget.layout.w), gridRow:widget.gridrow != null? widget.gridrow: this.generategridrow(widget.layout.y, widget.layout.h)}}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
@@ -126,6 +128,25 @@ class Widget extends React.Component {
                     </div>
                 </div>
             </div>);
+        }
+        else{
+            return (<div className={ 'columnSpan3 rowSpan1 placeholder'}>
+                <div className="panel panel-default" id={"widget_" + widget.id}>
+                    <div className="panel-heading">
+                        <ul className="list-inline panel-actions pull-right">
+                            <li style={{display: "inline"}}>{widget.name}</li>
+                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget.properties[0]))}
+                                                               role="button" title="Toggle Fullscreen"><i className="fas fa-expand-arrows-alt" style={{color: "#31BAB0"}}></i></a></li>
+                        </ul>
+                    </div>
+                    <div id={"widget-container_" + widget.id} className="widget-container">
+
+                        {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue)}
+
+                    </div>
+                </div>
+            </div>);
+        }
     }
     generategridcolumn(x, w){
         return (x + 1) + ' / span ' + w;

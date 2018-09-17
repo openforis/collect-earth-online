@@ -19,6 +19,7 @@ class BasicLayout extends React.Component{
                         WidgetTitle: '',
                         startDate:'',
                         endDate:'',
+                        widgetOptions:'',
                         FormReady: false
 
                       };
@@ -44,7 +45,10 @@ class BasicLayout extends React.Component{
         let widgets = this.state.widgets;
         console.log('I have ' + widgets.length + ' widgets to check');
         var changed = false;
-        widgets = _.map(this.state.widgets, function(widget, i) {
+        var row = 0;
+        var column = 0;
+        var sWidgets = _.orderBy(this.state.widgets, 'id', 'asc');
+        widgets = _.map(sWidgets, function(widget, i) {
             if(widget.layout)
             {
                 if(widget['gridcolumn']){
@@ -76,14 +80,59 @@ class BasicLayout extends React.Component{
                 delete widget['gridcolumn'];
                 delete widget['gridrow'];
             }
-            else{
-                console.log('why am i in here????');
+            else if(widget.position){
+
                 changed = true;
+                let x;
+                let w;
+                let y;
+                let h = 1;
+                let layout;
+
+                console.log('id: ' + widget.id);
+                console.log('column: ' + column);
+                console.log('widget.position: ' + widget.position);
+                console.log('widget.width: ' + widget.width);
+                console.log('row: ' + row);
+                if(column + parseInt(widget.width) <= 12)
+                {
+                    x = column;
+                    column = column + parseInt(widget.width);
+                }
+                else{
+                    x = 0;
+                    column = parseInt(widget.width);
+                    row +=1;
+                }
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
                 // Create a starter layout based on the i value
                 // need to add both layout and gridcolumn/gridrow properties
             }
+            else{
+                changed = true;
+                let x;
+                let w;
+                let y;
+                let h = 1;
+                let layout;
+                console.log('id: ' + widget.id);
+                console.log('column: ' + column);
+                console.log('widget.position: ' + widget.position);
+                console.log('widget.width: ' + widget.width);
+                console.log('row: ' + row);
+                if(column + 3 <= 12)
+                {
+                    x = column;
+                    column = column + 3;
+                }
+                else{
+                    x = 0;
+                    column = parseInt(widget.width);
+                    row +=1;
+                }
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
 
-
+            }
             return widget;
         });
         console.log(changed);
@@ -145,13 +194,15 @@ class BasicLayout extends React.Component{
                 <span className="text text-danger">Sample Image</span></div>;
         });
     }
-    onWidgetTypeSelectChanged = event => {
+    onWidgetTypeSelectChanged = (event, anything) => {
+        console.log(anything);
         this.setState({
             selectedWidgetType: event.target.value,
             selectedDataType: '-1',
             WidgetTitle: '',
             startDate:'',
             endDate:'',
+            widgetOptions:'',
             FormReady: false
 
         });
@@ -171,6 +222,7 @@ class BasicLayout extends React.Component{
             WidgetTitle: '',
             startDate:'',
             endDate:'',
+            widgetOptions:'',
             FormReady: false
         });
     };
@@ -232,6 +284,7 @@ class BasicLayout extends React.Component{
                     WidgetTitle: '',
                     startDate:'',
                     endDate:'',
+                    widgetOptions:'',
                     FormReady: false
                 });
             },
@@ -242,6 +295,9 @@ class BasicLayout extends React.Component{
     };
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
+    };
+    onWidgetwidgetOptionsChange = event => {
+        this.setState({widgetOptions: event.target.value});
     };
     onStartDateChanged = date => {
         this.setState({startDate: date});
@@ -282,7 +338,7 @@ class BasicLayout extends React.Component{
                                 <form>
                                     <div className="form-group">
                                         <label htmlFor="widgetTypeSelect">Type</label>
-                                        <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={this.onWidgetTypeSelectChanged}>
+                                        <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={(e) => this.onWidgetTypeSelectChanged(e, 'i am anything')}>
                                                  <option value="-1">Please select type</option>
                                                 <option label="Image Collection" value="ImageCollection">Image Collection</option>
                                                 <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
@@ -339,6 +395,25 @@ class BasicLayout extends React.Component{
                         </div>
                     </React.Fragment>
         }
+        else if(this.state.selectedWidgetType == 'ImageCollection')
+        {
+            return <React.Fragment>
+                <label htmlFor="widgetIndicesSelect">Data</label>
+                <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                    <option value="-1" className="" >Please select type</option>
+                    <option label="NDVI" value="NDVI">NDVI</option>
+                    <option label="EVI" value="EVI">EVI</option>
+                    <option label="EVI 2" value="EVI2">EVI 2</option>
+                    <option label="NDMI" value="NDMI">NDMI</option>
+                    <option label="NDWI" value="NDWI">NDWI</option>
+                    <option label="LANDSAT 5" value="LANDSAT5">LANDSAT 5</option>
+                    <option label="LANDSAT 7" value="LANDSAT7">LANDSAT 7</option>
+                    <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
+                    <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
+                    <option label="Custom widget" value="Custom">Custom widget</option>
+                </select>
+            </React.Fragment>
+        }
         else{
             return <React.Fragment>
                         <label htmlFor="widgetIndicesSelect">Data</label>
@@ -375,20 +450,44 @@ class BasicLayout extends React.Component{
                 } catch (e) {
                     console.warn(e.message);
                 }
-            });},250)
-            return <React.Fragment>
-                        <div className="form-group">
-                            <label htmlFor="widgetTitle">Title</label>
-                            <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
-                        </div>
-                        <label>Select the Date Range you would like</label>
-                        <div className="input-group input-daterange" id="range_new_cooked">
+            });},250);
+            if(this.state.selectedDataType == 'LANDSAT5'){
+                return <React.Fragment>
+                    <div className="form-group">
+                        <label htmlFor="widgetTitle">Title</label>
+                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                               className="form-control" onChange={this.onWidgetTitleChange}/>
+                    </div>
+                    <label>Select the Date Range you would like</label>
+                    <div className="input-group input-daterange" id="range_new_cooked">
 
-                            <input type="text"  className="form-control" value={this.state.startDate} id="sDate_new_cooked" />
-                                <div className="input-group-addon">to</div>
-                                <input type="text"  className="form-control" value={this.state.endDate} id="eDate_new_cooked" />
-                        </div>
-                    </React.Fragment>
+                        <input type="text" className="form-control" value={this.state.startDate} id="sDate_new_cooked"/>
+                        <div className="input-group-addon">to</div>
+                        <input type="text" className="form-control" value={this.state.endDate} id="eDate_new_cooked"/>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="widgetOptions">More Options</label>
+                        <input type="text" name="widgetOptions" id="widgetOptions" value={this.state.widgetOptions}
+                               className="form-control" onChange={this.onWidgetwidgetOptionsChange}/>
+                    </div>
+                </React.Fragment>
+            }
+            else {
+                return <React.Fragment>
+                    <div className="form-group">
+                        <label htmlFor="widgetTitle">Title</label>
+                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                               className="form-control" onChange={this.onWidgetTitleChange}/>
+                    </div>
+                    <label>Select the Date Range you would like</label>
+                    <div className="input-group input-daterange" id="range_new_cooked">
+
+                        <input type="text" className="form-control" value={this.state.startDate} id="sDate_new_cooked"/>
+                        <div className="input-group-addon">to</div>
+                        <input type="text" className="form-control" value={this.state.endDate} id="eDate_new_cooked"/>
+                    </div>
+                </React.Fragment>
+            }
         }
 
     }
