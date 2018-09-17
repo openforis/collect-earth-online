@@ -101,7 +101,7 @@ class Widgets extends React.Component {
 class Widget extends React.Component {
     constructor(props) {
         super(props);
-        this.imageCollectionList = ["addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI"];
+        this.imageCollectionList = ["addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
         this.graphControlList = ["timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
     }
     render() {
@@ -196,7 +196,7 @@ class Widget extends React.Component {
             return <div className="front"><StatsWidget widget={widget}/></div>
         }
         else {
-            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200"className="img-responsive" />;
+            return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200"className="img-responsive" />;
         }
     }
 
@@ -255,12 +255,17 @@ class MapWidget extends React.Component {
                 mapWidgetArray["widgetmap_" + widget.id].getSize()
             );
         }
+        var postObject = {};
         var collectionName = widget.properties[1];
         var dateFrom = widget.properties[2];
         var dateTo = widget.properties[3];
         var requestedIndex = widget.properties[0] === "ImageCollectionNDVI"? 'NDVI': widget.properties[0] === "ImageCollectionEVI"? 'EVI': widget.properties[0] === "ImageCollectionEVI2"? 'EVI2': widget.properties[0] === "ImageCollectionNDMI"? 'NDMI': widget.properties[0] === "ImageCollectionNDWI"? 'NDWI': '';
         var url = '';
-        if(collectionName.trim().length > 0)
+        if(widget.filterType != null && widget.filterType.length > 0){
+            var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'}
+            url = "http://collect.earth:8888/" + fts[widget.filterType]
+        }
+        else if(collectionName.trim().length > 0)
         {
             url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
         }
@@ -273,22 +278,42 @@ class MapWidget extends React.Component {
         }
         var min = "";
         var max = "0.3";
-        try {
-            if (widget.min > 0) {
-                min = widget.min;
-            }
-
-            if (widget.max > 0) {
-                max = widget.max;
-            }
-        }
-        catch (e) { alert(0); }
         var visParams;
-        visParams = {
-            min: min,
-            max: max,
-            bands: bands
-        };
+        var postObject = {};
+        postObject.collectionName = collectionName;
+        postObject.dateFrom = dateFrom;
+        postObject.dateTo= dateTo;
+        postObject.geometry= $.parseJSON(projPairAOI);
+        postObject.index= requestedIndex;
+        if(widget.visParams)
+        {
+            postObject.bands = widget.visParams.bands;
+            postObject.min = widget.visParams.min;
+            postObject.max = widget.visParams.max;
+            postObject.cloudLessThan = parseInt(widget.visParams.cloudLessThan);
+        }
+        else {
+            try {
+                if (widget.min > 0) {
+                    min = widget.min;
+                }
+
+                if (widget.max > 0) {
+                    max = widget.max;
+                }
+            }
+            catch (e) {
+                //alert(0);
+            }
+            visParams = {
+                min: min,
+                max: max,
+                bands: bands
+            };
+            postObject.visParams = visParams;
+        }
+
+
         $.ajax({
             url: url,
             type: "POST",
@@ -296,15 +321,7 @@ class MapWidget extends React.Component {
             indexVal: widget.id,
             crossDomain: true,
             contentType: "application/json",
-            data: JSON.stringify({
-                collectionName: collectionName,
-                visParams: visParams,
-                dateFrom: dateFrom,
-                dateTo: dateTo,
-                geometry: $.parseJSON(projPairAOI),
-                index: requestedIndex
-
-            })
+            data: JSON.stringify(postObject)
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.warn(jqXHR + textStatus + errorThrown);
         }).done(function (data, _textStatus, _jqXHR) {
