@@ -130,7 +130,7 @@ class Widget extends React.Component {
             </div>);
         }
         else{
-            return (<div className={ 'columnSpan3 rowSpan1 placeholder'}>
+            return (<div className={widget.isFull? 'fullwidget columnSpan3 rowSpan1 placeholder': 'columnSpan3 rowSpan1 placeholder'}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
