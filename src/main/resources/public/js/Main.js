@@ -136,7 +136,7 @@ class Collection extends React.Component {
     showProjectPlots() {
         mercator.addPlotLayer(this.mapConfig,
             this.plotList,
-            this.change.bind(this, function (feature) {
+            this.bind(this, function (feature) {
                 // FIXME: These three assignments don't appear to do anything
                 this.setState({showSideBar : true});
                 this.setState({mapClass : "sidemap"});
