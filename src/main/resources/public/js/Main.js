@@ -136,11 +136,11 @@ class Collection extends React.Component {
     showProjectPlots() {
         mercator.addPlotLayer(this.mapConfig,
             this.plotList,
-            angular.bind(this, function (feature) {
+            this.change.bind(this, function (feature) {
                 // FIXME: These three assignments don't appear to do anything
-                this.showSideBar = true;
-                this.mapClass = "sidemap";
-                this.quitClass = "quit-side";
+                this.setState({showSideBar : true});
+                this.setState({mapClass : "sidemap"});
+                this.setState({quitClass : "quit-side"});
                 this.loadPlotById(feature.get("features")[0].get("plotId"));
             }));
     }
@@ -221,7 +221,161 @@ class Collection extends React.Component {
                     + "&bradius=" + this.state.currentProject.plotSize / 2),
                 "_geo-dash");
         }
-    };
+    }
+    getPlotData() {
+        fetch(this.state.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
+            .then(response => {
+                if (response.ok) {
+                    response.json();
+                }
+                else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                }
+            })
+            .then(data => {
+
+                if (data == "done") {
+                    this.setState({currentPlot : null});
+                    // FIXME: What is the minimal set of these that I can execute?
+                    utils.disable_element("new-plot-button");
+                    utils.disable_element("flag-plot-button");
+                    utils.disable_element("save-values-button");
+                    alert("All plots have been analyzed for this project.");
+                } else {
+                    this.setState({currentPlot : data});
+                    this.loadRandomPlot();
+                }
+            });
+    }
+    loadRandomPlot() {
+        if (this.state.currentPlot == null) {
+            this.getPlotData();
+        } else {
+            // FIXME: What is the minimal set of these that I can execute?
+            utils.enable_element("flag-plot-button");
+
+            // FIXME: Move these calls into a function in mercator-openlayers.js
+            mercator.disableSelection(this.state.mapConfig);
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.state.mapConfig,
+                "currentSamples",
+                mercator.samplesToVectorSource(this.state.currentPlot.samples),
+                ceoMapStyles.redPoint);
+            mercator.enableSelection(this.state.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
+
+            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
+                + encodeURIComponent("title=" + this.state.currentProject.name
+                    + "&pid=" + this.state.projectId
+                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
+                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
+                    + "&bradius=" + this.state.currentProject.plotSize / 2),
+                "_geo-dash");
+        }
+    }
+    nextPlot() {
+        // FIXME: What is the minimal set of these that I can execute?
+        utils.enable_element("new-plot-button");
+        utils.enable_element("flag-plot-button");
+        utils.disable_element("save-values-button");
+        // FIXME: These classes should be handled with an ng-if in collection.ftl
+        document.getElementById("#go-to-first-plot-button").addClass("d-none");
+        document.getElementById("#plot-nav").removeClass("d-none");
+        // FIXME: These three assignments don't appear to do anything
+        this.state.showSideBar = true;
+        this.state.mapClass = "sidemap";
+        this.state.quitClass = "quit-side";
+        mercator.removeLayerByTitle(this.state.mapConfig, "currentPlots");
+        mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
+        this.state.currentPlot = null;
+        this.state.userSamples = {};
+        this.loadRandomPlot();
+    }
+    setCurrentValue(sampleValueGroup, sampleValue) {
+        var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
+        if (selectedFeatures && selectedFeatures.getLength() > 0) {
+            selectedFeatures.forEach(
+                function (sample) {
+                    var sampleId = sample.get("sampleId");
+                    if (!this.state.userSamples[sampleId]) {
+                        this.state.userSamples[sampleId] = {};
+                    }
+                    this.state.userSamples[sampleId][sampleValueGroup.name] = sampleValue.name;
+                    mercator.highlightSamplePoint(sample, sampleValue.color);
+                },
+                this // necessary to pass outer scope into function
+            );
+            selectedFeatures.clear();
+            utils.blink_border(sampleValue.name + "_" + sampleValue.id);
+            if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
+                && Object.values(this.state.userSamples).every(function (values) {
+                    return Object.keys(values).length == this.state.currentProject.sampleValues.length;
+                }, this)) {
+                // FIXME: What is the minimal set of these that I can execute?
+                utils.enable_element("save-values-button");
+                utils.disable_element("new-plot-button");
+            }
+        } else {
+            alert("No sample points selected. Please click some first.");
+        }
+    }
+    saveValues() {
+        $.ajax({
+            url: this.state.documentRoot + "/add-user-samples",
+            type: "POST",
+            async: true,
+            crossDomain: true,
+            contentType: false,
+            processData: false,
+            data:  {projectId: this.projectId,
+                plotId: this.currentPlot.id,
+                userId: this.userName,
+                userSamples: this.userSamples}
+        }).fail(function () {
+            console.log(response);
+            alert("Error saving your assignments to the database. See console for details.");
+        }).done(function (data) {
+            this.state.stats.analyzedPlots++;
+            this.nextPlot();
+        });
+    }
+    toggleStats() {
+        if (this.state.statClass == "projNoStats") {
+            this.setState({statClass :"projStats"});
+            this.setState({arrowState : "arrow-up"});
+        } else {
+            this.setState({statClass : "projNoStats"});
+            this.setState({arrowState : "arrow-down"});
+        }
+    }
+
+    assignedPercentage() {
+        if (this.state.currentProject == null || this.state.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * this.state.stats.analyzedPlots / this.state.currentProject.numPlots).toFixed(2);
+        }
+    }
+
+    flaggedPercentage () {
+        if (this.state.currentProject == null || this.state.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * this.state.stats.flaggedPlots / this.state.currentProject.numPlots).toFixed(2);
+        }
+    }
+
+    completedPercentage() {
+        if (this.state.currentProject == null || this.state.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2);
+        }
+    }
+
+
+
 
     render() {
         return (
@@ -255,7 +409,6 @@ class Collection extends React.Component {
         );
     }
 }
-
 class ImageAnalysisPane extends React.Component {
     constructor(props) {
         super(props);
