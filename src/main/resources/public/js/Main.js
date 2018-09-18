@@ -2,6 +2,7 @@ class Collection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            documentRoot:this.props.documentRoot,
             currentProject : null,
             stats : null,
             plotList : null,
@@ -21,8 +22,7 @@ class Collection extends React.Component {
             quitClass : "quit-full",
         };
     };
-
-     getProjectById(projectId) {
+    getProjectById(projectId) {
         fetch(this.state.documentRoot + "/get-project-by-id/" + projectId)
             .then(response => {
                 if (response.ok) {
@@ -43,7 +43,6 @@ class Collection extends React.Component {
                     }
                 }
             );
-
     }
     getProjectStats() {
         fetch(this.state.documentRoot + "/get-project-stats/" + this.props.projectId)
@@ -61,7 +60,6 @@ class Collection extends React.Component {
                 this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
             });
     }
-
     getProjectPlots() {
         fetch(this.state.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
             .then(response => {
@@ -78,7 +76,6 @@ class Collection extends React.Component {
                 this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
             })
     }
-
     getImageryList(institutionId) {
         fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
             .then(response => {
@@ -102,7 +99,6 @@ class Collection extends React.Component {
             }
         );
     }
-
     updateDGWMSLayer() {
         mercator.updateLayerWmsParams(this.state.mapConfig,
             "DigitalGlobeWMSImagery",
@@ -122,7 +118,7 @@ class Collection extends React.Component {
             },
             this);
     }
-    setBaseMapSource = function () {
+    setBaseMapSource() {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
         this.state.currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
         if (this.state.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
@@ -159,7 +155,6 @@ class Collection extends React.Component {
         // Draw the project plots as clusters on the map
         this.showProjectPlots();
     }
-
     getPlotDataById(plotId) {
         fetch(this.state.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
             .then(response => {
@@ -186,7 +181,6 @@ class Collection extends React.Component {
                 }
             });
     }
-
     loadPlotById(plotId) {
         if (this.state.currentPlot == null) {
             this.getPlotDataById(plotId);
@@ -349,7 +343,6 @@ class Collection extends React.Component {
             this.setState({arrowState : "arrow-down"});
         }
     }
-
     assignedPercentage() {
         if (this.state.currentProject == null || this.state.stats == null) {
             return "0.00";
@@ -357,7 +350,6 @@ class Collection extends React.Component {
             return (100.0 * this.state.stats.analyzedPlots / this.state.currentProject.numPlots).toFixed(2);
         }
     }
-
     flaggedPercentage () {
         if (this.state.currentProject == null || this.state.stats == null) {
             return "0.00";
@@ -365,7 +357,6 @@ class Collection extends React.Component {
             return (100.0 * this.state.stats.flaggedPlots / this.state.currentProject.numPlots).toFixed(2);
         }
     }
-
     completedPercentage() {
         if (this.state.currentProject == null || this.state.stats == null) {
             return "0.00";
@@ -373,27 +364,26 @@ class Collection extends React.Component {
             return (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2);
         }
     }
-
-
-
-
     render() {
-        return (
-            <React.Fragment>
-                <ImageAnalysisPane />
-                <SideBar collection={this.state} updateDGWMSLayer={this.updateDGWMSLayer} updatePlanetLayer={this.updatePlanetLayer} setBaseMapSource={this.setBaseMapSource} flagPlot={this.flagPlot} nextPlot={this.nextPlot} saveValues={this.saveValues} completedPercentage={this.completedPercentage}/>
-            </React.Fragment>
-        );
+        var collection=this.state;
+         return(
+             <React.Fragment>
+                 <ImageAnalysisPane collection={collection}/>
+                 <SideBar collection={collection} updateDGWMSLayer={this.updateDGWMSLayer} updatePlanetLayer={this.updatePlanetLayer} setBaseMapSource={this.setBaseMapSource} flagPlot={this.flagPlot} nextPlot={this.nextPlot} saveValues={this.saveValues} completedPercentage={this.completedPercentage}/>
+             </React.Fragment>
+         );
     }
 }
 class ImageAnalysisPane extends React.Component {
     constructor(props) {
         super(props);
     };
+
     render() {
         var showSidebar;
-        if(this.props.showSideBar){
-            showSidebar=<div>
+        const collection = this.props.collection;
+        if (collection.showSideBar) {
+            showSidebar = <div>
                 <span id="action-button" name="collection-actioncall" title="Click a plot to analyze:"
                       alt="Click a plot to analyze">Click a plot to analyze, or:<p></p><br/>
                     <span className="button" onClick="collection.nextPlot()">Analyze random plot</span>
@@ -402,8 +392,8 @@ class ImageAnalysisPane extends React.Component {
                 </span>
             </div>
         }
-        else{
-            showSidebar=<div style="position:relative;">
+        else {
+            showSidebar = <div style="position:relative;">
                 <span id="action-button" name="collection-actioncall" title="Select each plot to choose value"
                       alt="Select each plot to choose value">Select each dot to choose value
                 </span>
@@ -416,7 +406,7 @@ class ImageAnalysisPane extends React.Component {
                     {showSidebar}
                 </div>
                 <div id="imagery-info" className="row d-none">
-                    <p className="col small">{this.props.currentImagery.attribution}</p>
+                    <p className="col small">{collection.currentImagery.attribution}</p>
                 </div>
             </div>
         );
@@ -426,11 +416,14 @@ class ImageAnalysisPane extends React.Component {
 class SideBar extends React.Component {
 
     render() {
-        const collection=this.props.collection;
+        const collection = this.props.collection;
         return (
             <React.Fragment>
                 <h2 className="header">{collection.currentProject.name}</h2>
-                <SideBarFieldSet collection={this.props.collection} updateDGWMSLayer={this.props.updateDGWMSLayer} updatePlanetLayer={this.props.updatePlanetLayer} setBaseMapSource={this.props.setBaseMapSource} flagPlot={this.props.flagPlot} nextPlot={this.props.nextPlot}/>
+                <SideBarFieldSet collection={this.props.collection} updateDGWMSLayer={this.props.updateDGWMSLayer}
+                                 updatePlanetLayer={this.props.updatePlanetLayer}
+                                 setBaseMapSource={this.props.setBaseMapSource} flagPlot={this.props.flagPlot}
+                                 nextPlot={this.props.nextPlot}/>
                 <div className="row">
                     <div className="col-sm-12 btn-block">
                         <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
@@ -497,12 +490,11 @@ class SideBar extends React.Component {
 
         );
     }
-
 }
 
 class SideBarFieldSet extends React.Component {
     render() {
-        const collection=this.props.collection;
+        const collection = this.props.collection;
 
         return (
             <React.Fragment>
@@ -535,12 +527,10 @@ class SideBarFieldSet extends React.Component {
                             size="1"
                             value={collection.currentProject.baseMapSource} onChange={this.props.setBaseMapSource()}>
                         {
-                        collection.imageryList.map(imagery=>
-                            <option value={imagery.title}>{imagery.title}</option>
+                            collection.imageryList.map(imagery =>
+                                <option value={imagery.title}>{imagery.title}</option>
                             )
                         }
-
-
                     </select>
                     if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
                     <select className="form-control form-control-sm" id="dg-imagery-year" name="dg-imagery-year"
@@ -568,7 +558,7 @@ class SideBarFieldSet extends React.Component {
                         <option value="2000">2000</option>
                     </select>
                 }
-                if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
+                    if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
                     <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
                             size="1"
                             value={collection.stackingProfileDG} onChange={this.props.updateDGWMSLayer}>
@@ -579,7 +569,7 @@ class SideBarFieldSet extends React.Component {
                         <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
                     </select>
                 }
-                if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
+                    if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
                     <select className="form-control form-control-sm" id="planet-imagery-year" name="planet-imagery-year"
                             size="1"
                             value={collection.imageryYearPlanet} convert-to-number
@@ -589,7 +579,7 @@ class SideBarFieldSet extends React.Component {
                         <option value="2016">2016</option>
                     </select>
                 }
-                if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
+                    if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
                     <select className="form-control form-control-sm" id="planet-imagery-month"
                             name="planet-imagery-month" size="1"
                             value={collection.imageryMonthPlanet} onChange={this.props.updatePlanetLayer}>
@@ -609,22 +599,28 @@ class SideBarFieldSet extends React.Component {
                 }
                 </fieldset>
                 {
-                    collection.currentProject.sampleValues.map(sampleValueGroup=>
+                    collection.currentProject.sampleValues.map(sampleValueGroup =>
                         <fieldset className="mb-1 justify-content-center text-center">
                             <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
                             <ul id="samplevalue" className="justify-content-center">
                                 {
-                                sampleValueGroup.values.map(sampleValue=>
-                                <li className="mb-1">
-                                    <button type="button" className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                            id={ sampleValue.name + '_' + sampleValue.id }
-                                            name={ sampleValue.name + '_' + sampleValue.id }
-                                            onClick={collection.setCurrentValue(sampleValueGroup, sampleValue)}>
-                                        <div className="circle" style={{"background-color": sampleValue.color , border:"solid 1px", float: "left","margin-top": "4px"}}></div>
-                                        <span className="small">{sampleValue.name}</span>
-                                    </button>
-                                </li>
-                                )
+                                    sampleValueGroup.values.map(sampleValue =>
+                                        <li className="mb-1">
+                                            <button type="button"
+                                                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                                    id={sampleValue.name + '_' + sampleValue.id}
+                                                    name={sampleValue.name + '_' + sampleValue.id}
+                                                    onClick={collection.setCurrentValue(sampleValueGroup, sampleValue)}>
+                                                <div className="circle" style={{
+                                                    "background-color": sampleValue.color,
+                                                    border: "solid 1px",
+                                                    float: "left",
+                                                    "margin-top": "4px"
+                                                }}></div>
+                                                <span className="small">{sampleValue.name}</span>
+                                            </button>
+                                        </li>
+                                    )
                                 }
                             </ul>
                         </fieldset>
@@ -639,7 +635,7 @@ class SideBarFieldSet extends React.Component {
 
 function renderCollection(documentRoot, username, projectId) {
     ReactDOM.render(
-        <Institution documentRoot={documentRoot} userName={username} projectId={projectId}/>,
+        <Collection documentRoot={documentRoot} userName={username} projectId={projectId}/>,
         document.getElementById("collection")
     );
 }
