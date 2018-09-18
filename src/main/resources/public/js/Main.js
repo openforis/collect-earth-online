@@ -381,30 +381,7 @@ class Collection extends React.Component {
         return (
             <React.Fragment>
                 <ImageAnalysisPane />
-                <SideBar/>
-                <div className="modal fade" id="confirmation-quit" tabIndex="-1" role="dialog"
-                     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                    <div className="modal-dialog modal-dialog-centered" role="document">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title" id="exampleModalLongTitle">Confirmation</h5>
-                                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div className="modal-body">
-                                Are you sure you want to stop collecting data?
-                            </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close
-                                </button>
-                                <button type="button" className="btn bg-lightgreen btn-sm" id="quit-button"
-                                        onClick=${"window.location='" + this.state.documentRoot + "/home'"}>OK
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <SideBar collection={this.state} updateDGWMSLayer={this.updateDGWMSLayer} updatePlanetLayer={this.updatePlanetLayer} setBaseMapSource={this.setBaseMapSource} flagPlot={this.flagPlot} nextPlot={this.nextPlot} saveValues={this.saveValues} completedPercentage={this.completedPercentage}/>
             </React.Fragment>
         );
     }
@@ -453,12 +430,12 @@ class SideBar extends React.Component {
         return (
             <React.Fragment>
                 <h2 className="header">{collection.currentProject.name}</h2>
-                <SideBarFieldSet/>
+                <SideBarFieldSet collection={this.props.collection} updateDGWMSLayer={this.props.updateDGWMSLayer} updatePlanetLayer={this.props.updatePlanetLayer} setBaseMapSource={this.props.setBaseMapSource} flagPlot={this.props.flagPlot} nextPlot={this.props.nextPlot}/>
                 <div className="row">
                     <div className="col-sm-12 btn-block">
                         <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                 type="button"
-                                name="save-values" onClick={collection.saveValues()} style="opacity:0.5" disabled>
+                                name="save-values" onClick={this.props.saveValues()} style="opacity:0.5" disabled>
                             Save
                         </button>
                         <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
@@ -494,7 +471,7 @@ class SideBar extends React.Component {
                                                 <td className="small">Plots Completed</td>
                                                 <td className="small">
                                                     {collection.stats.analyzedPlots + collection.stats.flaggedPlots}
-                                                    ({collection.completedPercentage()}%)
+                                                    ({this.props.completedPercentage()}%)
                                                 </td>
                                             </tr>
                                             <tr>
@@ -535,19 +512,19 @@ class SideBarFieldSet extends React.Component {
                         <div className="col" id="go-to-first-plot">
                             <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="new-plot" value="Go to first plot" onClick={collection.nextPlot()}/>
+                                   name="new-plot" value="Go to first plot" onClick={this.props.nextPlot()}/>
                         </div>
                     </div>
                     <div className="row d-none" id="plot-nav">
                         <div className="col-sm-6 pr-2">
                             <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="new-plot" value="Skip" onClick={collection.nextPlot()}/>
+                                   name="new-plot" value="Skip" onClick={this.props.nextPlot()}/>
                         </div>
                         <div className="col-sm-6 pl-2">
                             <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="flag-plot" value="Flag Plot as Bad" onClick={collection.flagPlot()}
+                                   name="flag-plot" value="Flag Plot as Bad" onClick={this.props.flagPlot()}
                                    style="opacity:0.5" disabled/>
                         </div>
                     </div>
@@ -556,7 +533,7 @@ class SideBarFieldSet extends React.Component {
                     <h3>Imagery Options</h3>
                     <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                             size="1"
-                            value={collection.currentProject.baseMapSource} onChange={collection.setBaseMapSource()}>
+                            value={collection.currentProject.baseMapSource} onChange={this.props.setBaseMapSource()}>
                         {
                         collection.imageryList.map(imagery=>
                             <option value={imagery.title}>{imagery.title}</option>
@@ -569,7 +546,7 @@ class SideBarFieldSet extends React.Component {
                     <select className="form-control form-control-sm" id="dg-imagery-year" name="dg-imagery-year"
                             size="1"
                             value={collection.imageryYearDG} convert-to-number
-                            onChange={collection.updateDGWMSLayer()}>
+                            onChange={this.props.updateDGWMSLayer}>
                         <option value="2018">2018</option>
                         <option value="2017">2017</option>
                         <option value="2016">2016</option>
@@ -594,7 +571,7 @@ class SideBarFieldSet extends React.Component {
                 if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
                     <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
                             size="1"
-                            ng-model="collection.stackingProfileDG" onChange={collection.updateDGWMSLayer()}>
+                            value={collection.stackingProfileDG} onChange={this.props.updateDGWMSLayer}>
                         <option value="Accuracy_Profile">Accuracy Profile</option>
                         <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
                         <option value="Global_Currency_Profile">Global Currency Profile</option>
@@ -606,7 +583,7 @@ class SideBarFieldSet extends React.Component {
                     <select className="form-control form-control-sm" id="planet-imagery-year" name="planet-imagery-year"
                             size="1"
                             value={collection.imageryYearPlanet} convert-to-number
-                            onChange={collection.updatePlanetLayer()}>
+                            onChange={this.props.updatePlanetLayer()}>
                         <option value="2018">2018</option>
                         <option value="2017">2017</option>
                         <option value="2016">2016</option>
@@ -615,7 +592,7 @@ class SideBarFieldSet extends React.Component {
                 if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
                     <select className="form-control form-control-sm" id="planet-imagery-month"
                             name="planet-imagery-month" size="1"
-                            value={collection.imageryMonthPlanet} onChange={collection.updatePlanetLayer()}>
+                            value={collection.imageryMonthPlanet} onChange={this.props.updatePlanetLayer}>
                         <option value="01">January</option>
                         <option value="02">February</option>
                         <option value="03">March</option>
