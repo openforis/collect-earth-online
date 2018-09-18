@@ -1,9 +1,10 @@
 var debugreturn;
-
+var gObject;
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { widgets: [ ] }
+        this.state = { widgets: [ ] };
+        gObject = this;
     }
     componentDidMount() {
         fetch(theURL + "/id/" + pid,)
@@ -219,13 +220,14 @@ class MapWidget extends React.Component {
                            onInput = {(evt) => onOpacityChange(widget, widget.id, evt )}
                     />
         </React.Fragment>
-    }
+    };
     componentDidMount()
     {
         const widget = this.props.widget;
         var raster = new ol.layer.Tile({
             source: new ol.source.OSM()
         });
+        //raster.id = "geeLayer";
         var mapdiv = "widgetmap_" + widget.id;
         var map = new ol.Map({
             layers: [raster],
@@ -234,9 +236,24 @@ class MapWidget extends React.Component {
                 center: [0, 0],
                 projection: "EPSG:3857",
                 zoom: 4
-            })
+            }),
+            id: "widgetmapobject_" + widget.id
         });
-        mapWidgetArray[mapdiv] = map
+        map.getView().on('propertychange', onpropertychange);
+
+        function onpropertychange(){
+            map.dispatchEvent('movestart');
+            var view = map.getView();
+            view.un('propertychange', onpropertychange);
+            map.on('moveend', function() {
+                view.on('propertychange', onpropertychange);
+            });
+        }
+
+        map.on("movestart", this.pauseGeeLayer);
+        map.on("moveend", this.resumeGeeLayer);
+        mapWidgetArray[mapdiv] = map;
+
         if (projAOI === "") {
             projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
         } else {
@@ -339,8 +356,34 @@ class MapWidget extends React.Component {
             }
         });
     }
+    pauseGeeLayer(e)
+    {
+        whatise = e;
+        var layers = e.target.getLayers().getArray();
+        layers.forEach(function(lyr){
+            if(lyr.get('id') && lyr.get('id').indexOf('widget') ==0){
+                lyr.setVisible(false);
+            }
+        })
+    }
+    resumeGeeLayer(e)
+    {
+        if(geeTimeout[e.target.get('target')]){
+            window.clearTimeout(geeTimeout[e.target.get('target')]);
+            delete geeTimeout[e.target.get('target')];
+        }
+        geeTimeout[e.target.get('target')] = window.setTimeout(function(){
+            var layers = e.target.getLayers().getArray();
+            layers.forEach(function(lyr){
+                if(lyr.get('id') && lyr.get('id').indexOf('widget') ==0){
+                    lyr.setVisible(true);
+                }
+            })
+        }, 1000);
+    }
 }
-
+var geeTimeout = {};
+var whatise;
 class GraphWidget extends React.Component {
     render() {
         const widget = this.props.widget;
