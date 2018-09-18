@@ -365,13 +365,14 @@ class Collection extends React.Component {
         }
     }
     render() {
-        var collection=this.state;
-         return(
-             <React.Fragment>
-                 <ImageAnalysisPane collection={collection}/>
-                 <SideBar collection={collection} updateDGWMSLayer={this.updateDGWMSLayer} updatePlanetLayer={this.updatePlanetLayer} setBaseMapSource={this.setBaseMapSource} flagPlot={this.flagPlot} nextPlot={this.nextPlot} saveValues={this.saveValues} completedPercentage={this.completedPercentage}/>
-             </React.Fragment>
-         );
+         return(<React.Fragment>
+                 <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
+                 <SideBar collection={this.state} updateDGWMSLayer={this.updateDGWMSLayer}
+                     updatePlanetLayer={this.updatePlanetLayer} setBaseMapSource={this.setBaseMapSource}
+                     flagPlot={this.flagPlot} nextPlot={this.nextPlot} saveValues={this.saveValues}
+                     completedPercentage={this.completedPercentage}/>
+        </React.Fragment>
+    );
     }
 }
 class ImageAnalysisPane extends React.Component {
@@ -386,14 +387,14 @@ class ImageAnalysisPane extends React.Component {
             showSidebar = <div>
                 <span id="action-button" name="collection-actioncall" title="Click a plot to analyze:"
                       alt="Click a plot to analyze">Click a plot to analyze, or:<p></p><br/>
-                    <span className="button" onClick="collection.nextPlot()">Analyze random plot</span>
-                    <br style="clear:both;"/>
-                    <br style="clear:both;"/>
+                    <span className="button" onClick={this.props.nextPlot}>Analyze random plot</span>
+                    <br style={{clear:"both"}}/>
+                    <br style={{clear:"both"}}/>
                 </span>
             </div>
         }
         else {
-            showSidebar = <div style="position:relative;">
+            showSidebar = <div style={{position:"relative"}}>
                 <span id="action-button" name="collection-actioncall" title="Select each plot to choose value"
                       alt="Select each plot to choose value">Select each dot to choose value
                 </span>

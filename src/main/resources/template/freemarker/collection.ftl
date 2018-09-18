@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<script type="text/javascript" src="${root}/js/Main.js"></script>
+<script type="text/babel" src="${root}/js/Main.js"></script>
 <#if username == "">
     <#assign username = "guest">
 </#if>
