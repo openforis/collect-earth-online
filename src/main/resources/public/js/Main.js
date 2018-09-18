@@ -1,5 +1,6 @@
 class Collection extends React.Component {
     constructor(props) {
+        console.log("construtoer");
         super(props);
         this.state = {
             documentRoot:this.props.documentRoot,
@@ -21,29 +22,42 @@ class Collection extends React.Component {
             mapClass : "fullmap",
             quitClass : "quit-full",
         };
+        this.saveValues=this.saveValues.bind(this);
     };
     getProjectById(projectId) {
+console.log("in get proj");
         fetch(this.state.documentRoot + "/get-project-by-id/" + projectId)
-            .then(response => {
-                if (response.ok) {
-                    response.json();
-                }
-                else {
+            .then(function(response) {
                     console.log(response);
-                    alert("Error retrieving the project info. See console for details.");
+                    if (response.ok) {
+                        response.json();
+                    }
+                    else {
+                        console.log(response);
+                        alert("Error retrieving the project info. See console for details.");
+                    }
+                    return response;
                 }
-            })
+            )
             .then(data => {
                     if (data == null || data.id == 0) {
+                        console.log("in if");
                         alert("No project found with ID " + projectId + ".");
                         window.location = this.state.documentRoot + "/home";
                     } else {
+                        console.log("in else");
                         this.setState({currentProject: data});
-                        this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+                        this.initialize();
+
                     }
                 }
             );
     }
+    initialize() {
+        console.log("in init");
+            this.getProjectById(this.props.projectId);
+    }
+
     getProjectStats() {
         fetch(this.state.documentRoot + "/get-project-stats/" + this.props.projectId)
             .then(response => {
@@ -57,7 +71,7 @@ class Collection extends React.Component {
             })
             .then(data => {
                 this.setState({stats: data});
-                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+                this.initialize();
             });
     }
     getProjectPlots() {
@@ -73,7 +87,7 @@ class Collection extends React.Component {
             })
             .then(data => {
                 this.setState({plotList: data});
-                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+                this.initialize();
             })
     }
     getImageryList(institutionId) {
@@ -89,7 +103,7 @@ class Collection extends React.Component {
             })
             .then(data => {
                 this.setState({imageryList :data});
-                this.initialize(this.state.documentRoot, this.props.userName, this.props.projectId);
+                this.initialize();
             });
     }
     getImageryByTitle(imageryTitle) {
@@ -314,9 +328,12 @@ class Collection extends React.Component {
             alert("No sample points selected. Please click some first.");
         }
     }
-    saveValues() {
+    saveValues = event => {
+        console.log("in save ");
+        console.log(this.state);
+        var ref=this;
         $.ajax({
-            url: this.state.documentRoot + "/add-user-samples",
+            url: ref.state.documentRoot + "/add-user-samples",
             type: "POST",
             async: true,
             crossDomain: true,
@@ -330,8 +347,8 @@ class Collection extends React.Component {
             console.log(response);
             alert("Error saving your assignments to the database. See console for details.");
         }).done(function (data) {
-            this.state.stats.analyzedPlots++;
-            this.nextPlot();
+            ref.state.stats.analyzedPlots++;
+            ref.nextPlot();
         });
     }
     toggleStats() {
@@ -363,6 +380,10 @@ class Collection extends React.Component {
         } else {
             return (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2);
         }
+    }
+    componentDidMount(){
+        console.log("cdm");
+        this.initialize();
     }
     render() {
          return(<React.Fragment>
@@ -415,12 +436,14 @@ class ImageAnalysisPane extends React.Component {
 }
 
 class SideBar extends React.Component {
-
+    constructor(props) {
+        super(props);
+    };
     render() {
         const collection = this.props.collection;
         return (
             <React.Fragment>
-                <h2 className="header">{collection.currentProject.name}</h2>
+                <h2 className="header">{collection.currentProject != null? collection.currentProject.name : ''}</h2>
                 <SideBarFieldSet collection={this.props.collection} updateDGWMSLayer={this.props.updateDGWMSLayer}
                                  updatePlanetLayer={this.props.updatePlanetLayer}
                                  setBaseMapSource={this.props.setBaseMapSource} flagPlot={this.props.flagPlot}
@@ -429,7 +452,7 @@ class SideBar extends React.Component {
                     <div className="col-sm-12 btn-block">
                         <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                 type="button"
-                                name="save-values" onClick={this.props.saveValues()} style="opacity:0.5" disabled>
+                                name="save-values" onClick={this.props.saveValues} style="opacity:0.5" disabled>
                             Save
                         </button>
                         <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
@@ -445,7 +468,7 @@ class SideBar extends React.Component {
                                             <tbody>
                                             <tr>
                                                 <td className="small">Project</td>
-                                                <td className="small">{collection.currentProject.name}</td>
+                                                <td className="small">{collection.currentProject==null?"":collection.currentProject.name}</td>
                                             </tr>
                                             <tr>
                                                 <td className="small">Plots Assigned</td>
@@ -494,8 +517,77 @@ class SideBar extends React.Component {
 }
 
 class SideBarFieldSet extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+
     render() {
         const collection = this.props.collection;
+        var select1, select2;
+        if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
+            select1 = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
+                                              name="dg-imagery-year"
+                                              size="1"
+                                              value={collection.imageryYearDG} convert-to-number
+                                              onChange={this.props.updateDGWMSLayer}>
+                <option value="2018">2018</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+                <option value="2015">2015</option>
+                <option value="2014">2014</option>
+                <option value="2013">2013</option>
+                <option value="2012">2012</option>
+                <option value="2011">2011</option>
+                <option value="2010">2010</option>
+                <option value="2009">2009</option>
+                <option value="2008">2008</option>
+                <option value="2007">2007</option>
+                <option value="2006">2006</option>
+                <option value="2005">2005</option>
+                <option value="2004">2004</option>
+                <option value="2003">2003</option>
+                <option value="2002">2002</option>
+                <option value="2001">2001</option>
+                <option value="2000">2000</option>
+            </select>
+                <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
+                        size="1"
+                        value={collection.stackingProfileDG} onChange={this.props.updateDGWMSLayer}>
+                    <option value="Accuracy_Profile">Accuracy Profile</option>
+                    <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
+                    <option value="Global_Currency_Profile">Global Currency Profile</option>
+                    <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
+                    <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+                </select>
+            </React.Fragment>;
+        }
+        if (collection.currentProject.baseMapSource == 'PlanetGlobalMosaic') {
+            select2 = <React.Fragment> <select className="form-control form-control-sm" id="planet-imagery-year"
+                                               name="planet-imagery-year"
+                                               size="1"
+                                               value={collection.imageryYearPlanet} convert-to-number
+                                               onChange={this.props.updatePlanetLayer()}>
+                <option value="2018">2018</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+            </select>
+                <select className="form-control form-control-sm" id="planet-imagery-month"
+                        name="planet-imagery-month" size="1"
+                        value={collection.imageryMonthPlanet} onChange={this.props.updatePlanetLayer}>
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select></React.Fragment>;
+        }
 
         return (
             <React.Fragment>
@@ -533,71 +625,9 @@ class SideBarFieldSet extends React.Component {
                             )
                         }
                     </select>
-                    if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
-                    <select className="form-control form-control-sm" id="dg-imagery-year" name="dg-imagery-year"
-                            size="1"
-                            value={collection.imageryYearDG} convert-to-number
-                            onChange={this.props.updateDGWMSLayer}>
-                        <option value="2018">2018</option>
-                        <option value="2017">2017</option>
-                        <option value="2016">2016</option>
-                        <option value="2015">2015</option>
-                        <option value="2014">2014</option>
-                        <option value="2013">2013</option>
-                        <option value="2012">2012</option>
-                        <option value="2011">2011</option>
-                        <option value="2010">2010</option>
-                        <option value="2009">2009</option>
-                        <option value="2008">2008</option>
-                        <option value="2007">2007</option>
-                        <option value="2006">2006</option>
-                        <option value="2005">2005</option>
-                        <option value="2004">2004</option>
-                        <option value="2003">2003</option>
-                        <option value="2002">2002</option>
-                        <option value="2001">2001</option>
-                        <option value="2000">2000</option>
-                    </select>
-                }
-                    if(collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery'){
-                    <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
-                            size="1"
-                            value={collection.stackingProfileDG} onChange={this.props.updateDGWMSLayer}>
-                        <option value="Accuracy_Profile">Accuracy Profile</option>
-                        <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
-                        <option value="Global_Currency_Profile">Global Currency Profile</option>
-                        <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
-                        <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
-                    </select>
-                }
-                    if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
-                    <select className="form-control form-control-sm" id="planet-imagery-year" name="planet-imagery-year"
-                            size="1"
-                            value={collection.imageryYearPlanet} convert-to-number
-                            onChange={this.props.updatePlanetLayer()}>
-                        <option value="2018">2018</option>
-                        <option value="2017">2017</option>
-                        <option value="2016">2016</option>
-                    </select>
-                }
-                    if(collection.currentProject.baseMapSource == 'PlanetGlobalMosaic'){
-                    <select className="form-control form-control-sm" id="planet-imagery-month"
-                            name="planet-imagery-month" size="1"
-                            value={collection.imageryMonthPlanet} onChange={this.props.updatePlanetLayer}>
-                        <option value="01">January</option>
-                        <option value="02">February</option>
-                        <option value="03">March</option>
-                        <option value="04">April</option>
-                        <option value="05">May</option>
-                        <option value="06">June</option>
-                        <option value="07">July</option>
-                        <option value="08">August</option>
-                        <option value="09">September</option>
-                        <option value="10">October</option>
-                        <option value="11">November</option>
-                        <option value="12">December</option>
-                    </select>
-                }
+                    {select1}
+                    {select2}
+
                 </fieldset>
                 {
                     collection.currentProject.sampleValues.map(sampleValueGroup =>
@@ -635,6 +665,7 @@ class SideBarFieldSet extends React.Component {
 }
 
 function renderCollection(documentRoot, username, projectId) {
+
     ReactDOM.render(
         <Collection documentRoot={documentRoot} userName={username} projectId={projectId}/>,
         document.getElementById("collection")
