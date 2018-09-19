@@ -1,3 +1,4 @@
+var cp="",im="",pl="";
 class Collection extends React.Component {
     constructor(props) {
         super(props);
@@ -23,8 +24,8 @@ class Collection extends React.Component {
         };
 
     };
+
     componentDidMount(){
-        var cp="",im="";
         fetch(this.state.documentRoot + "/get-project-by-id/" + this.props.projectId)
             .then(response => {
                 if (response.ok) {
@@ -70,6 +71,7 @@ class Collection extends React.Component {
             })
             .then(data => {
                 this.setState({plotList: data});
+                pl=data;
             });
         fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + cp.institution)
             .then(response => {
@@ -84,14 +86,14 @@ class Collection extends React.Component {
             .then(data => {
                 this.setState({imageryList :data});
                 im=data;
-                    if (im.length > 0) {
+                    if (im.length > 0 && cp!="") {
                         this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, im)});
                         this.setBaseMapSource();
 
                         // Show the project's boundary
                         mercator.addVectorLayer(this.state.mapConfig,
                             "currentAOI",
-                            mercator.geometryToVectorSource(mercator.parseGeoJson(cp.boundary, true)),
+                            mercator.geometryToVectorSource(mercator.parseGeoJson(cp    .boundary, true)),
                             ceoMapStyles.polygon);
                         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
 
@@ -119,15 +121,17 @@ class Collection extends React.Component {
         }
     }
     showProjectPlots() {
-        mercator.addPlotLayer(this.state.mapConfig,
-            this.state.plotList,
-            this.bind(this, function (feature) {
-                // FIXME: These three assignments don't appear to do anything
-                this.setState({showSideBar : true});
-                this.setState({mapClass : "sidemap"});
-                this.setState({quitClass : "quit-side"});
-                this.loadPlotById(feature.get("features")[0].get("plotId"));
-            }));
+        if(this.state.plotList!=null) {
+            mercator.addPlotLayer(this.state.mapConfig,
+                this.state.plotList,
+                (feature) => {// FIXME: These three assignments don't appear to do anything
+                    this.setState({showSideBar: true});
+                    this.setState({mapClass: "sidemap"});
+                    this.setState({quitClass: "quit-side"});
+                    this.loadPlotById(feature.get("features")[0].get("plotId"));
+                }
+            );
+        }
     }
     updateDGWMSLayer() {
         mercator.updateLayerWmsParams(this.state.mapConfig,

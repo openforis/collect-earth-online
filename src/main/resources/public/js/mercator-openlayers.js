@@ -890,6 +890,7 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
 // extent covered by these plots. If a cluster only contains one plot,
 // the callBack function will be called on the cluster feature.
 mercator.addPlotLayer = function (mapConfig, plots, callBack) {
+console.log("in merc");
     var plotSource = mercator.plotsToVectorSource(plots);
     var clusterSource = new ol.source.Cluster({source:   plotSource,
                                                distance: 40});
