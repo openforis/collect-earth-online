@@ -23,6 +23,9 @@ class Collection extends React.Component {
             quitClass : "quit-full",
         };
 this.flagPlot=this.flagPlot.bind(this);
+this.setBaseMapSource=this.setBaseMapSource.bind(this);
+this.updateDGWMSLayer=this.updateDGWMSLayer.bind(this);
+this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
     };
 
     componentDidMount(){
@@ -103,8 +106,15 @@ this.flagPlot=this.flagPlot.bind(this);
             });
 
     }
-    setBaseMapSource() {
-        if (this.state.currentProject != null) {
+    setBaseMapSource(event) {
+
+        if (this.state.currentProject != null && this.state.mapConfig!=null) {
+            const target = event.target;
+            const value = target.value;
+            var proj=this.state.currentProject;
+            proj.baseMapSource=value;
+
+            this.setState({currentProject: proj});
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
         this.setState({currentImagery: this.getImageryByTitle(this.state.currentProject.baseMapSource)});
         var cimagery = this.state.currentImagery;
@@ -567,16 +577,24 @@ class SideBarFieldSet extends React.Component {
     render() {
         const collection = this.props.collection;
         var select1, select2;
-        var temp="";
         var projMap="";
-        if(collection.imageryList!=null) {
-            collection.imageryList.map(imagery =>
-                temp = temp + <option value={imagery.title}>{imagery.title}</option>
-            )
+        var temp= "";
+        var tempOptions="";
+        if(collection.imageryList!=null && collection.currentProject!=null) {
+
+
+            temp = <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
+                           size="1" defaultValue={collection.currentProject.baseMapSource}
+                           onChange={(e)=>this.props.setBaseMapSource(e)}>{
+                collection.imageryList.map(imagery =>
+                    <option value={imagery.title}>{imagery.title}</option>
+                )
+            }
+            </select>;
         }
         if(collection.currentProject!=null) {
-            collection.currentProject.sampleValues.map(sampleValueGroup =>
-                projMap = projMap + <fieldset className="mb-1 justify-content-center text-center">
+            projMap = collection.currentProject.sampleValues.map(sampleValueGroup =>
+                <fieldset className="mb-1 justify-content-center text-center">
                     <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
                     <ul id="samplevalue" className="justify-content-center">
                         {
@@ -586,7 +604,7 @@ class SideBarFieldSet extends React.Component {
                                             className="btn btn-outline-darkgray btn-sm btn-block pl-1"
                                             id={sampleValue.name + '_' + sampleValue.id}
                                             name={sampleValue.name + '_' + sampleValue.id}
-                                            onClick={()=>collection.setCurrentValue(sampleValueGroup, sampleValue)}>
+                                            onClick={() => collection.setCurrentValue(sampleValueGroup, sampleValue)}>
                                         <div className="circle" style={{
                                             "background-color": sampleValue.color,
                                             border: "solid 1px",
@@ -601,12 +619,13 @@ class SideBarFieldSet extends React.Component {
                     </ul>
                 </fieldset>
             )
+
         }
-        if (collection.currentProject!=null ) {
+        if (collection.currentProject!=null  &&collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
             select1 = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
                                               name="dg-imagery-year"
                                               size="1"
-                                              value={collection.imageryYearDG} convert-to-number
+                                              value={parseInt(collection.imageryYearDG,10)}
                                               onChange={this.props.updateDGWMSLayer}>
                 <option value="2018">2018</option>
                 <option value="2017">2017</option>
@@ -643,7 +662,7 @@ class SideBarFieldSet extends React.Component {
             select2 = <React.Fragment> <select className="form-control form-control-sm" id="planet-imagery-year"
                                                name="planet-imagery-year"
                                                size="1"
-                                               value={collection.imageryYearPlanet} convert-to-number
+                                               value={parseInt(collection.imageryYearPlanet,10)}
                                                onChange={this.props.updatePlanetLayer()}>
                 <option value="2018">2018</option>
                 <option value="2017">2017</option>
@@ -694,13 +713,7 @@ class SideBarFieldSet extends React.Component {
                 </fieldset>
                 <fieldset className="mb-3 justify-content-center text-center">
                     <h3>Imagery Options</h3>
-                    <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                            size="1"
-                            onChange={this.props.setBaseMapSource}>
-
-                        {temp}
-
-                    </select>
+                    {temp}
                     {select1}
                     {select2}
 
