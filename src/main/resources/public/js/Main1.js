@@ -106,15 +106,15 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
             });
 
     }
-    setBaseMapSource(event) {
+    setBaseMapSource() {
 
         if (this.state.currentProject != null && this.state.mapConfig!=null) {
-            const target = event.target;
-            const value = target.value;
-            var proj=this.state.currentProject;
-            proj.baseMapSource=value;
-
-            this.setState({currentProject: proj});
+            // const target = event.target;
+            // const value = target.value;
+            // var proj=this.state.currentProject;
+            // proj.baseMapSource=value;
+            //
+            // this.setState({currentProject: proj});
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
         this.setState({currentImagery: this.getImageryByTitle(this.state.currentProject.baseMapSource)});
         var cimagery = this.state.currentImagery;
@@ -436,10 +436,12 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
 
         return(<React.Fragment>
                 <ImageAnalysisPane collection={this.state} imageryList={this.state.imageryList} nextPlot={this.nextPlot}/>
+            <div id="sidebar" className="col-xl-3">
                 <SideBar collection={this.state} updateDGWMSLayer={this.updateDGWMSLayer}
                          updatePlanetLayer={this.updatePlanetLayer} setBaseMapSource={this.setBaseMapSource}
                          flagPlot={this.flagPlot} nextPlot={()=>this.nextPlot} saveValues={this.saveValues}
                          completedPercentage={this.completedPercentage} assignedPercentage={this.assignedPercentage} flaggedPercentage={this.flaggedPercentage} setCurrentValue={this.setCurrentValue}/>
+            </div>
             </React.Fragment>
         );
     }
@@ -475,7 +477,7 @@ class ImageAnalysisPane extends React.Component {
             </div>
         }
         return (
-            <div id="image-analysis-pane" className= {collection.mapClass ? collection.mapClass  : "col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height"}>
+            <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
                 <div className="buttonHolder d-none">
                     {showSidebar}
                 </div>
@@ -585,7 +587,7 @@ class SideBarFieldSet extends React.Component {
 
             temp = <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                            size="1" defaultValue={collection.currentProject.baseMapSource}
-                           onChange={(e)=>this.props.setBaseMapSource(e)}>{
+                           onChange={this.props.setBaseMapSource}>{
                 collection.imageryList.map(imagery =>
                     <option value={imagery.title}>{imagery.title}</option>
                 )
