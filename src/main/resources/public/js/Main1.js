@@ -107,17 +107,14 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
 
     }
     setBaseMapSource() {
-
-        if (this.state.currentProject != null && this.state.mapConfig!=null) {
-            // const target = event.target;
-            // const value = target.value;
-            // var proj=this.state.currentProject;
-            // proj.baseMapSource=value;
-            //
-            // this.setState({currentProject: proj});
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
-        this.setState({currentImagery: this.getImageryByTitle(this.state.currentProject.baseMapSource)});
-        var cimagery = this.state.currentImagery;
+        if (this.state.currentProject != null && this.state.mapConfig != null) {
+            var bms = document.getElementById("base-map-source");
+            var proj = this.state.currentProject;
+            proj.baseMapSource = bms.options[bms.selectedIndex].value;
+            this.setState({currentProject: proj});
+            mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
+            this.setState({currentImagery: this.getImageryByTitle(this.state.currentProject.baseMapSource)});
+            var cimagery = this.state.currentImagery;
 
             if (this.state.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
                 cimagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
@@ -581,10 +578,7 @@ class SideBarFieldSet extends React.Component {
         var select1, select2;
         var projMap="";
         var temp= "";
-        var tempOptions="";
         if(collection.imageryList!=null && collection.currentProject!=null) {
-
-
             temp = <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                            size="1" defaultValue={collection.currentProject.baseMapSource}
                            onChange={this.props.setBaseMapSource}>{
