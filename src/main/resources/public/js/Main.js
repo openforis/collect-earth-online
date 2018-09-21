@@ -22,13 +22,15 @@ class Collection extends React.Component {
             mapClass : "fullmap",
             quitClass : "quit-full",
         };
-this.flagPlot=this.flagPlot.bind(this);
-this.setBaseMapSource=this.setBaseMapSource.bind(this);
-this.updateDGWMSLayer=this.updateDGWMSLayer.bind(this);
-this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
+        this.setBaseMapSource=this.setBaseMapSource.bind(this);
+        this.updateDGWMSLayer=this.updateDGWMSLayer.bind(this);
+        this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
+        this.nextPlot=this.nextPlot.bind(this);
     };
-
-    componentDidMount(){
+    componentDidMount() {
+        this.initialization();
+    }
+    getProjectById(){
         fetch(this.state.documentRoot + "/get-project-by-id/" + this.props.projectId)
             .then(response => {
                 if (response.ok) {
@@ -37,46 +39,51 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
                 else {
                     console.log(response);
                     alert("Error retrieving the project info. See console for details.");
-                }})
+                }
+            })
             .then(data => {
                 if (data == null || data.id == 0) {
                     alert("No project found with ID " + this.props.projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
                     this.setState({currentProject: data});
-                    cp=data;
-
                 }
             });
+    }
+    getProjectStats(){
         fetch(this.state.documentRoot + "/get-project-stats/" + this.props.projectId)
-            .then(function(response) {
-                if (response.ok) {
-                    return response.json();
-                }
-                else {
-                    console.log(response);
-                    alert("Error getting project stats. See console for details.");
-                }
-                return response;
-            })
-            .then(data => {
-                this.setState({stats: data});
-            });
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    else {
+                        console.log(response);
+                        alert("Error getting project stats. See console for details.");
+                    }
+                })
+                .then(data => {
+                    this.setState({stats: data});
+                  this.initialization();
+                });
+    }
+    getProjectPlots(){
         fetch(this.state.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
-            .then(response => {
-                if (response.ok) {
-                   return response.json();
-                }
-                else {
-                    console.log(response);
-                    alert("Error loading plot data. See console for details.");
-                }
-            })
-            .then(data => {
-                this.setState({plotList: data});
-                pl=data;
-            });
-        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + cp.institution)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    else {
+                        console.log(response);
+                        alert("Error loading plot data. See console for details.");
+                    }
+                })
+                .then(data => {
+                    this.setState({plotList: data});
+                    this.initialization();
+                });
+    }
+    getImageryList(institution) {
+        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institution)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -87,35 +94,20 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
                 }
             })
             .then(data => {
-                this.setState({imageryList :data});
-                im=data;
-                    if (im.length > 0 && cp!="") {
-                        this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, im)});
-                        this.setBaseMapSource();
-
-                        // Show the project's boundary
-                        mercator.addVectorLayer(this.state.mapConfig,
-                            "currentAOI",
-                            mercator.geometryToVectorSource(mercator.parseGeoJson(cp    .boundary, true)),
-                            ceoMapStyles.polygon);
-                        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-
-                        // Draw the project plots as clusters on the map
-                        this.showProjectPlots();
-                }
+                this.setState({imageryList: data})
+                this.initialization();
             });
-
     }
     setBaseMapSource() {
         if (this.state.currentProject != null && this.state.mapConfig != null) {
             var bms = document.getElementById("base-map-source");
-            var proj = this.state.currentProject;
-            proj.baseMapSource = bms.options[bms.selectedIndex].value;
-            this.setState({currentProject: proj});
+            if(bms!=null) {
+                var proj = this.state.currentProject;
+                proj.baseMapSource = bms.options[bms.selectedIndex].value;
+                this.setState({currentProject: proj});
+            }
             mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
-            this.setState({currentImagery: this.getImageryByTitle(this.state.currentProject.baseMapSource)});
-            var cimagery = this.state.currentImagery;
-
+            var cimagery=this.getImageryByTitle(this.state.currentProject.baseMapSource);
             if (this.state.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
                 cimagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
                 this.setState({currentImagery: cimagery});
@@ -140,6 +132,13 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
             );
         }
     }
+    getImageryByTitle(imageryTitle) {
+        return this.state.imageryList.find(
+            function (imagery) {
+                return imagery.title == imageryTitle;
+            }
+        );
+    };
     updateDGWMSLayer() {
         mercator.updateLayerWmsParams(this.state.mapConfig,
             "DigitalGlobeWMSImagery",
@@ -160,17 +159,20 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
             this);
     }
     loadPlotById(plotId) {
+
         if (this.state.currentPlot == null) {
+            console.log("hjdhf");
             this.getPlotDataById(plotId);
         } else {
+            console.log("kdhsf");
             // FIXME: What is the minimal set of these that I can execute?
-                utils.enable_element("new-plot-button");
-                utils.enable_element("flag-plot-button");
-                utils.disable_element("save-values-button");
+            utils.enable_element("new-plot-button");
+            utils.enable_element("flag-plot-button");
+            utils.disable_element("save-values-button");
 
-                // FIXME: These classes should be handled with an ng-if in collection.ftl
-                document.getElementById("#go-to-first-plot-button").addClass("d-none");
-                document.getElementById("#plot-nav").removeClass("d-none");
+            // FIXME: These classes should be handled with an ng-if in collection.ftl
+            document.getElementById("go-to-first-plot-button").classList.add("d-none");
+            document.getElementById("plot-nav").classList.remove("d-none");
 
             // FIXME: These three assignments don't appear to do anything
             this.setState({showSideBar : true});
@@ -199,201 +201,30 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
     getPlotDataById(plotId) {
         fetch(this.state.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
             .then(response => {
+
                 if (response.ok) {
-                    return response.json();
-                }
+                    if(response.status==200) {
+                        console.log(response);
+                        this.setState({currentPlot: null});
+                        this.showProjectPlots();
+                        alert("This plot has already been analyzed.");
+                    }
+                    else
+                        if (response.status == 404) {
+                            this.setState({currentPlot: null});
+                            this.showProjectPlots();
+                            alert("No plot with ID " + plotId + " found.");
+                        }
+                        else{
+                            this.setState({currentPlot : response.json()});
+                            this.loadPlotById(plotId);
+                        }
+                    }
                 else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                }
-            })
-            .then(data => {
-                if (data[0] == "done") {
-                    this.setState({currentPlot : null});
-                    this.showProjectPlots();
-                    alert("This plot has already been analyzed.");
-                } else if (data[0] == "not found") {
-                    this.setState({currentPlot : null});
-                    this.showProjectPlots();
-                    alert("No plot with ID " + plotId + " found.");
-                } else {
-                    this.setState({currentPlot : data});
-                    this.loadPlotById(plotId);
-                }
+                        console.log(response);
+                        alert("Error retrieving plot data. See console for details.");
+                    }
             });
-    }
-    getImageryByTitle(imageryTitle) {
-        return this.state.imageryList.find(
-            function (imagery) {
-                return imagery.title == imageryTitle;
-            }
-        );
-    };
-    nextPlot() {
-        // FIXME: What is the minimal set of these that I can execute?
-        utils.enable_element("new-plot-button");
-        utils.enable_element("flag-plot-button");
-        utils.disable_element("save-values-button");
-
-        // FIXME: These classes should be handled with an ng-if in collection.ftl
-        document.getElementById("#go-to-first-plot-button").addClass("d-none");
-        document.getElementById("#plot-nav").removeClass("d-none");
-        // FIXME: These three assignments don't appear to do anything
-        this.setState({showSideBar: true});
-        this.setState({mapClass: "sidemap"});
-        this.setState({quitClass: "quit-side"});
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentPlots");
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
-        this.setState({currentPlot: null});
-        this.setState({userSamples: {}});
-        this.loadRandomPlot();
-    }
-    flagPlot() {
-        var ref=this;
-        var refState=this.state;
-        if(refState.currentPlot!=null) {
-            var obj = {
-                projectId: ref.props.projectId,
-                plotId: refState.currentPlot.id,
-                userId: ref.props.userName
-            };
-            $.ajax({
-                url: refState.documentRoot + "/flag-plot",
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: false,
-                processData: false,
-                data: {obj}
-            }).fail(function () {
-                console.log(response);
-                alert("Error flagging plot as bad. See console for details.");
-            }).done(function (data) {
-                ref.stats.flaggedPlots++;
-                ref.nextPlot();
-            });
-        }
-    }
-    loadRandomPlot() {
-        if (this.state.currentPlot == null) {
-            this.getPlotData();
-        } else {
-            // FIXME: What is the minimal set of these that I can execute?
-            utils.enable_element("flag-plot-button");
-
-            // FIXME: Move these calls into a function in mercator-openlayers.js
-            mercator.disableSelection(this.state.mapConfig);
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
-            mercator.addVectorLayer(this.state.mapConfig,
-                "currentSamples",
-                mercator.samplesToVectorSource(this.state.currentPlot.samples),
-                ceoMapStyles.redPoint);
-            mercator.enableSelection(this.state.mapConfig, "currentSamples");
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
-
-            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
-                + encodeURIComponent("title=" + this.state.currentProject.name
-                    + "&pid=" + this.state.projectId
-                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
-                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
-                    + "&bradius=" + this.state.currentProject.plotSize / 2),
-                "_geo-dash");
-        }
-    }
-    getPlotData() {
-        fetch(this.state.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                }
-            })
-            .then(data => {
-
-                if (data[0] == "done") {
-                    this.setState({currentPlot : null});
-                    // FIXME: What is the minimal set of these that I can execute?
-                    utils.disable_element("new-plot-button");
-                    utils.disable_element("flag-plot-button");
-                    utils.disable_element("save-values-button");
-                    alert("All plots have been analyzed for this project.");
-                } else {
-                    this.setState({currentPlot : data});
-                    this.loadRandomPlot();
-                }
-            });
-    }
-    loadRandomPlot() {
-        if (this.state.currentPlot == null) {
-            this.getPlotData();
-        } else {
-            // FIXME: What is the minimal set of these that I can execute?
-            utils.enable_element("flag-plot-button");
-
-            // FIXME: Move these calls into a function in mercator-openlayers.js
-            mercator.disableSelection(this.state.mapConfig);
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
-            mercator.addVectorLayer(this.state.mapConfig,
-                "currentSamples",
-                mercator.samplesToVectorSource(this.state.currentPlot.samples),
-                ceoMapStyles.redPoint);
-            mercator.enableSelection(this.state.mapConfig, "currentSamples");
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
-
-            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
-                + encodeURIComponent("title=" + this.state.currentProject.name
-                    + "&pid=" + this.state.projectId
-                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
-                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
-                    + "&bradius=" + this.state.currentProject.plotSize / 2),
-                "_geo-dash");
-        }
-    }
-    assignedPercentage() {
-        if (this.state.currentProject == null || this.state.stats == null) {
-            return "0.00";
-        } else {
-            return (100.0 * this.state.stats.analyzedPlots / this.state.currentProject.numPlots).toFixed(2);
-        }
-    }
-    flaggedPercentage () {
-        if (this.state.currentProject == null || this.state.stats == null) {
-            return "0.00";
-        } else {
-            return (100.0 * this.state.stats.flaggedPlots / this.state.currentProject.numPlots).toFixed(2);
-        }
-    }
-    completedPercentage() {
-        if (this.state.currentProject == null || this.state.stats == null) {
-            return "0.00";
-        } else {
-            return (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2);
-        }
-    }
-    saveValues = event => {
-        console.log("in save ");
-        var ref=this;
-        $.ajax({
-            url: ref.state.documentRoot + "/add-user-samples",
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: false,
-            processData: false,
-            data:  {projectId: ref.props.projectId,
-                plotId: ref.state.currentPlot.id,
-                userId: ref.props.userName,
-                userSamples: ref.state.userSamples}
-        }).fail(function () {
-            console.log(response);
-            alert("Error saving your assignments to the database. See console for details.");
-        }).done(function (data) {
-            ref.state.stats.analyzedPlots++;
-            ref.nextPlot();
-        });
     }
     setCurrentValue(sampleValueGroup, sampleValue) {
         var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
@@ -428,17 +259,183 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
             alert("No sample points selected. Please click some first.");
         }
     }
-    render() {
-        console.log(this.state);
+    flagPlot() {
+        var ref=this;
+        var refState=this.state;
+        if(refState.currentPlot!=null) {
+            var obj = {
+                projectId: ref.props.projectId,
+                plotId: refState.currentPlot.id,
+                userId: ref.props.userName
+            };
+            $.ajax({
+                url: refState.documentRoot + "/flag-plot",
+                type: "POST",
+                async: true,
+                crossDomain: true,
+                contentType: false,
+                processData: false,
+                data: {obj}
+            }).fail(function () {
+                console.log(response);
+                alert("Error flagging plot as bad. See console for details.");
+            }).done(function (data) {
+                ref.stats.flaggedPlots++;
+                ref.nextPlot();
+            });
+        }
+    }
+    nextPlot() {
+        // FIXME: What is the minimal set of these that I can execute?
+        utils.enable_element("new-plot-button");
+        utils.enable_element("flag-plot-button");
+        utils.disable_element("save-values-button");
 
+        // FIXME: These classes should be handled with an ng-if in collection.ftl
+        document.getElementById("go-to-first-plot-button").classList.add("d-none");
+        document.getElementById("plot-nav").classList.remove("d-none");
+        // FIXME: These three assignments don't appear to do anything
+        this.setState({showSideBar: true});
+        this.setState({mapClass: "sidemap"});
+        this.setState({quitClass: "quit-side"});
+        mercator.removeLayerByTitle(this.state.mapConfig, "currentPlots");
+        mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
+        this.setState({currentPlot: null});
+        this.setState({userSamples: {}});
+        this.loadRandomPlot();
+    }
+    loadRandomPlot() {
+        if (this.state.currentPlot == null) {
+            this.getPlotData();
+        } else {
+            // FIXME: What is the minimal set of these that I can execute?
+            utils.enable_element("flag-plot-button");
+
+            // FIXME: Move these calls into a function in mercator-openlayers.js
+            mercator.disableSelection(this.state.mapConfig);
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.state.mapConfig,
+                "currentSamples",
+                mercator.samplesToVectorSource(this.state.currentPlot.samples),
+                ceoMapStyles.redPoint);
+            mercator.enableSelection(this.state.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
+
+            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
+                + encodeURIComponent("title=" + this.state.currentProject.name
+                    + "&pid=" + this.props.projectId
+                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
+                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
+                    + "&bradius=" + this.state.currentProject.plotSize / 2),
+                "_geo-dash");
+        }
+    }
+    getPlotData() {
+        fetch(this.state.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId)
+            .then(response => {
+                if (response.ok) {
+                    if (response.status==200) {
+                        this.setState({currentPlot : null});
+                        // FIXME: What is the minimal set of these that I can execute?
+                        utils.disable_element("new-plot-button");
+                        utils.disable_element("flag-plot-button");
+                        utils.disable_element("save-values-button");
+                        alert("All plots have been analyzed for this project.");
+                    } else {
+                        this.setState({currentPlot : data});
+                        this.loadRandomPlot();
+                    }
+                }
+                else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                }
+            });
+    }
+    assignedPercentage() {
+        if (this.state.currentProject == null || this.state.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * this.state.stats.analyzedPlots / this.state.currentProject.numPlots).toFixed(2);
+        }
+    }
+    flaggedPercentage () {
+        if (this.state.currentProject == null || this.state.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * this.state.stats.flaggedPlots / this.state.currentProject.numPlots).toFixed(2);
+        }
+    }
+    completedPercentage() {
+        if (this.state.currentProject == null || this.state.stats == null) {
+            return "0.00";
+        } else {
+            return (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2);
+        }
+    }
+    saveValues = event => {
+        var ref=this;
+        $.ajax({
+            url: ref.state.documentRoot + "/add-user-samples",
+            type: "POST",
+            async: true,
+            crossDomain: true,
+            contentType: false,
+            processData: false,
+            data:  {projectId: ref.props.projectId,
+                plotId: ref.state.currentPlot.id,
+                userId: ref.props.userName,
+                userSamples: ref.state.userSamples}
+        }).fail(function () {
+            console.log(response);
+            alert("Error saving your assignments to the database. See console for details.");
+        }).done(function (data) {
+            ref.state.stats.analyzedPlots++;
+            ref.nextPlot();
+        });
+    }
+    initialization() {
+
+        if (this.state.currentProject == null) {
+            // Load the project details
+            this.getProjectById();
+        }
+        if (this.state.stats == null) {
+            // Load the project stats
+            this.getProjectStats();
+        }
+        if (this.state.plotList == null) {
+            // Load the project plots
+            this.getProjectPlots();
+        }
+        if (this.state.imageryList == null && this.state.currentProject != null) {
+            // Load the imageryList
+            this.getImageryList(this.state.currentProject.institution);
+        }
+        if (this.state.imageryList != null && this.state.imageryList.length > 0) {
+            // Draw a map with the project AOI and plot clusters
+            this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
+            this.setBaseMapSource();
+            // Show the project's boundary
+            mercator.addVectorLayer(this.state.mapConfig,
+                "currentAOI",
+                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+                ceoMapStyles.polygon);
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+            // Draw the project plots as clusters on the map
+            this.showProjectPlots();
+        }
+    }
+    render() {
+        console.log("from collection");
+        console.log(this.state);
         return(<React.Fragment>
-                <ImageAnalysisPane collection={this.state} imageryList={this.state.imageryList} nextPlot={this.nextPlot}/>
-            <div id="sidebar" className="col-xl-3">
-                <SideBar collection={this.state} updateDGWMSLayer={this.updateDGWMSLayer}
-                         updatePlanetLayer={this.updatePlanetLayer} setBaseMapSource={this.setBaseMapSource}
-                         flagPlot={this.flagPlot} nextPlot={()=>this.nextPlot} saveValues={this.saveValues}
-                         completedPercentage={this.completedPercentage} assignedPercentage={this.assignedPercentage} flaggedPercentage={this.flaggedPercentage} setCurrentValue={this.setCurrentValue}/>
-            </div>
+                <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
+                <div id="sidebar" className="col-xl-3">
+                    <SideBar collection={this.state} setBaseMapSource={this.setBaseMapSource} setCurrentValue={this.setCurrentValue} updateDGWMSLayer={this.updateDGWMSLayer}
+                             updatePlanetLayer={this.updatePlanetLayer} nextPlot={this.nextPlot} flagPlot={this.flagPlot}
+                             assignedPercentage={this.assignedPercentage} flaggedPercentage={this.flaggedPercentage} completedPercentage={this.completedPercentage} saveValues={this.saveValues} />
+                </div>
             </React.Fragment>
         );
     }
@@ -446,17 +443,22 @@ this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
 class ImageAnalysisPane extends React.Component {
     constructor(props) {
         super(props);
-        this.state={imageryList:this.props.imageryList};
+        this.state={
+            showSideBar : false,
+            mapClass : "fullmap",
+            quitClass : "quit-full",
+            imageryList:this.props.imageryList,
+            currentPlot:this.props.collection.currentPlot,
+            mapConfig:this.props.collection.mapConfig,
+            userSamples : {},
+        };
     };
-    componentDidMount(){
-
-    }
-
     render() {
+        console.log("from imge");
+        console.log(this.props.collection);
         var showSidebar;
         const collection = this.props.collection;
-
-        if (collection.showSideBar) {
+        if (this.state.showSideBar) {
             showSidebar = <div>
                 <span id="action-button" name="collection-actioncall" title="Click a plot to analyze:"
                       alt="Click a plot to analyze">Click a plot to analyze, or:<p></p><br/>
@@ -491,14 +493,14 @@ class SideBar extends React.Component {
         super(props);
     };
     render() {
+        console.log("from sidebar");
+        console.log(this.props.collection);
         const collection = this.props.collection;
         return (
             <React.Fragment>
-                <h2 className="header">{collection.currentProject != null? collection.currentProject.name : ''}</h2>
-                <SideBarFieldSet collection={this.props.collection} updateDGWMSLayer={this.props.updateDGWMSLayer}
-                                 updatePlanetLayer={this.props.updatePlanetLayer}
-                                 setBaseMapSource={this.props.setBaseMapSource} flagPlot={this.props.flagPlot}
-                                 nextPlot={this.props.nextPlot} setCurrentValue={this.props.setCurrentValue}/>
+                <h2 className="header">{collection.currentProject==null?"":collection.currentProject.name}</h2>
+                <SideBarFieldSet collection={this.props.collection} setBaseMapSource={this.props.setBaseMapSource} setCurrentValue={this.props.setCurrentValue}
+                                 updateDGWMSLayer={this.props.updateDGWMSLayer} updatePlanetLayer={this.props.updatePlanetLayer} nextPlot={this.props.nextPlot} flagPlot={this.props.flagPlot}/>
                 <div className="row">
                     <div className="col-sm-12 btn-block">
                         <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
@@ -544,7 +546,7 @@ class SideBar extends React.Component {
                                             </tr>
                                             <tr>
                                                 <td className="small">Plots Total</td>
-                                                <td className="small">{collection.currentProject==null?"":collection.currentProject.numPlots}</td>
+                                                <td className="small">{collection.stats==null?"":collection.currentProject.numPlots}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -554,7 +556,7 @@ class SideBar extends React.Component {
                         </div>
                         <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
                                 type="button"
-                                name="collection-quit" className="collection.quitClass" data-toggle="modal"
+                                name="collection-quit" data-toggle="modal"
                                 data-target="#confirmation-quit">
                             Quit
                         </button>
@@ -562,7 +564,6 @@ class SideBar extends React.Component {
                 </div>
 
             </React.Fragment>
-
         );
     }
 }
@@ -576,9 +577,9 @@ class SideBarFieldSet extends React.Component {
     render() {
         const collection = this.props.collection;
         var select1, select2;
-        var projMap="";
-        var temp= "";
-        if(collection.imageryList!=null && collection.currentProject!=null) {
+        var projMap = "";
+        var temp = "";
+        if (collection.imageryList != null && collection.currentProject != null) {
             temp = <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                            size="1" defaultValue={collection.currentProject.baseMapSource}
                            onChange={this.props.setBaseMapSource}>{
@@ -588,7 +589,7 @@ class SideBarFieldSet extends React.Component {
             }
             </select>;
         }
-        if(collection.currentProject!=null) {
+        if (collection.currentProject != null) {
             projMap = collection.currentProject.sampleValues.map(sampleValueGroup =>
                 <fieldset className="mb-1 justify-content-center text-center">
                     <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
@@ -600,7 +601,7 @@ class SideBarFieldSet extends React.Component {
                                             className="btn btn-outline-darkgray btn-sm btn-block pl-1"
                                             id={sampleValue.name + '_' + sampleValue.id}
                                             name={sampleValue.name + '_' + sampleValue.id}
-                                            onClick={() => collection.setCurrentValue(sampleValueGroup, sampleValue)}>
+                                            onClick={() => this.props.setCurrentValue(sampleValueGroup, sampleValue)}>
                                         <div className="circle" style={{
                                             "background-color": sampleValue.color,
                                             border: "solid 1px",
@@ -615,71 +616,70 @@ class SideBarFieldSet extends React.Component {
                     </ul>
                 </fieldset>
             )
-
-        }
-        if (collection.currentProject!=null  &&collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
-            select1 = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
-                                              name="dg-imagery-year"
-                                              size="1"
-                                              value={parseInt(collection.imageryYearDG,10)}
-                                              onChange={this.props.updateDGWMSLayer}>
-                <option value="2018">2018</option>
-                <option value="2017">2017</option>
-                <option value="2016">2016</option>
-                <option value="2015">2015</option>
-                <option value="2014">2014</option>
-                <option value="2013">2013</option>
-                <option value="2012">2012</option>
-                <option value="2011">2011</option>
-                <option value="2010">2010</option>
-                <option value="2009">2009</option>
-                <option value="2008">2008</option>
-                <option value="2007">2007</option>
-                <option value="2006">2006</option>
-                <option value="2005">2005</option>
-                <option value="2004">2004</option>
-                <option value="2003">2003</option>
-                <option value="2002">2002</option>
-                <option value="2001">2001</option>
-                <option value="2000">2000</option>
-            </select>
-                <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
-                        size="1"
-                        value={collection.stackingProfileDG} onChange={this.props.updateDGWMSLayer}>
-                    <option value="Accuracy_Profile">Accuracy Profile</option>
-                    <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
-                    <option value="Global_Currency_Profile">Global Currency Profile</option>
-                    <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
-                    <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+            if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
+                select1 = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
+                                                  name="dg-imagery-year"
+                                                  size="1"
+                                                  defaultValue ={collection.imageryYearDG}
+                                                  onChange={this.props.updateDGWMSLayer}>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                    <option value="2015">2015</option>
+                    <option value="2014">2014</option>
+                    <option value="2013">2013</option>
+                    <option value="2012">2012</option>
+                    <option value="2011">2011</option>
+                    <option value="2010">2010</option>
+                    <option value="2009">2009</option>
+                    <option value="2008">2008</option>
+                    <option value="2007">2007</option>
+                    <option value="2006">2006</option>
+                    <option value="2005">2005</option>
+                    <option value="2004">2004</option>
+                    <option value="2003">2003</option>
+                    <option value="2002">2002</option>
+                    <option value="2001">2001</option>
+                    <option value="2000">2000</option>
                 </select>
-            </React.Fragment>;
-        }
-        if (collection.currentProject!=null &&collection.currentProject.baseMapSource == 'PlanetGlobalMosaic') {
-            select2 = <React.Fragment> <select className="form-control form-control-sm" id="planet-imagery-year"
-                                               name="planet-imagery-year"
-                                               size="1"
-                                               value={parseInt(collection.imageryYearPlanet,10)}
-                                               onChange={this.props.updatePlanetLayer()}>
-                <option value="2018">2018</option>
-                <option value="2017">2017</option>
-                <option value="2016">2016</option>
-            </select>
-                <select className="form-control form-control-sm" id="planet-imagery-month"
-                        name="planet-imagery-month" size="1"
-                        value={collection.imageryMonthPlanet} onChange={this.props.updatePlanetLayer}>
-                    <option value="01">January</option>
-                    <option value="02">February</option>
-                    <option value="03">March</option>
-                    <option value="04">April</option>
-                    <option value="05">May</option>
-                    <option value="06">June</option>
-                    <option value="07">July</option>
-                    <option value="08">August</option>
-                    <option value="09">September</option>
-                    <option value="10">October</option>
-                    <option value="11">November</option>
-                    <option value="12">December</option>
-                </select></React.Fragment>;
+                    <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
+                            size="1"
+                            defaultValue={collection.stackingProfileDG} onChange={this.props.updateDGWMSLayer}>
+                        <option value="Accuracy_Profile">Accuracy Profile</option>
+                        <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
+                        <option value="Global_Currency_Profile">Global Currency Profile</option>
+                        <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
+                        <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+                    </select>
+                </React.Fragment>;
+            }
+            if (collection.currentProject.baseMapSource == 'PlanetGlobalMosaic') {
+                select2 = <React.Fragment> <select className="form-control form-control-sm" id="planet-imagery-year"
+                                                   name="planet-imagery-year"
+                                                   size="1"
+                                                   defaultValue={collection.imageryYearPlanet}
+                                                   onChange={this.props.updatePlanetLayer}>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                </select>
+                    <select className="form-control form-control-sm" id="planet-imagery-month"
+                            name="planet-imagery-month" size="1"
+                            defaultValue={collection.imageryMonthPlanet} onChange={this.props.updatePlanetLayer}>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select></React.Fragment>;
+            }
         }
 
         return (
@@ -690,19 +690,19 @@ class SideBarFieldSet extends React.Component {
                         <div className="col" id="go-to-first-plot">
                             <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="new-plot" value="Go to first plot" onClick={this.props.nextPlot()}/>
+                                   name="new-plot" defaultValue="Go to first plot" onClick={this.props.nextPlot}/>
                         </div>
                     </div>
                     <div className="row d-none" id="plot-nav">
                         <div className="col-sm-6 pr-2">
                             <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="new-plot" value="Skip" onClick={this.props.nextPlot()}/>
+                                   name="new-plot" defaultValue="Skip" onClick={this.props.nextPlot}/>
                         </div>
                         <div className="col-sm-6 pl-2">
                             <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                    type="button"
-                                   name="flag-plot" value="Flag Plot as Bad" onClick={this.props.flagPlot()}
+                                   name="flag-plot" defaultValue="Flag Plot as Bad" onClick={this.props.flagPlot}
                                    style={{opacity:"0.5"}} disabled/>
                         </div>
                     </div>
@@ -715,6 +715,7 @@ class SideBarFieldSet extends React.Component {
 
                 </fieldset>
                 {projMap}
+
             </React.Fragment>
 
         );
