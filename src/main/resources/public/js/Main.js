@@ -26,6 +26,7 @@ class Collection extends React.Component {
         this.updateDGWMSLayer=this.updateDGWMSLayer.bind(this);
         this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
         this.nextPlot=this.nextPlot.bind(this);
+        this.setCurrentValue=this.setCurrentValue.bind(this);
     };
     componentDidMount() {
         this.initialization();
@@ -161,10 +162,8 @@ class Collection extends React.Component {
     loadPlotById(plotId) {
 
         if (this.state.currentPlot == null) {
-            console.log("hjdhf");
             this.getPlotDataById(plotId);
         } else {
-            console.log("kdhsf");
             // FIXME: What is the minimal set of these that I can execute?
             utils.enable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
@@ -204,7 +203,6 @@ class Collection extends React.Component {
 
                 if (response.ok) {
                     if(response.status==200) {
-                        console.log(response);
                         this.setState({currentPlot: null});
                         this.showProjectPlots();
                         alert("This plot has already been analyzed.");
@@ -286,6 +284,7 @@ class Collection extends React.Component {
         }
     }
     nextPlot() {
+        console.log("clicked a plot");
         // FIXME: What is the minimal set of these that I can execute?
         utils.enable_element("new-plot-button");
         utils.enable_element("flag-plot-button");
@@ -342,7 +341,7 @@ class Collection extends React.Component {
                         utils.disable_element("save-values-button");
                         alert("All plots have been analyzed for this project.");
                     } else {
-                        this.setState({currentPlot : data});
+                        this.setState({currentPlot : response.json()});
                         this.loadRandomPlot();
                     }
                 }
@@ -412,19 +411,26 @@ class Collection extends React.Component {
             // Load the imageryList
             this.getImageryList(this.state.currentProject.institution);
         }
+
+
         if (this.state.imageryList != null && this.state.imageryList.length > 0) {
-            // Draw a map with the project AOI and plot clusters
-            this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
-            this.setBaseMapSource();
-            // Show the project's boundary
-            mercator.addVectorLayer(this.state.mapConfig,
-                "currentAOI",
-                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-                ceoMapStyles.polygon);
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-            // Draw the project plots as clusters on the map
-            this.showProjectPlots();
+            setTimeout(() => {
+                this.showProjectMap();
+            }, 250);
+
         }
+    }
+   showProjectMap() {
+       this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
+       this.setBaseMapSource();
+       // Show the project's boundary
+       mercator.addVectorLayer(this.state.mapConfig,
+           "currentAOI",
+           mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+           ceoMapStyles.polygon);
+       mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+       // Draw the project plots as clusters on the map
+       this.showProjectPlots();
     }
     render() {
         console.log("from collection");
@@ -454,7 +460,7 @@ class ImageAnalysisPane extends React.Component {
         };
     };
     render() {
-        console.log("from imge");
+        console.log("from image");
         console.log(this.props.collection);
         var showSidebar;
         const collection = this.props.collection;
