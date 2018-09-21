@@ -869,9 +869,8 @@ public class JsonProjects implements Projects {
                                                                                                        sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
                                                                                                        sampleValue.remove("$$hashKey");
                                                                                                        sampleValue.remove("object");
-                                                                                                       if (sampleValue.get("image").getAsString().equals("")) {
-                                                                                                           sampleValue.add("image", null);
-                                                                                                       }
+                                                                                                       // FIXME: Remove the "image" field from the database
+                                                                                                       sampleValue.add("image", null);
                                                                                                        return sampleValue;
                                                                                                    });
                                                             sampleValueGroup.add("values", updatedSampleValues);
