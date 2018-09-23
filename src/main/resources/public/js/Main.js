@@ -27,6 +27,8 @@ class Collection extends React.Component {
         this.updatePlanetLayer=this.updatePlanetLayer.bind(this);
         this.nextPlot=this.nextPlot.bind(this);
         this.setCurrentValue=this.setCurrentValue.bind(this);
+        this.loadPlotById=this.loadPlotById.bind(this);
+        this.saveValues=this.saveValues.bind(this);
     };
     componentDidMount() {
         this.initialization();
@@ -48,6 +50,7 @@ class Collection extends React.Component {
                     window.location = this.state.documentRoot + "/home";
                 } else {
                     this.setState({currentProject: data});
+                    this.getImageryList(data.institution);
                 }
             });
     }
@@ -64,7 +67,7 @@ class Collection extends React.Component {
                 })
                 .then(data => {
                     this.setState({stats: data});
-                  this.initialization();
+               //   this.initialization();
                 });
     }
     getProjectPlots(){
@@ -80,7 +83,7 @@ class Collection extends React.Component {
                 })
                 .then(data => {
                     this.setState({plotList: data});
-                    this.initialization();
+                  //  this.initialization();
                 });
     }
     getImageryList(institution) {
@@ -96,7 +99,7 @@ class Collection extends React.Component {
             })
             .then(data => {
                 this.setState({imageryList: data})
-                this.initialization();
+              //  this.initialization();
             });
     }
     setBaseMapSource() {
@@ -109,6 +112,7 @@ class Collection extends React.Component {
             }
             mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
             var cimagery=this.getImageryByTitle(this.state.currentProject.baseMapSource);
+            this.setState({currentImagery:cimagery})
             if (this.state.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
                 cimagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
                 this.setState({currentImagery: cimagery});
@@ -160,13 +164,20 @@ class Collection extends React.Component {
             this);
     }
     loadPlotById(plotId) {
-
+        var mapConfig=this.state.mapConfig;
+        var currentPlot=this.state.currentPlot;
         if (this.state.currentPlot == null) {
             this.getPlotDataById(plotId);
         } else {
             // FIXME: What is the minimal set of these that I can execute?
             utils.enable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
+            if(document.getElementById("flag-plot-button")!=null){
+                var ref=this;
+                document.getElementById("flag-plot-button").onclick=function () {
+                 ref.flagPlot();
+                }
+            }
             utils.disable_element("save-values-button");
 
             // FIXME: These classes should be handled with an ng-if in collection.ftl
@@ -179,20 +190,19 @@ class Collection extends React.Component {
             this.setState({quitClass : "quit-side"});
 
             // FIXME: Move these calls into a function in mercator-openlayers.js
-            mercator.disableSelection(this.state.mapConfig);
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
-            mercator.addVectorLayer(this.state.mapConfig,
+            mercator.disableSelection(mapConfig);
+            mercator.removeLayerByTitle(mapConfig, "currentSamples");
+            mercator.addVectorLayer(mapConfig,
                 "currentSamples",
-                mercator.samplesToVectorSource(this.state.currentPlot.samples),
+                mercator.samplesToVectorSource(currentPlot.samples),
                 ceoMapStyles.redPoint);
-            mercator.enableSelection(this.state.mapConfig, "currentSamples");
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
-
+            mercator.enableSelection(mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(mapConfig, "currentSamples");
             window.open(this.state.documentRoot + "/geo-dash?editable=false&"
                 + encodeURIComponent("title=" + this.state.currentProject.name
-                    + "&pid=" + this.state.projectId
-                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
-                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
+                    + "&pid=" + this.props.projectId
+                    + "&aoi=[" + mercator.getViewExtent(mapConfig)
+                    + "]&daterange=&bcenter=" + currentPlot.center
                     + "&bradius=" + this.state.currentProject.plotSize / 2),
                 "_geo-dash");
         }
@@ -200,29 +210,31 @@ class Collection extends React.Component {
     getPlotDataById(plotId) {
         fetch(this.state.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
             .then(response => {
-
                 if (response.ok) {
-                    if(response.status==200) {
-                        this.setState({currentPlot: null});
-                        this.showProjectPlots();
-                        alert("This plot has already been analyzed.");
-                    }
-                    else
-                        if (response.status == 404) {
-                            this.setState({currentPlot: null});
-                            this.showProjectPlots();
-                            alert("No plot with ID " + plotId + " found.");
-                        }
-                        else{
-                            this.setState({currentPlot : response.json()});
-                            this.loadPlotById(plotId);
-                        }
-                    }
+                  //  console.log(response.text());
+                   return response.text();
+                }
                 else {
-                        console.log(response);
-                        alert("Error retrieving plot data. See console for details.");
-                    }
-            });
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                }
+            })
+            .then(data=> {
+            if (data == "done") {
+                this.setState({currentPlot: null});
+                this.showProjectPlots();
+                alert("This plot has already been analyzed.");
+            }
+            else if (data == "not found") {
+                this.setState({currentPlot: null});
+                this.showProjectPlots();
+                alert("No plot with ID " + plotId + " found.");
+            }
+            else {
+                this.setState({currentPlot: JSON.parse(data)});
+                this.loadPlotById(plotId);
+            }
+        });
     }
     setCurrentValue(sampleValueGroup, sampleValue) {
         var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
@@ -248,43 +260,46 @@ class Collection extends React.Component {
                     return Object.keys(values).length == this.state.currentProject.sampleValues.length;
                 }, this)) {
                 // FIXME: What is the minimal set of these that I can execute?
-                if(document.getElementById("new-plot-button")!=null) {
                     utils.enable_element("save-values-button");
-                    utils.disable_element("new-plot-button");
+                if(document.getElementById("save-values-button")!=null) {
+                    var ref=this;
+                    document.getElementById("save-values-button").onclick = function () {
+                        ref.saveValues();
+                    }
                 }
+                    utils.disable_element("new-plot-button");
             }
+
         } else {
             alert("No sample points selected. Please click some first.");
         }
     }
     flagPlot() {
         var ref=this;
-        var refState=this.state;
-        if(refState.currentPlot!=null) {
-            var obj = {
-                projectId: ref.props.projectId,
-                plotId: refState.currentPlot.id,
-                userId: ref.props.userName
-            };
+        if(ref.state.currentPlot!=null) {
             $.ajax({
-                url: refState.documentRoot + "/flag-plot",
+                url: ref.state.documentRoot + "/flag-plot",
                 type: "POST",
                 async: true,
                 crossDomain: true,
                 contentType: false,
                 processData: false,
-                data: {obj}
+                data: JSON.stringify({
+                    projectId: ref.props.projectId,
+                    plotId: ref.state.currentPlot.id,
+                    userId: ref.props.userName
+                })
             }).fail(function () {
-                console.log(response);
                 alert("Error flagging plot as bad. See console for details.");
             }).done(function (data) {
-                ref.stats.flaggedPlots++;
+                var statistics=ref.state.stats;
+                statistics.flaggedPlots=statistics.flaggedPlots+1;
+                ref.setState({stats:statistics});
                 ref.nextPlot();
             });
         }
     }
     nextPlot() {
-        console.log("clicked a plot");
         // FIXME: What is the minimal set of these that I can execute?
         utils.enable_element("new-plot-button");
         utils.enable_element("flag-plot-button");
@@ -333,23 +348,25 @@ class Collection extends React.Component {
         fetch(this.state.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId)
             .then(response => {
                 if (response.ok) {
-                    if (response.status==200) {
-                        this.setState({currentPlot : null});
-                        // FIXME: What is the minimal set of these that I can execute?
-                        utils.disable_element("new-plot-button");
-                        utils.disable_element("flag-plot-button");
-                        utils.disable_element("save-values-button");
-                        alert("All plots have been analyzed for this project.");
-                    } else {
-                        this.setState({currentPlot : response.json()});
-                        this.loadRandomPlot();
-                    }
+                    return response.text();
                 }
                 else {
                     console.log(response);
                     alert("Error retrieving plot data. See console for details.");
                 }
-            });
+            }).then(data=> {
+            if (data == "done") {
+                this.setState({currentPlot: null});
+                // FIXME: What is the minimal set of these that I can execute?
+                utils.disable_element("new-plot-button");
+                utils.disable_element("flag-plot-button");
+                utils.disable_element("save-values-button");
+                alert("All plots have been analyzed for this project.");
+            } else {
+                this.setState({currentPlot: JSON.parse(data)});
+                this.loadRandomPlot();
+            }
+        });
     }
     assignedPercentage() {
         if (this.state.currentProject == null || this.state.stats == null) {
@@ -372,7 +389,7 @@ class Collection extends React.Component {
             return (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2);
         }
     }
-    saveValues = event => {
+    saveValues= () => {
         var ref=this;
         $.ajax({
             url: ref.state.documentRoot + "/add-user-samples",
@@ -381,66 +398,52 @@ class Collection extends React.Component {
             crossDomain: true,
             contentType: false,
             processData: false,
-            data:  {projectId: ref.props.projectId,
+            data:  JSON.stringify({projectId: ref.props.projectId,
                 plotId: ref.state.currentPlot.id,
                 userId: ref.props.userName,
-                userSamples: ref.state.userSamples}
+                userSamples: ref.state.userSamples})
         }).fail(function () {
-            console.log(response);
             alert("Error saving your assignments to the database. See console for details.");
         }).done(function (data) {
-            ref.state.stats.analyzedPlots++;
+            var statistics=ref.state.stats;
+            statistics.analyzedPlots=statistics.analyzedPlots+1;
+            ref.setState({stats:statistics});
             ref.nextPlot();
         });
     }
-    initialization() {
-
-        if (this.state.currentProject == null) {
-            // Load the project details
-            this.getProjectById();
-        }
-        if (this.state.stats == null) {
-            // Load the project stats
-            this.getProjectStats();
-        }
-        if (this.state.plotList == null) {
-            // Load the project plots
-            this.getProjectPlots();
-        }
-        if (this.state.imageryList == null && this.state.currentProject != null) {
-            // Load the imageryList
-            this.getImageryList(this.state.currentProject.institution);
-        }
-
-
-        if (this.state.imageryList != null && this.state.imageryList.length > 0) {
-            setTimeout(() => {
-                this.showProjectMap();
-            }, 250);
-
-        }
+    showProjectMap() {
+        this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
+        this.setBaseMapSource();
+        // Show the project's boundary
+        mercator.addVectorLayer(this.state.mapConfig,
+            "currentAOI",
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+            ceoMapStyles.polygon);
+        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+        // Draw the project plots as clusters on the map
+        this.showProjectPlots();
     }
-   showProjectMap() {
-       this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
-       this.setBaseMapSource();
-       // Show the project's boundary
-       mercator.addVectorLayer(this.state.mapConfig,
-           "currentAOI",
-           mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-           ceoMapStyles.polygon);
-       mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-       // Draw the project plots as clusters on the map
-       this.showProjectPlots();
+    initialization() {
+        this.getProjectById();
+        this.getProjectStats();
+        this.getProjectPlots();
+        setTimeout(() => {
+            if (this.state.imageryList != null && this.state.imageryList.length > 0) {
+                this.showProjectMap();
+            }
+           }, 250);
+
+
     }
     render() {
-        console.log("from collection");
-        console.log(this.state);
+
         return(<React.Fragment>
                 <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
                 <div id="sidebar" className="col-xl-3">
                     <SideBar collection={this.state} setBaseMapSource={this.setBaseMapSource} setCurrentValue={this.setCurrentValue} updateDGWMSLayer={this.updateDGWMSLayer}
                              updatePlanetLayer={this.updatePlanetLayer} nextPlot={this.nextPlot} flagPlot={this.flagPlot}
-                             assignedPercentage={this.assignedPercentage} flaggedPercentage={this.flaggedPercentage} completedPercentage={this.completedPercentage} saveValues={this.saveValues} />
+                             assignedPercentage={this.assignedPercentage} flaggedPercentage={this.flaggedPercentage} completedPercentage={this.completedPercentage}
+                             saveValues={()=>this.saveValues()} />
                 </div>
             </React.Fragment>
         );
@@ -460,8 +463,6 @@ class ImageAnalysisPane extends React.Component {
         };
     };
     render() {
-        console.log("from image");
-        console.log(this.props.collection);
         var showSidebar;
         const collection = this.props.collection;
         if (this.state.showSideBar) {
@@ -494,24 +495,21 @@ class ImageAnalysisPane extends React.Component {
     }
 }
 
-class SideBar extends React.Component {
-    constructor(props) {
-        super(props);
-    };
-    render() {
+function SideBar(props){
         console.log("from sidebar");
-        console.log(this.props.collection);
-        const collection = this.props.collection;
+        console.log(props.collection);
+        const collection = props.collection;
+
         return (
             <React.Fragment>
                 <h2 className="header">{collection.currentProject==null?"":collection.currentProject.name}</h2>
-                <SideBarFieldSet collection={this.props.collection} setBaseMapSource={this.props.setBaseMapSource} setCurrentValue={this.props.setCurrentValue}
-                                 updateDGWMSLayer={this.props.updateDGWMSLayer} updatePlanetLayer={this.props.updatePlanetLayer} nextPlot={this.props.nextPlot} flagPlot={this.props.flagPlot}/>
+                <SideBarFieldSet collection={props.collection} setBaseMapSource={props.setBaseMapSource} setCurrentValue={props.setCurrentValue}
+                                 updateDGWMSLayer={props.updateDGWMSLayer} updatePlanetLayer={props.updatePlanetLayer} nextPlot={props.nextPlot} flagPlot={props.flagPlot}/>
                 <div className="row">
                     <div className="col-sm-12 btn-block">
                         <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                 type="button"
-                                name="save-values" onClick={this.props.saveValues} style={{opacity:"0.5"}} disabled>
+                                name="save-values" style={{opacity:"0.5"}} disabled>
                             Save
                         </button>
                         <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
@@ -533,21 +531,21 @@ class SideBar extends React.Component {
                                                 <td className="small">Plots Assigned</td>
                                                 <td className="small">
                                                     {collection.stats==null?"":collection.stats.analyzedPlots}
-                                                    ({this.props.assignedPercentage}%)
+                                                    ({props.assignedPercentage}%)
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td className="small">Plots Flagged</td>
                                                 <td className="small">
                                                     {collection.stats==null?"":collection.stats.flaggedPlots}
-                                                    ({this.props.flaggedPercentage}%)
+                                                    ({props.flaggedPercentage}%)
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td className="small">Plots Completed</td>
                                                 <td className="small">
                                                     {collection.stats==null?"":collection.stats.analyzedPlots + collection.stats.flaggedPlots}
-                                                    ({this.props.completedPercentage}%)
+                                                    ({props.completedPercentage}%)
                                                 </td>
                                             </tr>
                                             <tr>
@@ -568,12 +566,9 @@ class SideBar extends React.Component {
                         </button>
                     </div>
                 </div>
-
             </React.Fragment>
         );
-    }
 }
-
 
 class SideBarFieldSet extends React.Component {
     constructor(props) {
@@ -727,7 +722,6 @@ class SideBarFieldSet extends React.Component {
         );
     }
 }
-
 
 function renderCollection(documentRoot, username, projectId) {
 
