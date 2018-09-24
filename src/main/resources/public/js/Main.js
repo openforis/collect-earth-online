@@ -2,6 +2,9 @@ class Project extends React.Component{
     constructor(props) {
         super(props);
         this.state = {
+            userId:this.props.userId,
+            projectId:this.props.projectId,
+            institutionId:this.props.institutionId,
             details: null,
             stats: null,
             imageryList: null,
@@ -30,7 +33,25 @@ class Project extends React.Component{
         };
     };
     componentDidMount(){
-        this.initialization(this.props.documentRoot,this.props.userId,this.props.projectId,this.props.institutionId);
+        this.initialization(this.props.documentRoot,this.state.userId,this.state.projectId,this.state.institutionId);
+    }
+    initialization(documentRoot, userId, projectId, institutionId) {
+        if (this.state.details == null) {
+            this.getProjectById(projectId);
+        }
+        else if (this.state.details.id == 0) {
+            this.getProjectList(userId, projectId);
+        }
+        else if (this.state.details.id != 0) {
+            this.getProjectStats(projectId);
+            if (this.state.imageryList == null) {
+                this.getImageryList(institutionId);
+            }
+            else {
+             //   this.updateUnmanagedComponents(projectId);
+            }
+        }
+
     }
     logFormData(formData)
     {
@@ -293,7 +314,7 @@ class Project extends React.Component{
         }
     }
     getProjectById(projectId) {
-        fetch(this.state.documentRoot + "/get-project-by-id/" + projectId)
+        fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
             .then(response => {
                 if (response.ok) {
                     return response.json()
@@ -309,9 +330,9 @@ class Project extends React.Component{
                 } else {
                     this.setState({details: data});
                     if (this.state.details.id == 0) {
-                        this.initialization(this.state.documentRoot, this.props.userId, projectId, this.props.institutionId);
+                        this.initialization(this.props.documentRoot,this.state.userId,projectId,this.state.institutionId);
                     } else {
-                        this.initialization(this.state.documentRoot, this.props.userId, projectId, this.state.details.institution);
+                        this.initialization(this.props.documentRoot,this.state.userId,projectId,this.state.details.institution);
                     }
                 }
             });
@@ -331,7 +352,8 @@ class Project extends React.Component{
                 var projList = this.state.projectList;
                 projList.unshift(JSON.parse(JSON.stringify(this.state.details)));
                 this.setState({projectList: projList});
-                this.initialization(this.props.documentRoot, userId, projectId, this.props.institutionId);
+                this.setState({userId: userId});
+                this.setState({projectId: projectId});
             });
     }
     getProjectStats(projectId) {
@@ -346,7 +368,6 @@ class Project extends React.Component{
             })
             .then(data => {
                 this.setState({stats: data});
-                this.initialization(this.props.documentRoot, this.props.userId, projectId, this.props.institutionId);
             });
     }
 
@@ -464,25 +485,10 @@ class Project extends React.Component{
             this.showProjectMap(projectId);
         }
     }
-    initialization(documentRoot, userId, projectId, institutionId) {
-        this.getProjectById(projectId);
-        if (this.state.details.id == 0 && this.state.projectList == null) {
-            this.getProjectList(userId, projectId);
-        }
-        if (this.state.details.id != 0 && this.stats == null) {
-            // Load the project stats
-            this.getProjectStats(projectId);
-        }
-        if (this.state.imageryList == null) {
-            // Load the imageryList
-            this.getImageryList(institutionId);
-        } else {
-            // Set the radio buttons and checkboxes and load the project map
-            this.updateUnmanagedComponents(projectId);
-        }
-    }
+
 
     render(){
+        console.log(this.state);
         var header;
         if(this.props.projectId=="0")
         {
@@ -501,8 +507,8 @@ class Project extends React.Component{
                                    setProjectTemplate={this.setProjectTemplate} setPrivacyLevel={this.setPrivacyLevel}
                                    setSampleDistribution={this.setSampleDistribution} addSampleValueRow={this.addSampleValueRow}
                                    setBaseMapSource={this.setBaseMapSource} setPlotDistribution={this.setPlotDistribution} addSampleValueGroup={this.addSampleValueGroup}/>
-                <ProjectManagement project={this.state} configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
-                                   downloadSampleData={this.downloadSampleData} changeAvailability={this.changeAvailability} createProject={this.createProject}/>
+                {/*<ProjectManagement project={this.state} configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}*/}
+                                   {/*downloadSampleData={this.downloadSampleData} changeAvailability={this.changeAvailability} createProject={this.createProject}/>*/}
             </div>
         );
     }
@@ -510,53 +516,58 @@ class Project extends React.Component{
 
 function ProjectStats(props) {
     var project=props.project;
-    return(
-        <div className="row mb-3">
-            <div id="project-stats" className={"col "+ props.project_stats_visibility}>
-                <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
-                        href="#project-stats-collapse" role="button" aria-expanded="false"
-                        aria-controls="project-stats-collapse">
-                    Project Stats
-                </button>
-                <div className="collapse col-xl-12" id="project-stats-collapse">
-                    <table className="table table-sm">
-                        <tbody>
-                        <tr>
-                            <td>Members</td>
-                            <td>{project.stats.members}</td>
-                            <td>Contributors</td>
-                            <td>{project.stats.contributors}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Plots</td>
-                            <td>{project.details.numPlots || 0}</td>
-                            <td>Date Created</td>
-                            <td>{project.dateCreated}</td>
-                        </tr>
-                        <tr>
-                            <td>Flagged Plots</td>
-                            <td>{project.stats.flaggedPlots}</td>
-                            <td>Date Published</td>
-                            <td>{project.datePublished}</td>
-                        </tr>
-                        <tr>
-                            <td>Analyzed Plots</td>
-                            <td>{project.stats.analyzedPlots}</td>
-                            <td>Date Closed</td>
-                            <td>{project.dateClosed}</td>
-                        </tr>
-                        <tr>
-                            <td>Unanalyzed Plots</td>
-                            <td>{project.stats.unanalyzedPlots}</td>
-                            <td>Date Archived</td>
-                            <td>{project.dateArchived}</td>
-                        </tr>
-                        </tbody>
-                    </table>
+
+        if(project.stats!=null) {
+            return(     <div className="row mb-3">
+                <div id="project-stats" className={"col " + props.project_stats_visibility}>
+                    <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                            href="#project-stats-collapse" role="button" aria-expanded="false"
+                            aria-controls="project-stats-collapse">
+                        Project Stats
+                    </button>
+                    <div className="collapse col-xl-12" id="project-stats-collapse">
+                        <table className="table table-sm">
+                            <tbody>
+                            <tr>
+                                <td>Members</td>
+                                <td>{project.stats.members}</td>
+                                <td>Contributors</td>
+                                <td>{project.stats.contributors}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Plots</td>
+                                <td>{project.details.numPlots || 0}</td>
+                                <td>Date Created</td>
+                                <td>{project.dateCreated}</td>
+                            </tr>
+                            <tr>
+                                <td>Flagged Plots</td>
+                                <td>{project.stats.flaggedPlots}</td>
+                                <td>Date Published</td>
+                                <td>{project.datePublished}</td>
+                            </tr>
+                            <tr>
+                                <td>Analyzed Plots</td>
+                                <td>{project.stats.analyzedPlots}</td>
+                                <td>Date Closed</td>
+                                <td>{project.dateClosed}</td>
+                            </tr>
+                            <tr>
+                                <td>Unanalyzed Plots</td>
+                                <td>{project.stats.unanalyzedPlots}</td>
+                                <td>Date Archived</td>
+                                <td>{project.dateArchived}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+
+    );}
+    else{
+        return(<span></span>);
+        }
 }
 
 function ProjectDesignForm(props){
