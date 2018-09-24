@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<script type="text/babel" src="${root}/js/Main.js"></script>
+<script type="text/babel" src="${root}/js/collection.js"></script>
 <#if username == "">
     <#assign username = "guest">
 </#if>
@@ -14,7 +14,7 @@
             renderCollection("${root}", "${username}","${project_id}");
     }
 </script>
-<div id="collection"></div>
+<div id="collection" class="row"></div>
 <div class="modal fade" id="confirmation-quit" tabindex="-1" role="dialog"
      aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
