@@ -30,6 +30,10 @@
         }
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
+    <#--var institutionID;-->
+    <#--$(function(){-->
+        <#--institutionID = "${institution_id}";-->
+    <#--})-->
 </script>
 <br style="clear:both;">
  <h3>React-Widget-Layout-Editor </h3>
