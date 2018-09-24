@@ -29,6 +29,9 @@ class Project extends React.Component{
             },
         };
     };
+    componentDidMount(){
+        this.initialization(this.props.documentRoot,this.props.userId,this.props.projectId,this.props.institutionId);
+    }
     logFormData(formData)
     {
         console.log(new Map(formData.entries()));
@@ -172,17 +175,17 @@ class Project extends React.Component{
         this.updateUnmanagedComponents(this.state.templateId);
     }
     setPrivacyLevel(privacyLevel) {
-        var detailsNew = ref.state.details;
+        var detailsNew = this.state.details;
         detailsNew.privacyLevel = privacyLevel;
-        ref.setState({details: detailsNew});
+        this.setState({details: detailsNew});
     }
     setBaseMapSource() {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
     }
     setPlotDistribution(plotDistribution) {
-        var detailsNew = ref.state.details;
+        var detailsNew = this.state.details;
         detailsNew.plotDistribution = plotDistribution;
-        ref.setState({details: detailsNew});
+        this.setState({details: detailsNew});
         if (plotDistribution == "random") {
             utils.enable_element("num-plots");
             utils.disable_element("plot-spacing");
@@ -194,7 +197,291 @@ class Project extends React.Component{
             utils.disable_element("plot-spacing");
         }
     }
-    
+
+    setPlotShape(plotShape) {
+        var detailsNew = this.state.details;
+        detailsNew.plotShape = plotShape;
+        this.setState({details: detailsNew});
+    }
+    setSampleDistribution(sampleDistribution) {
+        var detailsNew = this.state.details;
+        detailsNew.sampleDistribution = sampleDistribution;
+        this.setState({details: detailsNew});
+        if (sampleDistribution == "random") {
+            utils.enable_element("samples-per-plot");
+            utils.disable_element("sample-resolution");
+        } else {
+            utils.disable_element("samples-per-plot");
+            utils.enable_element("sample-resolution");
+        }
+    }
+    getParentSampleValues(sampleValues) {
+        return sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.parent == null || sampleValue.parent == "";
+            }
+        );
+    }
+    getChildSampleValues(sampleValues, parentSampleValue) {
+        return sampleValues.filter(
+            function (sampleValue) {
+                return sampleValue.parent == parentSampleValue.name;
+            }
+        );
+    }
+    topoSort(sampleValues) {
+        var parentSampleValues = this.getParentSampleValues(sampleValues);
+        var parentChildGroups = parentSampleValues.map(
+            function (parentSampleValue) {
+                var childSampleValues = this.getChildSampleValues(sampleValues, parentSampleValue);
+                return [parentSampleValue].concat(childSampleValues);
+            },
+            this
+        );
+        return [].concat.apply([], parentChildGroups);
+    }
+    addSampleValueGroup() {
+        var groupName = this.newSampleValueGroupName;
+        if (groupName != "") {
+            var newValueEntryNew = this.state.newValueEntry;
+            newValueEntryNew[groupName]= {name: "", color: "#000000", image: "", parent: ""};
+            this.setState({newValueEntry: newValueEntryNew});
+            var detailsNew = this.state.details;
+            detailsNew.sampleValues.push({name: groupName, values: []});
+            this.setState({details: detailsNew});
+            this.setState({newSampleValueGroupName : ""});
+        } else {
+            alert("Please enter a sample value group name first.");
+        }
+    }
+    removeSampleValueGroup(sampleValueGroupName) {
+        var detailsNew = this.state.details;
+        this.setState({details: detailsNew.sampleValues.filter(
+            function (sampleValueGroup) {
+                return sampleValueGroup.name != sampleValueGroupName;
+            }
+        )});
+    }
+
+    getSampleValueGroupByName(sampleValueGroupName) {
+        return this.state.details.sampleValues.find(
+            function (sampleValueGroup) {
+                return sampleValueGroup.name == sampleValueGroupName;
+            }
+        );
+    }
+
+    removeSampleValueRow(sampleValueGroupName, sampleValueName) {
+        var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
+        sampleValueGroup.values = sampleValueGroup.values.filter(
+            function (sampleValue) {
+                return sampleValue.name != sampleValueName && sampleValue.parent != sampleValueName;
+            }
+        );
+    }
+    addSampleValueRow(sampleValueGroupName) {
+        var entry = this.state.newValueEntry[sampleValueGroupName];
+        if (entry.name != "") {
+            var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
+            sampleValueGroup.values.push({name: entry.name, color: entry.color, image: entry.image, parent: entry.parent});
+            entry.name = "";
+            entry.color = "#000000";
+            entry.image = "";
+            entry.parent = "";
+        } else {
+            alert("A sample value must possess both a name and a color.");
+        }
+    }
+    getProjectById(projectId) {
+        fetch(this.state.documentRoot + "/get-project-by-id/" + projectId)
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    console.log(response);
+                    alert("Error retrieving the project info. See console for details.");
+                }
+            })
+            .then(data => {
+                if (data == "") {
+                    alert("No project found with ID " + projectId + ".");
+                    window.location = this.state.documentRoot + "/home";
+                } else {
+                    this.setState({details: data});
+                    if (this.state.details.id == 0) {
+                        this.initialization(this.state.documentRoot, this.props.userId, projectId, this.props.institutionId);
+                    } else {
+                        this.initialization(this.state.documentRoot, this.props.userId, projectId, this.state.details.institution);
+                    }
+                }
+            });
+    }
+    getProjectList(userId, projectId) {
+        fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    console.log(response);
+                    alert("Error retrieving the project list. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({projectList: data});
+                var projList = this.state.projectList;
+                projList.unshift(JSON.parse(JSON.stringify(this.state.details)));
+                this.setState({projectList: projList});
+                this.initialization(this.props.documentRoot, userId, projectId, this.props.institutionId);
+            });
+    }
+    getProjectStats(projectId) {
+        fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    console.log(response);
+                    alert("Error retrieving project stats. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({stats: data});
+                this.initialization(this.props.documentRoot, this.props.userId, projectId, this.props.institutionId);
+            });
+    }
+
+    getImageryList(institutionId) {
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    console.log(response);
+                    alert("Error retrieving the imagery list. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({imageryList: data});
+                this.initialization(this.props.documentRoot, this.props.userId, this.state.details.id, this.props.institutionId);
+            });
+    }
+
+    getPlotList(projectId, maxPlots) {
+        fetch(this.props.documentRoot + "/get-project-plots/" + projectId + "/" + maxPlots)
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    console.log(response);
+                    alert("Error retrieving plot list. See console for details.");
+                }
+            })
+            .then(data => {
+                this.setState({plotList: data});
+                this.showPlotCenters(projectId, maxPlots);
+            });
+    }
+    showPlotCenters(projectId, maxPlots) {
+        if (this.state.plotList == null) {
+            // Load the current project plots
+            this.getPlotList(projectId, maxPlots);
+        } else {
+            // Draw the plot shapes on the map
+            mercator.removeLayerByTitle(this.mapConfig, "flaggedPlots");
+            mercator.removeLayerByTitle(this.mapConfig, "analyzedPlots");
+            mercator.removeLayerByTitle(this.mapConfig, "unanalyzedPlots");
+            mercator.addPlotOverviewLayers(this.mapConfig, this.plotList, this.details.plotShape);
+        }
+    }
+
+    showProjectMap(projectId) {
+        // Initialize the basemap
+        if (this.state.mapConfig == null) {
+            this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
+        }
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
+
+        if (this.state.details.id == 0) {
+            // Enable dragbox interaction if we are creating a new project
+            var displayDragBoxBounds = function (dragBox) {
+                var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+                // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
+                document.getElementById("lon-min").value = extent[0];
+                document.getElementById("lat-min").value = extent[1];
+                document.getElementById("lon-max").value = extent[2];
+                document.getElementById("lat-max").value = extent[3];
+            };
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+            mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
+            mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
+            mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
+            mercator.disableDragBoxDraw(this.state.mapConfig);
+            mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
+        } else {
+            // Extract bounding box coordinates from the project boundary and show on the map
+            var boundaryExtent = mercator.parseGeoJson(this.state.details.boundary, false).getExtent();
+            this.setState({lonMin: boundaryExtent[0]});
+            this.setState({latMin: boundaryExtent[1]});
+            this.setState({lonMax: boundaryExtent[2]});
+            this.setState({latMax: boundaryExtent[3]});
+
+            // Display a bounding box with the project's AOI on the map and zoom to it
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+            mercator.addVectorLayer(this.state.mapConfig,
+                "currentAOI",
+                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
+                ceoMapStyles.polygon);
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+
+            // Force reloading of the plotList
+            this.setState({plotList: null});
+
+            // Show the plot centers on the map (but constrain to <= 100 points)
+            this.showPlotCenters(projectId, 100);
+        }
+    }
+    updateUnmanagedComponents(projectId) {
+        // Check the radio button values for this project
+        document.getElementById("privacy-" + this.state.details.privacyLevel).checked = true;
+        document.getElementById("plot-distribution-" + this.state.details.plotDistribution).checked = true;
+        document.getElementById("plot-shape-" + this.state.details.plotShape).checked = true;
+        document.getElementById("sample-distribution-" + this.state.details.sampleDistribution).checked = true;
+
+        // Enable the input fields that are connected to the radio buttons if their values are not null
+        if (this.state.details.plotDistribution == "gridded") {
+            utils.enable_element("plot-spacing");
+        }
+        if (this.state.details.sampleDistribution == "gridded") {
+            utils.enable_element("sample-resolution");
+        }
+
+        if (this.state.imageryList.length > 0) {
+            var detailsNew = this.state.details;
+            detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
+            // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
+            this.setState({details: detailsNew});
+            // Draw a map with the project AOI and a sampling of its plots
+            this.showProjectMap(projectId);
+        }
+    }
+    initialization(documentRoot, userId, projectId, institutionId) {
+        this.getProjectById(projectId);
+        if (this.state.details.id == 0 && this.state.projectList == null) {
+            this.getProjectList(userId, projectId);
+        }
+        if (this.state.details.id != 0 && this.stats == null) {
+            // Load the project stats
+            this.getProjectStats(projectId);
+        }
+        if (this.state.imageryList == null) {
+            // Load the imageryList
+            this.getImageryList(institutionId);
+        } else {
+            // Set the radio buttons and checkboxes and load the project map
+            this.updateUnmanagedComponents(projectId);
+        }
+    }
+
     render(){
         var header;
         if(this.props.projectId=="0")
@@ -209,15 +496,20 @@ class Project extends React.Component{
                 <div class="bg-darkgreen mb-3 no-container-margin">
                     {header}
                 </div>
-                <ProjectStats/>
-                <ProjectDesignForm/>
-                <ProjectManagement/>
+                <ProjectStats project={this.state} project_stats_visibility={this.props.project_stats_visibility}/>
+                <ProjectDesignForm projectId={this.props.projectId} project={this.state} project_template_visibility={this.props.project_template_visibility}
+                                   setProjectTemplate={this.setProjectTemplate} setPrivacyLevel={this.setPrivacyLevel}
+                                   setSampleDistribution={this.setSampleDistribution} addSampleValueRow={this.addSampleValueRow}
+                                   setBaseMapSource={this.setBaseMapSource} setPlotDistribution={this.setPlotDistribution} addSampleValueGroup={this.addSampleValueGroup}/>
+                <ProjectManagement project={this.state} configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
+                                   downloadSampleData={this.downloadSampleData} changeAvailability={this.changeAvailability} createProject={this.createProject}/>
             </div>
         );
     }
 }
 
 function ProjectStats(props) {
+    var project=props.project;
     return(
         <div className="row mb-3">
             <div id="project-stats" className={"col "+ props.project_stats_visibility}>
@@ -272,7 +564,7 @@ function ProjectDesignForm(props){
     if(props.projectId=="0"){
         addSampleValueGroupButton= <div id="add-sample-value-group">
             <input type="button" className="button" value="Add Sample Value Group"
-                   onClick={project.addSampleValueGroup()}/>
+                   onClick={props.addSampleValueGroup}/>
                 <input type="text" autoComplete="off" value={project.newSampleValueGroupName}/>
         </div>;
     }
@@ -280,14 +572,14 @@ function ProjectDesignForm(props){
     return(
         <form id="project-design-form" className="px-2 pb-2" method="post" action={props.documentRoot+"/create-project"}
               encType="multipart/form-data">
-            <ProjectTemplateVisibility/>
-            <ProjectInfo/>
-            <ProjectVisibility/>
-            <ProjectAOI/>
-            <ProjectImagery/>
-            <PlotDesign/>
-            <SampleDesign/>
-            <SampleValueInfo/>
+            <ProjectTemplateVisibility project={props.project} setProjectTemplate={props.setProjectTemplate}/>
+            <ProjectInfo project={props.project}/>
+            <ProjectVisibility setPrivacyLevel={props.setPrivacyLevel}/>
+            <ProjectAOI projectId={props.projectId} project={props.project}/>
+            <ProjectImagery project={props.project} setBaseMapSource={props.setBaseMapSource}/>
+            <PlotDesign project={props.project} setPlotDistribution={props.setPlotDistribution}/>
+            <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution }/>
+            <SampleValueInfo project={props.project} addSampleValueRow={props.addSampleValueRow}/>
             {addSampleValueGroupButton}
         </form>
     );
@@ -302,7 +594,7 @@ function ProjectTemplateVisibility(props) {
                     <div className="form-group">
                         <h3 htmlFor="project-template">Select Project</h3>
                         <select className="form-control form-control-sm" id="project-template" name="project-template"
-                                size="1" value={project.templateId} onChange={project.setProjectTemplate()}>
+                                size="1" value={project.templateId} onChange={props.setProjectTemplate}>
                             {
                                 project.projectList.map(proj=>
                                     <option value={ proj.id }>{proj.name}</option>
@@ -318,6 +610,7 @@ function ProjectTemplateVisibility(props) {
 }
 
 function ProjectInfo(props){
+    var project=props.project;
     return(
         <div className="row">
             <div className="col">
@@ -348,24 +641,24 @@ function ProjectVisibility(props) {
                 <div id="project-visibility" className="mb-3">
                     <div className="form-check form-check-inline">
                         <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
-                               value="public" onClick={project.setPrivacyLevel('public')}/>
+                               value="public" onClick={props.setPrivacyLevel('public')}/>
                             <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
-                               value="private" onClick={project.setPrivacyLevel('private')} checked/>
+                               value="private" onClick={props.setPrivacyLevel('private')} checked/>
                             <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
                                 Admins</i></label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input className="form-check-input" type="radio" id="privacy-institution" name="privacy-level"
-                               value="institution" onClick={project.setPrivacyLevel('institution')}/>
+                               value="institution" onClick={props.setPrivacyLevel('institution')}/>
                             <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
                                 Members</i></label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input className="form-check-input" type="radio" id="privacy-invitation" name="privacy-level"
-                               value="invitation" onClick={project.setPrivacyLevel('invitation')} disabled/>
+                               value="invitation" onClick={props.setPrivacyLevel('invitation')} disabled/>
                             <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
                                 Soon</i></label>
                     </div>
@@ -376,6 +669,7 @@ function ProjectVisibility(props) {
 }
 
 function ProjectAOI(props) {
+    var project=props.project;
     var msg = "";
     if (props.projectId == "0") {
         msg = <div className="row">
@@ -425,6 +719,7 @@ function ProjectAOI(props) {
 }
 
 function ProjectImagery(props) {
+    var project=props.project;
     return(
         <div className="row mb-3">
             <div className="col">
@@ -434,7 +729,7 @@ function ProjectImagery(props) {
                         <h3 htmlFor="base-map-source">Basemap Source</h3>
                         <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                                 size="1"
-                                value="project.details.baseMapSource" onChange={project.setBaseMapSource()}>
+                                value="project.details.baseMapSource" onChange={props.setBaseMapSource}>
                             {
                                 project.imageryList.map(imagery =>
                                     <option value={imagery.title}>{imagery.title}</option>
@@ -450,6 +745,7 @@ function ProjectImagery(props) {
 }
 
 function PlotDesign(props){
+    var project=props.project;
     return(
         <div className="row mb-3">
             <div className="col">
@@ -461,21 +757,21 @@ function PlotDesign(props){
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" id="plot-distribution-random"
                                        name="plot-distribution" value="random"
-                                       onClick={project.setPlotDistribution('random')} checked/>
+                                       onClick={props.setPlotDistribution('random')} checked/>
                                     <label className="form-check-label small"
                                            htmlFor="plot-distribution-random">Random</label>
                             </div>
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" id="plot-distribution-gridded"
                                        name="plot-distribution" value="gridded"
-                                       onClick={project.setPlotDistribution('gridded')}/>
+                                       onClick={props.setPlotDistribution('gridded')}/>
                                     <label className="form-check-label small"
                                            htmlFor="plot-distribution-gridded">Gridded</label>
                             </div>
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" id="plot-distribution-csv"
                                        name="plot-distribution" value="csv"
-                                       onClick={project.setPlotDistribution('csv')}/>
+                                       onClick={props.setPlotDistribution('csv')}/>
                                     <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                            id="custom-csv-upload">
                                         <small>Upload CSV</small>
@@ -525,6 +821,7 @@ function PlotDesign(props){
 }
 
 function SampleDesign(props){
+    var project=props.project;
 return(
     <div className="row mb-3">
         <div className="col">
@@ -533,14 +830,14 @@ return(
                 <h3>Spatial Distribution</h3>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="sample-distribution-random"
-                           name="sample-distribution" value="random" onClick={project.setSampleDistribution('random')}
+                           name="sample-distribution" value="random" onClick={props.setSampleDistribution('random')}
                            checked/>
                         <label className="form-check-label small" htmlFor="sample-distribution-random">Random</label>
                 </div>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="sample-distribution-gridded"
                            name="sample-distribution" value="gridded"
-                           onClick={project.setSampleDistribution('gridded')}/>
+                           onClick={props.setSampleDistribution('gridded')}/>
                         <label className="form-check-label small" htmlFor="sample-distribution-gridded">Gridded</label>
                 </div>
                 <div className="form-group mb-1">
@@ -562,6 +859,7 @@ return(
 }
 
 function SampleValueInfo(props) {
+    var project=props.project;
     var removeSampleValueGroupButton = "", removeSampleValueRowButton = "", sampleValueTable = "";
     if (props.projectId == "0") {
         removeSampleValueGroupButton = <input id="remove-sample-value-group" type="button" className="button" value="-"
@@ -571,7 +869,7 @@ function SampleValueInfo(props) {
         sampleValueTable = <tr>
             <td>
                 <input type="button" className="button" value="+"
-                       onClick={project.addSampleValueRow(sampleValueGroup.name)}/>
+                       onClick={props.addSampleValueRow(sampleValueGroup.name)}/>
             </td>
             <td>
                 <input type="text" className="value-name" autoComplete="off"
@@ -609,7 +907,6 @@ function SampleValueInfo(props) {
                         <th scope="col"></th>
                         <th scope="col">Name</th>
                         <th scope="col">Color</th>
-                        <!-- <th scope="col">Reference Image</th> -->
                         <th scope="col">&nbsp;</th>
                     </tr>
                     </thead>
@@ -631,9 +928,6 @@ function SampleValueInfo(props) {
                                     <div className="circle"
                                          style={{"background-color": sampleValue.color, border: "solid 1px"}}></div>
                                 </td>
-                                <!-- <td>
-                                  {{ sampleValue.image }}
-                                  </td> -->
                                 <td>
                                     &nbsp;
                                 </td>
@@ -652,35 +946,36 @@ function SampleValueInfo(props) {
 }
 
 function ProjectManagement(props) {
+    var project=props.project;
     var buttons = "";
     if (props.projectId == "0") {
         buttons = <input type="button" id="create-project" className="btn btn-outline-danger btn-sm btn-block"
                          name="create-project" value="Create Project"
-                         onClick={project.createProject()}/>;
+                         onClick={props.createProject}/>;
     }
     else {
         buttons = <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
                          name="configure-geo-dash" value="Configure Geo-Dash"
-                         onClick={project.configureGeoDash()}
+                         onClick={props.configureGeoDash}
                          style={{display: project.details.availability == 'unpublished' || project.details.availability == 'published' ? 'block' : 'none'}}/>;
 
 
         buttons = {buttons} + <input type="button" id="download-plot-data"
                                      className="btn btn-outline-lightgreen btn-sm btn-block"
                                      name="download-plot-data" value="Download Plot Data"
-                                     onClick={project.downloadPlotData()}
+                                     onClick={props.downloadPlotData}
                                      style={{display: project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none'}}/>;
 
         buttons = {buttons} + <input type="button" id="download-sample-data"
                                      className="btn btn-outline-lightgreen btn-sm btn-block"
                                      name="download-sample-data" value="Download Sample Data"
-                                     onClick={project.downloadSampleData()}
+                                     onClick={props.downloadSampleData}
                                      style={{display: project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none'}}/>;
         buttons = {buttons} + <input type="button" id="change-availability"
                                      className="btn btn-outline-danger btn-sm btn-block"
                                      name="change-availability"
                                      value={project.stateTransitions[project.details.availability] + "Project"}
-                                     onClick={project.changeAvailability()}/>;
+                                     onClick={props.changeAvailability}/>;
     }
     return (
         <div id="project-management" className="col mb-3">
@@ -693,10 +988,10 @@ function ProjectManagement(props) {
     );
 }
 
-function renderProject(documentRoot, userId, projectId,institutionId,projectStatsVisibility,projectTemplateVisibility) {
+function renderProject(documentRoot, userId, projectId,institutionId,project_stats_visibility,project_template_visibility) {
     ReactDOM.render(
         <Project documentRoot={documentRoot} userId={userId} projectId={projectId} institutionId={institutionId}
-                 projectStatsVisibility={projectStatsVisibility} projectTemplateVisibility={projectTemplateVisibility}/>,
+                 project_stats_visibility={project_stats_visibility} project_template_visibility={project_template_visibility}/>,
         document.getElementById("project")
     );
 }
