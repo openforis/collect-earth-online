@@ -40,6 +40,11 @@ class Project extends React.Component{
         this.downloadSampleData=this.downloadSampleData.bind(this);
         this.closeProject=this.closeProject.bind(this);
         this.changeAvailability=this.changeAvailability.bind(this);
+        this.setBaseMapSource=this.setBaseMapSource.bind(this);
+        this.addSampleValueGroup=this.addSampleValueGroup.bind(this);
+        this.removeSampleValueGroup=this.removeSampleValueGroup.bind(this);
+        this.addSampleValueRow=this.addSampleValueRow.bind(this);
+        this.getParentSampleValues=this.getParentSampleValues.bind(this);
     };
     componentDidMount(){
         this.initialization(this.props.documentRoot,this.state.userId,this.state.projectId,this.state.institutionId);
@@ -283,17 +288,22 @@ class Project extends React.Component{
         return [].concat.apply([], parentChildGroups);
     }
     addSampleValueGroup() {
-        var groupName = this.newSampleValueGroupName;
-        if (groupName != "") {
-            var newValueEntryNew = this.state.newValueEntry;
-            newValueEntryNew[groupName]= {name: "", color: "#000000", image: "", parent: ""};
-            this.setState({newValueEntry: newValueEntryNew});
-            var detailsNew = this.state.details;
-            detailsNew.sampleValues.push({name: groupName, values: []});
-            this.setState({details: detailsNew});
-            this.setState({newSampleValueGroupName : ""});
-        } else {
-            alert("Please enter a sample value group name first.");
+        if(this.state.details!=null) {
+            var groupName = document.getElementById("samplevaluegrouptext").value;
+            if (groupName != "") {
+                console.log("innnnn");
+                var newValueEntryNew = this.state.newValueEntry;
+                newValueEntryNew[groupName] = {name: "", color: "#000000", image: "", parent: ""};
+                console.log(newValueEntryNew);
+
+                this.setState({newValueEntry: newValueEntryNew});
+                var detailsNew = this.state.details;
+                detailsNew.sampleValues.push({name: groupName, values: []});
+                this.setState({details: detailsNew});
+                this.setState({newSampleValueGroupName: ""});
+            } else {
+                alert("Please enter a sample value group name first.");
+            }
         }
     }
     removeSampleValueGroup(sampleValueGroupName) {
@@ -590,8 +600,8 @@ function ProjectDesignForm(props){
     if(props.projectId=="0"){
         addSampleValueGroupButton= <div id="add-sample-value-group">
             <input type="button" className="button" value="Add Sample Value Group"
-                   onClick={props.addSampleValueGroup}/>
-                <input type="text" autoComplete="off" value={project.newSampleValueGroupName}/>
+                   onClick={props.addSampleValueGroup}/>&nbsp;
+                <input type="text" id="samplevaluegrouptext" autoComplete="off" defaultValue={project.newSampleValueGroupName}/>
         </div>;
     }
 
@@ -653,13 +663,13 @@ function ProjectInfo(props){
                         <div className="form-group">
                             <h3 htmlFor="project-name">Name</h3>
                             <input className="form-control form-control-sm" type="text" id="project-name" name="name"
-                                   autoComplete="off" value={project.details.name}/>
+                                   autoComplete="off" defaultValue={project.details.name}/>
                         </div>
                         <div className="form-group">
                             <h3 htmlFor="project-description">Description</h3>
                             <textarea className="form-control form-control-sm" id="project-description"
                                       name="description"
-                                      value={project.details.description}></textarea>
+                                      defaultValue={project.details.description}></textarea>
                         </div>
                     </div>
                 </div>
@@ -682,13 +692,13 @@ function ProjectVisibility(props) {
                     <div id="project-visibility" className="mb-3">
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
-                                   value="public" checked={props.project.details.privacyLevel === 'public'}
+                                   defaultValue="public" checked={props.project.details.privacyLevel === 'public'}
                                    onClick={()=>props.setPrivacyLevel('public')}/>
                             <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
                         </div>
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
-                                   value="private" onClick={()=>props.setPrivacyLevel('private')}
+                                   defaultValue="private" onClick={()=>props.setPrivacyLevel('private')}
                                    checked={props.project.details.privacyLevel === 'private'}/>
                             <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
                                 Admins</i></label>
@@ -696,7 +706,7 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-institution"
                                    name="privacy-level"
-                                   value="institution" onClick={() => props.setPrivacyLevel('institution')}
+                                   defaultValue="institution" onClick={() => props.setPrivacyLevel('institution')}
                                    checked={props.project.details.privacyLevel === 'institution'}/>
                             <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
                                 Members</i></label>
@@ -704,7 +714,7 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-invitation"
                                    name="privacy-level"
-                                   value="invitation" onClick={() => props.setPrivacyLevel('invitation')} disabled
+                                   defaultValue="invitation" onClick={() => props.setPrivacyLevel('invitation')} disabled
                                    checked={props.project.details.privacyLevel === 'invitation'}/>
                             <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
                                 Soon</i></label>
@@ -737,26 +747,26 @@ function ProjectAOI(props) {
                         <div class="row">
                             <div class="col-md-6 offset-md-3">
                                 <input class="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
-                                       value={project.latMax} placeholder="North" autocomplete="off" min="-90.0"
+                                       defaultValue={project.latMax} placeholder="North" autocomplete="off" min="-90.0"
                                        max="90.0" step="any"/>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <input class="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
-                                       value={project.lonMin} placeholder="West" autocomplete="off" min="-180.0"
+                                       defaultValue={project.lonMin} placeholder="West" autocomplete="off" min="-180.0"
                                        max="180.0" step="any"/>
                             </div>
                             <div class="col-md-6">
                                 <input class="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
-                                       value={project.lonMax} placeholder="East" autocomplete="off" min="-180.0"
+                                       defaultValue={project.lonMax} placeholder="East" autocomplete="off" min="-180.0"
                                        max="180.0" step="any"/>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 offset-md-3">
                                 <input class="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
-                                       value={project.latMin} placeholder="South" autocomplete="off" min="-90.0"
+                                       defaultValue={project.latMin} placeholder="South" autocomplete="off" min="-90.0"
                                        max="90.0" step="any"/>
                             </div>
                         </div>
@@ -779,7 +789,7 @@ function ProjectImagery(props) {
                             <h3 htmlFor="base-map-source">Basemap Source</h3>
                             <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                                     size="1"
-                                    value={project.details.baseMapSource} onChange={props.setBaseMapSource}>
+                                    defaultValue={project.details.baseMapSource} onChange={props.setBaseMapSource}>
                                 {
                                     project.imageryList.map(imagery =>
                                         <option value={imagery.title}>{imagery.title}</option>
@@ -806,7 +816,7 @@ function PlotDesign(props) {
             <p htmlFor="plot-size">{"Plot " + project.details.plotShape == 'circle' ? 'Diameter' : 'Width' + "(m)"}</p>
              <input className="form-control form-control-sm" type="number" id="plot-size"
                      name="plot-size" autoComplete="off" min="0.0" step="any"
-                     value={project.details.plotSize}/>
+                    defaultValue={project.details.plotSize}/>
         </React.Fragment>
 
         return (
@@ -827,7 +837,7 @@ function PlotDesign(props) {
                                 </div>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-gridded"
-                                           name="plot-distribution" value="gridded"
+                                           name="plot-distribution" defaultValue="gridded"
                                            onClick={()=>props.setPlotDistribution('gridded')}
                                            checked={props.project.details.plotDistribution === 'gridded'}/>
                                     <label className="form-check-label small"
@@ -835,7 +845,7 @@ function PlotDesign(props) {
                                 </div>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-csv"
-                                           name="plot-distribution" value="csv"
+                                           name="plot-distribution" defaultValue="csv"
                                            onClick={()=>props.setPlotDistribution('csv')}
                                            checked={props.project.details.plotDistribution === 'csv'}/>
                                     <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
@@ -849,13 +859,13 @@ function PlotDesign(props) {
                                     <p htmlFor="num-plots">Number of plots</p>
                                     <input className="form-control form-control-sm" type="number" id="num-plots"
                                            name="num-plots" autoComplete="off" min="0" step="1"
-                                           value={project.details == null ? "" : project.details.numPlots}/>
+                                           defaultValue={project.details == null ? "" : project.details.numPlots}/>
                                 </div>
                                 <div className="form-group mb-1">
                                     <p htmlFor="plot-spacing">Plot spacing (m)</p>
                                     <input className="form-control form-control-sm" type="number" id="plot-spacing"
                                            name="plot-spacing" autoComplete="off" min="0.0" step="any"
-                                           value={project.details == null ? "" : project.details.plotSpacing} disabled/>
+                                           defaultValue={project.details == null ? "" : project.details.plotSpacing} disabled/>
                                 </div>
                             </div>
                         </div>
@@ -865,13 +875,13 @@ function PlotDesign(props) {
                                 <h3>Plot Shape</h3>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-shape-circle"
-                                           name="plot-shape" value="circle" onClick={()=>props.setPlotShape('circle')}
+                                           name="plot-shape" defaultValue="circle" onClick={()=>props.setPlotShape('circle')}
                                            checked={props.project.details.plotShape === 'circle'}/>
                                     <label className="form-check-label small" htmlFor="plot-shape-circle">Circle</label>
                                 </div>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-shape-square"
-                                           name="plot-shape" value="square" onClick={()=>props.setPlotShape('square')} checked={props.project.details.plotShape === 'square'}/>
+                                           name="plot-shape" defaultValue="square" onClick={()=>props.setPlotShape('square')} checked={props.project.details.plotShape === 'square'}/>
                                     <label className="form-check-label small" htmlFor="plot-shape-square">Square</label>
                                 </div>
                                 {plotshape}
@@ -899,7 +909,7 @@ function SampleDesign(props) {
                         <h3>Spatial Distribution</h3>
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-random"
-                                   name="sample-distribution" value="random"
+                                   name="sample-distribution" defaultValue="random"
                                    onClick={()=>props.setSampleDistribution('random')}
                                    checked={props.project.details.sampleDistribution === 'random'}/>
                             <label className="form-check-label small"
@@ -907,7 +917,7 @@ function SampleDesign(props) {
                         </div>
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-gridded"
-                                   name="sample-distribution" value="gridded"
+                                   name="sample-distribution" defaultValue="gridded"
                                    onClick={()=>props.setSampleDistribution('gridded')}
                                    checked={props.project.details.sampleDistribution === 'gridded'}/>
                             <label className="form-check-label small"
@@ -917,13 +927,13 @@ function SampleDesign(props) {
                             <p htmlFor="samples-per-plot">Samples per plot</p>
                             <input className="form-control form-control-sm" type="number" id="samples-per-plot"
                                    name="samples-per-plot" autoComplete="off" min="0" step="1"
-                                   value={project.details.samplesPerPlot}/>
+                                   defaultValue={project.details.samplesPerPlot}/>
                         </div>
                         <div className="form-group mb-1">
                             <p htmlFor="sample-resolution">Sample resolution (m)</p>
                             <input className="form-control form-control-sm" type="number" id="sample-resolution"
                                    name="sample-resolution" autoComplete="off" min="0.0" step="any"
-                                   value={project.details.sampleResolution} disabled/>
+                                   defaultValue={project.details.sampleResolution} disabled/>
                         </div>
                     </div>
                 </div>
@@ -977,7 +987,7 @@ function SampleValueInfo(props) {
                                 </tr>
                             )
                         }
-                        <SampleValueTable projectId={props.projectId} sampleValueGroup={sampleValueGroup} getParentSampleValues={props.getParentSampleValues}/>
+                        {/*<SampleValueTable project={project} projectId={props.projectId} sampleValueGroup={sampleValueGroup} getParentSampleValues={props.getParentSampleValues} addSampleValueRow={props.addSampleValueRow}/>*/}
                         </tbody>
                     </table>
                 </div>
