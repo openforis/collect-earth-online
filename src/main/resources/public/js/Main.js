@@ -49,6 +49,10 @@ class Project extends React.Component{
             this.getProjectById(projectId);
         }
         else {
+            this.state.details.privacyLevel="private";
+            this.state.details.projectDistribution="random";
+            this.state.details.plotShape="circle";
+            this.state.details.sampleDistribution="random";
             if (this.state.details.id == 0) {
                 this.getProjectList(userId, projectId);
             }
@@ -213,16 +217,17 @@ class Project extends React.Component{
             var detailsNew = this.state.details;
             detailsNew.plotDistribution = plotDistribution;
             this.setState({details: detailsNew});
-
-            if (plotDistribution == "random") {
-                utils.enable_element("num-plots");
-                utils.disable_element("plot-spacing");
-            } else if (plotDistribution == "gridded") {
-                utils.disable_element("num-plots");
-                utils.enable_element("plot-spacing");
-            } else {
-                utils.disable_element("num-plots");
-                utils.disable_element("plot-spacing");
+            if (document.getElementById("num-plots") != null) {
+                if (plotDistribution == "random") {
+                    utils.enable_element("num-plots");
+                    utils.disable_element("plot-spacing");
+                } else if (plotDistribution == "gridded") {
+                    utils.disable_element("num-plots");
+                    utils.enable_element("plot-spacing");
+                } else {
+                    utils.disable_element("num-plots");
+                    utils.disable_element("plot-spacing");
+                }
             }
         }
     }
@@ -595,11 +600,11 @@ function ProjectDesignForm(props){
               encType="multipart/form-data">
             <ProjectTemplateVisibility project={props.project} setProjectTemplate={props.setProjectTemplate}/>
             <ProjectInfo project={props.project}/>
-            {/*<ProjectVisibility setPrivacyLevel={props.setPrivacyLevel}/>*/}
+            <ProjectVisibility project={props.project} setPrivacyLevel={props.setPrivacyLevel}/>
             <ProjectAOI projectId={props.projectId} project={props.project}/>
             <ProjectImagery project={props.project} setBaseMapSource={props.setBaseMapSource}/>
-            {/*<PlotDesign project={props.project} setPlotDistribution={props.setPlotDistribution} setPlotShape={props.setPlotShape}/>*/}
-            {/*<SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>*/}
+            <PlotDesign project={props.project} setPlotDistribution={props.setPlotDistribution} setPlotShape={props.setPlotShape}/>
+            <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
             <SampleValueInfo project={props.project} projectId={props.projectId} addSampleValueRow={props.addSampleValueRow} topoSort={props.topoSort} getParentSampleValues={props.getParentSampleValues}
                              removeSampleValueGroup={props.removeSampleValueGroup} removeSampleValueRow={props.removeSampleValueRow}/>
             {addSampleValueGroupButton}
@@ -668,39 +673,48 @@ function ProjectInfo(props){
 }
 
 function ProjectVisibility(props) {
-    return(
-        <div className="row">
-            <div className="col">
-                <h2 className="header px-0">Project Visibility</h2>
-                <h3>Privacy Level</h3>
-                <div id="project-visibility" className="mb-3">
-                    <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
-                               value="public" onClick={props.setPrivacyLevel('public')}/>
+    if(props.project.details!=null) {
+        return (
+            <div className="row">
+                <div className="col">
+                    <h2 className="header px-0">Project Visibility</h2>
+                    <h3>Privacy Level</h3>
+                    <div id="project-visibility" className="mb-3">
+                        <div className="form-check form-check-inline">
+                            <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
+                                   value="public" checked={props.project.details.privacyLevel === 'public'}
+                                   onClick={()=>props.setPrivacyLevel('public')}/>
                             <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
-                               value="private" onClick={props.setPrivacyLevel('private')} checked/>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
+                                   value="private" onClick={()=>props.setPrivacyLevel('private')}
+                                   checked={props.project.details.privacyLevel === 'private'}/>
                             <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
                                 Admins</i></label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="privacy-institution" name="privacy-level"
-                               value="institution" onClick={props.setPrivacyLevel('institution')}/>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input className="form-check-input" type="radio" id="privacy-institution"
+                                   name="privacy-level"
+                                   value="institution" onClick={() => props.setPrivacyLevel('institution')}
+                                   checked={props.project.details.privacyLevel === 'institution'}/>
                             <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
                                 Members</i></label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="privacy-invitation" name="privacy-level"
-                               value="invitation" onClick={props.setPrivacyLevel('invitation')} disabled/>
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input className="form-check-input" type="radio" id="privacy-invitation"
+                                   name="privacy-level"
+                                   value="invitation" onClick={() => props.setPrivacyLevel('invitation')} disabled
+                                   checked={props.project.details.privacyLevel === 'invitation'}/>
                             <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
                                 Soon</i></label>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
+    return (<span></span>);
 }
 
 function ProjectAOI(props) {
@@ -784,15 +798,17 @@ function ProjectImagery(props) {
     }
 }
 
-function PlotDesign(props){
+function PlotDesign(props) {
     var project=props.project;
    var plotshape="";
-    if(project.details!=null){
-        plotshape= <p htmlFor="plot-size">{"Plot " + project.details.plotShape == 'circle' ? 'Diameter' : 'Width' + "(m)"}</p>
-            +<input className="form-control form-control-sm" type="number" id="plot-size"
-        name="plot-size" autoComplete="off" min="0.0" step="any"
-        value={project.details.plotSize}/>;
-    }
+    if(project.details!=null) {
+        plotshape =<React.Fragment>
+            <p htmlFor="plot-size">{"Plot " + project.details.plotShape == 'circle' ? 'Diameter' : 'Width' + "(m)"}</p>
+             <input className="form-control form-control-sm" type="number" id="plot-size"
+                     name="plot-size" autoComplete="off" min="0.0" step="any"
+                     value={project.details.plotSize}/>
+        </React.Fragment>
+
         return (
             <div className="row mb-3">
                 <div className="col">
@@ -804,21 +820,24 @@ function PlotDesign(props){
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-random"
                                            name="plot-distribution" value="random"
-                                           onClick={props.setPlotDistribution('random')} checked/>
+                                           onClick={()=>props.setPlotDistribution('random')}
+                                           checked={props.project.details.plotDistribution === 'random'}/>
                                     <label className="form-check-label small"
                                            htmlFor="plot-distribution-random">Random</label>
                                 </div>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-gridded"
                                            name="plot-distribution" value="gridded"
-                                           onClick={props.setPlotDistribution('gridded')}/>
+                                           onClick={()=>props.setPlotDistribution('gridded')}
+                                           checked={props.project.details.plotDistribution === 'gridded'}/>
                                     <label className="form-check-label small"
                                            htmlFor="plot-distribution-gridded">Gridded</label>
                                 </div>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-csv"
                                            name="plot-distribution" value="csv"
-                                           onClick={props.setPlotDistribution('csv')}/>
+                                           onClick={()=>props.setPlotDistribution('csv')}
+                                           checked={props.project.details.plotDistribution === 'csv'}/>
                                     <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                            id="custom-csv-upload">
                                         <small>Upload CSV</small>
@@ -846,13 +865,13 @@ function PlotDesign(props){
                                 <h3>Plot Shape</h3>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-shape-circle"
-                                           name="plot-shape" value="circle" onClick={props.setPlotShape('circle')}
-                                           checked/>
+                                           name="plot-shape" value="circle" onClick={()=>props.setPlotShape('circle')}
+                                           checked={props.project.details.plotShape === 'circle'}/>
                                     <label className="form-check-label small" htmlFor="plot-shape-circle">Circle</label>
                                 </div>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-shape-square"
-                                           name="plot-shape" value="square" onClick={props.setPlotShape('square')}/>
+                                           name="plot-shape" value="square" onClick={()=>props.setPlotShape('square')} checked={props.project.details.plotShape === 'square'}/>
                                     <label className="form-check-label small" htmlFor="plot-shape-square">Square</label>
                                 </div>
                                 {plotshape}
@@ -862,6 +881,10 @@ function PlotDesign(props){
                 </div>
             </div>
         );
+    }
+    else{
+        return(<span></span>);
+    }
 
 }
 
@@ -877,15 +900,16 @@ function SampleDesign(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-random"
                                    name="sample-distribution" value="random"
-                                   onClick={props.setSampleDistribution('random')}
-                                   checked/>
+                                   onClick={()=>props.setSampleDistribution('random')}
+                                   checked={props.project.details.sampleDistribution === 'random'}/>
                             <label className="form-check-label small"
                                    htmlFor="sample-distribution-random">Random</label>
                         </div>
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-gridded"
                                    name="sample-distribution" value="gridded"
-                                   onClick={props.setSampleDistribution('gridded')}/>
+                                   onClick={()=>props.setSampleDistribution('gridded')}
+                                   checked={props.project.details.sampleDistribution === 'gridded'}/>
                             <label className="form-check-label small"
                                    htmlFor="sample-distribution-gridded">Gridded</label>
                         </div>
