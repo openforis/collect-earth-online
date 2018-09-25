@@ -11,6 +11,7 @@
 
 
 <script>
+    let theRoot="${root}";
     let theURL="${root}" + "/geo-dash";
     var pid = this.getParameterByName("pid");
     function getParameterByName (name, url) {
@@ -30,10 +31,8 @@
         }
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
-    <#--var institutionID;-->
-    <#--$(function(){-->
-        <#--institutionID = "${institution_id}";-->
-    <#--})-->
+    var institutionID = this.getParameterByName("institutionID") != null? this.getParameterByName("institutionID"): '16';
+
 </script>
 <br style="clear:both;">
  <h3>React-Widget-Layout-Editor </h3>

@@ -224,9 +224,21 @@ class MapWidget extends React.Component {
     componentDidMount()
     {
         const widget = this.props.widget;
-        var raster = new ol.layer.Tile({
-            source: new ol.source.OSM()
-        });
+        var raster;
+        var basemap = widget.baseMap;
+        console.log('basemap: ' + basemap);
+        if(basemap == null || basemap.id == 'osm')
+        {
+            raster = new ol.layer.Tile({
+                source: new ol.source.OSM()
+            });
+        }
+        else{
+            var source = mercator.createSource(widget.baseMap.sourceConfig)
+            raster = new ol.layer.Tile({
+                source: source
+            });
+        }
         //raster.id = "geeLayer";
         var mapdiv = "widgetmap_" + widget.id;
         var map = new ol.Map({

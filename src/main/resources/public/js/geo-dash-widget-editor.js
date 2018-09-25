@@ -13,11 +13,12 @@ class BasicLayout extends React.Component{
         super(props);
         this.state = {  layout: {},
                         widgets: [ ],
+                        imagery: [],
                         isEditing: false,
                         selectedWidgetType: -1,
                         selectedDataType: -1,
                         WidgetTitle: '',
-                        WidgetBaseMap: '',
+                        WidgetBaseMap: 'osm',
                         startDate:'',
                         endDate:'',
                         widgetBands:'',
@@ -44,7 +45,11 @@ class BasicLayout extends React.Component{
             .then(data => this.checkWidgetStructure())
             .then(data => this.setState({layout: this.generateLayout()}))
         ;
-       // fetch(theURL + "get-all-imagery?institutionId=" )
+       fetch(theRoot + "/get-all-imagery?institutionId=" + institutionID )
+           .then(response => response.json())
+           .then(function(data){data.unshift({title: 'Open Street Maps', id: 'osm'}); return data;})
+           .then(data => this.setState({ imagery: data, WidgetBaseMap: data[0].id}))
+
     }
     checkWidgetStructure(){
         let widgets = this.state.widgets;
@@ -205,7 +210,7 @@ class BasicLayout extends React.Component{
             selectedWidgetType: event.target.value,
             selectedDataType: '-1',
             WidgetTitle: '',
-            WidgetBaseMap: '',
+            WidgetBaseMap: 'osm',
             startDate:'',
             endDate:'',
             widgetBands:'',
@@ -229,7 +234,7 @@ class BasicLayout extends React.Component{
             isEditing: false,
             selectedDataType: '-1',
             WidgetTitle: '',
-            WidgetBaseMap: '',
+            WidgetBaseMap: 'osm',
             startDate:'',
             endDate:'',
             widgetBands:'',
@@ -281,7 +286,7 @@ class BasicLayout extends React.Component{
             h: 1,
             minW:3
         }
-
+        widget.baseMap = (this.state.imagery.filter(imagery => imagery.id == this.state.WidgetBaseMap))[0];
 
 
         var holdRef = this;
@@ -305,7 +310,7 @@ class BasicLayout extends React.Component{
                     isEditing: false,
                     selectedDataType: '-1',
                     WidgetTitle: '',
-                    WidgetBaseMap: '',
+                    WidgetBaseMap: 'osm',
                     startDate:'',
                     endDate:'',
                     widgetBands:'',
@@ -414,18 +419,24 @@ class BasicLayout extends React.Component{
 
     }
     getBaseMapSelector(){
-        return <React.Fragment>
-            <label htmlFor="widgetIndicesSelect">Basemap</label>
-            <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataBaseMapSelectChanged} >
-                <option value="-1" className="" >Please select type</option>
-                <option label="NDVI" value="NDVI">NDVI</option>
-                <option label="EVI" value="EVI">EVI</option>
-                <option label="EVI 2" value="EVI2">EVI 2</option>
-                <option label="NDMI" value="NDMI">NDMI</option>
-                <option label="NDWI" value="NDWI">NDWI</option>
-                <option label="Custom widget" value="Custom">Custom widget</option>
-            </select>
-        </React.Fragment>
+        if(this.state.selectedWidgetType == 'ImageCollection') {
+            return <React.Fragment>
+                <label htmlFor="widgetIndicesSelect">Basemap</label>
+                <select name="widgetIndicesSelect" value={this.state.WidgetBaseMap} className="form-control"
+                        id="widgetIndicesSelect" onChange={this.onDataBaseMapSelectChanged}>
+                    {this.baseMapOptions()}
+                </select>
+            </React.Fragment>
+        }
+        else{return;}
+    }
+    baseMapOptions(){
+
+        var options = _.map(this.state.imagery, function(imagery)
+        {
+            return <option key={imagery.id} value={imagery.id}> {imagery.title} </option>
+        });
+        return options;
     }
     getDataType()
     {
