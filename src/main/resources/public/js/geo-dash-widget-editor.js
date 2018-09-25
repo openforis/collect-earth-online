@@ -17,6 +17,7 @@ class BasicLayout extends React.Component{
                         selectedWidgetType: -1,
                         selectedDataType: -1,
                         WidgetTitle: '',
+                        WidgetBaseMap: '',
                         startDate:'',
                         endDate:'',
                         widgetBands:'',
@@ -43,6 +44,7 @@ class BasicLayout extends React.Component{
             .then(data => this.checkWidgetStructure())
             .then(data => this.setState({layout: this.generateLayout()}))
         ;
+       // fetch(theURL + "get-all-imagery?institutionId=" )
     }
     checkWidgetStructure(){
         let widgets = this.state.widgets;
@@ -203,6 +205,7 @@ class BasicLayout extends React.Component{
             selectedWidgetType: event.target.value,
             selectedDataType: '-1',
             WidgetTitle: '',
+            WidgetBaseMap: '',
             startDate:'',
             endDate:'',
             widgetBands:'',
@@ -226,6 +229,7 @@ class BasicLayout extends React.Component{
             isEditing: false,
             selectedDataType: '-1',
             WidgetTitle: '',
+            WidgetBaseMap: '',
             startDate:'',
             endDate:'',
             widgetBands:'',
@@ -301,6 +305,7 @@ class BasicLayout extends React.Component{
                     isEditing: false,
                     selectedDataType: '-1',
                     WidgetTitle: '',
+                    WidgetBaseMap: '',
                     startDate:'',
                     endDate:'',
                     widgetBands:'',
@@ -315,6 +320,9 @@ class BasicLayout extends React.Component{
         });
 
     };
+    onDataBaseMapSelectChanged = event =>{
+        this.setState({WidgetBaseMap: event.target.value});
+    }
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
     };
@@ -376,6 +384,7 @@ class BasicLayout extends React.Component{
                                                 <option label="Statistics" value="statistics">Statistics</option>
                                         </select>
                                     </div>
+                                        {this.getBaseMapSelector()}
                                         {this.getDataType()}
                                         {this.getDataForm()}
                                 </form>
@@ -403,6 +412,20 @@ class BasicLayout extends React.Component{
                 <button type="button" className="btn btn-primary" onClick={this.onCreateNewWidget} disabled={!this.state.FormReady}>Create</button>
             </React.Fragment>
 
+    }
+    getBaseMapSelector(){
+        return <React.Fragment>
+            <label htmlFor="widgetIndicesSelect">Basemap</label>
+            <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataBaseMapSelectChanged} >
+                <option value="-1" className="" >Please select type</option>
+                <option label="NDVI" value="NDVI">NDVI</option>
+                <option label="EVI" value="EVI">EVI</option>
+                <option label="EVI 2" value="EVI2">EVI 2</option>
+                <option label="NDMI" value="NDMI">NDMI</option>
+                <option label="NDWI" value="NDWI">NDWI</option>
+                <option label="Custom widget" value="Custom">Custom widget</option>
+            </select>
+        </React.Fragment>
     }
     getDataType()
     {
