@@ -12,6 +12,8 @@ class Geodash extends React.Component {
             .then(data => data.widgets.map(function(widget){
                 widget.isFull = false;
                 widget.opacity = '0.9';
+                widget.sliderType = 'opacity';
+                widget.swipeValue = '1.0';
                 return widget;}))
             .then(data => debugreturn = data)
             .then(data => this.setState({ widgets: data}))
@@ -24,6 +26,8 @@ class Geodash extends React.Component {
                 projAOI={this.state.projAOI}
                 onFullScreen = {this.handleFullScreen}
                 onOpacityChanged = {this.handleOpacityChange}
+                onSliderChange = {this.handleSliderChange}
+                onSwipeChange = {this.handleSwipeChange}
             />
         </React.Fragment> );
     }
@@ -43,6 +47,25 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].opacity = evt.target.value;
         setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
+        this.setState({ widgets });
+    };
+    handleSliderChange = (widget, id, evt) => {
+
+        const widgets = [...this.state.widgets];
+        const index = widgets.indexOf(widget);
+        widgets[index] = { ...widget };
+        console.log('change slider');
+        widgets[index].sliderType = widgets[index].sliderType == 'opacity'? 'swipe': 'opacity';
+        // setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
+        this.setState({ widgets });
+    };
+    handleSwipeChange = (widget, id, evt) => {
+
+        const widgets = [...this.state.widgets];
+        const index = widgets.indexOf(widget);
+        widgets[index] = { ...widget };
+        widgets[index].swipeValue = evt.target.value;
+        // setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
         this.setState({ widgets });
     };
 }
@@ -93,6 +116,8 @@ class Widgets extends React.Component {
                     onFullScreen ={this.props.onFullScreen}
                     onOpacityChanged = {this.props.onOpacityChanged}
                     opacityValue = {this.props.opacityValue}
+                    onSliderChange = {this.props.onSliderChange}
+                    onSwipeChange = {this.props.onSwipeChange}
                 />
             ))}
         </div> );
@@ -107,9 +132,9 @@ class Widget extends React.Component {
     }
     render() {
         const {key, widget, isFull} = this.props;
-        return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue) }</React.Fragment>);
+        return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
     }
-    getWidgetHtml(widget, onOpacityChanged, opacityValue){
+    getWidgetHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         if(widget.gridcolumn || widget.layout)
         {
             return (<div className={ this.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: '', widget.gridrow != null? widget.gridrow: widget.layout != null? 'span ' + widget.layout.h: '') }
@@ -124,7 +149,7 @@ class Widget extends React.Component {
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
 
-                            {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue)}
+                            {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
 
                     </div>
                 </div>
@@ -142,7 +167,7 @@ class Widget extends React.Component {
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
 
-                        {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue)}
+                        {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
 
                     </div>
                 </div>
@@ -182,13 +207,13 @@ class Widget extends React.Component {
         }
         return classnames;
     }
-    getWidgetInnerHtml(widget, onOpacityChanged, opacityValue){
+    getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         let wtext = widget.properties[0];
         let control;
         let slider;
         if(this.imageCollectionList.includes(wtext))
         {
-            return <div className="front"><MapWidget widget={widget} onOpacityChange={onOpacityChanged} opacityValue={opacityValue}/>
+            return <div className="front"><MapWidget widget={widget} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
 
             </div>
         }else if (this.graphControlList.includes(wtext)) {
@@ -206,21 +231,52 @@ class Widget extends React.Component {
 class MapWidget extends React.Component {
     render() {
         const widget = this.props.widget;
-        const onOpacityChange = this.props.onOpacityChange;
-        const widgetId = "widgetmap_" + widget.id;
+
         return  <React.Fragment>
                     <div id={"widgetmap_" + widget.id} className="minmapwidget" style={{width:"100%", minHeight:"200px" }}>
                     </div>
-                    <input type = "range" className = "mapRange" id = {"rangeWidget_" + widget.id}
+            {this.getSliderControl()}
+        </React.Fragment>
+    };
+    getSliderControl(){
+        var widget = this.props.widget;
+        const onOpacityChange = this.props.onOpacityChange;
+        const onSliderChange = this.props.onSliderChange;
+        const onSwipeChange = this.props.onSwipeChange;
+
+        const widgetId = "widgetmap_" + widget.id;
+        if(widget.dualLayer){
+            var oStyle = {display: widget.sliderType == 'opacity'? 'block': 'none'};
+            var sStyle = {display: widget.sliderType == 'swipe'? 'block': 'none'};
+           return <div>
+                    <input type="button" value={this.props.widget.sliderType == 'opacity'? 'swipe': 'opacity'} style={{width: "80px", float: "left", margin: "8px 0 0 5px"}} onClick={(evt) => onSliderChange(widget, widget.id, evt)}/>
+                    <input type = "range" className = "mapRange dual" id = {"rangeWidget_" + widget.id}
                            value = {this.props.widget.opacity}
                            min = "0"
                            max = "1"
                            step = ".01"
                            onChange = {(evt) => onOpacityChange(widget, widget.id, evt )}
                            onInput = {(evt) => onOpacityChange(widget, widget.id, evt )}
+                           style={oStyle}
                     />
-        </React.Fragment>
-    };
+               <input type="range" className="mapRange dual" id={"swipeWidget_" + widget.id} min="0" max="1" step=".01" value={this.props.widget.swipeValue}
+                      onChange = {(evt) => onSwipeChange(widget, widget.id, evt )}
+                      onInput = {(evt) => onSwipeChange(widget, widget.id, evt )}
+                      style={sStyle}
+               />
+                </div>
+        }
+        else{
+            return <input type = "range" className = "mapRange" id = {"rangeWidget_" + widget.id}
+                          value = {this.props.widget.opacity}
+                          min = "0"
+                          max = "1"
+                          step = ".01"
+                          onChange = {(evt) => onOpacityChange(widget, widget.id, evt )}
+                          onInput = {(evt) => onOpacityChange(widget, widget.id, evt )}
+            />
+        }
+    }
     componentDidMount()
     {
         const widget = this.props.widget;
@@ -348,9 +404,13 @@ class MapWidget extends React.Component {
             type: "POST",
             async: true,
             indexVal: widget.id,
+            dualLayer: widget.dualLayer,
+            dualStart: widget.dualStart,
+            dualEnd: widget.dualEnd,
             crossDomain: true,
             contentType: "application/json",
-            data: JSON.stringify(postObject)
+            data: JSON.stringify(postObject),
+            postObject: JSON.stringify(postObject)
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.warn(jqXHR + textStatus + errorThrown);
         }).done(function (data, _textStatus, _jqXHR) {
@@ -361,12 +421,53 @@ class MapWidget extends React.Component {
                     var mapId = data.mapid;
                     var token = data.token;
                     var $this = this;
+                    var dualLayer = $this.dualLayer;
                     addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
+                    if(dualLayer)
+                    {
+                        console.log('dual');
+                        //console.log($this.postObject);
+                        console.log('dualStart: ' + $this.dualStart);
+                        console.log('dualEnd: ' + $this.dualEnd);
+                        var secondObject = JSON.parse($this.postObject);
+                        secondObject.dateFrom = $this.dualStart;
+                        secondObject.dateTo = $this.dualEnd;
+                        sajax = secondObject;
+                        $.ajax({
+                            url: url,
+                            type: "POST",
+                            async: true,
+                            indexVal: $this.indexVal,
+                            crossDomain: true,
+                            contentType: "application/json",
+                            data: JSON.stringify(secondObject)
+                        }).fail(function (jqXHR, textStatus, errorThrown) {
+                            console.warn(jqXHR + textStatus + errorThrown);
+                        }).done(function (data, _textStatus, _jqXHR) {
+                            if (data.errMsg) {
+                                console.info(data.errMsg);
+                            } else {
+                                if (data.hasOwnProperty("mapid")) {
+                                    var mapId = data.mapid;
+                                    var token = data.token;
+                                    var $this = this;
+                                    var dualLayer = $this.dualLayer;
+                                    addDualLayer(mapId, token, "widgetmap_" + $this.indexVal);
+                                } else {
+                                    console.warn("Wrong Data Returned");
+                                }
+                            }
+                        });
+
+
+
+                    }
                 } else {
                     console.warn("Wrong Data Returned");
                 }
             }
         });
+
     }
     pauseGeeLayer(e)
     {
@@ -394,6 +495,8 @@ class MapWidget extends React.Component {
         }, 1000);
     }
 }
+var sajax;
+var sout;
 var geeTimeout = {};
 var whatise;
 class GraphWidget extends React.Component {
@@ -632,7 +735,7 @@ function calculateArea (poly) {
     area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
     return numberWithCommas(area_ha);
 }
-function addTileServer (imageid, token, mapdiv) {
+function addTileServer (imageid, token, mapdiv, isDual) {
     var googleLayer = new ol.layer.Tile({
         source: new ol.source.XYZ({
             url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
@@ -640,13 +743,44 @@ function addTileServer (imageid, token, mapdiv) {
         id: mapdiv
     });
     mapWidgetArray[mapdiv].addLayer(googleLayer);
+    if(!isDual)
+    {
+        addBuffer(mapWidgetArray[mapdiv]);
+    }
+};
+
+function addDualLayer (imageid, token, mapdiv) {
+    var googleLayer = new ol.layer.Tile({
+        source: new ol.source.XYZ({
+            url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
+        }),
+        id: mapdiv + '_dual'
+    });
+    mapWidgetArray[mapdiv].addLayer(googleLayer);
+    var swipe = document.getElementById('swipeWidget_' + mapdiv.replace('widgetmap_', ''));
+
+    googleLayer.on('precompose', function(event) {
+        var ctx = event.context;
+        var width = ctx.canvas.width * (swipe.value);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
+        ctx.clip();
+    });
+
+    googleLayer.on('postcompose', function(event) {
+        var ctx = event.context;
+        ctx.restore();
+    });
+    swipe.addEventListener('input', function() {mapWidgetArray[mapdiv].render();}, false);
     addBuffer(mapWidgetArray[mapdiv]);
 };
+
 function setOpacity (value, layerID) {
     try{
     var id = layerID;
     var theLayers = mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
-        if (id == lyr.get('id')) {
+        if (id == lyr.get('id') || id + '_dual' == lyr.get('id')) {
             lyr.setOpacity(value);
         }
     });
