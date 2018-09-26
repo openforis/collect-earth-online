@@ -1,3 +1,4 @@
+var gobj;
 class Project extends React.Component{
     constructor(props) {
         super(props);
@@ -31,6 +32,7 @@ class Project extends React.Component{
                 archived: "Archive"
             },
         };
+        gobj=this;
         this.setPrivacyLevel=this.setPrivacyLevel.bind(this);
         this.setPlotDistribution=this.setPlotDistribution.bind(this);
         this.setPlotShape=this.setPlotShape.bind(this);
@@ -45,6 +47,9 @@ class Project extends React.Component{
         this.removeSampleValueGroup=this.removeSampleValueGroup.bind(this);
         this.addSampleValueRow=this.addSampleValueRow.bind(this);
         this.getParentSampleValues=this.getParentSampleValues.bind(this);
+        this.setProjectTemplate=this.setProjectTemplate.bind(this);
+        this.getSampleValueGroupByName=this.getSampleValueGroupByName.bind(this);
+        this.removeSampleValueRow=this.removeSampleValueRow.bind(this);
     };
     componentDidMount(){
         this.initialization(this.props.documentRoot,this.state.userId,this.state.projectId,this.state.institutionId);
@@ -197,15 +202,18 @@ class Project extends React.Component{
     downloadSampleData() {
         window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.details.id, "_blank");
     }
-    setProjectTemplate() {
+    setProjectTemplate(event) {
+        this.setState({templateId: event.target.value});
         const templateProject = this.state.projectList.find(
             function (project) {
-                return project.id == this.state.templateId;
+                return project.id == event.target.value;
             },
             this
         );
-        this.setState({details : JSON.parse(JSON.stringify(templateProject))}); // clone project
-        this.updateUnmanagedComponents(this.state.templateId);
+        this.setState({details: JSON.parse(JSON.stringify(templateProject))},
+            function() {this.updateUnmanagedComponents(this.state.templateId);}
+            ); // clone project
+
     }
     setPrivacyLevel(privacyLevel) {
         if(this.state.details!=null) {
@@ -215,6 +223,12 @@ class Project extends React.Component{
         }
     }
     setBaseMapSource() {
+        var e = document.getElementById("base-map-source");
+        var bms = e.options[e.selectedIndex].value;
+        var detailsNew=this.state.details;
+        detailsNew.baseMapSource=bms;
+
+        this.setState({details:detailsNew});
         mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
     }
     setPlotDistribution(plotDistribution) {
@@ -291,7 +305,6 @@ class Project extends React.Component{
         if(this.state.details!=null) {
             var groupName = document.getElementById("samplevaluegrouptext").value;
             if (groupName != "") {
-                console.log("innnnn");
                 var newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[groupName] = {name: "", color: "#000000", image: "", parent: ""};
                 console.log(newValueEntryNew);
@@ -330,16 +343,23 @@ class Project extends React.Component{
         );
     }
     addSampleValueRow(sampleValueGroupName) {
-        var entry = this.state.newValueEntry[sampleValueGroupName];
-        if (entry.name != "") {
-            var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
-            sampleValueGroup.values.push({name: entry.name, color: entry.color, image: entry.image, parent: entry.parent});
-            entry.name = "";
-            entry.color = "#000000";
-            entry.image = "";
-            entry.parent = "";
-        } else {
-            alert("A sample value must possess both a name and a color.");
+        if(Object.keys(this.state.newValueEntry).length != 0) {
+            var entry = this.state.newValueEntry[sampleValueGroupName];
+            if (entry.name != "") {
+                var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
+                sampleValueGroup.values.push({
+                    name: entry.name,
+                    color: entry.color,
+                    image: entry.image,
+                    parent: entry.parent
+                });
+                entry.name = "";
+                entry.color = "#000000";
+                entry.image = "";
+                entry.parent = "";
+            } else {
+                alert("A sample value must possess both a name and a color.");
+            }
         }
     }
     getProjectById(projectId) {
@@ -442,12 +462,14 @@ class Project extends React.Component{
         }
     }
     showProjectMap(projectId) {
+        console.log(this.state.mapConfig);
+
         // Initialize the basemap
         if (this.state.mapConfig == null) {
             this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
         }
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
 
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
         if (this.state.details.id == 0) {
             // Enable dragbox interaction if we are creating a new project
             var displayDragBoxBounds = function (dragBox) {
@@ -488,27 +510,24 @@ class Project extends React.Component{
         }
     }
     updateUnmanagedComponents(projectId) {
-        // Check the radio button values for this project
-        // document.getElementById("privacy-" + this.state.details.privacyLevel).checked = true;
-        // document.getElementById("plot-distribution-" + this.state.details.plotDistribution).checked = true;
-        // document.getElementById("plot-shape-" + this.state.details.plotShape).checked = true;
-        // document.getElementById("sample-distribution-" + this.state.details.sampleDistribution).checked = true;
+        if (this.state.details != null) {
+            // Enable the input fields that are connected to the radio buttons if their values are not null
+            if (this.state.details.plotDistribution == "gridded") {
+                utils.enable_element("plot-spacing");
+            }
+            if (this.state.details.sampleDistribution == "gridded") {
+                utils.enable_element("sample-resolution");
+            }
 
-        // Enable the input fields that are connected to the radio buttons if their values are not null
-        if (this.state.details.plotDistribution == "gridded") {
-            utils.enable_element("plot-spacing");
-        }
-        if (this.state.details.sampleDistribution == "gridded") {
-            utils.enable_element("sample-resolution");
-        }
-
-        if (this.state.imageryList.length > 0) {
-            var detailsNew = this.state.details;
-            detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
-            // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-            this.setState({details: detailsNew});
-            // Draw a map with the project AOI and a sampling of its plots
-            this.showProjectMap(projectId);
+            if (this.state.imageryList.length > 0) {
+                var detailsNew = this.state.details;
+                detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
+                // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
+                this.setState({details: detailsNew},
+                    this.showProjectMap(projectId)
+                   );
+                // Draw a map with the project AOI and a sampling of its plots
+            }
         }
     }
     render(){
@@ -601,7 +620,7 @@ function ProjectDesignForm(props){
         addSampleValueGroupButton= <div id="add-sample-value-group">
             <input type="button" className="button" value="Add Sample Value Group"
                    onClick={props.addSampleValueGroup}/>&nbsp;
-                <input type="text" id="samplevaluegrouptext" autoComplete="off" defaultValue={project.newSampleValueGroupName}/>
+                <input type="text" id="samplevaluegrouptext" autoComplete="off" value={project.newSampleValueGroupName}/>
         </div>;
     }
 
@@ -634,7 +653,7 @@ function ProjectTemplateVisibility(props) {
                             <h3 htmlFor="project-template">Select Project</h3>
                             <select className="form-control form-control-sm" id="project-template"
                                     name="project-template"
-                                    size="1" value={project.templateId} onChange={props.setProjectTemplate}>
+                                    size="1" defaultValue={project.templateId} onChange={props.setProjectTemplate}>
                                     {
                                         project.projectList.map(proj =>
                                             <option value={proj.id}>{proj.name}</option>
@@ -669,7 +688,7 @@ function ProjectInfo(props){
                             <h3 htmlFor="project-description">Description</h3>
                             <textarea className="form-control form-control-sm" id="project-description"
                                       name="description"
-                                      defaultValue={project.details.description}></textarea>
+                                      value={project.details.description}></textarea>
                         </div>
                     </div>
                 </div>
@@ -789,7 +808,7 @@ function ProjectImagery(props) {
                             <h3 htmlFor="base-map-source">Basemap Source</h3>
                             <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                                     size="1"
-                                    defaultValue={project.details.baseMapSource} onChange={props.setBaseMapSource}>
+                                   value={project.details.baseMapSource} onChange={props.setBaseMapSource}>
                                 {
                                     project.imageryList.map(imagery =>
                                         <option value={imagery.title}>{imagery.title}</option>
@@ -945,7 +964,7 @@ function SampleDesign(props) {
 
 function SampleValueInfo(props) {
     var project=props.project;
-    if(project.details!=null) {
+    if(project.details!=null && project.details.length>0) {
         return (
 
             project.details.sampleValues.map(sampleValueGroup =>
@@ -987,7 +1006,7 @@ function SampleValueInfo(props) {
                                 </tr>
                             )
                         }
-                        {/*<SampleValueTable project={project} projectId={props.projectId} sampleValueGroup={sampleValueGroup} getParentSampleValues={props.getParentSampleValues} addSampleValueRow={props.addSampleValueRow}/>*/}
+                        <SampleValueTable project={project} projectId={props.projectId} sampleValueGroup={sampleValueGroup} getParentSampleValues={props.getParentSampleValues} addSampleValueRow={props.addSampleValueRow}/>
                         </tbody>
                     </table>
                 </div>
@@ -1023,7 +1042,7 @@ function RemoveSampleValueRowButton(props){
 
 function SampleValueTable(props){
     var project=props.project;
-    if(props.projectId=="0") {
+    if(props.projectId=="0" &&  Object.keys(project.newValueEntry).length != 0) {
         return (
             <tr>
                 <td>
