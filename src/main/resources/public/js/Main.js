@@ -50,6 +50,10 @@ class Project extends React.Component{
         this.setProjectTemplate=this.setProjectTemplate.bind(this);
         this.getSampleValueGroupByName=this.getSampleValueGroupByName.bind(this);
         this.removeSampleValueRow=this.removeSampleValueRow.bind(this);
+        this.handleInputName=this.handleInputName.bind(this);
+        this.handleInputColor=this.handleInputColor.bind(this);
+        this.topoSort=this.topoSort.bind(this);
+
     };
     componentDidMount(){
         this.initialization(this.props.documentRoot,this.state.userId,this.state.projectId,this.state.institutionId);
@@ -83,20 +87,21 @@ class Project extends React.Component{
         if (confirm("Do you REALLY want to create this project?")) {
             utils.show_element("spinner");
             var formData = new FormData(document.getElementById("project-design-form"));
-            formData.append("institution", this.props.institution);
+            formData.append("institution", this.props.institutionId);
             formData.append("plot-distribution-csv-file", document.getElementById("plot-distribution-csv-file").files[0]);
             formData.append("sample-values", JSON.stringify(this.state.details.sampleValues));
+            console.log(formData);
             var ref = this;
             $.ajax({
                 url: this.props.documentRoot + "/create-project",
                 type: "POST",
                 async: true,
                 crossDomain: true,
-                contentType: "application/json",
+                contentType: false,
+                processData: false,
                 data: formData
-            }).fail(function (response) {
+            }).fail(function () {
                 utils.hide_element("spinner");
-                console.log(response);
                 alert("Error creating project. See console for details.");
             }).done(function (data) {
                 var detailsNew = ref.state.details;
@@ -307,25 +312,27 @@ class Project extends React.Component{
             if (groupName != "") {
                 var newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[groupName] = {name: "", color: "#000000", image: "", parent: ""};
-                console.log(newValueEntryNew);
-
-                this.setState({newValueEntry: newValueEntryNew});
                 var detailsNew = this.state.details;
                 detailsNew.sampleValues.push({name: groupName, values: []});
-                this.setState({details: detailsNew});
-                this.setState({newSampleValueGroupName: ""});
+                this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSampleValueGroupName: ""});
+                document.getElementById("samplevaluegrouptext").value="";
             } else {
                 alert("Please enter a sample value group name first.");
             }
         }
     }
     removeSampleValueGroup(sampleValueGroupName) {
-        var detailsNew = this.state.details;
-        this.setState({details: detailsNew.sampleValues.filter(
-            function (sampleValueGroup) {
-                return sampleValueGroup.name != sampleValueGroupName;
-            }
-        )});
+        if (this.state.details != null) {
+            var detailsNew = this.state.details;
+            detailsNew.sampleValues = detailsNew.sampleValues.filter(
+                function (sampleValueGroup) {
+                    return sampleValueGroup.name != sampleValueGroupName;
+                }
+            );
+            this.setState({
+                details: detailsNew
+            });
+        }
     }
     getSampleValueGroupByName(sampleValueGroupName) {
         return this.state.details.sampleValues.find(
@@ -343,24 +350,26 @@ class Project extends React.Component{
         );
     }
     addSampleValueRow(sampleValueGroupName) {
-        if(Object.keys(this.state.newValueEntry).length != 0) {
-            var entry = this.state.newValueEntry[sampleValueGroupName];
-            if (entry.name != "") {
-                var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
-                sampleValueGroup.values.push({
-                    name: entry.name,
-                    color: entry.color,
-                    image: entry.image,
-                    parent: entry.parent
-                });
-                entry.name = "";
-                entry.color = "#000000";
-                entry.image = "";
-                entry.parent = "";
-            } else {
-                alert("A sample value must possess both a name and a color.");
-            }
+        var entry = this.state.newValueEntry[sampleValueGroupName];
+        if (entry.name != "") {
+            var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
+            sampleValueGroup.values.push({
+                name: entry.name,
+                color: entry.color,
+                image: entry.image,
+                parent: entry.parent
+            });
+            entry.name = "";
+            entry.color = "#000000";
+            entry.image = "";
+            entry.parent = "";
+
+        } else {
+            alert("A sample value must possess both a name and a color.");
         }
+        var dNew = this.state.newValueEntry;
+        dNew[sampleValueGroupName] = entry;
+        this.setState({newValueEntry: dNew});
     }
     getProjectById(projectId) {
         fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
@@ -462,8 +471,6 @@ class Project extends React.Component{
         }
     }
     showProjectMap(projectId) {
-        console.log(this.state.mapConfig);
-
         // Initialize the basemap
         if (this.state.mapConfig == null) {
             this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
@@ -530,6 +537,16 @@ class Project extends React.Component{
             }
         }
     }
+    handleInputName(sampleValueGroup,event) {
+        var newValueEntryNew = this.state.newValueEntry;
+        newValueEntryNew[sampleValueGroup].name = event.target.value;
+        this.setState({newValueEntry: newValueEntryNew});
+    }
+    handleInputColor(sampleValueGroup,event) {
+        var newValueEntryNew = this.state.newValueEntry;
+        newValueEntryNew[sampleValueGroup].color = event.target.value;
+        this.setState({newValueEntry: newValueEntryNew});
+    }
     render(){
         console.log(this.state);
         var header;
@@ -550,7 +567,7 @@ class Project extends React.Component{
                                    setProjectTemplate={this.setProjectTemplate} setPrivacyLevel={this.setPrivacyLevel}
                                    setSampleDistribution={this.setSampleDistribution} addSampleValueRow={this.addSampleValueRow}
                                    setBaseMapSource={this.setBaseMapSource} setPlotDistribution={this.setPlotDistribution} setPlotShape={this.setPlotShape} addSampleValueGroup={this.addSampleValueGroup}
-                                   topoSort={this.topoSort} getParentSampleValues={this.getParentSampleValues} removeSampleValueGroup={this.removeSampleValueGroup} removeSampleValueRow={this.removeSampleValueRow}/>
+                                   topoSort={this.topoSort} getParentSampleValues={this.getParentSampleValues} removeSampleValueGroup={this.removeSampleValueGroup} removeSampleValueRow={this.removeSampleValueRow} handleInputColor={this.handleInputColor} handleInputName={this.handleInputName}/>
                 <ProjectManagement project={this.state} configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
                                    downloadSampleData={this.downloadSampleData} changeAvailability={this.changeAvailability} createProject={this.createProject}/>
             </div>
@@ -635,7 +652,7 @@ function ProjectDesignForm(props){
             <PlotDesign project={props.project} setPlotDistribution={props.setPlotDistribution} setPlotShape={props.setPlotShape}/>
             <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
             <SampleValueInfo project={props.project} projectId={props.projectId} addSampleValueRow={props.addSampleValueRow} topoSort={props.topoSort} getParentSampleValues={props.getParentSampleValues}
-                             removeSampleValueGroup={props.removeSampleValueGroup} removeSampleValueRow={props.removeSampleValueRow}/>
+                             removeSampleValueGroup={props.removeSampleValueGroup} removeSampleValueRow={props.removeSampleValueRow} handleInputColor={props.handleInputColor} handleInputName={props.handleInputName}/>
             {addSampleValueGroupButton}
         </form>
     );
@@ -688,7 +705,7 @@ function ProjectInfo(props){
                             <h3 htmlFor="project-description">Description</h3>
                             <textarea className="form-control form-control-sm" id="project-description"
                                       name="description"
-                                      value={project.details.description}></textarea>
+                                      defaultValue={project.details.description}></textarea>
                         </div>
                     </div>
                 </div>
@@ -964,9 +981,8 @@ function SampleDesign(props) {
 
 function SampleValueInfo(props) {
     var project=props.project;
-    if(project.details!=null && project.details.length>0) {
+    if(project.details!=null) {
         return (
-
             project.details.sampleValues.map(sampleValueGroup =>
                 <div className="sample-value-info">
                     <h2 className="header px-0">
@@ -1006,7 +1022,7 @@ function SampleValueInfo(props) {
                                 </tr>
                             )
                         }
-                        <SampleValueTable project={project} projectId={props.projectId} sampleValueGroup={sampleValueGroup} getParentSampleValues={props.getParentSampleValues} addSampleValueRow={props.addSampleValueRow}/>
+                        <SampleValueTable project={project} projectId={props.projectId} sampleValueGroup={sampleValueGroup} getParentSampleValues={props.getParentSampleValues} addSampleValueRow={props.addSampleValueRow} handleInputName={props.handleInputName} handleInputColor={props.handleInputColor}/>
                         </tbody>
                     </table>
                 </div>
@@ -1020,10 +1036,9 @@ function SampleValueInfo(props) {
 
 function RemoveSampleValueGroupButton(props){
     if(props.projectId=="0") {
-        return (
-            <input id="remove-sample-value-group" type="button" className="button" value="-"
-                   onClick={props.removeSampleValueGroup(props.sampleValueGroup.name)}/>
-        );
+            return (<input id="remove-sample-value-group" type="button" className="button" value="-"
+                           onClick={()=>props.removeSampleValueGroup(props.sampleValueGroup.name)}/>
+            );
     }
     else
         return(<span></span>);
@@ -1031,10 +1046,13 @@ function RemoveSampleValueGroupButton(props){
 
 function RemoveSampleValueRowButton(props){
     if(props.projectId=="0") {
-        return (
-            <input type="button" className="button" value="-"
-                   onClick={props.removeSampleValueRow(props.sampleValueGroup.name, props.sampleValue.name)}/>
-        );
+        if(props.sampleValue) {
+            return (
+                <input type="button" className="button" value="-"
+                       onClick={() => props.removeSampleValueRow(props.sampleValueGroup.name, props.sampleValue.name)}/>
+            );
+        }
+        else return(<h1>kii</h1>);
     }
     else
         return(<span></span>);
@@ -1042,20 +1060,20 @@ function RemoveSampleValueRowButton(props){
 
 function SampleValueTable(props){
     var project=props.project;
-    if(props.projectId=="0" &&  Object.keys(project.newValueEntry).length != 0) {
+    if(props.projectId=="0") {
         return (
             <tr>
                 <td>
                     <input type="button" className="button" value="+"
-                           onClick={props.addSampleValueRow(props.sampleValueGroup.name)}/>
+                           onClick={()=>props.addSampleValueRow(props.sampleValueGroup.name)}/>
                 </td>
                 <td>
                     <input type="text" className="value-name" autoComplete="off"
-                           value={project.newValueEntry[props.sampleValueGroup.name].name}/>
+                           value={project.newValueEntry[props.sampleValueGroup.name].name}  onChange={(e)=>props.handleInputName(props.sampleValueGroup.name,e)}/>
                 </td>
                 <td>
                     <input type="color" className="value-color"
-                           value={project.newValueEntry[props.sampleValueGroup.name].color}/>
+                           value={project.newValueEntry[props.sampleValueGroup.name].color} onChange={(e)=>props.handleInputColor(props.sampleValueGroup.name,e)} />
                 </td>
                 <td>
                     <label htmlFor="value-parent">Parent:</label>
