@@ -18,9 +18,12 @@ class BasicLayout extends React.Component{
                         selectedWidgetType: -1,
                         selectedDataType: -1,
                         WidgetTitle: '',
+                        dualLayer: false,
                         WidgetBaseMap: 'osm',
                         startDate:'',
                         endDate:'',
+                        startDate2:'',
+                        endDate2:'',
                         widgetBands:'',
                         widgetMin:'',
                         widgetMax:'',
@@ -211,8 +214,11 @@ class BasicLayout extends React.Component{
             selectedDataType: '-1',
             WidgetTitle: '',
             WidgetBaseMap: 'osm',
+            dualLayer: false,
             startDate:'',
             endDate:'',
+            startDate2:'',
+            endDate2:'',
             widgetBands:'',
             widgetMin:'',
             widgetMax:'',
@@ -235,8 +241,11 @@ class BasicLayout extends React.Component{
             selectedDataType: '-1',
             WidgetTitle: '',
             WidgetBaseMap: 'osm',
+            dualLayer: false,
             startDate:'',
             endDate:'',
+            startDate2:'',
+            endDate2:'',
             widgetBands:'',
             widgetMin:'',
             widgetMax:'',
@@ -287,7 +296,12 @@ class BasicLayout extends React.Component{
             minW:3
         }
         widget.baseMap = (this.state.imagery.filter(imagery => imagery.id == this.state.WidgetBaseMap))[0];
-
+        widget.dualLayer = this.state.dualLayer;
+        if(widget.dualLayer)
+        {
+            widget.dualStart = this.state.startDate2;
+            widget.dualEnd = this.state.endDate2;
+        }
 
         var holdRef = this;
 
@@ -311,8 +325,11 @@ class BasicLayout extends React.Component{
                     selectedDataType: '-1',
                     WidgetTitle: '',
                     WidgetBaseMap: 'osm',
+                    dualLayer: false,
                     startDate:'',
                     endDate:'',
+                    startDate2:'',
+                    endDate2:'',
                     widgetBands:'',
                     widgetMin:'',
                     widgetMax:'',
@@ -331,6 +348,9 @@ class BasicLayout extends React.Component{
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
     };
+    onWidgetDualLayerChange = event => {
+        this.setState({dualLayer: event.target.checked});
+    }
     onWidgetBandsChange = event => {
         this.setState({widgetBands: event.target.value});
     };
@@ -350,17 +370,37 @@ class BasicLayout extends React.Component{
         this.setState({endDate: date});
         this.checkDates();
     };
+    onStartDate2Changed = date => {
+        this.setState({startDate2: date});
+    };
+    onEndDate2Changed = date => {
+        this.setState({endDate2: date});
+        this.checkDates();
+    };
     checkDates() {
         var ed = new Date(this.state.endDate);
         var sd = new Date(this.state.startDate);
-        if(ed > sd && this.state.FormReady != true)
-        {
-            this.setState({FormReady: true})
+        if(! this.state.dualLayer) {
+            if (ed > sd && this.state.FormReady != true) {
+                this.setState({FormReady: true})
+            }
+            else if (ed < sd) {
+                if (this.state.FormReady == true) {
+                    this.setState({FormReady: false})
+                }
+            }
         }
-        else if(ed < sd) {
-            if(this.state.FormReady == true)
-            {
-                this.setState({FormReady: false})
+        else{
+            var ed2 = new Date(this.state.endDate2);
+            var sd2 = new Date(this.state.startDate2);
+
+            if (ed > sd && ed2 > sd2 && this.state.FormReady != true) {
+                this.setState({FormReady: true})
+            }
+            else if (ed < sd || ed2 < sd2) {
+                if (this.state.FormReady == true) {
+                    this.setState({FormReady: false})
+                }
             }
         }
 
@@ -505,7 +545,7 @@ class BasicLayout extends React.Component{
             setTimeout(() => {$(".input-daterange input").each(function () {
                 try {
                     console.log('init: ' + this.id);
-                    var bindEvt = this.id == 'sDate_new_cooked'? gObject.onStartDateChanged: gObject.onEndDateChanged;
+                    var bindEvt = this.id == 'sDate_new_cooked'? gObject.onStartDateChanged: this.id == 'eDate_new_cooked'? gObject.onEndDateChanged: this.id   == 'sDate_new_cooked2'? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
                     $(this).datepicker({
                         changeMonth: true,
                         changeYear: true,
@@ -531,6 +571,20 @@ class BasicLayout extends React.Component{
                         <input type="text" className="form-control" value={this.state.endDate} id="eDate_new_cooked"/>
                     </div>
                     <div className="form-group">
+                        <label htmlFor="widgetDualLayer">Dual Layer</label>
+                        <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
+                               className="form-control" onChange={this.onWidgetDualLayerChange}/>
+                    </div>
+                    <div style={{display : this.state.dualLayer == true? 'block': 'none'}}>
+                        <label>Select the Date Range for the top layer</label>
+                        <div className="input-group input-daterange" id="range_new_cooked2">
+
+                            <input type="text" className="form-control" value={this.state.startDate2} id="sDate_new_cooked2"/>
+                            <div className="input-group-addon">to</div>
+                            <input type="text" className="form-control" value={this.state.endDate2} id="eDate_new_cooked2"/>
+                        </div>
+                    </div>
+                    <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
                         <input type="text" name="widgetBands" id="widgetBands" value={this.state.widgetBands}
                                className="form-control" onChange={this.onWidgetBandsChange}/>
@@ -550,6 +604,37 @@ class BasicLayout extends React.Component{
                         <label htmlFor="widgetCloudScore">Cloud Score</label>
                         <input type="text" name="widgetCloudScore" id="widgetCloudScore" value={this.state.widgetCloudScore}
                                className="form-control" onChange={this.onWidgetCloudScoreChange}/>
+                    </div>
+                </React.Fragment>
+            }
+            else if(this.state.selectedWidgetType == 'ImageCollection')
+            {
+                return <React.Fragment>
+                    <div className="form-group">
+                        <label htmlFor="widgetTitle">Title</label>
+                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                               className="form-control" onChange={this.onWidgetTitleChange}/>
+                    </div>
+                    <label>Select the Date Range you would like</label>
+                    <div className="input-group input-daterange" id="range_new_cooked">
+
+                        <input type="text" className="form-control" value={this.state.startDate} id="sDate_new_cooked"/>
+                        <div className="input-group-addon">to</div>
+                        <input type="text" className="form-control" value={this.state.endDate} id="eDate_new_cooked"/>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="widgetDualLayer">Dual Layer</label>
+                        <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
+                               className="form-control" onChange={this.onWidgetDualLayerChange}/>
+                    </div>
+                    <div style={{display : this.state.dualLayer == true? 'block': 'none'}}>
+                        <label>Select the Date Range you would like</label>
+                        <div className="input-group input-daterange" id="range_new_cooked2">
+
+                            <input type="text" className="form-control" value={this.state.startDate2} id="sDate_new_cooked2"/>
+                            <div className="input-group-addon">to</div>
+                            <input type="text" className="form-control" value={this.state.endDate2} id="eDate_new_cooked2"/>
+                        </div>
                     </div>
                 </React.Fragment>
             }
