@@ -3,7 +3,7 @@ var gObject;
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { widgets: [ ] };
+        this.state = { widgets: [ ], callbackComplete: false };
         gObject = this;
     }
     componentDidMount() {
@@ -16,7 +16,8 @@ class Geodash extends React.Component {
                 widget.swipeValue = '1.0';
                 return widget;}))
             .then(data => debugreturn = data)
-            .then(data => this.setState({ widgets: data}))
+            .then(data => this.setState({ widgets: data, callbackComplete: true}))
+
             ;
     }
     render() {
@@ -28,6 +29,7 @@ class Geodash extends React.Component {
                 onOpacityChanged = {this.handleOpacityChange}
                 onSliderChange = {this.handleSliderChange}
                 onSwipeChange = {this.handleSwipeChange}
+                callbackComplete = {this.state.callbackComplete}
             />
         </React.Fragment> );
     }
@@ -108,6 +110,8 @@ function updateSize(which, type)
 
 class Widgets extends React.Component {
     render() {
+        if(this.props.widgets.length > 0)
+        {
         return ( <div className="row placeholders">
             {this.props.widgets.map(widget => (
                 <Widget
@@ -121,6 +125,14 @@ class Widgets extends React.Component {
                 />
             ))}
         </div> );
+        }
+        else{
+            return ( <div className="row placeholders">
+                <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
+                    <h1 id="noWidgetMessage" style={{display: this.props.callbackComplete == false? 'none' : 'block' }}>The Administrator has not configured any Geo-Dash Widgets for this project</h1>
+                </div>
+            </div> );
+        }
     }
 }
 
