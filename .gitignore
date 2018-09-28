@@ -11,3 +11,5 @@ collect-earth-online.iml
 /target/
 .idea/
 .DS_Store
+package-lock.json
+node_modules/

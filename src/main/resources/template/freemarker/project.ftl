@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<script type="text/babel" src="${root}/js/project.js"></script>
+<script type="text/javascript" src="${root}/js/project.js"></script>
 <script type="text/javascript">
 	<#if project_id == "">
 		<#assign project_id = "0">

@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-  <script type="text/babel" src="${root}/js/account.js"></script>
+  <script type="text/javascript" src="${root}/js/account.js"></script>
         <script type="text/javascript">
             $(function() {initialize();});
             function initialize() {

@@ -3,7 +3,7 @@
 <#include "announcements.ftl">
 <#include "start-content.ftl">
 <div id="home"></div>
-<script type="text/babel" src="${root}/js/home.js"></script>
+<script type="text/javascript" src="${root}/js/home.js"></script>
 <script type="text/javascript">
 $(function() {initialize();});
 function initialize() {
