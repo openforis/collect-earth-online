@@ -701,9 +701,4 @@ function SideBarFieldSet(props) {
     );
 }
 
-function renderCollection(documentRoot, username, projectId) {
-    ReactDOM.render(
-        <Collection documentRoot={documentRoot} userName={username} projectId={projectId}/>,
-        document.getElementById("collection")
-    );
-}
+

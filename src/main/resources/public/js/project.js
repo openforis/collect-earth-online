@@ -1813,9 +1813,3 @@ function ProjectManagement(props) {
         )
     );
 }
-
-function renderProject(documentRoot, userId, projectId, institutionId, project_stats_visibility, project_template_visibility) {
-    ReactDOM.render(React.createElement(Project, { documentRoot: documentRoot, userId: userId, projectId: projectId, institutionId: institutionId,
-        project_stats_visibility: project_stats_visibility,
-        project_template_visibility: project_template_visibility }), document.getElementById("project"));
-}

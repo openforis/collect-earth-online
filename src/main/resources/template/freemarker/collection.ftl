@@ -1,17 +1,12 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<script type="text/javascript" src="${root}/js/collection.js"></script>
 <#if username == "">
     <#assign username = "guest">
 </#if>
 <script type="text/javascript">
-    $(function() {initialize();});
-    function initialize() {
-        if(typeof(renderCollection)=="undefined")
-            setTimeout(initialize,250);
-        else
-            renderCollection("${root}", "${username}","${project_id}");
+    window.onload = function() {
+        renderPage("collection", {documentRoot: "${root}", username: "${username}", projectId: "${project_id}"});
     }
 </script>
 <div id="collection" class="row"></div>

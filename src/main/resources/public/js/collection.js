@@ -1045,7 +1045,3 @@ function SideBarFieldSet(props) {
         sampleValueGroup
     );
 }
-
-function renderCollection(documentRoot, username, projectId) {
-    ReactDOM.render(React.createElement(Collection, { documentRoot: documentRoot, userName: username, projectId: projectId }), document.getElementById("collection"));
-}

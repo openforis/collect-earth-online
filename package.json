@@ -2,9 +2,16 @@
   "name": "collect-earth-online",
   "version": "1.0.0",
   "description": "* Collect Earth Online",
+  "main": "src/main/resources/public/jsx/app.js",
+  "scripts": {
+    "start": "webpack --mode development",
+    "build": "webpack --mode production"
+  },
   "dependencies": {
     "babel-cli": "^6.26.0",
-    "babel-preset-react-app": "^3.1.2"
+    "babel-preset-react-app": "^3.1.2",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.1"
   },
   "devDependencies": {},
   "scripts": {
@@ -15,14 +22,40 @@
     "url": "git+https://github.com/openforis/collect-earth-online.git"
   },
   "keywords": [],
-  "author": {"name": "Gary W. Johnson", "email": "gjohnson@sig-gis.com"},
-  "contributors": [{"name": "Gary W. Johnson",         "email": "gjohnson@sig-gis.com"},
-    {"name": "David S. Saah",           "email": "dsaah@sig-gis.com"},
-    {"name": "Billy Ashmall",           "email": "billy.ashmall@nasa.gov"},
-    {"name": "Githika Tondapu",         "email": "githika.tondapu@nasa.gov"},
-    {"name": "Stefano Ricci",           "email": "stefano.ricci@fao.org"},
-    {"name": "Roberto Fontanarosa",     "email": "roberto.fontanarosa@fao.org"},
-    {"name": "Alfonso SanchezPausDiaz", "email": "alfonso.sanchezpausdiaz@fao.org"}],
+  "author": {
+    "name": "Gary W. Johnson",
+    "email": "gjohnson@sig-gis.com"
+  },
+  "contributors": [
+    {
+      "name": "Gary W. Johnson",
+      "email": "gjohnson@sig-gis.com"
+    },
+    {
+      "name": "David S. Saah",
+      "email": "dsaah@sig-gis.com"
+    },
+    {
+      "name": "Billy Ashmall",
+      "email": "billy.ashmall@nasa.gov"
+    },
+    {
+      "name": "Githika Tondapu",
+      "email": "githika.tondapu@nasa.gov"
+    },
+    {
+      "name": "Stefano Ricci",
+      "email": "stefano.ricci@fao.org"
+    },
+    {
+      "name": "Roberto Fontanarosa",
+      "email": "roberto.fontanarosa@fao.org"
+    },
+    {
+      "name": "Alfonso SanchezPausDiaz",
+      "email": "alfonso.sanchezpausdiaz@fao.org"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/openforis/collect-earth-online/issues"

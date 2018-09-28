@@ -1048,11 +1048,3 @@ function RequestMembership(props) {
     }
 }
 
-function renderInstitution(documentRoot, userId, institutionId,of_users_api_url,role,storage,nonPendingUsers,pageMode) {
-    ReactDOM.render(
-        <Institution documentRoot={documentRoot} userId={userId} institutionId={institutionId}
-                     of_users_api_url={of_users_api_url} role={role} storage={storage} nonPendingUsers={nonPendingUsers}
-                     pageMode={pageMode}/>,
-        document.getElementById("institution")
-    );
-}

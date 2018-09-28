@@ -1511,9 +1511,3 @@ function RequestMembership(props) {
         return React.createElement("span", null);
     }
 }
-
-function renderInstitution(documentRoot, userId, institutionId, of_users_api_url, role, storage, nonPendingUsers, pageMode) {
-    ReactDOM.render(React.createElement(Institution, { documentRoot: documentRoot, userId: userId, institutionId: institutionId,
-        of_users_api_url: of_users_api_url, role: role, storage: storage, nonPendingUsers: nonPendingUsers,
-        pageMode: pageMode }), document.getElementById("institution"));
-}

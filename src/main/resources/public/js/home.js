@@ -351,7 +351,3 @@ function Project(props) {
 //=========================================
 // Render Root Component
 //=========================================
-
-function renderHome(documentRoot, userId, username) {
-    ReactDOM.render(React.createElement(Home, { documentRoot: documentRoot, userId: userId, username: username }), document.getElementById("home"));
-}

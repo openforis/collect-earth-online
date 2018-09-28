@@ -345,7 +345,3 @@ function AccountForm(props) {
         );
     }
 }
-
-function renderAccount(documentRoot, userId, accountId, username) {
-    ReactDOM.render(React.createElement(Account, { documentRoot: documentRoot, userId: userId, accountId: accountId, username: username }), document.getElementById("account-page"));
-}

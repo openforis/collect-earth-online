@@ -63,9 +63,8 @@
         <!-- Billy's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
 
-        <!-- React libraries -->
-        <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
-        <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+        <!--to load app.js-->
+        <script type="text/javascript" src='${root}/jsx/app.js'></script>
 
         <!-- Stefano's styles and scripts for Collect integration -->
         <#if navlink == "Card-Test">
