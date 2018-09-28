@@ -2,7 +2,7 @@
   "name": "collect-earth-online",
   "version": "1.0.0",
   "description": "* Collect Earth Online",
-  "main": "src/main/resources/public/jsx/app.js",
+  "main": "main/resources/public/jsx/app.js",
   "scripts": {
     "start": "webpack --mode development",
     "build": "webpack --mode production"
@@ -14,9 +14,6 @@
     "webpack-cli": "^3.1.1"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openforis/collect-earth-online.git"
