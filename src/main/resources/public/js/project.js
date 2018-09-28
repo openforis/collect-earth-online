@@ -89,6 +89,17 @@ var Project = function (_React$Component) {
                     this.state.details.sampleDistribution = "random";
                     this.getProjectList(userId, projectId);
                 } else if (this.state.details.id != 0) {
+                    if (document.getElementById("num-plots") != null) {
+                        if (document.getElementById("plot-distribution-gridded").checked) document.getElementById("plot-design-text").innerHTML = "Description about gridded";
+                        if (document.getElementById("plot-distribution-random").checked) document.getElementById("plot-design-text").innerHTML = "Description about random";
+                        if (document.getElementById("plot-distribution-csv").checked) document.getElementById("plot-design-text").innerHTML = "Description about csv upload";
+                        if (document.getElementById("plot-distribution-shp").checked) document.getElementById("plot-design-text").innerHTML = "Description about shp upload";
+
+                        if (document.getElementById("sample-distribution-gridded").checked) document.getElementById("sample-design-text").innerHTML = "Description about gridded";
+                        if (document.getElementById("sample-distribution-random").checked) document.getElementById("sample-design-text").innerHTML = "Description about random";
+                        if (document.getElementById("sample-distribution-csv").checked) document.getElementById("sample-design-text").innerHTML = "Description about csv upload";
+                        if (document.getElementById("sample-distribution-shp").checked) document.getElementById("sample-design-text").innerHTML = "Description about shp upload";
+                    }
                     this.getProjectStats(projectId);
                 }
                 if (this.state.imageryList == null) {
@@ -278,14 +289,33 @@ var Project = function (_React$Component) {
                 this.setState({ details: detailsNew });
                 if (document.getElementById("num-plots") != null) {
                     if (plotDistribution == "random") {
+                        utils.enable_element("plot-size");
                         utils.enable_element("num-plots");
                         utils.disable_element("plot-spacing");
+                        utils.disable_element("plot-distribution-csv-file");
+                        utils.disable_element("plot-distribution-shp-file");
+                        document.getElementById("plot-design-text").innerHTML = "Description about random";
                     } else if (plotDistribution == "gridded") {
+                        utils.enable_element("plot-size");
                         utils.disable_element("num-plots");
                         utils.enable_element("plot-spacing");
-                    } else {
+                        utils.disable_element("plot-distribution-csv-file");
+                        utils.disable_element("plot-distribution-shp-file");
+                        document.getElementById("plot-design-text").innerHTML = "Description about gridded";
+                    } else if (plotDistribution == "csv") {
+                        utils.enable_element("plot-size");
                         utils.disable_element("num-plots");
                         utils.disable_element("plot-spacing");
+                        utils.disable_element("plot-distribution-shp-file");
+                        utils.enable_element("plot-distribution-csv-file");
+                        document.getElementById("plot-design-text").innerHTML = "Description about csv upload";
+                    } else {
+                        utils.disable_element("plot-size");
+                        utils.disable_element("num-plots");
+                        utils.disable_element("plot-spacing");
+                        utils.disable_element("plot-distribution-csv-file");
+                        utils.enable_element("plot-distribution-shp-file");
+                        document.getElementById("plot-design-text").innerHTML = "Description about shp upload";
                     }
                 }
             }
@@ -309,9 +339,27 @@ var Project = function (_React$Component) {
                 if (document.getElementById("samples-per-plot") != null && document.getElementById("sample-resolution") != null) if (sampleDistribution == "random") {
                     utils.enable_element("samples-per-plot");
                     utils.disable_element("sample-resolution");
-                } else {
+                    utils.disable_element("sample-distribution-csv-file");
+                    utils.disable_element("sample-distribution-shp-file");
+                    document.getElementById("sample-design-text").innerHTML = "Description about random";
+                } else if (sampleDistribution == "gridded") {
                     utils.disable_element("samples-per-plot");
                     utils.enable_element("sample-resolution");
+                    utils.disable_element("sample-distribution-csv-file");
+                    utils.disable_element("sample-distribution-shp-file");
+                    document.getElementById("sample-design-text").innerHTML = "Description about gridded";
+                } else if (sampleDistribution == "csv") {
+                    utils.disable_element("samples-per-plot");
+                    utils.disable_element("sample-resolution");
+                    utils.disable_element("sample-distribution-shp-file");
+                    utils.enable_element("sample-distribution-csv-file");
+                    document.getElementById("sample-design-text").innerHTML = "Description about csv upload";
+                } else {
+                    utils.disable_element("samples-per-plot");
+                    utils.disable_element("sample-resolution");
+                    utils.disable_element("sample-distribution-csv-file");
+                    utils.enable_element("sample-distribution-shp-file");
+                    document.getElementById("sample-design-text").innerHTML = "Description about shp upload";
                 }
             }
         }
@@ -1284,8 +1332,35 @@ function PlotDesign(props) {
                                         "Upload CSV"
                                     ),
                                     React.createElement("input", { type: "file", accept: "text/csv", id: "plot-distribution-csv-file",
-                                        style: { display: "none" } })
+                                        style: { display: "none" }, disabled: true })
                                 )
+                            ),
+                            React.createElement(
+                                "div",
+                                { className: "form-check form-check-inline" },
+                                React.createElement("input", { className: "form-check-input", type: "radio", id: "plot-distribution-shp",
+                                    name: "plot-distribution", defaultValue: "shp",
+                                    onClick: function onClick() {
+                                        return props.setPlotDistribution('shp');
+                                    },
+                                    checked: props.project.details.plotDistribution === 'shp' }),
+                                React.createElement(
+                                    "label",
+                                    { className: "btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0",
+                                        id: "custom-shp-upload" },
+                                    React.createElement(
+                                        "small",
+                                        null,
+                                        "Upload SHP"
+                                    ),
+                                    React.createElement("input", { type: "file", accept: ".shp", id: "plot-distribution-shp-file",
+                                        style: { display: "none" }, disabled: true })
+                                )
+                            ),
+                            React.createElement(
+                                "p",
+                                { id: "plot-design-text" },
+                                "Description about random"
                             ),
                             React.createElement(
                                 "div",
@@ -1420,6 +1495,55 @@ function SampleDesign(props) {
                                 htmlFor: "sample-distribution-gridded" },
                             "Gridded"
                         )
+                    ),
+                    React.createElement(
+                        "div",
+                        { className: "form-check form-check-inline" },
+                        React.createElement("input", { className: "form-check-input", type: "radio", id: "sample-distribution-csv",
+                            name: "sample-distribution", defaultValue: "csv",
+                            onClick: function onClick() {
+                                return props.setSampleDistribution('csv');
+                            },
+                            checked: props.project.details.sampleDistribution === 'csv' }),
+                        React.createElement(
+                            "label",
+                            { className: "btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0",
+                                id: "sample-custom-csv-upload" },
+                            React.createElement(
+                                "small",
+                                null,
+                                "Upload CSV"
+                            ),
+                            React.createElement("input", { type: "file", accept: "text/csv", id: "sample-distribution-csv-file",
+                                style: { display: "none" }, disabled: true })
+                        )
+                    ),
+                    React.createElement(
+                        "div",
+                        { className: "form-check form-check-inline" },
+                        React.createElement("input", { className: "form-check-input", type: "radio", id: "sample-distribution-shp",
+                            name: "sample-distribution", defaultValue: "shp",
+                            onClick: function onClick() {
+                                return props.setSampleDistribution('shp');
+                            },
+                            checked: props.project.details.sampleDistribution === 'shp' }),
+                        React.createElement(
+                            "label",
+                            { className: "btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0",
+                                id: "sample-custom-shp-upload" },
+                            React.createElement(
+                                "small",
+                                null,
+                                "Upload SHP"
+                            ),
+                            React.createElement("input", { type: "file", accept: ".shp", id: "sample-distribution-shp-file",
+                                style: { display: "none" }, disabled: true })
+                        )
+                    ),
+                    React.createElement(
+                        "p",
+                        { id: "sample-design-text" },
+                        "Description about random"
                     ),
                     React.createElement(
                         "div",
