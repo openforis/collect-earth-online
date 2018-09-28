@@ -1,3 +1,4 @@
+var mapConfigMercator="";
 class Home extends React.Component {
     constructor(props) {
         super(props);
@@ -34,7 +35,6 @@ class Home extends React.Component {
         );
     }
 }
-var gMapPanel;
 class MapPanel extends React.Component {
     constructor(props) {
         super(props);
@@ -43,7 +43,6 @@ class MapPanel extends React.Component {
             documentRoot: props.documentRoot,
             imagery: [],
         };
-        gMapPanel = this;
     }
 
     componentDidMount() {
@@ -64,6 +63,7 @@ class MapPanel extends React.Component {
     showProjectMap(projects, imagery, documentRoot) {
         if (imagery.length > 0) {
             const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, imagery);
+            mapConfigMercator=mapConfig;
             mercator.setVisibleLayer(mapConfig, imagery[0].title);
             if (projects.length > 0) {
                 mercator.addProjectMarkersAndZoom(mapConfig,
