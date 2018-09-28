@@ -989,9 +989,14 @@ function ProjectImagery(props) {
 function PlotDesign(props) {
     var project = props.project;
     var plotshape = "";
+    var txt="";
     if (project.details != null) {
+        if( project.details.plotShape == 'circle')
+        {
+            txt='Diameter (m)';
+        }else txt= 'Width (m)';
         plotshape = <React.Fragment>
-            <p htmlFor="plot-size">{"Plot " + project.details.plotShape == 'circle' ? 'Diameter' : 'Width' + "(m)"}</p>
+            <p htmlFor="plot-size">{txt}</p>
             <input className="form-control form-control-sm" type="number" id="plot-size"
                    name="plot-size" autoComplete="off" min="0.0" step="any"
                    defaultValue={project.details.plotSize}/>
