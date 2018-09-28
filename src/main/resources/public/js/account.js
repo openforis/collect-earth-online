@@ -2,7 +2,6 @@ class Account extends React.Component {
     constructor(props) {
         super(props);
     };
-
     render() {
         return (
             <React.Fragment>
@@ -10,21 +9,23 @@ class Account extends React.Component {
                     <h1>Your account</h1>
                 </div>
                 <UserStats/>
-                <AccountForm documentRoot={this.props.documentRoot} userId={this.props.userId} accountId={this.props.accountId} username={this.props.username}/>
+                <AccountForm documentRoot={this.props.documentRoot} userId={this.props.userId}
+                             accountId={this.props.accountId} username={this.props.username}/>
             </React.Fragment>
         );
     }
 }
 
-function UserStats(){
-    return(
+function UserStats() {
+    return (
         <div id="user-stats" className="col">
             <h2 className="header px-0">Here's your progress</h2>
             <h1><span className="badge bg-lightgreen">Level 1</span></h1>
             <div className="progress w3-light-grey mb-1">
-                <div className="progress-bar progress-bar-striped bg-lightgreen" role="progressbar" style={{width: '33%'}}
+                <div className="progress-bar progress-bar-striped bg-lightgreen" role="progressbar"
+                     style={{width: '33%'}}
                      aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
-                <div id="myBar" className="w3-container w3-blue w3-center" style={{width:'33%'}}>33%</div>
+                <div id="myBar" className="w3-container w3-blue w3-center" style={{width: '33%'}}>33%</div>
             </div>
             <p>You need to complete <span className="badge bg-lightgreen">15</span> more plots to reach <span
                 className="badge bg-lightgreen">Level 2</span></p>
@@ -61,7 +62,7 @@ function UserStats(){
                 </tr>
                 </tbody>
             </table>
-            <form style={{visibility:'visible'}}>
+            <form style={{visibility: 'visible'}}>
                 <fieldset>
                     <strong>Congratulations!</strong> You are ranked <span
                     className="badge bg-lightgreen">#3</span> overall and <span
@@ -75,7 +76,6 @@ function UserStats(){
 }
 
 function AccountForm(props) {
-
     if (props.userId == props.accountId) {
         return (<div id="account-form" className="col mb-3">
                 <h2 className="header px-0">Account Settings</h2>
@@ -84,7 +84,8 @@ function AccountForm(props) {
                 <form action={props.documentRoot + "/account/" + props.accountId} method="post">
                     <div className="form-group">
                         <label htmlFor="email">Reset email</label>
-                        <input autoComplete="off" id="email" name="email" placeholder="New email" defaultValue="" type="email"
+                        <input autoComplete="off" id="email" name="email" placeholder="New email" defaultValue=""
+                               type="email"
                                className="form-control"/>
                     </div>
                     <div className="form-group">
@@ -116,7 +117,6 @@ function AccountForm(props) {
     }
     else {
         return (
-
             <div id="account-form" className="col mb-3">
                 <h2 className="header px-0">Account Settings</h2>
                 <h1>{props.username}</h1>

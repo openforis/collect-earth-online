@@ -54,7 +54,6 @@ class Project extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.topoSort = this.topoSort.bind(this);
         this.createProject = this.createProject.bind(this);
-
     };
 
     componentDidMount() {
@@ -652,7 +651,6 @@ class Project extends React.Component {
 
 function ProjectStats(props) {
     var project = props.project;
-
     if (project.stats != null) {
         return (<div className="row mb-3">
                 <div id="project-stats" className={"col " + props.project_stats_visibility}>
@@ -716,7 +714,6 @@ function ProjectDesignForm(props) {
             <input type="text" id="samplevaluegrouptext" autoComplete="off" value={project.newSampleValueGroupName}/>
         </div>;
     }
-
     return (
         <form id="project-design-form" className="px-2 pb-2" method="post"
               action={props.documentRoot + "/create-project"}
@@ -853,7 +850,6 @@ function ProjectAOI(props) {
             <div className="col small text-center mb-2">Hold CTRL and click-and-drag a bounding box on the map</div>
         </div>;
     }
-
     return (
         <div class="row">
             <div class="col">
@@ -908,12 +904,11 @@ function ProjectImagery(props) {
                             <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                                     size="1"
                                     value={project.details.baseMapSource} onChange={props.setBaseMapSource}>
-                                {
-                                    project.imageryList.map(imagery =>
-                                        <option value={imagery.title}>{imagery.title}</option>
-                                    )
-                                }
-
+                                    {
+                                        project.imageryList.map(imagery =>
+                                            <option value={imagery.title}>{imagery.title}</option>
+                                        )
+                                    }
                             </select>
                         </div>
                     </div>
@@ -936,7 +931,6 @@ function PlotDesign(props) {
                    name="plot-size" autoComplete="off" min="0.0" step="any"
                    defaultValue={project.details.plotSize}/>
         </React.Fragment>
-
         return (
             <div className="row mb-3">
                 <div className="col">
@@ -1017,7 +1011,6 @@ function PlotDesign(props) {
     else {
         return (<span></span>);
     }
-
 }
 
 function SampleDesign(props) {
@@ -1164,7 +1157,6 @@ function SampleValueTable(props) {
         parent = project.newValueEntry[props.sampleValueGroup.name].parent;
 
     }
-
     if (props.projectId == "0") {
         return (
             <tr>
@@ -1195,7 +1187,6 @@ function SampleValueTable(props) {
             </tr>
         );
     }
-
     else
         return (<span></span>);
 }
