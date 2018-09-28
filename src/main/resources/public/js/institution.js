@@ -959,6 +959,7 @@ class UserButton extends React.Component {
     }
 
     isInstitutionMember(userId) {
+        console.log("is inst mem");
         return userId == 1
             || this.props.users.some(
                 function (user) {
@@ -989,41 +990,61 @@ class UserButton extends React.Component {
     }
 
     render() {
-        if (this.props.isAdmin == true) {
-            return (
-                <React.Fragment>
-                    <div className="row mb-1">
-                        <div className="col-9 pr-1">
-                            <input className="form-control form-control-sm" type="email" name="new-institution-user"
-                                   autoComplete="off"
-                                   placeholder="Email" onChange={this.handleChange}
-                                   value={this.state.newUserEmail}/>
-                        </div>
-                        <div className="col-3 pl-0">
-                            <button className="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user"
-                                    onClick={this.addUser}><span className="d-xl-none">
+        return (
+            <React.Fragment>
+                <AddUser isAdmin={this.props.isAdmin} handleChange={this.handleChange}
+                         newUserEmail={this.state.newUserEmail} addUser={this.addUser}/>
+                <RequestMembership requestMembership={this.requestMembership} documentRoot={this.props.documentRoot}
+                                   userId={this.props.userId} institutionId={this.props.institutionId}
+                                   isInstitutionMember={this.isInstitutionMember(this.props.userId)}/>
+            </React.Fragment>
+        );
+    }
+}
+
+function AddUser(props){
+    if (props.isAdmin == true) {
+        return (
+            <React.Fragment>
+                <div className="row mb-1">
+                    <div className="col-9 pr-1">
+                        <input className="form-control form-control-sm" type="email" name="new-institution-user"
+                               autoComplete="off"
+                               placeholder="Email" onChange={props.handleChange}
+                               value={props.newUserEmail}/>
+                    </div>
+                    <div className="col-3 pl-0">
+                        <button className="btn btn-sm btn-outline-yellow btn-block" name="add-institution-user"
+                                onClick={props.addUser}><span className="d-xl-none">
                             <i className="fa fa-plus-square"></i></span>
-                                <span className="d-none d-xl-block"> Add User</span></button>
-                        </div>
+                            <span className="d-none d-xl-block"> Add User</span></button>
                     </div>
-                </React.Fragment>
-            );
-        }
-        else return (<span></span>);
-        if (this.props.userId != '' && this.props.institutionId > 0 && !this.isInstitutionMember(this.props.userId)) {
-            return (
-                <React.Fragment>
-                    <div>
-                        <button className="btn btn-sm btn-outline-yellow btn-block mb-2"
-                                id="request-membership-button"
-                                name="request-membership-button"
-                                onClick={this.requestMembership(this.props.userId, this.props.institutionId, this.props.documentRoot)}>
-                            <i className="fa fa-plus-square"></i> Request membership
-                        </button>
-                    </div>
-                </React.Fragment>
-            );
-        }
+                </div>
+            </React.Fragment>
+        );
+    }
+    else return(<span></span>);
+}
+
+function RequestMembership(props) {
+    if (props.userId != '' && props.institutionId > 0 && !props.isInstitutionMember) {
+        console.log("in ifffff");
+        return (
+            <React.Fragment>
+                <div>
+                    <button className="btn btn-sm btn-outline-yellow btn-block mb-2"
+                            id="request-membership-button"
+                            name="request-membership-button"
+                            onClick={() => props.requestMembership(props.userId, props.institutionId, props.documentRoot)}>
+                        <i className="fa fa-plus-square"></i> Request membership
+                    </button>
+                </div>
+            </React.Fragment>
+        );
+    }
+    else {
+        return (<span></span>);
+
     }
 }
 
