@@ -52,8 +52,10 @@
         "react-dom": "^16.5.2"
     },
     "devDependencies": {
-        "babel-cli": "^6.26.0",
-        "babel-preset-react-app": "^3.1.2",
+        "@babel/core": "^7.1.2",
+        "@babel/preset-env": "^7.1.0",
+        "@babel/preset-react": "^7.0.0",
+        "babel-loader": "^8.0.4",
         "css-loader": "^1.0.0",
         "file-loader": "^2.0.0",
         "style-loader": "^0.23.0",
@@ -62,7 +64,6 @@
         "webpack-merge": "^4.1.4"
     },
     "scripts": {
-        "babel": "babel --watch src/main/resources/public/jsx --out-dir src/main/resources/public/js --presets react-app/prod",
         "webpack-dev": "webpack --config webpack.dev.js",
         "webpack-prod": "webpack --config webpack.prod.js"
     }
