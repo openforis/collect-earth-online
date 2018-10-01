@@ -26,16 +26,14 @@
         </div>
     </div>
 </div>
-<script type="text/javascript" src="${root}/js/bundle.js"></script>
+<script type="text/javascript" src="${root}/js/collection.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     renderPage("collection",
-                {
-                    documentRoot: "${root}",
-                    username:     "${username}",
-                    projectId:    "${project_id}"
-                }
-     );
+     renderCollectionPage({
+         documentRoot: "${root}",
+         username:     "${username}",
+         projectId:    "${project_id}"
+     });
  };
 </script>
 <#include "end-content.ftl">

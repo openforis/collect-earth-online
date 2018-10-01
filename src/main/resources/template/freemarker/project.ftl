@@ -15,19 +15,17 @@
 	<#assign project_template_visibility = "d-none">
 </#if>
 <div id="project" class="row justify-content-center"></div>
-<script type="text/javascript" src="${root}/js/bundle.js"></script>
+<script type="text/javascript" src="${root}/js/project.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     renderPage("project",
-                {
-                    documentRoot:                "${root}",
-                    userId:                      "${userid}",
-                    projectId:                   "${project_id}",
-                    institutionId:               "${institution_id}",
-                    project_stats_visibility:    "${project_stats_visibility}",
-                    project_template_visibility: "${project_template_visibility}"
-                }
-     );
+     renderProjectPage({
+         documentRoot:                "${root}",
+         userId:                      "${userid}",
+         projectId:                   "${project_id}",
+         institutionId:               "${institution_id}",
+         project_stats_visibility:    "${project_stats_visibility}",
+         project_template_visibility: "${project_template_visibility}"
+     });
  };
 </script>
 <#include "end-content.ftl">

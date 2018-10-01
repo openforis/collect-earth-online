@@ -13,6 +13,11 @@ collect-earth-online.iml
 /src/main/resources/public/js/home.js
 /src/main/resources/public/js/institution.js
 /src/main/resources/public/js/project.js
+/src/main/resources/public/js/account.bundle.js
+/src/main/resources/public/js/collection.bundle.js
+/src/main/resources/public/js/home.bundle.js
+/src/main/resources/public/js/institution.bundle.js
+/src/main/resources/public/js/project.bundle.js
 /target/
 .idea/
 .DS_Store

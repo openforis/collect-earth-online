@@ -244,7 +244,7 @@ function Project(props) {
         return (<span></span>);
 }
 
-export default function renderHome(args) {
+export default function renderHomePage(args) {
     ReactDOM.render(
         <Home documentRoot={args.documentRoot} userId={args.userId} username={args.username}/>,
         document.getElementById("home")

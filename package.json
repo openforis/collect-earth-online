@@ -1,61 +1,67 @@
 {
-  "name": "collect-earth-online",
-  "version": "1.0.0",
-  "description": "* Collect Earth Online",
-  "main": "main/resources/public/jsx/app.js",
-  "scripts": {
-    "start": "webpack --mode development",
-    "build": "webpack --mode production"
-  },
-  "dependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-react-app": "^3.1.2",
-    "webpack": "^4.20.2",
-    "webpack-cli": "^3.1.1"
-  },
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/openforis/collect-earth-online.git"
-  },
-  "keywords": [],
-  "author": {
-    "name": "Gary W. Johnson",
-    "email": "gjohnson@sig-gis.com"
-  },
-  "contributors": [
-    {
-      "name": "Gary W. Johnson",
-      "email": "gjohnson@sig-gis.com"
+    "name": "collect-earth-online",
+    "version": "1.0.0",
+    "description": "Collect Earth Online",
+    "keywords": [],
+    "author": {
+        "name": "Gary W. Johnson",
+        "email": "gjohnson@sig-gis.com"
     },
-    {
-      "name": "David S. Saah",
-      "email": "dsaah@sig-gis.com"
+    "contributors": [
+        {
+            "name": "Gary W. Johnson",
+            "email": "gjohnson@sig-gis.com"
+        },
+        {
+            "name": "David S. Saah",
+            "email": "dsaah@sig-gis.com"
+        },
+        {
+            "name": "Billy Ashmall",
+            "email": "billy.ashmall@nasa.gov"
+        },
+        {
+            "name": "Githika Tondapu",
+            "email": "githika.tondapu@nasa.gov"
+        },
+        {
+            "name": "Stefano Ricci",
+            "email": "stefano.ricci@fao.org"
+        },
+        {
+            "name": "Roberto Fontanarosa",
+            "email": "roberto.fontanarosa@fao.org"
+        },
+        {
+            "name": "Alfonso SanchezPausDiaz",
+            "email": "alfonso.sanchezpausdiaz@fao.org"
+        }
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/openforis/collect-earth-online/issues"
     },
-    {
-      "name": "Billy Ashmall",
-      "email": "billy.ashmall@nasa.gov"
+    "homepage": "https://github.com/openforis/collect-earth-online#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/openforis/collect-earth-online.git"
     },
-    {
-      "name": "Githika Tondapu",
-      "email": "githika.tondapu@nasa.gov"
+    "private": true,
+    "dependencies": {
+        "react": "^16.5.2",
+        "react-dom": "^16.5.2"
     },
-    {
-      "name": "Stefano Ricci",
-      "email": "stefano.ricci@fao.org"
+    "devDependencies": {
+        "babel-cli": "^6.26.0",
+        "babel-preset-react-app": "^3.1.2",
+        "css-loader": "^1.0.0",
+        "file-loader": "^2.0.0",
+        "style-loader": "^0.23.0",
+        "webpack": "^4.20.2",
+        "webpack-cli": "^3.1.1"
     },
-    {
-      "name": "Roberto Fontanarosa",
-      "email": "roberto.fontanarosa@fao.org"
-    },
-    {
-      "name": "Alfonso SanchezPausDiaz",
-      "email": "alfonso.sanchezpausdiaz@fao.org"
+    "scripts": {
+        "babel": "babel --watch src/main/resources/public/jsx --out-dir src/main/resources/public/js --presets react-app/prod",
+        "webpack": "webpack --config webpack.config.js --mode development"
     }
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/openforis/collect-earth-online/issues"
-  },
-  "homepage": "https://github.com/openforis/collect-earth-online#readme"
 }
