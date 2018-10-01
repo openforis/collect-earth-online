@@ -40,6 +40,9 @@ module.exports = {
             }
         ]
     },
-    // devtool: "cheap-module-eval-source-map",
-    // watch: true
+    optimization: {
+        splitChunks: {
+            chunks: "all"
+        }
+    }
 };

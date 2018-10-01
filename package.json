@@ -58,10 +58,12 @@
         "file-loader": "^2.0.0",
         "style-loader": "^0.23.0",
         "webpack": "^4.20.2",
-        "webpack-cli": "^3.1.1"
+        "webpack-cli": "^3.1.1",
+        "webpack-merge": "^4.1.4"
     },
     "scripts": {
         "babel": "babel --watch src/main/resources/public/jsx --out-dir src/main/resources/public/js --presets react-app/prod",
-        "webpack": "webpack --config webpack.config.js --mode development"
+        "webpack-dev": "webpack --config webpack.dev.js",
+        "webpack-prod": "webpack --config webpack.prod.js"
     }
 }
