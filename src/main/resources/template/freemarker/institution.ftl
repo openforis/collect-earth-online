@@ -2,10 +2,11 @@
 <#include "navbar.ftl">
 <#include "start-content.ftl">
 <div id="institution"></div>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~home~institution~project.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/institution.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     renderInstitutionPage({
+     institution.renderInstitutionPage({
          documentRoot:     "${root}",
          userId:           "${userid}",
          institutionId:    "${institution_id}",

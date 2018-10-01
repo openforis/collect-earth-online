@@ -704,7 +704,7 @@ function SideBarFieldSet(props) {
     );
 }
 
-export default function renderCollectionPage(args) {
+export function renderCollectionPage(args) {
     ReactDOM.render(
         <Collection documentRoot={args.documentRoot} userName={args.username} projectId={args.projectId}/>,
         document.getElementById("collection")

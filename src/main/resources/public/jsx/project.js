@@ -1350,7 +1350,7 @@ function ProjectManagement(props) {
     );
 }
 
-export default function renderProjectPage(args) {
+export function renderProjectPage(args) {
     ReactDOM.render(
         <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId} institutionId={args.institutionId}
                  project_stats_visibility={args.project_stats_visibility}

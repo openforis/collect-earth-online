@@ -1051,7 +1051,7 @@ function RequestMembership(props) {
     }
 }
 
-export default function renderInstitutionPage(args) {
+export function renderInstitutionPage(args) {
     ReactDOM.render(
         <Institution documentRoot={args.documentRoot} userId={args.userId} institutionId={args.institutionId}
                      of_users_api_url={args.of_users_api_url} role={args.role} storage={args.storage} nonPendingUsers={args.nonPendingUsers}

@@ -26,10 +26,11 @@
         </div>
     </div>
 </div>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~home~institution~project.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/collection.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     renderCollectionPage({
+     collection.renderCollectionPage({
          documentRoot: "${root}",
          username:     "${username}",
          projectId:    "${project_id}"

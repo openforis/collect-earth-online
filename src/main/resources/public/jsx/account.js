@@ -128,7 +128,7 @@ function AccountForm(props) {
     }
 }
 
-export default function renderAccountPage(args) {
+export function renderAccountPage(args) {
     ReactDOM.render(
         <Account documentRoot={args.documentRoot} userId={args.userId} accountId={args.accountId} username={args.username}/>,
         document.getElementById("account")

@@ -10,7 +10,9 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, "src/main/resources/public/js"),
-        filename: "[name].bundle.js"
+        filename: "[name].bundle.js",
+        library: "[name]",
+        libraryTarget: "var"
     },
     module: {
         rules: [
