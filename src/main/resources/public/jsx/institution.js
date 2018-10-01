@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 class Institution extends React.Component {
     constructor(props) {
         super(props);
@@ -1048,3 +1051,11 @@ function RequestMembership(props) {
     }
 }
 
+export default function renderInstitution(args) {
+    ReactDOM.render(
+        <Institution documentRoot={args.documentRoot} userId={args.userId} institutionId={args.institutionId}
+                     of_users_api_url={args.of_users_api_url} role={args.role} storage={args.storage} nonPendingUsers={args.nonPendingUsers}
+                     pageMode={args.pageMode}/>,
+        document.getElementById("institution")
+    );
+}

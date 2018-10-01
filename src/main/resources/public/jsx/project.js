@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 class Project extends React.Component {
     constructor(props) {
         super(props);
@@ -1347,3 +1350,11 @@ function ProjectManagement(props) {
     );
 }
 
+export default function renderProject(args) {
+    ReactDOM.render(
+        <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId} institutionId={args.institutionId}
+                 project_stats_visibility={args.project_stats_visibility}
+                 project_template_visibility={args.project_template_visibility}/>,
+        document.getElementById("project")
+    );
+}

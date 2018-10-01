@@ -3,7 +3,7 @@
 <#include "start-content.ftl">
         <script type="text/javascript">
             window.onload =function(){
-                renderPage("account-page", {
+                renderPage("account", {
                         documentRoot: '${root}',
                         userId: '${userid}',
                         accountId: '${account_id}',
@@ -18,7 +18,7 @@
              overflow-x: hidden;
          }
         </style>
-		<div id="account-page" class="col-xl-6 col-lg-8 border bg-lightgray mb-5">
+		<div id="account" class="col-xl-6 col-lg-8 border bg-lightgray mb-5">
         </div>	        
         
     </div>

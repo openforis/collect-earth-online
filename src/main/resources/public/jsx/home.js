@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 var mapConfigMercator="";
 class Home extends React.Component {
     constructor(props) {
@@ -240,8 +243,10 @@ function Project(props) {
     else
         return (<span></span>);
 }
-//=========================================
-// Render Root Component
-//=========================================
 
-
+export default function renderHome(args) {
+    ReactDOM.render(
+        <Home documentRoot={args.documentRoot} userId={args.userId} username={args.username}/>,
+        document.getElementById("home")
+    );
+}

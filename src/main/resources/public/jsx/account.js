@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 class Account extends React.Component {
     constructor(props) {
         super(props);
@@ -125,3 +128,9 @@ function AccountForm(props) {
     }
 }
 
+export default function renderAccount(args) {
+    ReactDOM.render(
+        <Account documentRoot={args.documentRoot} userId={args.userId} accountId={args.accountId} username={args.username}/>,
+        document.getElementById("account")
+    );
+}

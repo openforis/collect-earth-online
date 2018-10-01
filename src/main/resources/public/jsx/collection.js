@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 class Collection extends React.Component {
     constructor(props) {
         super(props);
@@ -701,4 +704,9 @@ function SideBarFieldSet(props) {
     );
 }
 
-
+export default function renderCollection(args) {
+    ReactDOM.render(
+        <Collection documentRoot={args.documentRoot} userName={args.username} projectId={args.projectId}/>,
+        document.getElementById("collection")
+    );
+}
