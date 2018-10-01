@@ -63,9 +63,6 @@
         <!-- Billy's custom styles and scripts -->
         <link rel="stylesheet" type="text/css" href="${root}/css/geo-dash.css">
 
-        <!--to load app.js-->
-        <script type="text/javascript" src='${root}/jsx/app.js'></script>
-
         <!-- Stefano's styles and scripts for Collect integration -->
         <#if navlink == "Card-Test">
             <link rel="stylesheet" type="text/css" href="/collect/earthFiles/jquery/jquery-ui.css">

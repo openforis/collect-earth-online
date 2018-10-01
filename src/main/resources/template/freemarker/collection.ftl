@@ -4,11 +4,6 @@
 <#if username == "">
     <#assign username = "guest">
 </#if>
-<script type="text/javascript">
-    window.onload = function() {
-        renderPage("collection", {documentRoot: "${root}", username: "${username}", projectId: "${project_id}"});
-    }
-</script>
 <div id="collection" class="row"></div>
 <div class="modal fade" id="confirmation-quit" tabindex="-1" role="dialog"
      aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -31,6 +26,17 @@
         </div>
     </div>
 </div>
-<!-- End Quit Confirmation Popup -->
+<script type="text/javascript" src="${root}/js/bundle.js"></script>
+<script type="text/javascript">
+ window.onload = function () {
+     renderPage("collection",
+                {
+                    documentRoot: "${root}",
+                    username:     "${username}",
+                    projectId:    "${project_id}"
+                }
+     );
+ };
+</script>
 <#include "end-content.ftl">
 <#include "footer.ftl">
