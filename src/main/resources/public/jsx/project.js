@@ -691,7 +691,7 @@ class Project extends React.Component {
         }
         return (
             <div id="project-design" className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
-                <div class="bg-darkgreen mb-3 no-container-margin">
+                <div className="bg-darkgreen mb-3 no-container-margin">
                     {header}
                 </div>
                 <ProjectStats project={this.state} project_stats_visibility={this.props.project_stats_visibility}/>
@@ -819,8 +819,8 @@ function ProjectTemplateVisibility(props) {
                                     name="project-template"
                                     size="1" value={project.templateId} onChange={props.setProjectTemplate}>
                                 {
-                                    project.projectList.map(proj =>
-                                        <option value={proj.id}>{proj.name}</option>
+                                    project.projectList.map((proj,uid) =>
+                                        <option key={uid} value={proj.id}>{proj.name}</option>
                                     )
                                 }
                             </select>
@@ -876,12 +876,12 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
                                    value="public" checked={props.project.details.privacyLevel === 'public'}
-                                   onClick={() => props.setPrivacyLevel('public')}/>
+                                   onChange={() => props.setPrivacyLevel('public')}/>
                             <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
                         </div>
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
-                                   value="private" onClick={() => props.setPrivacyLevel('private')}
+                                   value="private" onChange={() => props.setPrivacyLevel('private')}
                                    checked={props.project.details.privacyLevel === 'private'}/>
                             <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
                                 Admins</i></label>
@@ -889,7 +889,7 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-institution"
                                    name="privacy-level"
-                                   value="institution" onClick={() => props.setPrivacyLevel('institution')}
+                                   value="institution" onChange={() => props.setPrivacyLevel('institution')}
                                    checked={props.project.details.privacyLevel === 'institution'}/>
                             <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
                                 Members</i></label>
@@ -897,7 +897,7 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-invitation"
                                    name="privacy-level"
-                                   value="invitation" onClick={() => props.setPrivacyLevel('invitation')} disabled
+                                   value="invitation" onChange={() => props.setPrivacyLevel('invitation')} disabled
                                    checked={props.project.details.privacyLevel === 'invitation'}/>
                             <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
                                 Soon</i></label>
@@ -919,36 +919,36 @@ function ProjectAOI(props) {
         </div>;
     }
     return (
-        <div class="row">
-            <div class="col">
-                <h2 class="header px-0">Project AOI</h2>
+        <div className="row">
+            <div className="col">
+                <h2 className="header px-0">Project AOI</h2>
                 <div id="project-aoi">
                     <div id="project-map"></div>
                     {msg}
-                    <div class="form-group mx-4">
-                        <div class="row">
-                            <div class="col-md-6 offset-md-3">
-                                <input class="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
-                                       defaultValue={project.latMax} placeholder="North" autocomplete="off" min="-90.0"
+                    <div className="form-group mx-4">
+                        <div className="row">
+                            <div className="col-md-6 offset-md-3">
+                                <input className="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
+                                       defaultValue={project.latMax} placeholder="North" autoComplete="off" min="-90.0"
                                        max="90.0" step="any"/>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <input class="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
-                                       defaultValue={project.lonMin} placeholder="West" autocomplete="off" min="-180.0"
+                        <div className="row">
+                            <div className="col-md-6">
+                                <input className="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
+                                       defaultValue={project.lonMin} placeholder="West" autoComplete="off" min="-180.0"
                                        max="180.0" step="any"/>
                             </div>
-                            <div class="col-md-6">
-                                <input class="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
-                                       defaultValue={project.lonMax} placeholder="East" autocomplete="off" min="-180.0"
+                            <div className="col-md-6">
+                                <input className="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
+                                       defaultValue={project.lonMax} placeholder="East" autoComplete="off" min="-180.0"
                                        max="180.0" step="any"/>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 offset-md-3">
-                                <input class="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
-                                       defaultValue={project.latMin} placeholder="South" autocomplete="off" min="-90.0"
+                        <div className="row">
+                            <div className="col-md-6 offset-md-3">
+                                <input className="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
+                                       defaultValue={project.latMin} placeholder="South" autoComplete="off" min="-90.0"
                                        max="90.0" step="any"/>
                             </div>
                         </div>
@@ -962,6 +962,9 @@ function ProjectAOI(props) {
 function ProjectImagery(props) {
     var project = props.project;
     if (project.imageryList != null) {
+if(project.details.baseMapSource==null){
+    project.details.baseMapSource="";
+}
         return (
             <div className="row mb-3">
                 <div className="col">
@@ -973,8 +976,8 @@ function ProjectImagery(props) {
                                     size="1"
                                     value={project.details.baseMapSource} onChange={props.setBaseMapSource}>
                                     {
-                                        project.imageryList.map(imagery =>
-                                            <option value={imagery.title}>{imagery.title}</option>
+                                        project.imageryList.map((imagery,uid) =>
+                                            <option key={uid} value={imagery.title}>{imagery.title}</option>
                                         )
                                     }
                             </select>
@@ -1015,7 +1018,7 @@ function PlotDesign(props) {
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-random"
                                            name="plot-distribution" value="random"
-                                           onClick={() => props.setPlotDistribution('random')}
+                                           onChange={() => props.setPlotDistribution('random')}
                                            checked={props.project.details.plotDistribution === 'random'}/>
                                     <label className="form-check-label small"
                                            htmlFor="plot-distribution-random">Random</label>
@@ -1023,7 +1026,7 @@ function PlotDesign(props) {
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-gridded"
                                            name="plot-distribution" defaultValue="gridded"
-                                           onClick={() => props.setPlotDistribution('gridded')}
+                                           onChange={() => props.setPlotDistribution('gridded')}
                                            checked={props.project.details.plotDistribution === 'gridded'}/>
                                     <label className="form-check-label small"
                                            htmlFor="plot-distribution-gridded">Gridded</label>
@@ -1031,7 +1034,7 @@ function PlotDesign(props) {
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-csv"
                                            name="plot-distribution" defaultValue="csv"
-                                           onClick={() => props.setPlotDistribution('csv')}
+                                           onChange={() => props.setPlotDistribution('csv')}
                                            checked={props.project.details.plotDistribution === 'csv'}/>
                                     <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                            id="custom-csv-upload">
@@ -1043,7 +1046,7 @@ function PlotDesign(props) {
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-distribution-shp"
                                            name="plot-distribution" defaultValue="shp"
-                                           onClick={() => props.setPlotDistribution('shp')}
+                                           onChange={() => props.setPlotDistribution('shp')}
                                            checked={props.project.details.plotDistribution === 'shp'}/>
                                     <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                            id="custom-shp-upload">
@@ -1076,14 +1079,14 @@ function PlotDesign(props) {
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-shape-circle"
                                            name="plot-shape" defaultValue="circle"
-                                           onClick={() => props.setPlotShape('circle')}
+                                           onChange={() => props.setPlotShape('circle')}
                                            checked={props.project.details.plotShape === 'circle'}/>
                                     <label className="form-check-label small" htmlFor="plot-shape-circle">Circle</label>
                                 </div>
                                 <div className="form-check form-check-inline">
                                     <input className="form-check-input" type="radio" id="plot-shape-square"
                                            name="plot-shape" defaultValue="square"
-                                           onClick={() => props.setPlotShape('square')}
+                                           onChange={() => props.setPlotShape('square')}
                                            checked={props.project.details.plotShape === 'square'}/>
                                     <label className="form-check-label small" htmlFor="plot-shape-square">Square</label>
                                 </div>
@@ -1112,7 +1115,7 @@ function SampleDesign(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-random"
                                    name="sample-distribution" defaultValue="random"
-                                   onClick={() => props.setSampleDistribution('random')}
+                                   onChange={() => props.setSampleDistribution('random')}
                                    checked={props.project.details.sampleDistribution === 'random'}/>
                             <label className="form-check-label small"
                                    htmlFor="sample-distribution-random">Random</label>
@@ -1120,7 +1123,7 @@ function SampleDesign(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-gridded"
                                    name="sample-distribution" defaultValue="gridded"
-                                   onClick={() => props.setSampleDistribution('gridded')}
+                                   onChange={() => props.setSampleDistribution('gridded')}
                                    checked={props.project.details.sampleDistribution === 'gridded'}/>
                             <label className="form-check-label small"
                                    htmlFor="sample-distribution-gridded">Gridded</label>
@@ -1128,7 +1131,7 @@ function SampleDesign(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-csv"
                                    name="sample-distribution" defaultValue="csv"
-                                   onClick={() => props.setSampleDistribution('csv')}
+                                   onChange={() => props.setSampleDistribution('csv')}
                                    checked={props.project.details.sampleDistribution === 'csv'}/>
                             <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                    id="sample-custom-csv-upload">
@@ -1140,7 +1143,7 @@ function SampleDesign(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="sample-distribution-shp"
                                    name="sample-distribution" defaultValue="shp"
-                                   onClick={() => props.setSampleDistribution('shp')}
+                                   onChange={() => props.setSampleDistribution('shp')}
                                    checked={props.project.details.sampleDistribution === 'shp'}/>
                             <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                    id="sample-custom-shp-upload">
@@ -1174,8 +1177,8 @@ function SampleValueInfo(props) {
     var project = props.project;
     if (project.details != null) {
         return (
-            project.details.sampleValues.map(sampleValueGroup =>
-                <div className="sample-value-info">
+            project.details.sampleValues.map((sampleValueGroup,_uid) =>
+                <div key={_uid} className="sample-value-info">
                     <h2 className="header px-0">
                         <RemoveSampleValueGroupButton projectId={props.projectId}
                                                       removeSampleValueGroup={props.removeSampleValueGroup}
@@ -1193,8 +1196,8 @@ function SampleValueInfo(props) {
                         </thead>
                         <tbody>
                         {
-                            props.topoSort(sampleValueGroup.values).map(sampleValue =>
-                                <tr>
+                            props.topoSort(sampleValueGroup.values).map((sampleValue,uid) =>
+                                <tr key={uid}>
                                     <td>
                                         <RemoveSampleValueRowButton projectId={props.projectId}
                                                                     removeSampleValueRow={props.removeSampleValueRow}
@@ -1202,15 +1205,15 @@ function SampleValueInfo(props) {
                                                                     sampleValue={sampleValue}/>
                                     </td>
                                     <td style={{
-                                        "font-style": sampleValue.parent == null || sampleValue.parent == ''
+                                        fontStyle: sampleValue.parent == null || sampleValue.parent == ''
                                             ? 'normal'
-                                            : 'italic', "text-indent": '10px'
+                                            : 'italic', textIndent: '10px'
                                     }}>
                                         {sampleValue.name}
                                     </td>
                                     <td>
                                         <div className="circle"
-                                             style={{"background-color": sampleValue.color, border: "solid 1px"}}></div>
+                                             style={{backgroundColor: sampleValue.color, border: "solid 1px"}}></div>
                                     </td>
                                     <td>
                                         &nbsp;
@@ -1290,8 +1293,8 @@ function SampleValueTable(props) {
                             onChange={(e) => props.handleInputParent(props.sampleValueGroup.name, e)}>
                         <option value="">None</option>
                         {
-                            props.getParentSampleValues(props.sampleValueGroup.values).map(parentSampleValue =>
-                                <option value={parentSampleValue.name}>{parentSampleValue.name}</option>
+                            props.getParentSampleValues(props.sampleValueGroup.values).map((parentSampleValue,uid) =>
+                                <option key={uid} value={parentSampleValue.name}>{parentSampleValue.name}</option>
                             )
                         }
                     </select>
@@ -1300,7 +1303,7 @@ function SampleValueTable(props) {
         );
     }
     else
-        return (<span></span>);
+        return (<tr></tr>);
 }
 
 function ProjectManagement(props) {

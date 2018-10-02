@@ -106,12 +106,12 @@ function AccountForm(props) {
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="current-password">Verify your identity</label>
-                        <input autocomplete=" off" id="current-password" name="current-password" placeholder="
-                                       Current password" defaultValue="" type="password" class="form-control"/>
+                    <div className="form-group">
+                        <label htmlFor = "current-password">Verify your identity</label>
+                        <input autoComplete=" off" id="current-password" name="current-password" placeholder="
+                                       Current password" defaultValue="" type="password" className="form-control"/>
                     </div>
-                    <input class="btn btn-outline-lightgreen btn-block" name="update-account" defaultValue="Update
+                    <input className="btn btn-outline-lightgreen btn-block" name="update-account" defaultValue="Update
                                        account settings" type="submit"/>
                 </form>
 

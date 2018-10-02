@@ -154,7 +154,7 @@ class InstitutionList extends React.Component {
         return (
 
             this.state.institutions.map(
-                institution => <Institution id={institution.id} name={institution.name} projects={projects}
+                (institution,uid) => <Institution key={uid} id={institution.id} name={institution.name} projects={projects}
                                             documentRoot={this.state.documentRoot}/>
             )
 
@@ -168,7 +168,7 @@ function Institution(props) {
     const institutionName = props.name;
 
     return (
-        <li key={institutionId}>
+        <li>
             <div className="btn bg-lightgreen btn-block m-0 p-2 rounded-0"
                  data-toggle="collapse"
                  href={"#collapse" + institutionId} role="button"
@@ -201,7 +201,7 @@ function ProjectList(props) {
         <div className="collapse" id={"collapse" + institutionId}>
             {
                 props.projects.map(
-                    project => <Project id={project.id} institutionId={institutionId} editable={project.editable}
+                    (project,uid) => <Project key={uid} id={project.id} institutionId={institutionId} editable={project.editable}
                                         name={project.name} documentRoot={props.documentRoot}
                                         institution={parseInt(project.institution)}/>
                 )
@@ -214,8 +214,8 @@ function Project(props) {
     if (props.institution == props.institutionId) {
         if (props.editable == true) {
             return (
-                <div class="bg-lightgrey text-center p-1 row px-auto">
-                    <div class="col-lg-8 pr-lg-1">
+                <div className="bg-lightgrey text-center p-1 row px-auto">
+                    <div className="col-lg-8 pr-lg-1">
                         <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
                            href={props.documentRoot + "/collection/" + props.id}>
                             {props.name}

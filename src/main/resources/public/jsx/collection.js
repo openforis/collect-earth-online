@@ -568,30 +568,30 @@ function SideBarFieldSet(props) {
         imageryTitle = <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                                size="1" defaultValue={collection.currentProject.baseMapSource}
                                onChange={props.setBaseMapSource}>{
-            collection.imageryList.map(imagery =>
-                <option value={imagery.title}>{imagery.title}</option>
+            collection.imageryList.map((imagery,uid) =>
+                <option key={uid} value={imagery.title}>{imagery.title}</option>
             )
         }
         </select>;
     }
     if (collection.currentProject != null) {
-        sampleValueGroup = collection.currentProject.sampleValues.map(sampleValueGroup =>
-            <fieldset className="mb-1 justify-content-center text-center">
+        sampleValueGroup = collection.currentProject.sampleValues.map((sampleValueGroup,_uid) =>
+            <fieldset key={_uid} className="mb-1 justify-content-center text-center">
                 <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
                 <ul id="samplevalue" className="samplevalue justify-content-center">
                     {
-                        sampleValueGroup.values.map(sampleValue =>
-                            <li className="mb-1">
+                        sampleValueGroup.values.map((sampleValue,uid) =>
+                            <li key={uid} className="mb-1">
                                 <button type="button"
                                         className="btn btn-outline-darkgray btn-sm btn-block pl-1"
                                         id={sampleValue.name + '_' + sampleValue.id}
                                         name={sampleValue.name + '_' + sampleValue.id}
                                         onClick={() => props.setCurrentValue(sampleValueGroup, sampleValue)}>
                                     <div className="circle" style={{
-                                        "background-color": sampleValue.color,
+                                        backgroundColor: sampleValue.color,
                                         border: "solid 1px",
                                         float: "left",
-                                        "margin-top": "4px"
+                                        marginTop: "4px"
                                     }}></div>
                                     <span className="small">{sampleValue.name}</span>
                                 </button>

@@ -282,7 +282,7 @@ class InstitutionDescription extends React.Component {
                     <div className="row justify-content-center mb-2" id="institution-controls">
                         <div className="col-3">
                             <button id="edit-institution" type="button"
-                                    class="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                     onClick={togglePageMode}>
                                 <i className="fa fa-edit"></i> Edit
                             </button>
@@ -550,7 +550,7 @@ class ImageryList extends React.Component {
                                        isAdmin={isAdmin}/>
                         {
                             this.props.imagery.map(
-                                imageryItem => <Imagery institution={institution} title={imageryItem.title}
+                                (imageryItem,uid) => <Imagery key={uid} institution={institution} title={imageryItem.title}
                                                         imageryId={imageryItem.id} isAdmin={isAdmin}
                                                         deleteImagery={() => this.deleteImagery(this.props.documentRoot, imageryItem.id, this.props.institution.name, this.props.institutionId)}/>
                             )
@@ -696,7 +696,7 @@ class ProjectList extends React.Component {
                     <ProjectButton createProject={this.createProject}/>
 
                     {
-                        this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
+                        this.props.projects.map((project,uid) => <Project key={uid} documentRoot={this.props.documentRoot}
                                                                     proj={project}
                                                                     institution={institution}
                                                                     isAdmin={this.props.isAdmin}/>)
@@ -709,7 +709,7 @@ class ProjectList extends React.Component {
             return (
                 <React.Fragment>
                     {
-                        this.props.projects.map(project => <Project documentRoot={this.props.documentRoot}
+                        this.props.projects.map((project,uid) => <Project key={uid} documentRoot={this.props.documentRoot}
                                                                     proj={project}
                                                                     institution={institution}
                                                                     isAdmin={this.props.isAdmin}/>)
@@ -834,7 +834,7 @@ class UserList extends React.Component {
                             usersCompleteList={this.props.usersCompleteList}
                             updateUserInstitutionRole={this.updateUserInstitutionRole}/>
                     {
-                        this.props.users.map(user => <User documentRoot={this.props.documentRoot} user={user}
+                        this.props.users.map((user,uid) => <User key={uid} documentRoot={this.props.documentRoot} user={user}
                                                        institution={this.props.institution} isAdmin={this.state.isAdmin} institutionRole={this.state.institutionRole}
                                                        pageMode={this.state.pageMode}
                                                        updateUserInstitutionRole={this.updateUserInstitutionRole}/>
@@ -962,7 +962,6 @@ class UserButton extends React.Component {
     }
 
     isInstitutionMember(userId) {
-        console.log("is inst mem");
         return userId == 1
             || this.props.users.some(
                 function (user) {
