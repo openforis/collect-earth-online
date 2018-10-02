@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
 class Institution extends React.Component {
     constructor(props) {
         super(props);
@@ -437,9 +436,7 @@ class InstitutionDescription extends React.Component {
                             <div className="form-group">
                                 <label id="institution-description"
                                        htmlFor="institution-details-description">Description</label>
-                                <textarea id="institution-details-description" className="form-control"
-                                          rows="4" value={institution.description}
-                                          onChange={this.props.handleChange}></textarea>
+                                <textarea id="institution-details-description" className="form-control" rows="4" defaultValue={institution.description} onChange={this.props.handleChange}/>
                             </div>
                             {this.renderButtons(institutionId, institution, pageMode, this.props.togglePageMode, this.props.cancelChanges)}
                         </form>
