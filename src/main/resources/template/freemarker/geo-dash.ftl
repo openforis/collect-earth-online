@@ -1,6 +1,8 @@
 <#include "header.ftl">
 <#include "geodash-navbar.ftl">
 <#include "start-content.ftl">
+
+
 <script>
     let theURL="${root}" + "/geo-dash";
     var pid = this.getParameterByName("pid");
@@ -22,11 +24,19 @@
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 </script>
-<script type="text/babel" src="${root}/js/geodashreact.js"></script>
+
+
 <br style="clear:both;">
     <div class="container-fluid">
         <div id="dashHolder"></div>
     </div>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~widgetlayouteditor.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/geodashreact.bundle.js"></script>
 
+<script type="text/javascript">
+    window.onload = function () {
+        geodashreact.renderGeodashPage();
+    };
+</script>
 <#include "end-content.ftl">
 <#include "footer.ftl">

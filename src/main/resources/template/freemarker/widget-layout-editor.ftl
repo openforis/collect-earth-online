@@ -4,10 +4,6 @@
 <link rel="stylesheet" type="text/css" href="https://rawgit.com/STRML/react-grid-layout/master/css/styles.css"/>
 <link rel="stylesheet" type="text/css" href="https://rawgit.com/STRML/react-grid-layout/master/examples/example-styles.css"/>
 <link rel="stylesheet" type="text/css" href="https://rawgit.com/STRML/react-resizable/master/css/styles.css"/>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/lodash/4.5.1/lodash.min.js"></script>
-<script src="${root}/js/react-addons-pure-render-mixin.min.js"></script>
-<script type="text/javascript" src="https://rawgit.com/STRML/react-grid-layout/master/dist/react-grid-layout.min.js"></script>
-<script type="text/babel" src="${root}/js/geo-dash-widget-editor.js"></script>
 
 
 <script>
@@ -36,8 +32,13 @@
 </script>
 <br style="clear:both;">
  <h3>React-Widget-Layout-Editor </h3>
-  <div id="democontent"></div>
-
-
+  <div id="content"></div>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~widgetlayouteditor.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/widgetlayouteditor.bundle.js"></script>
+<script type="text/javascript">
+    window.onload = function () {
+        widgetlayouteditor.renderWidgetEditorPage();
+    };
+</script>
 <#include "end-content.ftl">
 <#include "footer.ftl">
