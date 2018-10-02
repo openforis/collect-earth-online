@@ -348,7 +348,15 @@ class InstitutionDescription extends React.Component {
             );
         }
     }
-
+    encodeImageFileAsURL(event) {
+        var file=event.target.files[0];
+        let reader = new FileReader();
+        reader.onloadend = function () {
+            let base64Data = reader.result;
+            console.log('RESULT', base64Data);
+        };
+        reader.readAsDataURL(file);
+    }
     render() {
         const {institution, documentRoot, institutionId, role, of_users_api_url, storage, isAdmin, details} = this.props;
         let pageMode = this.props.pageMode;
@@ -424,14 +432,14 @@ class InstitutionDescription extends React.Component {
                             <div className="form-group">
                                 <label id="institution-logo-selector" htmlFor="institution-logo">Logo</label>
                                 <input id="institution-logo" className="form-control mb-1 mr-sm-2" type="file"
-                                       accept="image/*"/>
+                                       accept="image/*" onChange={this.encodeImageFileAsURL}/>
                             </div>
                             <div className="form-group">
                                 <label id="institution-description"
                                        htmlFor="institution-details-description">Description</label>
                                 <textarea id="institution-details-description" className="form-control"
-                                          rows="4"
-                                          onChange={this.props.handleChange}>{institution.description}</textarea>
+                                          rows="4" value={institution.description}
+                                          onChange={this.props.handleChange}></textarea>
                             </div>
                             {this.renderButtons(institutionId, institution, pageMode, this.props.togglePageMode, this.props.cancelChanges)}
                         </form>
@@ -1030,7 +1038,6 @@ function AddUser(props){
 
 function RequestMembership(props) {
     if (props.userId != '' && props.institutionId > 0 && !props.isInstitutionMember) {
-        console.log("in ifffff");
         return (
             <React.Fragment>
                 <div>
