@@ -417,6 +417,7 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     ceoIcon:      mercator.getIconStyle("ceoicon.png"),
                     redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
                     bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
+                    yellowPoint:  mercator.getCircleStyle(5, null, "yellow", 2),
                     redCircle:    mercator.getCircleStyle(5, null, "red", 2),
                     yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
                     greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
@@ -424,7 +425,7 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
                     greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
                     cluster:      mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
-                    polygon:      mercator.getPolygonStyle(null, "#8b2323", 3)};
+                    polygon:      mercator.getPolygonStyle(null, "yellow", 3)};
 
 /*****************************************************************************
 ***

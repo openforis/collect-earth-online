@@ -216,7 +216,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             mercator.addVectorLayer(this.mapConfig,
                                     "currentSamples",
                                     mercator.samplesToVectorSource(this.currentPlot.samples),
-                                    ceoMapStyles.redPoint);
+                                    ceoMapStyles.yellowPoint);
             mercator.enableSelection(this.mapConfig, "currentSamples");
             mercator.zoomMapToLayer(this.mapConfig, "currentPlot");
 
@@ -277,7 +277,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
             mercator.addVectorLayer(this.mapConfig,
                                     "currentSamples",
                                     mercator.samplesToVectorSource(this.currentPlot.samples),
-                                    ceoMapStyles.redPoint);
+                                    ceoMapStyles.yellowPoint);
             mercator.enableSelection(this.mapConfig, "currentSamples");
             mercator.zoomMapToLayer(this.mapConfig, "currentPlot");
 
