@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 var debugreturn;
 var gObject;
 class Geodash extends React.Component {
@@ -32,7 +35,7 @@ class Geodash extends React.Component {
                 callbackComplete = {this.state.callbackComplete}
             />
         </React.Fragment> );
-    }
+    };
     handleFullScreen = (widget, type) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
@@ -841,7 +844,10 @@ var theSplit = decodeURI(projAOI).replace("[", "").replace("]", "").split(",");
 var projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
 var mapWidgetArray = [];
 var graphWidgetArray = [];
-ReactDOM.render(
-    <Geodash/>,
-    document.getElementById('dashHolder')
-);
+
+export function renderGeodashPage(args) {
+    ReactDOM.render(
+        <Geodash/>,
+        document.getElementById("dashHolder")
+    );
+}

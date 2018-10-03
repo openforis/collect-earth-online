@@ -4,7 +4,7 @@
 <div class="row justify-content-center">
 	<div id="account" class="col-xl-6 col-lg-8 border bg-lightgray mb-5"></div>
 </div>
-<script type="text/javascript" src="${root}/js/vendors~account~collection~home~institution~project.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~widgetlayouteditor.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/account.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {

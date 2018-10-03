@@ -3,7 +3,7 @@
 <#include "announcements.ftl">
 <#include "start-content.ftl">
 <div id="home"></div>
-<script type="text/javascript" src="${root}/js/vendors~account~collection~home~institution~project.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~widgetlayouteditor.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/home.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {

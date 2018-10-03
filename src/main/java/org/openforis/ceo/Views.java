@@ -169,8 +169,8 @@ public class Views {
 
     public static Route testWidgetLayout(FreeMarkerEngine freemarker) {
         Function<Request, String> getPid = (req) -> req.queryParams("pid");
-        return makeAuthenticatedRoute("test-Layout-Editor", freemarker,
-                Map.of("project_id", getPid));
+        return makeAuthenticatedRoute("Test-Layout-Editor", freemarker,
+                                      Map.of("project_id", getPid));
     }
 
     public static Route cardTest(FreeMarkerEngine freemarker) {
