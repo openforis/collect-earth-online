@@ -192,7 +192,14 @@
 			                                        <input type="file" accept="text/csv" id="plot-distribution-csv-file"  style="display: none;">
 			                                    </label>
 											</div>
-							              <div class="form-group mb-1">
+											<div class="form-check form-check-inline">
+			                                    <input class="form-check-input" type="radio" id="plot-distribution-shp" name="plot-distribution" value="shp" ng-click="project.setPlotDistribution('shp')">
+			                                    <label class="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0" id="custom-shp-upload">
+			                                        <small>Upload SHP</small>
+			                                        <input type="file" accept="application/zip" id="plot-distribution-shp-file"  style="display: none;">
+			                                    </label>
+											</div>
+							                <div class="form-group mb-1">
 						                    <p for="num-plots">Number of plots</p>
 						                    <input class="form-control form-control-sm" type="number" id="num-plots" name="num-plots" autocomplete="off" min="0" step="1" ng-model="project.details.numPlots">
 					                    </div>

@@ -32,6 +32,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
             var formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.institution);
             formData.append("plot-distribution-csv-file", document.getElementById("plot-distribution-csv-file").files[0]);
+            formData.append("plot-distribution-shp-file", document.getElementById("plot-distribution-shp-file").files[0]);
             formData.append("sample-values", JSON.stringify(this.details.sampleValues));
             $http.post(this.root + "/create-project",
                        formData,
@@ -163,12 +164,27 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         if (plotDistribution == "random") {
             utils.enable_element("num-plots");
             utils.disable_element("plot-spacing");
+            utils.enable_element("plot-shape-circle");
+            utils.enable_element("plot-shape-square");
+            utils.enable_element("plot-size");
         } else if (plotDistribution == "gridded") {
             utils.disable_element("num-plots");
             utils.enable_element("plot-spacing");
-        } else {
+            utils.enable_element("plot-shape-circle");
+            utils.enable_element("plot-shape-square");
+            utils.enable_element("plot-size");
+        } else if (plotDistribution == "csv") {
             utils.disable_element("num-plots");
             utils.disable_element("plot-spacing");
+            utils.enable_element("plot-shape-circle");
+            utils.enable_element("plot-shape-square");
+            utils.enable_element("plot-size");
+        } else if (plotDistribution == "shp") {
+            utils.disable_element("num-plots");
+            utils.disable_element("plot-spacing");
+            utils.disable_element("plot-shape-circle");
+            utils.disable_element("plot-shape-square");
+            utils.disable_element("plot-size");
         }
     };
 
@@ -394,7 +410,7 @@ angular.module("project", []).controller("ProjectController", ["$http", function
         // Check the radio button values for this project
         document.getElementById("privacy-" + this.details.privacyLevel).checked = true;
         document.getElementById("plot-distribution-" + this.details.plotDistribution).checked = true;
-        document.getElementById("plot-shape-" + this.details.plotShape).checked = true;
+        document.getElementById("plot-shape-" + (this.details.plotShape || "square")).checked = true;
         document.getElementById("sample-distribution-" + this.details.sampleDistribution).checked = true;
 
         // Enable the input fields that are connected to the radio buttons if their values are not null

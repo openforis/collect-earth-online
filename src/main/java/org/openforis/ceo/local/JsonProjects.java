@@ -25,6 +25,7 @@ import com.google.gson.JsonPrimitive;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -735,8 +736,58 @@ public class JsonProjects implements Projects {
         return obj.get(field).isJsonNull() ? new JsonPrimitive(0) : obj.get(field);
     }
 
+    private static JsonElement getOrEmptyString(JsonObject obj, String field) {
+        return obj.get(field).isJsonNull() ? new JsonPrimitive("") : obj.get(field);
+    }
+
+    private static void extractZipFileToGeoJson(int projectId) {
+        try {
+            System.out.println("Converting the uploaded ZIP file into GeoJSON.");
+            var pb = new ProcessBuilder("/bin/sh", "shp2geojson.sh", "project-" + projectId);
+            pb.directory(new File(expandResourcePath("/shp")));
+            var p = pb.start();
+            p.waitFor();
+            System.out.println("Conversion complete.");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static JsonArray getGeoJsonGeometries(int projectId) {
+        var geoJson = readJsonFile("../shp/project-" + projectId + "/project-" + projectId + ".json").getAsJsonObject();
+        if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+            return toStream(geoJson.get("features").getAsJsonArray())
+                .map(feature -> feature.get("geometry").getAsJsonObject())
+                .filter(geometry -> geometry.get("type").getAsString().equals("Polygon"))
+                .collect(intoJsonArray);
+        } else {
+            return new JsonArray();
+        }
+    }
+
+    private static Double[][] getGeometryCenters(JsonArray geoJsonGeometries) {
+        return toStream(geoJsonGeometries)
+            .map(geometry -> {
+                    var coordinates = geometry.get("coordinates").getAsJsonArray();
+                    var exteriorRing = coordinates.get(0).getAsJsonArray();
+                    var centroidX = toElementStream(exteriorRing)
+                        .skip(1) // linear rings repeat the same point as their first and last vertex
+                        .mapToDouble(point -> point.getAsJsonArray().get(0).getAsDouble())
+                        .average()
+                        .getAsDouble();
+                    var centroidY = toElementStream(exteriorRing)
+                        .skip(1) // linear rings repeat the same point as their first and last vertex
+                        .mapToDouble(point -> point.getAsJsonArray().get(1).getAsDouble())
+                        .average()
+                        .getAsDouble();
+                    return new Double[]{centroidX, centroidY};
+                })
+            .toArray(Double[][]::new);
+    }
+
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
+        var projectId =          newProject.get("id").getAsInt();
         var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
         var latMin =             getOrZero(newProject,"latMin").getAsDouble();
         var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
@@ -744,8 +795,8 @@ public class JsonProjects implements Projects {
         var plotDistribution =   newProject.get("plotDistribution").getAsString();
         var numPlots =           getOrZero(newProject,"numPlots").getAsInt();
         var plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
-        var plotShape =          newProject.get("plotShape").getAsString();
-        var plotSize =           newProject.get("plotSize").getAsDouble();
+        var plotShape =          getOrEmptyString(newProject,"plotShape").getAsString();
+        var plotSize =           getOrZero(newProject,"plotSize").getAsDouble();
         var sampleDistribution = newProject.get("sampleDistribution").getAsString();
         var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
         var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
@@ -760,6 +811,21 @@ public class JsonProjects implements Projects {
             lonMax = csvBounds[2];
             latMax = csvBounds[3];
         }
+
+        // If plotDistribution is shp, calculate the lat/lon bounds from the shp contents
+        var shpGeoms = new JsonArray();
+        var shpCenters = new Double[][]{};
+        if (plotDistribution.equals("shp")) {
+            extractZipFileToGeoJson(projectId);
+            shpGeoms = getGeoJsonGeometries(projectId);
+            shpCenters = getGeometryCenters(shpGeoms);
+            var shpBounds = calculateBounds(shpCenters, 500.0); // FIXME: replace hard-coded padding with a calculated value
+            lonMin = shpBounds[0];
+            latMin = shpBounds[1];
+            lonMax = shpBounds[2];
+            latMax = shpBounds[3];
+        }
+        final var shpGeomsFinal = shpGeoms;
 
         // Store the lat/lon bounding box coordinates as GeoJSON and remove their original fields
         newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
@@ -778,21 +844,29 @@ public class JsonProjects implements Projects {
 
         // Generate the plot objects and their associated sample points
         var newPlotCenters = plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
-                                  : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
-                                  : csvPoints;
+                           : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
+                           : plotDistribution.equals("csv") ? csvPoints
+                           : shpCenters;
         var plotIndexer = makeCounter();
         var newPlots = Arrays.stream(newPlotCenters)
             .map(plotCenter -> {
                     var newPlot = new JsonObject();
-                    newPlot.addProperty("id", plotIndexer.getAsInt());
+                    var newPlotId = plotIndexer.getAsInt();
+                    newPlot.addProperty("id", newPlotId);
                     newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
                     newPlot.addProperty("flagged", false);
                     newPlot.addProperty("analyses", 0);
                     newPlot.add("user", null);
 
-                    var newSamplePoints = sampleDistribution.equals("gridded")
-                        ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
-                        : createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot);
+                    if (plotDistribution.equals("shp")) {
+                        newPlot.addProperty("geom", shpGeomsFinal.get(newPlotId - 1).toString());
+                    }
+
+                    // FIXME: support different sampleDistributions when plotDistribution == shp
+                    var newSamplePoints = plotDistribution.equals("shp") ? new Double[][]{new Double[]{plotCenter[0], plotCenter[1]}}
+                                        : sampleDistribution.equals("gridded") ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
+                                        : createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot);
+
                     var sampleIndexer = makeCounter();
                     var newSamples = Arrays.stream(newSamplePoints)
                         .map(point -> {
@@ -852,6 +926,17 @@ public class JsonProjects implements Projects {
                 newProject.addProperty("csv", csvFileName);
             } else {
                 newProject.add("csv", null);
+            }
+
+            // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
+            if (newProject.get("plotDistribution").getAsString().equals("shp")) {
+                var shpFileName = writeFilePart(req,
+                                                "plot-distribution-shp-file",
+                                                expandResourcePath("/shp"),
+                                                "project-" + newProjectId);
+                newProject.addProperty("shp", shpFileName);
+            } else {
+                newProject.add("shp", null);
             }
 
             // Add ids to the sampleValueGroups and sampleValues and clean up some of their unnecessary fields
