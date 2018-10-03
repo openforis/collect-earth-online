@@ -2,13 +2,13 @@ const path = require("path");
 
 module.exports = {
     entry: {
-        home:        path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
-        institution: path.resolve(__dirname, "src/main/resources/public/jsx/institution.js"),
-        collection:  path.resolve(__dirname, "src/main/resources/public/jsx/collection.js"),
-        project:     path.resolve(__dirname, "src/main/resources/public/jsx/project.js"),
-        account:     path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
-        geodashreact:     path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
-        widgetlayouteditor:     path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
+        home:               path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
+        institution:        path.resolve(__dirname, "src/main/resources/public/jsx/institution.js"),
+        collection:         path.resolve(__dirname, "src/main/resources/public/jsx/collection.js"),
+        project:            path.resolve(__dirname, "src/main/resources/public/jsx/project.js"),
+        account:            path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
+        geodashreact:       path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
+        widgetlayouteditor: path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
     },
     output: {
         path: path.resolve(__dirname, "src/main/resources/public/js"),
