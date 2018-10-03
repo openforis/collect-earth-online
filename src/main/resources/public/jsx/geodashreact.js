@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 var debugreturn;
 var gObject;
 class Geodash extends React.Component {
@@ -843,9 +844,10 @@ var theSplit = decodeURI(projAOI).replace("[", "").replace("]", "").split(",");
 var projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
 var mapWidgetArray = [];
 var graphWidgetArray = [];
+
 export function renderGeodashPage(args) {
-ReactDOM.render(
-    <Geodash/>,
-    document.getElementById('dashHolder')
-);
+    ReactDOM.render(
+        <Geodash/>,
+        document.getElementById("dashHolder")
+    );
 }

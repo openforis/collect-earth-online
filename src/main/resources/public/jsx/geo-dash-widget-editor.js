@@ -1,6 +1,6 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import _ from 'lodash'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import _ from 'lodash';
 
 // import PureRenderMixin from 'react-addons-pure-render-mixin'
 // import {GridLayout} from 'react-grid-layout'
@@ -9,7 +9,6 @@ import _ from 'lodash'
 //import _ from 'lodash'
 
 class BasicLayout1 extends React.Component{
-
     render() {
         return (
             <React.Fragment>
@@ -27,8 +26,8 @@ class BasicLayout1 extends React.Component{
 }
 
 export function renderWidgetEditorPage(args) {
-ReactDOM.render(
-    <BasicLayout1 />,
-    document.getElementById('content')
-);
+    ReactDOM.render(
+        <BasicLayout1/>,
+        document.getElementById('content')
+    );
 }
