@@ -1039,7 +1039,7 @@ function PlotDesign(props) {
                                     <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                            id="custom-csv-upload">
                                         <small>Upload CSV</small>
-                                        <input type="file" accept="text/csv" id="plot-distribution-csv-file"
+                                        <input type="file" accept="text/csv" id="plot-distribution-csv-file" onChange={this.encodeImageFileAsURL}
                                                style={{display: "none"}} disabled/>
                                     </label>
                                 </div>
@@ -1051,7 +1051,7 @@ function PlotDesign(props) {
                                     <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                            id="custom-shp-upload">
                                         <small>Upload SHP</small>
-                                        <input type="file" accept=".shp" id="plot-distribution-shp-file"
+                                        <input type="file" accept=".shp" id="plot-distribution-shp-file" onChange={this.encodeImageFileAsURL}
                                                style={{display: "none"}} disabled/>
                                     </label>
                                 </div>
@@ -1103,74 +1103,91 @@ function PlotDesign(props) {
     }
 }
 
-function SampleDesign(props) {
-    var project = props.project;
-    if (project.details != null) {
-        return (
-            <div className="row mb-3">
-                <div className="col">
-                    <div id="sample-design">
-                        <h2 className="header px-0">Sample Design</h2>
-                        <h3>Spatial Distribution</h3>
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="sample-distribution-random"
-                                   name="sample-distribution" defaultValue="random"
-                                   onChange={() => props.setSampleDistribution('random')}
-                                   checked={props.project.details.sampleDistribution === 'random'}/>
-                            <label className="form-check-label small"
-                                   htmlFor="sample-distribution-random">Random</label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="sample-distribution-gridded"
-                                   name="sample-distribution" defaultValue="gridded"
-                                   onChange={() => props.setSampleDistribution('gridded')}
-                                   checked={props.project.details.sampleDistribution === 'gridded'}/>
-                            <label className="form-check-label small"
-                                   htmlFor="sample-distribution-gridded">Gridded</label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="sample-distribution-csv"
-                                   name="sample-distribution" defaultValue="csv"
-                                   onChange={() => props.setSampleDistribution('csv')}
-                                   checked={props.project.details.sampleDistribution === 'csv'}/>
-                            <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                   id="sample-custom-csv-upload">
-                                <small>Upload CSV</small>
-                                <input type="file" accept="text/csv" id="sample-distribution-csv-file"
-                                       style={{display: "none"}} disabled/>
-                            </label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="sample-distribution-shp"
-                                   name="sample-distribution" defaultValue="shp"
-                                   onChange={() => props.setSampleDistribution('shp')}
-                                   checked={props.project.details.sampleDistribution === 'shp'}/>
-                            <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                   id="sample-custom-shp-upload">
-                                <small>Upload SHP</small>
-                                <input type="file" accept=".shp" id="sample-distribution-shp-file"
-                                       style={{display: "none"}} disabled/>
-                            </label>
-                        </div>
-                        <p id="sample-design-text">Description about random</p>
-                        <div className="form-group mb-1">
-                            <p htmlFor="samples-per-plot">Samples per plot</p>
-                            <input className="form-control form-control-sm" type="number" id="samples-per-plot"
-                                   name="samples-per-plot" autoComplete="off" min="0" step="1"
-                                   defaultValue={project.details.samplesPerPlot}/>
-                        </div>
-                        <div className="form-group mb-1">
-                            <p htmlFor="sample-resolution">Sample resolution (m)</p>
-                            <input className="form-control form-control-sm" type="number" id="sample-resolution"
-                                   name="sample-resolution" autoComplete="off" min="0.0" step="any"
-                                   defaultValue={project.details.sampleResolution} disabled/>
+class SampleDesign extends React.Component{
+    constructor(props) {
+        super(props);
+    };
+    encodeImageFileAsURL(event) {
+        var file = event.target.files[0];
+        let reader = new FileReader();
+        reader.onloadend = function () {
+            let base64Data = reader.result;
+            console.log('RESULT', base64Data);
+        };
+        reader.readAsDataURL(file);
+    }
+    render()
+    {
+        var project = this.props.project;
+        if (project.details != null) {
+            return (
+                <div className="row mb-3">
+                    <div className="col">
+                        <div id="sample-design">
+                            <h2 className="header px-0">Sample Design</h2>
+                            <h3>Spatial Distribution</h3>
+                            <div className="form-check form-check-inline">
+                                <input className="form-check-input" type="radio" id="sample-distribution-random"
+                                       name="sample-distribution" defaultValue="random"
+                                       onChange={() => this.props.setSampleDistribution('random')}
+                                       checked={this.props.project.details.sampleDistribution === 'random'}/>
+                                <label className="form-check-label small"
+                                       htmlFor="sample-distribution-random">Random</label>
+                            </div>
+                            <div className="form-check form-check-inline">
+                                <input className="form-check-input" type="radio" id="sample-distribution-gridded"
+                                       name="sample-distribution" defaultValue="gridded"
+                                       onChange={() => this.props.setSampleDistribution('gridded')}
+                                       checked={this.props.project.details.sampleDistribution === 'gridded'}/>
+                                <label className="form-check-label small"
+                                       htmlFor="sample-distribution-gridded">Gridded</label>
+                            </div>
+                            <div className="form-check form-check-inline">
+                                <input className="form-check-input" type="radio" id="sample-distribution-csv"
+                                       name="sample-distribution" defaultValue="csv"
+                                       onChange={() => this.props.setSampleDistribution('csv')}
+                                       checked={this.props.project.details.sampleDistribution === 'csv'}/>
+                                <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                                       id="sample-custom-csv-upload">
+                                    <small>Upload CSV</small>
+                                    <input type="file" accept="text/csv" id="sample-distribution-csv-file"
+                                           onChange={this.encodeImageFileAsURL}
+                                           style={{display: "none"}} disabled/>
+                                </label>
+                            </div>
+                            <div className="form-check form-check-inline">
+                                <input className="form-check-input" type="radio" id="sample-distribution-shp"
+                                       name="sample-distribution" defaultValue="shp"
+                                       onChange={() => props.setSampleDistribution('shp')}
+                                       checked={props.project.details.sampleDistribution === 'shp'}/>
+                                <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                                       id="sample-custom-shp-upload">
+                                    <small>Upload SHP</small>
+                                    <input type="file" accept=".shp" id="sample-distribution-shp-file"
+                                           onChange={this.encodeImageFileAsURL}
+                                           style={{display: "none"}} disabled/>
+                                </label>
+                            </div>
+                            <p id="sample-design-text">Description about random</p>
+                            <div className="form-group mb-1">
+                                <p htmlFor="samples-per-plot">Samples per plot</p>
+                                <input className="form-control form-control-sm" type="number" id="samples-per-plot"
+                                       name="samples-per-plot" autoComplete="off" min="0" step="1"
+                                       defaultValue={project.details.samplesPerPlot}/>
+                            </div>
+                            <div className="form-group mb-1">
+                                <p htmlFor="sample-resolution">Sample resolution (m)</p>
+                                <input className="form-control form-control-sm" type="number" id="sample-resolution"
+                                       name="sample-resolution" autoComplete="off" min="0.0" step="any"
+                                       defaultValue={project.details.sampleResolution} disabled/>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        }
+        else return (<span></span>);
     }
-    else return (<span></span>);
 }
 
 function SampleValueInfo(props) {
