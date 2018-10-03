@@ -201,20 +201,33 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
 
             // FIXME: Move these calls into a function in mercator-openlayers.js
             mercator.disableSelection(this.mapConfig);
+            mercator.removeLayerByTitle(this.mapConfig, "currentPlot");
             mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.mapConfig,
+                                    "currentPlot",
+                                    mercator.geometryToVectorSource(
+                                        this.currentPlot.geom
+                                            ? mercator.parseGeoJson(this.currentPlot.geom, true)
+                                            : mercator.getPlotPolygon(this.currentPlot.center,
+                                                                      this.currentProject.plotSize,
+                                                                      this.currentProject.plotShape)
+                                    ),
+                                    ceoMapStyles.polygon);
             mercator.addVectorLayer(this.mapConfig,
                                     "currentSamples",
                                     mercator.samplesToVectorSource(this.currentPlot.samples),
                                     ceoMapStyles.redPoint);
             mercator.enableSelection(this.mapConfig, "currentSamples");
-            mercator.zoomMapToLayer(this.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.mapConfig, "currentPlot");
 
             window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
                                              + "&pid=" + this.projectId
                                              + "&aoi=[" + mercator.getViewExtent(this.mapConfig)
                                              + "]&daterange=&bcenter=" + this.currentPlot.center
-                                             + "&bradius=" + this.currentProject.plotSize / 2),
+                                             + "&bradius=" + (this.currentProject.plotSize
+                                                              ? this.currentProject.plotSize / 2.0
+                                                              : mercator.getViewRadius(this.mapConfig))),
                         "_geo-dash");
         }
     };
@@ -249,20 +262,33 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
 
             // FIXME: Move these calls into a function in mercator-openlayers.js
             mercator.disableSelection(this.mapConfig);
+            mercator.removeLayerByTitle(this.mapConfig, "currentPlot");
             mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
+            mercator.addVectorLayer(this.mapConfig,
+                                    "currentPlot",
+                                    mercator.geometryToVectorSource(
+                                        this.currentPlot.geom
+                                            ? mercator.parseGeoJson(this.currentPlot.geom, true)
+                                            : mercator.getPlotPolygon(this.currentPlot.center,
+                                                                      this.currentProject.plotSize,
+                                                                      this.currentProject.plotShape)
+                                    ),
+                                    ceoMapStyles.polygon);
             mercator.addVectorLayer(this.mapConfig,
                                     "currentSamples",
                                     mercator.samplesToVectorSource(this.currentPlot.samples),
                                     ceoMapStyles.redPoint);
             mercator.enableSelection(this.mapConfig, "currentSamples");
-            mercator.zoomMapToLayer(this.mapConfig, "currentSamples");
+            mercator.zoomMapToLayer(this.mapConfig, "currentPlot");
 
             window.open(this.root + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.currentProject.name
                                              + "&pid=" + this.projectId
                                              + "&aoi=[" + mercator.getViewExtent(this.mapConfig)
                                              + "]&daterange=&bcenter=" + this.currentPlot.center
-                                             + "&bradius=" + this.currentProject.plotSize / 2),
+                                             + "&bradius=" + (this.currentProject.plotSize
+                                                              ? this.currentProject.plotSize / 2.0
+                                                              : mercator.getViewRadius(this.mapConfig))),
                         "_geo-dash");
         }
     };
@@ -280,6 +306,7 @@ angular.module("collection", []).controller("CollectionController", ["$http", fu
         this.mapClass = "sidemap";
         this.quitClass = "quit-side";
         mercator.removeLayerByTitle(this.mapConfig, "currentPlots");
+        mercator.removeLayerByTitle(this.mapConfig, "currentPlot");
         mercator.removeLayerByTitle(this.mapConfig, "currentSamples");
         this.currentPlot = null;
         this.currentParentSampleValue = null;

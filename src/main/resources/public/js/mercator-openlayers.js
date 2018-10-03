@@ -52,12 +52,22 @@ mercator.getFullExtent = function () {
     return [llxy[0], llxy[1], urxy[0], urxy[1]];
 };
 
-// [Pure] Returns a bounding box for the current map view in Web
-// Mercator as [llx, lly, urx, ury].
+// [Pure] Returns a bounding box for the current map view in WGS84
+// lat/lon as [llx, lly, urx, ury].
 mercator.getViewExtent = function (mapConfig) {
     var size = mapConfig.map.getSize();
     var extent = mapConfig.view.calculateExtent(size);
     return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+};
+
+// [Pure] Returns the minimum distance in meters from the view center
+// to the view extent.
+mercator.getViewRadius = function (mapConfig) {
+    var size = mapConfig.map.getSize();
+    var [llx, lly, urx, ury] = mapConfig.view.calculateExtent(size);
+    var width = Math.abs(urx - llx);
+    var height = Math.abs(ury - lly);
+    return Math.min(width, height) / 2.0;
 };
 
 /*****************************************************************************
