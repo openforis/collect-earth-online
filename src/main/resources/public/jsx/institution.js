@@ -447,6 +447,11 @@ class Institution extends React.Component {
         const projects = this.state.projects;
         const users = this.state.users;
         const isAdmin = this.state.isAdmin;
+        var usersLength=0;
+        if(isAdmin){
+            usersLength=users.length;
+        }
+        else usersLength=this.state.nonPendingUsers;
         return (
             <React.Fragment>
                 <InstitutionDescription userId={this.props.userId} institution={this.state.institution}
@@ -486,7 +491,7 @@ class Institution extends React.Component {
                     </div>
                     <div id="user-list" className="col-lg-4 col-xs-12">
                         <h2 className="header">Users <span
-                            className="badge badge-pill  badge-light">{users.length}</span></h2>
+                            className="badge badge-pill  badge-light">{usersLength}</span></h2>
                         <UserList userId={this.props.userId} documentRoot={this.props.documentRoot}
                                   institution={this.state.institution}
                                   institutionId={this.props.institutionId} users={this.state.users} isAdmin={isAdmin}
