@@ -6,7 +6,9 @@ module.exports = {
         institution: path.resolve(__dirname, "src/main/resources/public/jsx/institution.js"),
         collection:  path.resolve(__dirname, "src/main/resources/public/jsx/collection.js"),
         project:     path.resolve(__dirname, "src/main/resources/public/jsx/project.js"),
-        account:     path.resolve(__dirname, "src/main/resources/public/jsx/account.js")
+        account:     path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
+        geodashreact:     path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
+        widgetlayouteditor:     path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
     },
     output: {
         path: path.resolve(__dirname, "src/main/resources/public/js"),
@@ -25,6 +27,10 @@ module.exports = {
                         presets: [
                             "@babel/preset-env",
                             "@babel/preset-react"
+                        ],
+                        plugins: [
+                            "@babel/plugin-proposal-class-properties",
+                            'lodash'
                         ]
                     }
                 },
