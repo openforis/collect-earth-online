@@ -26,7 +26,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'lodash';
-import PureRenderMixin from 'react-addons-pure-render-mixin'
+//import PureRenderMixin from 'react-addons-pure-render-mixin'
 
 import RGL, { WidthProvider } from 'react-grid-layout'
 const ReactGridLayout = WidthProvider(RGL);
@@ -46,13 +46,14 @@ var dashboardID;
 var gObject;
 var haveWidgets = false;
 var backwidget;
-class BasicLayout extends React.Component{
+class BasicLayout extends React.PureComponent{
     static defaultProps = {
         isDraggable: true,
         isResizable: true,
         className: "layout",
-        items: 2,
+        items: 0,
         rowHeight: 300,
+        onLayoutChange: function() {},
         cols: 12
     }
     constructor(props) {
@@ -335,7 +336,7 @@ class BasicLayout extends React.Component{
         widget.name = name;
         widget.properties = properties;
         widget.layout = {
-            i: id,
+            i: id.toString(),
             x: 0,
             y: (Math.max.apply(Math, this.state.widgets.map(function(o) { return o.layout.y; }))) + 1, // puts it at the bottom
             w: 3,
