@@ -80,7 +80,7 @@ CREATE TABLE user_plots(
 	user_id         integer not null references users (id) on delete cascade on update cascade,
     plot_id         integer not null references plots (id) on delete cascade on update cascade,
     flagged         boolean default false,
-	confidence      integer default 0 CHECK (confidence > 0 AND confidence < 100),
+	confidence      integer default 100 CHECK (confidence >= 0 AND confidence <= 100),
 	collection_time timestamp with time zone default now()
 );
 
@@ -88,7 +88,7 @@ CREATE TABLE sample_values(
 	id             serial primary key,
 	user_plot_id   integer not null references user_plots (id) on delete cascade on update cascade,
     sample_id      integer not null references samples (id) on delete cascade on update cascade,     
-	imagery_id     integer not null references imagery (id) on delete cascade on update cascade,
+	imagery_id     integer references imagery (id) on delete cascade on update cascade,
 	imagery_date   date,
 	value          jsonb
 );

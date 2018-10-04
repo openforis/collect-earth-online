@@ -212,7 +212,7 @@ CREATE OR REPLACE FUNCTION add_institution_user(_institution_id integer, _user_i
     $$
         INSERT INTO institution_users(
 	    institution_id, user_id, role_id)
-	    VALUES (_institution_id, _user_id, _role_id);
+	    VALUES (_institution_id, _user_id, _role_id)
         RETURNING id
     $$
   LANGUAGE SQL;
@@ -269,7 +269,7 @@ CREATE OR REPLACE FUNCTION add_project_widget(_project_id integer, _dashboard_id
     RETURNS integer AS
     $$
         INSERT INTO project_widgets(project_id, dashboard_id, widget)
-        VALUES (_project_id, _dashboard_id , _widget);
+        VALUES (_project_id, _dashboard_id , _widget)
         RETURNING id
     $$
   LANGUAGE SQL;
@@ -313,7 +313,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_dashboard_id(_dashboard_id int
 $$ LANGUAGE SQL;
 
 --Adds institution imagery(for migration script)
- CREATE FUNCTION add_institution_imagery(imagery_id integer,institution_id integer,visibility text, title text, attribution text, extent geometry, source_config jsonb) RETURNS integer AS $$
+ CREATE FUNCTION add_institution_imagery(imagery_id integer,institution_id integer,visibility text, title text, attribution text, extent jsonb, source_config jsonb) RETURNS integer AS $$
 	INSERT INTO imagery (id,institution_id,visibility,title,attribution,extent,source_config)
 	VALUES (imagery_id,institution_id,visibility,title,attribution,extent,source_config)
     RETURNING id
@@ -361,7 +361,7 @@ $$ LANGUAGE SQL;
 --Create project
 CREATE FUNCTION create_project(institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer, plot_spacing float, plot_shape text, plot_size float, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_survey jsonb, classification_start_date date, classification_end_date date, classification_timestep integer) RETURNS integer AS $$	
 	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)	
-	VALUES (institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,	
+	VALUES (institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
 	sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)	
 	RETURNING id	
 $$ LANGUAGE SQL;
