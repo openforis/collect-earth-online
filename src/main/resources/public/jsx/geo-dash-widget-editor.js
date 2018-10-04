@@ -26,6 +26,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'lodash';
+
 //import PureRenderMixin from 'react-addons-pure-render-mixin'
 
 import RGL, { WidthProvider } from 'react-grid-layout'
@@ -246,9 +247,9 @@ class BasicLayout extends React.PureComponent{
         var layout = this.state.layout;
         var holdRef = this;
         return _.map(this.state.widgets, function(widget, i) {
-            return <div key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + holdRef.getImageByType(widget.properties[0]) +")"}}>
+            return <div onDragStart={holdRef.onDragStart} onDragEnd={holdRef.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + holdRef.getImageByType(widget.properties[0]) +")"}}>
                 <h3 className="widgetEditor title">{widget.name}
-                    <span  onClick={holdRef.onRemoveItem.bind(holdRef, i)} className="remove">
+                    <span onClick={(e) => {e.stopPropagation(); holdRef.onRemoveItem(i)}} onMouseDown={function(e){console.log('mousedown happened'); e.stopPropagation()}} className="remove">
                     x
                 </span>
                 </h3>
@@ -274,6 +275,19 @@ class BasicLayout extends React.PureComponent{
             FormReady: false
 
         });
+    }
+    onDragStart = (e) => {
+        console.log('drag start');
+        e.preventDefault();
+        e.stopPropagation();
+        this.props.onMouseDown(e);
+    }
+
+    onDragEnd = (e) => {
+        console.log('drag end');
+        e.preventDefault();
+        e.stopPropagation();
+        this.props.onMouseUp(e);
     }
 
     onDataTypeSelectChanged = event => {
@@ -707,6 +721,8 @@ class BasicLayout extends React.PureComponent{
     }
 
     onRemoveItem(i) {
+
+        console.log('i was here');
         var removedWidget = _.filter(this.state.widgets, function(w){
             return w.layout.i == i.toString();
         });
