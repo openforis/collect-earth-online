@@ -13,10 +13,20 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
     RETURNS integer AS
     $$
         INSERT INTO users(email, password)
-        VALUES (_email, _password);
+        VALUES (_email, _password)
         RETURNING id
     $$
   LANGUAGE SQL;
+
+-- Adds a new user to the database (3 params for migration).
+CREATE OR REPLACE FUNCTION add_user(user_id integer,_email text, _password text)
+  RETURNS integer AS
+  $$
+      INSERT INTO users(id,email, password)
+      VALUES (user_id,_email, _password)
+      RETURNING id
+  $$
+LANGUAGE SQL;
 
 -- name: get-user-info-sql
 -- Returns all of the user fields associated with the provided email.
@@ -116,11 +126,21 @@ CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_id integ
 CREATE OR REPLACE FUNCTION add_institution(_name text, _logo text, _description text, _url text, _archived boolean)
     RETURNS integer AS
     $$
-        INSERT INTO institutions(name, logo, description, url, archived))
-        VALUES (_name, _logo, _description, _url, _archived);
+        INSERT INTO institutions(name, logo, description, url, archived)
+        VALUES (_name, _logo, _description, _url, _archived)
         RETURNING id
     $$
-  LANGUAGE 'sql'
+  LANGUAGE SQL;
+
+-- Adds a new institution to the database(extra param for migration)
+CREATE OR REPLACE FUNCTION add_institution(institution_id integer,_name text, _logo text, _description text, _url text, _archived boolean)
+    RETURNS integer AS
+    $$
+        INSERT INTO institutions(id,name, logo, description, url, archived)
+        VALUES (institution_id,_name, _logo, _description, _url, _archived)
+        RETURNING id
+    $$
+  LANGUAGE SQL;
 
 -- Returns institution from the database.
 CREATE OR REPLACE FUNCTION get_institution(_institution_id integer)
@@ -286,10 +306,17 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_dashboard_id(_dashboard_id int
   LANGUAGE SQL;
 
 --Adds institution imagery  
- CREATE FUNCTION add_institution_imagery(institution_id integer,visibility text, title text, attribution text, extent jsonb, source_config jsonb) RETURNS integer AS $$
+ CREATE FUNCTION add_institution_imagery(institution_id integer,visibility text, title text, attribution text, extent geometry, source_config jsonb) RETURNS integer AS $$
 	INSERT INTO imagery (institution_id,visibility,title,attribution,extent,source_config) 
 	VALUES (institution_id,visibility,title,attribution,extent,source_config)
     RETURNING id	
+$$ LANGUAGE SQL;
+
+--Adds institution imagery(for migration script)
+ CREATE FUNCTION add_institution_imagery(imagery_id integer,institution_id integer,visibility text, title text, attribution text, extent geometry, source_config jsonb) RETURNS integer AS $$
+	INSERT INTO imagery (id,institution_id,visibility,title,attribution,extent,source_config)
+	VALUES (imagery_id,institution_id,visibility,title,attribution,extent,source_config)
+    RETURNING id
 $$ LANGUAGE SQL;
 
 --Returns all rows in imagery for which visibility  =  "public".
