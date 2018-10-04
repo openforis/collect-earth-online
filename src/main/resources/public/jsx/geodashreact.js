@@ -119,6 +119,7 @@ class Widgets extends React.Component {
             {this.props.widgets.map(widget => (
                 <Widget
                     key={widget.id}
+                    id={widget.id}
                     widget={widget}
                     onFullScreen ={this.props.onFullScreen}
                     onOpacityChanged = {this.props.onOpacityChanged}
@@ -146,7 +147,7 @@ class Widget extends React.Component {
         this.graphControlList = ["timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
     }
     render() {
-        const {key, widget, isFull} = this.props;
+        const {widget, isFull} = this.props;
         return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
     }
     getWidgetHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){

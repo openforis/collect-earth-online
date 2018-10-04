@@ -51,11 +51,9 @@
         "lodash": "^4.17.11",
         "prop-types": "^15.6.2",
         "react": "^16.5.2",
-        "react-addons-pure-render-mixin": "^15.6.2",
         "react-dom": "^16.5.2"
     },
     "devDependencies": {
-        "@babel/cli": "^7.1.2",
         "@babel/core": "^7.1.2",
         "@babel/plugin-proposal-class-properties": "^7.1.0",
         "@babel/preset-env": "^7.1.0",

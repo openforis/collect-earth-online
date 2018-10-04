@@ -26,7 +26,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'lodash';
-import PureRenderMixin from 'react-addons-pure-render-mixin'
+
+//import PureRenderMixin from 'react-addons-pure-render-mixin'
 
 import RGL, { WidthProvider } from 'react-grid-layout'
 const ReactGridLayout = WidthProvider(RGL);
@@ -46,13 +47,14 @@ var dashboardID;
 var gObject;
 var haveWidgets = false;
 var backwidget;
-class BasicLayout extends React.Component{
+class BasicLayout extends React.PureComponent{
     static defaultProps = {
         isDraggable: true,
         isResizable: true,
         className: "layout",
-        items: 2,
+        items: 0,
         rowHeight: 300,
+        onLayoutChange: function() {},
         cols: 12
     }
     constructor(props) {
@@ -245,9 +247,9 @@ class BasicLayout extends React.Component{
         var layout = this.state.layout;
         var holdRef = this;
         return _.map(this.state.widgets, function(widget, i) {
-            return <div key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + holdRef.getImageByType(widget.properties[0]) +")"}}>
+            return <div onDragStart={holdRef.onDragStart} onDragEnd={holdRef.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + holdRef.getImageByType(widget.properties[0]) +")"}}>
                 <h3 className="widgetEditor title">{widget.name}
-                    <span  onClick={holdRef.onRemoveItem.bind(holdRef, i)} className="remove">
+                    <span onClick={(e) => {e.stopPropagation(); holdRef.onRemoveItem(i)}} onMouseDown={function(e){console.log('mousedown happened'); e.stopPropagation()}} className="remove">
                     x
                 </span>
                 </h3>
@@ -273,6 +275,19 @@ class BasicLayout extends React.Component{
             FormReady: false
 
         });
+    }
+    onDragStart = (e) => {
+        console.log('drag start');
+        e.preventDefault();
+        e.stopPropagation();
+        this.props.onMouseDown(e);
+    }
+
+    onDragEnd = (e) => {
+        console.log('drag end');
+        e.preventDefault();
+        e.stopPropagation();
+        this.props.onMouseUp(e);
     }
 
     onDataTypeSelectChanged = event => {
@@ -335,7 +350,7 @@ class BasicLayout extends React.Component{
         widget.name = name;
         widget.properties = properties;
         widget.layout = {
-            i: id,
+            i: id.toString(),
             x: 0,
             y: (Math.max.apply(Math, this.state.widgets.map(function(o) { return o.layout.y; }))) + 1, // puts it at the bottom
             w: 3,
@@ -706,6 +721,8 @@ class BasicLayout extends React.Component{
     }
 
     onRemoveItem(i) {
+
+        console.log('i was here');
         var removedWidget = _.filter(this.state.widgets, function(w){
             return w.layout.i == i.toString();
         });
