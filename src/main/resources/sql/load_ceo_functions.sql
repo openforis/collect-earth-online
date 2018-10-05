@@ -306,14 +306,14 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_dashboard_id(_dashboard_id uui
   LANGUAGE SQL;
 
 --Adds institution imagery
- CREATE FUNCTION add_institution_imagery_auto_id(institution_id integer,visibility text, title text, attribution text, extent jsonb, source_config jsonb) RETURNS integer AS $$
+ CREATE OR REPLACE  FUNCTION add_institution_imagery_auto_id(institution_id integer,visibility text, title text, attribution text, extent jsonb, source_config jsonb) RETURNS integer AS $$
 	INSERT INTO imagery (institution_id,visibility,title,attribution,extent,source_config)
 	VALUES (institution_id,visibility,title,attribution,extent,source_config)
    RETURNING id
 $$ LANGUAGE SQL;
 
 --Adds institution imagery(for migration script)
- CREATE FUNCTION add_institution_imagery(imagery_id integer,institution_id integer,visibility text, title text, attribution text, extent jsonb, source_config jsonb) RETURNS integer AS $$
+ CREATE OR REPLACE  FUNCTION add_institution_imagery(imagery_id integer,institution_id integer,visibility text, title text, attribution text, extent jsonb, source_config jsonb) RETURNS integer AS $$
 	INSERT INTO imagery (id,institution_id,visibility,title,attribution,extent,source_config)
 	VALUES (imagery_id,institution_id,visibility,title,attribution,extent,source_config)
     RETURNING id
@@ -327,18 +327,18 @@ CREATE OR REPLACE FUNCTION select_public_imagery() RETURNS TABLE
 		visibility      text,
 		title           text,
 		attribution     text,
-		extent          json,
-		source_config   json
+		extent          jsonb,
+		source_config   jsonb
 	) AS $$
 	SELECT id, institution_id, visibility, title, attribution, extent, source_config
 	FROM imagery
-	WHERE visibility = "public"
+	WHERE visibility = 'public'
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION delete_imagery(imagery_id integer)
 RETURNS integer AS $$
         DELETE FROM imagery
-        WHERE id = _id
+        WHERE id = imagery_id
         RETURNING id
 $$ LANGUAGE SQL;
 
@@ -359,7 +359,7 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(institution_id i
 $$ LANGUAGE SQL;
 
 --Create project
-CREATE FUNCTION create_project(institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer, plot_spacing float, plot_shape text, plot_size float, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_survey jsonb, classification_start_date date, classification_end_date date, classification_timestep integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION create_project(institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer, plot_spacing float, plot_shape text, plot_size float, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_survey jsonb, classification_start_date date, classification_end_date date, classification_timestep integer) RETURNS integer AS $$
 	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)
 	VALUES (institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
 	sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)
@@ -367,7 +367,7 @@ CREATE FUNCTION create_project(institution_id integer, availability text, name t
 $$ LANGUAGE SQL;
 
 --create project plots for migration
-CREATE FUNCTION create_project_plots(project_id integer,flagged integer,plot_points geometry(Point,4326)) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION create_project_plots(project_id integer,flagged integer,plot_points geometry(Point,4326)) RETURNS integer AS $$
 	INSERT INTO plots (project_id,flagged,center)
      (SELECT project_id,flagged,plot_points)
 	RETURNING id
@@ -375,7 +375,7 @@ $$ LANGUAGE SQL;
 
 
 --Create project plot samples
-CREATE FUNCTION create_project_plot_samples(plot_id integer, sample_points geometry(Point,4326)) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION create_project_plot_samples(plot_id integer, sample_points geometry(Point,4326)) RETURNS integer AS $$
 	INSERT INTO samples (plot_id, point)
 	 (SELECT plot_id, sample_points)
 	RETURNING id
@@ -825,7 +825,7 @@ $$ LANGUAGE SQL;
 --Publish project
 CREATE OR REPLACE FUNCTION publish_project(project_id integer) RETURNS integer AS $$
 	UPDATE projects
-	SET availability = "published"
+	SET availability = 'published'
 	WHERE id = project_id
 	RETURNING project_id
 
@@ -834,7 +834,7 @@ $$ LANGUAGE SQL;
 --Close project
 CREATE OR REPLACE FUNCTION close_project(project_id integer) RETURNS integer AS $$
 	UPDATE projects
-	SET availability = "closed"
+	SET availability = 'closed'
 	WHERE id = project_id
 	RETURNING project_id
 
@@ -843,7 +843,7 @@ $$ LANGUAGE SQL;
 --Archive project
 CREATE OR REPLACE FUNCTION archive_project(project_id integer) RETURNS integer AS $$
 	UPDATE projects
-	SET availability = "archived"
+	SET availability = 'archived'
 	WHERE id = project_id
 	RETURNING project_id
 
