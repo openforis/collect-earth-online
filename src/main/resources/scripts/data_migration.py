@@ -149,6 +149,7 @@ def insert_projects():
 
 def insert_plots(project_id,conn):
     cur_plot = conn.cursor()
+    user_plot_id=-1
     dirname = os.path.dirname(os.path.realpath('__file__'))
     plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\plot-data-'+str(project_id)+'.json'))), "r").read()
     plotArr = demjson.decode(plot_list_json)
@@ -162,7 +163,7 @@ def insert_plots(project_id,conn):
         plot_id = cur_plot.fetchone()[0]
         if plot['user'] is not None:
             user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
-            insert_samples(plot_id,plot['samples'],user_plot_id,conn)
+        insert_samples(plot_id,plot['samples'],user_plot_id,conn)
         conn.commit()
     cur_plot.close()
     
@@ -178,10 +179,10 @@ def insert_user_plots(plot_id,user,flagged,conn):
 def insert_samples(plot_id,samples,user_plot_id,conn):
     cur_sample = conn.cursor()
     for sample in samples:
-        print(sample)
         cur_sample.execute("select * from create_project_plot_samples(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(plot_id,sample['point']))
         sample_id = cur_sample.fetchone()[0]
-        insert_sample_values(user_plot_id,sample_id,sample['value'],conn)
+        if user_plot_id != -1:
+            insert_sample_values(user_plot_id,sample_id,sample['value'],conn)
         conn.commit()
     cur_sample.close()    
 
