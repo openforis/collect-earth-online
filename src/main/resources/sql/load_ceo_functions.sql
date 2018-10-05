@@ -367,18 +367,24 @@ CREATE FUNCTION create_project(institution_id integer, availability text, name t
 $$ LANGUAGE SQL;
 
 --Create project plots
-CREATE FUNCTION create_project_plots(project_id integer,plot_points text[]) RETURNS integer $$
+CREATE FUNCTION create_project_plots(project_id integer,plot_points geometry(Point,4326)) RETURNS integer AS $$
 	INSERT INTO plots (project_id,center)
-    FROM (SELECT project_id,ST_PointFromText(point,4326)
-	      FROM unnest(plot_points) AS point)
+     (SELECT project_id,plot_points)
 	RETURNING id
 $$ LANGUAGE SQL;
 
+--create project plots for migration
+CREATE FUNCTION create_project_plots(project_id integer,flagged integer,plot_points geometry(Point,4326)) RETURNS integer AS $$
+	INSERT INTO plots (project_id,flagged,center)
+     (SELECT project_id,flagged,plot_points)
+	RETURNING id
+$$ LANGUAGE SQL;
+
+
 --Create project plot samples
-CREATE FUNCTION create_project_plot_samples(plot_id integer, sample_points text[]) RETURNS integer $$
+CREATE FUNCTION create_project_plot_samples(plot_id integer, sample_points geometry(Point,4326)) RETURNS integer AS $$
 	INSERT INTO samples (plot_id, point)
-	FROM (SELECT plot_id, ST_PointFromText(point,4326)
-	      FROM unnest(sample_points) AS point)
+	 (SELECT plot_id, sample_points)
 	RETURNING id
 $$ LANGUAGE SQL;
 
@@ -883,7 +889,22 @@ CREATE OR REPLACE FUNCTION add_user_samples(project_id integer,plot_id integer,u
 	RETURNING count(sample_id)
 
 $$ LANGUAGE SQL;
+--Add user samples for migration
+CREATE OR REPLACE FUNCTION add_sample_values(user_plot_id integer,sample_id integer,value jsonb) RETURNS integer AS $$
 
+	INSERT INTO sample_values(user_plot_id,sample_id,value) VALUES (user_plot_id,sample_id,value)
+
+	RETURNING id
+
+$$ LANGUAGE SQL;
+
+--Add user plots for migration
+CREATE OR REPLACE FUNCTION add_user_plots(plot_id integer,username text,flagged boolean) RETURNS integer AS $$
+	INSERT INTO user_plots(plot_id,flagged,user_id)
+	(SELECT plot_id,flagged,(SELECT id FROM users WHERE email = username) as aa)
+
+	RETURNING id
+	$$ LANGUAGE SQL;
 --Returns all institutions
 CREATE OR REPLACE FUNCTION select_all_institutions() RETURNS TABLE
     (

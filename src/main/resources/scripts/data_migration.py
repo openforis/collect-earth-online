@@ -118,6 +118,8 @@ def insert_projects():
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur.execute("TRUNCATE TABLE projects RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE plots RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
         project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\project-list.json'))), "r").read()
         projectArr = demjson.decode(project_list_json)
@@ -134,6 +136,8 @@ def insert_projects():
                 if project['sampleResolution'] is None:
                     project['sampleResolution']=0
                 cur.execute("select * from create_project(%s,%s,%s::text,%s::text,%s::text,%s::text,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,%s,%s,%s::jsonb,%s,%s,%s)", (project['id'],project['institution'],project['availability'],project['name'],project['description'],project['privacyLevel'],project['boundary'],project['baseMapSource'],project['plotDistribution'],project['numPlots'],project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),None,None,0))
+                project_id = cur.fetchone()[0]
+                insert_plots(project_id,conn)
                 conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -141,6 +145,48 @@ def insert_projects():
     finally:
         if conn is not None:
             conn.close() 
+
+def insert_plots(project_id,conn):
+    cur_plot = conn.cursor()
+    dirname = os.path.dirname(os.path.realpath('__file__'))
+    plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\plot-data-'+str(project_id)+'.json'))), "r").read()
+    plotArr = demjson.decode(plot_list_json)
+    for plot in plotArr:
+        if plot['flagged']==False:
+            plot['flagged']=0
+        else:
+            plot['flagged']=1
+        cur_plot.execute("select * from create_project_plots(%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['flagged'],plot['center']))
+        plot_id = cur_plot.fetchone()[0]
+        user_plot_id=insert_user_plots(plot_id,plot['user'],plot['flagged'],conn)
+        insert_samples(plot_id,plot['samples'],user_plot_id,conn)
+        conn.commit()
+    cur_plot.close()
+    
+def insert_user_plots(plot_id,user,flagged,conn):
+    user_plot_id=-1
+    cur_up = conn.cursor()
+    cur_up.execute("select * from add_user_plots(%s,%s::text,%s)",(plot_id,user,flagged))
+    user_plot_id = cur_up.fetchone()[0]
+    conn.commit()
+    cur_up.close()   
+    return user_plot_id
+    
+def insert_samples(plot_id,samples,user_plot_id,conn):
+    cur_sample = conn.cursor()
+    for sample in samples:
+        print(sample)
+        cur_sample.execute("select * from create_project_plot_samples(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(plot_id,sample['point']))
+        sample_id = cur_sample.fetchone()[0]
+        insert_sample_values(user_plot_id,sample_id,sample['value']conn)
+        conn.commit()
+    cur_sample.close()    
+
+def insert_sample_values(user_plot_id,sample_id,sample_value,conn):
+    cur_sv = conn.cursor()
+    cur_sv.execute("select * from add_sample_values(%s,%s,%s::jsonb)",(user_plot_id,sample_id,json.dumps(sample_value)))
+    conn.commit()
+    cur_sv.close()    
             
 def insert_roles():
     conn = None
@@ -160,9 +206,11 @@ def insert_roles():
             conn.close() 
 
 if __name__ == '__main__':
-    insert_users()
-    insert_roles()
-    insert_institutions()
-    insert_imagery()
-    insert_project_widgets()
-    insert_projects()
+    #insert_users()
+    #insert_roles()
+    #insert_institutions()
+    #insert_imagery()
+    #insert_project_widgets()
+    insert_projects()#has insert_plots(),insert_samples() in it
+    
+    
