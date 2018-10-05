@@ -120,6 +120,7 @@ def insert_projects():
         cur.execute("TRUNCATE TABLE projects RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE plots RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
         project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\project-list.json'))), "r").read()
         projectArr = demjson.decode(project_list_json)
@@ -152,14 +153,16 @@ def insert_plots(project_id,conn):
     plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\plot-data-'+str(project_id)+'.json'))), "r").read()
     plotArr = demjson.decode(plot_list_json)
     for plot in plotArr:
+        boolean_Flagged=plot['flagged']
         if plot['flagged']==False:
             plot['flagged']=0
         else:
             plot['flagged']=1
         cur_plot.execute("select * from create_project_plots(%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['flagged'],plot['center']))
         plot_id = cur_plot.fetchone()[0]
-        user_plot_id=insert_user_plots(plot_id,plot['user'],plot['flagged'],conn)
-        insert_samples(plot_id,plot['samples'],user_plot_id,conn)
+        if plot['user'] is not None:
+            user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
+            insert_samples(plot_id,plot['samples'],user_plot_id,conn)
         conn.commit()
     cur_plot.close()
     
@@ -178,7 +181,7 @@ def insert_samples(plot_id,samples,user_plot_id,conn):
         print(sample)
         cur_sample.execute("select * from create_project_plot_samples(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(plot_id,sample['point']))
         sample_id = cur_sample.fetchone()[0]
-        insert_sample_values(user_plot_id,sample_id,sample['value']conn)
+        insert_sample_values(user_plot_id,sample_id,sample['value'],conn)
         conn.commit()
     cur_sample.close()    
 
@@ -206,11 +209,11 @@ def insert_roles():
             conn.close() 
 
 if __name__ == '__main__':
-    #insert_users()
-    #insert_roles()
-    #insert_institutions()
-    #insert_imagery()
-    #insert_project_widgets()
-    insert_projects()#has insert_plots(),insert_samples() in it
+    insert_users()
+    insert_roles()
+    insert_institutions()
+    insert_imagery()
+    insert_project_widgets()
+    insert_projects()
     
     
