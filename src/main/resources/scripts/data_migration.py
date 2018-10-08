@@ -161,7 +161,7 @@ def insert_plots(project_id,conn):
             plot['flagged']=1
         cur_plot.execute("select * from create_project_plots(%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['flagged'],plot['center']))
         plot_id = cur_plot.fetchone()[0]
-        if plot['user']:
+        if plot['user'] is not None:
             user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
         insert_samples(plot_id,plot['samples'],user_plot_id,conn)
         conn.commit()
@@ -170,10 +170,17 @@ def insert_plots(project_id,conn):
 def insert_user_plots(plot_id,user,flagged,conn):
     user_plot_id=-1
     cur_up = conn.cursor()
-    cur_up.execute("select * from add_user_plots(%s,%s::text,%s)",(plot_id,user,flagged))
-    user_plot_id = cur_up.fetchone()[0]
-    conn.commit()
-    cur_up.close()   
+    cur_user = conn.cursor()
+    cur_user.execute('select id from users where email='+user+';')
+    user_id=cur_user.fetchone()[0]
+    if user_id is None:
+        print('user is null')
+    else:
+        cur_up.execute("select * from add_user_plots(%s,%s::text,%s)",(plot_id,user,flagged))
+        user_plot_id = cur_up.fetchone()[0]
+        conn.commit()
+    cur_up.close()
+    cur_user.close()
     return user_plot_id
     
 def insert_samples(plot_id,samples,user_plot_id,conn):
@@ -214,8 +221,7 @@ if __name__ == '__main__':
     insert_roles()
     insert_institutions()
     insert_imagery()
-    insert_projects()
     insert_project_widgets()
-
+    insert_projects()
     
     
