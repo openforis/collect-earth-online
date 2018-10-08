@@ -214,7 +214,8 @@ if __name__ == '__main__':
     insert_roles()
     insert_institutions()
     insert_imagery()
-    insert_project_widgets()
     insert_projects()
+    insert_project_widgets()
+
     
     
