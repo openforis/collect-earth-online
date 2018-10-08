@@ -379,7 +379,7 @@ CREATE OR REPLACE FUNCTION create_project(
     classification_start_date date,
     classification_end_date date,
     classification_timestep integer)
-  RETURNS integer AS
+  RETURNS integer AS $$
 	INSERT INTO projects (id,institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)
 	VALUES (id,institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
 	sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)
