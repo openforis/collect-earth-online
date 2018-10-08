@@ -12,7 +12,7 @@ def insert_users():
         cur = conn.cursor()
         cur.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
-        user_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\user-list.json'))), "r").read()
+        user_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/user-list.json'))), "r").read()
         users = demjson.decode(user_list_json)
         for user in users:
             cur.execute("select * from add_user(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
@@ -35,7 +35,7 @@ def insert_institutions():
         cur.execute("TRUNCATE TABLE institutions RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE institution_users RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
-        institution_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\institution-list.json'))), "r").read()
+        institution_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/institution-list.json'))), "r").read()
         institutions = demjson.decode(institution_list_json)
         for institution in institutions:
             members=institution['members'];
@@ -77,7 +77,7 @@ def insert_imagery():
         cur = conn.cursor()
         cur.execute("TRUNCATE TABLE imagery RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
-        imagery_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\imagery-list.json'))), "r").read()
+        imagery_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/imagery-list.json'))), "r").read()
         imageryArr = demjson.decode(imagery_list_json)
         for imagery in imageryArr:
             cur.execute("select * from add_institution_imagery(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],imagery['attribution'],imagery['extent'],json.dumps(imagery['sourceConfig'])))
@@ -97,11 +97,11 @@ def insert_project_widgets():
         cur = conn.cursor()
         cur.execute("TRUNCATE TABLE project_widgets RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
-        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\proj.json'))), "r").read()
+        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r").read()
         dashArr = demjson.decode(project_dash_list_json)
         for dash in dashArr:
             dash_id=dash['dashboard']
-            dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\dash-'+dash_id+'.json'))), "r").read() 
+            dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/dash-'+dash_id+'.json'))), "r").read() 
             widget = demjson.decode(dash_json)
             cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(widget['widgets'])))
             conn.commit()
@@ -122,7 +122,7 @@ def insert_projects():
         cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
-        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\project-list.json'))), "r").read()
+        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/project-list.json'))), "r").read()
         projectArr = demjson.decode(project_list_json)
         for project in projectArr:
             if project['id']!=0:                
@@ -151,7 +151,7 @@ def insert_plots(project_id,conn):
     cur_plot = conn.cursor()
     user_plot_id=-1
     dirname = os.path.dirname(os.path.realpath('__file__'))
-    plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'..\json\plot-data-'+str(project_id)+'.json'))), "r").read()
+    plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/plot-data-'+str(project_id)+'.json'))), "r").read()
     plotArr = demjson.decode(plot_list_json)
     for plot in plotArr:
         boolean_Flagged=plot['flagged']
