@@ -357,7 +357,34 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(institution_id i
 	FROM select_public_imagery()
 	WHERE institution_id = institution_id
 $$ LANGUAGE SQL;
-
+--for migration
+CREATE OR REPLACE FUNCTION create_project(
+    id integer,
+    institution_id integer,
+    availability text,
+    name text,
+    description text,
+    privacy_level text,
+    boundary geometry,
+    base_map_source text,
+    plot_distribution text,
+    num_plots integer,
+    plot_spacing double precision,
+    plot_shape text,
+    plot_size double precision,
+    sample_distribution text,
+    samples_per_plot integer,
+    sample_resolution double precision,
+    sample_survey jsonb,
+    classification_start_date date,
+    classification_end_date date,
+    classification_timestep integer)
+  RETURNS integer AS
+	INSERT INTO projects (id,institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)
+	VALUES (id,institution_id, availability, name, description,privacy_level, boundary,base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
+	sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)
+	RETURNING id
+  $$ LANGUAGE SQL;
 --Create project
 CREATE OR REPLACE FUNCTION create_project(institution_id integer, availability text, name text, description text, privacy_level text, boundary geometry(Polygon,4326), base_map_source text, plot_distribution text, num_plots integer, plot_spacing float, plot_shape text, plot_size float, sample_distribution text, samples_per_plot integer, sample_resolution float, sample_survey jsonb, classification_start_date date, classification_end_date date, classification_timestep integer) RETURNS integer AS $$
 	INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,       sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, classification_end_date, classification_timestep)
