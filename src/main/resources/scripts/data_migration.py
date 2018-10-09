@@ -90,12 +90,9 @@ def insert_imagery():
         if conn is not None:
             conn.close() 
             
-def insert_project_widgets(project_id):
-    conn = None
+def insert_project_widgets(project_id,conn):
     try:
-        conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("TRUNCATE TABLE project_widgets RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath('__file__'))
         project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r").read()
         dashArr = demjson.decode(project_dash_list_json)
@@ -109,9 +106,6 @@ def insert_project_widgets(project_id):
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
-    finally:
-        if conn is not None:
-            conn.close() 
             
 def insert_projects():
     conn = None
@@ -119,6 +113,7 @@ def insert_projects():
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur.execute("TRUNCATE TABLE projects RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE project_widgets RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE plots RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
@@ -139,7 +134,7 @@ def insert_projects():
                     project['sampleResolution']=0
                 cur.execute("select * from create_project(%s,%s,%s::text,%s::text,%s::text,%s::text,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,%s,%s,%s::jsonb,%s,%s,%s)", (project['id'],project['institution'],project['availability'],project['name'],project['description'],project['privacyLevel'],project['boundary'],project['baseMapSource'],project['plotDistribution'],project['numPlots'],project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),None,None,0))
                 project_id = cur.fetchone()[0]
-                insert_project_widgets(project_id)
+                insert_project_widgets(project_id,conn)
                 insert_plots(project_id,conn)
                 conn.commit()
         cur.close()
