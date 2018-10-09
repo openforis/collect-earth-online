@@ -98,7 +98,7 @@ def insert_project_widgets(project_id,conn):
         dashArr = demjson.decode(project_dash_list_json)
         for dash in dashArr:
             dash_id=dash['dashboard']
-            if dash_id == project_id:
+            if dash['projectID'] == project_id:
                 dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/dash-'+dash_id+'.json'))), "r").read() 
                 widget = demjson.decode(dash_json)
                 cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(widget['widgets'])))
