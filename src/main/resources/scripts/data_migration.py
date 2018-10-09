@@ -121,7 +121,8 @@ def insert_projects():
         project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/project-list.json'))), "r").read()
         projectArr = demjson.decode(project_list_json)
         for project in projectArr:
-            if project['id']!=0:                
+            #print(project)
+            if project['id']>0:
                 if project['numPlots'] is None:
                     project['numPlots']=0
                 if project['plotSpacing'] is None:
@@ -148,20 +149,21 @@ def insert_plots(project_id,conn):
     cur_plot = conn.cursor()
     user_plot_id=-1
     dirname = os.path.dirname(os.path.realpath('__file__'))
-    plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/plot-data-'+str(project_id)+'.json'))), "r").read()
-    plotArr = demjson.decode(plot_list_json)
-    for plot in plotArr:
-        boolean_Flagged=plot['flagged']
-        if plot['flagged']==False:
-            plot['flagged']=0
-        else:
-            plot['flagged']=1
-        cur_plot.execute("select * from create_project_plots(%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['flagged'],plot['center']))
-        plot_id = cur_plot.fetchone()[0]
-        if plot['user'] is not None:
-            user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
-        insert_samples(plot_id,plot['samples'],user_plot_id,conn)
-        conn.commit()
+    if os.path.isfile(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/plot-data-'+str(project_id)+'.json')))):
+        plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/plot-data-'+str(project_id)+'.json'))), "r").read()
+        plotArr = demjson.decode(plot_list_json)
+        for plot in plotArr:
+            boolean_Flagged=plot['flagged']
+            if plot['flagged']==False:
+                plot['flagged']=0
+            else:
+                plot['flagged']=1
+            cur_plot.execute("select * from create_project_plots(%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['flagged'],plot['center']))
+            plot_id = cur_plot.fetchone()[0]
+            if plot['user'] is not None:
+                user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
+                insert_samples(plot_id,plot['samples'],user_plot_id,conn)
+                conn.commit()
     cur_plot.close()
     
 def insert_user_plots(plot_id,user,flagged,conn):
