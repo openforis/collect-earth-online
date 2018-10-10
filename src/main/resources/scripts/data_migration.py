@@ -90,19 +90,14 @@ def insert_imagery():
         if conn is not None:
             conn.close() 
             
-def insert_project_widgets(project_id,conn):
+def insert_project_widgets(dash_id,conn):
     try:
         cur = conn.cursor()
         dirname = os.path.dirname(os.path.realpath('__file__'))
-        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r").read()
-        dashArr = demjson.decode(project_dash_list_json)
-        for dash in dashArr:
-            dash_id=dash['dashboard']
-            if dash['projectID'] == str(project_id):
-                dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/dash-'+dash_id+'.json'))), "r").read() 
-                widget = demjson.decode(dash_json)
-                cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(widget['widgets'])))
-                conn.commit()
+        dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/dash-'+dash_id+'.json'))), "r").read() 
+        widget = demjson.decode(dash_json)
+        cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(widget['widgets'])))
+        conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -135,7 +130,12 @@ def insert_projects():
                     project['sampleResolution']=0
                 cur.execute("select * from create_project(%s,%s,%s::text,%s::text,%s::text,%s::text,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,%s,%s,%s::jsonb,%s,%s,%s)", (project['id'],project['institution'],project['availability'],project['name'],project['description'],project['privacyLevel'],project['boundary'],project['baseMapSource'],project['plotDistribution'],project['numPlots'],project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),None,None,0))
                 project_id = cur.fetchone()[0]
-                insert_project_widgets(project_id,conn)
+                project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r").read()
+                dashArr = demjson.decode(project_dash_list_json)
+                for dash in dashArr:
+                    dash_id=dash['dashboard']
+                    if dash['projectID'] == str(project_id):
+                        insert_project_widgets(dash_id,conn)
                 insert_plots(project_id,conn)
                 conn.commit()
         cur.close()
