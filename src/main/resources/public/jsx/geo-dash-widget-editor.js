@@ -67,6 +67,8 @@ class BasicLayout extends React.PureComponent{
             selectedWidgetType: -1,
             selectedDataType: -1,
             WidgetTitle: '',
+            imageCollection: '',
+            imageParams: '',
             dualLayer: false,
             WidgetBaseMap: 'osm',
             startDate:'',
@@ -262,6 +264,8 @@ class BasicLayout extends React.PureComponent{
             selectedWidgetType: event.target.value,
             selectedDataType: '-1',
             WidgetTitle: '',
+            imageCollection: '',
+            imageParams: '',
             WidgetBaseMap: 'osm',
             dualLayer: false,
             startDate:'',
@@ -302,6 +306,8 @@ class BasicLayout extends React.PureComponent{
             isEditing: false,
             selectedDataType: '-1',
             WidgetTitle: '',
+            imageCollection: '',
+            imageParams: '',
             WidgetBaseMap: 'osm',
             dualLayer: false,
             startDate:'',
@@ -336,9 +342,11 @@ class BasicLayout extends React.PureComponent{
             }
         }
 
-        if(wType == 'custom')
+        if(this.state.selectedDataType == 'Custom')
         {
             //more work to do to label the type and add
+            prop1 = this.state.imageCollection;
+            widget.visParams = this.state.imageParams;
         }
         properties[0] = wType;
         properties[1] = prop1;
@@ -386,6 +394,8 @@ class BasicLayout extends React.PureComponent{
                     isEditing: false,
                     selectedDataType: '-1',
                     WidgetTitle: '',
+                    imageCollection: '',
+                    imageParams: '',
                     WidgetBaseMap: 'osm',
                     dualLayer: false,
                     startDate:'',
@@ -410,6 +420,12 @@ class BasicLayout extends React.PureComponent{
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
     };
+    onImageCollectionChange = event => {
+        this.setState({imageCollection: event.target.value});
+    }
+    onImageParamsChange = event => {
+        this.setState({imageParams: event.target.value});
+    }
     onWidgetDualLayerChange = event => {
         this.setState({dualLayer: event.target.checked});
     }
@@ -426,18 +442,62 @@ class BasicLayout extends React.PureComponent{
         this.setState({widgetCloudScore: event.target.value});
     };
     onStartDateChanged = date => {
-        this.setState({startDate: date});
+        if(date.target)
+        {
+            if(date.target.value) {
+                this.setState({startDate: date.target.value});
+            }
+            else{
+                this.setState({startDate: ''});
+            }
+        }
+        else {
+            this.setState({startDate: date});
+        }
     };
     onEndDateChanged = date => {
-        this.setState({endDate: date});
-        this.checkDates();
+        if(date.target)
+        {
+            if(date.target.value) {
+                this.setState({endDate: date.target.value});
+            }
+            else{
+                this.setState({endDate: ''});
+            }
+        }
+        else {
+            this.setState({endDate: date});
+            this.checkDates();
+        }
     };
     onStartDate2Changed = date => {
-        this.setState({startDate2: date});
+        if(date.target)
+        {
+            if(date.target.value) {
+                this.setState({startDate2: date.target.value});
+            }
+            else{
+                this.setState({startDate2: ''});
+            }
+        }
+        else {
+            this.setState({startDate2: date});
+        }
     };
     onEndDate2Changed = date => {
-        this.setState({endDate2: date});
-        this.checkDates();
+        if(date.target)
+        {
+            if(date.target.value) {
+                this.setState({endDate2: date.target.value});
+            }
+            else{
+                this.setState({endDate2: ''});
+            }
+        }
+        else {
+            this.setState({endDate2: date});
+            this.checkDates();
+        }
     };
     checkDates() {
         var ed = new Date(this.state.endDate);
@@ -628,9 +688,9 @@ class BasicLayout extends React.PureComponent{
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
 
-                        <input type="text" className="form-control" value={this.state.startDate} id="sDate_new_cooked"/>
+                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" value={this.state.endDate} id="eDate_new_cooked"/>
+                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
                     </div>
                     <div className="form-group">
                         <label htmlFor="widgetDualLayer">Dual Layer</label>
@@ -641,9 +701,9 @@ class BasicLayout extends React.PureComponent{
                         <label>Select the Date Range for the top layer</label>
                         <div className="input-group input-daterange" id="range_new_cooked2">
 
-                            <input type="text" className="form-control" value={this.state.startDate2} id="sDate_new_cooked2"/>
+                            <input type="text" className="form-control"  onChange={this.onStartDate2Changed} value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
                             <div className="input-group-addon">to</div>
-                            <input type="text" className="form-control" value={this.state.endDate2} id="eDate_new_cooked2"/>
+                            <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
                         </div>
                     </div>
                     <div className="form-group">
@@ -669,6 +729,34 @@ class BasicLayout extends React.PureComponent{
                     </div>
                 </React.Fragment>
             }
+            else if(this.state.selectedWidgetType == 'ImageCollection' && this.state.selectedDataType == 'Custom')
+            {
+                return <React.Fragment>
+                    <div className="form-group">
+                        <label htmlFor="widgetTitle">Title</label>
+                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                               className="form-control" onChange={this.onWidgetTitleChange}/>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="imageCollection">GEE Image Collection</label>
+                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
+                               className="form-control" onChange={this.onImageCollectionChange}/>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="imageParams">Image Parameters (json format)</label>
+                        <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: 'hidden', overflowWrap: 'break-word', resize: 'vertical'}}></textarea>
+                        {/*<input type="text" name="imageParams" id="imageParams" value={this.state.imageParams}*/}
+                               {/*className="form-control" onChange={this.onImageParamsChange}/>*/}
+                    </div>
+                    <label>Select the Date Range you would like</label>
+                    <div className="input-group input-daterange" id="range_new_cooked">
+
+                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
+                        <div className="input-group-addon">to</div>
+                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
+                    </div>
+                </React.Fragment>
+            }
             else if(this.state.selectedWidgetType == 'ImageCollection')
             {
                 return <React.Fragment>
@@ -680,9 +768,9 @@ class BasicLayout extends React.PureComponent{
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
 
-                        <input type="text" className="form-control" value={this.state.startDate} id="sDate_new_cooked"/>
+                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" value={this.state.endDate} id="eDate_new_cooked"/>
+                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
                     </div>
                     <div className="form-group">
                         <label htmlFor="widgetDualLayer">Dual Layer</label>
@@ -693,10 +781,32 @@ class BasicLayout extends React.PureComponent{
                         <label>Select the Date Range you would like</label>
                         <div className="input-group input-daterange" id="range_new_cooked2">
 
-                            <input type="text" className="form-control" value={this.state.startDate2} id="sDate_new_cooked2"/>
+                            <input type="text" className="form-control" onChange={this.onStartDate2Changed} value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
                             <div className="input-group-addon">to</div>
-                            <input type="text" className="form-control" value={this.state.endDate2} id="eDate_new_cooked2"/>
+                            <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
                         </div>
+                    </div>
+                </React.Fragment>
+            }
+            else if(this.state.selectedWidgetType == 'TimeSeries' && this.state.selectedDataType == 'Custom')
+            {
+              return <React.Fragment>
+                    <div className="form-group">
+                        <label htmlFor="widgetTitle">Title</label>
+                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                               className="form-control" onChange={this.onWidgetTitleChange}/>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="imageCollection">GEE Image Collection</label>
+                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
+                               className="form-control" onChange={this.onImageCollectionChange}/>
+                    </div>
+                    <label>Select the Date Range you would like</label>
+                    <div className="input-group input-daterange" id="range_new_cooked">
+
+                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
+                        <div className="input-group-addon">to</div>
+                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
                     </div>
                 </React.Fragment>
             }
@@ -710,9 +820,9 @@ class BasicLayout extends React.PureComponent{
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
 
-                        <input type="text" className="form-control" value={this.state.startDate} id="sDate_new_cooked"/>
+                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" value={this.state.endDate} id="eDate_new_cooked"/>
+                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
                     </div>
                 </React.Fragment>
             }

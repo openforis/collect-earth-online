@@ -143,8 +143,8 @@ class Widgets extends React.Component {
 class Widget extends React.Component {
     constructor(props) {
         super(props);
-        this.imageCollectionList = ["addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
-        this.graphControlList = ["timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
+        this.imageCollectionList = ["ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
+        this.graphControlList = ["customTimeSeries", "timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
     }
     render() {
         const {widget, isFull} = this.props;
@@ -362,13 +362,21 @@ class MapWidget extends React.Component {
         var dateTo = widget.properties[3];
         var requestedIndex = widget.properties[0] === "ImageCollectionNDVI"? 'NDVI': widget.properties[0] === "ImageCollectionEVI"? 'EVI': widget.properties[0] === "ImageCollectionEVI2"? 'EVI2': widget.properties[0] === "ImageCollectionNDMI"? 'NDMI': widget.properties[0] === "ImageCollectionNDWI"? 'NDWI': '';
         var url = '';
+        console.log('about to set url');
         if(widget.filterType != null && widget.filterType.length > 0){
-            var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'}
-            url = "http://collect.earth:8888/" + fts[widget.filterType]
+            var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
+            url = "http://collect.earth:8888/" + fts[widget.filterType];
+            console.log('filtered');
+        }
+        else if('ImageCollectionCustom' == widget.properties[0]){
+            url = "http://collect.earth:8888/meanImageByMosaicCollection";
+            console.log('ImageCollectionCustom');
         }
         else if(collectionName.trim().length > 0)
         {
             url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
+            console.log('cloudMaskImageByMosaicCollection: '  + widget.properties[0]);
+
         }
         else{
             url = "http://collect.earth:8888/ImageCollectionbyIndex";
@@ -388,10 +396,22 @@ class MapWidget extends React.Component {
         postObject.index= requestedIndex;
         if(widget.visParams)
         {
-            postObject.bands = widget.visParams.bands;
-            postObject.min = widget.visParams.min;
-            postObject.max = widget.visParams.max;
-            postObject.cloudLessThan = parseInt(widget.visParams.cloudLessThan);
+            if(widget.visParams.cloudLessThan) {
+                postObject.bands = widget.visParams.bands;
+                postObject.min = widget.visParams.min;
+                postObject.max = widget.visParams.max;
+                postObject.cloudLessThan = parseInt(widget.visParams.cloudLessThan);
+            }
+            else{
+                console.log(widget.visParams)
+                try{
+                postObject.visParams = $.parseJSON(widget.visParams);
+                }
+                catch(e)
+                {
+                    postObject.visParams = widget.visParams;
+                }
+            }
         }
         else {
             try {
