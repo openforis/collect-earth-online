@@ -135,7 +135,7 @@ def insert_projects():
                         project['sampleResolution']=0
                     cur.execute("select * from create_project(%s,%s,%s::text,%s::text,%s::text,%s::text,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,%s,%s,%s::jsonb,%s,%s,%s)", (project['id'],project['institution'],project['availability'],project['name'],project['description'],project['privacyLevel'],project['boundary'],project['baseMapSource'],project['plotDistribution'],project['numPlots'],project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),None,None,0))
                     project_id = cur.fetchone()[0]
-    					
+
                     for dash in dashArr:
                         dash_id=dash['dashboard']
                         if dash['projectID'] == str(project_id):
@@ -146,10 +146,10 @@ def insert_projects():
                 print("project for loop: "+error)
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print("project outer: "+error)    
+        print("project outer: "+error)
     finally:
         if conn is not None:
-            conn.close() 
+            conn.close()
 
 def insert_plots(project_id,conn):
     cur_plot = conn.cursor()
@@ -172,9 +172,9 @@ def insert_plots(project_id,conn):
                     insert_samples(plot_id,plot['samples'],user_plot_id,conn)
                     conn.commit()
             except (Exception, psycopg2.DatabaseError) as error:
-                print("plots error: "+error)  
+                print("plots error: "+error)
     cur_plot.close()
-    
+
 def insert_user_plots(plot_id,user,flagged,conn):
     user_plot_id=-1
     cur_up = conn.cursor()
@@ -187,11 +187,11 @@ def insert_user_plots(plot_id,user,flagged,conn):
             user_plot_id = cur_up.fetchone()[0]
             conn.commit()
         except (Exception, psycopg2.DatabaseError) as error:
-                print("user plots error: "+error)  
+                print("user plots error: "+error)
     cur_up.close()
     cur_user.close()
     return user_plot_id
-    
+
 def insert_samples(plot_id,samples,user_plot_id,conn):
     cur_sample = conn.cursor()
     for sample in samples:
@@ -203,7 +203,7 @@ def insert_samples(plot_id,samples,user_plot_id,conn):
             conn.commit()
         except (Exception, psycopg2.DatabaseError) as error:
                 print("samples error: "+error)
-    cur_sample.close()    
+    cur_sample.close()
 
 def insert_sample_values(user_plot_id,sample_id,sample_value,conn):
     cur_sv = conn.cursor()
@@ -212,8 +212,8 @@ def insert_sample_values(user_plot_id,sample_id,sample_value,conn):
     except (Exception, psycopg2.DatabaseError) as error:
                 print("sample values error: "+error)
     conn.commit()
-    cur_sv.close()    
-            
+    cur_sv.close()
+
 def insert_roles():
     conn = None
     try:
@@ -226,21 +226,20 @@ def insert_roles():
         conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)    
+        print(error)
     finally:
         if conn is not None:
-            conn.close() 
+            conn.close()
 
 if __name__ == '__main__':
     print("inserting users")
     insert_users()
-    print("inserting roles")	
+    print("inserting roles")
     insert_roles()
-    print("inserting institutions")	
+    print("inserting institutions")
     insert_institutions()
-    print("inserting imagery")		
+    print("inserting imagery")
     insert_imagery()
-    print("inserting projects")		
+    print("inserting projects")
     insert_projects()
-    print("Done migration")		    
-    
+    print("Done migration")

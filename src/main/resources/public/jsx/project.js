@@ -17,7 +17,7 @@ class Project extends React.Component {
             latMin: "",
             lonMax: "",
             latMax: "",
-            newSampleValueGroupName: "",
+            newSurveyQuestionName: "",
             newValueEntry: {},
             projectList: null,
             templateId: "0",
@@ -44,13 +44,13 @@ class Project extends React.Component {
         this.closeProject = this.closeProject.bind(this);
         this.changeAvailability = this.changeAvailability.bind(this);
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
-        this.addSampleValueGroup = this.addSampleValueGroup.bind(this);
-        this.removeSampleValueGroup = this.removeSampleValueGroup.bind(this);
-        this.addSampleValueRow = this.addSampleValueRow.bind(this);
-        this.getParentSampleValues = this.getParentSampleValues.bind(this);
+        this.addSurveyQuestion = this.addSurveyQuestion.bind(this);
+        this.removeSurveyQuestion = this.removeSurveyQuestion.bind(this);
+        this.addSurveyQuestionRow = this.addSurveyQuestionRow.bind(this);
+        this.getParentSurveyQuestions = this.getParentSurveyQuestions.bind(this);
         this.setProjectTemplate = this.setProjectTemplate.bind(this);
-        this.getSampleValueGroupByName = this.getSampleValueGroupByName.bind(this);
-        this.removeSampleValueRow = this.removeSampleValueRow.bind(this);
+        this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
+        this.removeSurveyQuestionRow = this.removeSurveyQuestionRow.bind(this);
         this.handleInputName = this.handleInputName.bind(this);
         this.handleInputColor = this.handleInputColor.bind(this);
         this.handleInputParent = this.handleInputParent.bind(this);
@@ -364,60 +364,60 @@ class Project extends React.Component {
         }
     }
 
-    getParentSampleValues(sampleValues) {
-        return sampleValues.filter(
-            function (sampleValue) {
-                return sampleValue.parent == null || sampleValue.parent == "";
+    getParentSurveyQuestions(sampleSurvey) {
+        return sampleSurvey.filter(
+            function (surveyQuestion) {
+                return surveyQuestion.parent == null || surveyQuestion.parent == "";
             }
         );
     }
 
-    getChildSampleValues(sampleValues, parentSampleValue) {
-        return sampleValues.filter(
-            function (sampleValue) {
-                return sampleValue.parent == parentSampleValue.name;
+    getChildSurveyQuestions(sampleSurvey, parentSurveyQuestion) {
+        return sampleSurvey.filter(
+            function (surveyQuestion) {
+                return surveyQuestion.parent == parentSurveyQuestion.answer;
             }
         );
     }
 
-    topoSort(sampleValues) {
-        var parentSampleValues = this.getParentSampleValues(sampleValues);
-        var parentChildGroups = parentSampleValues.map(
-            function (parentSampleValue) {
-                var childSampleValues = sampleValues.filter(
+    topoSort(sampleSurvey) {
+        var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
+        var parentChildGroups = parentSurveyQuestions.map(
+            function (parentSurveyQuestion) {
+                var childSurveyQuestions = sampleSurvey.filter(
                     function (sampleValue) {
-                        return sampleValue.parent == parentSampleValue.name;
+                        return sampleValue.parent == parentSurveyQuestion.question;
                     }
                 );
-                return [parentSampleValue].concat(childSampleValues);
+                return [parentSurveyQuestion].concat(childSurveyQuestions);
             },
             this
         );
         return [].concat.apply([], parentChildGroups);
     }
 
-    addSampleValueGroup() {
+    addSurveyQuestion() {
         if (this.state.details != null) {
-            var groupName = document.getElementById("samplevaluegrouptext").value;
-            if (groupName != "") {
+            var questionText = document.getElementById("surveyQuestionText").value;
+            if (questionText != "") {
                 var newValueEntryNew = this.state.newValueEntry;
-                newValueEntryNew[groupName] = {name: "", color: "#000000", image: "", parent: ""};
+                newValueEntryNew[questionText] = {answer: "", color: "#000000", image: "", parent: ""};
                 var detailsNew = this.state.details;
-                detailsNew.sampleValues.push({name: groupName, values: []});
-                this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSampleValueGroupName: ""});
-                document.getElementById("samplevaluegrouptext").value = "";
+                detailsNew.sampleValues.push({question: questionText, answers: []});
+                this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSurveyQuestionName: ""});
+                document.getElementById("surveyQuestionText").value = "";
             } else {
-                alert("Please enter a sample value group name first.");
+                alert("Please enter a survey question first.");
             }
         }
     }
 
-    removeSampleValueGroup(sampleValueGroupName) {
+    removeSurveyQuestion(surveyQuestionName) {
         if (this.state.details != null) {
             var detailsNew = this.state.details;
             detailsNew.sampleValues = detailsNew.sampleValues.filter(
-                function (sampleValueGroup) {
-                    return sampleValueGroup.name != sampleValueGroupName;
+                function (surveyQuestion) {
+                    return surveyQuestion.question != surveyQuestionName;
                 }
             );
             this.setState({
@@ -426,44 +426,44 @@ class Project extends React.Component {
         }
     }
 
-    getSampleValueGroupByName(sampleValueGroupName) {
+    getSurveyQuestionByName(surveyQuestionName) {
         return this.state.details.sampleValues.find(
-            function (sampleValueGroup) {
-                return sampleValueGroup.name == sampleValueGroupName;
+            function (surveyQuestion) {
+                return surveyQuestion.question == surveyQuestionName;
             }
         );
     }
 
-    removeSampleValueRow(sampleValueGroupName, sampleValueName) {
-        var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
-        sampleValueGroup.values = sampleValueGroup.values.filter(
-            function (sampleValue) {
-                return sampleValue.name != sampleValueName && sampleValue.parent != sampleValueName;
+    removeSurveyQuestionRow(surveyQuestionText, _surveyAnswer) {
+        var surveyQuestion = this.getSurveyQuestionByName(surveyQuestionText);
+        surveyQuestion.answers = surveyQuestion.answers.filter(
+            function (surveyAnswer) {
+                return surveyAnswer.answer != _surveyAnswer && surveyAnswer.parent != _surveyAnswer;
             }
         );
         this.setState({});
     }
 
-    addSampleValueRow(sampleValueGroupName) {
-        var entry = this.state.newValueEntry[sampleValueGroupName];
-        if (entry.name != "") {
-            var sampleValueGroup = this.getSampleValueGroupByName(sampleValueGroupName);
-            sampleValueGroup.values.push({
-                name: entry.name,
+    addSurveyQuestionRow(surveyQuestionName) {
+        var entry = this.state.newValueEntry[surveyQuestionName];
+        if (entry.answer != "") {
+            var surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
+            surveyQuestion.answers.push({
+                answer: entry.answer,
                 color: entry.color,
                 image: entry.image,
                 parent: entry.parent
             });
-            entry.name = "";
+            entry.answer = "";
             entry.color = "#000000";
             entry.image = "";
             entry.parent = "";
 
         } else {
-            alert("A sample value must possess both a name and a color.");
+            alert("A survey answer must possess both an answer and a color.");
         }
         var dNew = this.state.newValueEntry;
-        dNew[sampleValueGroupName] = entry;
+        dNew[surveyQuestionName] = entry;
         this.setState({newValueEntry: dNew});
     }
 
@@ -641,28 +641,28 @@ class Project extends React.Component {
         }
     }
 
-    handleInputName(sampleValueGroup, event) {
+    handleInputName(surveyQuestion, event) {
         var newValueEntryNew = this.state.newValueEntry;
-        if (newValueEntryNew[sampleValueGroup]) {
-            newValueEntryNew[sampleValueGroup].name = event.target.value;
+        if (newValueEntryNew[surveyQuestion]) {
+            newValueEntryNew[surveyQuestion].answer = event.target.value;
         }
         else
-            newValueEntryNew[sampleValueGroup] = {name: event.target.value, color: "#000000", image: "", parent: ""};
+            newValueEntryNew[surveyQuestion] = {answer: event.target.value, color: "#000000", image: "", parent: ""};
         this.setState({newValueEntry: newValueEntryNew});
 
     }
 
-    handleInputColor(sampleValueGroup, event) {
+    handleInputColor(surveyQuestion, event) {
         var newValueEntryNew = this.state.newValueEntry;
-        newValueEntryNew[sampleValueGroup].color = event.target.value;
+        newValueEntryNew[surveyQuestion].color = event.target.value;
 
         this.setState({newValueEntry: newValueEntryNew});
 
     }
 
-    handleInputParent(sampleValueGroup, event) {
+    handleInputParent(surveyQuestion, event) {
         var newValueEntryNew = this.state.newValueEntry;
-        newValueEntryNew[sampleValueGroup].parent = event.target.value;
+        newValueEntryNew[surveyQuestion].parent = event.target.value;
 
         this.setState({newValueEntry: newValueEntryNew});
 
@@ -699,13 +699,13 @@ class Project extends React.Component {
                                    project_template_visibility={this.props.project_template_visibility}
                                    setProjectTemplate={this.setProjectTemplate} setPrivacyLevel={this.setPrivacyLevel}
                                    setSampleDistribution={this.setSampleDistribution}
-                                   addSampleValueRow={this.addSampleValueRow}
+                                   addSurveyQuestionRow={this.addSurveyQuestionRow}
                                    setBaseMapSource={this.setBaseMapSource}
                                    setPlotDistribution={this.setPlotDistribution} setPlotShape={this.setPlotShape}
-                                   addSampleValueGroup={this.addSampleValueGroup}
-                                   topoSort={this.topoSort} getParentSampleValues={this.getParentSampleValues}
-                                   removeSampleValueGroup={this.removeSampleValueGroup}
-                                   removeSampleValueRow={this.removeSampleValueRow}
+                                   addSurveyQuestion={this.addSurveyQuestion}
+                                   topoSort={this.topoSort} getParentSurveyQuestions={this.getParentSurveyQuestions}
+                                   removeSurveyQuestion={this.removeSurveyQuestion}
+                                   removeSurveyQuestionRow={this.removeSurveyQuestionRow}
                                    handleInputColor={this.handleInputColor} handleInputName={this.handleInputName}
                                    handleChange={this.handleChange} handleInputParent={this.handleInputParent}/>
                 <ProjectManagement project={this.state} projectId={this.props.projectId}
@@ -774,12 +774,12 @@ function ProjectStats(props) {
 }
 
 function ProjectDesignForm(props) {
-    var addSampleValueGroupButton = "";
+    var addSurveyQuestionButton = "";
     if (props.projectId == "0") {
-        addSampleValueGroupButton = <div id="add-sample-value-group">
-            <input type="button" className="button" value="Add Sample Value Group"
-                   onClick={props.addSampleValueGroup}/>&nbsp;
-            <input type="text" id="samplevaluegrouptext" autoComplete="off" value={project.newSampleValueGroupName}/>
+        addSurveyQuestionButton = <div id="add-sample-value-group">
+            <input type="button" className="button" value="Add Survey Question"
+                   onClick={props.addSurveyQuestion}/>&nbsp;
+            <input type="text" id="surveyQuestionText" autoComplete="off" value={project.newSurveyQuestionName}/>
         </div>;
     }
     return (
@@ -794,13 +794,15 @@ function ProjectDesignForm(props) {
             <PlotDesign project={props.project} setPlotDistribution={props.setPlotDistribution}
                         setPlotShape={props.setPlotShape}/>
             <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
-            <SampleValueInfo project={props.project} projectId={props.projectId}
-                             addSampleValueRow={props.addSampleValueRow} topoSort={props.topoSort}
-                             getParentSampleValues={props.getParentSampleValues}
-                             removeSampleValueGroup={props.removeSampleValueGroup}
-                             removeSampleValueRow={props.removeSampleValueRow} handleInputColor={props.handleInputColor}
-                             handleInputName={props.handleInputName} handleInputParent={props.handleInputParent}/>
-            {addSampleValueGroupButton}
+            <SurveyDesign project={props.project} projectId={props.projectId}
+                          addSurveyQuestionRow={props.addSurveyQuestionRow} topoSort={props.topoSort}
+                          getParentSurveyQuestions={props.getParentSurveyQuestions}
+                          removeSurveyQuestion={props.removeSurveyQuestion}
+                          removeSurveyQuestionRow={props.removeSurveyQuestionRow}
+                          handleInputColor={props.handleInputColor}
+                          handleInputName={props.handleInputName}
+                          handleInputParent={props.handleInputParent} addSurveyQuestionButton={addSurveyQuestionButton}/>
+
         </form>
     );
 }
@@ -1211,47 +1213,71 @@ class SampleDesign extends React.Component{
     }
 }
 
-function SampleValueInfo(props) {
+function SurveyDesign(props){
+    return(
+        <div className="row mb-3">
+            <div className="col">
+                <div id="survey-design">
+                    <h2 className="header px-0">Survey Design</h2>
+                    <SurveyQuestionInfo project={props.project} projectId={props.projectId}
+                                        addSurveyQuestionRow={props.addSurveyQuestionRow} topoSort={props.topoSort}
+                                        getParentSurveyQuestions={props.getParentSurveyQuestions}
+                                        removeSurveyQuestion={props.removeSurveyQuestion}
+                                        removeSurveyQuestionRow={props.removeSurveyQuestionRow}
+                                        handleInputColor={props.handleInputColor}
+                                        handleInputName={props.handleInputName}
+                                        handleInputParent={props.handleInputParent}/>
+                    {props.addSurveyQuestionButton}
+                </div>
+            </div>
+        </div>
+    );
+}
+function SurveyQuestionInfo(props) {
     var project = props.project;
+    var parentStyle = {fontStyle: 'normal'};
+    var childStyle = {fontStyle: 'italic', textIndent: '10px'};
     if (project.details != null) {
+console.log(project.details);
+
         return (
-            project.details.sampleValues.map((sampleValueGroup,_uid) =>
+            project.details.sampleValues.map((surveyQuestion, _uid) =>
                 <div key={_uid} className="sample-value-info">
-                    <h2 className="header px-0">
-                        <RemoveSampleValueGroupButton projectId={props.projectId}
-                                                      removeSampleValueGroup={props.removeSampleValueGroup}
-                                                      sampleValueGroup={sampleValueGroup}/>
-                        Sample Value Group: {sampleValueGroup.name}
-                    </h2>
+                    <h3 className="header px-0">
+                        <RemoveSurveyQuestionButton projectId={props.projectId}
+                                                      removeSurveyQuestion={props.removeSurveyQuestion}
+                                                      surveyQuestion={surveyQuestion}/>
+                        Survey Question: {surveyQuestion.question}
+                    </h3>
                     <table className="table table-sm">
                         <thead>
                         <tr>
                             <th scope="col"></th>
-                            <th scope="col">Name</th>
+                            <th scope="col">Answer</th>
                             <th scope="col">Color</th>
                             <th scope="col">&nbsp;</th>
                         </tr>
                         </thead>
                         <tbody>
                         {
-                            props.topoSort(sampleValueGroup.values).map((sampleValue,uid) =>
+                            props.topoSort(surveyQuestion.answers).map((surveyAnswer, uid) =>
+
+
                                 <tr key={uid}>
                                     <td>
-                                        <RemoveSampleValueRowButton projectId={props.projectId}
-                                                                    removeSampleValueRow={props.removeSampleValueRow}
-                                                                    sampleValueGroup={sampleValueGroup}
-                                                                    sampleValue={sampleValue}/>
+                                        <
+                                            RemoveSurveyQuestionRowButton projectId={props.projectId}
+                                                                    removeSurveyQuestionRow={props.removeSurveyQuestionRow}
+                                                                    surveyQuestion={surveyQuestion}
+                                                                          surveyAnswer={surveyAnswer}/>
                                     </td>
-                                    <td style={{
-                                        fontStyle: sampleValue.parent == null || sampleValue.parent == ''
-                                            ? 'normal'
-                                            : 'italic', textIndent: '10px'
-                                    }}>
-                                        {sampleValue.name}
+
+                                    <td style={(surveyAnswer.parent == null || surveyAnswer.parent == '') ? parentStyle : childStyle}>
+                                        {surveyAnswer.answer}
                                     </td>
                                     <td>
                                         <div className="circle"
-                                             style={{backgroundColor: sampleValue.color, border: "solid 1px"}}></div>
+                                             style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}></div>
                                     </td>
                                     <td>
                                         &nbsp;
@@ -1259,10 +1285,10 @@ function SampleValueInfo(props) {
                                 </tr>
                             )
                         }
-                        <SampleValueTable project={project} projectId={props.projectId}
-                                          sampleValueGroup={sampleValueGroup}
-                                          getParentSampleValues={props.getParentSampleValues}
-                                          addSampleValueRow={props.addSampleValueRow}
+                        <SurveyQuestionTable project={project} projectId={props.projectId}
+                                          surveyQuestion={surveyQuestion}
+                                          getParentSurveyQuestions={props.getParentSurveyQuestions}
+                                          addSurveyQuestionRow={props.addSurveyQuestionRow}
                                           handleInputName={props.handleInputName}
                                           handleInputColor={props.handleInputColor}
                                           handleInputParent={props.handleInputParent}/>
@@ -1277,22 +1303,22 @@ function SampleValueInfo(props) {
     }
 }
 
-function RemoveSampleValueGroupButton(props) {
+function RemoveSurveyQuestionButton(props) {
     if (props.projectId == "0") {
         return (<input id="remove-sample-value-group" type="button" className="button" value="-"
-                       onClick={() => props.removeSampleValueGroup(props.sampleValueGroup.name)}/>
+                       onClick={() => props.removeSurveyQuestion(props.surveyQuestion.question)}/>
         );
     }
     else
         return (<span></span>);
 }
 
-function RemoveSampleValueRowButton(props) {
+function RemoveSurveyQuestionRowButton(props) {
     if (props.projectId == "0") {
-        if (props.sampleValue) {
+        if (props.surveyAnswer) {
             return (
                 <input type="button" className="button" value="-"
-                       onClick={() => props.removeSampleValueRow(props.sampleValueGroup.name, props.sampleValue.name)}/>
+                       onClick={() => props.removeSurveyQuestionRow(props.surveyQuestion.question, props.surveyAnswer.answer)}/>
             );
         }
         else return (<h1></h1>);
@@ -1301,13 +1327,13 @@ function RemoveSampleValueRowButton(props) {
         return (<span></span>);
 }
 
-function SampleValueTable(props) {
+function SurveyQuestionTable(props) {
     var project = props.project;
-    var name = "", color = "", parent = "";
-    if (project.newValueEntry[props.sampleValueGroup.name]) {
-        name = project.newValueEntry[props.sampleValueGroup.name].name;
-        color = project.newValueEntry[props.sampleValueGroup.name].color;
-        parent = project.newValueEntry[props.sampleValueGroup.name].parent;
+    var answer = "", color = "", parent = "";
+    if (project.newValueEntry[props.surveyQuestion.question]) {
+        answer = project.newValueEntry[props.surveyQuestion.question].answer;
+        color = project.newValueEntry[props.surveyQuestion.question].color;
+        parent = project.newValueEntry[props.surveyQuestion.question].parent;
 
     }
     if (props.projectId == "0") {
@@ -1315,24 +1341,24 @@ function SampleValueTable(props) {
             <tr>
                 <td>
                     <input type="button" className="button" value="+"
-                           onClick={() => props.addSampleValueRow(props.sampleValueGroup.name)}/>
+                           onClick={() => props.addSurveyQuestionRow(props.surveyQuestion.question)}/>
                 </td>
                 <td>
                     <input type="text" className="value-name" autoComplete="off"
-                           value={name} onChange={(e) => props.handleInputName(props.sampleValueGroup.name, e)}/>
+                           value={answer} onChange={(e) => props.handleInputName(props.surveyQuestion.question, e)}/>
                 </td>
                 <td>
                     <input type="color" className="value-color"
-                           value={color} onChange={(e) => props.handleInputColor(props.sampleValueGroup.name, e)}/>
+                           value={color} onChange={(e) => props.handleInputColor(props.surveyQuestion.question, e)}/>
                 </td>
                 <td>
                     <label htmlFor="value-parent">Parent:</label>
                     <select id="value-parent" className="form-control form-control-sm" size="1" defaultValue={parent}
-                            onChange={(e) => props.handleInputParent(props.sampleValueGroup.name, e)}>
+                            onChange={(e) => props.handleInputParent(props.surveyQuestion.question, e)}>
                         <option value="">None</option>
                         {
-                            props.getParentSampleValues(props.sampleValueGroup.values).map((parentSampleValue,uid) =>
-                                <option key={uid} value={parentSampleValue.name}>{parentSampleValue.name}</option>
+                            props.getParentSurveyQuestions(props.surveyQuestion.answers).map((parentSurveyQuestion,uid) =>
+                                <option key={uid} value={parentSurveyQuestion.answer}>{parentSurveyQuestion.answer}</option>
                             )
                         }
                     </select>
