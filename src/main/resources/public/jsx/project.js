@@ -777,7 +777,7 @@ function ProjectDesignForm(props) {
     var addSampleValueGroupButton = "";
     if (props.projectId == "0") {
         addSampleValueGroupButton = <div id="add-sample-value-group">
-            <input type="button" className="button" value="Add Sample Value Group"
+            <input type="button" className="button" value="Add Survey Question"
                    onClick={props.addSampleValueGroup}/>&nbsp;
             <input type="text" id="samplevaluegrouptext" autoComplete="off" value={project.newSampleValueGroupName}/>
         </div>;
@@ -794,13 +794,22 @@ function ProjectDesignForm(props) {
             <PlotDesign project={props.project} setPlotDistribution={props.setPlotDistribution}
                         setPlotShape={props.setPlotShape}/>
             <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
-            <SampleValueInfo project={props.project} projectId={props.projectId}
-                             addSampleValueRow={props.addSampleValueRow} topoSort={props.topoSort}
-                             getParentSampleValues={props.getParentSampleValues}
-                             removeSampleValueGroup={props.removeSampleValueGroup}
-                             removeSampleValueRow={props.removeSampleValueRow} handleInputColor={props.handleInputColor}
-                             handleInputName={props.handleInputName} handleInputParent={props.handleInputParent}/>
-            {addSampleValueGroupButton}
+            <div className="row mb-3">
+                <div className="col">
+                    <div id="survey-design">
+                        <h2 className="header px-0">Survey Design</h2>
+                        <SampleValueInfo project={props.project} projectId={props.projectId}
+                                         addSampleValueRow={props.addSampleValueRow} topoSort={props.topoSort}
+                                         getParentSampleValues={props.getParentSampleValues}
+                                         removeSampleValueGroup={props.removeSampleValueGroup}
+                                         removeSampleValueRow={props.removeSampleValueRow}
+                                         handleInputColor={props.handleInputColor}
+                                         handleInputName={props.handleInputName}
+                                         handleInputParent={props.handleInputParent}/>
+                        {addSampleValueGroupButton}
+                    </div>
+                </div>
+            </div>
         </form>
     );
 }
@@ -1211,30 +1220,37 @@ class SampleDesign extends React.Component{
     }
 }
 
+
 function SampleValueInfo(props) {
     var project = props.project;
+    var parentStyle = {fontStyle: 'normal'};
+    var childStyle = {fontStyle: 'italic', textIndent: '10px'};
     if (project.details != null) {
+
+
         return (
-            project.details.sampleValues.map((sampleValueGroup,_uid) =>
+            project.details.sampleValues.map((sampleValueGroup, _uid) =>
                 <div key={_uid} className="sample-value-info">
-                    <h2 className="header px-0">
+                    <h3 className="header px-0">
                         <RemoveSampleValueGroupButton projectId={props.projectId}
                                                       removeSampleValueGroup={props.removeSampleValueGroup}
                                                       sampleValueGroup={sampleValueGroup}/>
-                        Sample Value Group: {sampleValueGroup.name}
-                    </h2>
+                        Survey Question: {sampleValueGroup.name}
+                    </h3>
                     <table className="table table-sm">
                         <thead>
                         <tr>
                             <th scope="col"></th>
-                            <th scope="col">Name</th>
+                            <th scope="col">Answer</th>
                             <th scope="col">Color</th>
                             <th scope="col">&nbsp;</th>
                         </tr>
                         </thead>
                         <tbody>
                         {
-                            props.topoSort(sampleValueGroup.values).map((sampleValue,uid) =>
+                            props.topoSort(sampleValueGroup.values).map((sampleValue, uid) =>
+
+
                                 <tr key={uid}>
                                     <td>
                                         <RemoveSampleValueRowButton projectId={props.projectId}
@@ -1242,11 +1258,8 @@ function SampleValueInfo(props) {
                                                                     sampleValueGroup={sampleValueGroup}
                                                                     sampleValue={sampleValue}/>
                                     </td>
-                                    <td style={{
-                                        fontStyle: sampleValue.parent == null || sampleValue.parent == ''
-                                            ? 'normal'
-                                            : 'italic', textIndent: '10px'
-                                    }}>
+
+                                    <td style={(sampleValue.parent == null || sampleValue.parent == '') ? parentStyle : childStyle}>
                                         {sampleValue.name}
                                     </td>
                                     <td>
