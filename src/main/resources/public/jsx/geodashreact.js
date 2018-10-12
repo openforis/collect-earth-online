@@ -261,7 +261,7 @@ class MapWidget extends React.Component {
         const onSwipeChange = this.props.onSwipeChange;
 
         const widgetId = "widgetmap_" + widget.id;
-        if(widget.dualLayer){
+        if(widget.dualLayer || widget.dualImageCollection){
             var oStyle = {display: widget.sliderType == 'opacity'? 'block': 'none'};
             var sStyle = {display: widget.sliderType == 'swipe'? 'block': 'none'};
            return <div>
@@ -293,12 +293,9 @@ class MapWidget extends React.Component {
             />
         }
     }
-    componentDidMount()
+    getRasterByBasemapConfig(basemap)
     {
-        const widget = this.props.widget;
-        var raster;
-        var basemap = widget.baseMap;
-        console.log('basemap: ' + basemap);
+        let raster;
         if(basemap == null || basemap.id == 'osm')
         {
             raster = new ol.layer.Tile({
@@ -306,12 +303,78 @@ class MapWidget extends React.Component {
             });
         }
         else{
-            var source = mercator.createSource(widget.baseMap.sourceConfig)
+            var source = mercator.createSource(basemap.sourceConfig)
             raster = new ol.layer.Tile({
                 source: source
             });
         }
-        //raster.id = "geeLayer";
+        return raster;
+    }
+    getGatewayUrl(widget, collectionName){
+        var url = '';
+        if(widget.filterType != null && widget.filterType.length > 0){
+            var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
+            url = "http://collect.earth:8888/" + fts[widget.filterType];
+            console.log('filtered');
+        }
+        else if('ImageCollectionCustom' == widget.properties[0]){
+            url = "http://collect.earth:8888/meanImageByMosaicCollection";
+            console.log('ImageCollectionCustom');
+        }
+        else if(collectionName.trim().length > 0)
+        {
+            url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
+            console.log('cloudMaskImageByMosaicCollection: '  + widget.properties[0]);
+
+        }
+        else{
+            url = "http://collect.earth:8888/ImageCollectionbyIndex";
+        }
+        return url;
+    }
+    getImageParams(widget){
+        var visParams;
+        if(widget.visParams)
+        {
+                console.log(widget.visParams)
+                try{
+                    visParams = $.parseJSON(widget.visParams);
+                }
+                catch(e)
+                {
+                    visParams = widget.visParams;
+                }
+
+        }
+        else {
+            var min;
+            var max;
+            try {
+                if (widget.min > 0) {
+                    min = widget.min;
+                }
+
+                if (widget.max > 0) {
+                    max = widget.max;
+                }
+            }
+            catch (e) {
+                //alert(0);
+            }
+            visParams = {
+                min: min,
+                max: max,
+                bands: widget.bands
+            };
+        }
+        return visParams;
+    }
+    componentDidMount()
+    {
+        const widget = this.props.widget;
+        var basemap = widget.baseMap;
+        var raster =  this.getRasterByBasemapConfig(basemap);
+
         var mapdiv = "widgetmap_" + widget.id;
         var map = new ol.Map({
             layers: [raster],
@@ -356,83 +419,101 @@ class MapWidget extends React.Component {
                 mapWidgetArray["widgetmap_" + widget.id].getSize()
             );
         }
-        var postObject = {};
-        var collectionName = widget.properties[1];
-        var dateFrom = widget.properties[2];
-        var dateTo = widget.properties[3];
-        var requestedIndex = widget.properties[0] === "ImageCollectionNDVI"? 'NDVI': widget.properties[0] === "ImageCollectionEVI"? 'EVI': widget.properties[0] === "ImageCollectionEVI2"? 'EVI2': widget.properties[0] === "ImageCollectionNDMI"? 'NDMI': widget.properties[0] === "ImageCollectionNDWI"? 'NDWI': '';
-        var url = '';
-        console.log('about to set url');
-        if(widget.filterType != null && widget.filterType.length > 0){
-            var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
-            url = "http://collect.earth:8888/" + fts[widget.filterType];
-            console.log('filtered');
-        }
-        else if('ImageCollectionCustom' == widget.properties[0]){
-            url = "http://collect.earth:8888/meanImageByMosaicCollection";
-            console.log('ImageCollectionCustom');
-        }
-        else if(collectionName.trim().length > 0)
-        {
-            url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
-            console.log('cloudMaskImageByMosaicCollection: '  + widget.properties[0]);
 
-        }
-        else{
-            url = "http://collect.earth:8888/ImageCollectionbyIndex";
-        }
+        var postObject = {};
+        var collectionName = '';
+        var dateFrom = '';
+        var dateTo = '';
+        var requestedIndex = '';
+        var url = '';
+        var dualImageObject = null;
         var bands = "";
         if (widget.properties.length === 5) {
             bands = widget.properties[4];
         }
+        widget.bands = bands;
         var min = "";
         var max = "0.3";
         var visParams;
-        var postObject = {};
+
+        /*********************Check here if widget is dualImageCollection *********************/
+        if(widget.dualImageCollection  && widget.dualImageCollection != null){
+         
+            //still have to make the same postObject, but set a different callback to recall for second layer
+            // might be best to rewrite the other at the same time.
+            //hmmmm, maybe i can handle all of this logic in the callback instead by setting a different variable
+            var firstImage = widget.dualImageCollection[0];
+            var secondImage = widget.dualImageCollection[1];
+            collectionName = firstImage.collectionType;
+            dateFrom = firstImage.startDate;
+            dateTo = firstImage.endDate;
+            requestedIndex = collectionName === "ImageCollectionNDVI" ? 'NDVI' : collectionName === "ImageCollectionEVI" ? 'EVI' : collectionName === "ImageCollectionEVI2" ? 'EVI2' : collectionName === "ImageCollectionNDMI" ? 'NDMI' : collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+            var shortWidget = {};
+            shortWidget.filterType = firstImage.filterType;
+            shortWidget.properties = [];
+            shortWidget.properties.push(collectionName);
+            url = this.getGatewayUrl(shortWidget, collectionName);
+            shortWidget.visParams = firstImage.visParams;
+            shortWidget.min = firstImage.min != null? firstImage.min: '';
+            shortWidget.max = firstImage.max != null? firstImage.max: '';
+            shortWidget.band = firstImage.band != null? firstImage.band: '';
+            postObject.visParams = this.getImageParams(shortWidget);
+
+            if(postObject.visParams.cloudLessThan) {
+                postObject.bands = postObject.visParams.bands;
+                postObject.min = postObject.visParams.min;
+                postObject.max = postObject.visParams.max;
+                postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
+            }
+
+
+
+            //Create the ajax object for the second call here
+            dualImageObject = {};
+            dualImageObject.collectionName = secondImage.collectionType;
+            dualImageObject.dateFrom = secondImage.startDate;
+            dualImageObject.dateTo = secondImage.endDate;
+            dualImageObject.requestedIndex = dualImageObject.collectionName === "ImageCollectionNDVI" ? 'NDVI' : dualImageObject.collectionName === "ImageCollectionEVI" ? 'EVI' : dualImageObject.collectionName === "ImageCollectionEVI2" ? 'EVI2' : dualImageObject.collectionName === "ImageCollectionNDMI" ? 'NDMI' : dualImageObject.collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+            var shortWidget2 = {};
+            shortWidget2.filterType = secondImage.filterType;
+            shortWidget2.properties = [];
+            shortWidget2.properties.push(dualImageObject.collectionName);
+
+            dualImageObject.url = this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
+
+            shortWidget2.visParams = secondImage.visParams;
+            shortWidget2.min = secondImage.min != null? secondImage.min: '';
+            shortWidget2.max = secondImage.max != null? secondImage.max: '';
+            shortWidget2.band = secondImage.band != null? secondImage.band: '';
+            dualImageObject.visParams = this.getImageParams(shortWidget2);
+
+
+        }
+        else {
+
+            /***************This is what happens if not***********************/
+
+            collectionName = widget.properties[1];
+            dateFrom = widget.properties[2];
+            dateTo = widget.properties[3];
+            requestedIndex = widget.properties[0] === "ImageCollectionNDVI" ? 'NDVI' : widget.properties[0] === "ImageCollectionEVI" ? 'EVI' : widget.properties[0] === "ImageCollectionEVI2" ? 'EVI2' : widget.properties[0] === "ImageCollectionNDMI" ? 'NDMI' : widget.properties[0] === "ImageCollectionNDWI" ? 'NDWI' : '';
+
+            url = this.getGatewayUrl(widget, collectionName);
+            postObject.visParams = this.getImageParams(widget);
+
+            if(postObject.visParams.cloudLessThan) {
+                postObject.bands = postObject.visParams.bands;
+                postObject.min = postObject.visParams.min;
+                postObject.max = postObject.visParams.max;
+                postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
+            }
+        }
+
         postObject.collectionName = collectionName;
         postObject.dateFrom = dateFrom;
         postObject.dateTo= dateTo;
         postObject.geometry= $.parseJSON(projPairAOI);
         postObject.index= requestedIndex;
-        if(widget.visParams)
-        {
-            if(widget.visParams.cloudLessThan) {
-                postObject.bands = widget.visParams.bands;
-                postObject.min = widget.visParams.min;
-                postObject.max = widget.visParams.max;
-                postObject.cloudLessThan = parseInt(widget.visParams.cloudLessThan);
-            }
-            else{
-                console.log(widget.visParams)
-                try{
-                postObject.visParams = $.parseJSON(widget.visParams);
-                }
-                catch(e)
-                {
-                    postObject.visParams = widget.visParams;
-                }
-            }
-        }
-        else {
-            try {
-                if (widget.min > 0) {
-                    min = widget.min;
-                }
-
-                if (widget.max > 0) {
-                    max = widget.max;
-                }
-            }
-            catch (e) {
-                //alert(0);
-            }
-            visParams = {
-                min: min,
-                max: max,
-                bands: bands
-            };
-            postObject.visParams = visParams;
-        }
 
 
         $.ajax({
@@ -441,6 +522,7 @@ class MapWidget extends React.Component {
             async: true,
             indexVal: widget.id,
             dualLayer: widget.dualLayer,
+            dualImageObject: JSON.stringify(dualImageObject),
             dualStart: widget.dualStart,
             dualEnd: widget.dualEnd,
             crossDomain: true,
@@ -458,6 +540,7 @@ class MapWidget extends React.Component {
                     var token = data.token;
                     var $this = this;
                     var dualLayer = $this.dualLayer;
+                    var dualImage = $this.dualImageObject;
                     addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
                     if(dualLayer)
                     {
@@ -494,9 +577,54 @@ class MapWidget extends React.Component {
                                 }
                             }
                         });
+                    }
+                    else if(dualImage && dualImage != null){
+                        var workingObject;
+                        try{
+                            workingObject = JSON.parse(dualImage);
+                            console.log('json parsed');
+                        }
+                        catch(e){
+                            workingObject = dualImage;
+                            console.log('as passed');
+                        }
+                        if(workingObject != null)
+                        {
+                        console.log(workingObject);
+                        console.log(workingObject.collectionName);
+                        var secondObject = workingObject;
+                        //set url based on data type
+                        //set variables needed for data type, maybe do this above so i can just pass the dualImage thru...
 
+                        $.ajax({
+                            url: workingObject.url,
+                            type: "POST",
+                            async: true,
+                            indexVal: $this.indexVal,
+                            crossDomain: true,
+                            contentType: "application/json",
+                            data: JSON.stringify(secondObject)
+                        }).fail(function (jqXHR, textStatus, errorThrown) {
+                            console.warn(jqXHR + textStatus + errorThrown);
+                        }).done(function (data, _textStatus, _jqXHR) {
+                            if (data.errMsg) {
+                                console.info(data.errMsg);
+                            } else {
 
+                                if (data.hasOwnProperty("mapid")) {
+                                    var mapId = data.mapid;
+                                    var token = data.token;
+                                    var $this = this;
+                                    var dualLayer = $this.dualLayer;
+                                    console.log(mapId +', ' + token + ', widgetmap_' + $this.indexVal);
+                                    addDualLayer(mapId, token, "widgetmap_" + $this.indexVal);
+                                } else {
+                                    console.warn("Wrong Data Returned");
+                                }
+                            }
+                        });
 
+                        }
                     }
                 } else {
                     console.warn("Wrong Data Returned");
