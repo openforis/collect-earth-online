@@ -367,7 +367,7 @@ class Project extends React.Component {
     getParentSurveyQuestions(sampleSurvey) {
         return sampleSurvey.filter(
             function (surveyQuestion) {
-                return surveyQuestion.parent == null || surveyQuestion.parent == "";
+                return surveyQuestion.parent == -1;
             }
         );
     }
@@ -375,7 +375,7 @@ class Project extends React.Component {
     getChildSurveyQuestions(sampleSurvey, parentSurveyQuestion) {
         return sampleSurvey.filter(
             function (surveyQuestion) {
-                return surveyQuestion.parent == parentSurveyQuestion.answer;
+                return surveyQuestion.parent == parentSurveyQuestion.id;
             }
         );
     }
@@ -386,7 +386,7 @@ class Project extends React.Component {
             function (parentSurveyQuestion) {
                 var childSurveyQuestions = sampleSurvey.filter(
                     function (sampleValue) {
-                        return sampleValue.parent == parentSurveyQuestion.question;
+                        return sampleValue.parent == parentSurveyQuestion.id;
                     }
                 );
                 return [parentSurveyQuestion].concat(childSurveyQuestions);
@@ -402,16 +402,26 @@ class Project extends React.Component {
             var parent_value = document.getElementById("value-parent");
 
             var parent = parent_value.options[parent_value.selectedIndex].text;
-            if(parent=="None")
-                parent="";
+            if (parent == "None")
+                parent = "";
             if (questionText != "") {
                 var newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[questionText] = {answer: "", color: "#000000", image: ""};
                 var detailsNew = this.state.details;
-                detailsNew.sampleValues.push({question: questionText, answers: [],parent:parent});
+                var _id = detailsNew.sampleValues.length + 1;
+                var parent_id = -1;
+                detailsNew.sampleValues.map((sq) => {
+                        if (sq.question == parent) {
+                            parent_id = sq.id;
+                        }
+                    }
+                );
+                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent: parent_id});
                 this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSurveyQuestionName: ""});
+                console.log("JSON object");
+                console.log(this.state.details.sampleValues);
                 document.getElementById("surveyQuestionText").value = "";
-                parent_value.options[0].selected=true;
+                parent_value.options[0].selected = true;
             } else {
                 alert("Please enter a survey question first.");
             }
@@ -444,7 +454,7 @@ class Project extends React.Component {
         var surveyQuestion = this.getSurveyQuestionByName(surveyQuestionText);
         surveyQuestion.answers = surveyQuestion.answers.filter(
             function (surveyAnswer) {
-                return surveyAnswer.answer != _surveyAnswer && surveyAnswer.parent != _surveyAnswer;
+                return surveyAnswer.answer != _surveyAnswer;
             }
         );
         this.setState({});
@@ -1286,7 +1296,7 @@ function SurveyQuestion(properties) {
                         <RemoveSurveyQuestionButton projectId={props.projectId}
                                                       removeSurveyQuestion={props.removeSurveyQuestion}
                                                       surveyQuestion={properties.surveyQuestion}/>
-                        <label  style={(properties.surveyQuestion.parent == null || properties.surveyQuestion.parent == '') ? parentStyle : childStyle}> Survey Question: {properties.surveyQuestion.question}</label>
+                        <label  style={(properties.surveyQuestion.parent == -1) ? parentStyle : childStyle}> Survey Question: {properties.surveyQuestion.question}</label>
                     </h3>
                     <table className="table table-sm">
                         <thead>
@@ -1366,7 +1376,7 @@ function RemoveSurveyQuestionRowButton(props) {
 
 function SurveyQuestionTable(props) {
     var project = props.project;
-    var answer = "", color = "", parent = "";
+    var answer = "", color = "";
     if (project.newValueEntry[props.surveyQuestion.question]) {
         answer = project.newValueEntry[props.surveyQuestion.question].answer;
         color = project.newValueEntry[props.surveyQuestion.question].color;
