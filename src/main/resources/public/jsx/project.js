@@ -116,7 +116,7 @@ class Project extends React.Component {
             var formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("plot-distribution-csv-file", document.getElementById("plot-distribution-csv-file").files[0]);
-            formData.append("sample-values", JSON.stringify(this.state.details.sampleSurvey));
+            formData.append("sample-values", JSON.stringify(this.state.details.sampleValues));
             var ref = this;
             $.ajax({
                 url: this.props.documentRoot + "/create-project",
@@ -403,7 +403,7 @@ class Project extends React.Component {
                 var newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[questionText] = {answer: "", color: "#000000", image: "", parent: ""};
                 var detailsNew = this.state.details;
-                detailsNew.sampleSurvey.push({question: questionText, answers: []});
+                detailsNew.sampleValues.push({question: questionText, answers: []});
                 this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSurveyQuestionName: ""});
                 document.getElementById("surveyQuestionText").value = "";
             } else {
@@ -415,7 +415,7 @@ class Project extends React.Component {
     removeSurveyQuestion(surveyQuestionName) {
         if (this.state.details != null) {
             var detailsNew = this.state.details;
-            detailsNew.sampleSurvey = detailsNew.sampleSurvey.filter(
+            detailsNew.sampleValues = detailsNew.sampleValues.filter(
                 function (surveyQuestion) {
                     return surveyQuestion.question != surveyQuestionName;
                 }
@@ -427,7 +427,7 @@ class Project extends React.Component {
     }
 
     getSurveyQuestionByName(surveyQuestionName) {
-        return this.state.details.sampleSurvey.find(
+        return this.state.details.sampleValues.find(
             function (surveyQuestion) {
                 return surveyQuestion.question == surveyQuestionName;
             }
@@ -1238,10 +1238,10 @@ function SurveyQuestionInfo(props) {
     var parentStyle = {fontStyle: 'normal'};
     var childStyle = {fontStyle: 'italic', textIndent: '10px'};
     if (project.details != null) {
-
+console.log(project.details);
 
         return (
-            project.details.sampleSurvey.map((surveyQuestion, _uid) =>
+            project.details.sampleValues.map((surveyQuestion, _uid) =>
                 <div key={_uid} className="sample-value-info">
                     <h3 className="header px-0">
                         <RemoveSurveyQuestionButton projectId={props.projectId}
