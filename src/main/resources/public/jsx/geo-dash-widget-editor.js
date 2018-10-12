@@ -92,9 +92,14 @@ class BasicLayout extends React.PureComponent{
             .then(response => response.json())
             .then(function(response){dashboardID = response.dashboardID;  return response})
             .then(data => data.widgets.map(function(widget){
+                if(widget.layout.y == null)
+                {
+                    widget.layout.y = 0;
+                }
                 return widget;}))
             .then(data => debugreturn = data)
-            .then(data => this.setState({ widgets: data}))
+            //.then(function(data){if(data){this.setState({ widgets: data})}  return response})
+             .then(data => this.setState({ widgets: data}))
             .then(function(data){ console.log('widgets should be updated'); haveWidgets = true; return data;})
             .then(data => this.checkWidgetStructure())
             .then(data => this.setState({layout: this.generateLayout()}))
@@ -357,10 +362,12 @@ class BasicLayout extends React.PureComponent{
         widget.id = id;
         widget.name = name;
         widget.properties = properties;
+        let yval = ((Math.max.apply(Math, this.state.widgets.map(function(o) { return o.layout.y != null? o.layout.y: 0; }))) + 1) > -1? (Math.max.apply(Math, this.state.widgets.map(function(o) { return o.layout.y != null? o.layout.y: 0; }))) + 1: 0;
+
         widget.layout = {
             i: id.toString(),
             x: 0,
-            y: (Math.max.apply(Math, this.state.widgets.map(function(o) { return o.layout.y; }))) + 1, // puts it at the bottom
+            y: yval, // puts it at the bottom
             w: 3,
             h: 1,
             minW:3
