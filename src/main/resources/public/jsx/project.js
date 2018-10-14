@@ -378,8 +378,8 @@ class Project extends React.Component {
         sampleSurvey.map((sq) => {
                 var parent_value = document.getElementById("value-parent");
 
-                var parent = parent_value.options[parent_value.selectedIndex].text;
-                if (sq.question == parent) {
+                var parent = parent_value.options[parent_value.selectedIndex].value;
+                if (sq.id == parent) {
                     ans = sq.answers;
                 }
 
@@ -423,7 +423,7 @@ class Project extends React.Component {
 
             var answer_value = document.getElementById("value-answer");
 
-            var answer = answer_value.options[answer_value.selectedIndex].text;
+            var answer = answer_value.options[answer_value.selectedIndex].id;
             if (parent == "None")
                 parent = "";
 
@@ -443,7 +443,7 @@ class Project extends React.Component {
                     }
                 );
                 this.getParentSurveyQuestionAnswers(detailsNew.sampleValues).map((ans) => {
-                        if (ans.answer == answer) {
+                        if (ans.id == answer) {
                             answer_id = ans.id;
 
                         }
@@ -1262,7 +1262,7 @@ function SurveyDesign(props){
         if(answers.length>0){
             answer_select=props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
                 <option key={uid}
-                        value={parentSurveyQuestionAnswer.answer}>{parentSurveyQuestionAnswer.answer}</option>
+                        value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
             )
         }
 
@@ -1295,7 +1295,7 @@ function SurveyDesign(props){
                                         {
                                             props.getParentSurveyQuestions(props.project.details.sampleValues).map((parentSurveyQuestion, uid) =>
                                                 <option key={uid}
-                                                        value={parentSurveyQuestion.question}>{parentSurveyQuestion.question}</option>
+                                                        value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}</option>
                                             )
                                         }
                                     </select>
