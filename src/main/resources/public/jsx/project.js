@@ -50,6 +50,7 @@ class Project extends React.Component {
         this.getParentSurveyQuestions = this.getParentSurveyQuestions.bind(this);
         this.setProjectTemplate = this.setProjectTemplate.bind(this);
         this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
+        this.getParentSurveyQuestionAnswers=this.getParentSurveyQuestionAnswers.bind(this);
         this.removeSurveyQuestionRow = this.removeSurveyQuestionRow.bind(this);
         this.handleInputName = this.handleInputName.bind(this);
         this.handleInputColor = this.handleInputColor.bind(this);
@@ -364,18 +365,35 @@ class Project extends React.Component {
         }
     }
 
+
     getParentSurveyQuestions(sampleSurvey) {
         return sampleSurvey.filter(
             function (surveyQuestion) {
-                return surveyQuestion.parent == -1;
+                return surveyQuestion.parent_question == -1;
             }
         );
     }
+    getParentSurveyQuestionAnswers(sampleSurvey) {
+        var ans = [];
+        sampleSurvey.map((sq) => {
+                var parent_value = document.getElementById("value-parent");
+
+                var parent = parent_value.options[parent_value.selectedIndex].text;
+                if (sq.question == parent) {
+                    ans = sq.answers;
+                }
+
+
+            }
+        );
+        return ans;
+    }
+
 
     getChildSurveyQuestions(sampleSurvey, parentSurveyQuestion) {
         return sampleSurvey.filter(
             function (surveyQuestion) {
-                return surveyQuestion.parent == parentSurveyQuestion.id;
+                return surveyQuestion.parent_question == parentSurveyQuestion.id;
             }
         );
     }
@@ -386,7 +404,7 @@ class Project extends React.Component {
             function (parentSurveyQuestion) {
                 var childSurveyQuestions = sampleSurvey.filter(
                     function (sampleValue) {
-                        return sampleValue.parent == parentSurveyQuestion.id;
+                        return sampleValue.parent_question == parentSurveyQuestion.id;
                     }
                 );
                 return [parentSurveyQuestion].concat(childSurveyQuestions);
@@ -402,21 +420,36 @@ class Project extends React.Component {
             var parent_value = document.getElementById("value-parent");
 
             var parent = parent_value.options[parent_value.selectedIndex].text;
+
+            var answer_value = document.getElementById("value-answer");
+
+            var answer = answer_value.options[answer_value.selectedIndex].text;
             if (parent == "None")
                 parent = "";
+
+            if (answer == "None")
+                answer = "";
             if (questionText != "") {
                 var newValueEntryNew = this.state.newValueEntry;
-                newValueEntryNew[questionText] = {answer: "", color: "#000000", image: ""};
+                newValueEntryNew[questionText] = {id:-1,answer: "", color: "#000000"};
                 var detailsNew = this.state.details;
                 var _id = detailsNew.sampleValues.length + 1;
-                var parent_id = -1;
+                var question_id = -1,answer_id=-1;
                 detailsNew.sampleValues.map((sq) => {
                         if (sq.question == parent) {
-                            parent_id = sq.id;
+                            question_id = sq.id;
+
                         }
                     }
                 );
-                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent: parent_id});
+                this.getParentSurveyQuestionAnswers(detailsNew.sampleValues).map((ans) => {
+                        if (ans.answer == answer) {
+                            answer_id = ans.id;
+
+                        }
+                    }
+                );
+                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id});
                 this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSurveyQuestionName: ""});
                 console.log("JSON object");
                 console.log(this.state.details.sampleValues);
@@ -465,13 +498,13 @@ class Project extends React.Component {
         if (entry.answer != "") {
             var surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
             surveyQuestion.answers.push({
+                id:surveyQuestion.answers.length+1,
                 answer: entry.answer,
-                color: entry.color,
-                image: entry.image,
+                color: entry.color
             });
+            entry.id=-1;
             entry.answer = "";
             entry.color = "#000000";
-            entry.image = "";
         } else {
             alert("A survey answer must possess both an answer and a color.");
         }
@@ -661,7 +694,7 @@ class Project extends React.Component {
             this.setState({newValueEntry:newValueEntryNew});
         }
         else
-            this.setState({newValueEntry:{answer: event.target.value, color: "#000000", image: ""}});
+            this.setState({newValueEntry:{id:-1,answer: event.target.value, color: "#000000"}});
     }
 
     handleInputColor(surveyQuestion, event) {
@@ -712,7 +745,7 @@ class Project extends React.Component {
                                    setBaseMapSource={this.setBaseMapSource}
                                    setPlotDistribution={this.setPlotDistribution} setPlotShape={this.setPlotShape}
                                    addSurveyQuestion={this.addSurveyQuestion}
-                                   topoSort={this.topoSort} getParentSurveyQuestions={this.getParentSurveyQuestions}
+                                   topoSort={this.topoSort} getParentSurveyQuestions={this.getParentSurveyQuestions} getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}
                                    removeSurveyQuestion={this.removeSurveyQuestion}
                                    removeSurveyQuestionRow={this.removeSurveyQuestionRow}
                                    handleInputColor={this.handleInputColor} handleInputName={this.handleInputName}
@@ -805,7 +838,7 @@ function ProjectDesignForm(props) {
             <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
             <SurveyDesign project={props.project} projectId={props.projectId}
                           addSurveyQuestionRow={props.addSurveyQuestionRow} topoSort={props.topoSort}
-                          getParentSurveyQuestions={props.getParentSurveyQuestions}
+                          getParentSurveyQuestions={props.getParentSurveyQuestions} getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}
                           removeSurveyQuestion={props.removeSurveyQuestion}
                           removeSurveyQuestionRow={props.removeSurveyQuestionRow}
                           handleInputColor={props.handleInputColor}
@@ -1224,6 +1257,15 @@ class SampleDesign extends React.Component{
 
 function SurveyDesign(props){
     if (props.project.details != null) {
+        var answer_select="";
+        var answers= props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
+        if(answers.length>0){
+            answer_select=props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
+                <option key={uid}
+                        value={parentSurveyQuestionAnswer.answer}>{parentSurveyQuestionAnswer.answer}</option>
+            )
+        }
+
         return (
             <div className="row mb-3">
                 <div className="col">
@@ -1257,6 +1299,16 @@ function SurveyDesign(props){
                                             )
                                         }
                                     </select>
+                                </td>
+                                <td>
+                                    <label htmlFor="value-answer">Answer:</label>
+                                </td>
+                                <td>
+                                    <select id="value-answer" className="form-control form-control-sm" size="1"
+                                            onChange={(e) => props.handleInputParent(e)}>
+                                        <option value="">None</option>
+                                               {answer_select}
+                                        </select>
                                 </td>
                             </tr>
                             </tbody>
@@ -1296,7 +1348,7 @@ function SurveyQuestion(properties) {
                         <RemoveSurveyQuestionButton projectId={props.projectId}
                                                       removeSurveyQuestion={props.removeSurveyQuestion}
                                                       surveyQuestion={properties.surveyQuestion}/>
-                        <label  style={(properties.surveyQuestion.parent == -1) ? parentStyle : childStyle}> Survey Question: {properties.surveyQuestion.question}</label>
+                        <label  style={(properties.surveyQuestion.parent_question == -1) ? parentStyle : childStyle}> Survey Question: {properties.surveyQuestion.question}</label>
                     </h3>
                     <table className="table table-sm">
                         <thead>
