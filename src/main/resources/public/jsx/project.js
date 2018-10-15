@@ -58,6 +58,7 @@ class Project extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.topoSort = this.topoSort.bind(this);
         this.createProject = this.createProject.bind(this);
+        this.getParentSurveyAnswers=this.getParentSurveyAnswers.bind(this);
     };
 
     componentDidMount() {
@@ -389,6 +390,19 @@ class Project extends React.Component {
         return ans;
     }
 
+    getParentSurveyAnswers(sampleSurvey,question_id) {
+        var ans = [];
+        sampleSurvey.map((sq) => {
+                if (sq.id == question_id) {
+                    ans = sq.answers;
+                }
+
+
+            }
+        );
+        return ans;
+    }
+
 
     getChildSurveyQuestions(sampleSurvey, parentSurveyQuestion) {
         return sampleSurvey.filter(
@@ -419,16 +433,11 @@ class Project extends React.Component {
             var questionText = document.getElementById("surveyQuestionText").value;
             var parent_value = document.getElementById("value-parent");
 
-            var parent = parent_value.options[parent_value.selectedIndex].text;
+            var parent = parent_value.options[parent_value.selectedIndex].value;
 
             var answer_value = document.getElementById("value-answer");
 
-            var answer = answer_value.options[answer_value.selectedIndex].id;
-            if (parent == "None")
-                parent = "";
-
-            if (answer == "None")
-                answer = "";
+            var answer = answer_value.options[answer_value.selectedIndex].value;
             if (questionText != "") {
                 var newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[questionText] = {id:-1,answer: "", color: "#000000"};
@@ -438,17 +447,16 @@ class Project extends React.Component {
                 detailsNew.sampleValues.map((sq) => {
                         if (sq.question == parent) {
                             question_id = sq.id;
-
+                            this.getParentSurveyAnswers(detailsNew.sampleValues,question_id).map((ans) => {
+                                    if (ans.id == answer) {
+                                        answer_id = ans.id;
+                                    }
+                                }
+                            );
                         }
                     }
                 );
-                this.getParentSurveyQuestionAnswers(detailsNew.sampleValues).map((ans) => {
-                        if (ans.id == answer) {
-                            answer_id = ans.id;
 
-                        }
-                    }
-                );
                 detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id});
                 this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSurveyQuestionName: ""});
                 console.log("JSON object");
