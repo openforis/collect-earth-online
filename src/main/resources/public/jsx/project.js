@@ -864,11 +864,22 @@ function ProjectStats(props) {
 function ProjectDesignForm(props) {
     var addSurveyQuestionButton = "";
     if (props.projectId == "0") {
-        addSurveyQuestionButton = <div id="add-sample-value-group">
-            <input type="button" className="button" value="Add Survey Question"
-                   onClick={props.addSurveyQuestion}/>&nbsp;
-            <input type="text" id="surveyQuestionText" autoComplete="off" value={project.newSurveyQuestionName}/>
-        </div>;
+        addSurveyQuestionButton = <React.Fragment>
+            <tr>
+                <td><label htmlFor="value-SQ">New Question:</label></td>
+                <td>
+                    <div id="add-sample-value-group">
+                        <input type="text" id="surveyQuestionText" autoComplete="off"
+                               value={project.newSurveyQuestionName}/>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td><input type="button" className="button" value="Add Survey Question"
+                                       onClick={props.addSurveyQuestion}/></td>
+                <td></td>
+            </tr>
+        </React.Fragment>;
     }
     return (
         <form id="project-design-form" className="px-2 pb-2" method="post"
@@ -1327,12 +1338,10 @@ function SurveyDesign(props){
                                             handleInputParent={props.handleInputParent}/>
                         <table>
                             <tbody>
-                            <tr>
+
+                                <tr>
                                 <td>
-                                    {props.addSurveyQuestionButton}
-                                </td>
-                                <td>
-                                    <label htmlFor="value-parent">Parent:</label>
+                                    <label htmlFor="value-parent">Parent Question:</label>
                                 </td>
                                     <td>
                                     <select id="value-parent" className="form-control form-control-sm" size="1"
@@ -1346,17 +1355,23 @@ function SurveyDesign(props){
                                         }
                                     </select>
                                 </td>
-                                <td>
-                                    <label htmlFor="value-answer">Answer:</label>
+
+                            </tr>
+                                <tr>
+                                    <td>
+                                    <label htmlFor="value-answer">Parent Answer:</label>
                                 </td>
                                 <td>
                                     <select id="value-answer" className="form-control form-control-sm" size="1"
                                             onChange={(e) => props.handleInputParent(e)}>
-                                        <option value="">None</option>
+                                        <option value="">Any</option>
                                                {answer_select}
                                         </select>
                                 </td>
                             </tr>
+
+                                    {props.addSurveyQuestionButton}
+
                             </tbody>
                         </table>
                     </div>
