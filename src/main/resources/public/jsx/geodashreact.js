@@ -318,7 +318,7 @@ class MapWidget extends React.Component {
             console.log('filtered');
         }
         else if('ImageCollectionCustom' == widget.properties[0]){
-            url = "http://collect.earth:8888/meanImageByMosaicCollection";
+            url = "http://collect.earth:8888/meanImageByMosaicCollections";
             console.log('ImageCollectionCustom');
         }
         else if(collectionName.trim().length > 0)
@@ -438,7 +438,7 @@ class MapWidget extends React.Component {
 
         /*********************Check here if widget is dualImageCollection *********************/
         if(widget.dualImageCollection  && widget.dualImageCollection != null){
-         
+
             //still have to make the same postObject, but set a different callback to recall for second layer
             // might be best to rewrite the other at the same time.
             //hmmmm, maybe i can handle all of this logic in the callback instead by setting a different variable
