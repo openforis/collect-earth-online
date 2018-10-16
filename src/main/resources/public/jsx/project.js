@@ -251,6 +251,37 @@ class Project extends React.Component {
             },
             this
         );
+        var sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
+        var newSV=[];
+        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+        if(sv.length>0){
+
+            sv.map((sq)=>{
+                    if(sq.name){
+                        tempSQ.id=sq.id;
+                        tempSQ.question=sq.name;
+                        sq.values.map((sa)=>{
+                            if(sa.name){
+                                if(sa.id>0){
+                                    tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
+                                }
+                            }
+                            else
+                                tempSQ.answers.push(sa);
+
+                        });
+                        if(tempSQ.id>0){
+                            newSV.push(tempSQ);
+                        }
+                    }
+                    else{
+                        newSV.push(sq);
+                    }
+                }
+            );
+        }
+        templateProject.sampleValues=newSV;
+
         this.setState({details: JSON.parse(JSON.stringify(templateProject))},
             function () {
                 this.updateUnmanagedComponents(this.state.templateId);
@@ -445,7 +476,7 @@ class Project extends React.Component {
                 var _id = detailsNew.sampleValues.length + 1;
                 var question_id = -1,answer_id=-1;
                 detailsNew.sampleValues.map((sq) => {
-                        if (sq.question == parent) {
+                        if (sq.id == parent) {
                             question_id = sq.id;
                             this.getParentSurveyAnswers(detailsNew.sampleValues,question_id).map((ans) => {
                                     if (ans.id == answer) {
@@ -702,7 +733,7 @@ class Project extends React.Component {
             this.setState({newValueEntry:newValueEntryNew});
         }
         else
-            this.setState({newValueEntry:{id:-1,answer: event.target.value, color: "#000000"}});
+            this.setState({newValueEntry:{id:-1,answer: "", color: "#000000"}});
     }
 
     handleInputColor(surveyQuestion, event) {
@@ -1332,9 +1363,12 @@ function SurveyDesign(props){
 }
 function SurveyQuestionTree(props) {
     var project = props.project;
+    var sv=project.details.sampleValues;
+    var newSV=[];
     if (project.details != null) {
-        return (
-            props.topoSort(project.details.sampleValues).map((surveyQuestion, _uid) =>
+
+            return (
+            props.topoSort(sv).map((surveyQuestion, _uid) =>
                 <SurveyQuestion key={_uid} prop={props} surveyQuestion={surveyQuestion}/>
             )
         );
@@ -1436,7 +1470,7 @@ function RemoveSurveyQuestionRowButton(props) {
 
 function SurveyQuestionTable(props) {
     var project = props.project;
-    var answer = "", color = "";
+    var answer = "", color = "#000000";
     if (project.newValueEntry[props.surveyQuestion.question]) {
         answer = project.newValueEntry[props.surveyQuestion.question].answer;
         color = project.newValueEntry[props.surveyQuestion.question].color;
