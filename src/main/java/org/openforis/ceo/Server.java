@@ -18,17 +18,20 @@ import org.openforis.ceo.db_api.GeoDash;
 import org.openforis.ceo.db_api.Imagery;
 import org.openforis.ceo.db_api.Institutions;
 import org.openforis.ceo.db_api.Projects;
+import org.openforis.ceo.db_api.TimeSync;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
 import org.openforis.ceo.local.JsonGeoDash;
 import org.openforis.ceo.local.JsonImagery;
 import org.openforis.ceo.local.JsonInstitutions;
 import org.openforis.ceo.local.JsonProjects;
+import org.openforis.ceo.local.JsonTimeSync;
 import org.openforis.ceo.local.JsonUsers;
 import org.openforis.ceo.postgres.PostgresGeoDash;
 import org.openforis.ceo.postgres.PostgresImagery;
 import org.openforis.ceo.postgres.PostgresInstitutions;
 import org.openforis.ceo.postgres.PostgresProjects;
+import org.openforis.ceo.postgres.PostgresTimeSync;
 import org.openforis.ceo.postgres.PostgresUsers;
 import org.openforis.ceo.users.CeoAuthFilter;
 import org.openforis.ceo.users.OfGroups;
@@ -55,7 +58,8 @@ public class Server implements SparkApplication {
 
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes(String databaseType, Projects projects, Imagery imagery,
-                                      Users users, Institutions institutions, GeoDash geoDash) {
+                                      Users users, Institutions institutions, GeoDash geoDash,
+                                      TimeSync timeSync) {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -89,6 +93,7 @@ public class Server implements SparkApplication {
         get("/password",                              Views.password(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
         get("/card-test",                             Views.cardTest(freemarker));
+        get("/timesync",                              Views.timeSync(freemarker));
 
         // Routing Table: HTML pages (with side effects)
         post("/account/:id",                          (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
@@ -137,6 +142,9 @@ public class Server implements SparkApplication {
         get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
         get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);
 
+        // Routing Table: TimeSync API
+        get("/timesync/version",                      timeSync::getVersion);
+
         // Routing Table: Page Not Found
         get("*",                                      Views.pageNotFound(freemarker));
 
@@ -172,7 +180,8 @@ public class Server implements SparkApplication {
                           new JsonImagery(),
                           new JsonUsers(),
                           new JsonInstitutions(),
-                          new JsonGeoDash());
+                          new JsonGeoDash(),
+                          new JsonTimeSync());
         } else {
             // Set up the routing table to use the POSTGRES backend
             declareRoutes("POSTGRES",
@@ -180,7 +189,8 @@ public class Server implements SparkApplication {
                           new PostgresImagery(),
                           new PostgresUsers(),
                           new PostgresInstitutions(),
-                          new PostgresGeoDash());
+                          new PostgresGeoDash(),
+                          new PostgresTimeSync());
         }
     }
 
@@ -192,7 +202,8 @@ public class Server implements SparkApplication {
                       new CollectImagery(),
                       new OfUsers(),
                       new OfGroups(),
-                      new JsonGeoDash());
+                      new JsonGeoDash(),
+                      new JsonTimeSync());
     }
 
 }

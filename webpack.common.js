@@ -8,7 +8,8 @@ module.exports = {
         project:            path.resolve(__dirname, "src/main/resources/public/jsx/project.js"),
         account:            path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
         geodashreact:       path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
-        widgetlayouteditor: path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
+        widgetlayouteditor: path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js"),
+        timesync:           path.resolve(__dirname, "src/main/resources/public/jsx/timesync.js")
     },
     output: {
         path: path.resolve(__dirname, "src/main/resources/public/js"),

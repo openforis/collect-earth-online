@@ -26,7 +26,7 @@
      return decodeURIComponent(results[2].replace(/\+/g, " "));
  }
 </script>
-<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~widgetlayouteditor.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~timesync~widgetlayouteditor.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/geodashreact.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {

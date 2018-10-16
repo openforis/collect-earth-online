@@ -1,18 +1,15 @@
 <#include "header.ftl">
 <#include "navbar.ftl">
 <#include "start-content.ftl">
-<div class="row justify-content-center">
-	<div id="account" class="col-xl-6 col-lg-8 border bg-lightgray mb-5"></div>
-</div>
+<div id="timesync"></div>
 <script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~timesync~widgetlayouteditor.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/account.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/timesync.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     account.renderAccountPage({
+     timesync.renderTimeSyncPage({
          documentRoot: "${root}",
          userId:       "${userid}",
-         accountId:    "${account_id}",
-         username:     "${username}"
+         userName:     "${username}"
      });
  };
 </script>
