@@ -408,7 +408,7 @@ class Project extends React.Component {
     getParentSurveyQuestions(sampleSurvey) {
         return sampleSurvey.filter(
             function (surveyQuestion) {
-                return surveyQuestion.parent_question == -1;
+                return surveyQuestion.parent_question==-1;
             }
         );
     }
@@ -450,6 +450,29 @@ class Project extends React.Component {
         );
     }
 
+    // topoSort(sampleSurvey) {
+    //     var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
+    //     console.log(parentSurveyQuestions);
+    //     var parentChildGroups = this.getParentChildGroups(parentSurveyQuestions,sampleSurvey);
+    //     return parentChildGroups;
+    // }
+    // getParentChildGroups(parentSurveyQuestions,sampleSurvey){
+    //     var parentChildGroups = parentSurveyQuestions.map(
+    //         function (parentSurveyQuestion) {
+    //             var childSurveyQuestions = sampleSurvey.filter(
+    //                 function (sampleValue) {
+    //                     return sampleValue.parent_question == parentSurveyQuestion.id && sampleValue.parent_question!=-1;
+    //                 }
+    //             );
+    //             console.log("from topo");
+    //             console.log((parentSurveyQuestions).concat(childSurveyQuestions));
+    //             return (parentSurveyQuestions).concat(childSurveyQuestions);
+    //         },
+    //         this
+    //     );
+    //     return [].concat.apply([], parentChildGroups);
+    //
+    // }
     topoSort(sampleSurvey) {
         var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
         var parentChildGroups = parentSurveyQuestions.map(
@@ -465,8 +488,7 @@ class Project extends React.Component {
         );
         return [].concat.apply([], parentChildGroups);
     }
-
-    addSurveyQuestion() {
+    addSurveyQuestion(){
         if (this.state.details != null) {
             var questionText = document.getElementById("surveyQuestionText").value;
             var parent_value = document.getElementById("value-parent");
@@ -1348,7 +1370,7 @@ function SurveyDesign(props){
                                             onChange={(e) => props.handleInputParent(e)}>
                                         <option value="">None</option>
                                         {
-                                            props.getParentSurveyQuestions(props.project.details.sampleValues).map((parentSurveyQuestion, uid) =>
+                                            (props.project.details.sampleValues).map((parentSurveyQuestion, uid) =>
                                                 <option key={uid}
                                                         value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}</option>
                                             )
@@ -1383,28 +1405,70 @@ function SurveyDesign(props){
         return(<span></span>);
     }
 }
-function SurveyQuestionTree(props) {
-    var project = props.project;
-    var sv=project.details.sampleValues;
-    var newSV=[];
-    if (project.details != null) {
+class SurveyQuestionTree extends React.Component {
+    constructor(props) {
+        super(props);
+    };
 
+    // getCurrent(parent_id) {
+    //     var project=this.props.project;
+    //     if(project.details != null ) {
+    //         console.log("giotto this get curr");
+    //         console.log(parent_id);
+    //         console.log(project.details.sampleValues);
+    //         project.details.sampleValues.filter(sq =>  sq.parent_question == parent_id).map(sq => (
+    //             <React.Fragment>
+    //             <span>hhh</span>
+    //             <ul key={sq.id}>
+    //                 <li>{sq.question}</li>
+    //                 {this.getCurrent(sq.id)}
+    //             </ul>
+    //             </React.Fragment>
+    //         ));
+    //     }
+    // }
+
+    getCurrent = (node) => this.props.project.details.sampleValues.filter(cNode => cNode.parent_question == node).map((cNode,uid) => (
+
+
+            <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
+                <li>
+        <SurveyQuestion prop={this.props} surveyQuestion={cNode}/>
+        {this.getCurrent(cNode.id)}
+                </li>
+
+            </ul>
+    ))
+    render() {
+        var project = this.props.project;
+        var sv = project.details.sampleValues;
+        var newSV = [];
+        if (project.details != null) {
             return (
-            props.topoSort(sv).map((surveyQuestion, _uid) =>
-                <SurveyQuestion key={_uid} prop={props} surveyQuestion={surveyQuestion}/>
-            )
-        );
-    }
-    else{
-        return(<span></span>);
+                // props.topoSort(sv).map((surveyQuestion, _uid) =>
+                //     <SurveyQuestion key={_uid} prop={props} surveyQuestion={surveyQuestion}/>
+                // )
+                <div>
+                    {this.getCurrent(-1)}
+                </div>
+
+                // sv.map((surveyQuestion, _uid) =>
+                //     <SurveyQuestion key={_uid} prop={props} surveyQuestion={surveyQuestion}/>
+                // )
+            );
+        }
+        else {
+            return (<span></span>);
+        }
     }
 }
 
 function SurveyQuestion(properties) {
     var props=properties.prop;
     var project = props.project;
-    var parentStyle = {fontStyle: 'normal'};
-    var childStyle = {fontStyle: 'italic', textIndent: '20px'};
+    if(properties.surveyQuestion.answers==null){
+        console.log("answers null");
+    }
     if (project.details != null) {
         return (
                 <div className="sample-value-info">
@@ -1412,7 +1476,7 @@ function SurveyQuestion(properties) {
                         <RemoveSurveyQuestionButton projectId={props.projectId}
                                                       removeSurveyQuestion={props.removeSurveyQuestion}
                                                       surveyQuestion={properties.surveyQuestion}/>
-                        <label  style={(properties.surveyQuestion.parent_question == -1) ? parentStyle : childStyle}> Survey Question: {properties.surveyQuestion.question}</label>
+                        <label> Survey Question: {properties.surveyQuestion.question}</label>
                     </h3>
                     <table className="table table-sm">
                         <thead>
@@ -1425,7 +1489,9 @@ function SurveyQuestion(properties) {
                         </thead>
                         <tbody>
                         {
+
                             (properties.surveyQuestion.answers).map((surveyAnswer, uid) => {
+
                                 return <tr key={uid}>
                                         <td>
                                             <RemoveSurveyQuestionRowButton projectId={props.projectId}
@@ -1434,7 +1500,7 @@ function SurveyQuestion(properties) {
                                                                               surveyAnswer={surveyAnswer}/>
                                         </td>
 
-                                        <td style={parentStyle}>
+                                        <td>
                                             {surveyAnswer.answer}
                                         </td>
                                         <td>
