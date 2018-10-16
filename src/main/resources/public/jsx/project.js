@@ -254,6 +254,8 @@ class Project extends React.Component {
         var sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
         var newSV=[];
         var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+        var dNew = this.state.newValueEntry;
+
         if(sv.length>0){
 
             sv.map((sq)=>{
@@ -266,22 +268,27 @@ class Project extends React.Component {
                                     tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
                                 }
                             }
-                            else
+                            else {
                                 tempSQ.answers.push(sa);
+                            }
 
                         });
                         if(tempSQ.id>0){
                             newSV.push(tempSQ);
+                            dNew[tempSQ.question] ={id:-1,answer:"",color:"#000000"};
+                            this.setState({newValueEntry: dNew});
                         }
                     }
                     else{
                         newSV.push(sq);
+                        dNew[sq.question] ={id:-1,answer:"",color:"#000000"};
+                        this.setState({newValueEntry: dNew});
                     }
                 }
             );
         }
-        templateProject.sampleValues=newSV;
 
+        templateProject.sampleValues=newSV;
         this.setState({details: JSON.parse(JSON.stringify(templateProject))},
             function () {
                 this.updateUnmanagedComponents(this.state.templateId);
