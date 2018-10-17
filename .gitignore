@@ -8,6 +8,10 @@ collect-earth-online.iml
 /bin/
 /build/
 /src/main/resources/public/downloads/*.csv
+/src/main/resources/public/js/*.bundle.js
+/src/main/resources/public/js/*.bundle.js.map
 /target/
 .idea/
 .DS_Store
+node_modules/
+package-lock.json

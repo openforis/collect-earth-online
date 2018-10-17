@@ -68,15 +68,15 @@ public class CollectProjects implements Projects {
         var institutionId = req.queryParams("institutionId");
 
         var params = Map.of("userId",                (Object) userId,
-                            "groupId",               (Object) institutionId,
-                            "includeTemporary",      (Object) true,
-                            "full",                  (Object) true,
-                            "includeCodeListValues", (Object) true,
-                            "target",                (Object) COLLECT_EARTH_ONLINE_TARGET);
+                "groupId",               (Object) institutionId,
+                "includeTemporary",      (Object) true,
+                "full",                  (Object) true,
+                "includeCodeListValues", (Object) true,
+                "target",                (Object) COLLECT_EARTH_ONLINE_TARGET);
 
         var allSurveys = getFromCollect("survey", params).getAsJsonArray();
         var allProjects = toElementStream(allSurveys)
-            .map(s -> convertToCeoProject((JsonObject) s));
+                .map(s -> convertToCeoProject((JsonObject) s));
 
         //consider only not archived projects
         var filteredProjects = allProjects.filter(project -> !project.get("archived").getAsBoolean());
@@ -89,10 +89,10 @@ public class CollectProjects implements Projects {
         if (userId == null) {
             // Not logged in
             filteredProjects = filteredProjects
-                .filter(project ->
-                        project.get("privacyLevel").getAsString().equals("public") &&
-                        project.get("availability").getAsString().equals("published"))
-                .map(project -> {
+                    .filter(project ->
+                            project.get("privacyLevel").getAsString().equals("public") &&
+                                    project.get("availability").getAsString().equals("published"))
+                    .map(project -> {
                         project.addProperty("editable", false);
                         return project;
                     });
@@ -100,19 +100,19 @@ public class CollectProjects implements Projects {
             //logged in
             var institutionRoles = (new OfUsers()).getInstitutionRoles(userId);
             filteredProjects = filteredProjects.filter(project -> {
-                    var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
-                    var privacyLevel = project.get("privacyLevel").getAsString();
-                    var availability = project.get("availability").getAsString();
-                    if (role.equals("admin")) {
-                        return (privacyLevel.equals("public") || privacyLevel.equals("private") || privacyLevel.equals("institution"))
+                var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
+                var privacyLevel = project.get("privacyLevel").getAsString();
+                var availability = project.get("availability").getAsString();
+                if (role.equals("admin")) {
+                    return (privacyLevel.equals("public") || privacyLevel.equals("private") || privacyLevel.equals("institution"))
                             && (availability.equals("unpublished") || availability.equals("published") || availability.equals("closed"));
-                    } else if (role.equals("member")) {
-                        return (privacyLevel.equals("public") || privacyLevel.equals("institution")) && availability.equals("published");
-                    } else {
-                        return privacyLevel.equals("public") && availability.equals("published");
-                    }
-                })
-                .map(project -> {
+                } else if (role.equals("member")) {
+                    return (privacyLevel.equals("public") || privacyLevel.equals("institution")) && availability.equals("published");
+                } else {
+                    return privacyLevel.equals("public") && availability.equals("published");
+                }
+            })
+                    .map(project -> {
                         var role = institutionRoles.getOrDefault(project.get("institution").getAsInt(), "");
                         if (role.equals("admin")) {
                             project.addProperty("editable", true);
@@ -144,11 +144,11 @@ public class CollectProjects implements Projects {
 
     private static JsonArray convertSamplingPointItems(String username, int projectId, JsonArray samplingPointItems) {
         return mapJsonArray(samplingPointItems,
-                            itemObj -> {
-                                var plotId = findElement(itemObj, "levelCodes[0]").getAsString();
-                                var sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
-                                return convertToCeoRecord(username, projectId, itemObj, sampleItems, null);
-                            });
+                itemObj -> {
+                    var plotId = findElement(itemObj, "levelCodes[0]").getAsString();
+                    var sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
+                    return convertToCeoRecord(username, projectId, itemObj, sampleItems, null);
+                });
     }
 
     // Call Collect's REST API to QUERY the database.
@@ -168,10 +168,10 @@ public class CollectProjects implements Projects {
         if (numPlots > maxPlots) {
             var stepSize = 1.0 * numPlots / maxPlots;
             var filteredSamplingPointItems =
-                Stream.iterate(0.0, i -> i + stepSize)
-                .limit(maxPlots)
-                .map(i -> (JsonObject) samplingPointItems.get(Math.toIntExact(Math.round(i))))
-                .collect(intoJsonArray);
+                    Stream.iterate(0.0, i -> i + stepSize)
+                            .limit(maxPlots)
+                            .map(i -> (JsonObject) samplingPointItems.get(Math.toIntExact(Math.round(i))))
+                            .collect(intoJsonArray);
             return convertSamplingPointItems(username, projectId, filteredSamplingPointItems).toString();
         } else {
             return convertSamplingPointItems(username, projectId, samplingPointItems).toString();
@@ -272,54 +272,54 @@ public class CollectProjects implements Projects {
             var sampleValueTranslations = getSampleValueTranslations(ceoProject);
             var plotPoints = getCollectSamplingPointItems(projectId);
             var plotSummaries = mapJsonArray(plotPoints,
-                                             plot -> {
-                                                 var plotUsername = ADMIN_USERNAME; //TODO
-                                                 var plotSummary = new JsonObject();
-                                                 var plotId = findElement(plot, "levelCodes[0]").getAsString();
-                                                 plotSummary.addProperty("plot_id", plotId);
-                                                 plotSummary.addProperty("center_lon", plot.get("x").getAsDouble());
-                                                 plotSummary.addProperty("center_lat", plot.get("y").getAsDouble());
-                                                 plotSummary.addProperty("size_m", ceoProject.get("plotSize").getAsDouble());
-                                                 plotSummary.addProperty("shape", ceoProject.get("plotShape").getAsString());
-                                                 plotSummary.addProperty("flagged", isFlagged(plot));
-                                                 plotSummary.addProperty("analyses", getCollectRecordsCountByPlotId(username,
-                                                                                                                    projectId,
-                                                                                                                    plotId));
-                                                 var samples = getCollectSamplingPointItems(projectId, plotId, false);
-                                                 plotSummary.addProperty("sample_points", samples.size());
-                                                 plotSummary.addProperty("user_id", plotUsername);
-                                                 plotSummary.add("distribution", getValueDistribution(collectSurvey,
-                                                                                                      username,
-                                                                                                      projectId,
-                                                                                                      plotId,
-                                                                                                      samples,
-                                                                                                      sampleValueTranslations));
-                                                 return plotSummary;
-                                             });
+                    plot -> {
+                        var plotUsername = ADMIN_USERNAME; //TODO
+                        var plotSummary = new JsonObject();
+                        var plotId = findElement(plot, "levelCodes[0]").getAsString();
+                        plotSummary.addProperty("plot_id", plotId);
+                        plotSummary.addProperty("center_lon", plot.get("x").getAsDouble());
+                        plotSummary.addProperty("center_lat", plot.get("y").getAsDouble());
+                        plotSummary.addProperty("size_m", ceoProject.get("plotSize").getAsDouble());
+                        plotSummary.addProperty("shape", ceoProject.get("plotShape").getAsString());
+                        plotSummary.addProperty("flagged", isFlagged(plot));
+                        plotSummary.addProperty("analyses", getCollectRecordsCountByPlotId(username,
+                                projectId,
+                                plotId));
+                        var samples = getCollectSamplingPointItems(projectId, plotId, false);
+                        plotSummary.addProperty("sample_points", samples.size());
+                        plotSummary.addProperty("user_id", plotUsername);
+                        plotSummary.add("distribution", getValueDistribution(collectSurvey,
+                                username,
+                                projectId,
+                                plotId,
+                                samples,
+                                sampleValueTranslations));
+                        return plotSummary;
+                    });
 
             var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape",
-                                      "flagged", "analyses", "sample_points", "user_id"};
+                    "flagged", "analyses", "sample_points", "user_id"};
             var labels = getValueDistributionLabels(ceoProject);
 
             var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels))
-                .map(String::toUpperCase).collect(Collectors.joining(","));
+                    .map(String::toUpperCase).collect(Collectors.joining(","));
 
             var csvContent = toStream(plotSummaries)
-                .map(plotSummary -> {
+                    .map(plotSummary -> {
                         var fieldStream = Arrays.stream(fields);
                         var labelStream = Arrays.stream(labels);
                         var distribution = plotSummary.get("distribution").getAsJsonObject();
                         return Stream.concat(fieldStream.map(field ->
-                                                             plotSummary.get(field).isJsonNull()
-                                                             ? ""
-                                                             : plotSummary.get(field).getAsString()),
-                                             labelStream.map(label ->
-                                                             distribution.has(label)
-                                                             ? distribution.get(label).getAsString()
-                                                             : "0.0"))
-                            .collect(Collectors.joining(","));
+                                        plotSummary.get(field).isJsonNull()
+                                                ? ""
+                                                : plotSummary.get(field).getAsString()),
+                                labelStream.map(label ->
+                                        distribution.has(label)
+                                                ? distribution.get(label).getAsString()
+                                                : "0.0"))
+                                .collect(Collectors.joining(","));
                     })
-                .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining("\n"));
 
             var projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             var currentDate = LocalDate.now().toString();
@@ -343,88 +343,88 @@ public class CollectProjects implements Projects {
             var sampleValueTranslations = getSampleValueTranslations(ceoProject);
             var plotPoints = getCollectSamplingPointItems(projectId);
             var sampleSummaries = flatMapJsonArray(plotPoints,
-                                                   plot -> {
-                                                       var plotId = getMemberValue(plot, "levelCodes[0]", String.class);
-                                                       var recordSummaries = getCollectRecordSummariesByPlotId(username, projectId, plotId, false, null, "CLEANSING");
-                                                       var flagged = isFlagged(plot);
-                                                       var analyses = recordSummaries.size();
-                                                       var samplingPoints = getCollectSamplingPointItems(projectId, plotId, false);
-                                                       var records = toStream(recordSummaries).map(recordSummary -> {
-                                                               return getCollectRecord(projectId, recordSummary.getAsJsonObject().get("id").getAsInt());
-                                                           }).collect(intoJsonArray);
+                    plot -> {
+                        var plotId = getMemberValue(plot, "levelCodes[0]", String.class);
+                        var recordSummaries = getCollectRecordSummariesByPlotId(username, projectId, plotId, false, null, "CLEANSING");
+                        var flagged = isFlagged(plot);
+                        var analyses = recordSummaries.size();
+                        var samplingPoints = getCollectSamplingPointItems(projectId, plotId, false);
+                        var records = toStream(recordSummaries).map(recordSummary -> {
+                            return getCollectRecord(projectId, recordSummary.getAsJsonObject().get("id").getAsInt());
+                        }).collect(intoJsonArray);
 
-                                                       return toStream(samplingPoints).flatMap(samplingPoint -> {
-                                                               var subplotId = getMemberValue(samplingPoint, "levelCodes[1]", String.class);
-                                                               if (records.size() == 0) {
-                                                                   //unanalyzed sampling point
-                                                                   var sampleSummary = new JsonObject();
-                                                                   sampleSummary.addProperty("plot_id", plotId);
-                                                                   sampleSummary.addProperty("sample_id", subplotId);
-                                                                   sampleSummary.add("lon", samplingPoint.get("x"));
-                                                                   sampleSummary.add("lat", samplingPoint.get("y"));
-                                                                   sampleSummary.addProperty("flagged", flagged);
-                                                                   sampleSummary.addProperty("analyses", analyses);
-                                                                   sampleSummary.addProperty("user_id", (String) null);
-                                                                   sampleSummary.addProperty("value", (String) null);
-                                                                   return Arrays.asList(sampleSummary).stream();
-                                                               } else {
-                                                                   return toStream(records).map(collectRecord -> {
-                                                                           var subplot = getCollectRecordSubplot(collectSurvey, collectRecord, subplotId);
-                                                                           var valueDefId = getCollectSurveyNodeDefinitionId(collectSurvey, "subplot/values_1");
-                                                                           var val = getCollectRecordAttributeValue(subplot, valueDefId);
-                                                                           var sampleSummary = new JsonObject();
-                                                                           sampleSummary.addProperty("plot_id", plotId);
-                                                                           sampleSummary.addProperty("sample_id", subplotId);
-                                                                           sampleSummary.add("lon", samplingPoint.get("x"));
-                                                                           sampleSummary.add("lat", samplingPoint.get("y"));
-                                                                           sampleSummary.addProperty("flagged", flagged);
-                                                                           sampleSummary.addProperty("analyses", analyses);
-                                                                           sampleSummary.addProperty("user_id", ADMIN_USERNAME); //TODO
-                                                                           sampleSummary.addProperty("value", val);
-                                                                           return sampleSummary;
-                                                                       });
-                                                               }
-                                                           });
-                                                   }
-                                                   );
+                        return toStream(samplingPoints).flatMap(samplingPoint -> {
+                            var subplotId = getMemberValue(samplingPoint, "levelCodes[1]", String.class);
+                            if (records.size() == 0) {
+                                //unanalyzed sampling point
+                                var sampleSummary = new JsonObject();
+                                sampleSummary.addProperty("plot_id", plotId);
+                                sampleSummary.addProperty("sample_id", subplotId);
+                                sampleSummary.add("lon", samplingPoint.get("x"));
+                                sampleSummary.add("lat", samplingPoint.get("y"));
+                                sampleSummary.addProperty("flagged", flagged);
+                                sampleSummary.addProperty("analyses", analyses);
+                                sampleSummary.addProperty("user_id", (String) null);
+                                sampleSummary.addProperty("value", (String) null);
+                                return Arrays.asList(sampleSummary).stream();
+                            } else {
+                                return toStream(records).map(collectRecord -> {
+                                    var subplot = getCollectRecordSubplot(collectSurvey, collectRecord, subplotId);
+                                    var valueDefId = getCollectSurveyNodeDefinitionId(collectSurvey, "subplot/values_1");
+                                    var val = getCollectRecordAttributeValue(subplot, valueDefId);
+                                    var sampleSummary = new JsonObject();
+                                    sampleSummary.addProperty("plot_id", plotId);
+                                    sampleSummary.addProperty("sample_id", subplotId);
+                                    sampleSummary.add("lon", samplingPoint.get("x"));
+                                    sampleSummary.add("lat", samplingPoint.get("y"));
+                                    sampleSummary.addProperty("flagged", flagged);
+                                    sampleSummary.addProperty("analyses", analyses);
+                                    sampleSummary.addProperty("user_id", ADMIN_USERNAME); //TODO
+                                    sampleSummary.addProperty("value", val);
+                                    return sampleSummary;
+                                });
+                            }
+                        });
+                    }
+            );
 
             var sampleValueGroups = ceoProject.get("sampleValues").getAsJsonArray();
             var sampleValueGroupNames = toStream(sampleValueGroups)
-                .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
-                                          sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
-                                          (a, b) -> b));
+                    .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
+                            sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
+                            (a, b) -> b));
 
             var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"};
             var labels = sampleValueGroupNames.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(Map.Entry::getValue)
-                .toArray(String[]::new);
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(Map.Entry::getValue)
+                    .toArray(String[]::new);
 
             var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels))
-                .map(String::toUpperCase).collect(Collectors.joining(","));
+                    .map(String::toUpperCase).collect(Collectors.joining(","));
 
             var csvContent = toStream(sampleSummaries)
-                .map(sampleSummary -> {
+                    .map(sampleSummary -> {
                         var fieldStream = Arrays.stream(fields);
                         var labelStream = Arrays.stream(labels);
                         return Stream.concat(fieldStream.map(field ->
-                                                             sampleSummary.get(field).isJsonNull()
-                                                             ? ""
-                                                             : sampleSummary.get(field).getAsString()),
-                                             labelStream.map(label -> {
-                                                     var value = sampleSummary.get("value");
-                                                     if (value.isJsonNull()) {
-                                                         return "";
-                                                     } else if (value.isJsonPrimitive()) {
-                                                         return sampleValueTranslations
-                                                             .getOrDefault(value.getAsString(), "LULC:NoValue")
-                                                             .split(":")[1];
-                                                     } else {
-                                                         return value.getAsJsonObject().get(label).getAsString();
-                                                     }}))
-                            .collect(Collectors.joining(","));
+                                        sampleSummary.get(field).isJsonNull()
+                                                ? ""
+                                                : sampleSummary.get(field).getAsString()),
+                                labelStream.map(label -> {
+                                    var value = sampleSummary.get("value");
+                                    if (value.isJsonNull()) {
+                                        return "";
+                                    } else if (value.isJsonPrimitive()) {
+                                        return sampleValueTranslations
+                                                .getOrDefault(value.getAsString(), "LULC:NoValue")
+                                                .split(":")[1];
+                                    } else {
+                                        return value.getAsJsonObject().get(label).getAsString();
+                                    }}))
+                                .collect(Collectors.joining(","));
                     })
-                .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining("\n"));
 
             var projectName = ceoProject.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             var currentDate = LocalDate.now().toString();
@@ -438,23 +438,23 @@ public class CollectProjects implements Projects {
                                                    JsonArray samples, final Map<String, String> sampleValueTranslations) {
         var recordSummaries = getCollectRecordSummariesByPlotId(username, projectId, plotId, false, null, "CLEANSING");
         var records = toElementStream(recordSummaries)
-            .map(s -> getCollectRecord(projectId, s.getAsJsonObject().get("id").getAsInt()))
-            .collect(intoJsonArray);
+                .map(s -> getCollectRecord(projectId, s.getAsJsonObject().get("id").getAsInt()))
+                .collect(intoJsonArray);
 
         var valueCounts = toStream(samples)
-            .map(sample -> findElement(sample, "levelCodes[1]").getAsString())
-            .map(subplotId -> {
+                .map(sample -> findElement(sample, "levelCodes[1]").getAsString())
+                .map(subplotId -> {
                     var values = toStream(records)
-                        .map(record -> {
+                            .map(record -> {
                                 var subplot = getCollectRecordSubplot(collectSurvey, record, subplotId);
                                 var valueDefId = getCollectSurveyNodeDefinitionId(collectSurvey, "subplot/values_1");
                                 return getCollectRecordAttributeValue(subplot, valueDefId);
                             })
-                        .map(value -> sampleValueTranslations.getOrDefault(value, "NoValue"))
-                        .collect(Collectors.toList());
+                            .map(value -> sampleValueTranslations.getOrDefault(value, "NoValue"))
+                            .collect(Collectors.toList());
                     return values;
                 }).flatMap(List::stream)
-            .collect(countDistinct);
+                .collect(countDistinct);
         var valueDistribution = new JsonObject();
         valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
         return valueDistribution;
@@ -529,30 +529,30 @@ public class CollectProjects implements Projects {
         var survey = getCollectSurvey(projectId).getAsJsonObject();
 
         userSamples.entrySet().forEach(e -> {
-                var sampleSubplotKey = e.getKey();
-                var sampleValue = e.getValue().getAsJsonObject();
+            var sampleSubplotKey = e.getKey();
+            var sampleValue = e.getValue().getAsJsonObject();
 
-                var subplot = getCollectRecordSubplot(survey, collectRecord, sampleSubplotKey);
+            var subplot = getCollectRecordSubplot(survey, collectRecord, sampleSubplotKey);
 
-                var attributeUpdateCommands = sampleValue.entrySet().stream().map(sampleValueEntry -> {
-                        var codeListLabel = sampleValueEntry.getKey();
-                        var codeList = getCollectCodeListFromLabel(survey, codeListLabel);
-                        var codeListName = codeList.get("name").getAsString();
-                        var codeListItemLabel = sampleValueEntry.getValue().getAsString();
-                        var attrName = codeListName;
-                        var attrVal = getCollectCodeListItemCodeFromLabel(codeList, codeListItemLabel);
-                        return createAttributeUpdateCommand(projectId, survey, recordId, subplot,
-                                                            format("subplot/%s", attrName), attrVal, username);
-                    }).collect(intoJsonArray);
+            var attributeUpdateCommands = sampleValue.entrySet().stream().map(sampleValueEntry -> {
+                var codeListLabel = sampleValueEntry.getKey();
+                var codeList = getCollectCodeListFromLabel(survey, codeListLabel);
+                var codeListName = codeList.get("name").getAsString();
+                var codeListItemLabel = sampleValueEntry.getValue().getAsString();
+                var attrName = codeListName;
+                var attrVal = getCollectCodeListItemCodeFromLabel(codeList, codeListItemLabel);
+                return createAttributeUpdateCommand(projectId, survey, recordId, subplot,
+                        format("subplot/%s", attrName), attrVal, username);
+            }).collect(intoJsonArray);
 
-                var attributeUpdateCommandsWrapper = new JsonObject();
-                attributeUpdateCommandsWrapper.add("commands", attributeUpdateCommands);
+            var attributeUpdateCommandsWrapper = new JsonObject();
+            attributeUpdateCommandsWrapper.add("commands", attributeUpdateCommands);
 
-                postToCollect("command/record/attributes", attributeUpdateCommandsWrapper);
+            postToCollect("command/record/attributes", attributeUpdateCommandsWrapper);
 
-                //TODO restore it when authentication token issue in Collect is fixed
-                //postToCollect(format("survey/%d/data/records/promote/%d", projectId, recordId));
-            });
+            //TODO restore it when authentication token issue in Collect is fixed
+            //postToCollect(format("survey/%d/data/records/promote/%d", projectId, recordId));
+        });
         return "";
     }
 
@@ -590,10 +590,10 @@ public class CollectProjects implements Projects {
 
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             var newProject = partsToJsonObject(req,
-                                               new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
-                                                            "lat-max", "base-map-source", "plot-distribution", "num-plots",
-                                                            "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                                                            "samples-per-plot", "sample-resolution", "sample-values"});
+                    new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
+                            "lat-max", "base-map-source", "plot-distribution", "num-plots",
+                            "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
+                            "samples-per-plot", "sample-resolution", "sample-values"});
 
             // Manually add the name and description fields since they may be invalid JSON
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
@@ -606,13 +606,13 @@ public class CollectProjects implements Projects {
                 var plotDistributionIs = req.raw().getPart("plot-distribution-csv-file").getInputStream();
                 var nextPlotId = new AtomicInteger(1);
                 var plotSamplingPonints = new BufferedReader(new InputStreamReader(plotDistributionIs)).lines().skip(1).map(line -> {
-                        var samplingPoint = new JsonObject();
-                        samplingPoint.add("levelCodes", singletonArray(new JsonPrimitive(nextPlotId.getAndIncrement())));
-                        samplingPoint.addProperty("srsId", "EPGS:4326");
-                        var lineFields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
-                        samplingPoint.addProperty("y", lineFields[0]);
-                        samplingPoint.addProperty("x", lineFields[1]);
-                        return samplingPoint;
+                    var samplingPoint = new JsonObject();
+                    samplingPoint.add("levelCodes", singletonArray(new JsonPrimitive(nextPlotId.getAndIncrement())));
+                    samplingPoint.addProperty("srsId", "EPGS:4326");
+                    var lineFields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
+                    samplingPoint.addProperty("y", lineFields[0]);
+                    samplingPoint.addProperty("x", lineFields[1]);
+                    return samplingPoint;
                 }).collect(intoJsonArray);
                 collectSurveyCreationParams.add("samplingPointsByLevel", singletonArray(plotSamplingPonints));
             }
@@ -644,7 +644,7 @@ public class CollectProjects implements Projects {
             var boundary = new JsonObject();
             boundary.addProperty("type", "Polygon");
             var coordinates = Stream.iterate(0, i -> i + 1).limit(4)
-                .map(i -> {
+                    .map(i -> {
                         var coordinate = new JsonArray();
                         coordinate.add(findElement(samplingPointDataConfiguration, format("aoiBoundary[%d].x", i)));
                         coordinate.add(findElement(samplingPointDataConfiguration, format("aoiBoundary[%d].y", i)));
@@ -671,8 +671,8 @@ public class CollectProjects implements Projects {
 
         var codeLists = collectSurvey.get("codeLists").getAsJsonArray();
         var sampleValuesList = toElementStream(codeLists)
-            .filter(codeListEl -> ((JsonObject) codeListEl).get("name").getAsString().startsWith("values_"))
-            .map(codeListEl -> {
+                .filter(codeListEl -> ((JsonObject) codeListEl).get("name").getAsString().startsWith("values_"))
+                .map(codeListEl -> {
                     var codeListObj = (JsonObject) codeListEl;
 
                     var result = new JsonObject();
@@ -680,14 +680,14 @@ public class CollectProjects implements Projects {
                     result.add("name", codeListObj.get("label"));
 
                     var sampleValues = toElementStream(codeListObj.get("items").getAsJsonArray()).map(item -> {
-                            var obj = (JsonObject) item;
-                            var sampleValue = new JsonObject();
-                            sampleValue.add("id", obj.get("id"));
-                            sampleValue.add("code", obj.get("code"));
-                            sampleValue.add("name", obj.get("label"));
-                            sampleValue.addProperty("color", "#" + obj.get("color").getAsString());
-                            return sampleValue;
-                        }).collect(intoJsonArray);
+                        var obj = (JsonObject) item;
+                        var sampleValue = new JsonObject();
+                        sampleValue.add("id", obj.get("id"));
+                        sampleValue.add("code", obj.get("code"));
+                        sampleValue.add("name", obj.get("label"));
+                        sampleValue.addProperty("color", "#" + obj.get("color").getAsString());
+                        return sampleValue;
+                    }).collect(intoJsonArray);
 
                     result.add("values", sampleValues);
                     return result;
@@ -721,13 +721,13 @@ public class CollectProjects implements Projects {
         obj.addProperty("user", username); //TODO
 
         var samples = toElementStream(sampleItems).map(item -> {
-                var itemObj = (JsonObject) item;
-                var sampleId = findElement(itemObj, "levelCodes[1]").getAsString();
-                var o = new JsonObject();
-                o.addProperty("id", sampleId);
-                o.add("point", createPointObject(itemObj.get("x").getAsDouble(), itemObj.get("y").getAsDouble()));
-                return o;
-            }).collect(intoJsonArray);
+            var itemObj = (JsonObject) item;
+            var sampleId = findElement(itemObj, "levelCodes[1]").getAsString();
+            var o = new JsonObject();
+            o.addProperty("id", sampleId);
+            o.add("point", createPointObject(itemObj.get("x").getAsDouble(), itemObj.get("y").getAsDouble()));
+            return o;
+        }).collect(intoJsonArray);
 
         obj.add("samples", samples);
         return obj;
@@ -776,22 +776,22 @@ public class CollectProjects implements Projects {
 
         var sampleValueLists = ceoProject.get("sampleValues").getAsJsonArray();
         var codeLists = toElementStream(sampleValueLists).map(sampleValueList -> {
-                var sampleValueListObj = (JsonObject) sampleValueList;
-                var codeList = new JsonObject();
-                codeList.addProperty("label", sampleValueListObj.get("name").getAsString());
+            var sampleValueListObj = (JsonObject) sampleValueList;
+            var codeList = new JsonObject();
+            codeList.addProperty("label", sampleValueListObj.get("name").getAsString());
 
-                var values = sampleValueListObj.get("values").getAsJsonArray();
-                var codeListItems = toElementStream(values).map(valEl -> {
-                        var valObj = valEl.getAsJsonObject();
-                        var item = new JsonObject();
-                        item.addProperty("label", valObj.get("name").getAsString());
-                        item.addProperty("color", valObj.get("color").getAsString().substring(1));
-                        return item;
-                    }).collect(intoJsonArray);
-
-                codeList.add("items", codeListItems);
-                return codeList;
+            var values = sampleValueListObj.get("values").getAsJsonArray();
+            var codeListItems = toElementStream(values).map(valEl -> {
+                var valObj = valEl.getAsJsonObject();
+                var item = new JsonObject();
+                item.addProperty("label", valObj.get("name").getAsString());
+                item.addProperty("color", valObj.get("color").getAsString().substring(1));
+                return item;
             }).collect(intoJsonArray);
+
+            codeList.add("items", codeListItems);
+            return codeList;
+        }).collect(intoJsonArray);
 
         data.add("codeLists", codeLists);
         return data;
@@ -827,7 +827,7 @@ public class CollectProjects implements Projects {
         for (var pathPart : pathParts) {
             var currentChildrenDefs = findElement(currentObj, "children").getAsJsonArray();
             currentObj = filterJsonArray(currentChildrenDefs, o -> pathPart.equals(o.get("name").getAsString()))
-                .get(0).getAsJsonObject();
+                    .get(0).getAsJsonObject();
         };
         return currentObj.get("id").getAsInt();
     }
@@ -836,14 +836,14 @@ public class CollectProjects implements Projects {
     private static JsonObject getCollectCodeListFromLabel(JsonObject survey, String codeListLabel) {
         var codeLists = survey.get("codeLists").getAsJsonArray();
         var codeList = filterJsonArray(codeLists,
-                                       l -> codeListLabel.equals(getMemberValue(l, "label", String.class))).get(0).getAsJsonObject();
+                l -> codeListLabel.equals(getMemberValue(l, "label", String.class))).get(0).getAsJsonObject();
         return codeList;
     }
 
     private static String getCollectCodeListItemCodeFromLabel(JsonObject codeList, String codeListItemLabel) {
         var codeListItems = codeList.get("items").getAsJsonArray();
         var codeListItem = filterJsonArray(codeListItems,
-                                           i -> i.get("label").getAsString().equals(codeListItemLabel)).get(0).getAsJsonObject();
+                i -> i.get("label").getAsString().equals(codeListItemLabel)).get(0).getAsJsonObject();
         return codeListItem.get("code").getAsString();
     }
 
@@ -854,10 +854,10 @@ public class CollectProjects implements Projects {
     private static JsonArray getCollectRecordSummariesByPlotId(String username, int projectId, String plotId,
                                                                boolean onlyOwnedRecords, String step, String stepGreaterOrEqualTo) {
         var params = Map.of("username",             (Object) username,
-                            "keyValues[0]",         (Object) plotId,
-                            "sortFields[0].field",  (Object) "KEY2",
-                            "onlyOwnedRecords",     (Object) onlyOwnedRecords,
-                            "stepGreaterOrEqualTo", (Object) stepGreaterOrEqualTo);
+                "keyValues[0]",         (Object) plotId,
+                "sortFields[0].field",  (Object) "KEY2",
+                "onlyOwnedRecords",     (Object) onlyOwnedRecords,
+                "stepGreaterOrEqualTo", (Object) stepGreaterOrEqualTo);
         var fromCollect = getFromCollect(format("survey/%d/data/records/summary", projectId), params).getAsJsonObject();
         var plotSummaries = fromCollect.get("records").getAsJsonArray();
         return plotSummaries;
@@ -892,11 +892,11 @@ public class CollectProjects implements Projects {
 
     private static JsonArray getCollectSamplingPointItems(int projectId, String plotId, boolean onlyParentItem) {
         return getFromCollect(format("survey/%d/sampling_point_data", projectId),
-                              (plotId == null)
-                              ? Map.of("only_parent_item", onlyParentItem)
-                              : Map.of("only_parent_item", onlyParentItem,
-                                       "parent_keys", plotId))
-            .getAsJsonArray();
+                (plotId == null)
+                        ? Map.of("only_parent_item", onlyParentItem)
+                        : Map.of("only_parent_item", onlyParentItem,
+                        "parent_keys", plotId))
+                .getAsJsonArray();
     }
 
     private static JsonObject getCollectPlotSamplingPointItem(int projectId, String plotId) {
@@ -905,24 +905,24 @@ public class CollectProjects implements Projects {
 
     private static int countCollectSamplingPointItems(int projectId, int levelIndex, List<String> infoAttributes) {
         return getFromCollect(format("survey/%d/count/sampling_point_data", projectId),
-                              Map.of("level",           levelIndex,
-                                     "info_attributes", infoAttributes))
-            .getAsInt();
+                Map.of("level",           levelIndex,
+                        "info_attributes", infoAttributes))
+                .getAsInt();
     }
 
     private static int countCollectRecords(int projectId, boolean ignoreMeasurements, Integer userId) {
         return getFromCollect(format("survey/%d/data/count/records", projectId),
-                              Map.of("ignore_measurements", (Object) ignoreMeasurements,
-                                     "user_id",             (Object) userId))
-            .getAsInt();
+                Map.of("ignore_measurements", (Object) ignoreMeasurements,
+                        "user_id",             (Object) userId))
+                .getAsInt();
     }
 
     private static JsonObject createNewCollectRecord(int projectId, String username, String plotId, int measurement) {
         return postToCollect(String.format("survey/%s/data/records", projectId),
-                             Map.of("username",               username,
-                                    "recordKey",              Arrays.asList(plotId, measurement),
-                                    "addSecondLevelEntities", true))
-            .getAsJsonObject();
+                Map.of("username",               username,
+                        "recordKey",              Arrays.asList(plotId, measurement),
+                        "addSecondLevelEntities", true))
+                .getAsJsonObject();
     }
 
     private static int countCollectContributors(int projectId) {
@@ -934,13 +934,13 @@ public class CollectProjects implements Projects {
     private static JsonObject getCollectRecordSubplot(JsonObject survey, JsonObject record, String subplotId) {
         var subplotNodeDefId = getCollectSurveyNodeDefinitionId(survey, "subplot");
         var subplots = findElement(record,
-                                   format("rootEntity.childrenByDefinitionId.%d", subplotNodeDefId)).getAsJsonArray();
+                format("rootEntity.childrenByDefinitionId.%d", subplotNodeDefId)).getAsJsonArray();
 
         var subplot = toElementStream(subplots).filter(s -> {
-                var subplotKeyDefId = getCollectSurveyNodeDefinitionId(survey, "subplot/subplot_id");
-                var subplotKey = getCollectRecordAttributeValue((JsonObject) s, subplotKeyDefId);
-                return subplotKey.equals(subplotId);
-            }).collect(intoJsonArray).get(0).getAsJsonObject();
+            var subplotKeyDefId = getCollectSurveyNodeDefinitionId(survey, "subplot/subplot_id");
+            var subplotKey = getCollectRecordAttributeValue((JsonObject) s, subplotKeyDefId);
+            return subplotKey.equals(subplotId);
+        }).collect(intoJsonArray).get(0).getAsJsonObject();
         return subplot;
     }
 
@@ -991,8 +991,8 @@ public class CollectProjects implements Projects {
         } else {
             var institutions = OfGroups.getAllInstitutions(null);
             var matchingInstitution = findInJsonArray(institutions,
-                                                                       institution ->
-                                                                       institution.get("id").getAsString().equals(institutionId));
+                    institution ->
+                            institution.get("id").getAsString().equals(institutionId));
             if (matchingInstitution.isPresent()) {
                 var institution = matchingInstitution.get();
                 var admins = institution.getAsJsonArray("admins");
@@ -1026,19 +1026,19 @@ public class CollectProjects implements Projects {
         var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
         var firstGroupName = firstGroup.get("name").getAsString();
         return toStream(firstGroup.get("values").getAsJsonArray())
-            .collect(Collectors.toMap(sampleValue -> sampleValue.get("code").getAsString(),
-                                      sampleValue -> firstGroupName + ":" + sampleValue.get("name").getAsString(),
-                                      (a, b) -> b));
+                .collect(Collectors.toMap(sampleValue -> sampleValue.get("code").getAsString(),
+                        sampleValue -> firstGroupName + ":" + sampleValue.get("name").getAsString(),
+                        (a, b) -> b));
     }
 
     private static String[] getValueDistributionLabels(JsonObject project) {
         var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
         return toStream(sampleValueGroups)
-            .flatMap(group -> {
+                .flatMap(group -> {
                     var sampleValues = group.get("values").getAsJsonArray();
                     return toStream(sampleValues).map(sampleValue -> group.get("name").getAsString() + ":" + sampleValue.get("name").getAsString());
                 })
-            .toArray(String[]::new);
+                .toArray(String[]::new);
     }
 
     private static HttpServletResponse writeCsvFile(HttpServletResponse response, String header, String content,
@@ -1057,7 +1057,7 @@ public class CollectProjects implements Projects {
     }
 
     private static Collector<String, ?, Map<String, Long>> countDistinct =
-        Collectors.groupingBy(Function.identity(), Collectors.counting());
+            Collectors.groupingBy(Function.identity(), Collectors.counting());
 
     private static String getLoggedUsername(Request req) {
         var session = req.raw().getSession();

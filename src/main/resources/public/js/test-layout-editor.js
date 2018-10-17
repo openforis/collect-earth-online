@@ -874,7 +874,6 @@ angular.module("geodash", []).controller("GeodashWidgetEditorController", ["$htt
                 geodash.checkUpdate();
             },
             error: function (xhr) {
-                debugme = xhr;
             }
         });
     }
