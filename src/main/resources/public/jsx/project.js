@@ -598,7 +598,38 @@ class Project extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
-                    this.setState({details: data});
+                    var detailsNew=data;
+                    var sv=detailsNew.sampleValues;
+                    var newSV=[];
+                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+                    if(sv.length>0){
+                        sv.map((sq)=>{
+                                if(sq.name){
+                                    tempSQ.id=sq.id;
+                                    tempSQ.question=sq.name;
+                                    sq.values.map((sa)=>{
+                                        if(sa.name){
+                                            if(sa.id>0){
+                                                tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
+                                            }
+                                        }
+                                        else {
+                                            tempSQ.answers.push(sa);
+                                        }
+
+                                    });
+                                    if(tempSQ.id>0){
+                                        newSV.push(tempSQ);
+                                    }
+                                }
+                                else{
+                                    newSV.push(sq);
+                                }
+                            }
+                        );
+                    }
+                    detailsNew.sampleValues=newSV;
+                    this.setState({details: detailsNew});
                     if (this.state.details.id == 0) {
                         this.initialization(this.props.documentRoot, this.state.userId, projectId, this.state.institutionId);
                     } else {
@@ -1424,9 +1455,7 @@ class SurveyQuestionTree extends React.Component {
     ))
     render() {
         var project = this.props.project;
-        var sv = project.details.sampleValues;
-        var newSV = [];
-        if (project.details != null) {
+   if (project.details != null) {
             return (
                 <div>
                     {this.getCurrent(-1)}
@@ -1445,7 +1474,6 @@ function SurveyQuestion(properties) {
     if(properties.surveyQuestion.answers==null){
         console.log("answers null");
     }
-    console.log(properties.surveyQuestion);
     if (project.details != null) {
         return (
                 <div className="sample-value-info">
