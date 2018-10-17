@@ -253,6 +253,7 @@ public class JsonProjects implements Projects {
     private static Collector<String, ?, Map<String, Long>> countDistinct =
             Collectors.groupingBy(Function.identity(), Collectors.counting());
 
+    // FIXME: Update this function for the new surveyQuestion JSON structure
     private static String[] getValueDistributionLabels(JsonObject project) {
         var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
         return toStream(sampleValueGroups)
@@ -264,6 +265,7 @@ public class JsonProjects implements Projects {
                 .toArray(String[]::new);
     }
 
+    // FIXME: Update this function for the new surveyQuestion JSON structure
     private static Map<Integer, String> getSampleValueTranslations(JsonObject project) {
         var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
         var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
@@ -274,6 +276,7 @@ public class JsonProjects implements Projects {
                         (a, b) -> b));
     }
 
+    // FIXME: Update this function for the new surveyQuestion JSON structure
     // Returns a JsonObject like this:
     // {"Land Use:Timber" 10.0,
     //  "Land Use:Agriculture": 20.0,
@@ -322,6 +325,7 @@ public class JsonProjects implements Projects {
         return response;
     }
 
+    // FIXME: Update this function for the new surveyQuestion JSON structure
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         var projectId = req.params(":id");
         var projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -383,6 +387,7 @@ public class JsonProjects implements Projects {
         }
     }
 
+    // FIXME: Update this function for the new surveyQuestion JSON structure
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         var projectId = req.params(":id");
         var projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -922,10 +927,21 @@ public class JsonProjects implements Projects {
                 var csvFileName = writeFilePart(req,
                         "plot-distribution-csv-file",
                         expandResourcePath("/csv"),
-                        "project-" + newProjectId);
-                newProject.addProperty("csv", csvFileName);
+                        "project-" + newProjectId + "-plots");
+                newProject.addProperty("plots-csv", csvFileName);
             } else {
-                newProject.add("csv", null);
+                newProject.add("plots-csv", null);
+            }
+
+            // Upload the sample-distribution-csv-file if one was provided
+            if (newProject.get("sampleDistribution").getAsString().equals("csv")) {
+                var csvFileName = writeFilePart(req,
+                        "sample-distribution-csv-file",
+                        expandResourcePath("/csv"),
+                        "project-" + newProjectId + "-samples");
+                newProject.addProperty("samples-csv", csvFileName);
+            } else {
+                newProject.add("samples-csv", null);
             }
 
             // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
@@ -933,35 +949,22 @@ public class JsonProjects implements Projects {
                 var shpFileName = writeFilePart(req,
                                                 "plot-distribution-shp-file",
                                                 expandResourcePath("/shp"),
-                                                "project-" + newProjectId);
-                newProject.addProperty("shp", shpFileName);
+                                                "project-" + newProjectId + "-plots");
+                newProject.addProperty("plots-shp", shpFileName);
             } else {
-                newProject.add("shp", null);
+                newProject.add("plots-shp", null);
             }
 
-            // Add ids to the sampleValueGroups and sampleValues and clean up some of their unnecessary fields
-            var sampleValueGroups = newProject.get("sampleValues").getAsJsonArray();
-            var sampleValueGroupIndexer = makeCounter();
-            var updatedSampleValueGroups = mapJsonArray(sampleValueGroups,
-                    sampleValueGroup -> {
-                        sampleValueGroup.addProperty("id", sampleValueGroupIndexer.getAsInt());
-                        sampleValueGroup.remove("$$hashKey");
-                        sampleValueGroup.remove("object");
-                        var sampleValues = sampleValueGroup.get("values").getAsJsonArray();
-                        var sampleValueIndexer = makeCounter();
-                        var updatedSampleValues = mapJsonArray(sampleValues,
-                                sampleValue -> {
-                                    sampleValue.addProperty("id", sampleValueIndexer.getAsInt());
-                                    sampleValue.remove("$$hashKey");
-                                    sampleValue.remove("object");
-                                    // FIXME: Remove the "image" field from the database
-                                    sampleValue.add("image", null);
-                                    return sampleValue;
-                                });
-                        sampleValueGroup.add("values", updatedSampleValues);
-                        return sampleValueGroup;
-                    });
-            newProject.add("sampleValues", updatedSampleValueGroups);
+            // Upload the sample-distribution-shp-file if one was provided (this should be a ZIP file)
+            if (newProject.get("sampleDistribution").getAsString().equals("shp")) {
+                var shpFileName = writeFilePart(req,
+                                                "sample-distribution-shp-file",
+                                                expandResourcePath("/shp"),
+                                                "project-" + newProjectId + "-samples");
+                newProject.addProperty("samples-shp", shpFileName);
+            } else {
+                newProject.add("samples-shp", null);
+            }
 
             // Add some missing fields that don't come from the web UI
             newProject.addProperty("archived", false);
