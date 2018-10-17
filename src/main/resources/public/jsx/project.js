@@ -1339,6 +1339,40 @@ class SampleDesign extends React.Component{
 function SurveyDesign(props){
     if (props.project.details != null) {
         var answer_select = "";
+        var dropdowns;
+        if(props.projectId=="0") {
+            dropdowns = <React.Fragment>
+                <tr>
+                    <td>
+                        <label htmlFor="value-parent">Parent Question:</label>
+                    </td>
+                    <td>
+                        <select id="value-parent" className="form-control form-control-sm" size="1"
+                                onChange={(e) => props.handleInputParent(e)}>
+                            <option value="">None</option>
+                            {
+                                (props.project.details.sampleValues).map((parentSurveyQuestion, uid) =>
+                                    <option key={uid}
+                                            value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}</option>
+                                )
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label htmlFor="value-answer">Parent Answer:</label>
+                    </td>
+                    <td>
+                        <select id="value-answer" className="form-control form-control-sm" size="1"
+                                onChange={(e) => props.handleInputParent(e)}>
+                            <option value="">Any</option>
+                            {answer_select}
+                        </select>
+                    </td>
+                </tr>
+            </React.Fragment>;
+        }
         var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
         if (answers.length > 0) {
             answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
@@ -1362,36 +1396,7 @@ function SurveyDesign(props){
                                             handleInputParent={props.handleInputParent}/>
                         <table>
                             <tbody>
-                            <tr>
-                                <td>
-                                    <label htmlFor="value-parent">Parent Question:</label>
-                                </td>
-                                <td>
-                                    <select id="value-parent" className="form-control form-control-sm" size="1"
-                                            onChange={(e) => props.handleInputParent(e)}>
-                                        <option value="">None</option>
-                                        {
-                                            (props.project.details.sampleValues).map((parentSurveyQuestion, uid) =>
-                                                <option key={uid}
-                                                        value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}</option>
-                                            )
-                                        }
-                                    </select>
-                                </td>
-
-                            </tr>
-                            <tr>
-                                <td>
-                                    <label htmlFor="value-answer">Parent Answer:</label>
-                                </td>
-                                <td>
-                                    <select id="value-answer" className="form-control form-control-sm" size="1"
-                                            onChange={(e) => props.handleInputParent(e)}>
-                                        <option value="">Any</option>
-                                        {answer_select}
-                                    </select>
-                                </td>
-                            </tr>
+                            {dropdowns}
                             {props.addSurveyQuestionButton}
                             </tbody>
                         </table>
@@ -1409,8 +1414,6 @@ class SurveyQuestionTree extends React.Component {
         super(props);
     };
     getCurrent = (node) => this.props.project.details.sampleValues.filter(cNode => cNode.parent_question == node).map((cNode,uid) => (
-
-
             <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
                 <li>
         <SurveyQuestion prop={this.props} surveyQuestion={cNode}/>
@@ -1425,16 +1428,9 @@ class SurveyQuestionTree extends React.Component {
         var newSV = [];
         if (project.details != null) {
             return (
-                // props.topoSort(sv).map((surveyQuestion, _uid) =>
-                //     <SurveyQuestion key={_uid} prop={props} surveyQuestion={surveyQuestion}/>
-                // )
                 <div>
                     {this.getCurrent(-1)}
                 </div>
-
-                // sv.map((surveyQuestion, _uid) =>
-                //     <SurveyQuestion key={_uid} prop={props} surveyQuestion={surveyQuestion}/>
-                // )
             );
         }
         else {
@@ -1449,6 +1445,7 @@ function SurveyQuestion(properties) {
     if(properties.surveyQuestion.answers==null){
         console.log("answers null");
     }
+    console.log(properties.surveyQuestion);
     if (project.details != null) {
         return (
                 <div className="sample-value-info">
