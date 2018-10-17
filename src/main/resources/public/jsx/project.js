@@ -419,13 +419,12 @@ class Project extends React.Component {
         var ans = [];
         sampleSurvey.map((sq) => {
                 var parent_value = document.getElementById("value-parent");
-
-                var parent = parent_value.options[parent_value.selectedIndex].value;
-                if (sq.id == parent) {
-                    ans = sq.answers;
+                if(parent_value!=null) {
+                    var parent = parent_value.options[parent_value.selectedIndex].value;
+                    if (sq.id == parent) {
+                        ans = sq.answers;
+                    }
                 }
-
-
             }
         );
         return ans;
@@ -887,7 +886,7 @@ function ProjectStats(props) {
 }
 
 function ProjectDesignForm(props) {
-    var addSurveyQuestionButton = "";
+    var addSurveyQuestionButton;
     if (props.projectId == "0") {
         addSurveyQuestionButton = <React.Fragment>
             <tr>
@@ -1339,10 +1338,10 @@ class SampleDesign extends React.Component{
 
 function SurveyDesign(props){
     if (props.project.details != null) {
-        var answer_select="";
-        var answers= props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
-        if(answers.length>0){
-            answer_select=props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
+        var answer_select = "";
+        var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
+        if (answers.length > 0) {
+            answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
                 <option key={uid}
                         value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
             )
@@ -1363,12 +1362,11 @@ function SurveyDesign(props){
                                             handleInputParent={props.handleInputParent}/>
                         <table>
                             <tbody>
-
-                                <tr>
+                            <tr>
                                 <td>
                                     <label htmlFor="value-parent">Parent Question:</label>
                                 </td>
-                                    <td>
+                                <td>
                                     <select id="value-parent" className="form-control form-control-sm" size="1"
                                             onChange={(e) => props.handleInputParent(e)}>
                                         <option value="">None</option>
@@ -1382,21 +1380,19 @@ function SurveyDesign(props){
                                 </td>
 
                             </tr>
-                                <tr>
-                                    <td>
+                            <tr>
+                                <td>
                                     <label htmlFor="value-answer">Parent Answer:</label>
                                 </td>
                                 <td>
                                     <select id="value-answer" className="form-control form-control-sm" size="1"
                                             onChange={(e) => props.handleInputParent(e)}>
                                         <option value="">Any</option>
-                                               {answer_select}
-                                        </select>
+                                        {answer_select}
+                                    </select>
                                 </td>
                             </tr>
-
-                                    {props.addSurveyQuestionButton}
-
+                            {props.addSurveyQuestionButton}
                             </tbody>
                         </table>
                     </div>
@@ -1412,25 +1408,6 @@ class SurveyQuestionTree extends React.Component {
     constructor(props) {
         super(props);
     };
-
-    // getCurrent(parent_id) {
-    //     var project=this.props.project;
-    //     if(project.details != null ) {
-    //         console.log("giotto this get curr");
-    //         console.log(parent_id);
-    //         console.log(project.details.sampleValues);
-    //         project.details.sampleValues.filter(sq =>  sq.parent_question == parent_id).map(sq => (
-    //             <React.Fragment>
-    //             <span>hhh</span>
-    //             <ul key={sq.id}>
-    //                 <li>{sq.question}</li>
-    //                 {this.getCurrent(sq.id)}
-    //             </ul>
-    //             </React.Fragment>
-    //         ));
-    //     }
-    // }
-
     getCurrent = (node) => this.props.project.details.sampleValues.filter(cNode => cNode.parent_question == node).map((cNode,uid) => (
 
 
