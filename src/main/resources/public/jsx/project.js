@@ -118,6 +118,9 @@ class Project extends React.Component {
             var formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("plot-distribution-csv-file", document.getElementById("plot-distribution-csv-file").files[0]);
+            formData.append("plot-distribution-shp-file", document.getElementById("plot-distribution-shp-file").files[0]);
+            formData.append("sample-distribution-csv-file", document.getElementById("sample-distribution-csv-file").files[0]);
+            formData.append("sample-distribution-shp-file", document.getElementById("sample-distribution-shp-file").files[0]);
             formData.append("sample-values", JSON.stringify(this.state.details.sampleValues));
             var ref = this;
             $.ajax({
