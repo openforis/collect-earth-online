@@ -164,6 +164,8 @@ class Collection extends React.Component {
             this);
     }
     loadPlotById(plotId) {
+        if(document.getElementById("testg")!=null)
+        document.getElementById("testg").style.display="block";
         var mapConfig = this.state.mapConfig;
         var currentPlot = this.state.currentPlot;
         if (this.state.currentPlot == null) {
@@ -453,6 +455,7 @@ class Collection extends React.Component {
         this.showProjectPlots();
     }
     initialization() {
+
         this.getProjectById();
         this.getProjectStats();
         this.getProjectPlots();
@@ -463,8 +466,20 @@ class Collection extends React.Component {
         }, 250);
 
 
+
     }
+        showAnswers(event){
+            var x = event.target.nextSibling;
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+        }
+
     render() {
+        // if(document.getElementById("testg")!=null)
+        //     document.getElementById("testg").style.display="none";
         return (<React.Fragment>
                 <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
                 <div id="sidebar" className="col-xl-3">
@@ -473,7 +488,7 @@ class Collection extends React.Component {
                              updatePlanetLayer={this.updatePlanetLayer} nextPlot={this.nextPlot}
                              flagPlot={this.flagPlot}
                              assignedPercentage={this.assignedPercentage()} flaggedPercentage={this.flaggedPercentage()}
-                             completedPercentage={this.completedPercentage()}
+                             completedPercentage={this.completedPercentage()} showAnswers={this.showAnswers}
                     />
                 </div>
             </React.Fragment>
@@ -521,7 +536,7 @@ function SideBar(props) {
             <SideBarFieldSet collection={props.collection} setBaseMapSource={props.setBaseMapSource}
                              setCurrentValue={props.setCurrentValue}
                              updateDGWMSLayer={props.updateDGWMSLayer} updatePlanetLayer={props.updatePlanetLayer}
-                             nextPlot={props.nextPlot} flagPlot={props.flagPlot}/>
+                             nextPlot={props.nextPlot} flagPlot={props.flagPlot} showAnswers={props.showAnswers}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
                     <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
@@ -590,7 +605,7 @@ function SideBar(props) {
 function SideBarFieldSet(props) {
     const collection = props.collection;
     var selectDG, selectPlanet;
-    var sampleValueGroup = "";
+    var surveyQuestionTree = "";
     var imageryTitle = "";
     if (collection.imageryList != null && collection.currentProject != null) {
         imageryTitle = <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
@@ -602,33 +617,87 @@ function SideBarFieldSet(props) {
         }
         </select>;
     }
+
     if (collection.currentProject != null) {
-        sampleValueGroup = collection.currentProject.sampleValues.map((sampleValueGroup,_uid) =>
-            <fieldset key={_uid} className="mb-1 justify-content-center text-center">
-                <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
-                <ul id="samplevalue" className="samplevalue justify-content-center">
-                    {
-                        sampleValueGroup.values.map((sampleValue,uid) =>
-                            <li key={uid} className="mb-1">
-                                <button type="button"
-                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                        id={sampleValue.name + '_' + sampleValue.id}
-                                        name={sampleValue.name + '_' + sampleValue.id}
-                                        onClick={() => props.setCurrentValue(sampleValueGroup, sampleValue)}>
-                                    <div className="circle" style={{
-                                        backgroundColor: sampleValue.color,
-                                        border: "solid 1px",
-                                        float: "left",
-                                        marginTop: "4px"
-                                    }}></div>
-                                    <span className="small">{sampleValue.name}</span>
-                                </button>
-                            </li>
-                        )
+        var sv=collection.currentProject.sampleValues;
+        var newSV=[];
+        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+        if(sv.length>0){
+
+            sv.map((sq)=>{
+                    if(sq.name){
+                        tempSQ.id=sq.id;
+                        tempSQ.question=sq.name;
+                        sq.values.map((sa)=>{
+                            if(sa.name){
+                                if(sa.id>0){
+                                    tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
+                                }
+                            }
+                            else {
+                                tempSQ.answers.push(sa);
+                            }
+
+                        });
+                        if(tempSQ.id>0){
+                            newSV.push(tempSQ);
+                        }
                     }
-                </ul>
-            </fieldset>
-        )
+                    else{
+                        newSV.push(sq);
+                    }
+                }
+            );
+        }
+
+
+        surveyQuestionTree = newSV.map((surveyQuestion,_uid) => {
+           if(surveyQuestion.parent_question==-1) {
+               return   <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
+                    <button id={surveyQuestion.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block" onClick={props.showAnswers} style={{marginBottom:"10px"}}>Survey Question: {surveyQuestion.question}</button>
+                    <ul id="samplevalue" className="samplevalue justify-content-center" style={{display:"none"}}>
+                        {
+                            // sampleValueGroup.values.map((sampleValue,uid) =>
+                            //     <li key={uid} className="mb-1">
+                            //         <button type="button"
+                            //                 className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                            //                 id={sampleValue.name + '_' + sampleValue.id}
+                            //                 name={sampleValue.name + '_' + sampleValue.id}
+                            //                 onClick={() => props.setCurrentValue(sampleValueGroup, sampleValue)}>
+                            //             <div className="circle" style={{
+                            //                 backgroundColor: sampleValue.color,
+                            //                 border: "solid 1px",
+                            //                 float: "left",
+                            //                 marginTop: "4px"
+                            //             }}></div>
+                            //             <span className="small">{sampleValue.name}</span>
+                            //         </button>
+                            //     </li>
+                            //)
+
+                            surveyQuestion.answers.map((ans, uid) =>
+                                <li key={uid} className="mb-1">
+                                    <button type="button"
+                                            className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                            id={ans.answer + '_' + ans.id}
+                                            name={ans.answer + '_' + ans.id}
+                                            onClick={() => props.setCurrentValue(surveyQuestion, ans)}>
+                                        <div className="circle" style={{
+                                            backgroundColor: ans.color,
+                                            border: "solid 1px",
+                                            float: "left",
+                                            marginTop: "4px"
+                                        }}></div>
+                                        <span className="small">{ans.answer}</span>
+                                    </button>
+                                </li>
+                            )
+
+                        }
+                    </ul>
+                </fieldset>
+            }
+        });
         if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
             selectDG = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
                                                name="dg-imagery-year"
@@ -726,7 +795,8 @@ function SideBarFieldSet(props) {
                 {selectDG}
                 {selectPlanet}
             </fieldset>
-            {sampleValueGroup}
+            <h3>Survey Questions(click on a question to expand)</h3>
+            {surveyQuestionTree}
         </React.Fragment>
 
     );
