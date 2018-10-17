@@ -92,9 +92,10 @@ class BasicLayout extends React.PureComponent{
             .then(response => response.json())
             .then(function(response){dashboardID = response.dashboardID;  return response})
             .then(data => data.widgets.map(function(widget){
-                if(widget.layout.y == null)
-                {
-                    widget.layout.y = 0;
+                if(widget.layout) {
+                    if (widget.layout.y == null) {
+                        widget.layout.y = 0;
+                    }
                 }
                 return widget;}))
             .then(data => debugreturn = data)
