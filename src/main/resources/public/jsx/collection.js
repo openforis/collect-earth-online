@@ -293,52 +293,56 @@ class Collection extends React.Component {
             });
     }
     setCurrentValue(event,surveyQuestion, answer) {
-        console.log("SQ");
-        console.log(surveyQuestion);
-        this.state.currentProject.sampleValues.map((sq)=>
-    surveyQuestion.answers.map((ans)=>{if(ans.id==sq.parent_question && ans.id==answer.id){
-       console.log("is a parent");
-       console.log(ans.id);
-       console.log(ans.answer);
-    }})
-
-    );
-        var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        if (selectedFeatures && selectedFeatures.getLength() > 0) {
-            selectedFeatures.forEach(
-                function (sample) {
-                    var sampleId = sample.get("sampleId");
-                    var uSamples = this.state.userSamples;
-                    if (!this.state.userSamples[sampleId]) {
-                        uSamples[sampleId] = {};
-                        this.setState({userSamples: uSamples});
-                    }
-                    uSamples[sampleId][surveyQuestion.question] = answer.answer;
-                    this.setState({userSamples: uSamples});
-                    mercator.highlightSamplePoint(sample, answer.color);
-                },
-                this // necessary to pass outer scope into function
-            );
-            selectedFeatures.clear();
-            utils.blink_border(answer.answer + "_" + answer.id);
-            if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
-                && Object.values(this.state.userSamples).every(function (values) {
-                    return Object.keys(values).length == this.state.currentProject.sampleValues.length;
-                }, this)) {
-                // FIXME: What is the minimal set of these that I can execute?
-                utils.enable_element("save-values-button");
-                if (document.getElementById("save-values-button") != null) {
-                    var ref = this;
-                    document.getElementById("save-values-button").onclick = function () {
-                        ref.saveValues();
-                    }
+        console.log("answer");
+        console.log(answer);
+        this.state.currentProject.sampleValues.map((sq) => {
+                if (answer.id == sq.parent_answer) {
+                    console.log("is a parent");
+                    console.log(answer.id);
+                    console.log(answer.answer);
                 }
-                utils.disable_element("new-plot-button");
-            }
+                else {
 
-        } else {
-            alert("No sample points selected. Please click some first.");
-        }
+                    var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
+                    if (selectedFeatures && selectedFeatures.getLength() > 0) {
+                        selectedFeatures.forEach(
+                            function (sample) {
+                                var sampleId = sample.get("sampleId");
+                                var uSamples = this.state.userSamples;
+                                if (!this.state.userSamples[sampleId]) {
+                                    uSamples[sampleId] = {};
+                                    this.setState({userSamples: uSamples});
+                                }
+                                uSamples[sampleId][surveyQuestion.question] = answer.answer;
+                                this.setState({userSamples: uSamples});
+                                mercator.highlightSamplePoint(sample, answer.color);
+                            },
+                            this // necessary to pass outer scope into function
+                        );
+                        selectedFeatures.clear();
+                        utils.blink_border(answer.answer + "_" + answer.id);
+                        if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
+                            && Object.values(this.state.userSamples).every(function (values) {
+                                return Object.keys(values).length == this.state.currentProject.sampleValues.length;
+                            }, this)) {
+                            // FIXME: What is the minimal set of these that I can execute?
+                            utils.enable_element("save-values-button");
+                            if (document.getElementById("save-values-button") != null) {
+                                var ref = this;
+                                document.getElementById("save-values-button").onclick = function () {
+                                    ref.saveValues();
+                                }
+                            }
+                            utils.disable_element("new-plot-button");
+                        }
+
+                    } else {
+                        alert("No sample points selected. Please click some first.");
+                    }
+
+                }
+            }
+        );
     }
     flagPlot() {
         var ref = this;
