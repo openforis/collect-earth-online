@@ -252,11 +252,11 @@ class Collection extends React.Component {
                                     ceoMapStyles.yellowPoint);
             mercator.enableSelection(mapConfig, "currentSamples");
             mercator.zoomMapToLayer(mapConfig, "currentPlot");
-
+            console.log(this.state.currentProject);
             window.open(this.state.documentRoot + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.state.currentProject.name
                                              + "&pid=" + this.props.projectId
-                    + "&plotid=" + this.state.currentProject.plotId
+                    + "&plotid=" + this.state.currentProject.id
                     + "&plotshape=" + this.state.currentProject.plotShape
                                              + "&aoi=[" + mercator.getViewExtent(mapConfig)
                                              + "]&daterange=&bcenter=" + currentPlot.center
@@ -304,7 +304,7 @@ class Collection extends React.Component {
                     console.log(answer.answer);
                 }
                 else {
-
+                }
                     var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
                     if (selectedFeatures && selectedFeatures.getLength() > 0) {
                         selectedFeatures.forEach(
@@ -343,7 +343,7 @@ class Collection extends React.Component {
                     }
 
                 }
-            }
+
         );
     }
     flagPlot() {
@@ -422,7 +422,7 @@ class Collection extends React.Component {
             window.open(this.state.documentRoot + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.state.currentProject.name
                                              + "&pid=" + this.props.projectId
-                    + "&plotid=" + this.state.currentProject.plotId
+                    + "&plotid=" + this.state.currentProject.id
                     + "&plotshape=" + this.state.currentProject.plotShape
                                              + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
                                              + "]&daterange=&bcenter=" + this.state.currentPlot.center
@@ -559,9 +559,7 @@ class Collection extends React.Component {
 
     getCurrent = (node,ref) => this.state.currentProject.sampleValues.filter(cNode => cNode.parent_question == node).map(function(cNode,_uid) {
         if(cNode.answered) {
-
-           return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
-
+            return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
                 <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                         onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
                     Question: {cNode.question}</button>
@@ -582,15 +580,13 @@ class Collection extends React.Component {
                                         }}></div>
                                         <span className="small">{ans.answer}</span>
                                     </button>
+                                    {ref.getCurrent(cNode.id, ref)}
                                 </li>
                             }
                         )
-
                     }
                 </ul>
-               {ref.getCurrent(cNode.id, ref)}
-
-           </fieldset>
+            </fieldset>
         }
         else{
             return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
@@ -616,17 +612,13 @@ class Collection extends React.Component {
                                 </button>
                             </li>
                         )
-
                     }
                 </ul>
             </fieldset>
         }
-
     });
 
     render() {
-        // if(document.getElementById("testg")!=null)
-        //     document.getElementById("testg").style.display="none";
         return (<React.Fragment>
                 <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
                 <div id="sidebar" className="col-xl-3">
@@ -865,7 +857,9 @@ function SideBarFieldSet(props) {
                 {selectDG}
                 {selectPlanet}
             </fieldset>
-            <h3>Survey Questions(click on a question to expand)</h3>
+            <fieldset className="mb-3 justify-content-center text-center">
+                <h3>Survey Questions</h3><i style={{fontSize:"small"}}>(Click on a question to expand)</i>
+            </fieldset>
             {surveyQuestionTree}
         </React.Fragment>
 
