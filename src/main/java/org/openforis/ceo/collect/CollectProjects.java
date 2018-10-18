@@ -179,6 +179,11 @@ public class CollectProjects implements Projects {
         //[{center: "{\"type\":\"Point\",\"coordinates\":[102.999640127073,22.0468074686287]}", id: 4289, flagged: false, analyses: 0, user: null,
     }
 
+    // FIXME: stub
+    public String getProjectPlot(Request req, Response res) {
+        return "";
+    }
+
     // Call Collect's REST API to QUERY the database.
     //
     // Return a JSON object with several computed integer fields

@@ -29,7 +29,7 @@
      }
      return decodeURIComponent(results[2].replace(/\+/g, " "));
  }
- var institutionID = this.getParameterByName("institutionID") != null? this.getParameterByName("institutionID"): '16';
+ var institutionID = this.getParameterByName("institutionID") != null? this.getParameterByName("institutionID"): '1';
 </script>
 <script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~widgetlayouteditor.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/vendors~widgetlayouteditor.bundle.js"></script>
