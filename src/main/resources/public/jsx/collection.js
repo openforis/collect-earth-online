@@ -256,6 +256,8 @@ class Collection extends React.Component {
             window.open(this.state.documentRoot + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.state.currentProject.name
                                              + "&pid=" + this.props.projectId
+                    + "&plotid=" + this.state.currentProject.plotId
+                    + "&plotshape=" + this.state.currentProject.plotShape
                                              + "&aoi=[" + mercator.getViewExtent(mapConfig)
                                              + "]&daterange=&bcenter=" + currentPlot.center
                                              + "&bradius=" + (this.state.currentProject.plotSize
@@ -420,6 +422,8 @@ class Collection extends React.Component {
             window.open(this.state.documentRoot + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.state.currentProject.name
                                              + "&pid=" + this.props.projectId
+                    + "&plotid=" + this.state.currentProject.plotId
+                    + "&plotshape=" + this.state.currentProject.plotShape
                                              + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
                                              + "]&daterange=&bcenter=" + this.state.currentPlot.center
                                              + "&bradius=" + (this.state.currentProject.plotSize
@@ -563,28 +567,30 @@ class Collection extends React.Component {
                     Question: {cNode.question}</button>
                 <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
                     {
-                        cNode.answers.map((ans, uid) =>
-                            <li key={uid} className="mb-1">
-                                <button type="button"
-                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                        id={ans.answer + '_' + ans.id}
-                                        name={ans.answer + '_' + ans.id}
-                                        onClick={(e) => ref.setCurrentValue(e,cNode, ans)}>
-                                    <div className="circle" style={{
-                                        backgroundColor: ans.color,
-                                        border: "solid 1px",
-                                        float: "left",
-                                        marginTop: "4px"
-                                    }}></div>
-                                    <span className="small">{ans.answer}</span>
-                                </button>
-                                {ref.getCurrent(cNode.id,ref)}
-                            </li>
+                        cNode.answers.map((ans, uid) => {
+                                <li key={uid} className="mb-1">
+                                    <button type="button"
+                                            className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                            id={ans.answer + '_' + ans.id}
+                                            name={ans.answer + '_' + ans.id}
+                                            onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
+                                        <div className="circle" style={{
+                                            backgroundColor: ans.color,
+                                            border: "solid 1px",
+                                            float: "left",
+                                            marginTop: "4px"
+                                        }}></div>
+                                        <span className="small">{ans.answer}</span>
+                                    </button>
+                                </li>
+                            }
                         )
 
                     }
                 </ul>
-            </fieldset>
+               {ref.getCurrent(cNode.id, ref)}
+
+           </fieldset>
         }
         else{
             return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
