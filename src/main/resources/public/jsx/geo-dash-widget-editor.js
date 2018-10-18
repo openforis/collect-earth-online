@@ -257,7 +257,7 @@ class BasicLayout extends React.PureComponent{
     {
         let ajaxurl = theURL + "/deletewidget/widget/" + widget.id;
         this.serveItUp(ajaxurl, widget);
-    }
+    };
 
     generateDOM() {
         console.log('generateDOM');
@@ -272,7 +272,39 @@ class BasicLayout extends React.PureComponent{
                 </h3>
                 <span className="text text-danger">Sample Image</span></div>;
         });
-    }
+    };
+    addCustomImagery(imagery) {
+        $.ajax({
+            url: this.props.documentRoot + "/add-institution-imagery",
+            type: "POST",
+            async: true,
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify(imagery)
+        }).fail(function () {
+            console.log("Error adding custom imagery to institution. See console for details.");
+        }).done(function (data) {
+            console.log("imagery added");
+
+            }
+        );
+    };
+    buildImageryObject(img){
+        let title = img.filterType.replace(/\w\S*/g, function (word) {
+            return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
+        return {
+            institutionId: institutionID,
+            imageryTitle: title,
+            imageryAttribution: "Google Earth Engine",
+            geeParams: {
+                collectionType: img.collectionType,
+                startDate: img.startDate,
+                endDate: img.endDate,
+                filterType: img.filterType,
+                visParams: img.visParams
+            }
+        };
+    };
     onWidgetTypeSelectChanged = (event, anything) => {
         console.log(anything);
         this.setState({
@@ -356,16 +388,13 @@ class BasicLayout extends React.PureComponent{
         });
     };
     onNextWizardStep = event =>{
-        console.log('setting wizard step');
         this.setState({wizardStep: 2});
     }
     onPrevWizardStep = event =>{
-        console.log('setting wizard step');
         this.setState({wizardStep: 1});
     }
     onCreateNewWidget = event =>{
-        console.log('need to create the defined widget');
-        console.log('need to reset form values to defaults');
+        var AddImageType = [];
         var widget = {};
         var id = this.state.widgets.length > 0?(Math.max.apply(Math, this.state.widgets.map(function(o) { return o.id; }))) + 1: 0;
         var name = this.state.WidgetTitle;
@@ -388,7 +417,7 @@ class BasicLayout extends React.PureComponent{
         widget.baseMap = (this.state.imagery.filter(imagery => imagery.id == this.state.WidgetBaseMap))[0];
         if(this.state.selectedWidgetType == "DualImageCollection")
         {
-            console.log('build out the data structure for the widget from the state');
+            //console.log('build out the data structure for the widget from the state');
             widget.properties = ["","","","",""];
             widget.filterType = '';
             widget.visParams = {};
@@ -397,7 +426,10 @@ class BasicLayout extends React.PureComponent{
             let img2 = {};
             img1.collectionType = 'ImageCollection' + this.state.selectedDataType;
             img2.collectionType = 'ImageCollection' + this.state.selectedDataTypeDual;
-
+            img1.startDate = this.state.startDate;
+            img1.endDate = this.state.endDate;
+            img2.startDate = this.state.startDateDual;
+            img2.endDate = this.state.endDateDual;
             if (['LANDSAT5', 'LANDSAT7', 'LANDSAT8', 'Sentinel2'].includes(this.state.selectedDataType)) {
                 img1.filterType = this.state.selectedDataType != null ? this.state.selectedDataType : '';
                 img1.visParams = {
@@ -406,6 +438,8 @@ class BasicLayout extends React.PureComponent{
                     max: this.state.widgetMax,
                     cloudLessThan: this.state.widgetCloudScore
                 }
+                this.addCustomImagery(this.buildImageryObject(img1));
+
             }
 
             if (['LANDSAT5', 'LANDSAT7', 'LANDSAT8', 'Sentinel2'].includes(this.state.selectedDataTypeDual)) {
@@ -416,14 +450,16 @@ class BasicLayout extends React.PureComponent{
                     max: this.state.widgetMaxDual,
                     cloudLessThan: this.state.widgetCloudScoreDual
                 }
+                this.addCustomImagery(this.buildImageryObject(img2));
             }
-            img1.startDate = this.state.startDate;
-            img1.endDate = this.state.endDate;
-            img2.startDate = this.state.startDateDual;
-            img2.endDate = this.state.endDateDual;
+
 
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
+
+
+
+
 
         }
         else {
@@ -431,16 +467,6 @@ class BasicLayout extends React.PureComponent{
             var prop1 = '';
             var properties = [];
             var prop4 = this.state.selectedDataType != null ? this.state.selectedDataType : '';
-            if (['LANDSAT5', 'LANDSAT7', 'LANDSAT8', 'Sentinel2'].includes(this.state.selectedDataType)) {
-                widget.filterType = this.state.selectedDataType;
-                widget.visParams = {
-                    bands: this.state.widgetBands,
-                    min: this.state.widgetMin,
-                    max: this.state.widgetMax,
-                    cloudLessThan: this.state.widgetCloudScore
-                }
-            }
-
             if (this.state.selectedDataType == 'Custom') {
                 //more work to do to label the type and add
                 prop1 = this.state.imageCollection;
@@ -453,6 +479,24 @@ class BasicLayout extends React.PureComponent{
             properties[4] = prop4;
 
             widget.properties = properties;
+            if (['LANDSAT5', 'LANDSAT7', 'LANDSAT8', 'Sentinel2'].includes(this.state.selectedDataType)) {
+                widget.filterType = this.state.selectedDataType;
+                widget.visParams = {
+                    bands: this.state.widgetBands,
+                    min: this.state.widgetMin,
+                    max: this.state.widgetMax,
+                    cloudLessThan: this.state.widgetCloudScore
+                };
+
+                this.addCustomImagery(this.buildImageryObject({
+                    collectionType:'ImageCollection' + this.state.selectedDataType,
+                    startDate: this.state.startDate,
+                    endDate: this.state.endDate,
+                    filterType: widget.filterType,
+                    visParams: widget.visParams
+                }));
+            }
+
 
             widget.dualLayer = this.state.dualLayer;
             if (widget.dualLayer) {
@@ -504,7 +548,7 @@ class BasicLayout extends React.PureComponent{
     };
     onDataBaseMapSelectChanged = event =>{
         this.setState({WidgetBaseMap: event.target.value});
-    }
+    };
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
     };

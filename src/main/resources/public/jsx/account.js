@@ -21,7 +21,7 @@ class Account extends React.Component {
 
 function UserStats() {
     return (
-        <div id="user-stats" className="col">
+        <div id="user-stats" className="col" style={{display:"None"}}>
             <h2 className="header px-0">Here's your progress</h2>
             <h1><span className="badge bg-lightgreen">Level 1</span></h1>
             <div className="progress w3-light-grey mb-1">

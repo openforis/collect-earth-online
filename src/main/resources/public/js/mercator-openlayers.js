@@ -96,6 +96,45 @@ mercator.createSource = function (sourceConfig) {
         return new ol.source.TileWMS({serverType: "geoserver",
                                       url: sourceConfig.geoserverUrl,
                                       params: sourceConfig.geoserverParams});
+    }else if (sourceConfig.type == "GeeGateway") {
+        //get variables and make ajax call to get mapid and token
+        //then add xyz layer
+        const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
+        const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
+        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? sourceConfig.geeParams.visParams.cloudLessThan: '';
+        const theJson = {
+            dateFrom: sourceConfig.geeParams.startDate,
+            dateTo: sourceConfig.geeParams.endDate,
+            bands: sourceConfig.geeParams.visParams.bands,
+            min: sourceConfig.geeParams.visParams,
+            max: sourceConfig.geeParams.visParams,
+            cloudLessThan: cloudVar
+        };
+        $.ajax({
+            url: url,
+            type: "POST",
+            async: true,
+            crossDomain: true,
+            contentType: "application/json",
+            data: JSON.stringify(theJson)
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.warn(jqXHR + textStatus + errorThrown);
+        }).done(function (data, _textStatus, _jqXHR) {
+            if (data.errMsg) {
+                console.info(data.errMsg);
+            } else {
+                if (data.hasOwnProperty("mapid")) {
+                    return googleLayer = new ol.layer.Tile({
+                        source: new ol.source.XYZ({
+                            url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token
+                        })
+                    });
+                } else {
+                    console.warn("Wrong Data Returned");
+                }
+            }
+        });
+
     } else {
         return null;
     }

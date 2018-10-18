@@ -977,23 +977,126 @@ function setOpacity (value, layerID) {
 function addBuffer (whichMap) {
     "use strict";
     try {
-        var circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
-        var CircleFeature = new ol.Feature(circle);
-        var vectorSource = new ol.source.Vector({});
-        vectorSource.addFeatures([CircleFeature]);
-        var layer = new ol.layer.Vector({
-            source: vectorSource,
-            style: [
-                new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: "#8b2323",
-                        width: 2
-                    }),
-                    fill: null
+        //check to see the shape here...
+        if (plotshape && plotshape == 'square') {
+            var centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
+            var pointFeature = new ol.Feature(centerPoint);
+            var poitnExtent = pointFeature.getGeometry().getExtent();
+            var bufferedExtent = new ol.extent.buffer(poitnExtent,parseInt(bradius));
+            console.log(bufferedExtent);
+            var bufferPolygon = new ol.geom.Polygon(
+                [
+                    [[bufferedExtent[0],bufferedExtent[1]],
+                        [bufferedExtent[0],bufferedExtent[3]],
+                        [bufferedExtent[2],bufferedExtent[3]],
+                        [bufferedExtent[2],bufferedExtent[1]],
+                        [bufferedExtent[0],bufferedExtent[1]]]
+                ]
+            );
+            console.log("bufferPolygon",bufferPolygon);
+            var bufferedFeature = new ol.Feature(bufferPolygon);
+           // vectorBuffers.getSource().addFeature(bufferedFeature);
+
+            var vectorSource = new ol.source.Vector({});
+            vectorSource.addFeatures([bufferedFeature]);
+            var layer = new ol.layer.Vector({
+                source: vectorSource,
+                style: [
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: "#8b2323",
+                            width: 2
+                        }),
+                        fill: null
+                    })
+                ]
+            });
+            whichMap.addLayer(layer);
+        }
+        else if(plotshape && plotshape == 'circle') {
+            var circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
+            var CircleFeature = new ol.Feature(circle);
+            var vectorSource = new ol.source.Vector({});
+            vectorSource.addFeatures([CircleFeature]);
+            var layer = new ol.layer.Vector({
+                source: vectorSource,
+                style: [
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: "#8b2323",
+                            width: 2
+                        }),
+                        fill: null
+                    })
+                ]
+            });
+            whichMap.addLayer(layer);
+        }
+        else{
+
+
+            fetch(theURL + "/id/" + pid,)
+                .then(response => response.json())
+                .then(function(_geojson_object){
+                    var vectorSource = new ol.source.Vector({
+                        features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:3857' }) // this is important to know...
+                    });
+
+                    vectorSource = new ol.layer.Vector({
+                        source: _geojson_vectorSource,
+                        style: [
+                            new ol.style.Style({
+                                stroke: new ol.style.Stroke({
+                                    color: "#8b2323",
+                                    width: 2
+                                }),
+                                fill: null
+                            })
+                        ]
+                    });
+                    whichMap.addLayer(_geojson_vectorLayer);
+                });
+
+
+            $.ajax({
+                url: theURL + "/getShpByProjPlotID",
+                type: "POST",
+                async: true,
+                theMap: whichMap,
+                contentType: "application/json",
+                data: JSON.stringify({
+                    projectID: projectID,
+                    plotID: plotID
                 })
-            ]
-        });
-        whichMap.addLayer(layer);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.warn(jqXHR + textStatus + errorThrown);
+            }).done(function (data, _textStatus, _jqXHR) {
+                if (data.errMsg) {
+                    console.warn(e.message + _textStatus + _jqXHR);
+                } else {
+                    var whichMap = this.theMap;
+                    var _geojson_object = typeof(data) == 'string'? JSON.parse(data): data;
+
+                    var vectorSource = new ol.source.Vector({
+                        features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:3857' }) // this is important to know change to proper projection...
+                    });
+
+                    vectorSource = new ol.layer.Vector({
+                        source: _geojson_vectorSource,
+                        style: [
+                            new ol.style.Style({
+                                stroke: new ol.style.Stroke({
+                                    color: "#8b2323",
+                                    width: 2
+                                }),
+                                fill: null
+                            })
+                        ]
+                    });
+                    whichMap.addLayer(_geojson_vectorLayer);
+                }
+            });
+        }
     } catch (e) {
         console.warn("buffer failed: " + e.message);
     }
@@ -1012,6 +1115,9 @@ var ptop = 0;
 var bradius = getParameterByName("bradius");
 var bcenter = getParameterByName("bcenter");
 var projAOI = getParameterByName("aoi");
+var plotshape = getParameterByName("plotshape");
+var projectID = getParameterByName("pid");
+var plotID = getParameterByName("plotid");
 var theSplit = decodeURI(projAOI).replace("[", "").replace("]", "").split(",");
 var projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
 var mapWidgetArray = [];

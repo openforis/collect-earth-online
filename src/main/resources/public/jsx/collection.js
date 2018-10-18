@@ -252,10 +252,12 @@ class Collection extends React.Component {
                                     ceoMapStyles.yellowPoint);
             mercator.enableSelection(mapConfig, "currentSamples");
             mercator.zoomMapToLayer(mapConfig, "currentPlot");
-
+            console.log(this.state.currentProject);
             window.open(this.state.documentRoot + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.state.currentProject.name
                                              + "&pid=" + this.props.projectId
+                    + "&plotid=" + this.state.currentProject.id
+                    + "&plotshape=" + this.state.currentProject.plotShape
                                              + "&aoi=[" + mercator.getViewExtent(mapConfig)
                                              + "]&daterange=&bcenter=" + currentPlot.center
                                              + "&bradius=" + (this.state.currentProject.plotSize
@@ -293,52 +295,56 @@ class Collection extends React.Component {
             });
     }
     setCurrentValue(event,surveyQuestion, answer) {
-        console.log("SQ");
-        console.log(surveyQuestion);
-        this.state.currentProject.sampleValues.map((sq)=>
-    surveyQuestion.answers.map((ans)=>{if(ans.id==sq.parent_question && ans.id==answer.id){
-       console.log("is a parent");
-       console.log(ans.id);
-       console.log(ans.answer);
-    }})
-
-    );
-        var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        if (selectedFeatures && selectedFeatures.getLength() > 0) {
-            selectedFeatures.forEach(
-                function (sample) {
-                    var sampleId = sample.get("sampleId");
-                    var uSamples = this.state.userSamples;
-                    if (!this.state.userSamples[sampleId]) {
-                        uSamples[sampleId] = {};
-                        this.setState({userSamples: uSamples});
-                    }
-                    uSamples[sampleId][surveyQuestion.question] = answer.answer;
-                    this.setState({userSamples: uSamples});
-                    mercator.highlightSamplePoint(sample, answer.color);
-                },
-                this // necessary to pass outer scope into function
-            );
-            selectedFeatures.clear();
-            utils.blink_border(answer.answer + "_" + answer.id);
-            if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
-                && Object.values(this.state.userSamples).every(function (values) {
-                    return Object.keys(values).length == this.state.currentProject.sampleValues.length;
-                }, this)) {
-                // FIXME: What is the minimal set of these that I can execute?
-                utils.enable_element("save-values-button");
-                if (document.getElementById("save-values-button") != null) {
-                    var ref = this;
-                    document.getElementById("save-values-button").onclick = function () {
-                        ref.saveValues();
-                    }
+        console.log("answer");
+        console.log(answer);
+        this.state.currentProject.sampleValues.map((sq) => {
+                if (answer.id == sq.parent_answer) {
+                    console.log("is a parent");
+                    console.log(answer.id);
+                    console.log(answer.answer);
                 }
-                utils.disable_element("new-plot-button");
-            }
+                else {
+                }
+                    var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
+                    if (selectedFeatures && selectedFeatures.getLength() > 0) {
+                        selectedFeatures.forEach(
+                            function (sample) {
+                                var sampleId = sample.get("sampleId");
+                                var uSamples = this.state.userSamples;
+                                if (!this.state.userSamples[sampleId]) {
+                                    uSamples[sampleId] = {};
+                                    this.setState({userSamples: uSamples});
+                                }
+                                uSamples[sampleId][surveyQuestion.question] = answer.answer;
+                                this.setState({userSamples: uSamples});
+                                mercator.highlightSamplePoint(sample, answer.color);
+                            },
+                            this // necessary to pass outer scope into function
+                        );
+                        selectedFeatures.clear();
+                        utils.blink_border(answer.answer + "_" + answer.id);
+                        if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
+                            && Object.values(this.state.userSamples).every(function (values) {
+                                return Object.keys(values).length == this.state.currentProject.sampleValues.length;
+                            }, this)) {
+                            // FIXME: What is the minimal set of these that I can execute?
+                            utils.enable_element("save-values-button");
+                            if (document.getElementById("save-values-button") != null) {
+                                var ref = this;
+                                document.getElementById("save-values-button").onclick = function () {
+                                    ref.saveValues();
+                                }
+                            }
+                            utils.disable_element("new-plot-button");
+                        }
 
-        } else {
-            alert("No sample points selected. Please click some first.");
-        }
+                    } else {
+                        alert("No sample points selected. Please click some first.");
+                    }
+
+                }
+
+        );
     }
     flagPlot() {
         var ref = this;
@@ -416,6 +422,8 @@ class Collection extends React.Component {
             window.open(this.state.documentRoot + "/geo-dash?editable=false&"
                         + encodeURIComponent("title=" + this.state.currentProject.name
                                              + "&pid=" + this.props.projectId
+                    + "&plotid=" + this.state.currentProject.id
+                    + "&plotshape=" + this.state.currentProject.plotShape
                                              + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
                                              + "]&daterange=&bcenter=" + this.state.currentPlot.center
                                              + "&bradius=" + (this.state.currentProject.plotSize
@@ -551,33 +559,31 @@ class Collection extends React.Component {
 
     getCurrent = (node,ref) => this.state.currentProject.sampleValues.filter(cNode => cNode.parent_question == node).map(function(cNode,_uid) {
         if(cNode.answered) {
-
-           return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
-
+            return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
                 <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                         onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
                     Question: {cNode.question}</button>
                 <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
                     {
-                        cNode.answers.map((ans, uid) =>
-                            <li key={uid} className="mb-1">
-                                <button type="button"
-                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                        id={ans.answer + '_' + ans.id}
-                                        name={ans.answer + '_' + ans.id}
-                                        onClick={(e) => ref.setCurrentValue(e,cNode, ans)}>
-                                    <div className="circle" style={{
-                                        backgroundColor: ans.color,
-                                        border: "solid 1px",
-                                        float: "left",
-                                        marginTop: "4px"
-                                    }}></div>
-                                    <span className="small">{ans.answer}</span>
-                                </button>
-                                {ref.getCurrent(cNode.id,ref)}
-                            </li>
+                        cNode.answers.map((ans, uid) => {
+                                <li key={uid} className="mb-1">
+                                    <button type="button"
+                                            className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                            id={ans.answer + '_' + ans.id}
+                                            name={ans.answer + '_' + ans.id}
+                                            onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
+                                        <div className="circle" style={{
+                                            backgroundColor: ans.color,
+                                            border: "solid 1px",
+                                            float: "left",
+                                            marginTop: "4px"
+                                        }}></div>
+                                        <span className="small">{ans.answer}</span>
+                                    </button>
+                                    {ref.getCurrent(cNode.id, ref)}
+                                </li>
+                            }
                         )
-
                     }
                 </ul>
             </fieldset>
@@ -606,17 +612,13 @@ class Collection extends React.Component {
                                 </button>
                             </li>
                         )
-
                     }
                 </ul>
             </fieldset>
         }
-
     });
 
     render() {
-        // if(document.getElementById("testg")!=null)
-        //     document.getElementById("testg").style.display="none";
         return (<React.Fragment>
                 <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
                 <div id="sidebar" className="col-xl-3">
@@ -855,7 +857,9 @@ function SideBarFieldSet(props) {
                 {selectDG}
                 {selectPlanet}
             </fieldset>
-            <h3>Survey Questions(click on a question to expand)</h3>
+            <fieldset className="mb-3 justify-content-center text-center">
+                <h3>Survey Questions</h3><i style={{fontSize:"small"}}>(Click on a question to expand)</i>
+            </fieldset>
             {surveyQuestionTree}
         </React.Fragment>
 
