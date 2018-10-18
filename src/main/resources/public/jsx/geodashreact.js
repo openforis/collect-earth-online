@@ -977,6 +977,7 @@ function setOpacity (value, layerID) {
 function addBuffer (whichMap) {
     "use strict";
     try {
+        //check to see the shape here...
         var circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
         var CircleFeature = new ol.Feature(circle);
         var vectorSource = new ol.source.Vector({});
