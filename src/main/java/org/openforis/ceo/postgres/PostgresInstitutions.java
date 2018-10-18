@@ -33,9 +33,9 @@ public class PostgresInstitutions implements Institutions {
                 newInstitution.addProperty("id", rs.getInt("id"));
                 newInstitution.addProperty("name", rs.getString("name"));
                 newInstitution.addProperty("logo", rs.getString("logo"));
-                newInstitution.addProperty("attribution", rs.getString("attribution"));
-                newInstitution.addProperty("extent", rs.getObject("extent").toString());
-                newInstitution.addProperty("sourceConfig", rs.getObject("source_config").toString());
+                newInstitution.addProperty("description", rs.getString("description"));
+                newInstitution.addProperty("url", rs.getObject("url").toString());
+                newInstitution.addProperty("archived", rs.getObject("archived").toString());
 
                 institutionArray.add(newInstitution);
             }
@@ -47,56 +47,44 @@ public class PostgresInstitutions implements Institutions {
         return "";
     }
 
-    private static Optional<JsonObject> getInstitutionById(int institutionId) {
-        var SQL = "SELECT * FROM select_all_institutions(?)";
+    public String getInstitutionDetails(Request req, Response res) {
+        var institutionId = Integer.parseInt(req.params(":id"));
+        var SQL = "SELECT * FROM select_institution_by_id(?)";
 
         try (var conn = connect();
-             var pstmt = conn.prepareStatement(SQL)) {
+            var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, institutionId);
-            var newInstitution = new JsonObject();
             var rs = pstmt.executeQuery();
-            rs.next();
+            var newInstitution = new JsonObject();
+            if(rs.next()) {
                 //create institution json to send back
-
-            newInstitution.addProperty("id", rs.getInt("id"));
-            newInstitution.addProperty("name", rs.getString("name"));
-            newInstitution.addProperty("logo", rs.getString("logo"));
-            newInstitution.addProperty("attribution", rs.getString("attribution"));
-            newInstitution.addProperty("extent", rs.getObject("extent").toString());
-            newInstitution.addProperty("sourceConfig", rs.getObject("source_config").toString());
-
-            return Optional.of(newInstitution);
+                newInstitution.addProperty("id", rs.getInt("id"));
+                newInstitution.addProperty("name", rs.getString("name"));
+                newInstitution.addProperty("logo", rs.getString("logo"));
+                newInstitution.addProperty("description", rs.getString("description"));
+                newInstitution.addProperty("url", rs.getObject("url").toString());
+                newInstitution.addProperty("archived", rs.getObject("archived").toString());
+            } else {
+                // create a blank institution json to send back
+                newInstitution.addProperty("id"         , -1);
+                newInstitution.addProperty("name"       , "No institution with ID=" + institutionId);
+                newInstitution.addProperty("logo"       , "");
+                newInstitution.addProperty("description", "");
+                newInstitution.addProperty("url"        , "");
+                newInstitution.addProperty("archived"   , false);
+            }
+            
+            return newInstitution.toString();
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        return null;
+        return "";
     }
-
-    public String getInstitutionDetails(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
-        var matchingInstitution = getInstitutionById(institutionId);
-        if (matchingInstitution.isPresent()) {
-            return matchingInstitution.get().toString();
-        } else {
-            var noInstitutionFound = new JsonObject();
-            noInstitutionFound.addProperty("id"         , -1);
-            noInstitutionFound.addProperty("name"       , "No institution with ID=" + institutionId);
-            noInstitutionFound.addProperty("logo"       , "");
-            noInstitutionFound.addProperty("description", "");
-            noInstitutionFound.addProperty("url"        , "");
-            noInstitutionFound.addProperty("archived"   , false);
-            noInstitutionFound.add("members"            , new JsonArray());
-            noInstitutionFound.add("admins"             , new JsonArray());
-            noInstitutionFound.add("pending"            , new JsonArray());
-            return noInstitutionFound.toString();
-        }
-    }
-
+    
     public String updateInstitution(Request req, Response res) {
         try {
             var institutionId = req.params(":id");
-
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
             req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
@@ -106,24 +94,49 @@ public class PostgresInstitutions implements Institutions {
             var url = partToString(req.raw().getPart("institution-url"));
             var description = partToString(req.raw().getPart("institution-description"));
 
-            var newInstitutionId = 0;
-            var logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
-            var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
-
             if (institutionId.equals("0")) {
                 // NOTE: This branch creates a new institution
 
-                var SQL = "SELECT * FROM add_institution(?, ?, ?, ?, ?)";
+                var SQL = "SELECT * FROM add_institution( ?, ?, ?, ?, ?)";
 
-                try (var conn = connect();
-                     var pstmt = conn.prepareStatement(SQL)) {
-                    pstmt.setInt(1, userid);
-                    pstmt.setString(2, name);
-                    pstmt.setString(3, logoPath);
-                    pstmt.setString(4, description);
-                    pstmt.setString(5, url); //This is the extent
-                    pstmt.setBoolean(6, false);
+                try (var conn = connect()) {
+                    var pstmt = conn.prepareStatement(SQL);
+                    pstmt.setString(1, name);
+                    pstmt.setString(2, "");
+                    pstmt.setString(3, description);
+                    pstmt.setString(4, url); //This is the extent
+                    pstmt.setBoolean(5, false);
                     var rs = pstmt.executeQuery();
+                    if (rs.next()) {
+                        var newInstitutionId = rs.getInt("add_institution");
+                        var logoFileName = writeFilePart(req,
+                                "institution-logo",
+                                expandResourcePath("/public/img/institution-logos"),
+                                "institution-" + newInstitutionId);
+                        var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+                        
+                        var logoSQL = "SELECT * FROM update_institution_logo(?,?)";
+                        var logoPstmt = conn.prepareStatement(logoSQL);
+                        logoPstmt.setInt(1, newInstitutionId);
+                        logoPstmt.setString(2, logoPath);
+                        var rsLogo = logoPstmt.executeQuery();
+                        
+                        // add user and default admin to group
+                        var userSQL = "SELECT * FROM add_institution_user(?,?,?)";
+                        var userPstmt = conn.prepareStatement(userSQL);
+                        userPstmt.setInt(1,newInstitutionId);
+                        userPstmt.setInt(2,userid);
+                        userPstmt.setInt(3,1);
+                        var userRs = userPstmt.executeQuery();
+
+                        var adminPstmt = conn.prepareStatement(userSQL);
+                        adminPstmt.setInt(1,newInstitutionId);
+                        adminPstmt.setInt(2,1);
+                        adminPstmt.setInt(3,1);
+                        var adminRs = adminPstmt.executeQuery();
+  
+                    }
+
                     return "";
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
@@ -132,7 +145,14 @@ public class PostgresInstitutions implements Institutions {
                 return "";
             } else {
                 // NOTE: This branch edits an existing institution
-                var SQL = "SELECT * FROM update_institution(?, ?, ?, ?)";
+
+                var logoFileName = writeFilePart(req,
+                                                "institution-logo",
+                                                expandResourcePath("/public/img/institution-logos"),
+                                                "institution-" + institutionId);
+                var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+    
+                var SQL = "SELECT * FROM update_institution(?, ?, ?, ?, ?, ?)";
 
                 try (var conn = connect();
                      var pstmt = conn.prepareStatement(SQL)) {
@@ -141,6 +161,7 @@ public class PostgresInstitutions implements Institutions {
                     pstmt.setString(3, logoPath);
                     pstmt.setString(4, description);
                     pstmt.setString(5, url);
+                    pstmt.setBoolean(6, false);
                     var rs = pstmt.executeQuery();
                     return "";
                 } catch (SQLException e) {
@@ -157,10 +178,11 @@ public class PostgresInstitutions implements Institutions {
     public String archiveInstitution(Request req, Response res) {
         var institutionId = req.params(":id");
         var SQL = "SELECT * FROM archive_institution(?)";
-
+        System.out.println(institutionId);
         try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(institutionId));
+            System.out.println(pstmt.toString());
             var rs = pstmt.executeQuery();
             return "";
         } catch (SQLException e) {

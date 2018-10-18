@@ -11,13 +11,14 @@ def insert_users():
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
-        dirname = os.path.dirname(os.path.realpath('__file__'))
+        dirname = os.path.dirname(os.path.realpath(__file__))
         user_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/user-list.json'))), "r").read()
         users = demjson.decode(user_list_json)
         for user in users:
             cur.execute("select * from add_user(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
             user_id = cur.fetchone()[0]
             conn.commit()
+        cur.execute("select * from update_sequence('users')")
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -34,7 +35,7 @@ def insert_institutions():
         cur1 = conn.cursor()
         cur.execute("TRUNCATE TABLE institutions RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE institution_users RESTART IDENTITY CASCADE")
-        dirname = os.path.dirname(os.path.realpath('__file__'))
+        dirname = os.path.dirname(os.path.realpath(__file__))
         institution_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/institution-list.json'))), "r").read()
         institutions = demjson.decode(institution_list_json)
         for institution in institutions:
@@ -62,6 +63,7 @@ def insert_institutions():
 
             institution_id = cur.fetchone()[0]
             conn.commit()
+        cur.execute("select * from update_sequence('institutions')")        
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -76,13 +78,14 @@ def insert_imagery():
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur.execute("TRUNCATE TABLE imagery RESTART IDENTITY CASCADE")
-        dirname = os.path.dirname(os.path.realpath('__file__'))
+        dirname = os.path.dirname(os.path.realpath(__file__))
         imagery_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/imagery-list.json'))), "r").read()
         imageryArr = demjson.decode(imagery_list_json)
         for imagery in imageryArr:
             cur.execute("select * from add_institution_imagery(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
             imagery_id = cur.fetchone()[0]
             conn.commit()
+        cur.execute("select * from update_sequence('imagery')")  
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -93,7 +96,7 @@ def insert_imagery():
 def insert_project_widgets(project_id,dash_id,conn):
     try:
         cur = conn.cursor()
-        dirname = os.path.dirname(os.path.realpath('__file__'))
+        dirname = os.path.dirname(os.path.realpath(__file__))
         dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/dash-'+dash_id+'.json'))), "r").read() 
         widget = demjson.decode(dash_json)
         if widget['projectID'] is not None and str(project_id)==widget['projectID']:
@@ -101,7 +104,7 @@ def insert_project_widgets(project_id,dash_id,conn):
             conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print("project widgets: "+error)    
+        print("project widgets: "+ str(error))    
             
 def insert_projects():
     conn = None
@@ -113,7 +116,7 @@ def insert_projects():
         cur.execute("TRUNCATE TABLE plots RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
-        dirname = os.path.dirname(os.path.realpath('__file__'))
+        dirname = os.path.dirname(os.path.realpath(__file__))
         project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/project-list.json'))), "r").read()
         projectArr = demjson.decode(project_list_json)
         project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r").read()
@@ -143,10 +146,11 @@ def insert_projects():
                     insert_plots(project_id,conn)
                     conn.commit()
             except(Exception, psycopg2.DatabaseError) as error:
-                print("project for loop: "+error)
+                print("project for loop: "+ str(error))
+        cur.execute("select * from update_sequence('projects')")
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print("project outer: "+error)
+        print("project outer: "+ str(error))
     finally:
         if conn is not None:
             conn.close()
@@ -154,7 +158,7 @@ def insert_projects():
 def insert_plots(project_id,conn):
     cur_plot = conn.cursor()
     user_plot_id=-1
-    dirname = os.path.dirname(os.path.realpath('__file__'))
+    dirname = os.path.dirname(os.path.realpath(__file__))
     if os.path.isfile(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/plot-data-'+str(project_id)+'.json')))):
         plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/plot-data-'+str(project_id)+'.json'))), "r").read()
         plotArr = demjson.decode(plot_list_json)
@@ -172,7 +176,7 @@ def insert_plots(project_id,conn):
                     insert_samples(plot_id,plot['samples'],user_plot_id,conn)
                     conn.commit()
             except (Exception, psycopg2.DatabaseError) as error:
-                print("plots error: "+error)
+                print("plots error: "+ str(error))
     cur_plot.close()
 
 def insert_user_plots(plot_id,user,flagged,conn):
@@ -187,7 +191,7 @@ def insert_user_plots(plot_id,user,flagged,conn):
             user_plot_id = cur_up.fetchone()[0]
             conn.commit()
         except (Exception, psycopg2.DatabaseError) as error:
-                print("user plots error: "+error)
+                print("user plots error: "+ str(error))
     cur_up.close()
     cur_user.close()
     return user_plot_id
@@ -202,7 +206,7 @@ def insert_samples(plot_id,samples,user_plot_id,conn):
                 insert_sample_values(user_plot_id,sample_id,sample['value'],conn)
             conn.commit()
         except (Exception, psycopg2.DatabaseError) as error:
-                print("samples error: "+error)
+                print("samples error: "+ str(error))
     cur_sample.close()
 
 def insert_sample_values(user_plot_id,sample_id,sample_value,conn):
@@ -210,7 +214,7 @@ def insert_sample_values(user_plot_id,sample_id,sample_value,conn):
     try:
         cur_sv.execute("select * from add_sample_values(%s,%s,%s::jsonb)",(user_plot_id,sample_id,json.dumps(sample_value)))
     except (Exception, psycopg2.DatabaseError) as error:
-                print("sample values error: "+error)
+                print("sample values error: "+ str(error))
     conn.commit()
     cur_sv.close()
 
@@ -223,6 +227,7 @@ def insert_roles():
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (1,'admin'))
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (2,'member'))
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (3,'pending'))
+        cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (4,'not-member'))
         conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:

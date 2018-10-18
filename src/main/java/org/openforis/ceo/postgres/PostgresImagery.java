@@ -37,11 +37,12 @@ public class PostgresImagery implements Imagery {
                 //create imagery json to send back
                 var newImagery = new JsonObject();
                 newImagery.addProperty("id", rs.getInt("id"));
+                newImagery.addProperty("institution", rs.getInt("institution_id"));
                 newImagery.addProperty("visibility", rs.getString("visibility"));
                 newImagery.addProperty("title", rs.getString("title"));
                 newImagery.addProperty("attribution", rs.getString("attribution"));
                 newImagery.addProperty("extent", rs.getObject("extent").toString());
-                newImagery.addProperty("sourceConfig", rs.getObject("source_config").toString());
+                newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
 
                 imageryArray.add(newImagery);
             }
@@ -74,7 +75,7 @@ public class PostgresImagery implements Imagery {
             sourceConfig.addProperty("geoserverUrl", geoserverURL);
             sourceConfig.add("geoserverParams", geoserverParams);
 
-            var SQL = "SELECT * FROM add_project_widget(?, ?, ?, ?, ?::JSONB, ?::JSONB)";
+            var SQL = "SELECT * FROM add_institution_imagery_auto_id(?, ?, ?, ?, ?::JSONB, ?::JSONB)";
 
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
@@ -97,6 +98,7 @@ public class PostgresImagery implements Imagery {
         }
     }
 
+    // FIXME add check to validate the user has permission to delete
     public String deleteInstitutionImagery(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var imageryId = jsonInputs.get("imageryId").getAsString();

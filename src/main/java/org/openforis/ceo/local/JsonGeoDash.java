@@ -82,6 +82,7 @@ public class JsonGeoDash implements GeoDash {
         return "";
     }
 
+    // FIXME: the new react design is using the body to pass the widget JSON (see PostgresGeoDash for updated form)
     public synchronized String createDashBoardWidgetById(Request req, Response res) {
         var dashboardId = req.queryParams("dashID");
         var widgetJson = req.queryParams("widgetJSON");
@@ -107,6 +108,7 @@ public class JsonGeoDash implements GeoDash {
         }
     }
 
+    // FIXME: the new react design is using the body to pass the widget JSON (see PostgresGeoDash for updated form)
     public synchronized String updateDashBoardWidgetById(Request req, Response res) {
         var dashboardId = req.queryParams("dashID");
         var widgetId = req.params(":id");

@@ -67,7 +67,10 @@ public class JsonInstitutions implements Institutions {
                 // Generate a new institution id
                 var newInstitutionId = getNextId(institutions);
                 // Upload the logo image if one was provided
-                var logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
+                var logoFileName = writeFilePart(req,
+                                                "institution-logo",
+                                                expandResourcePath("/public/img/institution-logos"),
+                                                "institution-" + newInstitutionId);
                 var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
                 var members = new JsonArray();

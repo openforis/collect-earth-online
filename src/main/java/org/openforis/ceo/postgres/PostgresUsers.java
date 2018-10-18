@@ -28,6 +28,7 @@ public class PostgresUsers implements Users {
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputReturnURL = req.queryParams("returnurl");
+
         var returnURL = (inputReturnURL == null || inputReturnURL.isEmpty())
             ? CeoConfig.documentRoot + "/home"
             : inputReturnURL;
@@ -49,10 +50,11 @@ public class PostgresUsers implements Users {
                     return req;
                 } else {
                     // Authentication successful
-                    req.session().attribute("userid", storedId);
+                    req.session().attribute("userid", Integer.toString(storedId));
                     req.session().attribute("username", inputEmail);
                     req.session().attribute("administrator", administrator);
                     res.redirect(returnURL);
+                    System.out.println(res.toString());
                     return req;
                 }
             } else {
@@ -100,7 +102,7 @@ public class PostgresUsers implements Users {
                     var rs = pstmt.executeQuery();
                     if (rs.next()) {
                         // Assign the username and role session attributes
-                        req.session().attribute("userid", rs.getInt("id"));
+                        req.session().attribute("userid", Integer.toString(rs.getInt("add_user")));
                         req.session().attribute("username", inputEmail);
                         req.session().attribute("administrator", false);
 
@@ -119,43 +121,48 @@ public class PostgresUsers implements Users {
     public Request logout(Request req, Response res) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
-        req.session().removeAttribute("role");
+        req.session().removeAttribute("administrator");
         return req;
     }
 
     public Request updateAccount(Request req, Response res) {
-        var userId = req.session().attribute("userid");
+        var storedEmail = req.session().attribute("username").toString();
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
         var inputPasswordConfirmation = req.queryParams("password-confirmation");
         var inputCurrentPassword = req.queryParams("current-password");
 
         // Validate input params and assign flash_message if invalid
-        if (!isEmail(inputEmail)) {
+        if (inputCurrentPassword.length() == 0) {
+            req.session().attribute("flash_message", "Current Password required");
+            return req;
+        // let user change email without changing password
+        } else if (inputEmail.length() > 0 && !isEmail(inputEmail)) {
             req.session().attribute("flash_message", inputEmail + " is not a valid email address.");
             return req;
-        } else if (inputPassword.length() < 8) {
-            req.session().attribute("flash_message", "Password must be at least 8 characters.");
+        // let user change email without changing password
+        } else if (inputPassword.length() > 0 && inputPassword.length() < 8) {
+            req.session().attribute("flash_message", "New Password must be at least 8 characters.");
             return req;
         } else if (!inputPassword.equals(inputPasswordConfirmation)) {
-            req.session().attribute("flash_message", "Password and Password confirmation do not match.");
+            req.session().attribute("flash_message", "New Password and Password confirmation do not match.");
             return req;
         } else {
             var SQL_user = "SELECT * FROM get_user(?)";
             try (var conn = connect();
                  var pstmt_user = conn.prepareStatement(SQL_user)) {
-                pstmt_user.setString(1, inputEmail);
+                pstmt_user.setString(1, storedEmail);
                 var rs_user = pstmt_user.executeQuery();
                 if(rs_user.next()) {
                     var storedPassword = rs_user.getString("password");
-                    if (storedPassword.equals(inputPassword)) {
+                    if (storedPassword.equals(inputCurrentPassword)) {
                         var SQL = "SELECT * FROM set_user_email_and_password(?,?,?)";
                         var pstmt = conn.prepareStatement(SQL);
                         pstmt.setInt(1, rs_user.getInt("id"));
-                        pstmt.setString(2, inputEmail);
-                        pstmt.setString(3, inputPassword);
+                        pstmt.setString(2, inputEmail.length() == 0 ? storedEmail : inputEmail);
+                        pstmt.setString(3, inputPassword.length() == 0 ? storedPassword : inputPassword);
                         var rs = pstmt.executeQuery();
-                        req.session().attribute("username", inputEmail);
+                        req.session().attribute("username", inputEmail.length() == 0 ? storedEmail : inputEmail);
                         req.session().attribute("flash_message", "The user has been updated.");
                         return req;
                     } else {
@@ -233,11 +240,11 @@ public class PostgresUsers implements Users {
                 pstmt_user.setString(1, inputEmail);
                 var rs_user = pstmt_user.executeQuery();
                 if (rs_user.next()) {
-                    var storedEmail = rs_user.getString("email");
+                    var storedEmail = rs_user.getString("identity");
                     var storedResetKey = rs_user.getString("reset_key");
                     if (storedResetKey.equals(inputResetKey)) {
                         if (storedEmail.equals(inputEmail)) {
-                            var SQL = "SELECT * FROM set_password_reset_key(?,?)";
+                            var SQL = "SELECT * FROM update_password(?,?)";
                             var pstmt = conn.prepareStatement(SQL);
                             pstmt.setString(1, inputEmail);
                             pstmt.setString(2, inputPassword);
@@ -266,35 +273,40 @@ public class PostgresUsers implements Users {
         if (institutionId == null || institutionId.isEmpty()) {
             var SQL_users = "SELECT * FROM get_all_users()";
             try (var conn = connect();
-                 var pstmt_users = conn.prepareStatement(SQL_users)) {
-                var rs_users = pstmt_users.executeQuery();
-                var all_users = new JsonObject();
-                all_users.addProperty("id", rs_users.getInt("id"));
-                all_users.addProperty("email", rs_users.getString("email"));
-                all_users.addProperty("administrator", rs_users.getBoolean("administrator"));
-                all_users.addProperty("resetKey", rs_users.getString("reset_key"));
-
-                return all_users.toString();
+                 var pstmt = conn.prepareStatement(SQL_users)) {
+                var rs = pstmt.executeQuery();
+                var allUsers = new JsonArray();
+                while (rs.next()) {
+                    var userJson = new JsonObject();
+                    userJson.addProperty("id", rs.getInt("id"));
+                    userJson.addProperty("email", rs.getString("email"));
+                    userJson.addProperty("administrator", rs.getBoolean("administrator"));
+                    userJson.addProperty("resetKey", rs.getString("reset_key"));
+                    
+                    allUsers.add(userJson);
+                }
+                return allUsers.toString();
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }
         } else {
             var SQL = "SELECT * FROM get_all_users_by_institution_id(?)";
+            
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
-                pstmt.setString(1, institutionId);
+                pstmt.setInt(1, Integer.parseInt(institutionId));
                 var rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    var inst_users = new JsonObject();
-                    inst_users.addProperty("id", rs.getInt("id"));
-                    inst_users.addProperty("email", rs.getString("email"));
-                    inst_users.addProperty("administrator", rs.getBoolean("administrator"));
-                    inst_users.addProperty("resetKey", rs.getString("reset_key"));
-                    inst_users.addProperty("institutionRole", rs.getString("institution_role"));
-                    return inst_users.toString();
-                } else {
-                    return (new JsonArray()).toString();
+                var instAllUsers = new JsonArray();
+                while (rs.next()) {
+                    var instUsers = new JsonObject();
+                    instUsers.addProperty("id", rs.getInt("id"));
+                    instUsers.addProperty("email", rs.getString("email"));
+                    instUsers.addProperty("administrator", rs.getBoolean("administrator"));
+                    instUsers.addProperty("resetKey", rs.getString("reset_key"));
+                    instUsers.addProperty("institutionRole", rs.getString("institution_role"));
+                    instAllUsers.add(instUsers);
                 }
+                return instAllUsers.toString();
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }
@@ -325,13 +337,21 @@ public class PostgresUsers implements Users {
         var institutionId = jsonInputs.get("institutionId").getAsString();
         var role = jsonInputs.get("role").getAsString();
         var SQL = "SELECT * FROM update_institution_user_role(?,?,?)";
-
         try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1,Integer.parseInt(institutionId));
             pstmt.setInt(2,Integer.parseInt(userId.toString()));
             pstmt.setString(3,role);
             var rs = pstmt.executeQuery();
+
+            if(rs.next() && rs.getInt("update_institution_user_role") == 0) {
+                SQL = "SELECT * FROM add_institution_user(?,?,?)";
+                var addPstmt = conn.prepareStatement(SQL);
+                addPstmt.setInt(1,Integer.parseInt(institutionId));
+                addPstmt.setInt(2,Integer.parseInt(userId.toString()));
+                addPstmt.setString(3,role);
+                var addrs = addPstmt.executeQuery();
+            } 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -342,13 +362,13 @@ public class PostgresUsers implements Users {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var userId = jsonInputs.get("userId");
         var institutionId = jsonInputs.get("institutionId").getAsString();
-        var SQL = "SELECT * FROM update_institution_user_role(?,?,?)";
+        var SQL = "SELECT * FROM add_institution_user(?,?,?)";
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1,Integer.parseInt(institutionId));
             pstmt.setInt(2,Integer.parseInt(userId.toString()));
-            pstmt.setString(3,"pending");
+            pstmt.setInt(3,3);
             var rs = pstmt.executeQuery();
         }
         catch (SQLException e) {
