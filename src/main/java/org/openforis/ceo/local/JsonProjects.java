@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
@@ -971,7 +972,9 @@ public class JsonProjects implements Projects {
             : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
             : plotDistribution.equals("csv") ? csvPlotPoints.entrySet().toArray()
             : shpPlotCenters.entrySet().toArray();
+
         var plotIndexer = makeCounter();
+
         var newPlots = Arrays.stream(newPlotCenters)
             .map(plotEntry -> {
                     var newPlot = new JsonObject();
@@ -981,58 +984,75 @@ public class JsonProjects implements Projects {
                     newPlot.addProperty("analyses", 0);
                     newPlot.add("user", null);
 
-                    if (plotDistribution.equals("random")) {
-                        var plotCenter = (Double[]) plotEntry;
-                        newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                    } else if (plotDistribution.equals("gridded")) {
-                        var plotCenter = (Double[]) plotEntry;
-                        newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                    } else if (plotDistribution.equals("csv")) {
-                        var plotId = (String) ((Map.Entry) plotEntry).getKey();
-                        var plotCenter = (Double[]) ((Map.Entry) plotEntry).getValue();
+                    var plotId =
+                        List.of("csv", "shp").contains(plotDistribution)
+                        ? (String) ((Map.Entry) plotEntry).getKey()
+                        : "";
+
+                    var plotCenter =
+                        List.of("csv", "shp").contains(plotDistribution)
+                        ? (Double[]) ((Map.Entry) plotEntry).getValue()
+                        : (Double[]) plotEntry;
+
+                    newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
+
+                    if (List.of("csv", "shp").contains(plotDistribution)) {
                         newPlot.addProperty("plotId", plotId);
-                        newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
-                    } else if (plotDistribution.equals("shp")) {
-                        var plotId = (String) ((Map.Entry) plotEntry).getKey();
-                        var plotCenter = (Double[]) ((Map.Entry) plotEntry).getValue();
-                        newPlot.addProperty("plotId", plotId);
-                        newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
+                    }
+
+                    if (plotDistribution.equals("shp")) {
                         newPlot.addProperty("geom", shpPlotGeomsFinal.get(plotId).toString());
                     }
 
-                    // FIXME: Support different sampleDistributions when plotDistribution == shp
-                    // FIXME: Filter sample points based on PLOTID attribute if sampleDistribution == "csv" or "shp"
                     var newSamplePoints =
-                        sampleDistribution.equals("csv")
-                        ? csvSamplePointsFinal
-                        : (sampleDistribution.equals("random")
-                           ? (plotDistribution.equals("shp")
-                              ? new Double[][]{new Double[]{plotCenter[0], plotCenter[1]}}
-                              : createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot))
-                           : (sampleDistribution.equals("gridded")
-                              ? (plotDistribution.equals("shp")
-                                 ? new Double[][]{new Double[]{plotCenter[0], plotCenter[1]}}
-                                 : createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution))
-                              : shpSampleCentersFinal));
+                        sampleDistribution.equals("random")
+                        ? (List.of("random", "gridded").contains(plotDistribution)
+                           ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
+                           : new Double[][]{plotCenter})
+                        : (sampleDistribution.equals("gridded")
+                           ? (List.of("random", "gridded").contains(plotDistribution)
+                              ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
+                              : new Double[][]{plotCenter})
+                           : (sampleDistribution.equals("csv")
+                              ? csvSamplePointsFinal.get(plotId).entrySet().toArray()
+                              : shpSampleCentersFinal.get(plotId).entrySet().toArray()));
 
                     var sampleIndexer = makeCounter();
+
                     var newSamples = Arrays.stream(newSamplePoints)
-                            .map(point -> {
+                        .map(sampleEntry -> {
                                 var newSample = new JsonObject();
                                 var newSampleId = sampleIndexer.getAsInt();
                                 newSample.addProperty("id", newSampleId);
-                                newSample.addProperty("point", makeGeoJsonPoint(point[0], point[1]).toString());
-                                if (sampleDistribution.equals("shp")) {
-                                    newSample.addProperty("geom", shpSampleGeomsFinal.get(newSampleId - 1).toString());
+
+                                var sampleId =
+                                    List.of("csv", "shp").contains(sampleDistribution)
+                                    ? (String) ((Map.Entry) sampleEntry).getKey()
+                                    : "";
+
+                                var sampleCenter =
+                                    List.of("csv", "shp").contains(sampleDistribution)
+                                    ? (Double[]) ((Map.Entry) sampleEntry).getValue()
+                                    : (Double[]) sampleEntry;
+
+                                newSample.addProperty("point", makeGeoJsonPoint(sampleCenter[0], sampleCenter[1]).toString());
+
+                                if (List.of("csv", "shp").contains(sampleDistribution)) {
+                                    newSample.addProperty("sampleId", sampleId);
                                 }
+
+                                if (sampleDistribution.equals("shp")) {
+                                    newSample.addProperty("geom", shpSampleGeomsFinal.get(plotId).get(sampleId).toString());
+                                }
+
                                 return newSample;
                             })
-                            .collect(intoJsonArray);
+                        .collect(intoJsonArray);
 
                     newPlot.add("samples", newSamples);
                     return newPlot;
                 })
-                .collect(intoJsonArray);
+            .collect(intoJsonArray);
 
         // Write the plot data to a new plot-data-<id>.json file
         writeJsonFile("plot-data-" + newProject.get("id").getAsString() + ".json", newPlots);
