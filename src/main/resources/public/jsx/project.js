@@ -419,6 +419,7 @@ class Project extends React.Component {
         var ans = [];
         sampleSurvey.map((sq) => {
                 var parent_value = document.getElementById("value-parent");
+
                 if(parent_value!=null) {
                     var parent = parent_value.options[parent_value.selectedIndex].value;
                     if (sq.id == parent) {
@@ -1371,7 +1372,15 @@ function SurveyDesign(props){
     if (props.project.details != null) {
         var answer_select = "";
         var dropdowns;
+        var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
+        if (answers.length > 0) {
+            answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
+                <option key={uid}
+                        value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
+            )
+        }
         if(props.projectId=="0") {
+
             dropdowns = <React.Fragment>
                 <tr>
                     <td>
@@ -1404,13 +1413,7 @@ function SurveyDesign(props){
                 </tr>
             </React.Fragment>;
         }
-        var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
-        if (answers.length > 0) {
-            answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
-                <option key={uid}
-                        value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
-            )
-        }
+
 
         return (
             <div className="row mb-3">

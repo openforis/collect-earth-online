@@ -4,9 +4,11 @@ import ReactDOM from 'react-dom';
 class Collection extends React.Component {
     constructor(props) {
         super(props);
+        let project={};
+        project.sampleValues=[];
         this.state = {
             documentRoot: this.props.documentRoot,
-            currentProject: null,
+            currentProject: project,
             stats: null,
             plotList: null,
             imageryList: null,
@@ -23,6 +25,8 @@ class Collection extends React.Component {
             showSideBar: false,
             mapClass: "fullmap",
             quitClass: "quit-full",
+
+
         };
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.updateDGWMSLayer = this.updateDGWMSLayer.bind(this);
@@ -31,6 +35,8 @@ class Collection extends React.Component {
         this.setCurrentValue = this.setCurrentValue.bind(this);
         this.loadPlotById = this.loadPlotById.bind(this);
         this.saveValues = this.saveValues.bind(this);
+        this.showProjectMap=this.showProjectMap.bind(this);
+        this.showAnswers=this.showAnswers.bind(this);
     };
     componentDidMount() {
         this.initialization();
@@ -51,7 +57,42 @@ class Collection extends React.Component {
                     alert("No project found with ID " + this.props.projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
-                    this.setState({currentProject: data});
+                    var currProj=data;
+                    var newSV=[];
+                    var sv=data.sampleValues;
+                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,answered:false};
+
+                    if(sv.length>0){
+
+                        sv.map((sq)=>{
+                                if(sq.name){
+                                    tempSQ.id=sq.id;
+                                    tempSQ.question=sq.name;
+                                    sq.values.map((sa)=>{
+                                        if(sa.name){
+                                            if(sa.id>0){
+                                                tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
+                                            }
+                                        }
+                                        else {
+                                            tempSQ.answers.push(sa);
+                                        }
+
+                                    });
+                                    if(tempSQ.id>0){
+                                        newSV.push(tempSQ);
+                                    }
+                                }
+                                else{
+                                    sq.answered=false;
+                                    newSV.push(sq);
+                                }
+                            }
+                        );
+                    }
+                    currProj.sampleValues=newSV;
+
+                    this.setState({currentProject: currProj});
                     this.getImageryList(data.institution);
                 }
             });
@@ -251,7 +292,17 @@ class Collection extends React.Component {
                 }
             });
     }
-    setCurrentValue(sampleValueGroup, sampleValue) {
+    setCurrentValue(event,surveyQuestion, answer) {
+        console.log("SQ");
+        console.log(surveyQuestion);
+        this.state.currentProject.sampleValues.map((sq)=>
+    surveyQuestion.answers.map((ans)=>{if(ans.id==sq.parent_question && ans.id==answer.id){
+       console.log("is a parent");
+       console.log(ans.id);
+       console.log(ans.answer);
+    }})
+
+    );
         var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
             selectedFeatures.forEach(
@@ -262,14 +313,14 @@ class Collection extends React.Component {
                         uSamples[sampleId] = {};
                         this.setState({userSamples: uSamples});
                     }
-                    uSamples[sampleId][sampleValueGroup.name] = sampleValue.name;
+                    uSamples[sampleId][surveyQuestion.question] = answer.answer;
                     this.setState({userSamples: uSamples});
-                    mercator.highlightSamplePoint(sample, sampleValue.color);
+                    mercator.highlightSamplePoint(sample, answer.color);
                 },
                 this // necessary to pass outer scope into function
             );
             selectedFeatures.clear();
-            utils.blink_border(sampleValue.name + "_" + sampleValue.id);
+            utils.blink_border(answer.answer + "_" + answer.id);
             if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
                 && Object.values(this.state.userSamples).every(function (values) {
                     return Object.keys(values).length == this.state.currentProject.sampleValues.length;
@@ -443,16 +494,21 @@ class Collection extends React.Component {
         });
     }
     showProjectMap() {
-        this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
-        this.setBaseMapSource();
-        // Show the project's boundary
-        mercator.addVectorLayer(this.state.mapConfig,
-            "currentAOI",
-            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-            ceoMapStyles.polygon);
-        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-        // Draw the project plots as clusters on the map
-        this.showProjectPlots();
+        if(this.state.currentProject.boundary && this.state.currentProject.boundary!=null) {
+            this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
+            this.setBaseMapSource();
+            // Show the project's boundary
+            mercator.addVectorLayer(this.state.mapConfig,
+                "currentAOI",
+                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+                ceoMapStyles.polygon);
+            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+            // Draw the project plots as clusters on the map
+            this.showProjectPlots();
+        }
+        else{
+            setTimeout( this.showProjectMap ,250);
+        }
     }
     initialization() {
 
@@ -469,13 +525,94 @@ class Collection extends React.Component {
 
     }
         showAnswers(event){
+        var cp=this.state.currentProject;
+        var sv=this.state.currentProject.sampleValues;
             var x = event.target.nextSibling;
+
             if (x.style.display === "none") {
                 x.style.display = "block";
+          sv.map((sq)=>{
+                    if(sq.id==event.target.id){
+                        sq.answered=true;
+                    }
+                });
             } else {
                 x.style.display = "none";
+                sv.map((sq)=>{
+                  if(sq.id==event.target.id){
+                      sq.answered=false;
+                    }
+                });
             }
+            cp.sampleValues=sv;
+            this.setState({currentProject:cp});
+            console.log(cp);
         }
+
+    getCurrent = (node,ref) => this.state.currentProject.sampleValues.filter(cNode => cNode.parent_question == node).map(function(cNode,_uid) {
+        if(cNode.answered) {
+
+           return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
+
+                <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
+                        onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
+                    Question: {cNode.question}</button>
+                <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
+                    {
+                        cNode.answers.map((ans, uid) =>
+                            <li key={uid} className="mb-1">
+                                <button type="button"
+                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                        id={ans.answer + '_' + ans.id}
+                                        name={ans.answer + '_' + ans.id}
+                                        onClick={(e) => ref.setCurrentValue(e,cNode, ans)}>
+                                    <div className="circle" style={{
+                                        backgroundColor: ans.color,
+                                        border: "solid 1px",
+                                        float: "left",
+                                        marginTop: "4px"
+                                    }}></div>
+                                    <span className="small">{ans.answer}</span>
+                                </button>
+                                {ref.getCurrent(cNode.id,ref)}
+                            </li>
+                        )
+
+                    }
+                </ul>
+            </fieldset>
+        }
+        else{
+            return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
+                <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
+                        onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
+                    Question: {cNode.question}</button>
+                <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
+                    {
+                        cNode.answers.map((ans, uid) =>
+                            <li key={uid} className="mb-1">
+                                <button type="button"
+                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                        id={ans.answer + '_' + ans.id}
+                                        name={ans.answer + '_' + ans.id}
+                                        onClick={() => ref.setCurrentValue(cNode, ans)}>
+                                    <div className="circle" style={{
+                                        backgroundColor: ans.color,
+                                        border: "solid 1px",
+                                        float: "left",
+                                        marginTop: "4px"
+                                    }}></div>
+                                    <span className="small">{ans.answer}</span>
+                                </button>
+                            </li>
+                        )
+
+                    }
+                </ul>
+            </fieldset>
+        }
+
+    });
 
     render() {
         // if(document.getElementById("testg")!=null)
@@ -488,7 +625,7 @@ class Collection extends React.Component {
                              updatePlanetLayer={this.updatePlanetLayer} nextPlot={this.nextPlot}
                              flagPlot={this.flagPlot}
                              assignedPercentage={this.assignedPercentage()} flaggedPercentage={this.flaggedPercentage()}
-                             completedPercentage={this.completedPercentage()} showAnswers={this.showAnswers}
+                             completedPercentage={this.completedPercentage()} showAnswers={this.showAnswers} getCurrent={this.getCurrent} _this={this}
                     />
                 </div>
             </React.Fragment>
@@ -536,7 +673,7 @@ function SideBar(props) {
             <SideBarFieldSet collection={props.collection} setBaseMapSource={props.setBaseMapSource}
                              setCurrentValue={props.setCurrentValue}
                              updateDGWMSLayer={props.updateDGWMSLayer} updatePlanetLayer={props.updatePlanetLayer}
-                             nextPlot={props.nextPlot} flagPlot={props.flagPlot} showAnswers={props.showAnswers}/>
+                             nextPlot={props.nextPlot} flagPlot={props.flagPlot} showAnswers={props.showAnswers} getCurrent={props.getCurrent} _this={props._this}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
                     <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
@@ -619,85 +756,8 @@ function SideBarFieldSet(props) {
     }
 
     if (collection.currentProject != null) {
-        var sv=collection.currentProject.sampleValues;
-        var newSV=[];
-        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
-        if(sv.length>0){
-
-            sv.map((sq)=>{
-                    if(sq.name){
-                        tempSQ.id=sq.id;
-                        tempSQ.question=sq.name;
-                        sq.values.map((sa)=>{
-                            if(sa.name){
-                                if(sa.id>0){
-                                    tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
-                                }
-                            }
-                            else {
-                                tempSQ.answers.push(sa);
-                            }
-
-                        });
-                        if(tempSQ.id>0){
-                            newSV.push(tempSQ);
-                        }
-                    }
-                    else{
-                        newSV.push(sq);
-                    }
-                }
-            );
-        }
-
-
-        surveyQuestionTree = newSV.map((surveyQuestion,_uid) => {
-           if(surveyQuestion.parent_question==-1) {
-               return   <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
-                    <button id={surveyQuestion.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block" onClick={props.showAnswers} style={{marginBottom:"10px"}}>Survey Question: {surveyQuestion.question}</button>
-                    <ul id="samplevalue" className="samplevalue justify-content-center" style={{display:"none"}}>
-                        {
-                            // sampleValueGroup.values.map((sampleValue,uid) =>
-                            //     <li key={uid} className="mb-1">
-                            //         <button type="button"
-                            //                 className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                            //                 id={sampleValue.name + '_' + sampleValue.id}
-                            //                 name={sampleValue.name + '_' + sampleValue.id}
-                            //                 onClick={() => props.setCurrentValue(sampleValueGroup, sampleValue)}>
-                            //             <div className="circle" style={{
-                            //                 backgroundColor: sampleValue.color,
-                            //                 border: "solid 1px",
-                            //                 float: "left",
-                            //                 marginTop: "4px"
-                            //             }}></div>
-                            //             <span className="small">{sampleValue.name}</span>
-                            //         </button>
-                            //     </li>
-                            //)
-
-                            surveyQuestion.answers.map((ans, uid) =>
-                                <li key={uid} className="mb-1">
-                                    <button type="button"
-                                            className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                            id={ans.answer + '_' + ans.id}
-                                            name={ans.answer + '_' + ans.id}
-                                            onClick={() => props.setCurrentValue(surveyQuestion, ans)}>
-                                        <div className="circle" style={{
-                                            backgroundColor: ans.color,
-                                            border: "solid 1px",
-                                            float: "left",
-                                            marginTop: "4px"
-                                        }}></div>
-                                        <span className="small">{ans.answer}</span>
-                                    </button>
-                                </li>
-                            )
-
-                        }
-                    </ul>
-                </fieldset>
-            }
-        });
+        var newSV=collection.currentProject.sampleValues;
+        surveyQuestionTree=props.getCurrent(-1,props._this);
         if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
             selectDG = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
                                                name="dg-imagery-year"
