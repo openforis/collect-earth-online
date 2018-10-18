@@ -189,6 +189,11 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    // FIXME: stub
+    public String getProjectPlot(Request req, Response res) {
+        return "";
+    }
+
     private static String[] getProjectUsers(String projectId) {
         var users = new JsonArray();
         try (var conn = connect()) {
