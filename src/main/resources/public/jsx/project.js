@@ -419,6 +419,7 @@ class Project extends React.Component {
         var ans = [];
         sampleSurvey.map((sq) => {
                 var parent_value = document.getElementById("value-parent");
+
                 if(parent_value!=null) {
                     var parent = parent_value.options[parent_value.selectedIndex].value;
                     if (sq.id == parent) {
@@ -598,7 +599,38 @@ class Project extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
-                    this.setState({details: data});
+                    var detailsNew=data;
+                    var sv=detailsNew.sampleValues;
+                    var newSV=[];
+                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+                    if(sv.length>0){
+                        sv.map((sq)=>{
+                                if(sq.name){
+                                    tempSQ.id=sq.id;
+                                    tempSQ.question=sq.name;
+                                    sq.values.map((sa)=>{
+                                        if(sa.name){
+                                            if(sa.id>0){
+                                                tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
+                                            }
+                                        }
+                                        else {
+                                            tempSQ.answers.push(sa);
+                                        }
+
+                                    });
+                                    if(tempSQ.id>0){
+                                        newSV.push(tempSQ);
+                                    }
+                                }
+                                else{
+                                    newSV.push(sq);
+                                }
+                            }
+                        );
+                    }
+                    detailsNew.sampleValues=newSV;
+                    this.setState({details: detailsNew});
                     if (this.state.details.id == 0) {
                         this.initialization(this.props.documentRoot, this.state.userId, projectId, this.state.institutionId);
                     } else {
@@ -1340,7 +1372,15 @@ function SurveyDesign(props){
     if (props.project.details != null) {
         var answer_select = "";
         var dropdowns;
+        var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
+        if (answers.length > 0) {
+            answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
+                <option key={uid}
+                        value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
+            )
+        }
         if(props.projectId=="0") {
+
             dropdowns = <React.Fragment>
                 <tr>
                     <td>
@@ -1373,13 +1413,7 @@ function SurveyDesign(props){
                 </tr>
             </React.Fragment>;
         }
-        var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
-        if (answers.length > 0) {
-            answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
-                <option key={uid}
-                        value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
-            )
-        }
+
 
         return (
             <div className="row mb-3">
@@ -1424,9 +1458,7 @@ class SurveyQuestionTree extends React.Component {
     ))
     render() {
         var project = this.props.project;
-        var sv = project.details.sampleValues;
-        var newSV = [];
-        if (project.details != null) {
+   if (project.details != null) {
             return (
                 <div>
                     {this.getCurrent(-1)}
@@ -1445,7 +1477,6 @@ function SurveyQuestion(properties) {
     if(properties.surveyQuestion.answers==null){
         console.log("answers null");
     }
-    console.log(properties.surveyQuestion);
     if (project.details != null) {
         return (
                 <div className="sample-value-info">

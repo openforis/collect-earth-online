@@ -41,8 +41,9 @@ class Geodash extends React.Component {
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
+        console.log("going full");
         this.setState({ widgets },
-            function() {updateSize(widget, type);}
+            function() {console.log(widget.id); console.log(type); updateSize(widget, type);}
          );
     };
     handleOpacityChange = (widget, id, evt) => {
@@ -159,7 +160,7 @@ class Widget extends React.Component {
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
                             <li style={{display: "inline"}}>{widget.name}</li>
-                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget.properties[0]))}
+                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget))}
                                                            role="button" title="Toggle Fullscreen"><i className="fas fa-expand-arrows-alt" style={{color: "#31BAB0"}}></i></a></li>
                         </ul>
                     </div>
@@ -177,7 +178,7 @@ class Widget extends React.Component {
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
                             <li style={{display: "inline"}}>{widget.name}</li>
-                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget.properties[0]))}
+                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget))}
                                                                role="button" title="Toggle Fullscreen"><i className="fas fa-expand-arrows-alt" style={{color: "#31BAB0"}}></i></a></li>
                         </ul>
                     </div>
@@ -196,8 +197,13 @@ class Widget extends React.Component {
     generategridrow(x, h){
         return (x + 1) + ' / span ' + h;
     }
-    getWidgetType(wtext)
+    getWidgetType(awidget)
     {
+        if(awidget.dualImageCollection && awidget.dualImageCollection != null)
+        {
+            return "mapwidget";
+        }
+        let wtext = awidget.properties[0];
         if(this.imageCollectionList.includes(wtext))
         {
             return "mapwidget";
@@ -227,7 +233,7 @@ class Widget extends React.Component {
         let wtext = widget.properties[0];
         let control;
         let slider;
-        if(this.imageCollectionList.includes(wtext))
+        if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null))
         {
             return <div className="front"><MapWidget widget={widget} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
 
@@ -315,7 +321,7 @@ class MapWidget extends React.Component {
         if(widget.filterType != null && widget.filterType.length > 0){
             var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
             url = "http://collect.earth:8888/" + fts[widget.filterType];
-            console.log('filtered');
+            console.log('filtered: ' + widget.filterType + " Length = " + widget.filterType.length);
         }
         else if('ImageCollectionCustom' == widget.properties[0]){
             url = "http://collect.earth:8888/meanImageByMosaicCollections";
@@ -445,13 +451,18 @@ class MapWidget extends React.Component {
             var firstImage = widget.dualImageCollection[0];
             var secondImage = widget.dualImageCollection[1];
             collectionName = firstImage.collectionType;
+            requestedIndex = collectionName === "ImageCollectionNDVI" ? 'NDVI' : collectionName === "ImageCollectionEVI" ? 'EVI' : collectionName === "ImageCollectionEVI2" ? 'EVI2' : collectionName === "ImageCollectionNDMI" ? 'NDMI' : collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+            collectionName = collectionName === "ImageCollectionNDVI" ? '' : collectionName === "ImageCollectionEVI" ? '' : collectionName === "ImageCollectionEVI2" ? '' : collectionName === "ImageCollectionNDMI" ? '' : collectionName === "ImageCollectionNDWI" ? '' : collectionName;
             dateFrom = firstImage.startDate;
             dateTo = firstImage.endDate;
-            requestedIndex = collectionName === "ImageCollectionNDVI" ? 'NDVI' : collectionName === "ImageCollectionEVI" ? 'EVI' : collectionName === "ImageCollectionEVI2" ? 'EVI2' : collectionName === "ImageCollectionNDMI" ? 'NDMI' : collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+
             var shortWidget = {};
             shortWidget.filterType = firstImage.filterType;
             shortWidget.properties = [];
             shortWidget.properties.push(collectionName);
+            console.log("dual sending: "  + collectionName);
+            console.log(shortWidget);
+            console.log("*******************");
             url = this.getGatewayUrl(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null? firstImage.min: '';
@@ -471,10 +482,11 @@ class MapWidget extends React.Component {
             //Create the ajax object for the second call here
             dualImageObject = {};
             dualImageObject.collectionName = secondImage.collectionType;
+            dualImageObject.index = dualImageObject.collectionName === "ImageCollectionNDVI" ? 'NDVI' : dualImageObject.collectionName === "ImageCollectionEVI" ? 'EVI' : dualImageObject.collectionName === "ImageCollectionEVI2" ? 'EVI2' : dualImageObject.collectionName === "ImageCollectionNDMI" ? 'NDMI' : dualImageObject.collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+            dualImageObject.collectionName = dualImageObject.collectionName === "ImageCollectionNDVI" ? '' : dualImageObject.collectionName === "ImageCollectionEVI" ? '' : dualImageObject.collectionName === "ImageCollectionEVI2" ? '' : dualImageObject.collectionName === "ImageCollectionNDMI" ? '' : dualImageObject.collectionName === "ImageCollectionNDWI" ? '' : dualImageObject.collectionName;
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
-            dualImageObject.requestedIndex = dualImageObject.collectionName === "ImageCollectionNDVI" ? 'NDVI' : dualImageObject.collectionName === "ImageCollectionEVI" ? 'EVI' : dualImageObject.collectionName === "ImageCollectionEVI2" ? 'EVI2' : dualImageObject.collectionName === "ImageCollectionNDMI" ? 'NDMI' : dualImageObject.collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
-            var shortWidget2 = {};
+             var shortWidget2 = {};
             shortWidget2.filterType = secondImage.filterType;
             shortWidget2.properties = [];
             shortWidget2.properties.push(dualImageObject.collectionName);
@@ -485,6 +497,15 @@ class MapWidget extends React.Component {
             shortWidget2.min = secondImage.min != null? secondImage.min: '';
             shortWidget2.max = secondImage.max != null? secondImage.max: '';
             shortWidget2.band = secondImage.band != null? secondImage.band: '';
+            if(shortWidget2.visParams && shortWidget2.visParams.cloudLessThan != null) {
+                dualImageObject.bands = shortWidget2.visParams.bands;
+                dualImageObject.min = shortWidget2.visParams.min;
+                dualImageObject.max = shortWidget2.visParams.max;
+                dualImageObject.cloudLessThan = parseInt(shortWidget2.visParams.cloudLessThan);
+            }
+
+
+
             dualImageObject.visParams = this.getImageParams(shortWidget2);
 
 
@@ -497,7 +518,9 @@ class MapWidget extends React.Component {
             dateFrom = widget.properties[2];
             dateTo = widget.properties[3];
             requestedIndex = widget.properties[0] === "ImageCollectionNDVI" ? 'NDVI' : widget.properties[0] === "ImageCollectionEVI" ? 'EVI' : widget.properties[0] === "ImageCollectionEVI2" ? 'EVI2' : widget.properties[0] === "ImageCollectionNDMI" ? 'NDMI' : widget.properties[0] === "ImageCollectionNDWI" ? 'NDWI' : '';
-
+            console.log("single sending: "  + collectionName);
+            console.log(widget);
+            console.log("*******************");
             url = this.getGatewayUrl(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
 
