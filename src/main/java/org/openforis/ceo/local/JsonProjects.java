@@ -33,6 +33,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
@@ -710,16 +712,47 @@ public class JsonProjects implements Projects {
                 .toArray(Double[][]::new);
     }
 
-    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: lon, lat, ...
-    private static Double[][] loadCsvPoints(String filename) {
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON, LAT, PLOTID
+    private static HashMap<String, Double[]> loadCsvPlotPoints(String filename) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
-            return lines.skip(1)
-                .map(line -> {
+            var plotPoints = new HashMap<String, Double[]>();
+            lines
+                .skip(1)
+                .forEach(line -> {
                         var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
-                        return new Double[]{Double.parseDouble(fields[0]),
-                                            Double.parseDouble(fields[1])};
-                    })
-                .toArray(Double[][]::new);
+                        var plotId = fields[2];
+                        var plotCenter = new Double[]{Double.parseDouble(fields[0]),
+                                                      Double.parseDouble(fields[1])};
+                        plotPoints.put(plotId, plotCenter);
+                    });
+            return plotPoints;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON, LAT, PLOTID, SAMPLEID
+    private static HashMap<String, HashMap<String, Double[]>> loadCsvSamplePoints(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            var samplesByPlot = new HashMap<String, HashMap<String, Double[]>>();
+            lines
+                .skip(1)
+                .forEach(line -> {
+                        var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
+                        var plotId = fields[2];
+                        var sampleId = fields[3];
+                        var sampleCenter = new Double[]{Double.parseDouble(fields[0]),
+                                                        Double.parseDouble(fields[1])};
+                        if (samplesByPlot.containsKey(plotId)) {
+                            var samplePoints = samplesByPlot.get(plotId);
+                            samplePoints.put(sampleId, sampleCenter);
+                        } else {
+                            var samplePoints = new HashMap<String, Double[]>();
+                            samplePoints.put(sampleId, sampleCenter);
+                            samplesByPlot.put(plotId, samplePoints);
+                        }
+                    });
+            return samplesByPlot;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -758,38 +791,104 @@ public class JsonProjects implements Projects {
         }
     }
 
-    // FIXME: Extract PLOTID and SAMPLEID from these features and store in the outgoing JsonArray
-    private static JsonArray getGeoJsonGeometries(int projectId, String plotsOrSamples) {
-        var geoJson = readJsonFile("../shp/project-" + projectId + "-" + plotsOrSamples
-                                   + "/project-" + projectId + "-" + plotsOrSamples + ".json").getAsJsonObject();
+    // The uploaded GeoJson must contain Polygon geometries with PLOTID properties
+    private static HashMap<String, JsonObject> getGeoJsonPlotGeometries(int projectId) {
+        var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
+                                   + "/project-" + projectId + "-plots.json").getAsJsonObject();
         if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
-            return toStream(geoJson.get("features").getAsJsonArray())
-                .map(feature -> feature.get("geometry").getAsJsonObject())
-                .filter(geometry -> geometry.get("type").getAsString().equals("Polygon"))
-                .collect(intoJsonArray);
+            var plotGeoms = new HashMap<String, JsonObject>();
+            toStream(geoJson.get("features").getAsJsonArray())
+                .filter(feature -> {
+                        var geometry = feature.get("geometry").getAsJsonObject();
+                        return geometry.get("type").getAsString().equals("Polygon");
+                    })
+                .forEach(feature -> {
+                        var geometry = feature.get("geometry").getAsJsonObject();
+                        var properties = feature.get("properties").getAsJsonObject();
+                        var plotId = properties.get("PLOTID").getAsString();
+                        plotGeoms.put(plotId, geometry);
+                    });
+            return plotGeoms;
         } else {
-            return new JsonArray();
+            return new HashMap<String, JsonObject>();
         }
     }
 
-    private static Double[][] getGeometryCenters(JsonArray geoJsonGeometries) {
-        return toStream(geoJsonGeometries)
-            .map(geometry -> {
-                    var coordinates = geometry.get("coordinates").getAsJsonArray();
-                    var exteriorRing = coordinates.get(0).getAsJsonArray();
-                    var centroidX = toElementStream(exteriorRing)
-                        .skip(1) // linear rings repeat the same point as their first and last vertex
-                        .mapToDouble(point -> point.getAsJsonArray().get(0).getAsDouble())
-                        .average()
-                        .getAsDouble();
-                    var centroidY = toElementStream(exteriorRing)
-                        .skip(1) // linear rings repeat the same point as their first and last vertex
-                        .mapToDouble(point -> point.getAsJsonArray().get(1).getAsDouble())
-                        .average()
-                        .getAsDouble();
-                    return new Double[]{centroidX, centroidY};
-                })
-            .toArray(Double[][]::new);
+    // The uploaded GeoJson must contain Polygon geometries with PLOTID and SAMPLEID properties
+    private static HashMap<String, HashMap<String, JsonObject>> getGeoJsonSampleGeometries(int projectId) {
+        var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
+                                   + "/project-" + projectId + "-samples.json").getAsJsonObject();
+        if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+            var sampleGeomsByPlot = new HashMap<String, HashMap<String, JsonObject>>();
+            toStream(geoJson.get("features").getAsJsonArray())
+                .filter(feature -> {
+                        var geometry = feature.get("geometry").getAsJsonObject();
+                        return geometry.get("type").getAsString().equals("Polygon");
+                    })
+                .forEach(feature -> {
+                        var geometry = feature.get("geometry").getAsJsonObject();
+                        var properties = feature.get("properties").getAsJsonObject();
+                        var plotId = properties.get("PLOTID").getAsString();
+                        var sampleId = properties.get("SAMPLEID").getAsString();
+                        if (sampleGeomsByPlot.containsKey(plotId)) {
+                            var sampleGeoms = sampleGeomsByPlot.get(plotId);
+                            sampleGeoms.put(sampleId, geometry);
+                        } else {
+                            var sampleGeoms = new HashMap<String, JsonObject>();
+                            sampleGeoms.put(sampleId, geometry);
+                            sampleGeomsByPlot.put(plotId, sampleGeoms);
+                        }
+                    });
+            return sampleGeomsByPlot;
+        } else {
+            return new HashMap<String, HashMap<String, JsonObject>>();
+        }
+    }
+
+    private static Double[] getGeometryCentroid(JsonObject geoJsonGeometry) {
+        var coordinates = geoJsonGeometry.get("coordinates").getAsJsonArray();
+        var exteriorRing = coordinates.get(0).getAsJsonArray();
+        var centroidX = toElementStream(exteriorRing)
+            .skip(1) // linear rings repeat the same point as their first and last vertex
+            .mapToDouble(point -> point.getAsJsonArray().get(0).getAsDouble())
+            .average()
+            .getAsDouble();
+        var centroidY = toElementStream(exteriorRing)
+            .skip(1) // linear rings repeat the same point as their first and last vertex
+            .mapToDouble(point -> point.getAsJsonArray().get(1).getAsDouble())
+            .average()
+            .getAsDouble();
+        return new Double[]{centroidX, centroidY};
+    }
+
+    // FIXME: Can you re-implement this using the Collectors functions?
+    private static HashMap<String, Double[]> getPlotGeometryCenters(HashMap<String, JsonObject> plotGeoms) {
+        var plotCenters = new HashMap<String, Double[]>();
+        plotGeoms.entrySet().forEach(plot -> {
+                var plotId = plot.getKey();
+                var plotGeom = plot.getValue();
+                var centroid = getGeometryCentroid(plotGeom);
+                plotCenters.put(plotId, centroid);
+            });
+        return plotCenters;
+    }
+
+    // FIXME: Can you re-implement this using the Collectors functions?
+    private static HashMap<String, HashMap<String, Double[]>> getSampleGeometryCenters(HashMap<String, HashMap<String, JsonObject>> sampleGeomsByPlot) {
+        var sampleCentersByPlot = new HashMap<String, HashMap<String, Double[]>>();
+        sampleGeomsByPlot.entrySet().forEach(plot -> {
+                var plotId = plot.getKey();
+                var sampleGeoms = plot.getValue();
+                var sampleCenters = new HashMap<String, Double[]>();
+                sampleGeoms.entrySet().forEach(sample -> {
+                        var sampleId = sample.getKey();
+                        var sampleGeom = sample.getValue();
+                        var centroid = getGeometryCentroid(sampleGeom);
+                        sampleCenters.put(sampleId, centroid);
+                    });
+                sampleCentersByPlot.put(plotId, sampleCenters);
+            });
+        return sampleCentersByPlot;
     }
 
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
@@ -809,10 +908,10 @@ public class JsonProjects implements Projects {
         var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
 
         // If plotDistribution is csv, calculate the lat/lon bounds from the csv contents
-        var csvPlotPoints = new Double[][]{};
+        var csvPlotPoints = new HashMap<String, Double[]>();
         if (plotDistribution.equals("csv")) {
-            csvPlotPoints = loadCsvPoints(newProject.get("plots-csv").getAsString());
-            var csvPlotBounds = calculateBounds(csvPlotPoints, plotSize / 2.0);
+            csvPlotPoints = loadCsvPlotPoints(newProject.get("plots-csv").getAsString());
+            var csvPlotBounds = calculateBounds(csvPlotPoints.values().toArray(new Double[][]{}), plotSize / 2.0);
             lonMin = csvPlotBounds[0];
             latMin = csvPlotBounds[1];
             lonMax = csvPlotBounds[2];
@@ -820,20 +919,20 @@ public class JsonProjects implements Projects {
         }
 
         // If sampleDistribution is csv, calculate the lat/lon bounds from the csv contents
-        var csvSamplePoints = new Double[][]{};
+        var csvSamplePoints = new HashMap<String, HashMap<String, Double[]>>();
         if (sampleDistribution.equals("csv")) {
-            csvSamplePoints = loadCsvPoints(newProject.get("samples-csv").getAsString());
+            csvSamplePoints = loadCsvSamplePoints(newProject.get("samples-csv").getAsString());
         }
         final var csvSamplePointsFinal = csvSamplePoints;
 
         // If plotDistribution is shp, calculate the lat/lon bounds from the shp contents
-        var shpPlotGeoms = new JsonArray();
-        var shpPlotCenters = new Double[][]{};
+        var shpPlotGeoms = new HashMap<String, JsonObject>();
+        var shpPlotCenters = new HashMap<String, Double[]>();
         if (plotDistribution.equals("shp")) {
             extractZipFileToGeoJson(projectId, "plots");
-            shpPlotGeoms = getGeoJsonGeometries(projectId, "plots");
-            shpPlotCenters = getGeometryCenters(shpPlotGeoms);
-            var shpPlotBounds = calculateBounds(shpPlotCenters, 500.0); // FIXME: replace hard-coded padding with a calculated value
+            shpPlotGeoms = getGeoJsonPlotGeometries(projectId);
+            shpPlotCenters = getPlotGeometryCenters(shpPlotGeoms);
+            var shpPlotBounds = calculateBounds(shpPlotCenters.values().toArray(new Double[][]{}), 500.0); // FIXME: replace hard-coded padding with a calculated value
             lonMin = shpPlotBounds[0];
             latMin = shpPlotBounds[1];
             lonMax = shpPlotBounds[2];
@@ -842,12 +941,12 @@ public class JsonProjects implements Projects {
         final var shpPlotGeomsFinal = shpPlotGeoms;
 
         // If sampleDistribution is shp, calculate the lat/lon bounds from the shp contents
-        var shpSampleGeoms = new JsonArray();
-        var shpSampleCenters = new Double[][]{};
+        var shpSampleGeoms = new HashMap<String, HashMap<String, JsonObject>>();
+        var shpSampleCenters = new HashMap<String, HashMap<String, Double[]>>();
         if (sampleDistribution.equals("shp")) {
             extractZipFileToGeoJson(projectId, "samples");
-            shpSampleGeoms = getGeoJsonGeometries(projectId, "samples");
-            shpSampleCenters = getGeometryCenters(shpSampleGeoms);
+            shpSampleGeoms = getGeoJsonSampleGeometries(projectId);
+            shpSampleCenters = getSampleGeometryCenters(shpSampleGeoms);
         }
         final var shpSampleGeomsFinal = shpSampleGeoms;
         final var shpSampleCentersFinal = shpSampleCenters;
@@ -868,58 +967,92 @@ public class JsonProjects implements Projects {
         var top = paddedBounds[3];
 
         // Generate the plot objects and their associated sample points
-        var newPlotCenters = plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
-                           : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
-                           : plotDistribution.equals("csv") ? csvPlotPoints
-                           : shpPlotCenters;
+        var newPlotCenters =
+            plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
+            : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
+            : plotDistribution.equals("csv") ? csvPlotPoints.entrySet().toArray()
+            : shpPlotCenters.entrySet().toArray();
+
         var plotIndexer = makeCounter();
+
         var newPlots = Arrays.stream(newPlotCenters)
-                .map(plotCenter -> {
+            .map(plotEntry -> {
                     var newPlot = new JsonObject();
                     var newPlotId = plotIndexer.getAsInt();
                     newPlot.addProperty("id", newPlotId);
-                    newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
                     newPlot.addProperty("flagged", false);
                     newPlot.addProperty("analyses", 0);
                     newPlot.add("user", null);
 
-                    if (plotDistribution.equals("shp")) {
-                        newPlot.addProperty("geom", shpPlotGeomsFinal.get(newPlotId - 1).toString());
+                    var plotId =
+                        List.of("csv", "shp").contains(plotDistribution)
+                        ? (String) ((Map.Entry) plotEntry).getKey()
+                        : "";
+
+                    var plotCenter =
+                        List.of("csv", "shp").contains(plotDistribution)
+                        ? (Double[]) ((Map.Entry) plotEntry).getValue()
+                        : (Double[]) plotEntry;
+
+                    newPlot.addProperty("center", makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());
+
+                    if (List.of("csv", "shp").contains(plotDistribution)) {
+                        newPlot.addProperty("plotId", plotId);
                     }
 
-                    // FIXME: Support different sampleDistributions when plotDistribution == shp
-                    // FIXME: Filter sample points based on PLOTID attribute if sampleDistribution == "csv" or "shp"
+                    if (plotDistribution.equals("shp")) {
+                        newPlot.addProperty("geom", shpPlotGeomsFinal.get(plotId).toString());
+                    }
+
                     var newSamplePoints =
-                        sampleDistribution.equals("csv")
-                        ? csvSamplePointsFinal
-                        : (sampleDistribution.equals("random")
-                           ? (plotDistribution.equals("shp")
-                              ? new Double[][]{new Double[]{plotCenter[0], plotCenter[1]}}
-                              : createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot))
-                           : (sampleDistribution.equals("gridded")
-                              ? (plotDistribution.equals("shp")
-                                 ? new Double[][]{new Double[]{plotCenter[0], plotCenter[1]}}
-                                 : createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution))
-                              : shpSampleCentersFinal));
+                        sampleDistribution.equals("random")
+                        ? (List.of("random", "gridded").contains(plotDistribution)
+                           ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
+                           : new Double[][]{plotCenter})
+                        : (sampleDistribution.equals("gridded")
+                           ? (List.of("random", "gridded").contains(plotDistribution)
+                              ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
+                              : new Double[][]{plotCenter})
+                           : (sampleDistribution.equals("csv")
+                              ? csvSamplePointsFinal.get(plotId).entrySet().toArray()
+                              : shpSampleCentersFinal.get(plotId).entrySet().toArray()));
 
                     var sampleIndexer = makeCounter();
+
                     var newSamples = Arrays.stream(newSamplePoints)
-                            .map(point -> {
+                        .map(sampleEntry -> {
                                 var newSample = new JsonObject();
                                 var newSampleId = sampleIndexer.getAsInt();
                                 newSample.addProperty("id", newSampleId);
-                                newSample.addProperty("point", makeGeoJsonPoint(point[0], point[1]).toString());
-                                if (sampleDistribution.equals("shp")) {
-                                    newSample.addProperty("geom", shpSampleGeomsFinal.get(newSampleId - 1).toString());
+
+                                var sampleId =
+                                    List.of("csv", "shp").contains(sampleDistribution)
+                                    ? (String) ((Map.Entry) sampleEntry).getKey()
+                                    : "";
+
+                                var sampleCenter =
+                                    List.of("csv", "shp").contains(sampleDistribution)
+                                    ? (Double[]) ((Map.Entry) sampleEntry).getValue()
+                                    : (Double[]) sampleEntry;
+
+                                newSample.addProperty("point", makeGeoJsonPoint(sampleCenter[0], sampleCenter[1]).toString());
+
+                                if (List.of("csv", "shp").contains(sampleDistribution)) {
+                                    newSample.addProperty("sampleId", sampleId);
                                 }
+
+                                if (sampleDistribution.equals("shp")) {
+                                    newSample.addProperty("geom", shpSampleGeomsFinal.get(plotId).get(sampleId).toString());
+                                }
+
                                 return newSample;
                             })
-                            .collect(intoJsonArray);
+                        .collect(intoJsonArray);
 
                     newPlot.add("samples", newSamples);
                     return newPlot;
                 })
-                .collect(intoJsonArray);
+            .collect(intoJsonArray);
 
         // Write the plot data to a new plot-data-<id>.json file
         writeJsonFile("plot-data-" + newProject.get("id").getAsString() + ".json", newPlots);
