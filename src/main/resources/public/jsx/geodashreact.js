@@ -41,9 +41,8 @@ class Geodash extends React.Component {
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
-        console.log("going full");
         this.setState({ widgets },
-            function() {console.log(widget.id); console.log(type); updateSize(widget, type);}
+            function() { updateSize(widget, type);}
          );
     };
     handleOpacityChange = (widget, id, evt) => {
@@ -60,7 +59,6 @@ class Geodash extends React.Component {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
-        console.log('change slider');
         widgets[index].sliderType = widgets[index].sliderType == 'opacity'? 'swipe': 'opacity';
         // setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
         this.setState({ widgets });
@@ -321,16 +319,13 @@ class MapWidget extends React.Component {
         if(widget.filterType != null && widget.filterType.length > 0){
             var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
             url = "http://collect.earth:8888/" + fts[widget.filterType];
-            console.log('filtered: ' + widget.filterType + " Length = " + widget.filterType.length);
         }
         else if('ImageCollectionCustom' == widget.properties[0]){
             url = "http://collect.earth:8888/meanImageByMosaicCollections";
-            console.log('ImageCollectionCustom');
         }
         else if(collectionName.trim().length > 0)
         {
             url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
-            console.log('cloudMaskImageByMosaicCollection: '  + widget.properties[0]);
 
         }
         else{
@@ -340,17 +335,13 @@ class MapWidget extends React.Component {
     }
     getImageParams(widget){
         var visParams;
-        if(widget.visParams)
-        {
-                console.log(widget.visParams)
-                try{
-                    visParams = $.parseJSON(widget.visParams);
-                }
-                catch(e)
-                {
-                    visParams = widget.visParams;
-                }
-
+        if(widget.visParams) {
+            try {
+                visParams = $.parseJSON(widget.visParams);
+            }
+            catch (e) {
+                visParams = widget.visParams;
+            }
         }
         else {
             var min;
@@ -460,9 +451,6 @@ class MapWidget extends React.Component {
             shortWidget.filterType = firstImage.filterType;
             shortWidget.properties = [];
             shortWidget.properties.push(collectionName);
-            console.log("dual sending: "  + collectionName);
-            console.log(shortWidget);
-            console.log("*******************");
             url = this.getGatewayUrl(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null? firstImage.min: '';
@@ -518,9 +506,7 @@ class MapWidget extends React.Component {
             dateFrom = widget.properties[2];
             dateTo = widget.properties[3];
             requestedIndex = widget.properties[0] === "ImageCollectionNDVI" ? 'NDVI' : widget.properties[0] === "ImageCollectionEVI" ? 'EVI' : widget.properties[0] === "ImageCollectionEVI2" ? 'EVI2' : widget.properties[0] === "ImageCollectionNDMI" ? 'NDMI' : widget.properties[0] === "ImageCollectionNDWI" ? 'NDWI' : '';
-            console.log("single sending: "  + collectionName);
-            console.log(widget);
-            console.log("*******************");
+
             url = this.getGatewayUrl(widget, collectionName);
             postObject.visParams = this.getImageParams(widget);
 
@@ -567,10 +553,6 @@ class MapWidget extends React.Component {
                     addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
                     if(dualLayer)
                     {
-                        console.log('dual');
-                        //console.log($this.postObject);
-                        console.log('dualStart: ' + $this.dualStart);
-                        console.log('dualEnd: ' + $this.dualEnd);
                         var secondObject = JSON.parse($this.postObject);
                         secondObject.dateFrom = $this.dualStart;
                         secondObject.dateTo = $this.dualEnd;
@@ -605,16 +587,12 @@ class MapWidget extends React.Component {
                         var workingObject;
                         try{
                             workingObject = JSON.parse(dualImage);
-                            console.log('json parsed');
                         }
                         catch(e){
                             workingObject = dualImage;
-                            console.log('as passed');
                         }
                         if(workingObject != null)
                         {
-                        console.log(workingObject);
-                        console.log(workingObject.collectionName);
                         var secondObject = workingObject;
                         //set url based on data type
                         //set variables needed for data type, maybe do this above so i can just pass the dualImage thru...
@@ -639,7 +617,6 @@ class MapWidget extends React.Component {
                                     var token = data.token;
                                     var $this = this;
                                     var dualLayer = $this.dualLayer;
-                                    console.log(mapId +', ' + token + ', widgetmap_' + $this.indexVal);
                                     addDualLayer(mapId, token, "widgetmap_" + $this.indexVal);
                                 } else {
                                     console.warn("Wrong Data Returned");
@@ -983,7 +960,6 @@ function addBuffer (whichMap) {
             var pointFeature = new ol.Feature(centerPoint);
             var poitnExtent = pointFeature.getGeometry().getExtent();
             var bufferedExtent = new ol.extent.buffer(poitnExtent,parseInt(bradius));
-            console.log(bufferedExtent);
             var bufferPolygon = new ol.geom.Polygon(
                 [
                     [[bufferedExtent[0],bufferedExtent[1]],
@@ -993,7 +969,6 @@ function addBuffer (whichMap) {
                         [bufferedExtent[0],bufferedExtent[1]]]
                 ]
             );
-            console.log("bufferPolygon",bufferPolygon);
             var bufferedFeature = new ol.Feature(bufferPolygon);
            // vectorBuffers.getSource().addFeature(bufferedFeature);
 
