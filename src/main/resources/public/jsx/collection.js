@@ -130,7 +130,7 @@ class Collection extends React.Component {
                     });
                     currProj.sampleValues = newSV;
                     console.log(currProj.sampleValues);
-                    this.setState({currentProject: currProj});
+                    this.setState({currentProject: currProj}, this.showProjectMap());
                     this.getImageryList(data.institution);
                 }
             });
@@ -167,6 +167,7 @@ class Collection extends React.Component {
             });
     }
     getImageryList(institution) {
+        var ref = this;
         fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institution)
             .then(response => {
                 if (response.ok) {
@@ -179,6 +180,14 @@ class Collection extends React.Component {
             })
             .then(data => {
                 this.setState({imageryList: data})
+            })
+            .then(function(){
+
+                if (ref.state.imageryList != null && ref.state.imageryList.length > 0) {
+                    console.log("i worked");
+                    ref.showProjectMap();
+                }
+
             });
     }
     setBaseMapSource() {
@@ -538,7 +547,7 @@ class Collection extends React.Component {
         });
     }
     showProjectMap() {
-        if(this.state.currentProject.boundary && this.state.currentProject.boundary!=null) {
+
             this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
             this.setBaseMapSource();
             // Show the project's boundary
@@ -549,24 +558,13 @@ class Collection extends React.Component {
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
             // Draw the project plots as clusters on the map
             this.showProjectPlots();
-        }
-        else{
-            setTimeout( this.showProjectMap ,250);
-        }
+
     }
     initialization() {
 
         this.getProjectById();
         this.getProjectStats();
         this.getProjectPlots();
-        setTimeout(() => {
-            if (this.state.imageryList != null && this.state.imageryList.length > 0) {
-                this.showProjectMap();
-            }
-        }, 250);
-
-
-
     }
         showAnswers(event){
            var cp=this.state.currentProject;
