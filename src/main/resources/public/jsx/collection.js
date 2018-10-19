@@ -25,8 +25,6 @@ class Collection extends React.Component {
             showSideBar: false,
             mapClass: "fullmap",
             quitClass: "quit-full",
-
-
         };
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.updateDGWMSLayer = this.updateDGWMSLayer.bind(this);
@@ -359,24 +357,25 @@ class Collection extends React.Component {
                 console.log(this.state.userSamples);
                 selectedFeatures.clear();
                 utils.blink_border(answer.answer + "_" + answer.id);
-                if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
-                    && Object.values(this.state.userSamples).every(function (values) {
-                        return Object.keys(values).length == this.state.currentProject.sampleValues.length;
-                    }, this)) {
-                    // FIXME: What is the minimal set of these that I can execute?
-                    utils.enable_element("save-values-button");
-                    if (document.getElementById("save-values-button") != null) {
-                        var ref = this;
-                        document.getElementById("save-values-button").onclick = function () {
-                            ref.saveValues();
-                        }
-                    }
-                    utils.disable_element("new-plot-button");
-                }
+
             }
         }
         else {
             alert("No sample points selected. Please click some first.");
+        }
+        if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
+            && Object.values(this.state.userSamples).every(function (values) {
+                return Object.keys(values).length == this.state.currentProject.sampleValues.length;
+            }, this)) {
+            // FIXME: What is the minimal set of these that I can execute?
+            utils.enable_element("save-values-button");
+            if (document.getElementById("save-values-button") != null) {
+                var ref = this;
+                document.getElementById("save-values-button").onclick = function () {
+                    ref.saveValues();
+                }
+            }
+            utils.disable_element("new-plot-button");
         }
     }
     flagPlot() {
@@ -654,7 +653,11 @@ class Collection extends React.Component {
             </fieldset>
         }
     });
-
+    componentWillUpdate(){
+        if(pointClicked){
+            console.log("clicked point");
+        }
+    }
     render() {
         return (<React.Fragment>
                 <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>

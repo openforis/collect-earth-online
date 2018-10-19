@@ -17,7 +17,7 @@
 *****************************************************************************/
 
 var mercator = {};
-
+var pointClicked=false;
 /*****************************************************************************
 ***
 *** Lon/Lat Reprojection
@@ -607,6 +607,7 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
     select.set("title", interactionTitle);
     var action = function (event) {
         event.selected.forEach(function (feature) {
+            pointClicked=true;
             featureStyles[feature] = feature.getStyle();
             feature.setStyle(null);
         });
@@ -647,6 +648,9 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
     return dragBox;
 };
 
+mercator.pointClick=function() {
+    return pointClicked;
+}
 // [Side Effects] Adds a click select interaction and a dragBox select
 // interaction to mapConfig's map object associated with the layer
 // with title == layerTitle.
