@@ -1034,15 +1034,11 @@ function addBuffer (whichMap) {
 
 
             $.ajax({
-                url: theURL + "/getShpByProjPlotID",
-                type: "POST",
+                url: theURL.replace('/geo-dash', '') + "/get-project-plot/" + projectID + "/" + plotID,
+                type: "GET",
                 async: true,
                 theMap: whichMap,
-                contentType: "application/json",
-                data: JSON.stringify({
-                    projectID: projectID,
-                    plotID: plotID
-                })
+                contentType: "application/json"
             }).fail(function (jqXHR, textStatus, errorThrown) {
                 console.warn(jqXHR + textStatus + errorThrown);
             }).done(function (data, _textStatus, _jqXHR) {
@@ -1056,8 +1052,8 @@ function addBuffer (whichMap) {
                         features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:3857' }) // this is important to know change to proper projection...
                     });
 
-                    vectorSource = new ol.layer.Vector({
-                        source: _geojson_vectorSource,
+                    let _geojson_vectorLayer = new ol.layer.Vector({
+                        source: vectorSource,
                         style: [
                             new ol.style.Style({
                                 stroke: new ol.style.Stroke({

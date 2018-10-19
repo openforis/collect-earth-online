@@ -275,7 +275,7 @@ class BasicLayout extends React.PureComponent{
     };
     addCustomImagery(imagery) {
         $.ajax({
-            url: this.props.documentRoot + "/add-institution-imagery",
+            url: theURL.replace('/geo-dash', '') + "/add-geodash-imagery",
             type: "POST",
             async: true,
             crossDomain: true,
@@ -289,13 +289,34 @@ class BasicLayout extends React.PureComponent{
             }
         );
     };
+    getGatewayUrl(widget, collectionName){
+        var url = '';
+        if(widget.filterType != null && widget.filterType.length > 0){
+            var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
+            url = "http://collect.earth:8888/" + fts[widget.filterType];
+        }
+        else if(widget.properties && 'ImageCollectionCustom' == widget.properties[0]){
+            url = "http://collect.earth:8888/meanImageByMosaicCollections";
+        }
+        else if(collectionName.trim().length > 0)
+        {
+            url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
+
+        }
+        else{
+            url = "http://collect.earth:8888/ImageCollectionbyIndex";
+        }
+        return url;
+    };
     buildImageryObject(img){
+        let gatewayUrl = getGatewayUrl(img);
         let title = img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
         return {
             institutionId: institutionID,
             imageryTitle: title,
             imageryAttribution: "Google Earth Engine",
+            geeUrl: gatewayUrl,
             geeParams: {
                 collectionType: img.collectionType,
                 startDate: img.startDate,

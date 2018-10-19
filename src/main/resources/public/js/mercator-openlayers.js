@@ -101,19 +101,21 @@ mercator.createSource = function (sourceConfig) {
         //then add xyz layer
         const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
         const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
-        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? sourceConfig.geeParams.visParams.cloudLessThan: '';
+        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): '';
         const theJson = {
             dateFrom: sourceConfig.geeParams.startDate,
             dateTo: sourceConfig.geeParams.endDate,
             bands: sourceConfig.geeParams.visParams.bands,
-            min: sourceConfig.geeParams.visParams,
-            max: sourceConfig.geeParams.visParams,
-            cloudLessThan: cloudVar
+            min: sourceConfig.geeParams.visParams.min,
+            max: sourceConfig.geeParams.visParams.max,
+            cloudLessThan: cloudVar,
+            visParams: sourceConfig.geeParams.visParams
         };
+        let geeLayer;
         $.ajax({
             url: url,
             type: "POST",
-            async: true,
+            async: false,
             crossDomain: true,
             contentType: "application/json",
             data: JSON.stringify(theJson)
@@ -124,16 +126,15 @@ mercator.createSource = function (sourceConfig) {
                 console.info(data.errMsg);
             } else {
                 if (data.hasOwnProperty("mapid")) {
-                    return googleLayer = new ol.layer.Tile({
-                        source: new ol.source.XYZ({
+                    geeLayer = new ol.source.XYZ({
                             url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token
-                        })
-                    });
+                        });
                 } else {
                     console.warn("Wrong Data Returned");
                 }
             }
         });
+        return geeLayer;
 
     } else {
         return null;
@@ -152,6 +153,7 @@ mercator.createLayer = function (layerConfig) {
                                   extent: layerConfig.extent,
                                   source: source});
     } else {
+        console.log(source);
         return new ol.layer.Tile({title: layerConfig.title,
                                   visible: false,
                                   source: source});
@@ -183,7 +185,7 @@ mercator.verifyZoomLevel = function (zoomLevel) {
 
 // [Pure] Predicate
 mercator.verifyLayerConfig = function (layerConfig) {
-    var layerKeys = Object.keys(layerConfig);
+    let layerKeys = Object.keys(layerConfig);
     return layerKeys.includes("title")
         && layerKeys.includes("extent")
         && layerKeys.includes("sourceConfig")
@@ -241,6 +243,7 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
 mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
+    console.log(layerConfigs);
     var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
