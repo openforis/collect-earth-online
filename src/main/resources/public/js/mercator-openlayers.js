@@ -99,8 +99,9 @@ mercator.createSource = function (sourceConfig) {
     }else if (sourceConfig.type == "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
-        const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
-        const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
+        //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
+        //const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
+        const url = sourceConfig.geeUrl;
         const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): '';
         const theJson = {
             dateFrom: sourceConfig.geeParams.startDate,

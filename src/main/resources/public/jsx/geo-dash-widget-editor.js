@@ -309,7 +309,7 @@ class BasicLayout extends React.PureComponent{
         return url;
     };
     buildImageryObject(img){
-        let gatewayUrl = getGatewayUrl(img);
+        let gatewayUrl = this.getGatewayUrl(img);
         let title = img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
         return {
