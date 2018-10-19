@@ -34,7 +34,7 @@ CREATE OR REPLACE FUNCTION update_sequence(_table text)
   RETURNS void AS
   $$
 	BEGIN
-		EXECUTE 
+	EXECUTE 
 			'WITH nextval as (			
 			SELECT MAX(id)+1 as nextval FROM ' 
 			|| quote_ident(_table) ||
@@ -789,27 +789,25 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
 		contributors integer
 	) AS $$
 	WITH members AS(
-		SELECT *
+		SELECT count(distinct user_id) as members
 		FROM select_project_users(_project_id)
 	),
-		contributors AS(
-			SELECT up.user_id as user_id,up.flagged as flagged,pl.assigned as assigned,pl.id as plot_id
+		sums AS(
+			SELECT count(distinct up.user_id) as contributors, sum(pl.flagged) as flagged, sum(pl.assigned) as assigned,count(distinct pl.id) as plots
 			FROM projects prj
 			INNER JOIN plots pl
 			  ON prj.id =  pl.project_id
-			INNER JOIN user_plots up
+			LEFT JOIN user_plots up
 			  ON up.plot_id = pl.id
 			WHERE prj.id = _project_id
-			  AND pl.flagged > 0
-			  AND pl.assigned > 0
-
+			  
 	)
-	SELECT CAST(count(flagged)AS int) AS flagged_plots,
-		   CAST(count(assigned) AS int) assigned_plots,
-		   CAST(GREATEST(0,(count(plot_id)-count(flagged)-count(assigned))) as int) AS unassigned_plots,
-		   CAST(count(members.user_id) AS int) AS members,
-	       CAST(count(contributors.user_id) AS int) AS contributors
-	FROM members, contributors
+	SELECT CAST(flagged AS int) AS flagged_plots,
+		   CAST(assigned AS int) assigned_plots,
+		   CAST(GREATEST(0,(plots-flagged-assigned)) as int) AS unassigned_plots,
+		   CAST(members AS int) AS members,
+	       CAST(contributors AS int) AS contributors
+	FROM members, sums
 $$ LANGUAGE SQL;
 
 --Returns unanalyzed plots

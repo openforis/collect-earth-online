@@ -264,9 +264,9 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(1,Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
             if (rs.next()){
-                stats.addProperty("flagged_plots",rs.getInt("flagged_plots"));
-                stats.addProperty("assigned_plots",rs.getInt("assigned_plots"));
-                stats.addProperty("unassigned_plots",rs.getInt("unassigned_plots"));
+                stats.addProperty("flaggedPlots",rs.getInt("flagged_plots"));
+                stats.addProperty("assignedPlots",rs.getInt("assigned_plots"));
+                stats.addProperty("unassignedPlots",rs.getInt("unassigned_plots"));
                 stats.addProperty("members",rs.getInt("members"));
                 stats.addProperty("contributors",rs.getInt("contributors"));
             }
@@ -724,12 +724,7 @@ public class PostgresProjects implements Projects {
             latMax = csvBounds[3];
         }
 
-        // Store the lat/lon bounding box coordinates as GeoJSON and remove their original fields
         newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
-        newProject.remove("lonMin");
-        newProject.remove("latMin");
-        newProject.remove("lonMax");
-        newProject.remove("latMax");
 
         // Convert the lat/lon boundary coordinates to Web Mercator (units: meters) and apply an interior buffer of plotSize / 2
         var bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, 4326, 3857);
@@ -745,18 +740,22 @@ public class PostgresProjects implements Projects {
             : csvPoints;
         try (var conn = connect()) {
             //update plots
-            var SqlPlots = "SELECT * FROM create_project_plots(?,?)";
+            var SqlPlots = "SELECT * FROM create_project_plots(?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
             var pstmtPlots = conn.prepareStatement(SqlPlots) ;
-            pstmtPlots.setInt(1,newProject.get("id").getAsInt());
-            pstmtPlots.setObject(2,newPlotCenters);
+            pstmtPlots.setInt(1,Integer.parseInt(newProject.get("projId").getAsString()));
+            pstmtPlots.setInt(2, 0);            
+            pstmtPlots.setString(3, makeGeoJsonPoint(newPlotCenters[0][0], newPlotCenters[0][1] ).toString());
             var rsPlots = pstmtPlots.executeQuery();
-            var newPlotId = rsPlots.getInt("id");
+            var newPlotId = 0;
+            if (rsPlots.next()) {
+                newPlotId = rsPlots.getInt("create_project_plots");
+            }
 
             //update samples
-            var SqlSamples = "SELECT * FROM create_project_plot_samples(?,?)";
+            var SqlSamples = "SELECT * FROM create_project_plot_samples(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
             var pstmtSamples = conn.prepareStatement(SqlSamples) ;
             pstmtSamples.setInt(1,newPlotId);
-            pstmtSamples.setObject(2,newPlotCenters);
+            pstmtSamples.setString(2,makeGeoJsonPoint(newPlotCenters[0][0], newPlotCenters[0][1] ).toString());
             var rsSamples = pstmtSamples.executeQuery();
 
             // Return the updated project object
@@ -774,7 +773,6 @@ public class PostgresProjects implements Projects {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
             req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
-            System.out.println(req.raw().getPart("institution"));
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             var newProject = partsToJsonObject(req,
                                                new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
@@ -787,16 +785,22 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
             newProject.addProperty("availability", "unpublished");
-            System.out.println(newProject.toString());
+             // Store the lat/lon bounding box coordinates as GeoJSON and remove their original fields
+            var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
+            var latMin =             getOrZero(newProject,"latMin").getAsDouble();
+            var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
+            var latMax =             getOrZero(newProject,"latMax").getAsDouble();
+            // FIXME need to convert to geometry
+            newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
             try (var conn = connect()) {
-                var SQL = "SELECT * FROM create_project(?,?,?,?,?,?::geometry,?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
+                var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
                 var pstmt = conn.prepareStatement(SQL);
                 pstmt.setInt(1,newProject.get("institution").getAsInt());
                 pstmt.setString(2 ,newProject.get("availability").getAsString());
                 pstmt.setString(3,newProject.get("name").getAsString());
                 pstmt.setString(4, newProject.get("description").getAsString());
                 pstmt.setString(5, newProject.get("privacyLevel").getAsString());
-                pstmt.setString(6, null);
+                pstmt.setString(6, newProject.get("boundary").getAsString());
                 pstmt.setString(7, newProject.get("baseMapSource").getAsString());
                 pstmt.setString(8, newProject.get("plotDistribution").getAsString());
                 pstmt.setInt(9, getOrZero(newProject, "numPlots").getAsInt());
@@ -815,25 +819,30 @@ public class PostgresProjects implements Projects {
                 // pstmt.setDate(17,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
                 // pstmt.setDate(18, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
                 // pstmt.setInt(19, newProject.get("classification_timestep").getAsInt());
+
                 var rs = pstmt.executeQuery();
                 var newProjectId = "";
                 if (rs.next()){
                     newProjectId = Integer.toString(rs.getInt("create_project"));
+                    newProject.addProperty("projId", newProjectId);
                     // Upload the plot-distribution-csv-file if one was provided
+                    // not stored in database
                     if (newProject.get("plotDistribution").getAsString().equals("csv")) {
                         var csvFileName = writeFilePart(req,
                                 "plot-distribution-csv-file",
                                 expandResourcePath("/csv"),
                                 "project-" + newProjectId);
                         newProject.addProperty("csv", csvFileName);
+
                     } else {
                         newProject.add("csv", null);
                     }
+                    // Create the requested plot set and write it to plot-data-<newProjectId>.json
+                    var newProjectUpdated = createProjectPlots(newProject);
                 }
-                // Create the requested plot set and write it to plot-data-<newProjectId>.json
-                var newProjectUpdated = createProjectPlots(newProject);
                 // Indicate that the project was created successfully
                 return newProjectId;
+
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
                 // Indicate that an error occurred with project creation
