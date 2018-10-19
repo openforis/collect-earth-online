@@ -37,6 +37,7 @@ class Collection extends React.Component {
         this.saveValues = this.saveValues.bind(this);
         this.showProjectMap=this.showProjectMap.bind(this);
         this.showAnswers=this.showAnswers.bind(this);
+        this.flagPlot=this.flagPlot.bind(this);
     };
     componentDidMount() {
         this.initialization();
@@ -254,12 +255,12 @@ class Collection extends React.Component {
             // FIXME: What is the minimal set of these that I can execute?
             utils.enable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
-            if (document.getElementById("flag-plot-button") != null) {
-                var ref = this;
-                document.getElementById("flag-plot-button").onclick = function () {
-                    ref.flagPlot();
-                }
-            }
+            // if (document.getElementById("flag-plot-button") != null) {
+            //     var ref = this;
+            //     document.getElementById("flag-plot-button").onclick = function () {
+            //         ref.flagPlot();
+            //     }
+            // }
             utils.disable_element("save-values-button");
 
             // FIXME: These classes should be handled with an ng-if in collection.ftl
@@ -337,6 +338,7 @@ class Collection extends React.Component {
         var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
             if (answer.hasChildQuestion) {
+                alert('Select an answer for '+answer.answer + ' by selecting the child question.');
             }
             else{
                 selectedFeatures.forEach(
@@ -379,28 +381,28 @@ class Collection extends React.Component {
     }
     flagPlot() {
         var ref = this;
-        if (ref.state.currentPlot != null) {
-            $.ajax({
-                url: ref.state.documentRoot + "/flag-plot",
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: false,
-                processData: false,
-                data: JSON.stringify({
-                    projectId: ref.props.projectId,
-                    plotId: ref.state.currentPlot.id,
-                    userId: ref.props.userName
-                })
-            }).fail(function () {
-                alert("Error flagging plot as bad. See console for details.");
-            }).done(function (data) {
-                var statistics = ref.state.stats;
-                statistics.flaggedPlots = statistics.flaggedPlots + 1;
-                ref.setState({stats: statistics});
-                ref.nextPlot();
-            });
-        }
+            if (ref.state.currentPlot != null) {
+                $.ajax({
+                    url: ref.state.documentRoot + "/flag-plot",
+                    type: "POST",
+                    async: true,
+                    crossDomain: true,
+                    contentType: false,
+                    processData: false,
+                    data: JSON.stringify({
+                        projectId: ref.props.projectId,
+                        plotId: ref.state.currentPlot.id,
+                        userId: ref.props.userName
+                    })
+                }).fail(function () {
+                    alert("Error flagging plot as bad. See console for details.");
+                }).done(function (data) {
+                    var statistics = ref.state.stats;
+                    statistics.flaggedPlots = statistics.flaggedPlots + 1;
+                    ref.setState({stats: statistics});
+                    ref.nextPlot();
+                });
+            }
     }
     nextPlot() {
         // FIXME: What is the minimal set of these that I can execute?
@@ -421,6 +423,10 @@ class Collection extends React.Component {
         this.setState({currentPlot: null});
         this.setState({userSamples: {}});
         this.loadRandomPlot();
+        var ref=this;
+        document.getElementById('flag-plot-button').onclick = function () {
+            ref.flagPlot()
+        };
     }
     loadRandomPlot() {
         if (this.state.currentPlot == null) {
@@ -787,9 +793,7 @@ function SideBarFieldSet(props) {
         }
         </select>;
     }
-
     if (collection.currentProject != null) {
-        var newSV=collection.currentProject.sampleValues;
         surveyQuestionTree=props.getCurrent(-1,props._this);
         if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
             selectDG = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
@@ -877,7 +881,7 @@ function SideBarFieldSet(props) {
                     <div className="col-sm-6 pl-2">
                         <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                type="button"
-                               name="flag-plot" defaultValue="Flag Plot as Bad" onClick={props.flagPlot}
+                               name="flag-plot" value="Flag Plot as Bad"
                                style={{opacity: "0.5"}} disabled/>
                     </div>
                 </div>
