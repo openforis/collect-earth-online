@@ -39,6 +39,10 @@ class Collection extends React.Component {
     };
     componentDidMount() {
         this.initialization();
+        var ref = this;
+        document.getElementById('flag-plot-button').onclick = function () {
+            ref.flagPlot()
+        };
     }
     getProjectById() {
         fetch(this.state.documentRoot + "/get-project-by-id/" + this.props.projectId)
@@ -130,7 +134,7 @@ class Collection extends React.Component {
                     });
                     currProj.sampleValues = newSV;
                     console.log(currProj.sampleValues);
-                    this.setState({currentProject: currProj}, this.showProjectMap());
+                    this.setState({currentProject: currProj});
                     this.getImageryList(data.institution);
                 }
             });
@@ -182,9 +186,7 @@ class Collection extends React.Component {
                 this.setState({imageryList: data})
             })
             .then(function(){
-
                 if (ref.state.imageryList != null && ref.state.imageryList.length > 0) {
-                    console.log("i worked");
                     ref.showProjectMap();
                 }
 
@@ -432,9 +434,7 @@ class Collection extends React.Component {
         this.setState({userSamples: {}});
         this.loadRandomPlot();
         var ref=this;
-        document.getElementById('flag-plot-button').onclick = function () {
-            ref.flagPlot()
-        };
+
     }
     loadRandomPlot() {
         if (this.state.currentPlot == null) {
@@ -883,7 +883,8 @@ function SideBarFieldSet(props) {
                         <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                type="button"
                                name="flag-plot" value="Flag Plot as Bad"
-                               style={{opacity: "0.5"}} disabled/>
+                               style={{opacity: "0.5"}} disabled
+                               />
                     </div>
                 </div>
             </fieldset>

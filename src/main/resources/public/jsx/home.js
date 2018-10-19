@@ -50,16 +50,19 @@ class MapPanel extends React.Component {
 
     componentDidMount() {
         //get projects
+        var ref  = this;
         fetch(this.state.documentRoot + "/get-all-projects?userId=" + this.props.userId)
             .then(response => response.json())
-            .then(data => this.setState({projects: data}));
-        //get imagery
-        fetch(this.state.documentRoot + "/get-all-imagery")
-            .then(response => response.json())
-            .then(data => this.setState({imagery: data}));
-        setTimeout(() => {
-            this.showProjectMap(this.state.projects, this.state.imagery, this.state.documentRoot);
-        }, 250);
+            .then(data => this.setState({projects: data}))
+            .then(function () {
+                    fetch(ref.state.documentRoot + "/get-all-imagery")
+                        .then(response => response.json())
+                        .then(data => ref.setState({imagery: data}))
+                        .then(function () {
+                            ref.showProjectMap(ref.state.projects, ref.state.imagery, ref.state.documentRoot);
+                        });
+                }
+            );
     }
 
 
