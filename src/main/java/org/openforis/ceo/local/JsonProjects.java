@@ -145,6 +145,18 @@ public class JsonProjects implements Projects {
         }
     }
 
+    public String getProjectPlot(Request req, Response res) {
+        var projectId = req.params(":project-id");
+        var plotId = req.params(":plot-id");
+        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        var matchingPlot = findInJsonArray(plots, plot -> plot.get("id").getAsString().equals(plotId));
+        if (matchingPlot.isPresent()) {
+            return matchingPlot.get().toString();
+        } else {
+            return "";
+        }
+    }
+
     private static String[] getProjectUsers(String projectId) {
         var projects = readJsonFile("project-list.json").getAsJsonArray();
         var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));

@@ -37,6 +37,7 @@ class Collection extends React.Component {
         this.saveValues = this.saveValues.bind(this);
         this.showProjectMap=this.showProjectMap.bind(this);
         this.showAnswers=this.showAnswers.bind(this);
+        this.flagPlot=this.flagPlot.bind(this);
     };
     componentDidMount() {
         this.initialization();
@@ -57,21 +58,32 @@ class Collection extends React.Component {
                     alert("No project found with ID " + this.props.projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
-                    var currProj=data;
-                    var newSV=[];
-                    var sv=data.sampleValues;
-                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,answered:false};
+                    var currProj = data;
+                    var newSV = [];
+                    var sv = data.sampleValues;
+                    var tempSQ = {
+                        id: -1,
+                        question: "",
+                        answers: [],
+                        parent_question: -1,
+                        parent_answer: -1,
+                        answered: false
+                    };
 
-                    if(sv.length>0){
+                    if (sv.length > 0) {
 
-                        sv.map((sq)=>{
-                                if(sq.name){
-                                    tempSQ.id=sq.id;
-                                    tempSQ.question=sq.name;
-                                    sq.values.map((sa)=>{
-                                        if(sa.name){
-                                            if(sa.id>0){
-                                                tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
+                        sv.map((sq) => {
+                                if (sq.name) {
+                                    tempSQ.id = sq.id;
+                                    tempSQ.question = sq.name;
+                                    sq.values.map((sa) => {
+                                        if (sa.name) {
+                                            if (sa.id > 0) {
+                                                tempSQ.answers.push({
+                                                    id: sa.id,
+                                                    answer: sa.name,
+                                                    color: sa.color
+                                                });
                                             }
                                         }
                                         else {
@@ -79,19 +91,47 @@ class Collection extends React.Component {
                                         }
 
                                     });
-                                    if(tempSQ.id>0){
+                                    if (tempSQ.id > 0) {
                                         newSV.push(tempSQ);
                                     }
                                 }
-                                else{
-                                    sq.answered=false;
+                                else {
+                                    sq.answered = false;
                                     newSV.push(sq);
                                 }
                             }
                         );
                     }
-                    currProj.sampleValues=newSV;
 
+                    newSV.map((s)=>{
+                       s.answers.map((a)=>{
+                           a.hasChildQuestion=false;
+                       })
+                    });
+                    var testSV = newSV;
+                    var testRes = [];
+                    testRes = newSV.map((sq) => {
+                        if (sq.parent_question > 0) {
+                             testSV.map((sqq) => {
+                                if (sqq.id == sq.parent_question) {
+                                    if (sq.parent_answer > 0) {
+                                        sqq.answers.map((ans) => {
+                                            if (ans.id == sq.parent_answer) {
+                                                ans.hasChildQuestion = true;
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        sqq.answers.map((ans) => {
+                                            ans.hasChildQuestion = true;
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    currProj.sampleValues = newSV;
+                    console.log(currProj.sampleValues);
                     this.setState({currentProject: currProj});
                     this.getImageryList(data.institution);
                 }
@@ -215,12 +255,12 @@ class Collection extends React.Component {
             // FIXME: What is the minimal set of these that I can execute?
             utils.enable_element("new-plot-button");
             utils.enable_element("flag-plot-button");
-            if (document.getElementById("flag-plot-button") != null) {
-                var ref = this;
-                document.getElementById("flag-plot-button").onclick = function () {
-                    ref.flagPlot();
-                }
-            }
+            // if (document.getElementById("flag-plot-button") != null) {
+            //     var ref = this;
+            //     document.getElementById("flag-plot-button").onclick = function () {
+            //         ref.flagPlot();
+            //     }
+            // }
             utils.disable_element("save-values-button");
 
             // FIXME: These classes should be handled with an ng-if in collection.ftl
@@ -295,81 +335,74 @@ class Collection extends React.Component {
             });
     }
     setCurrentValue(event,surveyQuestion, answer) {
-        console.log("answer");
-        console.log(answer);
-        this.state.currentProject.sampleValues.map((sq) => {
-                if (answer.id == sq.parent_answer) {
-                    console.log("is a parent");
-                    console.log(answer.id);
-                    console.log(answer.answer);
-                }
-                else {
-                }
-                    var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-                    if (selectedFeatures && selectedFeatures.getLength() > 0) {
-                        selectedFeatures.forEach(
-                            function (sample) {
-                                var sampleId = sample.get("sampleId");
-                                var uSamples = this.state.userSamples;
-                                if (!this.state.userSamples[sampleId]) {
-                                    uSamples[sampleId] = {};
-                                    this.setState({userSamples: uSamples});
-                                }
-                                uSamples[sampleId][surveyQuestion.question] = answer.answer;
-                                this.setState({userSamples: uSamples});
-                                mercator.highlightSamplePoint(sample, answer.color);
-                            },
-                            this // necessary to pass outer scope into function
-                        );
-                        selectedFeatures.clear();
-                        utils.blink_border(answer.answer + "_" + answer.id);
-                        if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
-                            && Object.values(this.state.userSamples).every(function (values) {
-                                return Object.keys(values).length == this.state.currentProject.sampleValues.length;
-                            }, this)) {
-                            // FIXME: What is the minimal set of these that I can execute?
-                            utils.enable_element("save-values-button");
-                            if (document.getElementById("save-values-button") != null) {
-                                var ref = this;
-                                document.getElementById("save-values-button").onclick = function () {
-                                    ref.saveValues();
-                                }
-                            }
-                            utils.disable_element("new-plot-button");
+        var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
+        if (selectedFeatures && selectedFeatures.getLength() > 0) {
+            if (answer.hasChildQuestion) {
+                alert('Select an answer for '+answer.answer + ' by selecting the child question.');
+            }
+            else{
+                selectedFeatures.forEach(
+                    function (sample) {
+                        var sampleId = sample.get("sampleId");
+                        var uSamples = this.state.userSamples;
+                        if (!this.state.userSamples[sampleId]) {
+                            uSamples[sampleId] = {};
+                            this.setState({userSamples: uSamples});
                         }
-
-                    } else {
-                        alert("No sample points selected. Please click some first.");
+                        uSamples[sampleId][surveyQuestion.question] = answer.answer;
+                        this.setState({userSamples: uSamples});
+                        mercator.highlightSamplePoint(sample, answer.color);
+                    },
+                    this // necessary to pass outer scope into function
+                );
+                console.log("user samples");
+                console.log(this.state.userSamples);
+                selectedFeatures.clear();
+                utils.blink_border(answer.answer + "_" + answer.id);
+                if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
+                    && Object.values(this.state.userSamples).every(function (values) {
+                        return Object.keys(values).length == this.state.currentProject.sampleValues.length;
+                    }, this)) {
+                    // FIXME: What is the minimal set of these that I can execute?
+                    utils.enable_element("save-values-button");
+                    if (document.getElementById("save-values-button") != null) {
+                        var ref = this;
+                        document.getElementById("save-values-button").onclick = function () {
+                            ref.saveValues();
+                        }
                     }
-
+                    utils.disable_element("new-plot-button");
                 }
-
-        );
+            }
+        }
+        else {
+            alert("No sample points selected. Please click some first.");
+        }
     }
     flagPlot() {
         var ref = this;
-        if (ref.state.currentPlot != null) {
-            $.ajax({
-                url: ref.state.documentRoot + "/flag-plot",
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: false,
-                processData: false,
-                data: JSON.stringify({
-                    projectId: ref.props.projectId,
-                    plotId: ref.state.currentPlot.id,
-                    userId: ref.props.userName
-                })
-            }).fail(function () {
-                alert("Error flagging plot as bad. See console for details.");
-            }).done(function (data) {
-                var statistics = ref.state.stats;
-                statistics.flaggedPlots = statistics.flaggedPlots + 1;
-                ref.setState({stats: statistics});
-                ref.nextPlot();
-            });
-        }
+            if (ref.state.currentPlot != null) {
+                $.ajax({
+                    url: ref.state.documentRoot + "/flag-plot",
+                    type: "POST",
+                    async: true,
+                    crossDomain: true,
+                    contentType: false,
+                    processData: false,
+                    data: JSON.stringify({
+                        projectId: ref.props.projectId,
+                        plotId: ref.state.currentPlot.id,
+                        userId: ref.props.userName
+                    })
+                }).fail(function () {
+                    alert("Error flagging plot as bad. See console for details.");
+                }).done(function (data) {
+                    var statistics = ref.state.stats;
+                    statistics.flaggedPlots = statistics.flaggedPlots + 1;
+                    ref.setState({stats: statistics});
+                    ref.nextPlot();
+                });
+            }
     }
     nextPlot() {
         // FIXME: What is the minimal set of these that I can execute?
@@ -390,6 +423,10 @@ class Collection extends React.Component {
         this.setState({currentPlot: null});
         this.setState({userSamples: {}});
         this.loadRandomPlot();
+        var ref=this;
+        document.getElementById('flag-plot-button').onclick = function () {
+            ref.flagPlot()
+        };
     }
     loadRandomPlot() {
         if (this.state.currentPlot == null) {
@@ -533,59 +570,59 @@ class Collection extends React.Component {
 
     }
         showAnswers(event){
-        var cp=this.state.currentProject;
-        var sv=this.state.currentProject.sampleValues;
-            var x = event.target.nextSibling;
-
-            if (x.style.display === "none") {
-                x.style.display = "block";
-          sv.map((sq)=>{
-                    if(sq.id==event.target.id){
-                        sq.answered=true;
-                    }
-                });
-            } else {
-                x.style.display = "none";
-                sv.map((sq)=>{
-                  if(sq.id==event.target.id){
-                      sq.answered=false;
-                    }
-                });
-            }
-            cp.sampleValues=sv;
-            this.setState({currentProject:cp});
-            console.log(cp);
+           var cp=this.state.currentProject;
+            var sv=this.state.currentProject.sampleValues;
+                var x = event.target.nextSibling;
+                if (x.style.display === "none") {
+                    x.style.display = "block";
+              sv.map((sq)=>{
+                        if(sq.id==event.target.id){
+                            sq.answered=true;
+                        }
+                    });
+                } else {
+                    x.style.display = "none";
+                    sv.map((sq)=>{
+                      if(sq.id==event.target.id){
+                          sq.answered=false;
+                        }
+                    });
+                }
+                cp.sampleValues=sv;
+                this.setState({currentProject:cp});
+                console.log(cp);
         }
 
     getCurrent = (node,ref) => this.state.currentProject.sampleValues.filter(cNode => cNode.parent_question == node).map(function(cNode,_uid) {
-        if(cNode.answered) {
+          if(cNode.answered) {
+
             return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
                 <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                         onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
                     Question: {cNode.question}</button>
                 <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
                     {
-                        cNode.answers.map((ans, uid) => {
-                                <li key={uid} className="mb-1">
-                                    <button type="button"
-                                            className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                            id={ans.answer + '_' + ans.id}
-                                            name={ans.answer + '_' + ans.id}
-                                            onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
-                                        <div className="circle" style={{
-                                            backgroundColor: ans.color,
-                                            border: "solid 1px",
-                                            float: "left",
-                                            marginTop: "4px"
-                                        }}></div>
-                                        <span className="small">{ans.answer}</span>
-                                    </button>
-                                    {ref.getCurrent(cNode.id, ref)}
-                                </li>
-                            }
+                        cNode.answers.map((ans, uid) =>
+                            <li key={uid} className="mb-1">
+                                <button type="button"
+                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                        id={ans.answer + '_' + ans.id}
+                                        name={ans.answer + '_' + ans.id}
+                                        onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
+                                    <div className="circle" style={{
+                                        backgroundColor: ans.color,
+                                        border: "solid 1px",
+                                        float: "left",
+                                        marginTop: "4px"
+                                    }}></div>
+                                    <span className="small">{ans.answer}</span>
+                                </button>
+                            </li>
                         )
                     }
                 </ul>
+                {ref.getCurrent(cNode.id, ref)}
+
             </fieldset>
         }
         else{
@@ -756,9 +793,7 @@ function SideBarFieldSet(props) {
         }
         </select>;
     }
-
     if (collection.currentProject != null) {
-        var newSV=collection.currentProject.sampleValues;
         surveyQuestionTree=props.getCurrent(-1,props._this);
         if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
             selectDG = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
@@ -846,7 +881,7 @@ function SideBarFieldSet(props) {
                     <div className="col-sm-6 pl-2">
                         <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                                type="button"
-                               name="flag-plot" defaultValue="Flag Plot as Bad" onClick={props.flagPlot}
+                               name="flag-plot" value="Flag Plot as Bad"
                                style={{opacity: "0.5"}} disabled/>
                     </div>
                 </div>
