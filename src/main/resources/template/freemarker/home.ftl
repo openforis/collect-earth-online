@@ -10,7 +10,7 @@
      home.renderHomePage({
          documentRoot: "${root}",
          userId:       "${userid}",
-         username:     "${username}"
+         userName:     "${username}"
      });
  };
 </script>
