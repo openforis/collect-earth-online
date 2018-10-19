@@ -154,7 +154,6 @@ mercator.createLayer = function (layerConfig) {
                                   extent: layerConfig.extent,
                                   source: source});
     } else {
-        console.log(source);
         return new ol.layer.Tile({title: layerConfig.title,
                                   visible: false,
                                   source: source});

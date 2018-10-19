@@ -483,6 +483,13 @@ class BasicLayout extends React.PureComponent{
 
 
         }
+        else if(this.state.selectedWidgetType == "imageAsset")
+        {
+            widget.properties = ["","","","",""];
+            widget.filterType = '';
+            widget.visParams = this.state.imageParams;
+            widget.ImageAsset = this.state.imageCollection;
+        }
         else {
             var wType = this.state.selectedWidgetType == 'TimeSeries' ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType == 'ImageCollection' ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType == 'statistics' ? 'getStats' : 'custom';
             var prop1 = '';
@@ -784,6 +791,7 @@ class BasicLayout extends React.PureComponent{
                                             <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
                                             <option label="Statistics" value="statistics">Statistics</option>
                                             <option label="Dual Image Collection" value="DualImageCollection">Dual Image Collection</option>
+                                            <option label="Image Asset" value="imageAsset">Image Asset</option>
                                         </select>
                                     </div>
                                     {this.getBaseMapSelector()}
@@ -816,7 +824,7 @@ class BasicLayout extends React.PureComponent{
 
     }
     getBaseMapSelector(){
-        if(this.state.selectedWidgetType == 'ImageCollection' || this.state.selectedWidgetType == 'DualImageCollection') {
+        if(this.state.selectedWidgetType == 'ImageCollection' || this.state.selectedWidgetType == 'DualImageCollection' || this.state.selectedWidgetType == 'imageAsset') {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select name="widgetIndicesSelect" value={this.state.WidgetBaseMap} className="form-control"
@@ -856,6 +864,15 @@ class BasicLayout extends React.PureComponent{
                     <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
                 </div>
             </React.Fragment>
+        }
+        else if(this.state.selectedWidgetType == 'imageAsset')
+        {
+            if(this.state.FormReady != true){
+                this.setState({
+                    FormReady: true
+                });
+            }
+            return <br/>
         }
         else if(this.state.selectedWidgetType == 'ImageCollection')
         {
@@ -936,7 +953,26 @@ class BasicLayout extends React.PureComponent{
     }
     getDataForm()
     {
-        if(this.state.selectedDataType == '-1')
+        if(this.state.selectedWidgetType == 'imageAsset')
+        {
+            return <React.Fragment>
+                <div className="form-group">
+                    <label htmlFor="widgetTitle">Title</label>
+                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                           className="form-control" onChange={this.onWidgetTitleChange}/>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="imageCollection">GEE Image Asset</label>
+                    <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
+                           className="form-control" onChange={this.onImageCollectionChange}/>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="imageParams">Image Parameters (json format)</label>
+                    <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: 'hidden', overflowWrap: 'break-word', resize: 'vertical'}}></textarea>
+                </div>
+            </React.Fragment>
+        }
+        else if(this.state.selectedDataType == '-1')
         {
             console.log('Blank');
             return
