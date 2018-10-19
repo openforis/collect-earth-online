@@ -154,7 +154,6 @@ mercator.createLayer = function (layerConfig) {
                                   extent: layerConfig.extent,
                                   source: source});
     } else {
-        console.log(source);
         return new ol.layer.Tile({title: layerConfig.title,
                                   visible: false,
                                   source: source});
@@ -244,7 +243,6 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
 mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
-    console.log(layerConfigs);
     var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);

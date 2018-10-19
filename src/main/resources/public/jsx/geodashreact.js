@@ -197,7 +197,7 @@ class Widget extends React.Component {
     }
     getWidgetType(awidget)
     {
-        if(awidget.dualImageCollection && awidget.dualImageCollection != null)
+        if((awidget.dualImageCollection && awidget.dualImageCollection != null) || (awidget.ImageAsset && awidget.ImageAsset.length > 0))
         {
             return "mapwidget";
         }
@@ -231,7 +231,7 @@ class Widget extends React.Component {
         let wtext = widget.properties[0];
         let control;
         let slider;
-        if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null))
+        if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0))
         {
             return <div className="front"><MapWidget widget={widget} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
 
@@ -319,6 +319,10 @@ class MapWidget extends React.Component {
         if(widget.filterType != null && widget.filterType.length > 0){
             var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
             url = "http://collect.earth:8888/" + fts[widget.filterType];
+        }
+        else if(widget.ImageAsset && widget.ImageAsset.length > 0)
+        {
+            url = "http://collect.earth:8888/image";
         }
         else if('ImageCollectionCustom' == widget.properties[0]){
             url = "http://collect.earth:8888/meanImageByMosaicCollections";
@@ -515,6 +519,10 @@ class MapWidget extends React.Component {
                 postObject.min = postObject.visParams.min;
                 postObject.max = postObject.visParams.max;
                 postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
+            }
+            if(widget.ImageAsset)
+            {
+                postObject.imageName = widget.ImageAsset;
             }
         }
 
@@ -1010,27 +1018,27 @@ function addBuffer (whichMap) {
         else{
 
 
-            fetch(theURL + "/id/" + pid,)
-                .then(response => response.json())
-                .then(function(_geojson_object){
-                    var vectorSource = new ol.source.Vector({
-                        features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:3857' }) // this is important to know...
-                    });
-
-                    vectorSource = new ol.layer.Vector({
-                        source: _geojson_vectorSource,
-                        style: [
-                            new ol.style.Style({
-                                stroke: new ol.style.Stroke({
-                                    color: "#8b2323",
-                                    width: 2
-                                }),
-                                fill: null
-                            })
-                        ]
-                    });
-                    whichMap.addLayer(_geojson_vectorLayer);
-                });
+            // fetch(theURL + "/id/" + pid,)
+            //     .then(response => response.json())
+            //     .then(function(_geojson_object){
+            //         var vectorSource = new ol.source.Vector({
+            //             features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:3857' }) // this is important to know...
+            //         });
+            //
+            //         vectorSource = new ol.layer.Vector({
+            //             source: _geojson_vectorSource,
+            //             style: [
+            //                 new ol.style.Style({
+            //                     stroke: new ol.style.Stroke({
+            //                         color: "#8b2323",
+            //                         width: 2
+            //                     }),
+            //                     fill: null
+            //                 })
+            //             ]
+            //         });
+            //         whichMap.addLayer(_geojson_vectorLayer);
+            //     });
 
 
             $.ajax({
