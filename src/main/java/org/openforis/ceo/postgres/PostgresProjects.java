@@ -6,6 +6,7 @@ import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -41,19 +42,37 @@ import spark.Response;
 
 public class PostgresProjects implements Projects {
 
-    private static String prepareGetAllProjectsQueryString(String userId, String institutionId) {
-        if (userId == null || userId.isEmpty()) {
-            if (institutionId == null || institutionId.isEmpty()) {
-                return "SELECT * FROM select_all_projects()";
+    // build connection string.  connection goes out of scope and will disconect
+    private static PreparedStatement prepareGetAllProjectsQuery(String userId, String institutionId) {
+        try (var conn = connect()) {
+            if (userId == null || userId.isEmpty()) {
+                if (institutionId == null || institutionId.isEmpty()) {
+                    var SQL = "SELECT * FROM select_all_projects()";
+                    var pstmt = conn.prepareStatement(SQL);
+                    return pstmt;
+                } else {
+                    var SQL = "SELECT * FROM select_all_institution_projects(?)";
+                    var pstmt = conn.prepareStatement(SQL);
+                    pstmt.setInt(1, Integer.parseInt(institutionId));
+                    return pstmt;
+                }
             } else {
-                return "SELECT * FROM select_all_institution_projects(" + institutionId + ")";
+                if (institutionId == null || institutionId.isEmpty()) {
+                    var SQL = "SELECT * FROM select_all_user_projects(?)";
+                    var pstmt = conn.prepareStatement(SQL);
+                    pstmt.setInt(1, Integer.parseInt(userId));
+                    return pstmt;
+                } else {
+                    var SQL = "SELECT * FROM select_institution_projects_with_roles(?,?)";
+                    var pstmt = conn.prepareStatement(SQL);
+                    pstmt.setInt(1, Integer.parseInt(userId));
+                    pstmt.setInt(2, Integer.parseInt(institutionId));
+                    return pstmt;
+                }
             }
-        } else {
-            if (institutionId == null || institutionId.isEmpty()) {
-                return "SELECT * FROM select_all_user_projects("+ userId + ")";
-            } else {
-                return "SELECT * FROM select_institution_projects_with_roles(" + userId + "," + institutionId + ")";
-            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return null;
         }
     }
 
@@ -70,7 +89,7 @@ public class PostgresProjects implements Projects {
         var userId = req.queryParams("userId");
         var institutionId = req.queryParams("institutionId");
 
-        var SQL = prepareGetAllProjectsQueryString(userId, institutionId);
+        var SQL = prepareGetAllProjectsQuery(userId, institutionId).toString();
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
@@ -80,22 +99,22 @@ public class PostgresProjects implements Projects {
             while(rs.next()) {
                 var newProject = new JsonObject();
                 newProject.addProperty("id",rs.getInt("id"));
-                newProject.addProperty("institution_id",rs.getInt("institution_id"));
+                newProject.addProperty("institution",rs.getInt("institution_id"));
                 newProject.addProperty("availability",rs.getString("availability"));
                 newProject.addProperty("name",rs.getString("name"));
                 newProject.addProperty("description",rs.getString("description"));
-                newProject.addProperty("privacy_level",rs.getString("privacy_level"));
+                newProject.addProperty("privacyLevel",rs.getString("privacy_level"));
                 newProject.addProperty("boundary",rs.getString("boundary"));
-                newProject.addProperty("base_map_source",rs.getString("base_map_source"));
-                newProject.addProperty("plot_distribution",rs.getString("plot_distribution"));
-                newProject.addProperty("num_plots",rs.getInt("num_plots"));
-                newProject.addProperty("plot_spacing",rs.getFloat("plot_spacing"));
-                newProject.addProperty("plot_shape",rs.getString("plot_shape"));
-                newProject.addProperty("plot_size",rs.getFloat("plot_size"));
-                newProject.addProperty("sample_distribution",rs.getString("sample_distribution"));
-                newProject.addProperty("samples_per_plot",rs.getInt("samples_per_plot"));
-                newProject.addProperty("sample_resolution",rs.getFloat("sample_resolution"));
-                newProject.add("sample_survey", parseJson(rs.getString("sample_survey")).getAsJsonArray());
+                newProject.addProperty("baseMapSource",rs.getString("base_map_source"));
+                newProject.addProperty("plotDistribution",rs.getString("plot_distribution"));
+                newProject.addProperty("numPlots",rs.getInt("num_plots"));
+                newProject.addProperty("plotSpacing",rs.getFloat("plot_spacing"));
+                newProject.addProperty("plotShape",rs.getString("plot_shape"));
+                newProject.addProperty("plotSize",rs.getFloat("plot_size"));
+                newProject.addProperty("sampleDistribution",rs.getString("sample_distribution"));
+                newProject.addProperty("samplesPerPlot",rs.getInt("samples_per_plot"));
+                newProject.addProperty("sampleResolution",rs.getFloat("sample_resolution"));
+                newProject.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
 
                 // FIXME: this might be better handled by having a default date in the merge
                 var classificationStartDate = rs.getDate("classification_start_date");
@@ -127,22 +146,22 @@ public class PostgresProjects implements Projects {
             var rs = pstmt.executeQuery();
             if(rs.next()) {
                 project.addProperty("id", rs.getInt("id"));
-                project.addProperty("institution_id", rs.getInt("institution_id"));
+                project.addProperty("institution", rs.getInt("institution_id"));
                 project.addProperty("availability", rs.getString("availability"));
                 project.addProperty("name", rs.getString("name"));
                 project.addProperty("description", rs.getString("description"));
-                project.addProperty("privacy_level", rs.getString("privacy_level"));
+                project.addProperty("privacyLevel", rs.getString("privacy_level"));
                 project.addProperty("boundary", rs.getString("boundary"));
-                project.addProperty("base_map_source", rs.getString("base_map_source"));
-                project.addProperty("plot_distribution", rs.getString("plot_distribution"));
-                project.addProperty("num_plots", rs.getInt("num_plots"));
-                project.addProperty("plot_spacing", rs.getFloat("plot_spacing"));
-                project.addProperty("plot_shape", rs.getString("plot_shape"));
-                project.addProperty("plot_size", rs.getFloat("plot_size"));
-                project.addProperty("sample_distribution", rs.getString("sample_distribution"));
-                project.addProperty("samples_per_plot", rs.getInt("samples_per_plot"));
-                project.addProperty("sample_resolution", rs.getFloat("sample_resolution"));
-                project.add("sample_survey", parseJson(rs.getString("sample_survey")).getAsJsonArray());
+                project.addProperty("baseMapSource", rs.getString("base_map_source"));
+                project.addProperty("plotDistribution", rs.getString("plot_distribution"));
+                project.addProperty("numPlots", rs.getInt("num_plots"));
+                project.addProperty("plotSpacing", rs.getFloat("plot_spacing"));
+                project.addProperty("plotShape", rs.getString("plot_shape"));
+                project.addProperty("plotSize", rs.getFloat("plot_size"));
+                project.addProperty("sampleDistribution", rs.getString("sample_distribution"));
+                project.addProperty("samplesPerPlot", rs.getInt("samples_per_plot"));
+                project.addProperty("sampleResolution", rs.getFloat("sample_resolution"));
+                project.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
 
                 var classificationStartDate = rs.getDate("classification_start_date");
                 var classificationEndDate = rs.getDate("classification_end_date");
@@ -155,7 +174,30 @@ public class PostgresProjects implements Projects {
                 return project.toString();
 
             } else {
-                return "";
+                project.addProperty("id", 0);
+                project.addProperty("institution",0);
+                project.addProperty("availability", "nonexistent");
+                project.addProperty("name", "");
+                project.addProperty("description", "");
+                project.addProperty("privacyLevel", "public");
+                project.addProperty("boundary", "");
+                project.addProperty("baseMapSource", "");
+                project.addProperty("plotDistribution", "random");
+                project.addProperty("numPlots", "");
+                project.addProperty("plotSpacing", "");
+                project.addProperty("plotShape", "circle");
+                project.addProperty("plotSize", "");
+                project.addProperty("sampleDistribution", "random");
+                project.addProperty("samplesPerPlot","");
+                project.addProperty("sampleResolution", "");
+                project.add("sampleValues", parseJson("[]").getAsJsonArray());
+
+                project.addProperty("classification_start_date", "");
+                project.addProperty("classification_end_date", "");
+                project.addProperty("classification_timestep", 0);
+                // FIXME: if editable is needed, add to table and function
+                // project.addProperty("editable", rs.getBoolean("editable"));
+                return project.toString();
             }
 
         } catch (SQLException e) {
@@ -732,7 +774,7 @@ public class PostgresProjects implements Projects {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
             req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
-
+            System.out.println(req.raw().getPart("institution"));
             // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
             var newProject = partsToJsonObject(req,
                                                new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
@@ -745,35 +787,53 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
             newProject.addProperty("availability", "unpublished");
+            System.out.println(newProject.toString());
             try (var conn = connect()) {
-                var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                var SQL = "SELECT * FROM create_project(?,?,?,?,?,?::geometry,?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
                 var pstmt = conn.prepareStatement(SQL);
                 pstmt.setInt(1,newProject.get("institution").getAsInt());
                 pstmt.setString(2 ,newProject.get("availability").getAsString());
                 pstmt.setString(3,newProject.get("name").getAsString());
                 pstmt.setString(4, newProject.get("description").getAsString());
-                pstmt.setString(5, newProject.get("privacy-level").getAsString());
-                pstmt.setString(6, newProject.get("boundary").getAsString());
-                pstmt.setString(7, newProject.get("base-map-source").getAsString());
-                pstmt.setString(8, newProject.get("plot-distribution").getAsString());
-                pstmt.setInt(9, newProject.get("num-plots").getAsInt());
-                pstmt.setFloat(10, newProject.get("plot-spacing").getAsFloat());
-                pstmt.setString(11, newProject.get("plot-shape").getAsString());
-                pstmt.setFloat(12,  newProject.get("plot-size").getAsFloat());
-                pstmt.setString(13, newProject.get("sample-distribution").getAsString());
-                pstmt.setInt(14, newProject.get("samples-per-plot").getAsInt());
-                pstmt.setFloat(15,newProject.get("sample-resolution").getAsFloat());
-                pstmt.setObject(16, newProject.get("sample-values"));
-                pstmt.setDate(17,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
-                pstmt.setDate(18, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
-                pstmt.setInt(19, newProject.get("classification_timestep").getAsInt());
+                pstmt.setString(5, newProject.get("privacyLevel").getAsString());
+                pstmt.setString(6, null);
+                pstmt.setString(7, newProject.get("baseMapSource").getAsString());
+                pstmt.setString(8, newProject.get("plotDistribution").getAsString());
+                pstmt.setInt(9, getOrZero(newProject, "numPlots").getAsInt());
+                pstmt.setFloat(10, getOrZero(newProject, "plotSpacing").getAsFloat());
+                pstmt.setString(11, newProject.get("plotShape").getAsString());
+                pstmt.setFloat(12,  getOrZero(newProject, "plotSize").getAsFloat());
+                pstmt.setString(13, newProject.get("sampleDistribution").getAsString());
+                pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
+                pstmt.setFloat(15, getOrZero(newProject, "sampleResolution").getAsFloat());
+                pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
+                pstmt.setDate(17,  new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setDate(18, new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setInt(19, 0);
+                
+                // FIXME not implimented in JS
+                // pstmt.setDate(17,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
+                // pstmt.setDate(18, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
+                // pstmt.setInt(19, newProject.get("classification_timestep").getAsInt());
                 var rs = pstmt.executeQuery();
-                var newProjectId = rs.getInt("id");
-
+                var newProjectId = "";
+                if (rs.next()){
+                    newProjectId = Integer.toString(rs.getInt("create_project"));
+                    // Upload the plot-distribution-csv-file if one was provided
+                    if (newProject.get("plotDistribution").getAsString().equals("csv")) {
+                        var csvFileName = writeFilePart(req,
+                                "plot-distribution-csv-file",
+                                expandResourcePath("/csv"),
+                                "project-" + newProjectId);
+                        newProject.addProperty("csv", csvFileName);
+                    } else {
+                        newProject.add("csv", null);
+                    }
+                }
                 // Create the requested plot set and write it to plot-data-<newProjectId>.json
                 var newProjectUpdated = createProjectPlots(newProject);
                 // Indicate that the project was created successfully
-                return newProjectId + "";
+                return newProjectId;
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
                 // Indicate that an error occurred with project creation

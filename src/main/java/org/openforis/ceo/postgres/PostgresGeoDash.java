@@ -38,7 +38,13 @@ public class PostgresGeoDash implements GeoDash {
                 newDashboard.addProperty("projectID", projectId);
                 newDashboard.addProperty("projectTitle", projectTitle);
                 newDashboard.addProperty("dashboardID", rs.getString("dashboard_id"));
-                newDashboard.add("widgets", parseJson(rs.getString("widget")).getAsJsonArray());
+                var widgetsJson = new JsonArray();
+
+                do {
+                    widgetsJson.add(parseJson(rs.getString("widget")).getAsJsonObject());
+                } while (rs.next());
+
+                newDashboard.add("widgets", widgetsJson);
                 
                 if (callback != null) {
                     return callback + "(" + newDashboard.toString() + ")";

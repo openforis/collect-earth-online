@@ -18,7 +18,6 @@ def insert_users():
             cur.execute("select * from add_user(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
             user_id = cur.fetchone()[0]
             conn.commit()
-        cur.execute("select * from update_sequence('users')")
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -63,7 +62,6 @@ def insert_institutions():
 
             institution_id = cur.fetchone()[0]
             conn.commit()
-        cur.execute("select * from update_sequence('institutions')")        
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -85,7 +83,6 @@ def insert_imagery():
             cur.execute("select * from add_institution_imagery(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
             imagery_id = cur.fetchone()[0]
             conn.commit()
-        cur.execute("select * from update_sequence('imagery')")  
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -99,9 +96,10 @@ def insert_project_widgets(project_id,dash_id,conn):
         dirname = os.path.dirname(os.path.realpath(__file__))
         dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/dash-'+dash_id+'.json'))), "r").read() 
         widget = demjson.decode(dash_json)
-        if widget['projectID'] is not None and str(project_id)==widget['projectID']:
-            cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(widget['widgets'])))
-            conn.commit()
+        if widget['projectID'] is not None and project_id==widget['projectID']:
+            for awidget in widget['widgets']:
+                cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(awidget)))
+                conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print("project widgets: "+ str(error))    
@@ -117,9 +115,9 @@ def insert_projects():
         cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath(__file__))
-        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/project-list.json'))), "r").read()
+        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/project-list.json'))), "r", encoding="utf8").read()
         projectArr = demjson.decode(project_list_json)
-        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r").read()
+        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r", encoding="utf8").read()
         dashArr = demjson.decode(project_dash_list_json)
         print(len(projectArr))
         for project in projectArr:
@@ -147,7 +145,6 @@ def insert_projects():
                     conn.commit()
             except(Exception, psycopg2.DatabaseError) as error:
                 print("project for loop: "+ str(error))
-        cur.execute("select * from update_sequence('projects')")
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print("project outer: "+ str(error))
@@ -235,6 +232,18 @@ def insert_roles():
     finally:
         if conn is not None:
             conn.close()
+def update_sequence():
+    conn = psycopg2.connect(**params)
+    cur = conn.cursor()
+    cur.execute("select * from update_sequence('users')")
+    cur.execute("select * from update_sequence('institutions')")  
+    cur.execute("select * from update_sequence('imagery')")  
+    cur.execute("select * from update_sequence('projects')")
+    cur.execute("select * from update_sequence('user_plots')")
+    cur.execute("select * from update_sequence('sample_values')")
+    cur.execute("select * from update_sequence('plots')")
+
+
 
 if __name__ == '__main__':
     print("inserting users")
@@ -247,4 +256,6 @@ if __name__ == '__main__':
     insert_imagery()
     print("inserting projects")
     insert_projects()
+    print("Done with projects")
+    update_sequence()
     print("Done migration")

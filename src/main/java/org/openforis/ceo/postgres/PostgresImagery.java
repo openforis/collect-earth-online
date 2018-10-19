@@ -61,30 +61,20 @@ public class PostgresImagery implements Imagery {
             var institutionId         = jsonInputs.get("institutionId").getAsInt();
             var imageryTitle          = jsonInputs.get("imageryTitle").getAsString();
             var imageryAttribution    = jsonInputs.get("imageryAttribution").getAsString();
-            var geoserverURL          = jsonInputs.get("geoserverURL").getAsString();
-            var layerName             = jsonInputs.get("layerName").getAsString();
-            var geoserverParamsString = jsonInputs.get("geoserverParams").getAsString();
-            var geoserverParams       = geoserverParamsString.equals("")
-                                            ? new JsonObject()
-                                            : parseJson(geoserverParamsString).getAsJsonObject();
+            var extent                = jsonInputs.has("extent") ? jsonInputs.get("extent").getAsString() : "{}";
+            var sourceConfig          = jsonInputs.get("sourceConfig").getAsString();
 
-            // Add layerName to geoserverParams
-            geoserverParams.addProperty("LAYERS", layerName);
-            var sourceConfig = new JsonObject();
-            sourceConfig.addProperty("type", "GeoServer");
-            sourceConfig.addProperty("geoserverUrl", geoserverURL);
-            sourceConfig.add("geoserverParams", geoserverParams);
 
             var SQL = "SELECT * FROM add_institution_imagery_auto_id(?, ?, ?, ?, ?::JSONB, ?::JSONB)";
 
             try (var conn = connect();
-                 var pstmt = conn.prepareStatement(SQL)) {
+                var pstmt = conn.prepareStatement(SQL)) {
                 pstmt.setInt(1, institutionId);
                 pstmt.setString(2, "private");
                 pstmt.setString(3, imageryTitle);
                 pstmt.setString(4, imageryAttribution);
-                pstmt.setString(5, ""); //This is the extent
-                pstmt.setString(6, sourceConfig.toString());
+                pstmt.setString(5, extent);
+                pstmt.setString(6, sourceConfig);
                 var rs = pstmt.executeQuery();
                 return "";
             } catch (SQLException e) {

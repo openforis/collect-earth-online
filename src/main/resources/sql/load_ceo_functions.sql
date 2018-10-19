@@ -31,14 +31,20 @@ LANGUAGE SQL;
 -- manually adding rows while specifying id will not update the sequence
 -- update the sequnce at the end of the migration
 CREATE OR REPLACE FUNCTION update_sequence(_table text)
-  RETURNS bigint AS
+  RETURNS void AS
   $$
-      WITH nextval AS (
-	  	SELECT MAX(id)+1 as nextval FROM users
-	  )
-		SELECT setval(pg_get_serial_sequence(_table, 'id'), nextval, false) from nextval
+	BEGIN
+		EXECUTE 
+			'WITH nextval as (			
+			SELECT MAX(id)+1 as nextval FROM ' 
+			|| quote_ident(_table) ||
+			')
+			SELECT setval(pg_get_serial_sequence('''  
+			|| quote_ident(_table) || 
+			''', ''id''), nextval , false) FROM nextval';
+	END
   $$
-LANGUAGE SQL;
+LANGUAGE PLPGSQL;
 
 -- name: get-user-info-sql
 -- Returns all of the user fields associated with the provided email.
@@ -621,9 +627,8 @@ CREATE OR REPLACE FUNCTION select_all_user_institution_projects(_user_id integer
 	  editable					boolean
 	) AS $$
 	SELECT *
-	FROM select_all_projects()
+	FROM select_all_user_projects(_user_id)
 	WHERE institution_id = _institution_id
-	  --AND user_id = _user_id
 $$ LANGUAGE SQL;
 
 --Returns all rows in projects for a user_id with roles.
@@ -662,14 +667,14 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
 	WHERE role = 'admin'
 	  AND p.privacy_level IN ('public','private','institution')
 	  AND p.availability IN ('unpublished','published','closed')
-    UNION ALL
+    UNION
 	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,p.boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
 	,p.sample_survey,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
 	FROM project_roles,projects as p
 	WHERE role = 'member'
 	  AND p.privacy_level IN ('public','institution')
 	  AND p.availability  =  'published'
-	UNION ALL
+	UNION
 	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,p.boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
 	,p.sample_survey,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
 	FROM project_roles,projects as p
