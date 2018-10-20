@@ -16,7 +16,7 @@
 ***
 *****************************************************************************/
 
-export var mercator = {};
+var mercator = {};
 
 // FIXME: No global variables!
 var collRef;
@@ -1030,3 +1030,9 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 // FIXME: change calls from draw_project_points to:
 //        mercator.removeLayerByTitle(mapConfig, "currentPlots");
 //        mercator.addPlotLayer(mapConfig, plots);
+
+module.exports = {
+    mercator: mercator,
+    collRef: collRef,
+    ceoMapStyles: ceoMapStyles
+};

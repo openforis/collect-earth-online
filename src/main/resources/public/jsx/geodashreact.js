@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { mercator } from "../js/mercator-openlayers.js";
 
 var debugreturn;
 var gObject;

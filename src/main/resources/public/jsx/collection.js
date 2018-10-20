@@ -1,5 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
+import { mercator, collRef } from "../js/mercator-openlayers.js";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -41,7 +42,7 @@ class Collection extends React.Component {
     componentDidMount() {
         this.initialization();
         var ref = this;
-        document.getElementById('flag-plot-button').onclick = function () {
+        document.getElementById("flag-plot-button").onclick = function () {
             ref.flagPlot()
         };
 
@@ -349,7 +350,7 @@ class Collection extends React.Component {
         var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
             if (answer.hasChildQuestion) {
-                alert('Select an answer for '+answer.answer + ' by selecting the child question.');
+                alert("Select an answer for "+answer.answer + " by selecting the child question.");
             }
             else{
                 selectedFeatures.forEach(
@@ -610,8 +611,8 @@ class Collection extends React.Component {
                               <li key={uid} className="mb-1">
                                   <button type="button"
                                           className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                          id={ans.answer + '_' + ans.id}
-                                          name={ans.answer + '_' + ans.id}
+                                          id={ans.answer + "_" + ans.id}
+                                          name={ans.answer + "_" + ans.id}
                                           onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
                                       <div className="circle" style={{
                                           backgroundColor: ans.color,
@@ -640,8 +641,8 @@ class Collection extends React.Component {
                                <li key={uid} className="mb-1">
                                    <button type="button"
                                            className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                           id={ans.answer + '_' + ans.id}
-                                           name={ans.answer + '_' + ans.id}
+                                           id={ans.answer + "_" + ans.id}
+                                           name={ans.answer + "_" + ans.id}
                                            onClick={() => ref.setCurrentValue(cNode, ans)}>
                                        <div className="circle" style={{
                                            backgroundColor: ans.color,
@@ -800,7 +801,7 @@ function SideBarFieldSet(props) {
     }
     if (collection.currentProject != null) {
         surveyQuestionTree = props.getCurrent(-1, props._this);
-        if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
+        if (collection.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
             selectDG = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
                                                name="dg-imagery-year"
                                                size="1"
@@ -837,7 +838,7 @@ function SideBarFieldSet(props) {
                 </select>
             </React.Fragment>;
         }
-        if (collection.currentProject.baseMapSource == 'PlanetGlobalMosaic') {
+        if (collection.currentProject.baseMapSource == "PlanetGlobalMosaic") {
             selectPlanet = <React.Fragment> <select className="form-control form-control-sm" id="planet-imagery-year"
                                                     name="planet-imagery-year"
                                                     size="1"
