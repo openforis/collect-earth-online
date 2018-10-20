@@ -25,6 +25,7 @@ class Collection extends React.Component {
             showSideBar: false,
             mapClass: "fullmap",
             quitClass: "quit-full",
+            clicked:false
         };
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.updateDGWMSLayer = this.updateDGWMSLayer.bind(this);
@@ -43,6 +44,8 @@ class Collection extends React.Component {
         document.getElementById('flag-plot-button').onclick = function () {
             ref.flagPlot()
         };
+
+
     }
     getProjectById() {
         fetch(this.state.documentRoot + "/get-project-by-id/" + this.props.projectId)
@@ -152,7 +155,6 @@ class Collection extends React.Component {
             })
             .then(data => {
                 this.setState({stats: data});
-                //   this.initialization();
             });
     }
     getProjectPlots() {
@@ -558,7 +560,6 @@ class Collection extends React.Component {
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
             // Draw the project plots as clusters on the map
             this.showProjectPlots();
-
     }
     initialization() {
 
@@ -566,97 +567,100 @@ class Collection extends React.Component {
         this.getProjectStats();
         this.getProjectPlots();
     }
-        showAnswers(event){
-           var cp=this.state.currentProject;
-            var sv=this.state.currentProject.sampleValues;
-                var x = event.target.nextSibling;
-                if (x.style.display === "none") {
-                    x.style.display = "block";
-              sv.map((sq)=>{
-                        if(sq.id==event.target.id){
-                            sq.answered=true;
-                        }
-                    });
-                } else {
-                    x.style.display = "none";
-                    sv.map((sq)=>{
-                      if(sq.id==event.target.id){
-                          sq.answered=false;
-                        }
-                    });
-                }
-                cp.sampleValues=sv;
-                this.setState({currentProject:cp});
-                console.log(cp);
+    showAnswers(event){
+        var x = event.target.nextSibling;
+        if(this.state.clicked==true){
+            x.style.display === "none";
         }
+       var cp=this.state.currentProject;
+        var sv=this.state.currentProject.sampleValues;
+            if (x.style.display === "none") {
+                x.style.display = "block";
+          sv.map((sq)=>{
+                    if(sq.id==event.target.id){
+                        sq.answered=true;
+                    }
+                });
+            } else {
+                x.style.display = "none";
+                sv.map((sq)=>{
+                  if(sq.id==event.target.id){
+                      sq.answered=false;
+                    }
+                });
+            }
+            cp.sampleValues=sv;
+            this.setState({currentProject:cp});
+    }
+
+    hideAnswers(){
+        var x=document.getElementById("samplevalue");
+        x.style.display="none";
+    }
 
     getCurrent = (node,ref) => this.state.currentProject.sampleValues.filter(cNode => cNode.parent_question == node).map(function(cNode,_uid) {
-          if(cNode.answered) {
+           if(cNode.answered) {
+              return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
+                  <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
+                          onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
+                      Question: {cNode.question}</button>
+                  <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
+                      {
+                          cNode.answers.map((ans, uid) =>
+                              <li key={uid} className="mb-1">
+                                  <button type="button"
+                                          className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                          id={ans.answer + '_' + ans.id}
+                                          name={ans.answer + '_' + ans.id}
+                                          onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
+                                      <div className="circle" style={{
+                                          backgroundColor: ans.color,
+                                          border: "solid 1px",
+                                          float: "left",
+                                          marginTop: "4px"
+                                      }}></div>
+                                      <span className="small">{ans.answer}</span>
+                                  </button>
+                              </li>
+                          )
+                      }
+                  </ul>
+                  {ref.getCurrent(cNode.id, ref)}
 
-            return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
-                <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
-                        onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
-                    Question: {cNode.question}</button>
-                <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
-                    {
-                        cNode.answers.map((ans, uid) =>
-                            <li key={uid} className="mb-1">
-                                <button type="button"
-                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                        id={ans.answer + '_' + ans.id}
-                                        name={ans.answer + '_' + ans.id}
-                                        onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
-                                    <div className="circle" style={{
-                                        backgroundColor: ans.color,
-                                        border: "solid 1px",
-                                        float: "left",
-                                        marginTop: "4px"
-                                    }}></div>
-                                    <span className="small">{ans.answer}</span>
-                                </button>
-                            </li>
-                        )
-                    }
-                </ul>
-                {ref.getCurrent(cNode.id, ref)}
+              </fieldset>
+          }
+          else {
+               return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
+                   <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
+                           onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
+                       Question: {cNode.question}</button>
+                   <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
+                       {
+                           cNode.answers.map((ans, uid) =>
+                               <li key={uid} className="mb-1">
+                                   <button type="button"
+                                           className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                                           id={ans.answer + '_' + ans.id}
+                                           name={ans.answer + '_' + ans.id}
+                                           onClick={() => ref.setCurrentValue(cNode, ans)}>
+                                       <div className="circle" style={{
+                                           backgroundColor: ans.color,
+                                           border: "solid 1px",
+                                           float: "left",
+                                           marginTop: "4px"
+                                       }}></div>
+                                       <span className="small">{ans.answer}</span>
+                                   </button>
+                               </li>
+                           )
+                       }
+                   </ul>
+               </fieldset>
+           }
 
-            </fieldset>
-        }
-        else{
-            return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
-                <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
-                        onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
-                    Question: {cNode.question}</button>
-                <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
-                    {
-                        cNode.answers.map((ans, uid) =>
-                            <li key={uid} className="mb-1">
-                                <button type="button"
-                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                        id={ans.answer + '_' + ans.id}
-                                        name={ans.answer + '_' + ans.id}
-                                        onClick={() => ref.setCurrentValue(cNode, ans)}>
-                                    <div className="circle" style={{
-                                        backgroundColor: ans.color,
-                                        border: "solid 1px",
-                                        float: "left",
-                                        marginTop: "4px"
-                                    }}></div>
-                                    <span className="small">{ans.answer}</span>
-                                </button>
-                            </li>
-                        )
-                    }
-                </ul>
-            </fieldset>
-        }
     });
-    componentWillUpdate(){
-        if(pointClicked){
-            console.log("clicked point");
-        }
-    }
     render() {
+        collRef=this;
         return (<React.Fragment>
                 <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
                 <div id="sidebar" className="col-xl-3">
@@ -795,7 +799,7 @@ function SideBarFieldSet(props) {
         </select>;
     }
     if (collection.currentProject != null) {
-        surveyQuestionTree=props.getCurrent(-1,props._this);
+        surveyQuestionTree = props.getCurrent(-1, props._this);
         if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
             selectDG = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
                                                name="dg-imagery-year"
@@ -861,46 +865,49 @@ function SideBarFieldSet(props) {
                 </select></React.Fragment>;
         }
     }
+        return (
 
-    return (
-        <React.Fragment>
-            <fieldset className="mb-3 text-center">
-                <h3>Plot Navigation</h3>
-                <div className="row">
-                    <div className="col" id="go-to-first-plot">
-                        <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button"
-                               name="new-plot" defaultValue="Go to first plot" onClick={props.nextPlot}/>
+            <React.Fragment>
+                <fieldset className="mb-3 text-center">
+                    <h3>Plot Navigation</h3>
+                    <div className="row">
+                        <div className="col" id="go-to-first-plot">
+                            <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                                   type="button"
+                                   name="new-plot" defaultValue="Go to first plot" onClick={props.nextPlot}/>
+                        </div>
                     </div>
-                </div>
-                <div className="row d-none" id="plot-nav">
-                    <div className="col-sm-6 pr-2">
-                        <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button"
-                               name="new-plot" defaultValue="Skip" onClick={props.nextPlot}/>
+                    <div className="row d-none" id="plot-nav">
+                        <div className="col-sm-6 pr-2">
+                            <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                                   type="button"
+                                   name="new-plot" defaultValue="Skip" onClick={props.nextPlot}/>
+                        </div>
+                        <div className="col-sm-6 pl-2">
+                            <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                                   type="button"
+                                   name="flag-plot" value="Flag Plot as Bad"
+                                   style={{opacity: "0.5"}} disabled
+                            />
+                        </div>
                     </div>
-                    <div className="col-sm-6 pl-2">
-                        <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button"
-                               name="flag-plot" value="Flag Plot as Bad"
-                               style={{opacity: "0.5"}} disabled
-                               />
-                    </div>
-                </div>
-            </fieldset>
-            <fieldset className="mb-3 justify-content-center text-center">
-                <h3>Imagery Options</h3>
-                {imageryTitle}
-                {selectDG}
-                {selectPlanet}
-            </fieldset>
-            <fieldset className="mb-3 justify-content-center text-center">
-                <h3>Survey Questions</h3><i style={{fontSize:"small"}}>(Click on a question to expand)</i>
-            </fieldset>
-            {surveyQuestionTree}
-        </React.Fragment>
+                </fieldset>
+                <fieldset className="mb-3 justify-content-center text-center">
+                    <h3>Imagery Options</h3>
+                    {imageryTitle}
+                    {selectDG}
+                    {selectPlanet}
+                </fieldset>
+                <fieldset className="mb-3 justify-content-center text-center">
+                    <h3>Survey Questions</h3><i style={{fontSize: "small"}}>(Click on a question to expand)</i>
+                </fieldset>
 
-    );
+                {surveyQuestionTree}
+            </React.Fragment>
+
+        );
+
+
 }
 
 export function renderCollectionPage(args) {

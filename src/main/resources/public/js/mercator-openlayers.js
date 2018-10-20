@@ -17,7 +17,10 @@
 *****************************************************************************/
 
 export var mercator = {};
-var pointClicked=false;
+
+// FIXME: No global variables!
+var collRef;
+
 /*****************************************************************************
 ***
 *** Lon/Lat Reprojection
@@ -606,7 +609,7 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
     select.set("title", interactionTitle);
     var action = function (event) {
         event.selected.forEach(function (feature) {
-            pointClicked=true;
+            collRef.hideAnswers();
             featureStyles[feature] = feature.getStyle();
             feature.setStyle(null);
         });
@@ -631,6 +634,7 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
     dragBox.set("title", interactionTitle);
     var boxstartAction = function () {
         selectedFeatures.clear();
+        collRef.hideAnswers();
     };
     var boxendAction = function () {
         var extent = dragBox.getGeometry().getExtent();
@@ -646,10 +650,6 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
     dragBox.on("boxend", boxendAction);
     return dragBox;
 };
-
-mercator.pointClick=function() {
-    return pointClicked;
-}
 // [Side Effects] Adds a click select interaction and a dragBox select
 // interaction to mapConfig's map object associated with the layer
 // with title == layerTitle.
