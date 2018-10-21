@@ -20,15 +20,17 @@ function UserStats() {
             <h2 className="header px-0">Here is your progress</h2>
             <h1><span className="badge bg-lightgreen">Level 1</span></h1>
             <div className="progress w3-light-grey mb-1">
-                <div className="progress-bar progress-bar-striped bg-lightgreen" role="progressbar"
-                     style={{width: "33%"}}
+                <div className="progress-bar progress-bar-striped bg-lightgreen"
+                     role="progressbar" style={{width: "33%"}}
                      aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
                 <div id="myBar" className="w3-container w3-blue w3-center" style={{width: "33%"}}>33%</div>
             </div>
-            <p>You need to complete
+            <p>
+                You need to complete
                 <span className="badge bg-lightgreen">15</span>
                 more plots to reach
-                <span className="badge bg-lightgreen">Level 2</span></p>
+                <span className="badge bg-lightgreen">Level 2</span>
+            </p>
             <table id="user-stats-table" className="table table-sm">
                 <tbody>
                     <tr>
