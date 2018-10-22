@@ -33,7 +33,7 @@
  window.onload = function () {
      collection.renderCollectionPage({
          documentRoot: "${root}",
-         username:     "${username}",
+         userName:     "${username}",
          projectId:    "${project_id}"
      });
  };
