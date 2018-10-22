@@ -11,12 +11,12 @@ class Collection extends React.Component {
             stats: {},
             plotList: [],
             imageryList: [],
+            mapConfig: null,
             currentImagery: {attribution: ""},
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
             imageryYearPlanet: 2018,
             imageryMonthPlanet: "03",
-            mapConfig: null,
             projectPlotsShown: false,
             navButtonsShown: 1,
             newPlotButtonDisabled: false,
@@ -24,23 +24,20 @@ class Collection extends React.Component {
             saveValuesButtonDisabled: true,
             currentPlot: null,
             userSamples: {},
-            statClass: "projNoStats",
-            arrowState: "arrow-down",
-            mapClass: "fullmap",
-            quitClass: "quit-full",
             clicked:false
         };
-        // FIXME: Do all of these need to be bound?
         this.setBaseMapSource  = this.setBaseMapSource.bind(this);
         this.updateDGWMSLayer  = this.updateDGWMSLayer.bind(this);
         this.updatePlanetLayer = this.updatePlanetLayer.bind(this);
-        this.nextPlot          = this.nextPlot.bind(this);
-        this.setCurrentValue   = this.setCurrentValue.bind(this);
         this.getPlotData       = this.getPlotData.bind(this);
-        this.saveValues        = this.saveValues.bind(this);
-        this.showProjectMap    = this.showProjectMap.bind(this);
-        this.showAnswers       = this.showAnswers.bind(this);
+        this.nextPlot          = this.nextPlot.bind(this);
         this.flagPlot          = this.flagPlot.bind(this);
+        this.saveValues        = this.saveValues.bind(this);
+        // FIXME: Do all of these need to be bound?
+        this.setCurrentValue   = this.setCurrentValue.bind(this);
+        this.showAnswers       = this.showAnswers.bind(this);
+        this.hideAnswers       = this.hideAnswers.bind(this);
+        this.getCurrent        = this.getCurrent.bind(this);
     }
 
     componentDidMount() {
@@ -182,12 +179,19 @@ class Collection extends React.Component {
                                   this.setState({navButtonsShown: 2,
                                                  newPlotButtonDisabled: false,
                                                  flagPlotButtonDisabled: false,
-                                                 saveValuesButtonDisabled: true,
-                                                 mapClass: "sidemap",
-                                                 quitClass: "quit-side"});
+                                                 saveValuesButtonDisabled: true});
                                   this.getPlotData(feature.get("features")[0].get("plotId"));
                               });
         this.setState({projectPlotsShown: true});
+    }
+
+    setBaseMapSource(event) {
+        const dropdown = event.target;
+        const newBaseMapSource = dropdown.options[dropdown.selectedIndex].value;
+        let proj = this.state.currentProject;
+        proj.baseMapSource = newBaseMapSource;
+        this.setState({currentProject: proj});
+        this.updateMapImagery(newBaseMapSource);
     }
 
     updateMapImagery(newBaseMapSource) {
@@ -305,22 +309,11 @@ class Collection extends React.Component {
                     "_geo-dash");
     }
 
-    setBaseMapSource(event) {
-        const dropdown = event.target;
-        const newBaseMapSource = dropdown.options[dropdown.selectedIndex].value;
-        let proj = this.state.currentProject;
-        proj.baseMapSource = newBaseMapSource;
-        this.setState({currentProject: proj});
-        this.updateMapImagery(newBaseMapSource);
-    }
-
     nextPlot() {
         this.setState({navButtonsShown: 2,
                        newPlotButtonDisabled: false,
                        flagPlotButtonDisabled: false,
-                       saveValuesButtonDisabled: true,
-                       mapClass: "sidemap",
-                       quitClass: "quit-side"});
+                       saveValuesButtonDisabled: true});
         this.getPlotData("random");
     }
 
@@ -533,19 +526,19 @@ class Collection extends React.Component {
     });
 
     assignedPercentage() {
-        return (this.state.currentProject && this.state.stats.analyzedPlots)
+        return (this.state.currentProject.numPlots && this.state.stats.analyzedPlots)
             ? (100.0 * this.state.stats.analyzedPlots / this.state.currentProject.numPlots).toFixed(2)
             : "0.00";
     }
 
     flaggedPercentage() {
-        return (this.state.currentProject && this.state.stats.flaggedPlots)
+        return (this.state.currentProject.numPlots && this.state.stats.flaggedPlots)
             ? (100.0 * this.state.stats.flaggedPlots / this.state.currentProject.numPlots).toFixed(2)
             : "0.00";
     }
 
     completedPercentage() {
-        return (this.state.currentProject && this.state.stats.analyzedPlots)
+        return (this.state.currentProject.numPlots && this.state.stats.analyzedPlots)
             ? (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2)
             : "0.00";
     }
@@ -554,19 +547,27 @@ class Collection extends React.Component {
         return (
             <React.Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.currentImagery.attribution}/>
-                <SideBar collection={this.state}
-                         setBaseMapSource={this.setBaseMapSource}
-                         setCurrentValue={this.setCurrentValue}
-                         updateDGWMSLayer={this.updateDGWMSLayer}
-                         updatePlanetLayer={this.updatePlanetLayer}
+                <SideBar currentProject={this.state.currentProject}
+                         navButtonsShown={this.state.navButtonsShown}
+                         newPlotButtonDisabled={this.state.newPlotButtonDisabled}
+                         flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
                          nextPlot={this.nextPlot}
                          flagPlot={this.flagPlot}
-                         assignedPercentage={this.assignedPercentage()}
-                         flaggedPercentage={this.flaggedPercentage()}
-                         completedPercentage={this.completedPercentage()}
-                         showAnswers={this.showAnswers}
-                         getCurrent={this.getCurrent}
-                         _this={this}/>
+                         imageryList={this.state.imageryList}
+                         setBaseMapSource={this.setBaseMapSource}
+                         imageryYearDG={this.state.imageryYearDG}
+                         stackingProfileDG={this.state.stackingProfileDG}
+                         updateDGWMSLayer={this.updateDGWMSLayer}
+                         imageryYearPlanet={this.state.imageryYearPlanet}
+                         imageryMonthPlanet={this.state.imageryMonthPlanet}
+                         updatePlanetLayer={this.updatePlanetLayer}
+                         stats={this.state.stats}
+                         analyzedPercentage={this.analyzedPercentage}
+                         flaggedPercentage={this.flaggedPercentage}
+                         completedPercentage={this.completedPercentage}
+                         saveValues={this.saveValues}
+                         saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
+                         getCurrent={this.getCurrent}/>
             </React.Fragment>
         );
     }
@@ -585,80 +586,42 @@ function ImageAnalysisPane(props) {
 function SideBar(props) {
     return (
         <div id="sidebar" className="col-xl-3">
-            <h2 className="header">{props.collection.currentProject.name || ""}</h2>
-            <SideBarFieldSet collection={props.collection}
-                             setBaseMapSource={props.setBaseMapSource}
-                             setCurrentValue={props.setCurrentValue}
-                             updateDGWMSLayer={props.updateDGWMSLayer}
-                             updatePlanetLayer={props.updatePlanetLayer}
-                             nextPlot={props.nextPlot}
-                             flagPlot={props.flagPlot}
-                             showAnswers={props.showAnswers}
-                             getCurrent={props.getCurrent}
-                             _this={props._this}/>
+            <ProjectName projectName={props.currentProject.name}/>
+            <PlotNavigation navButtonsShown={props.navButtonsShown}
+                            nextPlot={props.nextPlot}
+                            flagPlot={props.flagPlot}
+                            newPlotButtonDisabled={props.newPlotButtonDisabled}
+                            flagPlotButtonDisabled={props.flagPlotButtonDisabled}/>
+            <ImageryOptions baseMapSource={props.currentProject.baseMapSource}
+                            setBaseMapSource={props.setBaseMapSource}
+                            imageryList={props.imageryList}
+                            imageryYearDG={props.imageryYearDG}
+                            stackingProfileDG={props.stackingProfileDG}
+                            updateDGWMSLayer={props.updateDGWMSLayer}
+                            imageryYearPlanet={props.imageryYearPlanet}
+                            imageryMonthPlanet={props.imageryMonthPlanet}
+                            updatePlanetLayer={props.updatePlanetLayer}/>
+            <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
+                             getCurrent={props.getCurrent}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
-                    <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                            type="button" name="save-values" style={{opacity: "0.5"}} disabled>
-                        Save
-                    </button>
-                    <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
-                            href="#project-stats-collapse" role="button" aria-expanded="false"
-                            aria-controls="project-stats-collapse">
-                        Project Stats
-                    </button>
-                    <div className="row justify-content-center mb-1 text-center">
-                        <div className="col-lg-12">
-                            <fieldset id="projStats" className={"text-center " + props.collection.statClass}>
-                                <div className="collapse" id="project-stats-collapse">
-                                    <table className="table table-sm">
-                                        <tbody>
-                                            <tr>
-                                                <td className="small">Project</td>
-                                                <td className="small">
-                                                    {props.collection.currentProject.name || ""}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="small">Plots Assigned</td>
-                                                <td className="small">
-                                                    {props.collection.stats.analyzedPlots || ""}
-                                                    ({props.assignedPercentage}%)
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="small">Plots Flagged</td>
-                                                <td className="small">
-                                                    {props.collection.stats.flaggedPlots || ""}
-                                                    ({props.flaggedPercentage}%)
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="small">Plots Completed</td>
-                                                <td className="small">
-                                                    {props.collection.stats.analyzedPlots + props.collection.stats.flaggedPlots || ""}
-                                                    ({props.completedPercentage}%)
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="small">Plots Total</td>
-                                                <td className="small">
-                                                    {props.collection.currentProject.numPlots || ""}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </fieldset>
-                        </div>
-                    </div>
-                    <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
-                            type="button" name="collection-quit" data-toggle="modal" data-target="#confirmation-quit">
-                        Quit
-                    </button>
+                    <SaveValuesButton saveValues={props.saveValues}
+                                      saveValuesButtonDisabled={props.saveValuesButtonDisabled}/>
+                    <ProjectStats currentProject={props.currentProject}
+                                  stats={props.stats}
+                                  analyzedPercentage={props.analyzedPercentage}
+                                  flaggedPercentage={props.flaggedPercentage}
+                                  completedPercentage={props.completedPercentage}/>
+                    <QuitButton/>
                 </div>
             </div>
         </div>
+    );
+}
+
+function ProjectName(props) {
+    return (
+        <h2 className="header">{props.projectName || ""}</h2>
     );
 }
 
@@ -666,15 +629,69 @@ function range(start, stop, step) {
     return Array.from({length: (stop - start) / step}, (_, i) => start + (i * step));
 }
 
+function PlotNavigation(props) {
+    return (
+        <fieldset className="mb-3 text-center">
+            <h3>Plot Navigation</h3>
+            <div className={props.navButtonsShown == 1 ? "row" : "row d-none"} id="go-to-first-plot">
+                <div className="col">
+                    <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                           type="button" name="new-plot" value="Go to first plot" onClick={props.nextPlot}/>
+                </div>
+            </div>
+            <div className={props.navButtonsShown == 2 ? "row" : "row d-none"} id="plot-nav">
+                <div className="col-sm-6 pr-2">
+                    <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                           type="button" name="new-plot" value="Skip" onClick={props.nextPlot}
+                           style={{opacity: props.newPlotButtonDisabled ? "0.5" : "1.0"}}
+                           disabled={props.newPlotButtonDisabled}/>
+                </div>
+                <div className="col-sm-6 pl-2">
+                    <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                           type="button" name="flag-plot" value="Flag Plot as Bad" onClick={props.flagPlot}
+                           style={{opacity: props.flagPlotButtonDisabled ? "0.5" : "1.0"}}
+                           disabled={props.flagPlotButtonDisabled}/>
+                </div>
+            </div>
+        </fieldset>
+    );
+}
+
+function ImageryOptions(props) {
+    return (
+        <fieldset className="mb-3 justify-content-center text-center">
+            <h3>Imagery Options</h3>
+            <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
+                    size="1" defaultValue={props.baseMapSource || ""}
+                    onChange={props.setBaseMapSource}>
+                {
+                    props.imageryList.map(
+                        (imagery, uid) =>
+                            <option key={uid} value={imagery.title}>{imagery.title}</option>
+                    )
+                }
+            </select>
+            <DigitalGlobeMenus baseMapSource={props.baseMapSource}
+                               imageryYearDG={props.imageryYearDG}
+                               stackingProfileDG={props.stackingProfileDG}
+                               updateDGWMSLayer={props.updateDGWMSLayer}/>
+            <PlanetMenus baseMapSource={props.baseMapSource}
+                         imageryYearPlanet={props.imageryYearPlanet}
+                         imageryMonthPlanet={props.imageryMonthPlanet}
+                         updatePlanetLayer={props.updatePlanetLayer}/>
+        </fieldset>
+    );
+}
+
 function DigitalGlobeMenus(props) {
-    if (props.collection.currentProject && props.collection.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
+    if (props.baseMapSource == "DigitalGlobeWMSImagery") {
         return (
             <React.Fragment>
                 <select className="form-control form-control-sm"
                         id="dg-imagery-year"
                         name="dg-imagery-year"
                         size="1"
-                        defaultValue={props.collection.imageryYearDG}
+                        defaultValue={props.imageryYearDG}
                         onChange={props.updateDGWMSLayer}>
                     {
                         range(2018,1999,-1).map(year => <option key={year} value={year}>{year}</option>)
@@ -684,7 +701,7 @@ function DigitalGlobeMenus(props) {
                         id="dg-stacking-profile"
                         name="dg-stacking-profile"
                         size="1"
-                        defaultValue={props.collection.stackingProfileDG}
+                        defaultValue={props.stackingProfileDG}
                         onChange={props.updateDGWMSLayer}>
                     {
                         ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
@@ -699,14 +716,14 @@ function DigitalGlobeMenus(props) {
 }
 
 function PlanetMenus(props) {
-    if (props.collection.currentProject && props.collection.currentProject.baseMapSource == "PlanetGlobalMosaic") {
+    if (props.baseMapSource == "PlanetGlobalMosaic") {
         return (
             <React.Fragment>
                 <select className="form-control form-control-sm"
                         id="planet-imagery-year"
                         name="planet-imagery-year"
                         size="1"
-                        defaultValue={props.collection.imageryYearPlanet}
+                        defaultValue={props.imageryYearPlanet}
                         onChange={props.updatePlanetLayer}>
                     {
                         range(2018,2015,-1).map(year => <option key={year} value={year}>{year}</option>)
@@ -716,7 +733,7 @@ function PlanetMenus(props) {
                         id="planet-imagery-month"
                         name="planet-imagery-month"
                         size="1"
-                        defaultValue={props.collection.imageryMonthPlanet}
+                        defaultValue={props.imageryMonthPlanet}
                         onChange={props.updatePlanetLayer}>
                     <option value="01">January</option>
                     <option value="02">February</option>
@@ -738,52 +755,89 @@ function PlanetMenus(props) {
     }
 }
 
-function SideBarFieldSet(props) {
+// FIXME: how does props.getCurrent() work?
+function SurveyQuestions(props) {
+    return (
+        <fieldset className="mb-3 justify-content-center text-center">
+            <h3>Survey Questions</h3>
+            <i style={{fontSize: "small"}}>(Click on a question to expand)</i>
+            {props.surveyQuestions.length > 0 && props.getCurrent(-1, props._this)}
+        </fieldset>
+    );
+}
+
+function SaveValuesButton(props) {
+    return (
+        <input id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+               type="button" name="save-values" value="Save" onClick={props.saveValues}
+               style={{opacity: props.saveValuesButtonDisabled ? "0.5" : "1.0"}}
+               disabled={props.saveValuesButtonDisabled}/>
+    );
+}
+
+function ProjectStats(props) {
     return (
         <React.Fragment>
-            <fieldset className="mb-3 text-center">
-                <h3>Plot Navigation</h3>
-                <div className={props.collection.navButtonsShown == 1 ? "row" : "row d-none"} id="go-to-first-plot">
-                    <div className="col">
-                        <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button" name="new-plot" value="Go to first plot" onClick={props.nextPlot}/>
-                    </div>
+            <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                    href="#project-stats-collapse" role="button" aria-expanded="false"
+                    aria-controls="project-stats-collapse">
+                Project Stats
+            </button>
+            <div className="row justify-content-center mb-1 text-center">
+                <div className="col-lg-12">
+                    <fieldset id="projStats" className="text-center projNoStats">
+                        <div className="collapse" id="project-stats-collapse">
+                            <table className="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td className="small">Project</td>
+                                        <td className="small">
+                                            {props.currentProject.name || ""}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Assigned</td>
+                                        <td className="small">
+                                            {props.stats.analyzedPlots || ""}
+                                            ({props.assignedPercentage}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Flagged</td>
+                                        <td className="small">
+                                            {props.stats.flaggedPlots || ""}
+                                            ({props.flaggedPercentage}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Completed</td>
+                                        <td className="small">
+                                            {props.stats.analyzedPlots + props.stats.flaggedPlots || ""}
+                                            ({props.completedPercentage}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Total</td>
+                                        <td className="small">
+                                            {props.currentProject.numPlots || ""}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </fieldset>
                 </div>
-                <div className={props.collection.navButtonsShown == 2 ? "row" : "row d-none"} id="plot-nav">
-                    <div className="col-sm-6 pr-2">
-                        <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button" name="new-plot" value="Skip" onClick={props.nextPlot}
-                               style={{opacity: props.collection.newPlotButtonDisabled ? "0.5" : "1.0"}}
-                               disabled={props.collection.newPlotButtonDisabled}/>
-                    </div>
-                    <div className="col-sm-6 pl-2">
-                        <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button" name="flag-plot" value="Flag Plot as Bad" onClick={props.flagPlot}
-                               style={{opacity: props.collection.flagPlotButtonDisabled ? "0.5" : "1.0"}}
-                               disabled={props.collection.flagPlotButtonDisabled}/>
-                    </div>
-                </div>
-            </fieldset>
-            <fieldset className="mb-3 justify-content-center text-center">
-                <h3>Imagery Options</h3>
-                <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                        size="1" defaultValue={props.collection.currentProject.baseMapSource || ""}
-                        onChange={props.setBaseMapSource}>
-                    {
-                        props.collection.imageryList.map(
-                            (imagery, uid) =>
-                                <option key={uid} value={imagery.title}>{imagery.title}</option>)
-                    }
-                </select>
-                <DigitalGlobeMenus collection={props.collection}/>
-                <PlanetMenus collection={props.collection}/>
-            </fieldset>
-            <fieldset className="mb-3 justify-content-center text-center">
-                <h3>Survey Questions</h3>
-                <i style={{fontSize: "small"}}>(Click on a question to expand)</i>
-            </fieldset>
-            {props.collection.currentProject && props.getCurrent(-1, props._this)}
+            </div>
         </React.Fragment>
+    );
+}
+
+function QuitButton() {
+    return (
+        <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
+                type="button" name="collection-quit" data-toggle="modal" data-target="#confirmation-quit">
+            Quit
+        </button>
     );
 }
 
