@@ -2,14 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { mercator } from "../js/mercator-openlayers.js";
 
-var debugreturn;
-var gObject;
+var geeTimeout = {};
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
         this.state = { widgets: [ ], callbackComplete: false };
-        gObject = this;
-    }
+    };
     componentDidMount() {
         fetch(theURL + "/id/" + pid,)
             .then(response => response.json())
@@ -19,11 +17,8 @@ class Geodash extends React.Component {
                 widget.sliderType = 'opacity';
                 widget.swipeValue = '1.0';
                 return widget;}))
-            .then(data => debugreturn = data)
-            .then(data => this.setState({ widgets: data, callbackComplete: true}))
-
-            ;
-    }
+            .then(data => this.setState({ widgets: data, callbackComplete: true}));
+    };
     render() {
         return ( <React.Fragment>
             <Widgets
@@ -47,7 +42,6 @@ class Geodash extends React.Component {
          );
     };
     handleOpacityChange = (widget, id, evt) => {
-
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
@@ -56,21 +50,17 @@ class Geodash extends React.Component {
         this.setState({ widgets });
     };
     handleSliderChange = (widget, id, evt) => {
-
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].sliderType = widgets[index].sliderType == 'opacity'? 'swipe': 'opacity';
-        // setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
         this.setState({ widgets });
     };
     handleSwipeChange = (widget, id, evt) => {
-
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].swipeValue = evt.target.value;
-        // setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
         this.setState({ widgets });
     };
 }
@@ -137,7 +127,7 @@ class Widgets extends React.Component {
                 </div>
             </div> );
         }
-    }
+    };
 }
 
 class Widget extends React.Component {
@@ -145,11 +135,11 @@ class Widget extends React.Component {
         super(props);
         this.imageCollectionList = ["ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
         this.graphControlList = ["customTimeSeries", "timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
-    }
+    };
     render() {
         const {widget, isFull} = this.props;
         return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
-    }
+    };
     getWidgetHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         if(widget.gridcolumn || widget.layout)
         {
@@ -164,9 +154,7 @@ class Widget extends React.Component {
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
-
                             {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
-
                     </div>
                 </div>
             </div>);
@@ -182,20 +170,18 @@ class Widget extends React.Component {
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
-
                         {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
-
                     </div>
                 </div>
             </div>);
         }
-    }
+    };
     generategridcolumn(x, w){
         return (x + 1) + ' / span ' + w;
-    }
+    };
     generategridrow(x, h){
         return (x + 1) + ' / span ' + h;
-    }
+    };
     getWidgetType(awidget)
     {
         if((awidget.dualImageCollection && awidget.dualImageCollection != null) || (awidget.ImageAsset && awidget.ImageAsset.length > 0))
@@ -214,7 +200,7 @@ class Widget extends React.Component {
         else {
             return "undefinedwidget";
         }
-    }
+    };
     getClassNames(fullState, c, r)
     {
         let classnames = 'placeholder';
@@ -227,7 +213,7 @@ class Widget extends React.Component {
         classnames += r.includes("span 2")? " rowSpan2": r.includes("span 3")? " rowSpan3": " rowSpan1";
         }
         return classnames;
-    }
+    };
     getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         let wtext = widget.properties[0];
         let control;
@@ -245,8 +231,7 @@ class Widget extends React.Component {
         else {
             return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200"className="img-responsive" />;
         }
-    }
-
+    };
 }
 
 class MapWidget extends React.Component {
@@ -297,7 +282,7 @@ class MapWidget extends React.Component {
                           onInput = {(evt) => onOpacityChange(widget, widget.id, evt )}
             />
         }
-    }
+    };
     getRasterByBasemapConfig(basemap)
     {
         let raster;
@@ -314,7 +299,7 @@ class MapWidget extends React.Component {
             });
         }
         return raster;
-    }
+    };
     getGatewayUrl(widget, collectionName){
         var url = '';
         if(widget.filterType != null && widget.filterType.length > 0){
@@ -337,7 +322,7 @@ class MapWidget extends React.Component {
             url = "http://collect.earth:8888/ImageCollectionbyIndex";
         }
         return url;
-    }
+    };
     getImageParams(widget){
         var visParams;
         if(widget.visParams) {
@@ -370,7 +355,7 @@ class MapWidget extends React.Component {
             };
         }
         return visParams;
-    }
+    };
     componentDidMount()
     {
         const widget = this.props.widget;
@@ -565,7 +550,6 @@ class MapWidget extends React.Component {
                         var secondObject = JSON.parse($this.postObject);
                         secondObject.dateFrom = $this.dualStart;
                         secondObject.dateTo = $this.dualEnd;
-                        sajax = secondObject;
                         $.ajax({
                             url: url,
                             type: "POST",
@@ -641,17 +625,16 @@ class MapWidget extends React.Component {
             }
         });
 
-    }
+    };
     pauseGeeLayer(e)
     {
-        whatise = e;
         var layers = e.target.getLayers().getArray();
         layers.forEach(function(lyr){
             if(lyr.get('id') && lyr.get('id').indexOf('widget') ==0){
                 lyr.setVisible(false);
             }
         })
-    }
+    };
     resumeGeeLayer(e)
     {
         if(geeTimeout[e.target.get('target')]){
@@ -666,12 +649,9 @@ class MapWidget extends React.Component {
                 }
             })
         }, 1000);
-    }
+    };
 }
-var sajax;
-var sout;
-var geeTimeout = {};
-var whatise;
+
 class GraphWidget extends React.Component {
     render() {
         const widget = this.props.widget;
@@ -680,7 +660,7 @@ class GraphWidget extends React.Component {
             </div>
             <h3 id={"widgettitle_" + widget.id} />
         </div>
-    }
+    };
     componentDidMount()
     {
         const widget = this.props.widget;
@@ -732,7 +712,7 @@ class GraphWidget extends React.Component {
                 }
             }
         });
-    }
+    };
 }
 
 class StatsWidget extends React.Component {
@@ -782,7 +762,8 @@ class StatsWidget extends React.Component {
                             </div>
                         </div>
                     </div>
-        }
+        };
+
     componentDidMount() {
         const widget = this.props.widget;
         $.ajax({
@@ -809,7 +790,7 @@ class StatsWidget extends React.Component {
 
             }
         });
-    }
+    };
 }
 function sortData(a, b){
 
