@@ -525,24 +525,6 @@ class Collection extends React.Component {
 
     });
 
-    assignedPercentage() {
-        return (this.state.currentProject.numPlots && this.state.stats.analyzedPlots)
-            ? (100.0 * this.state.stats.analyzedPlots / this.state.currentProject.numPlots).toFixed(2)
-            : "0.00";
-    }
-
-    flaggedPercentage() {
-        return (this.state.currentProject.numPlots && this.state.stats.flaggedPlots)
-            ? (100.0 * this.state.stats.flaggedPlots / this.state.currentProject.numPlots).toFixed(2)
-            : "0.00";
-    }
-
-    completedPercentage() {
-        return (this.state.currentProject.numPlots && this.state.stats.analyzedPlots)
-            ? (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2)
-            : "0.00";
-    }
-
     render() {
         return (
             <React.Fragment>
@@ -562,9 +544,6 @@ class Collection extends React.Component {
                          imageryMonthPlanet={this.state.imageryMonthPlanet}
                          updatePlanetLayer={this.updatePlanetLayer}
                          stats={this.state.stats}
-                         analyzedPercentage={this.analyzedPercentage}
-                         flaggedPercentage={this.flaggedPercentage}
-                         completedPercentage={this.completedPercentage}
                          saveValues={this.saveValues}
                          saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
                          getCurrent={this.getCurrent}/>
@@ -607,11 +586,9 @@ function SideBar(props) {
                 <div className="col-sm-12 btn-block">
                     <SaveValuesButton saveValues={props.saveValues}
                                       saveValuesButtonDisabled={props.saveValuesButtonDisabled}/>
-                    <ProjectStats currentProject={props.currentProject}
-                                  stats={props.stats}
-                                  analyzedPercentage={props.analyzedPercentage}
-                                  flaggedPercentage={props.flaggedPercentage}
-                                  completedPercentage={props.completedPercentage}/>
+                    <ProjectStats projectName={props.currentProject.name}
+                                  numPlots={props.currentProject.numPlots}
+                                  stats={props.stats}/>
                     <QuitButton/>
                 </div>
             </div>
@@ -623,10 +600,6 @@ function ProjectName(props) {
     return (
         <h2 className="header">{props.projectName || ""}</h2>
     );
-}
-
-function range(start, stop, step) {
-    return Array.from({length: (stop - start) / step}, (_, i) => start + (i * step));
 }
 
 function PlotNavigation(props) {
@@ -681,6 +654,10 @@ function ImageryOptions(props) {
                          updatePlanetLayer={props.updatePlanetLayer}/>
         </fieldset>
     );
+}
+
+function range(start, stop, step) {
+    return Array.from({length: (stop - start) / step}, (_, i) => start + (i * step));
 }
 
 function DigitalGlobeMenus(props) {
@@ -775,61 +752,69 @@ function SaveValuesButton(props) {
     );
 }
 
-function ProjectStats(props) {
-    return (
-        <React.Fragment>
-            <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
-                    href="#project-stats-collapse" role="button" aria-expanded="false"
-                    aria-controls="project-stats-collapse">
-                Project Stats
-            </button>
-            <div className="row justify-content-center mb-1 text-center">
-                <div className="col-lg-12">
-                    <fieldset id="projStats" className="text-center projNoStats">
-                        <div className="collapse" id="project-stats-collapse">
-                            <table className="table table-sm">
-                                <tbody>
-                                    <tr>
-                                        <td className="small">Project</td>
-                                        <td className="small">
-                                            {props.currentProject.name || ""}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="small">Plots Assigned</td>
-                                        <td className="small">
-                                            {props.stats.analyzedPlots || ""}
-                                            ({props.assignedPercentage}%)
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="small">Plots Flagged</td>
-                                        <td className="small">
-                                            {props.stats.flaggedPlots || ""}
-                                            ({props.flaggedPercentage}%)
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="small">Plots Completed</td>
-                                        <td className="small">
-                                            {props.stats.analyzedPlots + props.stats.flaggedPlots || ""}
-                                            ({props.completedPercentage}%)
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="small">Plots Total</td>
-                                        <td className="small">
-                                            {props.currentProject.numPlots || ""}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </fieldset>
+class ProjectStats extends React.Component {
+    asPercentage(part, total) {
+        return (part && total)
+            ? (100.0 * part / total).toFixed(2)
+            : "0.00";
+    }
+
+    render() {
+        return (
+            <React.Fragment>
+                <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                        href="#project-stats-collapse" role="button" aria-expanded="false"
+                        aria-controls="project-stats-collapse">
+                    Project Stats
+                </button>
+                <div className="row justify-content-center mb-1 text-center">
+                    <div className="col-lg-12">
+                        <fieldset id="projStats" className="text-center projNoStats">
+                            <div className="collapse" id="project-stats-collapse">
+                                <table className="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td className="small">Project</td>
+                                            <td className="small">
+                                                {this.props.projectName || ""}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Analyzed</td>
+                                            <td className="small">
+                                                {this.props.stats.analyzedPlots || ""}
+                                                ({this.asPercentage(this.props.stats.analyzedPlots, this.props.numPlots)}%)
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Flagged</td>
+                                            <td className="small">
+                                                {this.props.stats.flaggedPlots || ""}
+                                                ({this.asPercentage(this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Completed</td>
+                                            <td className="small">
+                                                {this.props.stats.analyzedPlots + this.props.stats.flaggedPlots || ""}
+                                                ({this.asPercentage(this.props.stats.analyzedPlots + this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Total</td>
+                                            <td className="small">
+                                                {this.props.numPlots || ""}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </fieldset>
+                    </div>
                 </div>
-            </div>
-        </React.Fragment>
-    );
+            </React.Fragment>
+        );
+    }
 }
 
 function QuitButton() {
