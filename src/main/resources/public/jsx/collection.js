@@ -26,7 +26,6 @@ class Collection extends React.Component {
             userSamples: {},
             statClass: "projNoStats",
             arrowState: "arrow-down",
-            showSideBar: false,
             mapClass: "fullmap",
             quitClass: "quit-full",
             clicked:false
@@ -184,7 +183,6 @@ class Collection extends React.Component {
                                                  newPlotButtonDisabled: false,
                                                  flagPlotButtonDisabled: false,
                                                  saveValuesButtonDisabled: true,
-                                                 showSideBar: true,
                                                  mapClass: "sidemap",
                                                  quitClass: "quit-side"});
                                   this.getPlotData(feature.get("features")[0].get("plotId"));
@@ -321,7 +319,6 @@ class Collection extends React.Component {
                        newPlotButtonDisabled: false,
                        flagPlotButtonDisabled: false,
                        saveValuesButtonDisabled: true,
-                       showSideBar: true,
                        mapClass: "sidemap",
                        quitClass: "quit-side"});
         this.getPlotData("random");
@@ -556,22 +553,20 @@ class Collection extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
-                <div id="sidebar" className="col-xl-3">
-                    <SideBar collection={this.state}
-                             setBaseMapSource={this.setBaseMapSource}
-                             setCurrentValue={this.setCurrentValue}
-                             updateDGWMSLayer={this.updateDGWMSLayer}
-                             updatePlanetLayer={this.updatePlanetLayer}
-                             nextPlot={this.nextPlot}
-                             flagPlot={this.flagPlot}
-                             assignedPercentage={this.assignedPercentage()}
-                             flaggedPercentage={this.flaggedPercentage()}
-                             completedPercentage={this.completedPercentage()}
-                             showAnswers={this.showAnswers}
-                             getCurrent={this.getCurrent}
-                             _this={this}/>
-                </div>
+                <ImageAnalysisPane imageryAttribution={this.state.currentImagery.attribution}/>
+                <SideBar collection={this.state}
+                         setBaseMapSource={this.setBaseMapSource}
+                         setCurrentValue={this.setCurrentValue}
+                         updateDGWMSLayer={this.updateDGWMSLayer}
+                         updatePlanetLayer={this.updatePlanetLayer}
+                         nextPlot={this.nextPlot}
+                         flagPlot={this.flagPlot}
+                         assignedPercentage={this.assignedPercentage()}
+                         flaggedPercentage={this.flaggedPercentage()}
+                         completedPercentage={this.completedPercentage()}
+                         showAnswers={this.showAnswers}
+                         getCurrent={this.getCurrent}
+                         _this={this}/>
             </React.Fragment>
         );
     }
@@ -580,29 +575,8 @@ class Collection extends React.Component {
 function ImageAnalysisPane(props) {
     return (
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
-            <div className="buttonHolder d-none">
-                {
-                    props.collection.showSideBar ?
-                        (
-                            <div>
-                                <span id="action-button" name="collection-actioncall" title="Click a plot to analyze:"
-                                      alt="Click a plot to analyze">Click a plot to analyze, or:<p></p><br/>
-                                    <span className="button" onClick={props.nextPlot}>Analyze random plot</span>
-                                    <br style={{clear: "both"}}/>
-                                    <br style={{clear: "both"}}/>
-                                </span>
-                            </div>
-                        ) : (
-                            <div style={{position: "relative"}}>
-                                <span id="action-button" name="collection-actioncall" title="Select each plot to choose value"
-                                      alt="Select each plot to choose value">Select each dot to choose value
-                                </span>
-                            </div>
-                        )
-                }
-            </div>
-            <div id="imagery-info" className="row d-none">
-                <p className="col small">{props.collection.currentImagery.attribution}</p>
+            <div id="imagery-info" className="row">
+                <p className="col small">{props.imageryAttribution}</p>
             </div>
         </div>
     );
@@ -610,7 +584,7 @@ function ImageAnalysisPane(props) {
 
 function SideBar(props) {
     return (
-        <React.Fragment>
+        <div id="sidebar" className="col-xl-3">
             <h2 className="header">{props.collection.currentProject.name || ""}</h2>
             <SideBarFieldSet collection={props.collection}
                              setBaseMapSource={props.setBaseMapSource}
@@ -684,7 +658,7 @@ function SideBar(props) {
                     </button>
                 </div>
             </div>
-        </React.Fragment>
+        </div>
     );
 }
 
