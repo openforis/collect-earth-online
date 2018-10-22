@@ -274,6 +274,7 @@ class BasicLayout extends React.PureComponent{
         });
     };
     addCustomImagery(imagery) {
+        console.log(imagery);
         $.ajax({
             url: theURL.replace('/geo-dash', '') + "/add-geodash-imagery",
             type: "POST",
@@ -291,9 +292,14 @@ class BasicLayout extends React.PureComponent{
     };
     getGatewayUrl(widget, collectionName){
         var url = '';
+
         if(widget.filterType != null && widget.filterType.length > 0){
             var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
             url = "http://collect.earth:8888/" + fts[widget.filterType];
+        }
+        else if(widget.ImageAsset && widget.ImageAsset.length > 0)
+        {
+            url = "http://collect.earth:8888/image";
         }
         else if(widget.properties && 'ImageCollectionCustom' == widget.properties[0]){
             url = "http://collect.earth:8888/meanImageByMosaicCollections";
@@ -312,7 +318,9 @@ class BasicLayout extends React.PureComponent{
         let gatewayUrl = this.getGatewayUrl(img);
         let title = img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
-        return {
+        let ImageAsset = img.ImageAsset ? img.ImageAsset : '';
+        console.log('image asset: ' + ImageAsset);
+        let iObject =  {
             institutionId: institutionID,
             imageryTitle: title,
             imageryAttribution: "Google Earth Engine",
@@ -322,9 +330,18 @@ class BasicLayout extends React.PureComponent{
                 startDate: img.startDate,
                 endDate: img.endDate,
                 filterType: img.filterType,
-                visParams: img.visParams
+                visParams: img.visParams,
+                ImageAsset: ImageAsset
             }
         };
+        if(img.ImageAsset && img.ImageAsset.length > 0)
+        {
+            title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp('_', 'g'), ' ');
+            iObject.imageryTitle = title;
+            iObject.ImageAsset = img.ImageAsset;
+        }
+        return iObject;
+
     };
     onWidgetTypeSelectChanged = (event, anything) => {
         console.log(anything);
@@ -473,15 +490,8 @@ class BasicLayout extends React.PureComponent{
                 }
                 this.addCustomImagery(this.buildImageryObject(img2));
             }
-
-
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
-
-
-
-
-
         }
         else if(this.state.selectedWidgetType == "imageAsset")
         {
@@ -489,6 +499,22 @@ class BasicLayout extends React.PureComponent{
             widget.filterType = '';
             widget.visParams = this.state.imageParams;
             widget.ImageAsset = this.state.imageCollection;
+            this.addCustomImagery(this.buildImageryObject({
+                    ImageAsset: widget.ImageAsset,
+                    startDate: '',
+                    endDate: '',
+                    filterType: '',
+                    visParams: widget.visParams
+            }));
+            /*
+            collectionType: img.collectionType,
+                startDate: img.startDate,
+                endDate: img.endDate,
+                filterType: img.filterType,
+                visParams: img.visParams
+            */
+
+            //should add custom imagery here as well i assume
         }
         else {
             var wType = this.state.selectedWidgetType == 'TimeSeries' ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType == 'ImageCollection' ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType == 'statistics' ? 'getStats' : 'custom';
@@ -524,8 +550,6 @@ class BasicLayout extends React.PureComponent{
                     visParams: widget.visParams
                 }));
             }
-
-
             widget.dualLayer = this.state.dualLayer;
             if (widget.dualLayer) {
                 widget.dualStart = this.state.startDate2;
