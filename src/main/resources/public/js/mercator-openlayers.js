@@ -115,13 +115,17 @@ mercator.createSource = function (sourceConfig) {
             cloudLessThan: cloudVar,
             visParams: sourceConfig.geeParams.visParams
         };
-        let geeLayer;
+        let geeLayer = new ol.source.XYZ({
+            url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token="
+        });
+
         $.ajax({
             url: url,
             type: "POST",
-            async: false,
+            async: true,
             crossDomain: true,
             contentType: "application/json",
+            mapConfig: sourceConfig,
             data: JSON.stringify(theJson)
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.warn(jqXHR + textStatus + errorThrown);
@@ -133,6 +137,9 @@ mercator.createSource = function (sourceConfig) {
                     geeLayer = new ol.source.XYZ({
                             url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token
                         });
+                    var l = mercator.getLayerByTitle(this.mapConfig, this.mapConfig.title);
+                    l.setSource(geeLayer);
+                    //get layer by id, the .setSource(geeLayer) should do the trick
                 } else {
                     console.warn("Wrong Data Returned");
                 }
