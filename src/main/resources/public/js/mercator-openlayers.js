@@ -106,7 +106,7 @@ mercator.createSource = function (sourceConfig) {
         //const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
         const url = sourceConfig.geeUrl;
         const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): '';
-        const theJson = {
+        let theJson = {
             dateFrom: sourceConfig.geeParams.startDate,
             dateTo: sourceConfig.geeParams.endDate,
             bands: sourceConfig.geeParams.visParams.bands,
@@ -115,29 +115,53 @@ mercator.createSource = function (sourceConfig) {
             cloudLessThan: cloudVar,
             visParams: sourceConfig.geeParams.visParams
         };
-        let geeLayer;
-        $.ajax({
-            url: url,
-            type: "POST",
-            async: false,
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify(theJson)
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            console.warn(jqXHR + textStatus + errorThrown);
-        }).done(function (data, _textStatus, _jqXHR) {
-            if (data.errMsg) {
-                console.info(data.errMsg);
-            } else {
-                if (data.hasOwnProperty("mapid")) {
-                    geeLayer = new ol.source.XYZ({
+        if(sourceConfig.geeParams.ImageAsset)
+        {
+            theJson.imageName = sourceConfig.geeParams.ImageAsset;
+        }
+        const theID = Math.random().toString(36).substr(2, 16) + '_' + Math.random().toString(36).substr(2, 9);
+        let geeLayer = new ol.source.XYZ({
+            url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
+            id: theID
+        });
+        geeLayer.setProperties({id: theID});
+        let createtype = 'test';
+        if(sourceConfig.create) {
+
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                async: true,
+                crossDomain: true,
+                contentType: "application/json",
+                mapConfig: sourceConfig,
+                LayerId: theID,
+                data: JSON.stringify(theJson)
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.warn(jqXHR + textStatus + errorThrown);
+            }).done(function (data, _textStatus, _jqXHR) {
+                if (data.errMsg) {
+                    console.info(data.errMsg);
+                } else {
+                    if (data.hasOwnProperty("mapid")) {
+                        let geeLayer = new ol.source.XYZ({
                             url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token
                         });
-                } else {
-                    console.warn("Wrong Data Returned");
+                        var layer;
+                        const LayerId = this.LayerId;
+                        mercator.currentMap.getLayers().forEach(function (lyr) {
+                            if (LayerId && LayerId == lyr.getSource().get('id')) {
+                                layer = lyr;
+                                layer.setSource(geeLayer);
+                            }
+                        });
+                    } else {
+                        console.warn("Wrong Data Returned");
+                    }
                 }
-            }
-        });
+            });
+        }
         return geeLayer;
 
     } else {
@@ -148,6 +172,7 @@ mercator.createSource = function (sourceConfig) {
 // [Pure] Returns a new ol.layer.Tile object or null if the
 // layerConfig is invalid.
 mercator.createLayer = function (layerConfig) {
+    layerConfig.sourceConfig.create = true;
     var source = mercator.createSource(layerConfig.sourceConfig);
     if (source == null) {
         return null;
@@ -200,6 +225,7 @@ mercator.verifyLayerConfigs = function (layerConfigs) {
     return layerConfigs.every(mercator.verifyLayerConfig);
 };
 
+mercator.currentMap = null;
 // [Pure] Returns the first error message generated while testing the
 // input arguments or null if all tests pass.
 mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConfigs) {
@@ -268,7 +294,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
                               layers: layers,
                               controls: controls,
                               view: view});
-
+        mercator.currentMap = map;
         // Return the map configuration object
         return {init: {divName: divName,
                        centerCoords: centerCoords,
