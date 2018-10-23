@@ -27,15 +27,17 @@ class Collection extends React.Component {
             currentPlot: null,
             userSamples: {}
         };
-        this.setBaseMapSource  = this.setBaseMapSource.bind(this);
-        this.updateDGWMSLayer  = this.updateDGWMSLayer.bind(this);
-        this.updatePlanetLayer = this.updatePlanetLayer.bind(this);
-        this.getPlotData       = this.getPlotData.bind(this);
-        this.nextPlot          = this.nextPlot.bind(this);
-        this.flagPlot          = this.flagPlot.bind(this);
-        this.saveValues        = this.saveValues.bind(this);
-        this.hideShowAnswers   = this.hideShowAnswers.bind(this);
-        this.setCurrentValue   = this.setCurrentValue.bind(this);
+        this.setBaseMapSource      = this.setBaseMapSource.bind(this);
+        this.setImageryYearDG      = this.setImageryYearDG.bind(this);
+        this.setStackingProfileDG  = this.setStackingProfileDG.bind(this);
+        this.setImageryYearPlanet  = this.setImageryYearPlanet.bind(this);
+        this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
+        this.getPlotData           = this.getPlotData.bind(this);
+        this.nextPlot              = this.nextPlot.bind(this);
+        this.flagPlot              = this.flagPlot.bind(this);
+        this.saveValues            = this.saveValues.bind(this);
+        this.hideShowAnswers       = this.hideShowAnswers.bind(this);
+        this.setCurrentValue       = this.setCurrentValue.bind(this);
     }
 
     componentDidMount() {
@@ -187,15 +189,55 @@ class Collection extends React.Component {
         this.updateMapImagery(newBaseMapSource);
     }
 
+    setImageryYearDG(event) {
+        const dropdown = event.target;
+        const newImageryYearDG = dropdown.options[dropdown.selectedIndex].value;
+        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        currentImagery.attribution += " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
+        this.setState({imageryYearDG: newImageryYearDG,
+                       currentImagery: currentImagery});
+        this.updateDGWMSLayer(newImageryYearDG, this.state.stackingProfileDG);
+    }
+
+    setStackingProfileDG(event) {
+        const dropdown = event.target;
+        const newStackingProfileDG = dropdown.options[dropdown.selectedIndex].value;
+        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        currentImagery.attribution += " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
+        this.setState({stackingProfileDG: newStackingProfileDG,
+                       currentImagery: currentImagery});
+        this.updateDGWMSLayer(this.state.imageryYearDG, newStackingProfileDG);
+    }
+
+    setImageryYearPlanet(event) {
+        const dropdown = event.target;
+        const newImageryYearPlanet = dropdown.options[dropdown.selectedIndex].value;
+        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        currentImagery.attribution += " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+        this.setState({imageryYearPlanet: newImageryYearPlanet,
+                       currentImagery: currentImagery});
+        this.updatePlanetLayer(this.state.imageryMonthPlanet, newImageryYearPlanet);
+    }
+
+    setImageryMonthPlanet(event) {
+        const dropdown = event.target;
+        const newImageryMonthPlanet = dropdown.options[dropdown.selectedIndex].value;
+        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        currentImagery.attribution += " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
+        this.setState({imageryMonthPlanet: newImageryMonthPlanet,
+                       currentImagery: currentImagery});
+        this.updatePlanetLayer(newImageryMonthPlanet, this.state.imageryYearPlanet);
+    }
+
     updateMapImagery(newBaseMapSource) {
         mercator.setVisibleLayer(this.state.mapConfig, newBaseMapSource);
         let newImagery = this.getImageryByTitle(newBaseMapSource);
         if (newBaseMapSource == "DigitalGlobeWMSImagery") {
             newImagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
-            this.updateDGWMSLayer();
+            this.updateDGWMSLayer(this.state.imageryYearDG, this.state.stackingProfileDG);
         } else if (newBaseMapSource == "PlanetGlobalMosaic") {
             newImagery.attribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
-            this.updatePlanetLayer();
+            this.updatePlanetLayer(this.state.imageryMonthPlanet, this.state.imageryYearPlanet);
         }
         this.setState({currentImagery: newImagery});
     }
@@ -204,22 +246,22 @@ class Collection extends React.Component {
         return this.state.imageryList.find(imagery => imagery.title == imageryTitle);
     }
 
-    updateDGWMSLayer() {
+    updateDGWMSLayer(imageryYear, stackingProfile) {
         mercator.updateLayerWmsParams(this.state.mapConfig,
                                       "DigitalGlobeWMSImagery",
                                       {
-                                          COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.state.imageryYearDG + "-01-01')"
-                                              + "AND(acquisition_date<='" + this.state.imageryYearDG + "-12-31')",
-                                          FEATUREPROFILE: this.state.stackingProfileDG
+                                          COVERAGE_CQL_FILTER: "(acquisition_date>='" + imageryYear + "-01-01')"
+                                              + "AND(acquisition_date<='" + imageryYear + "-12-31')",
+                                          FEATUREPROFILE: stackingProfile
                                       });
     }
 
-    updatePlanetLayer() {
+    updatePlanetLayer(imageryMonth, imageryYear) {
         mercator.updateLayerSource(this.state.mapConfig,
                                    "PlanetGlobalMosaic",
                                    sourceConfig => {
-                                       sourceConfig.month = this.state.imageryMonthPlanet;
-                                       sourceConfig.year = this.state.imageryYearPlanet;
+                                       sourceConfig.month = imageryMonth;
+                                       sourceConfig.year = imageryYear;
                                        return sourceConfig;
                                    },
                                    this);
@@ -423,10 +465,12 @@ class Collection extends React.Component {
                          setBaseMapSource={this.setBaseMapSource}
                          imageryYearDG={this.state.imageryYearDG}
                          stackingProfileDG={this.state.stackingProfileDG}
-                         updateDGWMSLayer={this.updateDGWMSLayer}
+                         setImageryYearDG={this.setImageryYearDG}
+                         setStackingProfileDG={this.setStackingProfileDG}
                          imageryYearPlanet={this.state.imageryYearPlanet}
                          imageryMonthPlanet={this.state.imageryMonthPlanet}
-                         updatePlanetLayer={this.updatePlanetLayer}
+                         setImageryYearPlanet={this.setImageryYearPlanet}
+                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                          stats={this.state.stats}
                          saveValues={this.saveValues}
                          saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
@@ -462,10 +506,12 @@ function SideBar(props) {
                             imageryList={props.imageryList}
                             imageryYearDG={props.imageryYearDG}
                             stackingProfileDG={props.stackingProfileDG}
-                            updateDGWMSLayer={props.updateDGWMSLayer}
+                            setImageryYearDG={props.setImageryYearDG}
+                            setStackingProfileDG={props.setStackingProfileDG}
                             imageryYearPlanet={props.imageryYearPlanet}
                             imageryMonthPlanet={props.imageryMonthPlanet}
-                            updatePlanetLayer={props.updatePlanetLayer}/>
+                            setImageryYearPlanet={props.setImageryYearPlanet}
+                            setImageryMonthPlanet={props.setImageryMonthPlanet}/>
             <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
                              surveyAnswersVisible={props.surveyAnswersVisible}
                              hideShowAnswers={props.hideShowAnswers}
@@ -523,7 +569,7 @@ function ImageryOptions(props) {
         <fieldset className="mb-3 justify-content-center text-center">
             <h3>Imagery Options</h3>
             <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                    size="1" defaultValue={props.baseMapSource || ""}
+                    size="1" value={props.baseMapSource || ""}
                     onChange={props.setBaseMapSource}>
                 {
                     props.imageryList.map(
@@ -535,11 +581,13 @@ function ImageryOptions(props) {
             <DigitalGlobeMenus baseMapSource={props.baseMapSource}
                                imageryYearDG={props.imageryYearDG}
                                stackingProfileDG={props.stackingProfileDG}
-                               updateDGWMSLayer={props.updateDGWMSLayer}/>
+                               setImageryYearDG={props.setImageryYearDG}
+                               setStackingProfileDG={props.setStackingProfileDG}/>
             <PlanetMenus baseMapSource={props.baseMapSource}
                          imageryYearPlanet={props.imageryYearPlanet}
                          imageryMonthPlanet={props.imageryMonthPlanet}
-                         updatePlanetLayer={props.updatePlanetLayer}/>
+                         setImageryYearPlanet={props.setImageryYearPlanet}
+                         setImageryMonthPlanet={props.setImageryMonthPlanet}/>
         </fieldset>
     );
 }
@@ -556,8 +604,8 @@ function DigitalGlobeMenus(props) {
                         id="dg-imagery-year"
                         name="dg-imagery-year"
                         size="1"
-                        defaultValue={props.imageryYearDG}
-                        onChange={props.updateDGWMSLayer}>
+                        value={props.imageryYearDG}
+                        onChange={props.setImageryYearDG}>
                     {
                         range(2018,1999,-1).map(year => <option key={year} value={year}>{year}</option>)
                     }
@@ -566,8 +614,8 @@ function DigitalGlobeMenus(props) {
                         id="dg-stacking-profile"
                         name="dg-stacking-profile"
                         size="1"
-                        defaultValue={props.stackingProfileDG}
-                        onChange={props.updateDGWMSLayer}>
+                        value={props.stackingProfileDG}
+                        onChange={props.setStackingProfileDG}>
                     {
                         ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
                             .map(profile => <option key={profile} value={profile}>{profile}</option>)
@@ -588,8 +636,8 @@ function PlanetMenus(props) {
                         id="planet-imagery-year"
                         name="planet-imagery-year"
                         size="1"
-                        defaultValue={props.imageryYearPlanet}
-                        onChange={props.updatePlanetLayer}>
+                        value={props.imageryYearPlanet}
+                        onChange={props.setImageryYearPlanet}>
                     {
                         range(2018,2015,-1).map(year => <option key={year} value={year}>{year}</option>)
                     }
@@ -598,8 +646,8 @@ function PlanetMenus(props) {
                         id="planet-imagery-month"
                         name="planet-imagery-month"
                         size="1"
-                        defaultValue={props.imageryMonthPlanet}
-                        onChange={props.updatePlanetLayer}>
+                        value={props.imageryMonthPlanet}
+                        onChange={props.setImageryMonthPlanet}>
                     <option value="01">January</option>
                     <option value="02">February</option>
                     <option value="03">March</option>
