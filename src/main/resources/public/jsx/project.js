@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
     constructor(props) {

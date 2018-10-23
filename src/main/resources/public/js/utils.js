@@ -48,3 +48,7 @@ utils.blink_border = function (element_id) {
     setTimeout(function () { utils.lowlight_border(element_id); }, 500);
     return null;
 };
+
+module.exports = {
+    utils: utils
+};
