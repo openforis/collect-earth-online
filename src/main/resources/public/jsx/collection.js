@@ -13,7 +13,8 @@ class Collection extends React.Component {
             plotList: [],
             imageryList: [],
             mapConfig: null,
-            currentImagery: {attribution: ""},
+            currentImagery: null,
+            imageryAttribution: "",
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
             imageryYearPlanet: 2018,
@@ -56,7 +57,7 @@ class Collection extends React.Component {
         if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.projectPlotsShown == false) {
             this.showProjectPlots();
         }
-        if (this.state.mapConfig && this.state.currentImagery.id == null) {
+        if (this.state.mapConfig && this.state.currentImagery == null) {
             this.updateMapImagery(this.state.currentProject.baseMapSource);
         }
     }
@@ -192,54 +193,56 @@ class Collection extends React.Component {
     setImageryYearDG(event) {
         const dropdown = event.target;
         const newImageryYearDG = dropdown.options[dropdown.selectedIndex].value;
-        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        currentImagery.attribution += " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({imageryYearDG: newImageryYearDG,
-                       currentImagery: currentImagery});
+                       imageryAttribution: newImageryAttribution});
         this.updateDGWMSLayer(newImageryYearDG, this.state.stackingProfileDG);
     }
 
     setStackingProfileDG(event) {
         const dropdown = event.target;
         const newStackingProfileDG = dropdown.options[dropdown.selectedIndex].value;
-        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        currentImagery.attribution += " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
         this.setState({stackingProfileDG: newStackingProfileDG,
-                       currentImagery: currentImagery});
+                       imageryAttribution: newImageryAttribution});
         this.updateDGWMSLayer(this.state.imageryYearDG, newStackingProfileDG);
     }
 
     setImageryYearPlanet(event) {
         const dropdown = event.target;
         const newImageryYearPlanet = dropdown.options[dropdown.selectedIndex].value;
-        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        currentImagery.attribution += " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
         this.setState({imageryYearPlanet: newImageryYearPlanet,
-                       currentImagery: currentImagery});
+                       imageryAttribution: newImageryAttribution});
         this.updatePlanetLayer(this.state.imageryMonthPlanet, newImageryYearPlanet);
     }
 
     setImageryMonthPlanet(event) {
         const dropdown = event.target;
         const newImageryMonthPlanet = dropdown.options[dropdown.selectedIndex].value;
-        let currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        currentImagery.attribution += " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
         this.setState({imageryMonthPlanet: newImageryMonthPlanet,
-                       currentImagery: currentImagery});
+                       imageryAttribution: newImageryAttribution});
         this.updatePlanetLayer(newImageryMonthPlanet, this.state.imageryYearPlanet);
     }
 
     updateMapImagery(newBaseMapSource) {
         mercator.setVisibleLayer(this.state.mapConfig, newBaseMapSource);
-        let newImagery = this.getImageryByTitle(newBaseMapSource);
+        const newImagery = this.getImageryByTitle(newBaseMapSource);
+        let newImageryAttribution = newImagery.attribution;
         if (newBaseMapSource == "DigitalGlobeWMSImagery") {
-            newImagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
+            newImageryAttribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
             this.updateDGWMSLayer(this.state.imageryYearDG, this.state.stackingProfileDG);
         } else if (newBaseMapSource == "PlanetGlobalMosaic") {
-            newImagery.attribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+            newImageryAttribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
             this.updatePlanetLayer(this.state.imageryMonthPlanet, this.state.imageryYearPlanet);
         }
-        this.setState({currentImagery: newImagery});
+        this.setState({currentImagery: newImagery,
+                       imageryAttribution: newImageryAttribution});
     }
 
     getImageryByTitle(imageryTitle) {
@@ -454,7 +457,7 @@ class Collection extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <ImageAnalysisPane imageryAttribution={this.state.currentImagery.attribution}/>
+                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
                 <SideBar currentProject={this.state.currentProject}
                          navButtonsShown={this.state.navButtonsShown}
                          newPlotButtonDisabled={this.state.newPlotButtonDisabled}
