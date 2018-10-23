@@ -413,9 +413,17 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_id 
 		extent          jsonb,
 		source_config   jsonb
 	) AS $$
+	WITH images as (
+	SELECT * from select_public_imagery()
+	UNION
 	SELECT *
-	FROM select_public_imagery()
+	FROM imagery
 	WHERE institution_id = _institution_id
+	)
+	
+	SELECT * from images 
+	ORDER BY visibility DESC, id
+	
 $$ LANGUAGE SQL;
 
 --for migration
@@ -437,6 +445,7 @@ CREATE OR REPLACE FUNCTION create_project(
 		_samples_per_plot integer,
 		_sample_resolution double precision,
 		_sample_survey jsonb,
+		_csv_file text,
 		_classification_start_date date,
 		_classification_end_date date,
 		_classification_timestep integer)
@@ -444,12 +453,12 @@ CREATE OR REPLACE FUNCTION create_project(
 	$$
 	INSERT INTO projects (id, institution_id, availability, name, description, privacy_level, boundary, 
 							base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
-							sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, 
-							classification_end_date, classification_timestep)
+							sample_distribution, samples_per_plot,sample_resolution, sample_survey, csv_file,
+							classification_start_date, classification_end_date, classification_timestep)
 	VALUES (_id, _institution_id, _availability, _name, _description, _privacy_level, _boundary,
 			_base_map_source, _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, 
-			_sample_distribution, _samples_per_plot, _sample_resolution, _sample_survey, _classification_start_date, 
-			_classification_end_date, _classification_timestep)
+			_sample_distribution, _samples_per_plot, _sample_resolution, _sample_survey, _csv_file,
+			_classification_start_date, _classification_end_date, _classification_timestep)
 	RETURNING id
   	$$
 	LANGUAGE SQL;
@@ -488,6 +497,22 @@ CREATE OR REPLACE FUNCTION create_project(
 	$$ 
 LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION update_project_csv(
+		_proj_id integer,
+		_csv_file text,
+		_boundary geometry(Polygon,4326)
+	)
+  	RETURNS integer AS 
+	$$
+	UPDATE projects 
+	SET csv_file = _csv_file,
+		boundary = _boundary
+	WHERE id = _proj_id
+	RETURNING id
+  	$$
+LANGUAGE SQL;
+
+
 --create project plots for migration
 CREATE OR REPLACE FUNCTION create_project_plots(_project_id integer, _flagged integer, _plot_points geometry(Point,4326)) 
 	RETURNS integer AS 
@@ -518,7 +543,7 @@ CREATE OR REPLACE FUNCTION select_project(_id integer)
 	  name                      text,
 	  description               text,
 	  privacy_level             text,
-	  boundary                  geometry(Polygon,4326),
+	  boundary                  text,
 	  base_map_source           text,
 	  plot_distribution         text,
 	  num_plots                 integer,
@@ -529,11 +554,14 @@ CREATE OR REPLACE FUNCTION select_project(_id integer)
 	  samples_per_plot          integer,
 	  sample_resolution         float,
 	  sample_survey             jsonb,
+	  csv_file					text,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer
 	) AS $$
-	SELECT *
+	SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
+		plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
+		sample_survey, csv_file, classification_start_date, classification_end_date, classification_timestep
 	FROM projects
 	WHERE id = _id
 $$ LANGUAGE SQL;
@@ -548,7 +576,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 	  name                      text,
 	  description               text,
 	  privacy_level             text,
-	  boundary                  geometry(Polygon,4326),
+	  boundary                  text,
 	  base_map_source           text,
 	  plot_distribution         text,
 	  num_plots                 integer,
@@ -559,12 +587,15 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 	  samples_per_plot          integer,
 	  sample_resolution         float,
 	  sample_survey             jsonb,
+	  csv_file					text,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
 	  editable                  boolean
 	) AS $$
-	SELECT *, false AS editable
+	SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
+		plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
+		sample_survey, csv_path, classification_start_date, classification_end_date, classification_timestep, false AS editable
 	FROM projects
 	WHERE privacy_level  =  'public'
 	  AND availability  =  'published'
@@ -579,7 +610,7 @@ CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integ
 	  name                      text,
 	  description               text,
 	  privacy_level             text,
-	  boundary                  geometry(Polygon,4326),
+	  boundary                  text,
 	  base_map_source           text,
 	  plot_distribution         text,
 	  num_plots                 integer,
@@ -590,6 +621,7 @@ CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integ
 	  samples_per_plot          integer,
 	  sample_resolution         float,
 	  sample_survey             jsonb,
+	  csv_path					text,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -600,36 +632,6 @@ CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integ
 	WHERE institution_id = _institution_id
 $$ LANGUAGE SQL;
 
---FIXME join tables to get usr_id
---Returns all rows in projects for a user_id and institution_id.
-CREATE OR REPLACE FUNCTION select_all_user_institution_projects(_user_id integer, _institution_id integer) 
-	RETURNS TABLE (
-	  id                        integer,
-	  institution_id            integer,
-	  availability              text,
-	  name                      text,
-	  description               text,
-	  privacy_level             text,
-	  boundary                  geometry(Polygon,4326),
-	  base_map_source           text,
-	  plot_distribution         text,
-	  num_plots                 integer,
-	  plot_spacing              float,
-	  plot_shape                text,
-	  plot_size                 float,
-	  sample_distribution       text,
-	  samples_per_plot          integer,
-	  sample_resolution         float,
-	  sample_survey             jsonb,
-	  classification_start_date	date,
-	  classification_end_date   date,
-	  classification_timestep   integer,
-	  editable					boolean
-	) AS $$
-	SELECT *
-	FROM select_all_user_projects(_user_id)
-	WHERE institution_id = _institution_id
-$$ LANGUAGE SQL;
 
 --Returns all rows in projects for a user_id with roles.
 CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer) 
@@ -640,7 +642,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
 	  name                      text,
 	  description               text,
 	  privacy_level             text,
-	  boundary                  geometry(Polygon,4326),
+	  boundary                  text,
 	  base_map_source           text,
 	  plot_distribution         text,
 	  num_plots                 integer,
@@ -651,6 +653,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
 	  samples_per_plot          integer,
 	  sample_resolution         float,
 	  sample_survey             jsonb,
+		csv_file				text,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -661,22 +664,22 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
 		FROM projects
 		LEFT JOIN get_institution_user_roles(_user_id) AS roles USING (institution_id)
 	)
-	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,p.boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
-	,p.sample_survey,p.classification_start_date,p.classification_end_date,p.classification_timestep,true AS editable
+	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
+	,p.sample_survey,p.csv_file,p.classification_start_date,p.classification_end_date,p.classification_timestep,true AS editable
 	FROM project_roles,projects as p
 	WHERE role = 'admin'
 	  AND p.privacy_level IN ('public','private','institution')
 	  AND p.availability IN ('unpublished','published','closed')
     UNION
-	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,p.boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
-	,p.sample_survey,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
+	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
+	,p.sample_survey,p.csv_file,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
 	FROM project_roles,projects as p
 	WHERE role = 'member'
 	  AND p.privacy_level IN ('public','institution')
 	  AND p.availability  =  'published'
 	UNION
-	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,p.boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
-	,p.sample_survey,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
+	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
+	,p.sample_survey,p.csv_file,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
 	FROM project_roles,projects as p
 	WHERE role NOT IN ('admin','member')
 	  AND p.privacy_level IN ('public','institution')
@@ -694,7 +697,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_id inte
 	  name                      text,
 	  description               text,
 	  privacy_level             text,
-	  boundary                  geometry(Polygon,4326),
+	  boundary                  text,
 	  base_map_source           text,
 	  plot_distribution         text,
 	  num_plots                 integer,
@@ -720,11 +723,11 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 	RETURNS TABLE (
 	  id         integer,
 	  project_id integer,
-	  center     geometry(Point,4326),
+	  center     text,
 	  flagged    integer,
 	  assigned   integer
 	) AS $$
-	SELECT * FROM plots
+	SELECT id, project_id, ST_AsGeoJSON(center), flagged, assigned FROM plots
 	WHERE project_id  =  _project_id
 -- 	FIXME:  think about the data, is groupby even needed?
 	group by id, center, flagged, assigned
@@ -1023,7 +1026,6 @@ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION add_user_plots(_plot_id integer, _username text, _flagged boolean) 
 	RETURNS integer AS $$
 		INSERT INTO user_plots(plot_id, flagged, user_id)
-		--FIXME as aa should be user_id
 		(SELECT _plot_id, _flagged, (SELECT id FROM users WHERE email = _username) as aa)
 
 		RETURNING id
@@ -1037,10 +1039,48 @@ CREATE OR REPLACE FUNCTION select_all_institutions()
 	  logo          text,
 	  description   text,
 	  url           text,
-	  archived      boolean
+	  archived      boolean,
+	  members		jsonb,
+	  admins		jsonb,
+	  pending		jsonb
 	) AS $$
-	SELECT *
-	FROM institutions
+	WITH inst_roles as (
+		SELECT user_id, title, institution_id
+		FROM institution_users as iu
+		LEFT JOIN roles
+			ON roles.id = iu.role_id
+	),
+	members as (
+		SELECT jsonb_agg(user_id) as member_list, institution_id
+		FROM inst_roles		
+		WHERE title = 'member'
+			OR title = 'admin'
+		GROUP BY institution_id
+	),
+	admins as (
+		SELECT jsonb_agg(user_id) as admin_list, institution_id
+		FROM inst_roles		
+		WHERE title = 'admin'
+		GROUP BY institution_id
+	),
+	pending as (
+		SELECT jsonb_agg(user_id) as pending_list, institution_id
+		FROM inst_roles		
+		WHERE title = 'pending'
+		GROUP BY institution_id
+	)
+	
+	SELECT i.*, 
+		(CASE WHEN member_list IS NULL THEN '[]' ELSE member_list END), 
+		(CASE WHEN admin_list IS NULL THEN '[]' ELSE admin_list END),
+		(CASE WHEN pending_list IS NULL THEN '[]' ELSE pending_list END)
+	FROM institutions as i
+	LEFT JOIN members as m
+		ON i.id = m.institution_id
+	LEFT JOIN admins as a
+		ON i.id = a.institution_id
+	LEFT JOIN pending as p
+		ON i.id = p.institution_id
 	WHERE archived = false
 $$ LANGUAGE SQL;
 
@@ -1055,12 +1095,13 @@ CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer)
 	  archived      boolean
 	) AS $$
 	SELECT *
-	FROM institutions
+	FROM select_all_institutions()
 	WHERE id = _institution_id
 	   AND archived = false
 $$ LANGUAGE SQL;
 
 --Returns  institution details
+--Unused
 CREATE OR REPLACE FUNCTION select_institution_details(_institution_id integer) 
 	RETURNS TABLE (
 	  id            integer,
@@ -1089,29 +1130,6 @@ CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name tex
 	$$
 LANGUAGE SQL;
 
---Add institution details
--- FIXME this function is ambigously defined.  Only adds user and not default admin
--- CREATE OR REPLACE FUNCTION add_institution( _user_id integer, _name text, _logo_path text, _description text, _url text) 
--- 	RETURNS integer AS $$
--- 		WITH institution_ids AS
--- 		(
--- 			INSERT INTO institutions(name, logo, description, url)
--- 			VALUES (_name, _logo_path, _description, _url)
--- 			RETURNING id
--- 		),
--- 		role_ids AS
--- 		(
--- 			SELECT id
--- 			FROM roles
--- 			WHERE title = 'admin'
--- 		)
--- 		INSERT INTO institution_users(institution_id, user_id, role_id)
--- 		(SELECT iid.id, _user_id, rid.id
--- 			FROM institution_ids AS iid
--- 			CROSS JOIN role_ids AS rid)
--- 		RETURNING institution_id
--- 	$$ 
--- LANGUAGE SQL;
 --Archive  institution
 CREATE OR REPLACE FUNCTION archive_institution(_institution_id integer) 
 	RETURNS integer AS 

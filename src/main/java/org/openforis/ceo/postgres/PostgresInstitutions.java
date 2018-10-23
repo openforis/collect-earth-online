@@ -2,6 +2,7 @@ package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
@@ -36,6 +37,9 @@ public class PostgresInstitutions implements Institutions {
                 newInstitution.addProperty("description", rs.getString("description"));
                 newInstitution.addProperty("url", rs.getObject("url").toString());
                 newInstitution.addProperty("archived", rs.getObject("archived").toString());
+                newInstitution.add("members", parseJson(rs.getString("members")).getAsJsonArray());
+                newInstitution.add("admins", parseJson(rs.getString("admins")).getAsJsonArray());
+                newInstitution.add("pending", parseJson(rs.getString("pending")).getAsJsonArray());
 
                 institutionArray.add(newInstitution);
             }
@@ -64,6 +68,11 @@ public class PostgresInstitutions implements Institutions {
                 newInstitution.addProperty("description", rs.getString("description"));
                 newInstitution.addProperty("url", rs.getObject("url").toString());
                 newInstitution.addProperty("archived", rs.getObject("archived").toString());
+                newInstitution.add("members", parseJson(rs.getString("members")).getAsJsonArray());
+                newInstitution.add("admins", parseJson(rs.getString("admins")).getAsJsonArray());
+                newInstitution.add("pending", parseJson(rs.getString("pending")).getAsJsonArray());
+            
+
             } else {
                 // create a blank institution json to send back
                 newInstitution.addProperty("id"         , -1);
@@ -71,6 +80,9 @@ public class PostgresInstitutions implements Institutions {
                 newInstitution.addProperty("logo"       , "");
                 newInstitution.addProperty("description", "");
                 newInstitution.addProperty("url"        , "");
+                newInstitution.add("members"            , parseJson("[]").getAsJsonArray());
+                newInstitution.add("admins"             , parseJson("[]").getAsJsonArray());
+                newInstitution.add("pending"            , parseJson("[]").getAsJsonArray());
                 newInstitution.addProperty("archived"   , false);
             }
             
@@ -146,27 +158,37 @@ public class PostgresInstitutions implements Institutions {
             } else {
                 // NOTE: This branch edits an existing institution
 
-                var logoFileName = writeFilePart(req,
-                                                "institution-logo",
-                                                expandResourcePath("/public/img/institution-logos"),
-                                                "institution-" + institutionId);
-                var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
-    
-                var SQL = "SELECT * FROM update_institution(?, ?, ?, ?, ?, ?)";
-
-                try (var conn = connect();
-                     var pstmt = conn.prepareStatement(SQL)) {
+                
+                try (var conn = connect()) {
+                    var pstmt = conn.prepareStatement("SELECT * FROM get_institution(?)");
                     pstmt.setInt(1, Integer.parseInt(institutionId));
-                    pstmt.setString(2, name);
-                    pstmt.setString(3, logoPath);
-                    pstmt.setString(4, description);
-                    pstmt.setString(5, url);
-                    pstmt.setBoolean(6, false);
                     var rs = pstmt.executeQuery();
-                    return "";
+                    if (rs.next()) {
+                        var logoPath = rs.getString("logo");
+                        var logodata = partToString(req.raw().getPart("institution-logo"));
+                        if (!logodata.equals("null") && logodata.length() > 0) {
+                            var logoFileName = writeFilePart(req,
+                                                            "institution-logo",
+                                                            expandResourcePath("/public/img/institution-logos"),
+                                                            "institution-" + institutionId);
+                            logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+                        }
+
+                        var updateSQL = "SELECT * FROM update_institution(?, ?, ?, ?, ?, ?)";
+                        pstmt = conn.prepareStatement(updateSQL);
+                        pstmt.setInt(1, Integer.parseInt(institutionId));
+                        pstmt.setString(2, name);
+                        pstmt.setString(3, logoPath);
+                        pstmt.setString(4, description);
+                        pstmt.setString(5, url);
+                        pstmt.setBoolean(6, false);
+                        pstmt.execute();
+
+                    }
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
                 }
+                
 
                 return "";
             }

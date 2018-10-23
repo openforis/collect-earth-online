@@ -34,6 +34,7 @@ CREATE TABLE projects (
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
+  csv_file                  text,
   classification_start_date	date,
   classification_end_date   date,
   classification_timestep   integer

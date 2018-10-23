@@ -59,7 +59,7 @@ class MapPanel extends React.Component {
             .then(data => this.setState({imagery: data}));
         setTimeout(() => {
             this.showProjectMap(this.state.projects, this.state.imagery, this.state.documentRoot);
-        }, 250);
+        }, 750);
     }
 
 

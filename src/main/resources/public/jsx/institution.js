@@ -71,10 +71,7 @@ class Institution extends React.Component {
             .then(data => {
                 this.setState({details: data});
                 if (ref.props.userId != "") {
-                    // FIXME the line below causes an error
                     ref.setState({isAdmin : this.state.details.admins.includes(parseInt(ref.props.userId))});
-                    // use to force admin state for testing
-                    // ref.setState({isAdmin : true});
                 }
             });
     }
