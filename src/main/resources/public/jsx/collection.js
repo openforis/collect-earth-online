@@ -22,9 +22,9 @@ class Collection extends React.Component {
             newPlotButtonDisabled: false,
             flagPlotButtonDisabled: false,
             saveValuesButtonDisabled: true,
+            surveyAnswersVisible: {},
             currentPlot: null,
-            userSamples: {},
-            clicked:false
+            userSamples: {}
         };
         this.setBaseMapSource  = this.setBaseMapSource.bind(this);
         this.updateDGWMSLayer  = this.updateDGWMSLayer.bind(this);
@@ -33,11 +33,8 @@ class Collection extends React.Component {
         this.nextPlot          = this.nextPlot.bind(this);
         this.flagPlot          = this.flagPlot.bind(this);
         this.saveValues        = this.saveValues.bind(this);
-        // FIXME: Do all of these need to be bound?
+        this.hideShowAnswers   = this.hideShowAnswers.bind(this);
         this.setCurrentValue   = this.setCurrentValue.bind(this);
-        this.showAnswers       = this.showAnswers.bind(this);
-        this.hideAnswers       = this.hideAnswers.bind(this);
-        this.getCurrent        = this.getCurrent.bind(this);
     }
 
     componentDidMount() {
@@ -85,11 +82,6 @@ class Collection extends React.Component {
             });
     }
 
-    // FIXME: add {answered: false} to each surveyQuestion object
-    // FIXME: add {hasChildQuestion: false} to each surveyQuestion answer object
-    // FIXME: for each child question, find its parent question object and parent answer object
-    //        add {hasChildQuestion: true} to each parent answer object that you find
-    //        if a parent answer is "Any", add {hasChildQuestion: true} all answer objects in the parent question object
     convertSampleValuesToSurveyQuestions(sampleValues) {
         return sampleValues.map(sampleValue => {
             if (sampleValue.name && sampleValue.values) {
@@ -374,6 +366,16 @@ class Collection extends React.Component {
             });
     }
 
+    hideShowAnswers(surveyNodeId) {
+        let surveyAnswersVisible = this.state.surveyAnswersVisible;
+        if (surveyAnswersVisible[surveyNodeId]) {
+            surveyAnswersVisible[surveyNodeId] = false;
+        } else {
+            surveyAnswersVisible[surveyNodeId] = true;
+        }
+        this.setState({surveyAnswersVisible: surveyAnswersVisible});
+    }
+
     // FIXME: Needs to be reviewed
     setCurrentValue(event, surveyQuestion, answer) {
         var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
@@ -422,109 +424,6 @@ class Collection extends React.Component {
         }
     }
 
-    // FIXME: Needs to be reviewed
-    showAnswers(event){
-        var x = event.target.nextSibling;
-        if(this.state.clicked==true){
-            x.style.display === "none";
-        }
-        var cp=this.state.currentProject;
-        var sv=this.state.currentProject.sampleValues;
-        if (x.style.display === "none") {
-            x.style.display = "block";
-            sv.map((sq)=>{
-                if(sq.id==event.target.id){
-                    sq.answered=true;
-                }
-            });
-        } else {
-            x.style.display = "none";
-            sv.map((sq)=>{
-                if(sq.id==event.target.id){
-                    sq.answered=false;
-                }
-            });
-        }
-        cp.sampleValues=sv;
-        this.setState({currentProject:cp});
-    }
-
-    // FIXME: Needs to be reviewed
-    hideAnswers(){
-        var x=document.getElementById("samplevalue");
-        x.style.display="none";
-    }
-
-    // FIXME: Move this functionality into render()
-    loadPlotCommon(plotId) {
-        // FIXME: What is this?
-        if(document.getElementById("testg")!=null)
-            document.getElementById("testg").style.display="block";
-    }
-
-    // FIXME: what?!
-    getCurrent = (node,ref) => this.state.currentProject.sampleValues.filter(cNode => cNode.parent_question == node).map(function(cNode,_uid) {
-        if(cNode.answered) {
-            return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
-                <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
-            onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
-            Question: {cNode.question}</button>
-                <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
-                {
-                    cNode.answers.map((ans, uid) =>
-                                      <li key={uid} className="mb-1">
-                                      <button type="button"
-                                      className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                      id={ans.answer + "_" + ans.id}
-                                      name={ans.answer + "_" + ans.id}
-                                      onClick={(e) => ref.setCurrentValue(e, cNode, ans)}>
-                                      <div className="circle" style={{
-                                          backgroundColor: ans.color,
-                                          border: "solid 1px",
-                                          float: "left",
-                                          marginTop: "4px"
-                                      }}></div>
-                                      <span className="small">{ans.answer}</span>
-                                      </button>
-                                      </li>
-                                     )
-                }
-            </ul>
-                {ref.getCurrent(cNode.id, ref)}
-
-            </fieldset>
-        }
-        else {
-            return <fieldset key={_uid} className="mb-1 justify-content-center text-center" id="testg">
-                <button id={cNode.id} className="text-center btn btn-outline-lightgreen btn-sm btn-block"
-            onClick={ref.showAnswers} style={{marginBottom: "10px"}}>Survey
-            Question: {cNode.question}</button>
-                <ul id="samplevalue" className="samplevalue justify-content-center" style={{display: "none"}}>
-                {
-                    cNode.answers.map((ans, uid) =>
-                                      <li key={uid} className="mb-1">
-                                      <button type="button"
-                                      className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                      id={ans.answer + "_" + ans.id}
-                                      name={ans.answer + "_" + ans.id}
-                                      onClick={() => ref.setCurrentValue(cNode, ans)}>
-                                      <div className="circle" style={{
-                                          backgroundColor: ans.color,
-                                          border: "solid 1px",
-                                          float: "left",
-                                          marginTop: "4px"
-                                      }}></div>
-                                      <span className="small">{ans.answer}</span>
-                                      </button>
-                                      </li>
-                                     )
-                }
-            </ul>
-                </fieldset>
-        }
-
-    });
-
     render() {
         return (
             <React.Fragment>
@@ -546,7 +445,9 @@ class Collection extends React.Component {
                          stats={this.state.stats}
                          saveValues={this.saveValues}
                          saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
-                         getCurrent={this.getCurrent}/>
+                         surveyAnswersVisible={this.state.surveyAnswersVisible}
+                         hideShowAnswers={this.hideShowAnswers}
+                         setCurrentValue={this.setCurrentValue}/>
             </React.Fragment>
         );
     }
@@ -581,7 +482,9 @@ function SideBar(props) {
                             imageryMonthPlanet={props.imageryMonthPlanet}
                             updatePlanetLayer={props.updatePlanetLayer}/>
             <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
-                             getCurrent={props.getCurrent}/>
+                             surveyAnswersVisible={props.surveyAnswersVisible}
+                             hideShowAnswers={props.hideShowAnswers}
+                             setCurrentValue={props.setCurrentValue}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
                     <SaveValuesButton saveValues={props.saveValues}
@@ -732,14 +635,73 @@ function PlanetMenus(props) {
     }
 }
 
-// FIXME: how does props.getCurrent() work?
 function SurveyQuestions(props) {
+    const topLevelNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == -1);
     return (
         <fieldset className="mb-3 justify-content-center text-center">
             <h3>Survey Questions</h3>
             <i style={{fontSize: "small"}}>(Click on a question to expand)</i>
-            {props.surveyQuestions.length > 0 && props.getCurrent(-1, props._this)}
+            {
+                topLevelNodes.map((surveyNode, uid) => <SurveyQuestionTree key={uid}
+                                                                           surveyNode={surveyNode}
+                                                                           surveyAnswersVisible={props.surveyAnswersVisible}
+                                                                           surveyQuestions={props.surveyQuestions}
+                                                                           hideShowAnswers={props.hideShowAnswers}
+                                                                           setCurrentValue={props.setCurrentValue}/>)
+            }
         </fieldset>
+    );
+}
+
+function SurveyQuestionTree(props) {
+    const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
+    return (
+        <fieldset className="mb-1 justify-content-center text-center">
+            <button id={props.surveyNode.question + "_" + props.surveyNode.id}
+                    className="text-center btn btn-outline-lightgreen btn-sm btn-block"
+                    onClick={() => props.hideShowAnswers(props.surveyNode.id)}
+                    style={{marginBottom: "10px"}}>
+                Survey Question: {props.surveyNode.question}
+            </button>
+            <ul className={"samplevalue justify-content-center" + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
+                {
+                    props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
+                                                                             id={ans.id}
+                                                                             answer={ans.answer}
+                                                                             color={ans.color}
+                                                                             setCurrentValue={props.setCurrentValue}/>)
+                }
+            </ul>
+            {
+                childNodes.map((surveyNode, uid) => <SurveyQuestionTree key={uid}
+                                                                        surveyNode={surveyNode}
+                                                                        surveyAnswersVisible={props.surveyAnswersVisible}
+                                                                        surveyQuestions={props.surveyQuestions}
+                                                                        hideShowAnswers={props.hideShowAnswers}
+                                                                        setCurrentValue={props.setCurrentValue}/>)
+            }
+        </fieldset>
+    );
+}
+
+// FIXME: setCurrentValue call is fubared
+function SurveyAnswer(props) {
+    return (
+        <li className="mb-1">
+            <button type="button"
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                    id={props.answer + "_" + props.id}
+                    name={props.answer + "_" + props.id}
+                    onClick={e => props.setCurrentValue(e, props.surveyNode, props)}>
+                <div className="circle"
+                     style={{backgroundColor: props.color,
+                             border: "solid 1px",
+                             float: "left",
+                             marginTop: "4px"}}>
+                </div>
+                <span className="small">{props.answer}</span>
+            </button>
+        </li>
     );
 }
 
