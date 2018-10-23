@@ -18,9 +18,6 @@
 
 var mercator = {};
 
-// FIXME: No global variables!
-var collRef;
-
 /*****************************************************************************
 ***
 *** Lon/Lat Reprojection
@@ -635,7 +632,6 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
     select.set("title", interactionTitle);
     var action = function (event) {
         event.selected.forEach(function (feature) {
-            collRef.hideAnswers();
             featureStyles[feature] = feature.getStyle();
             feature.setStyle(null);
         });
@@ -660,7 +656,6 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
     dragBox.set("title", interactionTitle);
     var boxstartAction = function () {
         selectedFeatures.clear();
-        collRef.hideAnswers();
     };
     var boxendAction = function () {
         var extent = dragBox.getGeometry().getExtent();
@@ -1059,6 +1054,5 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 
 module.exports = {
     mercator: mercator,
-    collRef: collRef,
     ceoMapStyles: ceoMapStyles
 };
