@@ -377,51 +377,35 @@ class Collection extends React.Component {
         this.setState({surveyAnswersVisible: surveyAnswersVisible});
     }
 
-    // FIXME: Needs to be reviewed
-    setCurrentValue(event, surveyQuestion, answer) {
-        var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
+    setCurrentValue(questionText, answerId, answerText, answerColor) {
+        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
-            if (answer.hasChildQuestion) {
-                alert("Select an answer for "+answer.answer + " by selecting the child question.");
-            }
-            else{
-                selectedFeatures.forEach(
-                    function (sample) {
-                        var sampleId = sample.get("sampleId");
-                        var uSamples = this.state.userSamples;
-                        if (!this.state.userSamples[sampleId]) {
-                            uSamples[sampleId] = {};
-                            this.setState({userSamples: uSamples});
-                        }
-                        uSamples[sampleId][surveyQuestion.question] = answer.answer;
-                        this.setState({userSamples: uSamples});
-                        mercator.highlightSamplePoint(sample, answer.color);
-                    },
-                    this // necessary to pass outer scope into function
-                );
-                console.log("user samples");
-                console.log(this.state.userSamples);
-                selectedFeatures.clear();
-                utils.blink_border(answer.answer + "_" + answer.id);
-
-            }
-        }
-        else {
-            alert("No sample points selected. Please click some first.");
-        }
-        if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
-            && Object.values(this.state.userSamples).every(function (values) {
-                return Object.keys(values).length == this.state.currentProject.sampleValues.length;
-            }, this)) {
-            // FIXME: What is the minimal set of these that I can execute?
-            utils.enable_element("save-values-button");
-            if (document.getElementById("save-values-button") != null) {
-                var ref = this;
-                document.getElementById("save-values-button").onclick = function () {
-                    ref.saveValues();
+            let userSamples = this.state.userSamples;
+            selectedFeatures.forEach(feature => {
+                const sampleId = feature.get("sampleId");
+                if (!userSamples[sampleId]) {
+                    userSamples[sampleId] = {};
                 }
-            }
-            utils.disable_element("new-plot-button");
+                userSamples[sampleId][questionText] = answerText;
+                mercator.highlightSamplePoint(feature, answerColor);
+            }, this); // necessary to pass outer scope into function
+            this.setState({userSamples: userSamples});
+            utils.blink_border(answerText + "_" + answerId);
+            selectedFeatures.clear();
+            this.checkIfAllSamplesAssigned();
+        } else {
+            alert("No samples selected. Please click some first.");
+        }
+    }
+
+    checkIfAllSamplesAssigned() {
+        const assignedSamples   = Object.keys(this.state.userSamples);
+        const assignedQuestions = Object.values(this.state.userSamples);
+        const totalSamples      = this.state.currentPlot.samples;
+        const totalQuestions    = this.state.currentProject.sampleValues;
+        if (assignedSamples.length == totalSamples.length
+            && assignedQuestions.every(assignments => Object.keys(assignments).length == totalQuestions.length, this)) {
+            this.setState({saveValuesButtonDisabled: false});
         }
     }
 
@@ -667,6 +651,7 @@ function SurveyQuestionTree(props) {
             <ul className={"samplevalue justify-content-center" + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
                 {
                     props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
+                                                                             question={props.surveyNode.question}
                                                                              id={ans.id}
                                                                              answer={ans.answer}
                                                                              color={ans.color}
@@ -685,7 +670,6 @@ function SurveyQuestionTree(props) {
     );
 }
 
-// FIXME: setCurrentValue call is fubared
 function SurveyAnswer(props) {
     return (
         <li className="mb-1">
@@ -693,7 +677,7 @@ function SurveyAnswer(props) {
                     className="btn btn-outline-darkgray btn-sm btn-block pl-1"
                     id={props.answer + "_" + props.id}
                     name={props.answer + "_" + props.id}
-                    onClick={e => props.setCurrentValue(e, props.surveyNode, props)}>
+                    onClick={() => props.setCurrentValue(props.question, props.id, props.answer, props.color)}>
                 <div className="circle"
                      style={{backgroundColor: props.color,
                              border: "solid 1px",
