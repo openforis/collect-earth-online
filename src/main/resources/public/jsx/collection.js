@@ -39,6 +39,7 @@ class Collection extends React.Component {
         this.saveValues            = this.saveValues.bind(this);
         this.hideShowAnswers       = this.hideShowAnswers.bind(this);
         this.setCurrentValue       = this.setCurrentValue.bind(this);
+        this.redirectToHomePage    = this.redirectToHomePage.bind(this);
     }
 
     componentDidMount() {
@@ -454,6 +455,10 @@ class Collection extends React.Component {
         }
     }
 
+    redirectToHomePage() {
+        window.location = this.props.documentRoot + "/home";
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -480,6 +485,7 @@ class Collection extends React.Component {
                          surveyAnswersVisible={this.state.surveyAnswersVisible}
                          hideShowAnswers={this.hideShowAnswers}
                          setCurrentValue={this.setCurrentValue}/>
+                <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
         );
     }
@@ -821,6 +827,32 @@ function QuitButton() {
                 type="button" name="collection-quit" data-toggle="modal" data-target="#confirmation-quit">
             Quit
         </button>
+    );
+}
+
+function QuitMenu(props) {
+    return (
+        <div className="modal fade" id="confirmation-quit" tabIndex="-1" role="dialog"
+             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div className="modal-dialog modal-dialog-centered" role="document">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h5 className="modal-title" id="exampleModalLongTitle">Confirmation</h5>
+                        <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div className="modal-body">
+                        Are you sure you want to stop collecting data?
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                        <button type="button" className="btn bg-lightgreen btn-sm" id="quit-button"
+                                onClick={props.redirectToHomePage}>OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 
