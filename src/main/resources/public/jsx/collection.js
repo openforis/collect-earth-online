@@ -6,7 +6,6 @@ import { utils } from "../js/utils.js";
 class Collection extends React.Component {
     constructor(props) {
         super(props);
-        // FIXME: Refactor this state further down the component tree
         this.state = {
             currentProject: {sampleValues: []},
             stats: {},
@@ -171,7 +170,6 @@ class Collection extends React.Component {
     showProjectPlots() {
         mercator.addPlotLayer(this.state.mapConfig,
                               this.state.plotList,
-                              // FIXME: Is "this" bound correctly?
                               feature => {
                                   this.setState({navButtonsShown: 2,
                                                  newPlotButtonDisabled: false,
