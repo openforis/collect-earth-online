@@ -711,13 +711,14 @@ mercator.addPointLayer = function (mapConfig, longitude, latitude) {
 };
 
 // [Pure] Returns a new vector source containing the passed in
-// samples. Features are constructed from each sample using its id and
-// point fields.
+// samples. Features are constructed from each sample using its id,
+// point, and geom fields.
 mercator.samplesToVectorSource = function (samples) {
     var features = samples.map(
         function (sample) {
             return new ol.Feature({sampleId: sample.id,
-                                   geometry: mercator.parseGeoJson(sample.point, true)});
+                                   geometry: mercator.parseGeoJson(sample.geom || sample.point, true),
+                                   shape: sample.geom ? "polygon" : "point"});
         }
     );
     return new ol.source.Vector({features: features});
@@ -737,8 +738,12 @@ mercator.getSelectedSamples = function (mapConfig) {
 // [Side Effects] Sets the sample's style to be a circle with a black
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
-mercator.highlightSamplePoint = function (sample, color) {
-    sample.setStyle(mercator.getCircleStyle(5, color || "#999999", "#000000", 2));
+mercator.highlightSampleGeometry = function (sample, color) {
+    if (sample.get("shape") == "point") {
+        sample.setStyle(mercator.getCircleStyle(5, color || "#999999", "#000000", 2));
+    } else {
+        sample.setStyle(mercator.getPolygonStyle(color || "#999999", "#000000", 3));
+    }
     return sample;
 };
 
@@ -1041,7 +1046,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 //        mercator.zoomMapToLayer(mapConfig, "currentSamples");
 // FIXME: change references for points created with draw_points from sample_id to sampleId
 // FIXME: change calls from get_selected_samples to mercator.getSelectedSamples
-// FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
+// FIXME: change calls from highlight_sample to mercator.highlightSampleGeometry
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
 // FIXME: change calls from draw_project_markers to:

@@ -326,7 +326,9 @@ class Collection extends React.Component {
         mercator.addVectorLayer(this.state.mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(plot.samples),
-                                ceoMapStyles.yellowPoint);
+                                plot.samples[0].geom
+                                ? ceoMapStyles.polygon
+                                : ceoMapStyles.yellowPoint);
         mercator.enableSelection(this.state.mapConfig, "currentSamples");
         mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
     }
@@ -431,7 +433,7 @@ class Collection extends React.Component {
                     userSamples[sampleId] = {};
                 }
                 userSamples[sampleId][questionText] = answerText;
-                mercator.highlightSamplePoint(feature, answerColor);
+                mercator.highlightSampleGeometry(feature, answerColor);
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples});
             utils.blink_border(answerText + "_" + answerId);
