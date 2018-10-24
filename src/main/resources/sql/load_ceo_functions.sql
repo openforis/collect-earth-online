@@ -619,132 +619,124 @@ CREATE OR REPLACE FUNCTION select_project_plots(project_id integer,maximum integ
 
 $$ LANGUAGE SQL;
 
--- YANG: This function does not make sense
---Returns project users
--- CREATE OR REPLACE FUNCTION select_project_users(project_id integer) RETURNS TABLE
---  (
---      user_id integer
---  ) AS $$
---
---  WITH matching_projects AS(
---      SELECT  *
---      FROM projects
---      WHERE id = project_id
---      ),
---      matching_institutions AS(
---          SELECT *
---          FROM projects p
---          INNER JOIN institutions i
---             ON p.institution_id = i.id
---          WHERE p.id = project_id
---
---      ),
---      matching_institution_users AS (
---          SELECT *
---          FROM matching_institutions mi
---          INNER JOIN institution_users ui
---              ON mi.institution_id = ui.institution_id
---          INNER JOIN users u
---              ON u.id = ui.user_id
---          INNER JOIN roles r
---              ON r.id = ui.role_id
---      )
---  SELECT *
---  FROM matching_projects
---  WHERE archived = false
---  UNION ALL
---  SELECT users.id
---  FROM matching_projects
---  CROSS JOIN users
---  WHERE privacy_level = 'public'
---  UNION ALL
---  SELECT user_id
---  FROM matching_institution_users
---  WHERE  privacy_level = 'private'
---    AND title = 'admin'
---  UNION ALL
---  SELECT user_id
---  FROM matching_institution_users
---  WHERE  privacy_level = 'institution'
---    AND availability = 'published'
---    AND title = 'member'
---
--- $$ LANGUAGE SQL;
+CREATE OR REPLACE FUNCTION select_project_users(project_id integer) RETURNS TABLE
+	(
+		user_id integer
+	) AS $$
+
+	WITH matching_projects AS(
+		SELECT  *
+		FROM projects
+		WHERE id = project_id
+	    ),
+		matching_institutions AS(
+			SELECT *
+			FROM projects p
+			INNER JOIN institutions i
+			   ON p.institution_id = i.id
+			WHERE p.id = project_id
+
+		),
+		matching_institution_users AS (
+			SELECT *
+			FROM matching_institutions mi
+			INNER JOIN institution_users ui
+				ON mi.institution_id = ui.institution_id
+			INNER JOIN users u
+				ON u.id = ui.user_id
+			INNER JOIN roles r
+			    ON r.id = ui.role_id
+		)
+	SELECT users.id
+	FROM matching_projects
+	CROSS JOIN users
+	WHERE privacy_level = 'public'
+	UNION ALL
+	SELECT user_id
+	FROM matching_institution_users
+	WHERE  privacy_level = 'private'
+	  AND title = 'admin'
+	UNION ALL
+	SELECT user_id
+	FROM matching_institution_users
+	WHERE  privacy_level = 'institution'
+	  AND availability = 'published'
+	  AND title = 'member'
+
+$$ LANGUAGE SQL;
 
 --Returns project statistics
--- CREATE OR REPLACE FUNCTION select_project_statistics(project_id integer) RETURNS TABLE
---  (
---      flagged_plots integer,
---      assigned_plots integer,
---      unassigned_plots integer,
---      members integer,
---      contributors integer
---  ) AS $$
---  WITH members AS(
---      SELECT *
---      FROM select_project_users(project_id)
---  ),
---      contributors AS(
---          SELECT *
---          FROM projects prj
---          INNER JOIN plots pl
---            ON prj.id =  pl.project_id
---          INNER JOIN user_plots up
---            ON up.plot_id = pl.id
---          WHERE prj.id = project_id
---            AND pl.flagged > 0
---            AND pl.assigned > 0
---
---  )
---  SELECT count(flagged) AS flagged_plots,
---         count(assigned) AS assigned_plots,
---         max(0,(count(plot_id)-flagged_plots-assigned_plots)) AS assigned_plots,
---         count(members.user_id) AS members,
---         count(contributors.user_id) AS contributors
---  FROM members, contributors
--- $$ LANGUAGE SQL;
+CREATE OR REPLACE FUNCTION select_project_statistics(project_id integer) RETURNS TABLE
+	(
+		flagged_plots integer,
+		assigned_plots integer,
+		unassigned_plots integer,
+		members integer,
+		contributors integer
+	) AS $$
+	WITH members AS(
+		SELECT *
+		FROM select_project_users(project_id)
+	),
+		contributors AS(
+			SELECT up.user_id as user_id,up.flagged as flagged,pl.assigned as assigned,pl.id as plot_id
+			FROM projects prj
+			INNER JOIN plots pl
+			  ON prj.id =  pl.project_id
+			INNER JOIN user_plots up
+			  ON up.plot_id = pl.id
+			WHERE prj.id = project_id
+			  AND pl.flagged > 0
+			  AND pl.assigned > 0
 
--- YANG: the logic for this function is unclear.
+	)
+	SELECT CAST(count(flagged)AS int) AS flagged_plots,
+		   CAST(count(assigned) AS int) assigned_plots,
+		   CAST(GREATEST(0,(count(plot_id)-count(flagged)-count(assigned))) as int) AS unassigned_plots,
+		   CAST(count(members.user_id) AS int) AS members,
+	       CAST(count(contributors.user_id) AS int) AS contributors
+	FROM members, contributors
+$$ LANGUAGE SQL;
+
 --Returns unanalyzed plots
--- CREATE OR REPLACE FUNCTION select_unassigned_plot(project_id integer,plot_id integer) RETURNS TABLE
---  (
---      plot text
---  ) AS $$
---  WITH unassigned_plots AS(
---          SELECT *
---          FROM projects prj
---          INNER JOIN plots pl
---            ON prj.id =  pl.project_id
---          WHERE prj.id = project_id
---            AND pl.id <> plot_id
---            AND flagged = 0
---               AND assigned = 0
---  )
---  SELECT plot_id
---     FROM unassigned_plots
---  ORDER BY plot_id
---  LIMIT 1
--- $$ LANGUAGE SQL;
+CREATE OR REPLACE FUNCTION select_unassigned_plot(project_id integer,plot_id integer) RETURNS TABLE
+	(
+		plot_id integer
+	) AS $$
+	WITH unassigned_plots AS(
+			SELECT *
+			FROM projects prj
+			INNER JOIN plots pl
+			  ON prj.id =  pl.project_id
+			WHERE prj.id = project_id
+			  AND pl.id <> plot_id
+	          AND flagged = 0
+              AND assigned = 0
+	)
+	SELECT plot_id
+    FROM unassigned_plots
+	ORDER BY plot_id
+	LIMIT 1
+$$ LANGUAGE SQL;
 
--- YANG: the logic for this function is unclear.
 --Returns unanalyzed plots by plot id
--- CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(project_id integer,plot_id integer) RETURNS TABLE
---  (
---      plot_id text
---  ) AS $$
---  WITH matching_plots AS(
---          SELECT *
---          FROM projects prj
---          INNER JOIN plots pl
---            ON prj.id =  pl.project_id
---          WHERE prj.id = project_id
---            AND pl.id=plot_id
---  )
---  SELECT plot_id
---  FROM matching_plots
---  WHERE flagged = 0
---       AND assigned = 0
--- $$ LANGUAGE SQL;
+CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(project_id integer,plot_id integer) RETURNS TABLE
+	(
+		plot_id integer
+	) AS $$
+	WITH matching_plots AS(
+			SELECT *
+			FROM projects prj
+			INNER JOIN plots pl
+			  ON prj.id =  pl.project_id
+			WHERE prj.id = project_id
+			  AND pl.id=plot_id
+	)
+	SELECT plot_id
+	FROM matching_plots
+	WHERE flagged = 0
+      AND assigned = 0
+$$ LANGUAGE SQL;
 
 --Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(project_id integer) RETURNS TABLE
