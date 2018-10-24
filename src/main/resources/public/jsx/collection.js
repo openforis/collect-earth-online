@@ -6,14 +6,14 @@ import { utils } from "../js/utils.js";
 class Collection extends React.Component {
     constructor(props) {
         super(props);
-        // FIXME: Refactor this state further down the component tree
         this.state = {
             currentProject: {sampleValues: []},
             stats: {},
             plotList: [],
             imageryList: [],
             mapConfig: null,
-            currentImagery: {attribution: ""},
+            currentImagery: null,
+            imageryAttribution: "",
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
             imageryYearPlanet: 2018,
@@ -27,15 +27,18 @@ class Collection extends React.Component {
             currentPlot: null,
             userSamples: {}
         };
-        this.setBaseMapSource  = this.setBaseMapSource.bind(this);
-        this.updateDGWMSLayer  = this.updateDGWMSLayer.bind(this);
-        this.updatePlanetLayer = this.updatePlanetLayer.bind(this);
-        this.getPlotData       = this.getPlotData.bind(this);
-        this.nextPlot          = this.nextPlot.bind(this);
-        this.flagPlot          = this.flagPlot.bind(this);
-        this.saveValues        = this.saveValues.bind(this);
-        this.hideShowAnswers   = this.hideShowAnswers.bind(this);
-        this.setCurrentValue   = this.setCurrentValue.bind(this);
+        this.setBaseMapSource      = this.setBaseMapSource.bind(this);
+        this.setImageryYearDG      = this.setImageryYearDG.bind(this);
+        this.setStackingProfileDG  = this.setStackingProfileDG.bind(this);
+        this.setImageryYearPlanet  = this.setImageryYearPlanet.bind(this);
+        this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
+        this.getPlotData           = this.getPlotData.bind(this);
+        this.nextPlot              = this.nextPlot.bind(this);
+        this.flagPlot              = this.flagPlot.bind(this);
+        this.saveValues            = this.saveValues.bind(this);
+        this.hideShowAnswers       = this.hideShowAnswers.bind(this);
+        this.setCurrentValue       = this.setCurrentValue.bind(this);
+        this.redirectToHomePage    = this.redirectToHomePage.bind(this);
     }
 
     componentDidMount() {
@@ -54,7 +57,7 @@ class Collection extends React.Component {
         if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.projectPlotsShown == false) {
             this.showProjectPlots();
         }
-        if (this.state.mapConfig && this.state.currentImagery.id == null) {
+        if (this.state.mapConfig && this.state.currentImagery == null) {
             this.updateMapImagery(this.state.currentProject.baseMapSource);
         }
     }
@@ -167,7 +170,6 @@ class Collection extends React.Component {
     showProjectPlots() {
         mercator.addPlotLayer(this.state.mapConfig,
                               this.state.plotList,
-                              // FIXME: Is "this" bound correctly?
                               feature => {
                                   this.setState({navButtonsShown: 2,
                                                  newPlotButtonDisabled: false,
@@ -187,39 +189,81 @@ class Collection extends React.Component {
         this.updateMapImagery(newBaseMapSource);
     }
 
+    setImageryYearDG(event) {
+        const dropdown = event.target;
+        const newImageryYearDG = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
+        this.setState({imageryYearDG: newImageryYearDG,
+                       imageryAttribution: newImageryAttribution});
+        this.updateDGWMSLayer(newImageryYearDG, this.state.stackingProfileDG);
+    }
+
+    setStackingProfileDG(event) {
+        const dropdown = event.target;
+        const newStackingProfileDG = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
+        this.setState({stackingProfileDG: newStackingProfileDG,
+                       imageryAttribution: newImageryAttribution});
+        this.updateDGWMSLayer(this.state.imageryYearDG, newStackingProfileDG);
+    }
+
+    setImageryYearPlanet(event) {
+        const dropdown = event.target;
+        const newImageryYearPlanet = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+        this.setState({imageryYearPlanet: newImageryYearPlanet,
+                       imageryAttribution: newImageryAttribution});
+        this.updatePlanetLayer(this.state.imageryMonthPlanet, newImageryYearPlanet);
+    }
+
+    setImageryMonthPlanet(event) {
+        const dropdown = event.target;
+        const newImageryMonthPlanet = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
+        this.setState({imageryMonthPlanet: newImageryMonthPlanet,
+                       imageryAttribution: newImageryAttribution});
+        this.updatePlanetLayer(newImageryMonthPlanet, this.state.imageryYearPlanet);
+    }
+
     updateMapImagery(newBaseMapSource) {
         mercator.setVisibleLayer(this.state.mapConfig, newBaseMapSource);
-        let newImagery = this.getImageryByTitle(newBaseMapSource);
+        const newImagery = this.getImageryByTitle(newBaseMapSource);
+        let newImageryAttribution = newImagery.attribution;
         if (newBaseMapSource == "DigitalGlobeWMSImagery") {
-            newImagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
-            this.updateDGWMSLayer();
+            newImageryAttribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
+            this.updateDGWMSLayer(this.state.imageryYearDG, this.state.stackingProfileDG);
         } else if (newBaseMapSource == "PlanetGlobalMosaic") {
-            newImagery.attribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
-            this.updatePlanetLayer();
+            newImageryAttribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+            this.updatePlanetLayer(this.state.imageryMonthPlanet, this.state.imageryYearPlanet);
         }
-        this.setState({currentImagery: newImagery});
+        this.setState({currentImagery: newImagery,
+                       imageryAttribution: newImageryAttribution});
     }
 
     getImageryByTitle(imageryTitle) {
         return this.state.imageryList.find(imagery => imagery.title == imageryTitle);
     }
 
-    updateDGWMSLayer() {
+    updateDGWMSLayer(imageryYear, stackingProfile) {
         mercator.updateLayerWmsParams(this.state.mapConfig,
                                       "DigitalGlobeWMSImagery",
                                       {
-                                          COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.state.imageryYearDG + "-01-01')"
-                                              + "AND(acquisition_date<='" + this.state.imageryYearDG + "-12-31')",
-                                          FEATUREPROFILE: this.state.stackingProfileDG
+                                          COVERAGE_CQL_FILTER: "(acquisition_date>='" + imageryYear + "-01-01')"
+                                              + "AND(acquisition_date<='" + imageryYear + "-12-31')",
+                                          FEATUREPROFILE: stackingProfile
                                       });
     }
 
-    updatePlanetLayer() {
+    updatePlanetLayer(imageryMonth, imageryYear) {
         mercator.updateLayerSource(this.state.mapConfig,
                                    "PlanetGlobalMosaic",
                                    sourceConfig => {
-                                       sourceConfig.month = this.state.imageryMonthPlanet;
-                                       sourceConfig.year = this.state.imageryYearPlanet;
+                                       sourceConfig.month = imageryMonth;
+                                       sourceConfig.year = imageryYear;
                                        return sourceConfig;
                                    },
                                    this);
@@ -282,7 +326,9 @@ class Collection extends React.Component {
         mercator.addVectorLayer(this.state.mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(plot.samples),
-                                ceoMapStyles.yellowPoint);
+                                plot.samples[0].geom
+                                ? ceoMapStyles.polygon
+                                : ceoMapStyles.yellowPoint);
         mercator.enableSelection(this.state.mapConfig, "currentSamples");
         mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
     }
@@ -387,7 +433,7 @@ class Collection extends React.Component {
                     userSamples[sampleId] = {};
                 }
                 userSamples[sampleId][questionText] = answerText;
-                mercator.highlightSamplePoint(feature, answerColor);
+                mercator.highlightSampleGeometry(feature, answerColor);
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples});
             utils.blink_border(answerText + "_" + answerId);
@@ -409,10 +455,14 @@ class Collection extends React.Component {
         }
     }
 
+    redirectToHomePage() {
+        window.location = this.props.documentRoot + "/home";
+    }
+
     render() {
         return (
             <React.Fragment>
-                <ImageAnalysisPane imageryAttribution={this.state.currentImagery.attribution}/>
+                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
                 <SideBar currentProject={this.state.currentProject}
                          navButtonsShown={this.state.navButtonsShown}
                          newPlotButtonDisabled={this.state.newPlotButtonDisabled}
@@ -423,16 +473,19 @@ class Collection extends React.Component {
                          setBaseMapSource={this.setBaseMapSource}
                          imageryYearDG={this.state.imageryYearDG}
                          stackingProfileDG={this.state.stackingProfileDG}
-                         updateDGWMSLayer={this.updateDGWMSLayer}
+                         setImageryYearDG={this.setImageryYearDG}
+                         setStackingProfileDG={this.setStackingProfileDG}
                          imageryYearPlanet={this.state.imageryYearPlanet}
                          imageryMonthPlanet={this.state.imageryMonthPlanet}
-                         updatePlanetLayer={this.updatePlanetLayer}
+                         setImageryYearPlanet={this.setImageryYearPlanet}
+                         setImageryMonthPlanet={this.setImageryMonthPlanet}
                          stats={this.state.stats}
                          saveValues={this.saveValues}
                          saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
                          surveyAnswersVisible={this.state.surveyAnswersVisible}
                          hideShowAnswers={this.hideShowAnswers}
                          setCurrentValue={this.setCurrentValue}/>
+                <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
         );
     }
@@ -462,10 +515,12 @@ function SideBar(props) {
                             imageryList={props.imageryList}
                             imageryYearDG={props.imageryYearDG}
                             stackingProfileDG={props.stackingProfileDG}
-                            updateDGWMSLayer={props.updateDGWMSLayer}
+                            setImageryYearDG={props.setImageryYearDG}
+                            setStackingProfileDG={props.setStackingProfileDG}
                             imageryYearPlanet={props.imageryYearPlanet}
                             imageryMonthPlanet={props.imageryMonthPlanet}
-                            updatePlanetLayer={props.updatePlanetLayer}/>
+                            setImageryYearPlanet={props.setImageryYearPlanet}
+                            setImageryMonthPlanet={props.setImageryMonthPlanet}/>
             <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
                              surveyAnswersVisible={props.surveyAnswersVisible}
                              hideShowAnswers={props.hideShowAnswers}
@@ -523,7 +578,7 @@ function ImageryOptions(props) {
         <fieldset className="mb-3 justify-content-center text-center">
             <h3>Imagery Options</h3>
             <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                    size="1" defaultValue={props.baseMapSource || ""}
+                    size="1" value={props.baseMapSource || ""}
                     onChange={props.setBaseMapSource}>
                 {
                     props.imageryList.map(
@@ -535,11 +590,13 @@ function ImageryOptions(props) {
             <DigitalGlobeMenus baseMapSource={props.baseMapSource}
                                imageryYearDG={props.imageryYearDG}
                                stackingProfileDG={props.stackingProfileDG}
-                               updateDGWMSLayer={props.updateDGWMSLayer}/>
+                               setImageryYearDG={props.setImageryYearDG}
+                               setStackingProfileDG={props.setStackingProfileDG}/>
             <PlanetMenus baseMapSource={props.baseMapSource}
                          imageryYearPlanet={props.imageryYearPlanet}
                          imageryMonthPlanet={props.imageryMonthPlanet}
-                         updatePlanetLayer={props.updatePlanetLayer}/>
+                         setImageryYearPlanet={props.setImageryYearPlanet}
+                         setImageryMonthPlanet={props.setImageryMonthPlanet}/>
         </fieldset>
     );
 }
@@ -556,8 +613,8 @@ function DigitalGlobeMenus(props) {
                         id="dg-imagery-year"
                         name="dg-imagery-year"
                         size="1"
-                        defaultValue={props.imageryYearDG}
-                        onChange={props.updateDGWMSLayer}>
+                        value={props.imageryYearDG}
+                        onChange={props.setImageryYearDG}>
                     {
                         range(2018,1999,-1).map(year => <option key={year} value={year}>{year}</option>)
                     }
@@ -566,8 +623,8 @@ function DigitalGlobeMenus(props) {
                         id="dg-stacking-profile"
                         name="dg-stacking-profile"
                         size="1"
-                        defaultValue={props.stackingProfileDG}
-                        onChange={props.updateDGWMSLayer}>
+                        value={props.stackingProfileDG}
+                        onChange={props.setStackingProfileDG}>
                     {
                         ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
                             .map(profile => <option key={profile} value={profile}>{profile}</option>)
@@ -588,8 +645,8 @@ function PlanetMenus(props) {
                         id="planet-imagery-year"
                         name="planet-imagery-year"
                         size="1"
-                        defaultValue={props.imageryYearPlanet}
-                        onChange={props.updatePlanetLayer}>
+                        value={props.imageryYearPlanet}
+                        onChange={props.setImageryYearPlanet}>
                     {
                         range(2018,2015,-1).map(year => <option key={year} value={year}>{year}</option>)
                     }
@@ -598,8 +655,8 @@ function PlanetMenus(props) {
                         id="planet-imagery-month"
                         name="planet-imagery-month"
                         size="1"
-                        defaultValue={props.imageryMonthPlanet}
-                        onChange={props.updatePlanetLayer}>
+                        value={props.imageryMonthPlanet}
+                        onChange={props.setImageryMonthPlanet}>
                     <option value="01">January</option>
                     <option value="02">February</option>
                     <option value="03">March</option>
@@ -770,6 +827,32 @@ function QuitButton() {
                 type="button" name="collection-quit" data-toggle="modal" data-target="#confirmation-quit">
             Quit
         </button>
+    );
+}
+
+function QuitMenu(props) {
+    return (
+        <div className="modal fade" id="confirmation-quit" tabIndex="-1" role="dialog"
+             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div className="modal-dialog modal-dialog-centered" role="document">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h5 className="modal-title" id="exampleModalLongTitle">Confirmation</h5>
+                        <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div className="modal-body">
+                        Are you sure you want to stop collecting data?
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                        <button type="button" className="btn bg-lightgreen btn-sm" id="quit-button"
+                                onClick={props.redirectToHomePage}>OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

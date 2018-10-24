@@ -464,7 +464,7 @@ ul.samplevalue{
 }
 #imagery-info {
     position: absolute;
-    top: 5px;
+    top: 0px;
     left: 20%;
     height: 2rem;
     width: 60%;
