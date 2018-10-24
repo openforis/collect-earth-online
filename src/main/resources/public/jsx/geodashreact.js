@@ -1037,24 +1037,26 @@ function addBuffer (whichMap) {
                 } else {
                     var whichMap = this.theMap;
                     var _geojson_object = typeof(data) == 'string'? JSON.parse(data): data;
+                    var vectorSource = mercator.geometryToVectorSource( mercator.parseGeoJson(_geojson_object.geom, true));
+                   var mapConfig = {};
+                   mapConfig.map = whichMap;
+                   const style = [
+                               new ol.style.Style({
+                                   stroke: new ol.style.Stroke({
+                                       color: "yellow",
+                                       width: 3
+                                   }),
+                                   fill: null
+                               })
+                           ];
+                   mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
 
-                    var vectorSource = new ol.source.Vector({
-                        features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:4326' }) // this is important to know change to proper projection...
-                    });
-
-                    let _geojson_vectorLayer = new ol.layer.Vector({
-                        source: vectorSource,
-                        style: [
-                            new ol.style.Style({
-                                stroke: new ol.style.Stroke({
-                                    color: "#8b2323",
-                                    width: 2
-                                }),
-                                fill: null
-                            })
-                        ]
-                    });
-                    whichMap.addLayer(_geojson_vectorLayer);
+                   if(_geojson_object.samples){
+                       _geojson_object.samples.forEach(function(element) {
+                           var vectorSource = mercator.geometryToVectorSource( mercator.parseGeoJson(element.geom, true));
+                           mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
+                       });
+                   }
                 }
             });
         }
