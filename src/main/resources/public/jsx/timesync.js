@@ -15,11 +15,11 @@ class TimeSync extends React.Component {
     componentDidMount() {
         fetch(this.state.documentRoot + "/timesync/version")
             .then(response => {
-                console.log(response);
+                let d = response.text();
+                console.log(d);
                 if (response.ok) {
-                    return response.json()
+                    return d;
                 } else {
-                    console.log(response);
                     alert("Error retrieving the TimeSync info. See console for details.");
                 }
             })

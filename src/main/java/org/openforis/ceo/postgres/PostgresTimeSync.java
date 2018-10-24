@@ -7,7 +7,7 @@ import spark.Response;
 public class PostgresTimeSync implements TimeSync {
 
     public String getVersion(Request req, Response res) {
-        return "Version 1.0";
+        return "{\"Version\": 1.0}";
     }
 
 }
