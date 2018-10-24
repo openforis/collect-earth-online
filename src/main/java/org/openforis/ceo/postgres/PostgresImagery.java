@@ -41,7 +41,7 @@ public class PostgresImagery implements Imagery {
                 newImagery.addProperty("visibility", rs.getString("visibility"));
                 newImagery.addProperty("title", rs.getString("title"));
                 newImagery.addProperty("attribution", rs.getString("attribution"));
-                newImagery.add("extent", null );
+                newImagery.add("extent", rs.getString("extent").equals("null") ? null : parseJson(rs.getString("extent")).getAsJsonArray() );
                 newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
 
                 imageryArray.add(newImagery);

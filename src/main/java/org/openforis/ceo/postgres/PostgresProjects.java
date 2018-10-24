@@ -212,10 +212,12 @@ public class PostgresProjects implements Projects {
             while (rs.next()) {
                 var singlePlot = new JsonObject();
                 singlePlot.addProperty("id",rs.getInt("id"));
-                singlePlot.addProperty("projectId",rs.getInt("project_id"));
+                singlePlot.addProperty("projectId",Integer.parseInt(projectId));
                 singlePlot.addProperty("center",rs.getString("center"));
-                singlePlot.addProperty("flagged",rs.getInt("flagged"));
-                singlePlot.addProperty("assigned",rs.getInt("assigned"));
+                singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
+                singlePlot.addProperty("analysis",rs.getInt("assigned"));
+                singlePlot.addProperty("user",rs.getString("username"));
+                singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
 
                 plots.add(singlePlot);
             }
@@ -223,6 +225,28 @@ public class PostgresProjects implements Projects {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
+        }
+    }
+
+    private static JsonArray getSampleJsonArray(Integer plot_id) {
+
+        var sampleSQL = "SELECT * FROM select_plot_samples(?)";
+        try (var conn = connect()) {
+            var samplePstmt = conn.prepareStatement(sampleSQL) ;
+            samplePstmt.setInt(1, plot_id);
+            var sampleRs = samplePstmt.executeQuery();
+            var samples = new JsonArray();
+            while (sampleRs.next()) {
+                var sample = new JsonObject();
+                sample.addProperty("id", sampleRs.getString("id"));
+                sample.addProperty("point", sampleRs.getString("point"));
+                if (sampleRs.getString("value").length() > 2) sample.add("value", parseJson(sampleRs.getString("value")).getAsJsonObject());
+                samples.add(sample);
+            }
+            return samples;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return new JsonArray();
         }
     }
 
@@ -250,21 +274,25 @@ public class PostgresProjects implements Projects {
 
     public  String getUnassignedPlot(Request req, Response res) {
         var projectId = req.params(":id");
-        var currentPlotId = req.queryParams("currentPlotId");
+        var currentPlotId = req.queryParamOrDefault("currentPlotId", "0");
+         
         try (var conn = connect()) {
+            var singlePlot = new JsonObject();
             var SQL = "SELECT * FROM select_unassigned_plot(?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
             pstmt.setInt(2,Integer.parseInt(currentPlotId));
             var rs = pstmt.executeQuery();
-
-            var unassignedPlot = new JsonObject();
-            if (rs.next()) {
-                unassignedPlot.addProperty("plot",rs.getString("plot_id"));
-            } 
-
-            return unassignedPlot.toString();
-
+            if (rs.next()) {     
+                singlePlot.addProperty("id",rs.getInt("id"));
+                singlePlot.addProperty("projectId",Integer.parseInt(projectId));
+                singlePlot.addProperty("center",rs.getString("center"));
+                singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
+                singlePlot.addProperty("analysis",rs.getInt("assigned"));
+                singlePlot.addProperty("user",rs.getString("username"));
+                singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
+            }
+            return  singlePlot.toString();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -274,20 +302,24 @@ public class PostgresProjects implements Projects {
     public  String getUnassignedPlotById(Request req, Response res) {
         var projectId = req.params(":projid");
         var plotId = req.params(":id");
+
         try (var conn = connect()) {
+            var singlePlot = new JsonObject();
             var SQL = "SELECT * FROM select_unassigned_plots_by_plot_id(?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
             pstmt.setInt(2,Integer.parseInt(plotId));
             var rs = pstmt.executeQuery();
-
-            var unassignedPlot = new JsonObject();
             if (rs.next()) {
-                unassignedPlot.addProperty("plot",rs.getString("plot_id"));
+                singlePlot.addProperty("id",rs.getInt("id"));
+                singlePlot.addProperty("projectId",Integer.parseInt(projectId));
+                singlePlot.addProperty("center",rs.getString("center"));
+                singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
+                singlePlot.addProperty("analysis",rs.getInt("assigned"));
+                singlePlot.addProperty("user",rs.getString("username"));
+                singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
             }
-
-            return unassignedPlot.toString();
-
+            return  singlePlot.toString();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -444,24 +476,32 @@ public class PostgresProjects implements Projects {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var projectId = jsonInputs.get("projectId").getAsString();
         var plotId = jsonInputs.get("plotId").getAsString();
-        var userId = jsonInputs.get("userId").getAsString();
-        var confidence = jsonInputs.get("confidence").getAsString();
-        var imageryId = jsonInputs.get("imagery_id").getAsString();
-        var imageryDate = new Date(jsonInputs.get("imagery_date").getAsLong());
-        var value = jsonInputs.get("value").getAsJsonObject();
-        try (var conn = connect()) {
-            var SQL = "SELECT * FROM add_user_samples(?,?,?,?,?,?,?)";
-            var pstmt = conn.prepareStatement(SQL) ;
-            pstmt.setInt(1, Integer.parseInt(projectId));
-            pstmt.setInt(2, Integer.parseInt(plotId));
-            pstmt.setInt(3, Integer.parseInt(userId));
-            pstmt.setInt(4, Integer.parseInt(confidence));
-            pstmt.setObject(5, value);
-            pstmt.setInt(6, Integer.parseInt(imageryId));
-            pstmt.setDate(7, (java.sql.Date) imageryDate);
+        var userName = jsonInputs.get("userId").getAsString();
+        // var confidence = jsonInputs.get("confidence").getAsString();
+        // var imageryId = jsonInputs.get("imagery_id").getAsString();
+        // var imageryDate = new Date(jsonInputs.get("imagery_date").getAsLong());
+        // var value = jsonInputs.get("value").getAsJsonObject();
+        var userSamples = jsonInputs.get("userSamples").getAsJsonObject();
 
-            var rs = pstmt.executeQuery();
-            return "" + rs.getInt("count(sample_id)");
+        try (var conn = connect()) {
+            var userSQL = "SELECT * FROM get_user(?)";
+            var userPstmt = conn.prepareStatement(userSQL);
+            userPstmt.setString(1, userName);
+            var userRs = userPstmt.executeQuery();
+            if (userRs.next()){
+                var userId = userRs.getInt("id");
+                var SQL = "SELECT * FROM add_user_samples(?,?,?,?,?::jsonb,?,?)";
+                var pstmt = conn.prepareStatement(SQL) ;
+                pstmt.setInt(1, Integer.parseInt(projectId));
+                pstmt.setInt(2, Integer.parseInt(plotId));
+                pstmt.setInt(3, userId);
+                pstmt.setInt(4, 100); //confidence
+                pstmt.setString(5, userSamples.toString());
+                pstmt.setObject(6, null); //imageryID
+                pstmt.setDate(7, new java.sql.Date(System.currentTimeMillis()) );
+                var rs = pstmt.executeQuery();
+            }
+            return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";

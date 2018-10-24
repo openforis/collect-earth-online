@@ -18,6 +18,8 @@ def insert_users():
             cur.execute("select * from add_user(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
             user_id = cur.fetchone()[0]
             conn.commit()
+        cur.execute("SELECT * FROM set_admin()")
+        conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -134,7 +136,7 @@ def insert_projects():
                         project['samplesPerPlot']=0
                     if project['sampleResolution'] is None:
                         project['sampleResolution']=0
-                    cur.execute("select * from create_project(%s,%s,%s::text,%s::text,%s::text,%s::text,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,%s,%s,%s::jsonb,%s,%s,%s)", (project['id'],project['institution'],project['availability'],project['name'],project['description'],project['privacyLevel'],project['boundary'],project['baseMapSource'],project['plotDistribution'],project['numPlots'],project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),json.dumps(project['csv']),current_date,current_date,0))
+                    cur.execute("select * from create_project(%s,%s,%s::text,%s::text,%s::text,%s::text,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,%s,%s,%s::jsonb,%s,%s,%s,%s)", (project['id'],project['institution'],project['availability'],project['name'],project['description'],project['privacyLevel'],project['boundary'],project['baseMapSource'],project['plotDistribution'],project['numPlots'],project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),json.dumps(project['csv']),None,None,0))
                     project_id = cur.fetchone()[0]
 
                     for dash in dashArr:
@@ -170,8 +172,8 @@ def insert_plots(project_id,conn):
                 plot_id = cur_plot.fetchone()[0]
                 if plot['user'] is not None:
                     user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
-                    insert_samples(plot_id,plot['samples'],user_plot_id,conn)
-                    conn.commit()
+                insert_samples(plot_id,plot['samples'],user_plot_id,conn)
+                conn.commit()
             except (Exception, psycopg2.DatabaseError) as error:
                 print("plots error: "+ str(error))
     cur_plot.close()

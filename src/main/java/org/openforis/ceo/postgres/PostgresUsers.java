@@ -52,9 +52,8 @@ public class PostgresUsers implements Users {
                     // Authentication successful
                     req.session().attribute("userid", Integer.toString(storedId));
                     req.session().attribute("username", inputEmail);
-                    req.session().attribute("administrator", administrator);
+                    req.session().attribute("role", administrator ? "admin" : "user");
                     res.redirect(returnURL);
-                    System.out.println(res.toString());
                     return req;
                 }
             } else {

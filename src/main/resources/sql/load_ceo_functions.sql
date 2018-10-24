@@ -28,6 +28,16 @@ CREATE OR REPLACE FUNCTION add_user(_user_id integer,_email text, _password text
   $$
 LANGUAGE SQL;
 
+--set user 1 as admin for migration
+CREATE OR REPLACE FUNCTION set_admin()
+  RETURNS void AS
+  $$
+      UPDATE users
+	  SET administrator = true
+	  WHERE id = 1
+  $$
+LANGUAGE SQL;
+
 -- manually adding rows while specifying id will not update the sequence
 -- update the sequnce at the end of the migration
 CREATE OR REPLACE FUNCTION update_sequence(_table text)
@@ -595,7 +605,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 	) AS $$
 	SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
 		plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-		sample_survey, csv_path, classification_start_date, classification_end_date, classification_timestep, false AS editable
+		sample_survey, csv_file, classification_start_date, classification_end_date, classification_timestep, false AS editable
 	FROM projects
 	WHERE privacy_level  =  'public'
 	  AND availability  =  'published'
@@ -621,7 +631,7 @@ CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integ
 	  samples_per_plot          integer,
 	  sample_resolution         float,
 	  sample_survey             jsonb,
-	  csv_path					text,
+	  csv_file					text,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -708,6 +718,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_id inte
 	  samples_per_plot          integer,
 	  sample_resolution         float,
 	  sample_survey             jsonb,
+	  csv_file					text,
 	  classification_start_date	date,
 	  classification_end_date   date,
 	  classification_timestep   integer,
@@ -718,20 +729,44 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_id inte
 	WHERE institution_id = _institution_id
 $$ LANGUAGE SQL;
 
---Returns project plots with a max value.
+-- select plots
 CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum integer) 
 	RETURNS TABLE (
 	  id         integer,
-	  project_id integer,
 	  center     text,
 	  flagged    integer,
-	  assigned   integer
+	  assigned   integer,
+		username 	text
 	) AS $$
-	SELECT id, project_id, ST_AsGeoJSON(center), flagged, assigned FROM plots
-	WHERE project_id  =  _project_id
--- 	FIXME:  think about the data, is groupby even needed?
-	group by id, center, flagged, assigned
+	WITH username AS (
+		SELECT DISTINCT email, plot_id 
+		FROM users 
+		INNER JOIN user_plots
+			ON users.id = user_plots.user_id
+	)
+	SELECT plots.id, ST_AsGeoJSON(center), flagged, assigned, username.email
+	FROM plots
+	LEFT JOIN username
+		ON plot_id = id
+	WHERE project_id = _project_id
 	LIMIT _maximum
+
+$$ LANGUAGE SQL;
+
+-- select samples to add to plots
+CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer) 
+	RETURNS TABLE (
+	  id         integer,
+	  point	 	text,
+	  value     jsonb
+	) AS $$
+	
+	SELECT samples.id, ST_AsGeoJSON(point) as point, 
+		(CASE WHEN sample_values.value IS NULL THEN '{}' ELSE sample_values.value END)
+	FROM samples
+	LEFT JOIN sample_values
+	ON samples.id = sample_values.sample_id
+	WHERE samples.plot_id = _plot_id
 
 $$ LANGUAGE SQL;
 
@@ -816,36 +851,37 @@ $$ LANGUAGE SQL;
 --Returns unanalyzed plots
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
 	RETURNS TABLE (
-		plot_id integer
-	) AS $$
-
-	SELECT pl.id as plot_id
-	FROM projects prj
-	INNER JOIN plots pl
-		ON prj.id =  pl.project_id
-	WHERE prj.id = _project_id
-		AND pl.id <> _plot_id
-		AND flagged = 0
-		AND assigned = 0
-	ORDER BY plot_id
+	  id         integer,
+	  center     text,
+	  flagged    integer,
+	  assigned   integer,
+	  username 	 text
+	) AS
+	$$
+	SELECT * from select_project_plots(_project_id, 100000000) as spp
+	WHERE spp.id <> _plot_id
+	AND flagged = 0
+	AND assigned = 0
+	ORDER BY id
 	LIMIT 1
 
 $$ LANGUAGE SQL;
+
 --Returns unanalyzed plots by plot id
 CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(_project_id integer,_plot_id integer) 
 	RETURNS TABLE (
-		plot_id integer
-	) AS $$
-
-		SELECT pl.id as plot_it
-		FROM projects prj
-		INNER JOIN plots pl
-			ON prj.id =  pl.project_id
-		WHERE prj.id = _project_id
-			AND pl.id = _plot_id
-			AND flagged = 0
-			AND assigned = 0
-
+	  id         integer,
+	  center     text,
+	  flagged    integer,
+	  assigned   integer,
+	  username 	 text
+	) AS
+	$$
+	SELECT * from select_project_plots(_project_id, 100000000) as spp
+	WHERE spp.id = _plot_id
+	AND flagged = 0
+	AND assigned = 0
+	
 $$ LANGUAGE SQL;
 
 --Returns project aggregate data
@@ -983,31 +1019,37 @@ CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collec
 	$$
 LANGUAGE SQL;
 
---Add user samples
+--Add user samples future design
 CREATE OR REPLACE FUNCTION add_user_samples( 
 		_project_id integer, 
 		_plot_id integer,
 		_user_id integer, 
 		_confidence integer, 
-		_value jsonb, 
+		_samples jsonb, 
 		_imagery_id integer, 
 		_imagery_date date
 		) 
 	RETURNS integer AS 
 	$$
 		UPDATE plots
+		-- should this be assigned = 1?
 		SET assigned = assigned + 1
 		WHERE id = _plot_id;
 
 		WITH user_plot_table AS(
 			INSERT INTO user_plots(user_id, plot_id, confidence) VALUES (_user_id, _plot_id, _confidence)
-			RETURNING id)
+			RETURNING id
+		),
+		sample_values AS (
+			SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
+		)
 
 		INSERT INTO sample_values(user_plot_id, sample_id, imagery_id, imagery_date, value)
 
-		(SELECT upt.id, s.id, _imagery_id, _imagery_date, _value
-			FROM samples AS s
-			CROSS JOIN user_plot_table AS upt
+		(SELECT upt.id, sv.sample_id, _imagery_id, _imagery_date, sv.value
+			FROM user_plot_table AS upt, samples AS s
+		 	INNER JOIN sample_values as sv
+		 		ON s.id = sv.sample_id
 			WHERE s.plot_id = _plot_id)
 
 		RETURNING sample_id
@@ -1092,7 +1134,10 @@ CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer)
 	  logo          text,
 	  description   text,
 	  url           text,
-	  archived      boolean
+	  archived      boolean,
+	  members		jsonb,
+	  admins		jsonb,
+	  pending		jsonb
 	) AS $$
 	SELECT *
 	FROM select_all_institutions()

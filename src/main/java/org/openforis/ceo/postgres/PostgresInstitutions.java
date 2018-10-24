@@ -200,11 +200,9 @@ public class PostgresInstitutions implements Institutions {
     public String archiveInstitution(Request req, Response res) {
         var institutionId = req.params(":id");
         var SQL = "SELECT * FROM archive_institution(?)";
-        System.out.println(institutionId);
         try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(institutionId));
-            System.out.println(pstmt.toString());
             var rs = pstmt.executeQuery();
             return "";
         } catch (SQLException e) {
