@@ -327,8 +327,8 @@ class Collection extends React.Component {
                                 "currentSamples",
                                 mercator.samplesToVectorSource(plot.samples),
                                 plot.samples[0].geom
-                                ? ceoMapStyles.polygon
-                                : ceoMapStyles.yellowPoint);
+                                    ? ceoMapStyles.polygon
+                                    : ceoMapStyles.yellowPoint);
         mercator.enableSelection(this.state.mapConfig, "currentSamples");
         mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
     }
@@ -340,8 +340,8 @@ class Collection extends React.Component {
         window.open(this.props.documentRoot + "/geo-dash?editable=false&"
                     + encodeURIComponent("title=" + this.state.currentProject.name
                                          + "&pid=" + this.props.projectId
-                                         + "&plotid=" + this.state.currentProject.id
-                                         + "&plotshape=" + this.state.currentProject.plotShape
+                                         + "&plotid=" + plot.id
+                                         + "&plotshape=" + (plot.geom ? "polygon" : this.state.currentProject.plotShape)
                                          + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
                                          + "]&daterange=&bcenter=" + plot.center
                                          + "&bradius=" + plotRadius),
