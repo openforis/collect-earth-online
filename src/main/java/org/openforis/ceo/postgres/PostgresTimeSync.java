@@ -10,4 +10,8 @@ public class PostgresTimeSync implements TimeSync {
         return "Version 1.0";
     }
 
+    public String getAssignedProject(Request req, Response res) {
+
+    }
+
 }
