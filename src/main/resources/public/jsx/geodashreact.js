@@ -1039,7 +1039,7 @@ function addBuffer (whichMap) {
                     var _geojson_object = typeof(data) == 'string'? JSON.parse(data): data;
 
                     var vectorSource = new ol.source.Vector({
-                        features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:3857' }) // this is important to know change to proper projection...
+                        features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:4326' }) // this is important to know change to proper projection...
                     });
 
                     let _geojson_vectorLayer = new ol.layer.Vector({
