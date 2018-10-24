@@ -52,12 +52,22 @@ mercator.getFullExtent = function () {
     return [llxy[0], llxy[1], urxy[0], urxy[1]];
 };
 
-// [Pure] Returns a bounding box for the current map view in Web
-// Mercator as [llx, lly, urx, ury].
+// [Pure] Returns a bounding box for the current map view in WGS84
+// lat/lon as [llx, lly, urx, ury].
 mercator.getViewExtent = function (mapConfig) {
     var size = mapConfig.map.getSize();
     var extent = mapConfig.view.calculateExtent(size);
     return ol.proj.transformExtent(extent, "EPSG:3857", "EPSG:4326");
+};
+
+// [Pure] Returns the minimum distance in meters from the view center
+// to the view extent.
+mercator.getViewRadius = function (mapConfig) {
+    var size = mapConfig.map.getSize();
+    var [llx, lly, urx, ury] = mapConfig.view.calculateExtent(size);
+    var width = Math.abs(urx - llx);
+    var height = Math.abs(ury - lly);
+    return Math.min(width, height) / 2.0;
 };
 
 /*****************************************************************************
@@ -86,6 +96,71 @@ mercator.createSource = function (sourceConfig) {
         return new ol.source.TileWMS({serverType: "geoserver",
                                       url: sourceConfig.geoserverUrl,
                                       params: sourceConfig.geoserverParams});
+    }else if (sourceConfig.type == "GeeGateway") {
+        //get variables and make ajax call to get mapid and token
+        //then add xyz layer
+        //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
+        //const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
+        const url = sourceConfig.geeUrl;
+        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): '';
+        let theJson = {
+            dateFrom: sourceConfig.geeParams.startDate,
+            dateTo: sourceConfig.geeParams.endDate,
+            bands: sourceConfig.geeParams.visParams.bands,
+            min: sourceConfig.geeParams.visParams.min,
+            max: sourceConfig.geeParams.visParams.max,
+            cloudLessThan: cloudVar,
+            visParams: sourceConfig.geeParams.visParams
+        };
+        if(sourceConfig.geeParams.ImageAsset)
+        {
+            theJson.imageName = sourceConfig.geeParams.ImageAsset;
+        }
+        const theID = Math.random().toString(36).substr(2, 16) + '_' + Math.random().toString(36).substr(2, 9);
+        let geeLayer = new ol.source.XYZ({
+            url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
+            id: theID
+        });
+        geeLayer.setProperties({id: theID});
+        let createtype = 'test';
+        if(sourceConfig.create) {
+
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                async: true,
+                crossDomain: true,
+                contentType: "application/json",
+                mapConfig: sourceConfig,
+                LayerId: theID,
+                data: JSON.stringify(theJson)
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.warn(jqXHR + textStatus + errorThrown);
+            }).done(function (data, _textStatus, _jqXHR) {
+                if (data.errMsg) {
+                    console.info(data.errMsg);
+                } else {
+                    if (data.hasOwnProperty("mapid")) {
+                        let geeLayer = new ol.source.XYZ({
+                            url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token
+                        });
+                        var layer;
+                        const LayerId = this.LayerId;
+                        mercator.currentMap.getLayers().forEach(function (lyr) {
+                            if (LayerId && LayerId == lyr.getSource().get('id')) {
+                                layer = lyr;
+                                layer.setSource(geeLayer);
+                            }
+                        });
+                    } else {
+                        console.warn("Wrong Data Returned");
+                    }
+                }
+            });
+        }
+        return geeLayer;
+
     } else {
         return null;
     }
@@ -94,6 +169,7 @@ mercator.createSource = function (sourceConfig) {
 // [Pure] Returns a new ol.layer.Tile object or null if the
 // layerConfig is invalid.
 mercator.createLayer = function (layerConfig) {
+    layerConfig.sourceConfig.create = true;
     var source = mercator.createSource(layerConfig.sourceConfig);
     if (source == null) {
         return null;
@@ -134,7 +210,7 @@ mercator.verifyZoomLevel = function (zoomLevel) {
 
 // [Pure] Predicate
 mercator.verifyLayerConfig = function (layerConfig) {
-    var layerKeys = Object.keys(layerConfig);
+    let layerKeys = Object.keys(layerConfig);
     return layerKeys.includes("title")
         && layerKeys.includes("extent")
         && layerKeys.includes("sourceConfig")
@@ -146,6 +222,7 @@ mercator.verifyLayerConfigs = function (layerConfigs) {
     return layerConfigs.every(mercator.verifyLayerConfig);
 };
 
+mercator.currentMap = null;
 // [Pure] Returns the first error message generated while testing the
 // input arguments or null if all tests pass.
 mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConfigs) {
@@ -214,7 +291,7 @@ mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
                               layers: layers,
                               controls: controls,
                               view: view});
-
+        mercator.currentMap = map;
         // Return the map configuration object
         return {init: {divName: divName,
                        centerCoords: centerCoords,
@@ -407,6 +484,7 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     ceoIcon:      mercator.getIconStyle("ceoicon.png"),
                     redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
                     bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
+                    yellowPoint:  mercator.getCircleStyle(5, null, "yellow", 2),
                     redCircle:    mercator.getCircleStyle(5, null, "red", 2),
                     yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
                     greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
@@ -414,7 +492,7 @@ var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
                     yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
                     greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
                     cluster:      mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
-                    polygon:      mercator.getPolygonStyle(null, "#8b2323", 3)};
+                    polygon:      mercator.getPolygonStyle(null, "yellow", 3)};
 
 /*****************************************************************************
 ***
@@ -593,7 +671,6 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
     dragBox.on("boxend", boxendAction);
     return dragBox;
 };
-
 // [Side Effects] Adds a click select interaction and a dragBox select
 // interaction to mapConfig's map object associated with the layer
 // with title == layerTitle.
@@ -634,13 +711,14 @@ mercator.addPointLayer = function (mapConfig, longitude, latitude) {
 };
 
 // [Pure] Returns a new vector source containing the passed in
-// samples. Features are constructed from each sample using its id and
-// point fields.
+// samples. Features are constructed from each sample using its id,
+// point, and geom fields.
 mercator.samplesToVectorSource = function (samples) {
     var features = samples.map(
         function (sample) {
             return new ol.Feature({sampleId: sample.id,
-                                   geometry: mercator.parseGeoJson(sample.point, true)});
+                                   geometry: mercator.parseGeoJson(sample.geom || sample.point, true),
+                                   shape: sample.geom ? "polygon" : "point"});
         }
     );
     return new ol.source.Vector({features: features});
@@ -660,8 +738,12 @@ mercator.getSelectedSamples = function (mapConfig) {
 // [Side Effects] Sets the sample's style to be a circle with a black
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
-mercator.highlightSamplePoint = function (sample, color) {
-    sample.setStyle(mercator.getCircleStyle(5, color || "#999999", "#000000", 2));
+mercator.highlightSampleGeometry = function (sample, color) {
+    if (sample.get("shape") == "point") {
+        sample.setStyle(mercator.getCircleStyle(5, color || "#999999", "#000000", 2));
+    } else {
+        sample.setStyle(mercator.getPolygonStyle(color || "#999999", "#000000", 3));
+    }
     return sample;
 };
 
@@ -964,7 +1046,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 //        mercator.zoomMapToLayer(mapConfig, "currentSamples");
 // FIXME: change references for points created with draw_points from sample_id to sampleId
 // FIXME: change calls from get_selected_samples to mercator.getSelectedSamples
-// FIXME: change calls from highlight_sample to mercator.highlightSamplePoint
+// FIXME: change calls from highlight_sample to mercator.highlightSampleGeometry
 // FIXME: change calls from enable_dragbox_draw to enableDragBoxDraw(mapConfig, displayDragBoxBounds)
 // FIXME: change calls from disable_dragbox_draw to disableDragBoxDraw
 // FIXME: change calls from draw_project_markers to:
@@ -974,3 +1056,8 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 // FIXME: change calls from draw_project_points to:
 //        mercator.removeLayerByTitle(mapConfig, "currentPlots");
 //        mercator.addPlotLayer(mapConfig, plots);
+
+module.exports = {
+    mercator: mercator,
+    ceoMapStyles: ceoMapStyles
+};

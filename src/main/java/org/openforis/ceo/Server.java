@@ -107,6 +107,7 @@ public class Server implements SparkApplication {
         get("/get-all-projects",                      projects::getAllProjects);
         get("/get-project-by-id/:id",                 projects::getProjectById);
         get("/get-project-plots/:id/:max",            projects::getProjectPlots);
+        get("/get-project-plot/:project-id/:plot-id", projects::getProjectPlot);
         get("/get-project-stats/:id",                 projects::getProjectStats);
         get("/get-unanalyzed-plot/:id",               projects::getUnassignedPlot);
         get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnassignedPlotById);
@@ -133,6 +134,7 @@ public class Server implements SparkApplication {
         // Routing Table: Imagery API
         get("/get-all-imagery",                       imagery::getAllImagery);
         post("/add-institution-imagery",              imagery::addInstitutionImagery);
+        post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
         post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
 
         // Routing Table: GeoDash API

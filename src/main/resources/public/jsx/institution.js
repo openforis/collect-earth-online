@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { utils } from "../js/utils.js";
+
 class Institution extends React.Component {
     constructor(props) {
         super(props);

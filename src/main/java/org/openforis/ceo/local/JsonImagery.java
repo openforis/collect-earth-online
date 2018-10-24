@@ -2,6 +2,7 @@ package org.openforis.ceo.local;
 
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
@@ -70,6 +71,85 @@ public class JsonImagery implements Imagery {
             writeJsonFile("imagery-list.json", imageryList);
 
             return "";
+        } catch (Exception e) {
+            // Indicate that an error occurred with imagery creation
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String addGeoDashImagery(Request req, Response res) {
+        try {
+            var jsonInputs         = parseJson(req.body()).getAsJsonObject();
+            var institutionId      = jsonInputs.get("institutionId").getAsInt();
+            var imageryTitle       = jsonInputs.get("imageryTitle").getAsString();
+            var imageryAttribution = jsonInputs.get("imageryAttribution").getAsString();
+            var geeUrl             = jsonInputs.get("geeUrl").getAsString();
+            var geeParams          = jsonInputs.get("geeParams").getAsJsonObject();
+
+            // Read in the existing imagery list
+            var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+
+            // Check to see if this imagery has already been added to this institution
+            var matchingImagery = findInJsonArray(imageryList, imagery -> imagery.get("title").getAsString().equals(imageryTitle));
+
+            if (matchingImagery.isPresent()) {
+                var imagery = matchingImagery.get();
+
+                if (imagery.get("institution").getAsString().equals(institutionId)) {
+                    // This imagery has already been added to this institution
+                    return "";
+                } else {
+                    // Generate a new imagery id
+                    var newImageryId = getNextId(imageryList);
+
+                    // Create a new source configuration for this imagery
+                    var sourceConfig = new JsonObject();
+                    sourceConfig.addProperty("type", "GeeGateway");
+                    sourceConfig.addProperty("geeUrl", geeUrl);
+                    sourceConfig.add("geeParams", geeParams);
+
+                    // Create a new imagery object
+                    var newImagery = new JsonObject();
+                    newImagery.addProperty("id", newImageryId);
+                    newImagery.addProperty("institution", institutionId);
+                    newImagery.addProperty("visibility", "private");
+                    newImagery.addProperty("title", imageryTitle);
+                    newImagery.addProperty("attribution", imageryAttribution);
+                    newImagery.add("extent", null);
+                    newImagery.add("sourceConfig", sourceConfig);
+
+                    // Write the new entry to imagery-list.json
+                    imageryList.add(newImagery);
+                    writeJsonFile("imagery-list.json", imageryList);
+
+                    return "";
+                }
+            } else {
+                // Generate a new imagery id
+                var newImageryId = getNextId(imageryList);
+
+                // Create a new source configuration for this imagery
+                var sourceConfig = new JsonObject();
+                sourceConfig.addProperty("type", "GeeGateway");
+                sourceConfig.addProperty("geeUrl", geeUrl);
+                sourceConfig.add("geeParams", geeParams);
+
+                // Create a new imagery object
+                var newImagery = new JsonObject();
+                newImagery.addProperty("id", newImageryId);
+                newImagery.addProperty("institution", institutionId);
+                newImagery.addProperty("visibility", "private");
+                newImagery.addProperty("title", imageryTitle);
+                newImagery.addProperty("attribution", imageryAttribution);
+                newImagery.add("extent", null);
+                newImagery.add("sourceConfig", sourceConfig);
+
+                // Write the new entry to imagery-list.json
+                imageryList.add(newImagery);
+                writeJsonFile("imagery-list.json", imageryList);
+
+                return "";
+            }
         } catch (Exception e) {
             // Indicate that an error occurred with imagery creation
             throw new RuntimeException(e);

@@ -16,6 +16,7 @@
 </#if>
 <div id="project" class="row justify-content-center"></div>
 <script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~timesync~widgetlayouteditor.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/collection~geodashreact~home~project.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/project.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {

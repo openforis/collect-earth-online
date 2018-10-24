@@ -1,656 +1,662 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
+import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { utils } from "../js/utils.js";
 
 class Collection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            documentRoot: this.props.documentRoot,
-            currentProject: null,
-            stats: null,
-            plotList: null,
-            imageryList: null,
-            currentImagery: {attribution: ""},
+            currentProject: {sampleValues: []},
+            stats: {},
+            plotList: [],
+            imageryList: [],
+            mapConfig: null,
+            currentImagery: null,
+            imageryAttribution: "",
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
             imageryYearPlanet: 2018,
             imageryMonthPlanet: "03",
-            mapConfig: null,
+            projectPlotsShown: false,
+            navButtonsShown: 1,
+            newPlotButtonDisabled: false,
+            flagPlotButtonDisabled: false,
+            saveValuesButtonDisabled: true,
+            surveyAnswersVisible: {},
             currentPlot: null,
-            userSamples: {},
-            statClass: "projNoStats",
-            arrowState: "arrow-down",
-            showSideBar: false,
-            mapClass: "fullmap",
-            quitClass: "quit-full",
+            userSamples: {}
         };
-        this.setBaseMapSource = this.setBaseMapSource.bind(this);
-        this.updateDGWMSLayer = this.updateDGWMSLayer.bind(this);
-        this.updatePlanetLayer = this.updatePlanetLayer.bind(this);
-        this.nextPlot = this.nextPlot.bind(this);
-        this.setCurrentValue = this.setCurrentValue.bind(this);
-        this.loadPlotById = this.loadPlotById.bind(this);
-        this.saveValues = this.saveValues.bind(this);
-    };
-    componentDidMount() {
-        this.initialization();
+        this.setBaseMapSource      = this.setBaseMapSource.bind(this);
+        this.setImageryYearDG      = this.setImageryYearDG.bind(this);
+        this.setStackingProfileDG  = this.setStackingProfileDG.bind(this);
+        this.setImageryYearPlanet  = this.setImageryYearPlanet.bind(this);
+        this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
+        this.getPlotData           = this.getPlotData.bind(this);
+        this.nextPlot              = this.nextPlot.bind(this);
+        this.flagPlot              = this.flagPlot.bind(this);
+        this.saveValues            = this.saveValues.bind(this);
+        this.hideShowAnswers       = this.hideShowAnswers.bind(this);
+        this.setCurrentValue       = this.setCurrentValue.bind(this);
+        this.redirectToHomePage    = this.redirectToHomePage.bind(this);
     }
+
+    componentDidMount() {
+        this.getProjectById();
+        this.getProjectStats();
+        this.getProjectPlots();
+    }
+
+    componentDidUpdate() {
+        if (this.state.currentProject.institution && this.state.imageryList.length == 0) {
+            this.getImageryList(this.state.currentProject.institution);
+        }
+        if (this.state.imageryList.length > 0 && this.state.mapConfig == null) {
+            this.showProjectMap();
+        }
+        if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.projectPlotsShown == false) {
+            this.showProjectPlots();
+        }
+        if (this.state.mapConfig && this.state.currentImagery == null) {
+            this.updateMapImagery(this.state.currentProject.baseMapSource);
+        }
+    }
+
     getProjectById() {
-        fetch(this.state.documentRoot + "/get-project-by-id/" + this.props.projectId)
+        fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
             .then(response => {
                 if (response.ok) {
                     return response.json();
-                }
-                else {
+                } else {
                     console.log(response);
                     alert("Error retrieving the project info. See console for details.");
+                    return new Promise(resolve => resolve(null));
                 }
             })
-            .then(data => {
-                if (data == null || data.id == 0) {
+            .then(project => {
+                if (project == null || project.id == 0) {
                     alert("No project found with ID " + this.props.projectId + ".");
-                    window.location = this.state.documentRoot + "/home";
+                    window.location = this.props.documentRoot + "/home";
                 } else {
-                    this.setState({currentProject: data});
-                    this.getImageryList(data.institution);
+                    const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues);
+                    console.log(surveyQuestions);
+                    project.sampleValues = surveyQuestions;
+                    this.setState({currentProject: project});
                 }
             });
     }
+
+    convertSampleValuesToSurveyQuestions(sampleValues) {
+        return sampleValues.map(sampleValue => {
+            if (sampleValue.name && sampleValue.values) {
+                const surveyQuestionAnswers = sampleValue.values.map(value => {
+                    if (value.name) {
+                        return {id: value.id,
+                                answer: value.name,
+                                color: value.color};
+                    } else {
+                        return value;
+                    }
+                });
+                return {id: sampleValue.id,
+                        question: sampleValue.name,
+                        answers: surveyQuestionAnswers,
+                        parent_question: -1,
+                        parent_answer: -1};
+            } else {
+                return sampleValue;
+            }
+        });
+    }
+
     getProjectStats() {
-        fetch(this.state.documentRoot + "/get-project-stats/" + this.props.projectId)
+        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
             .then(response => {
                 if (response.ok) {
                     return response.json();
-                }
-                else {
+                } else {
                     console.log(response);
                     alert("Error getting project stats. See console for details.");
+                    return new Promise(resolve => resolve(null));
                 }
             })
             .then(data => {
                 this.setState({stats: data});
-                //   this.initialization();
             });
     }
+
     getProjectPlots() {
-        fetch(this.state.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+        fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
             .then(response => {
                 if (response.ok) {
                     return response.json();
-                }
-                else {
+                } else {
                     console.log(response);
                     alert("Error loading plot data. See console for details.");
+                    return new Promise(resolve => resolve(null));
                 }
             })
             .then(data => {
                 this.setState({plotList: data});
             });
     }
+
     getImageryList(institution) {
-        fetch(this.state.documentRoot + "/get-all-imagery?institutionId=" + institution)
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
             .then(response => {
                 if (response.ok) {
                     return response.json();
-                }
-                else {
+                } else {
                     console.log(response);
                     alert("Error retrieving the imagery list. See console for details.");
+                    return new Promise(resolve => resolve(null));
                 }
             })
             .then(data => {
-                this.setState({imageryList: data})
+                this.setState({imageryList: data});
             });
     }
-    setBaseMapSource() {
-        if (this.state.currentProject != null && this.state.mapConfig != null) {
-            var bms = document.getElementById("base-map-source");
-            if (bms != null) {
-                var proj = this.state.currentProject;
-                proj.baseMapSource = bms.options[bms.selectedIndex].value;
-                this.setState({currentProject: proj});
-            }
-            mercator.setVisibleLayer(this.state.mapConfig, this.state.currentProject.baseMapSource);
-            var cimagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-            this.setState({currentImagery: cimagery})
-            if (this.state.currentProject.baseMapSource == "DigitalGlobeWMSImagery") {
-                cimagery.attribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
-                this.setState({currentImagery: cimagery});
-                this.updateDGWMSLayer();
-            } else if (this.state.currentProject.baseMapSource == "PlanetGlobalMosaic") {
-                cimagery.attribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
-                this.setState({currentImagery: cimagery});
-                this.updatePlanetLayer();
-            }
-        }
+
+    showProjectMap() {
+        let mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
+        mercator.addVectorLayer(mapConfig,
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+                                ceoMapStyles.polygon);
+        mercator.zoomMapToLayer(mapConfig, "currentAOI");
+        this.setState({mapConfig: mapConfig});
     }
+
     showProjectPlots() {
-        if (this.state.plotList != null) {
-            mercator.addPlotLayer(this.state.mapConfig,
-                this.state.plotList,
-                (feature) => {// FIXME: These three assignments don't appear to do anything
-                    this.setState({showSideBar: true});
-                    this.setState({mapClass: "sidemap"});
-                    this.setState({quitClass: "quit-side"});
-                    this.loadPlotById(feature.get("features")[0].get("plotId"));
-                }
-            );
-        }
+        mercator.addPlotLayer(this.state.mapConfig,
+                              this.state.plotList,
+                              feature => {
+                                  this.setState({navButtonsShown: 2,
+                                                 newPlotButtonDisabled: false,
+                                                 flagPlotButtonDisabled: false,
+                                                 saveValuesButtonDisabled: true});
+                                  this.getPlotData(feature.get("features")[0].get("plotId"));
+                              });
+        this.setState({projectPlotsShown: true});
     }
+
+    setBaseMapSource(event) {
+        const dropdown = event.target;
+        const newBaseMapSource = dropdown.options[dropdown.selectedIndex].value;
+        let proj = this.state.currentProject;
+        proj.baseMapSource = newBaseMapSource;
+        this.setState({currentProject: proj});
+        this.updateMapImagery(newBaseMapSource);
+    }
+
+    setImageryYearDG(event) {
+        const dropdown = event.target;
+        const newImageryYearDG = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
+        this.setState({imageryYearDG: newImageryYearDG,
+                       imageryAttribution: newImageryAttribution});
+        this.updateDGWMSLayer(newImageryYearDG, this.state.stackingProfileDG);
+    }
+
+    setStackingProfileDG(event) {
+        const dropdown = event.target;
+        const newStackingProfileDG = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
+        this.setState({stackingProfileDG: newStackingProfileDG,
+                       imageryAttribution: newImageryAttribution});
+        this.updateDGWMSLayer(this.state.imageryYearDG, newStackingProfileDG);
+    }
+
+    setImageryYearPlanet(event) {
+        const dropdown = event.target;
+        const newImageryYearPlanet = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+        this.setState({imageryYearPlanet: newImageryYearPlanet,
+                       imageryAttribution: newImageryAttribution});
+        this.updatePlanetLayer(this.state.imageryMonthPlanet, newImageryYearPlanet);
+    }
+
+    setImageryMonthPlanet(event) {
+        const dropdown = event.target;
+        const newImageryMonthPlanet = dropdown.options[dropdown.selectedIndex].value;
+        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
+        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
+        this.setState({imageryMonthPlanet: newImageryMonthPlanet,
+                       imageryAttribution: newImageryAttribution});
+        this.updatePlanetLayer(newImageryMonthPlanet, this.state.imageryYearPlanet);
+    }
+
+    updateMapImagery(newBaseMapSource) {
+        mercator.setVisibleLayer(this.state.mapConfig, newBaseMapSource);
+        const newImagery = this.getImageryByTitle(newBaseMapSource);
+        let newImageryAttribution = newImagery.attribution;
+        if (newBaseMapSource == "DigitalGlobeWMSImagery") {
+            newImageryAttribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
+            this.updateDGWMSLayer(this.state.imageryYearDG, this.state.stackingProfileDG);
+        } else if (newBaseMapSource == "PlanetGlobalMosaic") {
+            newImageryAttribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+            this.updatePlanetLayer(this.state.imageryMonthPlanet, this.state.imageryYearPlanet);
+        }
+        this.setState({currentImagery: newImagery,
+                       imageryAttribution: newImageryAttribution});
+    }
+
     getImageryByTitle(imageryTitle) {
-        return this.state.imageryList.find(
-            function (imagery) {
-                return imagery.title == imageryTitle;
-            }
-        );
-    };
-    updateDGWMSLayer() {
+        return this.state.imageryList.find(imagery => imagery.title == imageryTitle);
+    }
+
+    updateDGWMSLayer(imageryYear, stackingProfile) {
         mercator.updateLayerWmsParams(this.state.mapConfig,
-            "DigitalGlobeWMSImagery",
-            {
-                COVERAGE_CQL_FILTER: "(acquisition_date>='" + this.state.imageryYearDG + "-01-01')"
-                    + "AND(acquisition_date<='" + this.state.imageryYearDG + "-12-31')",
-                FEATUREPROFILE: this.state.stackingProfileDG
-            });
+                                      "DigitalGlobeWMSImagery",
+                                      {
+                                          COVERAGE_CQL_FILTER: "(acquisition_date>='" + imageryYear + "-01-01')"
+                                              + "AND(acquisition_date<='" + imageryYear + "-12-31')",
+                                          FEATUREPROFILE: stackingProfile
+                                      });
     }
-    updatePlanetLayer() {
+
+    updatePlanetLayer(imageryMonth, imageryYear) {
         mercator.updateLayerSource(this.state.mapConfig,
-            "PlanetGlobalMosaic",
-            function (sourceConfig) {
-                sourceConfig.month = this.state.imageryMonthPlanet;
-                sourceConfig.year = this.state.imageryYearPlanet;
-                return sourceConfig;
-            },
-            this);
+                                   "PlanetGlobalMosaic",
+                                   sourceConfig => {
+                                       sourceConfig.month = imageryMonth;
+                                       sourceConfig.year = imageryYear;
+                                       return sourceConfig;
+                                   },
+                                   this);
     }
-    loadPlotById(plotId) {
-        var mapConfig = this.state.mapConfig;
-        var currentPlot = this.state.currentPlot;
-        if (this.state.currentPlot == null) {
-            this.getPlotDataById(plotId);
-        } else {
-            // FIXME: What is the minimal set of these that I can execute?
-            utils.enable_element("new-plot-button");
-            utils.enable_element("flag-plot-button");
-            if (document.getElementById("flag-plot-button") != null) {
-                var ref = this;
-                document.getElementById("flag-plot-button").onclick = function () {
-                    ref.flagPlot();
-                }
-            }
-            utils.disable_element("save-values-button");
 
-            // FIXME: These classes should be handled with an ng-if in collection.ftl
-            document.getElementById("go-to-first-plot-button").classList.add("d-none");
-            document.getElementById("plot-nav").classList.remove("d-none");
-
-            // FIXME: These three assignments don't appear to do anything
-            this.setState({showSideBar: true});
-            this.setState({mapClass: "sidemap"});
-            this.setState({quitClass: "quit-side"});
-
-            // FIXME: Move these calls into a function in mercator-openlayers.js
-            mercator.disableSelection(mapConfig);
-            mercator.removeLayerByTitle(mapConfig, "currentSamples");
-            mercator.addVectorLayer(mapConfig,
-                "currentSamples",
-                mercator.samplesToVectorSource(currentPlot.samples),
-                ceoMapStyles.redPoint);
-            mercator.enableSelection(mapConfig, "currentSamples");
-            mercator.zoomMapToLayer(mapConfig, "currentSamples");
-            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
-                + encodeURIComponent("title=" + this.state.currentProject.name
-                    + "&pid=" + this.props.projectId
-                    + "&aoi=[" + mercator.getViewExtent(mapConfig)
-                    + "]&daterange=&bcenter=" + currentPlot.center
-                    + "&bradius=" + this.state.currentProject.plotSize / 2),
-                "_geo-dash");
-        }
-    }
-    getPlotDataById(plotId) {
-        fetch(this.state.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
+    getPlotData(plotId) {
+        const url = (plotId == "random")
+            ? this.props.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId
+            : this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId;
+        fetch(url)
             .then(response => {
                 if (response.ok) {
                     return response.text();
-                }
-                else {
+                } else {
                     console.log(response);
                     alert("Error retrieving plot data. See console for details.");
+                    return new Promise(resolve => resolve("error"));
                 }
             })
             .then(data => {
                 if (data == "done") {
-                    this.setState({currentPlot: null});
-                    this.showProjectPlots();
-                    alert("This plot has already been analyzed.");
-                }
-                else if (data == "not found") {
-                    this.setState({currentPlot: null});
-                    this.showProjectPlots();
+                    this.setState({currentPlot: null,
+                                   userSamples: {}});
+                    const msg = (plotId == "random")
+                        ? "All plots have been analyzed for this project."
+                        : "This plot has already been analyzed.";
+                    alert(msg);
+                } else if (data == "not found") {
+                    this.setState({currentPlot: null,
+                                   userSamples: {}});
                     alert("No plot with ID " + plotId + " found.");
-                }
-                else {
-                    this.setState({currentPlot: JSON.parse(data)});
-                    this.loadPlotById(plotId);
+                } else if (data == "error") {
+                    this.setState({currentPlot: null,
+                                   userSamples: {}});
+                } else {
+                    const newPlot = JSON.parse(data);
+                    this.setState({currentPlot: newPlot,
+                                   userSamples: {}});
+                    this.showProjectPlot(newPlot);
+                    this.showGeoDash(newPlot);
                 }
             });
     }
-    setCurrentValue(sampleValueGroup, sampleValue) {
-        var selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        if (selectedFeatures && selectedFeatures.getLength() > 0) {
-            selectedFeatures.forEach(
-                function (sample) {
-                    var sampleId = sample.get("sampleId");
-                    var uSamples = this.state.userSamples;
-                    if (!this.state.userSamples[sampleId]) {
-                        uSamples[sampleId] = {};
-                        this.setState({userSamples: uSamples});
-                    }
-                    uSamples[sampleId][sampleValueGroup.name] = sampleValue.name;
-                    this.setState({userSamples: uSamples});
-                    mercator.highlightSamplePoint(sample, sampleValue.color);
-                },
-                this // necessary to pass outer scope into function
-            );
-            selectedFeatures.clear();
-            utils.blink_border(sampleValue.name + "_" + sampleValue.id);
-            if (Object.keys(this.state.userSamples).length == this.state.currentPlot.samples.length
-                && Object.values(this.state.userSamples).every(function (values) {
-                    return Object.keys(values).length == this.state.currentProject.sampleValues.length;
-                }, this)) {
-                // FIXME: What is the minimal set of these that I can execute?
-                utils.enable_element("save-values-button");
-                if (document.getElementById("save-values-button") != null) {
-                    var ref = this;
-                    document.getElementById("save-values-button").onclick = function () {
-                        ref.saveValues();
-                    }
-                }
-                utils.disable_element("new-plot-button");
-            }
 
-        } else {
-            alert("No sample points selected. Please click some first.");
-        }
-    }
-    flagPlot() {
-        var ref = this;
-        if (ref.state.currentPlot != null) {
-            $.ajax({
-                url: ref.state.documentRoot + "/flag-plot",
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: false,
-                processData: false,
-                data: JSON.stringify({
-                    projectId: ref.props.projectId,
-                    plotId: ref.state.currentPlot.id,
-                    userId: ref.props.userName
-                })
-            }).fail(function () {
-                alert("Error flagging plot as bad. See console for details.");
-            }).done(function (data) {
-                var statistics = ref.state.stats;
-                statistics.flaggedPlots = statistics.flaggedPlots + 1;
-                ref.setState({stats: statistics});
-                ref.nextPlot();
-            });
-        }
-    }
-    nextPlot() {
-        // FIXME: What is the minimal set of these that I can execute?
-        utils.enable_element("new-plot-button");
-        utils.enable_element("flag-plot-button");
-        utils.disable_element("save-values-button");
-
-        // FIXME: These classes should be handled with an ng-if in collection.ftl
-        document.getElementById("go-to-first-plot-button").classList.add("d-none");
-        document.getElementById("plot-nav").classList.remove("d-none");
-        // FIXME: These three assignments don't appear to do anything
-        this.setState({showSideBar: true});
-        this.setState({mapClass: "sidemap"});
-        this.setState({quitClass: "quit-side"});
+    showProjectPlot(plot) {
+        mercator.disableSelection(this.state.mapConfig);
         mercator.removeLayerByTitle(this.state.mapConfig, "currentPlots");
+        mercator.removeLayerByTitle(this.state.mapConfig, "currentPlot");
         mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
-        this.setState({currentPlot: null});
-        this.setState({userSamples: {}});
-        this.loadRandomPlot();
+        mercator.addVectorLayer(this.state.mapConfig,
+                                "currentPlot",
+                                mercator.geometryToVectorSource(
+                                    plot.geom
+                                        ? mercator.parseGeoJson(plot.geom, true)
+                                        : mercator.getPlotPolygon(plot.center,
+                                                                  this.state.currentProject.plotSize,
+                                                                  this.state.currentProject.plotShape)
+                                ),
+                                ceoMapStyles.polygon);
+        mercator.addVectorLayer(this.state.mapConfig,
+                                "currentSamples",
+                                mercator.samplesToVectorSource(plot.samples),
+                                plot.samples[0].geom
+                                ? ceoMapStyles.polygon
+                                : ceoMapStyles.yellowPoint);
+        mercator.enableSelection(this.state.mapConfig, "currentSamples");
+        mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
     }
-    loadRandomPlot() {
-        if (this.state.currentPlot == null) {
-            this.getPlotData();
-        } else {
-            // FIXME: What is the minimal set of these that I can execute?
-            utils.enable_element("flag-plot-button");
 
-            // FIXME: Move these calls into a function in mercator-openlayers.js
-            mercator.disableSelection(this.state.mapConfig);
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
-            mercator.addVectorLayer(this.state.mapConfig,
-                "currentSamples",
-                mercator.samplesToVectorSource(this.state.currentPlot.samples),
-                ceoMapStyles.redPoint);
-            mercator.enableSelection(this.state.mapConfig, "currentSamples");
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentSamples");
+    showGeoDash(plot) {
+        const plotRadius = this.state.currentProject.plotSize
+            ? this.state.currentProject.plotSize / 2.0
+            : mercator.getViewRadius(this.state.mapConfig);
+        window.open(this.props.documentRoot + "/geo-dash?editable=false&"
+                    + encodeURIComponent("title=" + this.state.currentProject.name
+                                         + "&pid=" + this.props.projectId
+                                         + "&plotid=" + this.state.currentProject.id
+                                         + "&plotshape=" + this.state.currentProject.plotShape
+                                         + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
+                                         + "]&daterange=&bcenter=" + plot.center
+                                         + "&bradius=" + plotRadius),
+                    "_geo-dash");
+    }
 
-            window.open(this.state.documentRoot + "/geo-dash?editable=false&"
-                + encodeURIComponent("title=" + this.state.currentProject.name
-                    + "&pid=" + this.props.projectId
-                    + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
-                    + "]&daterange=&bcenter=" + this.state.currentPlot.center
-                    + "&bradius=" + this.state.currentProject.plotSize / 2),
-                "_geo-dash");
+    nextPlot() {
+        this.setState({navButtonsShown: 2,
+                       newPlotButtonDisabled: false,
+                       flagPlotButtonDisabled: false,
+                       saveValuesButtonDisabled: true});
+        this.getPlotData("random");
+    }
+
+    flagPlot() {
+        if (this.state.currentPlot != null) {
+            fetch(this.props.documentRoot + "/flag-plot",
+                  {
+                      method: "post",
+                      headers: {
+                          "Accept": "application/json",
+                          "Content-Type": "application/json"
+                      },
+                      body: JSON.stringify({
+                          projectId: this.props.projectId,
+                          plotId: this.state.currentPlot.id,
+                          userId: this.props.userName
+                      })
+                  })
+                .then(response => {
+                    if (response.ok) {
+                        let statistics = this.state.stats;
+                        statistics.flaggedPlots = statistics.flaggedPlots + 1;
+                        this.setState({stats: statistics});
+                        this.nextPlot();
+                    } else {
+                        console.log(response);
+                        alert("Error flagging plot as bad. See console for details.");
+                    }
+                });
         }
     }
-    getPlotData() {
-        fetch(this.state.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId)
+
+    saveValues() {
+        fetch(this.props.documentRoot + "/add-user-samples",
+              {
+                  method: "post",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                      projectId: this.props.projectId,
+                      plotId: this.state.currentPlot.id,
+                      userId: this.props.userName,
+                      userSamples: this.state.userSamples
+                  })
+              })
             .then(response => {
                 if (response.ok) {
-                    return response.text();
-                }
-                else {
+                    let statistics = this.state.stats;
+                    statistics.analyzedPlots = statistics.analyzedPlots + 1;
+                    this.setState({stats: statistics});
+                    this.nextPlot();
+                } else {
                     console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
+                    alert("Error saving your assignments to the database. See console for details.");
                 }
-            }).then(data => {
-            if (data == "done") {
-                this.setState({currentPlot: null});
-                // FIXME: What is the minimal set of these that I can execute?
-                utils.disable_element("new-plot-button");
-                utils.disable_element("flag-plot-button");
-                utils.disable_element("save-values-button");
-                alert("All plots have been analyzed for this project.");
-            } else {
-                this.setState({currentPlot: JSON.parse(data)});
-                this.loadRandomPlot();
-            }
-        });
+            });
     }
-    assignedPercentage() {
-        if (this.state.currentProject == null || this.state.stats == null) {
-            return "0.00";
-        } else {
-            return (100.0 * this.state.stats.analyzedPlots / this.state.currentProject.numPlots).toFixed(2);
-        }
-    }
-    flaggedPercentage() {
-        if (this.state.currentProject == null || this.state.stats == null) {
-            return "0.00";
-        } else {
-            return (100.0 * this.state.stats.flaggedPlots / this.state.currentProject.numPlots).toFixed(2);
-        }
-    }
-    completedPercentage() {
-        if (this.state.currentProject == null || this.state.stats == null) {
-            return "0.00";
-        } else {
-            return (100.0 * (this.state.stats.analyzedPlots + this.state.stats.flaggedPlots) / this.state.currentProject.numPlots).toFixed(2);
-        }
-    }
-    saveValues(){
-        var ref = this;
-        $.ajax({
-            url: ref.state.documentRoot + "/add-user-samples",
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: false,
-            processData: false,
-            data: JSON.stringify({
-                projectId: ref.props.projectId,
-                plotId: ref.state.currentPlot.id,
-                userId: ref.props.userName,
-                userSamples: ref.state.userSamples
-            })
-        }).fail(function () {
-            alert("Error saving your assignments to the database. See console for details.");
-        }).done(function (data) {
-            var statistics = ref.state.stats;
-            statistics.analyzedPlots = statistics.analyzedPlots + 1;
-            ref.setState({stats: statistics});
-            ref.nextPlot();
-        });
-    }
-    showProjectMap() {
-        this.setState({mapConfig: mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList)});
-        this.setBaseMapSource();
-        // Show the project's boundary
-        mercator.addVectorLayer(this.state.mapConfig,
-            "currentAOI",
-            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-            ceoMapStyles.polygon);
-        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-        // Draw the project plots as clusters on the map
-        this.showProjectPlots();
-    }
-    initialization() {
-        this.getProjectById();
-        this.getProjectStats();
-        this.getProjectPlots();
-        setTimeout(() => {
-            if (this.state.imageryList != null && this.state.imageryList.length > 0) {
-                this.showProjectMap();
-            }
-        }, 250);
 
-
+    hideShowAnswers(surveyNodeId) {
+        let surveyAnswersVisible = this.state.surveyAnswersVisible;
+        if (surveyAnswersVisible[surveyNodeId]) {
+            surveyAnswersVisible[surveyNodeId] = false;
+        } else {
+            surveyAnswersVisible[surveyNodeId] = true;
+        }
+        this.setState({surveyAnswersVisible: surveyAnswersVisible});
     }
+
+    setCurrentValue(questionText, answerId, answerText, answerColor) {
+        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
+        if (selectedFeatures && selectedFeatures.getLength() > 0) {
+            let userSamples = this.state.userSamples;
+            selectedFeatures.forEach(feature => {
+                const sampleId = feature.get("sampleId");
+                if (!userSamples[sampleId]) {
+                    userSamples[sampleId] = {};
+                }
+                userSamples[sampleId][questionText] = answerText;
+                mercator.highlightSampleGeometry(feature, answerColor);
+            }, this); // necessary to pass outer scope into function
+            this.setState({userSamples: userSamples});
+            utils.blink_border(answerText + "_" + answerId);
+            selectedFeatures.clear();
+            this.checkIfAllSamplesAssigned();
+        } else {
+            alert("No samples selected. Please click some first.");
+        }
+    }
+
+    checkIfAllSamplesAssigned() {
+        const assignedSamples   = Object.keys(this.state.userSamples);
+        const assignedQuestions = Object.values(this.state.userSamples);
+        const totalSamples      = this.state.currentPlot.samples;
+        const totalQuestions    = this.state.currentProject.sampleValues;
+        if (assignedSamples.length == totalSamples.length
+            && assignedQuestions.every(assignments => Object.keys(assignments).length == totalQuestions.length, this)) {
+            this.setState({saveValuesButtonDisabled: false});
+        }
+    }
+
+    redirectToHomePage() {
+        window.location = this.props.documentRoot + "/home";
+    }
+
     render() {
-        return (<React.Fragment>
-                <ImageAnalysisPane collection={this.state} nextPlot={this.nextPlot}/>
-                <div id="sidebar" className="col-xl-3">
-                    <SideBar collection={this.state} setBaseMapSource={this.setBaseMapSource}
-                             setCurrentValue={this.setCurrentValue} updateDGWMSLayer={this.updateDGWMSLayer}
-                             updatePlanetLayer={this.updatePlanetLayer} nextPlot={this.nextPlot}
-                             flagPlot={this.flagPlot}
-                             assignedPercentage={this.assignedPercentage()} flaggedPercentage={this.flaggedPercentage()}
-                             completedPercentage={this.completedPercentage()}
-                    />
-                </div>
+        return (
+            <React.Fragment>
+                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
+                <SideBar currentProject={this.state.currentProject}
+                         navButtonsShown={this.state.navButtonsShown}
+                         newPlotButtonDisabled={this.state.newPlotButtonDisabled}
+                         flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
+                         nextPlot={this.nextPlot}
+                         flagPlot={this.flagPlot}
+                         imageryList={this.state.imageryList}
+                         setBaseMapSource={this.setBaseMapSource}
+                         imageryYearDG={this.state.imageryYearDG}
+                         stackingProfileDG={this.state.stackingProfileDG}
+                         setImageryYearDG={this.setImageryYearDG}
+                         setStackingProfileDG={this.setStackingProfileDG}
+                         imageryYearPlanet={this.state.imageryYearPlanet}
+                         imageryMonthPlanet={this.state.imageryMonthPlanet}
+                         setImageryYearPlanet={this.setImageryYearPlanet}
+                         setImageryMonthPlanet={this.setImageryMonthPlanet}
+                         stats={this.state.stats}
+                         saveValues={this.saveValues}
+                         saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
+                         surveyAnswersVisible={this.state.surveyAnswersVisible}
+                         hideShowAnswers={this.hideShowAnswers}
+                         setCurrentValue={this.setCurrentValue}/>
+                <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
         );
     }
 }
 
 function ImageAnalysisPane(props) {
-    var showSidebar;
-    const collection = props.collection;
-    if (collection.showSideBar) {
-        showSidebar = <div>
-                <span id="action-button" name="collection-actioncall" title="Click a plot to analyze:"
-                      alt="Click a plot to analyze">Click a plot to analyze, or:<p></p><br/>
-                    <span className="button" onClick={props.nextPlot}>Analyze random plot</span>
-                    <br style={{clear: "both"}}/>
-                    <br style={{clear: "both"}}/>
-                </span>
-        </div>
-    }
-    else {
-        showSidebar = <div style={{position: "relative"}}>
-                <span id="action-button" name="collection-actioncall" title="Select each plot to choose value"
-                      alt="Select each plot to choose value">Select each dot to choose value
-                </span>
-        </div>
-    }
     return (
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
-            <div className="buttonHolder d-none">
-                {showSidebar}
-            </div>
-            <div id="imagery-info" className="row d-none">
-                <p className="col small">{collection.currentImagery.attribution}</p>
+            <div id="imagery-info" className="row">
+                <p className="col small">{props.imageryAttribution}</p>
             </div>
         </div>
     );
 }
 
 function SideBar(props) {
-    const collection = props.collection;
     return (
-        <React.Fragment>
-            <h2 className="header">{collection.currentProject == null ? "" : collection.currentProject.name}</h2>
-            <SideBarFieldSet collection={props.collection} setBaseMapSource={props.setBaseMapSource}
-                             setCurrentValue={props.setCurrentValue}
-                             updateDGWMSLayer={props.updateDGWMSLayer} updatePlanetLayer={props.updatePlanetLayer}
-                             nextPlot={props.nextPlot} flagPlot={props.flagPlot}/>
+        <div id="sidebar" className="col-xl-3">
+            <ProjectName projectName={props.currentProject.name}/>
+            <PlotNavigation navButtonsShown={props.navButtonsShown}
+                            nextPlot={props.nextPlot}
+                            flagPlot={props.flagPlot}
+                            newPlotButtonDisabled={props.newPlotButtonDisabled}
+                            flagPlotButtonDisabled={props.flagPlotButtonDisabled}/>
+            <ImageryOptions baseMapSource={props.currentProject.baseMapSource}
+                            setBaseMapSource={props.setBaseMapSource}
+                            imageryList={props.imageryList}
+                            imageryYearDG={props.imageryYearDG}
+                            stackingProfileDG={props.stackingProfileDG}
+                            setImageryYearDG={props.setImageryYearDG}
+                            setStackingProfileDG={props.setStackingProfileDG}
+                            imageryYearPlanet={props.imageryYearPlanet}
+                            imageryMonthPlanet={props.imageryMonthPlanet}
+                            setImageryYearPlanet={props.setImageryYearPlanet}
+                            setImageryMonthPlanet={props.setImageryMonthPlanet}/>
+            <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
+                             surveyAnswersVisible={props.surveyAnswersVisible}
+                             hideShowAnswers={props.hideShowAnswers}
+                             setCurrentValue={props.setCurrentValue}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
-                    <button id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                            type="button"
-                            name="save-values" style={{opacity: "0.5"}} disabled>
-                        Save
-                    </button>
-                    <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
-                            href="#project-stats-collapse" role="button" aria-expanded="false"
-                            aria-controls="project-stats-collapse">
-                        Project Stats
-                    </button>
-                    <div className="row justify-content-center mb-1 text-center">
-                        <div className="col-lg-12">
-                            <fieldset id="projStats" className="collection.statClass" className="text-center">
-                                <div className="collapse" id="project-stats-collapse">
-                                    <table className="table table-sm">
-                                        <tbody>
-                                        <tr>
-                                            <td className="small">Project</td>
-                                            <td className="small">{collection.currentProject == null ? "" : collection.currentProject.name}</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Assigned</td>
-                                            <td className="small">
-                                                {collection.stats == null ? "" : collection.stats.analyzedPlots}
-                                                ({props.assignedPercentage}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Flagged</td>
-                                            <td className="small">
-                                                {collection.stats == null ? "" : collection.stats.flaggedPlots}
-                                                ({props.flaggedPercentage}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Completed</td>
-                                            <td className="small">
-                                                {collection.stats == null ? "" : collection.stats.analyzedPlots + collection.stats.flaggedPlots}
-                                                ({props.completedPercentage}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Total</td>
-                                            <td className="small">{collection.currentProject == null ? "" : collection.currentProject.numPlots}</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </fieldset>
-                        </div>
-                    </div>
-                    <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
-                            type="button"
-                            name="collection-quit" data-toggle="modal"
-                            data-target="#confirmation-quit">
-                        Quit
-                    </button>
+                    <SaveValuesButton saveValues={props.saveValues}
+                                      saveValuesButtonDisabled={props.saveValuesButtonDisabled}/>
+                    <ProjectStats projectName={props.currentProject.name}
+                                  numPlots={props.currentProject.numPlots}
+                                  stats={props.stats}/>
+                    <QuitButton/>
                 </div>
             </div>
-        </React.Fragment>
+        </div>
     );
 }
 
-function SideBarFieldSet(props) {
-    const collection = props.collection;
-    var selectDG, selectPlanet;
-    var sampleValueGroup = "";
-    var imageryTitle = "";
-    if (collection.imageryList != null && collection.currentProject != null) {
-        imageryTitle = <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                               size="1" defaultValue={collection.currentProject.baseMapSource}
-                               onChange={props.setBaseMapSource}>{
-            collection.imageryList.map((imagery,uid) =>
-                <option key={uid} value={imagery.title}>{imagery.title}</option>
-            )
-        }
-        </select>;
-    }
-    if (collection.currentProject != null) {
-        sampleValueGroup = collection.currentProject.sampleValues.map((sampleValueGroup,_uid) =>
-            <fieldset key={_uid} className="mb-1 justify-content-center text-center">
-                <h3 className="text-center">Sample Value: {sampleValueGroup.name}</h3>
-                <ul id="samplevalue" className="samplevalue justify-content-center">
-                    {
-                        sampleValueGroup.values.map((sampleValue,uid) =>
-                            <li key={uid} className="mb-1">
-                                <button type="button"
-                                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                                        id={sampleValue.name + '_' + sampleValue.id}
-                                        name={sampleValue.name + '_' + sampleValue.id}
-                                        onClick={() => props.setCurrentValue(sampleValueGroup, sampleValue)}>
-                                    <div className="circle" style={{
-                                        backgroundColor: sampleValue.color,
-                                        border: "solid 1px",
-                                        float: "left",
-                                        marginTop: "4px"
-                                    }}></div>
-                                    <span className="small">{sampleValue.name}</span>
-                                </button>
-                            </li>
-                        )
-                    }
-                </ul>
-            </fieldset>
-        )
-        if (collection.currentProject.baseMapSource == 'DigitalGlobeWMSImagery') {
-            selectDG = <React.Fragment><select className="form-control form-control-sm" id="dg-imagery-year"
-                                               name="dg-imagery-year"
-                                               size="1"
-                                               defaultValue={collection.imageryYearDG}
-                                               onChange={props.updateDGWMSLayer}>
-                <option value="2018">2018</option>
-                <option value="2017">2017</option>
-                <option value="2016">2016</option>
-                <option value="2015">2015</option>
-                <option value="2014">2014</option>
-                <option value="2013">2013</option>
-                <option value="2012">2012</option>
-                <option value="2011">2011</option>
-                <option value="2010">2010</option>
-                <option value="2009">2009</option>
-                <option value="2008">2008</option>
-                <option value="2007">2007</option>
-                <option value="2006">2006</option>
-                <option value="2005">2005</option>
-                <option value="2004">2004</option>
-                <option value="2003">2003</option>
-                <option value="2002">2002</option>
-                <option value="2001">2001</option>
-                <option value="2000">2000</option>
+function ProjectName(props) {
+    return (
+        <h2 className="header">{props.projectName || ""}</h2>
+    );
+}
+
+function PlotNavigation(props) {
+    return (
+        <fieldset className="mb-3 text-center">
+            <h3>Plot Navigation</h3>
+            <div className={props.navButtonsShown == 1 ? "row" : "row d-none"} id="go-to-first-plot">
+                <div className="col">
+                    <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                           type="button" name="new-plot" value="Go to first plot" onClick={props.nextPlot}/>
+                </div>
+            </div>
+            <div className={props.navButtonsShown == 2 ? "row" : "row d-none"} id="plot-nav">
+                <div className="col-sm-6 pr-2">
+                    <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                           type="button" name="new-plot" value="Skip" onClick={props.nextPlot}
+                           style={{opacity: props.newPlotButtonDisabled ? "0.5" : "1.0"}}
+                           disabled={props.newPlotButtonDisabled}/>
+                </div>
+                <div className="col-sm-6 pl-2">
+                    <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+                           type="button" name="flag-plot" value="Flag Plot as Bad" onClick={props.flagPlot}
+                           style={{opacity: props.flagPlotButtonDisabled ? "0.5" : "1.0"}}
+                           disabled={props.flagPlotButtonDisabled}/>
+                </div>
+            </div>
+        </fieldset>
+    );
+}
+
+function ImageryOptions(props) {
+    return (
+        <fieldset className="mb-3 justify-content-center text-center">
+            <h3>Imagery Options</h3>
+            <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
+                    size="1" value={props.baseMapSource || ""}
+                    onChange={props.setBaseMapSource}>
+                {
+                    props.imageryList.map(
+                        (imagery, uid) =>
+                            <option key={uid} value={imagery.title}>{imagery.title}</option>
+                    )
+                }
             </select>
-                <select className="form-control form-control-sm" id="dg-stacking-profile" name="dg-stacking-profile"
+            <DigitalGlobeMenus baseMapSource={props.baseMapSource}
+                               imageryYearDG={props.imageryYearDG}
+                               stackingProfileDG={props.stackingProfileDG}
+                               setImageryYearDG={props.setImageryYearDG}
+                               setStackingProfileDG={props.setStackingProfileDG}/>
+            <PlanetMenus baseMapSource={props.baseMapSource}
+                         imageryYearPlanet={props.imageryYearPlanet}
+                         imageryMonthPlanet={props.imageryMonthPlanet}
+                         setImageryYearPlanet={props.setImageryYearPlanet}
+                         setImageryMonthPlanet={props.setImageryMonthPlanet}/>
+        </fieldset>
+    );
+}
+
+function range(start, stop, step) {
+    return Array.from({length: (stop - start) / step}, (_, i) => start + (i * step));
+}
+
+function DigitalGlobeMenus(props) {
+    if (props.baseMapSource == "DigitalGlobeWMSImagery") {
+        return (
+            <React.Fragment>
+                <select className="form-control form-control-sm"
+                        id="dg-imagery-year"
+                        name="dg-imagery-year"
                         size="1"
-                        defaultValue={collection.stackingProfileDG} onChange={props.updateDGWMSLayer}>
-                    <option value="Accuracy_Profile">Accuracy Profile</option>
-                    <option value="Cloud_Cover_Profile">Cloud Cover Profile</option>
-                    <option value="Global_Currency_Profile">Global Currency Profile</option>
-                    <option value="MyDG_Color_Consumer_Profile">MyDG Color Consumer Profile</option>
-                    <option value="MyDG_Consumer_Profile">MyDG Consumer Profile</option>
+                        value={props.imageryYearDG}
+                        onChange={props.setImageryYearDG}>
+                    {
+                        range(2018,1999,-1).map(year => <option key={year} value={year}>{year}</option>)
+                    }
                 </select>
-            </React.Fragment>;
-        }
-        if (collection.currentProject.baseMapSource == 'PlanetGlobalMosaic') {
-            selectPlanet = <React.Fragment> <select className="form-control form-control-sm" id="planet-imagery-year"
-                                                    name="planet-imagery-year"
-                                                    size="1"
-                                                    defaultValue={collection.imageryYearPlanet}
-                                                    onChange={props.updatePlanetLayer}>
-                <option value="2018">2018</option>
-                <option value="2017">2017</option>
-                <option value="2016">2016</option>
-            </select>
-                <select className="form-control form-control-sm" id="planet-imagery-month"
-                        name="planet-imagery-month" size="1"
-                        defaultValue={collection.imageryMonthPlanet} onChange={props.updatePlanetLayer}>
+                <select className="form-control form-control-sm"
+                        id="dg-stacking-profile"
+                        name="dg-stacking-profile"
+                        size="1"
+                        value={props.stackingProfileDG}
+                        onChange={props.setStackingProfileDG}>
+                    {
+                        ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
+                            .map(profile => <option key={profile} value={profile}>{profile}</option>)
+                    }
+                </select>
+            </React.Fragment>
+        );
+    } else {
+        return "";
+    }
+}
+
+function PlanetMenus(props) {
+    if (props.baseMapSource == "PlanetGlobalMosaic") {
+        return (
+            <React.Fragment>
+                <select className="form-control form-control-sm"
+                        id="planet-imagery-year"
+                        name="planet-imagery-year"
+                        size="1"
+                        value={props.imageryYearPlanet}
+                        onChange={props.setImageryYearPlanet}>
+                    {
+                        range(2018,2015,-1).map(year => <option key={year} value={year}>{year}</option>)
+                    }
+                </select>
+                <select className="form-control form-control-sm"
+                        id="planet-imagery-month"
+                        name="planet-imagery-month"
+                        size="1"
+                        value={props.imageryMonthPlanet}
+                        onChange={props.setImageryMonthPlanet}>
                     <option value="01">January</option>
                     <option value="02">February</option>
                     <option value="03">March</option>
@@ -663,50 +669,196 @@ function SideBarFieldSet(props) {
                     <option value="10">October</option>
                     <option value="11">November</option>
                     <option value="12">December</option>
-                </select></React.Fragment>;
-        }
+                </select>
+            </React.Fragment>
+        );
+    } else {
+        return "";
+    }
+}
+
+function SurveyQuestions(props) {
+    const topLevelNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == -1);
+    return (
+        <fieldset className="mb-3 justify-content-center text-center">
+            <h3>Survey Questions</h3>
+            <i style={{fontSize: "small"}}>(Click on a question to expand)</i>
+            {
+                topLevelNodes.map((surveyNode, uid) => <SurveyQuestionTree key={uid}
+                                                                           surveyNode={surveyNode}
+                                                                           surveyAnswersVisible={props.surveyAnswersVisible}
+                                                                           surveyQuestions={props.surveyQuestions}
+                                                                           hideShowAnswers={props.hideShowAnswers}
+                                                                           setCurrentValue={props.setCurrentValue}/>)
+            }
+        </fieldset>
+    );
+}
+
+function SurveyQuestionTree(props) {
+    const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
+    return (
+        <fieldset className="mb-1 justify-content-center text-center">
+            <button id={props.surveyNode.question + "_" + props.surveyNode.id}
+                    className="text-center btn btn-outline-lightgreen btn-sm btn-block"
+                    onClick={() => props.hideShowAnswers(props.surveyNode.id)}
+                    style={{marginBottom: "10px"}}>
+                Survey Question: {props.surveyNode.question}
+            </button>
+            <ul className={"samplevalue justify-content-center" + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
+                {
+                    props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
+                                                                             question={props.surveyNode.question}
+                                                                             id={ans.id}
+                                                                             answer={ans.answer}
+                                                                             color={ans.color}
+                                                                             setCurrentValue={props.setCurrentValue}/>)
+                }
+            </ul>
+            {
+                childNodes.map((surveyNode, uid) => <SurveyQuestionTree key={uid}
+                                                                        surveyNode={surveyNode}
+                                                                        surveyAnswersVisible={props.surveyAnswersVisible}
+                                                                        surveyQuestions={props.surveyQuestions}
+                                                                        hideShowAnswers={props.hideShowAnswers}
+                                                                        setCurrentValue={props.setCurrentValue}/>)
+            }
+        </fieldset>
+    );
+}
+
+function SurveyAnswer(props) {
+    return (
+        <li className="mb-1">
+            <button type="button"
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                    id={props.answer + "_" + props.id}
+                    name={props.answer + "_" + props.id}
+                    onClick={() => props.setCurrentValue(props.question, props.id, props.answer, props.color)}>
+                <div className="circle"
+                     style={{backgroundColor: props.color,
+                             border: "solid 1px",
+                             float: "left",
+                             marginTop: "4px"}}>
+                </div>
+                <span className="small">{props.answer}</span>
+            </button>
+        </li>
+    );
+}
+
+function SaveValuesButton(props) {
+    return (
+        <input id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+               type="button" name="save-values" value="Save" onClick={props.saveValues}
+               style={{opacity: props.saveValuesButtonDisabled ? "0.5" : "1.0"}}
+               disabled={props.saveValuesButtonDisabled}/>
+    );
+}
+
+class ProjectStats extends React.Component {
+    asPercentage(part, total) {
+        return (part && total)
+            ? (100.0 * part / total).toFixed(2)
+            : "0.00";
     }
 
-    return (
-        <React.Fragment>
-            <fieldset className="mb-3 text-center">
-                <h3>Plot Navigation</h3>
-                <div className="row">
-                    <div className="col" id="go-to-first-plot">
-                        <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button"
-                               name="new-plot" defaultValue="Go to first plot" onClick={props.nextPlot}/>
+    render() {
+        return (
+            <React.Fragment>
+                <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                        href="#project-stats-collapse" role="button" aria-expanded="false"
+                        aria-controls="project-stats-collapse">
+                    Project Stats
+                </button>
+                <div className="row justify-content-center mb-1 text-center">
+                    <div className="col-lg-12">
+                        <fieldset id="projStats" className="text-center projNoStats">
+                            <div className="collapse" id="project-stats-collapse">
+                                <table className="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td className="small">Project</td>
+                                            <td className="small">
+                                                {this.props.projectName || ""}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Analyzed</td>
+                                            <td className="small">
+                                                {this.props.stats.analyzedPlots || ""}
+                                                ({this.asPercentage(this.props.stats.analyzedPlots, this.props.numPlots)}%)
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Flagged</td>
+                                            <td className="small">
+                                                {this.props.stats.flaggedPlots || ""}
+                                                ({this.asPercentage(this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Completed</td>
+                                            <td className="small">
+                                                {this.props.stats.analyzedPlots + this.props.stats.flaggedPlots || ""}
+                                                ({this.asPercentage(this.props.stats.analyzedPlots + this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="small">Plots Total</td>
+                                            <td className="small">
+                                                {this.props.numPlots || ""}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </fieldset>
                     </div>
                 </div>
-                <div className="row d-none" id="plot-nav">
-                    <div className="col-sm-6 pr-2">
-                        <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button"
-                               name="new-plot" defaultValue="Skip" onClick={props.nextPlot}/>
-                    </div>
-                    <div className="col-sm-6 pl-2">
-                        <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                               type="button"
-                               name="flag-plot" defaultValue="Flag Plot as Bad" onClick={props.flagPlot}
-                               style={{opacity: "0.5"}} disabled/>
-                    </div>
-                </div>
-            </fieldset>
-            <fieldset className="mb-3 justify-content-center text-center">
-                <h3>Imagery Options</h3>
-                {imageryTitle}
-                {selectDG}
-                {selectPlanet}
-            </fieldset>
-            {sampleValueGroup}
-        </React.Fragment>
+            </React.Fragment>
+        );
+    }
+}
 
+function QuitButton() {
+    return (
+        <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
+                type="button" name="collection-quit" data-toggle="modal" data-target="#confirmation-quit">
+            Quit
+        </button>
+    );
+}
+
+function QuitMenu(props) {
+    return (
+        <div className="modal fade" id="confirmation-quit" tabIndex="-1" role="dialog"
+             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div className="modal-dialog modal-dialog-centered" role="document">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h5 className="modal-title" id="exampleModalLongTitle">Confirmation</h5>
+                        <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div className="modal-body">
+                        Are you sure you want to stop collecting data?
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                        <button type="button" className="btn bg-lightgreen btn-sm" id="quit-button"
+                                onClick={props.redirectToHomePage}>OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 
 export function renderCollectionPage(args) {
     ReactDOM.render(
-        <Collection documentRoot={args.documentRoot} userName={args.username} projectId={args.projectId}/>,
+        <Collection documentRoot={args.documentRoot} userName={args.userName} projectId={args.projectId}/>,
         document.getElementById("collection")
     );
 }

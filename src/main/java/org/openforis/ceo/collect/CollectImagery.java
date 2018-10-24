@@ -88,6 +88,11 @@ public class CollectImagery implements Imagery {
         }
     }
 
+    // FIXME: stub
+    public String addGeoDashImagery(Request req, Response res) throws IOException {
+        return "";
+    }
+
     public String deleteInstitutionImagery(Request req, Response res) throws IOException {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var institutionId = jsonInputs.get("institutionId").getAsInt();

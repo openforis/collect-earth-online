@@ -1,14 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { mercator } from "../js/mercator-openlayers.js";
 
-var debugreturn;
-var gObject;
+var geeTimeout = {};
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
         this.state = { widgets: [ ], callbackComplete: false };
-        gObject = this;
-    }
+    };
     componentDidMount() {
         fetch(theURL + "/id/" + pid,)
             .then(response => response.json())
@@ -18,11 +17,8 @@ class Geodash extends React.Component {
                 widget.sliderType = 'opacity';
                 widget.swipeValue = '1.0';
                 return widget;}))
-            .then(data => debugreturn = data)
-            .then(data => this.setState({ widgets: data, callbackComplete: true}))
-
-            ;
-    }
+            .then(data => this.setState({ widgets: data, callbackComplete: true}));
+    };
     render() {
         return ( <React.Fragment>
             <Widgets
@@ -42,11 +38,10 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-            function() {updateSize(widget, type);}
+            function() { updateSize(widget, type);}
          );
     };
     handleOpacityChange = (widget, id, evt) => {
-
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
@@ -55,22 +50,17 @@ class Geodash extends React.Component {
         this.setState({ widgets });
     };
     handleSliderChange = (widget, id, evt) => {
-
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
-        console.log('change slider');
         widgets[index].sliderType = widgets[index].sliderType == 'opacity'? 'swipe': 'opacity';
-        // setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
         this.setState({ widgets });
     };
     handleSwipeChange = (widget, id, evt) => {
-
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].swipeValue = evt.target.value;
-        // setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
         this.setState({ widgets });
     };
 }
@@ -137,7 +127,7 @@ class Widgets extends React.Component {
                 </div>
             </div> );
         }
-    }
+    };
 }
 
 class Widget extends React.Component {
@@ -145,11 +135,11 @@ class Widget extends React.Component {
         super(props);
         this.imageCollectionList = ["ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
         this.graphControlList = ["customTimeSeries", "timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
-    }
+    };
     render() {
         const {widget, isFull} = this.props;
         return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
-    }
+    };
     getWidgetHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         if(widget.gridcolumn || widget.layout)
         {
@@ -159,14 +149,12 @@ class Widget extends React.Component {
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
                             <li style={{display: "inline"}}>{widget.name}</li>
-                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget.properties[0]))}
+                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget))}
                                                            role="button" title="Toggle Fullscreen"><i className="fas fa-expand-arrows-alt" style={{color: "#31BAB0"}}></i></a></li>
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
-
                             {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
-
                     </div>
                 </div>
             </div>);
@@ -177,27 +165,30 @@ class Widget extends React.Component {
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
                             <li style={{display: "inline"}}>{widget.name}</li>
-                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget.properties[0]))}
+                            <li style={{display: "inline"}}><a className="list-inline panel-actions panel-fullscreen" onClick={() => this.props.onFullScreen(this.props.widget, this.getWidgetType(widget))}
                                                                role="button" title="Toggle Fullscreen"><i className="fas fa-expand-arrows-alt" style={{color: "#31BAB0"}}></i></a></li>
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
-
                         {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
-
                     </div>
                 </div>
             </div>);
         }
-    }
+    };
     generategridcolumn(x, w){
         return (x + 1) + ' / span ' + w;
-    }
+    };
     generategridrow(x, h){
         return (x + 1) + ' / span ' + h;
-    }
-    getWidgetType(wtext)
+    };
+    getWidgetType(awidget)
     {
+        if((awidget.dualImageCollection && awidget.dualImageCollection != null) || (awidget.ImageAsset && awidget.ImageAsset.length > 0))
+        {
+            return "mapwidget";
+        }
+        let wtext = awidget.properties[0];
         if(this.imageCollectionList.includes(wtext))
         {
             return "mapwidget";
@@ -209,7 +200,7 @@ class Widget extends React.Component {
         else {
             return "undefinedwidget";
         }
-    }
+    };
     getClassNames(fullState, c, r)
     {
         let classnames = 'placeholder';
@@ -222,12 +213,12 @@ class Widget extends React.Component {
         classnames += r.includes("span 2")? " rowSpan2": r.includes("span 3")? " rowSpan3": " rowSpan1";
         }
         return classnames;
-    }
+    };
     getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         let wtext = widget.properties[0];
         let control;
         let slider;
-        if(this.imageCollectionList.includes(wtext))
+        if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0))
         {
             return <div className="front"><MapWidget widget={widget} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
 
@@ -240,8 +231,7 @@ class Widget extends React.Component {
         else {
             return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200"className="img-responsive" />;
         }
-    }
-
+    };
 }
 
 class MapWidget extends React.Component {
@@ -292,7 +282,7 @@ class MapWidget extends React.Component {
                           onInput = {(evt) => onOpacityChange(widget, widget.id, evt )}
             />
         }
-    }
+    };
     getRasterByBasemapConfig(basemap)
     {
         let raster;
@@ -309,42 +299,39 @@ class MapWidget extends React.Component {
             });
         }
         return raster;
-    }
+    };
     getGatewayUrl(widget, collectionName){
         var url = '';
         if(widget.filterType != null && widget.filterType.length > 0){
             var fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
             url = "http://collect.earth:8888/" + fts[widget.filterType];
-            console.log('filtered');
+        }
+        else if(widget.ImageAsset && widget.ImageAsset.length > 0)
+        {
+            url = "http://collect.earth:8888/image";
         }
         else if('ImageCollectionCustom' == widget.properties[0]){
             url = "http://collect.earth:8888/meanImageByMosaicCollections";
-            console.log('ImageCollectionCustom');
         }
         else if(collectionName.trim().length > 0)
         {
             url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
-            console.log('cloudMaskImageByMosaicCollection: '  + widget.properties[0]);
 
         }
         else{
             url = "http://collect.earth:8888/ImageCollectionbyIndex";
         }
         return url;
-    }
+    };
     getImageParams(widget){
         var visParams;
-        if(widget.visParams)
-        {
-                console.log(widget.visParams)
-                try{
-                    visParams = $.parseJSON(widget.visParams);
-                }
-                catch(e)
-                {
-                    visParams = widget.visParams;
-                }
-
+        if(widget.visParams) {
+            try {
+                visParams = $.parseJSON(widget.visParams);
+            }
+            catch (e) {
+                visParams = widget.visParams;
+            }
         }
         else {
             var min;
@@ -368,7 +355,7 @@ class MapWidget extends React.Component {
             };
         }
         return visParams;
-    }
+    };
     componentDidMount()
     {
         const widget = this.props.widget;
@@ -445,9 +432,11 @@ class MapWidget extends React.Component {
             var firstImage = widget.dualImageCollection[0];
             var secondImage = widget.dualImageCollection[1];
             collectionName = firstImage.collectionType;
+            requestedIndex = collectionName === "ImageCollectionNDVI" ? 'NDVI' : collectionName === "ImageCollectionEVI" ? 'EVI' : collectionName === "ImageCollectionEVI2" ? 'EVI2' : collectionName === "ImageCollectionNDMI" ? 'NDMI' : collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+            collectionName = collectionName === "ImageCollectionNDVI" ? '' : collectionName === "ImageCollectionEVI" ? '' : collectionName === "ImageCollectionEVI2" ? '' : collectionName === "ImageCollectionNDMI" ? '' : collectionName === "ImageCollectionNDWI" ? '' : collectionName;
             dateFrom = firstImage.startDate;
             dateTo = firstImage.endDate;
-            requestedIndex = collectionName === "ImageCollectionNDVI" ? 'NDVI' : collectionName === "ImageCollectionEVI" ? 'EVI' : collectionName === "ImageCollectionEVI2" ? 'EVI2' : collectionName === "ImageCollectionNDMI" ? 'NDMI' : collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+
             var shortWidget = {};
             shortWidget.filterType = firstImage.filterType;
             shortWidget.properties = [];
@@ -471,10 +460,11 @@ class MapWidget extends React.Component {
             //Create the ajax object for the second call here
             dualImageObject = {};
             dualImageObject.collectionName = secondImage.collectionType;
+            dualImageObject.index = dualImageObject.collectionName === "ImageCollectionNDVI" ? 'NDVI' : dualImageObject.collectionName === "ImageCollectionEVI" ? 'EVI' : dualImageObject.collectionName === "ImageCollectionEVI2" ? 'EVI2' : dualImageObject.collectionName === "ImageCollectionNDMI" ? 'NDMI' : dualImageObject.collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
+            dualImageObject.collectionName = dualImageObject.collectionName === "ImageCollectionNDVI" ? '' : dualImageObject.collectionName === "ImageCollectionEVI" ? '' : dualImageObject.collectionName === "ImageCollectionEVI2" ? '' : dualImageObject.collectionName === "ImageCollectionNDMI" ? '' : dualImageObject.collectionName === "ImageCollectionNDWI" ? '' : dualImageObject.collectionName;
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
-            dualImageObject.requestedIndex = dualImageObject.collectionName === "ImageCollectionNDVI" ? 'NDVI' : dualImageObject.collectionName === "ImageCollectionEVI" ? 'EVI' : dualImageObject.collectionName === "ImageCollectionEVI2" ? 'EVI2' : dualImageObject.collectionName === "ImageCollectionNDMI" ? 'NDMI' : dualImageObject.collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
-            var shortWidget2 = {};
+             var shortWidget2 = {};
             shortWidget2.filterType = secondImage.filterType;
             shortWidget2.properties = [];
             shortWidget2.properties.push(dualImageObject.collectionName);
@@ -485,6 +475,15 @@ class MapWidget extends React.Component {
             shortWidget2.min = secondImage.min != null? secondImage.min: '';
             shortWidget2.max = secondImage.max != null? secondImage.max: '';
             shortWidget2.band = secondImage.band != null? secondImage.band: '';
+            if(shortWidget2.visParams && shortWidget2.visParams.cloudLessThan != null) {
+                dualImageObject.bands = shortWidget2.visParams.bands;
+                dualImageObject.min = shortWidget2.visParams.min;
+                dualImageObject.max = shortWidget2.visParams.max;
+                dualImageObject.cloudLessThan = parseInt(shortWidget2.visParams.cloudLessThan);
+            }
+
+
+
             dualImageObject.visParams = this.getImageParams(shortWidget2);
 
 
@@ -506,6 +505,10 @@ class MapWidget extends React.Component {
                 postObject.min = postObject.visParams.min;
                 postObject.max = postObject.visParams.max;
                 postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
+            }
+            if(widget.ImageAsset)
+            {
+                postObject.imageName = widget.ImageAsset;
             }
         }
 
@@ -544,14 +547,9 @@ class MapWidget extends React.Component {
                     addTileServer(mapId, token, "widgetmap_" + $this.indexVal);
                     if(dualLayer)
                     {
-                        console.log('dual');
-                        //console.log($this.postObject);
-                        console.log('dualStart: ' + $this.dualStart);
-                        console.log('dualEnd: ' + $this.dualEnd);
                         var secondObject = JSON.parse($this.postObject);
                         secondObject.dateFrom = $this.dualStart;
                         secondObject.dateTo = $this.dualEnd;
-                        sajax = secondObject;
                         $.ajax({
                             url: url,
                             type: "POST",
@@ -582,16 +580,12 @@ class MapWidget extends React.Component {
                         var workingObject;
                         try{
                             workingObject = JSON.parse(dualImage);
-                            console.log('json parsed');
                         }
                         catch(e){
                             workingObject = dualImage;
-                            console.log('as passed');
                         }
                         if(workingObject != null)
                         {
-                        console.log(workingObject);
-                        console.log(workingObject.collectionName);
                         var secondObject = workingObject;
                         //set url based on data type
                         //set variables needed for data type, maybe do this above so i can just pass the dualImage thru...
@@ -616,7 +610,6 @@ class MapWidget extends React.Component {
                                     var token = data.token;
                                     var $this = this;
                                     var dualLayer = $this.dualLayer;
-                                    console.log(mapId +', ' + token + ', widgetmap_' + $this.indexVal);
                                     addDualLayer(mapId, token, "widgetmap_" + $this.indexVal);
                                 } else {
                                     console.warn("Wrong Data Returned");
@@ -632,17 +625,16 @@ class MapWidget extends React.Component {
             }
         });
 
-    }
+    };
     pauseGeeLayer(e)
     {
-        whatise = e;
         var layers = e.target.getLayers().getArray();
         layers.forEach(function(lyr){
             if(lyr.get('id') && lyr.get('id').indexOf('widget') ==0){
                 lyr.setVisible(false);
             }
         })
-    }
+    };
     resumeGeeLayer(e)
     {
         if(geeTimeout[e.target.get('target')]){
@@ -657,12 +649,9 @@ class MapWidget extends React.Component {
                 }
             })
         }, 1000);
-    }
+    };
 }
-var sajax;
-var sout;
-var geeTimeout = {};
-var whatise;
+
 class GraphWidget extends React.Component {
     render() {
         const widget = this.props.widget;
@@ -671,7 +660,7 @@ class GraphWidget extends React.Component {
             </div>
             <h3 id={"widgettitle_" + widget.id} />
         </div>
-    }
+    };
     componentDidMount()
     {
         const widget = this.props.widget;
@@ -723,7 +712,7 @@ class GraphWidget extends React.Component {
                 }
             }
         });
-    }
+    };
 }
 
 class StatsWidget extends React.Component {
@@ -773,7 +762,8 @@ class StatsWidget extends React.Component {
                             </div>
                         </div>
                     </div>
-        }
+        };
+
     componentDidMount() {
         const widget = this.props.widget;
         $.ajax({
@@ -800,7 +790,7 @@ class StatsWidget extends React.Component {
 
             }
         });
-    }
+    };
 }
 function sortData(a, b){
 
@@ -954,23 +944,120 @@ function setOpacity (value, layerID) {
 function addBuffer (whichMap) {
     "use strict";
     try {
-        var circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
-        var CircleFeature = new ol.Feature(circle);
-        var vectorSource = new ol.source.Vector({});
-        vectorSource.addFeatures([CircleFeature]);
-        var layer = new ol.layer.Vector({
-            source: vectorSource,
-            style: [
-                new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: "#8b2323",
-                        width: 2
-                    }),
-                    fill: null
-                })
-            ]
-        });
-        whichMap.addLayer(layer);
+        //check to see the shape here...
+        if (plotshape && plotshape == 'square') {
+            var centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
+            var pointFeature = new ol.Feature(centerPoint);
+            var poitnExtent = pointFeature.getGeometry().getExtent();
+            var bufferedExtent = new ol.extent.buffer(poitnExtent,parseInt(bradius));
+            var bufferPolygon = new ol.geom.Polygon(
+                [
+                    [[bufferedExtent[0],bufferedExtent[1]],
+                        [bufferedExtent[0],bufferedExtent[3]],
+                        [bufferedExtent[2],bufferedExtent[3]],
+                        [bufferedExtent[2],bufferedExtent[1]],
+                        [bufferedExtent[0],bufferedExtent[1]]]
+                ]
+            );
+            var bufferedFeature = new ol.Feature(bufferPolygon);
+           // vectorBuffers.getSource().addFeature(bufferedFeature);
+
+            var vectorSource = new ol.source.Vector({});
+            vectorSource.addFeatures([bufferedFeature]);
+            var layer = new ol.layer.Vector({
+                source: vectorSource,
+                style: [
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: "#8b2323",
+                            width: 2
+                        }),
+                        fill: null
+                    })
+                ]
+            });
+            whichMap.addLayer(layer);
+        }
+        else if(plotshape && plotshape == 'circle') {
+            var circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
+            var CircleFeature = new ol.Feature(circle);
+            var vectorSource = new ol.source.Vector({});
+            vectorSource.addFeatures([CircleFeature]);
+            var layer = new ol.layer.Vector({
+                source: vectorSource,
+                style: [
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: "#8b2323",
+                            width: 2
+                        }),
+                        fill: null
+                    })
+                ]
+            });
+            whichMap.addLayer(layer);
+        }
+        else{
+
+
+            // fetch(theURL + "/id/" + pid,)
+            //     .then(response => response.json())
+            //     .then(function(_geojson_object){
+            //         var vectorSource = new ol.source.Vector({
+            //             features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:3857' }) // this is important to know...
+            //         });
+            //
+            //         vectorSource = new ol.layer.Vector({
+            //             source: _geojson_vectorSource,
+            //             style: [
+            //                 new ol.style.Style({
+            //                     stroke: new ol.style.Stroke({
+            //                         color: "#8b2323",
+            //                         width: 2
+            //                     }),
+            //                     fill: null
+            //                 })
+            //             ]
+            //         });
+            //         whichMap.addLayer(_geojson_vectorLayer);
+            //     });
+
+
+            $.ajax({
+                url: theURL.replace('/geo-dash', '') + "/get-project-plot/" + projectID + "/" + plotID,
+                type: "GET",
+                async: true,
+                theMap: whichMap,
+                contentType: "application/json"
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.warn(jqXHR + textStatus + errorThrown);
+            }).done(function (data, _textStatus, _jqXHR) {
+                if (data.errMsg) {
+                    console.warn(e.message + _textStatus + _jqXHR);
+                } else {
+                    var whichMap = this.theMap;
+                    var _geojson_object = typeof(data) == 'string'? JSON.parse(data): data;
+
+                    var vectorSource = new ol.source.Vector({
+                        features: (new ol.format.GeoJSON()).readFeatures(_geojson_object, { featureProjection: 'EPSG:4326' }) // this is important to know change to proper projection...
+                    });
+
+                    let _geojson_vectorLayer = new ol.layer.Vector({
+                        source: vectorSource,
+                        style: [
+                            new ol.style.Style({
+                                stroke: new ol.style.Stroke({
+                                    color: "#8b2323",
+                                    width: 2
+                                }),
+                                fill: null
+                            })
+                        ]
+                    });
+                    whichMap.addLayer(_geojson_vectorLayer);
+                }
+            });
+        }
     } catch (e) {
         console.warn("buffer failed: " + e.message);
     }
@@ -989,6 +1076,9 @@ var ptop = 0;
 var bradius = getParameterByName("bradius");
 var bcenter = getParameterByName("bcenter");
 var projAOI = getParameterByName("aoi");
+var plotshape = getParameterByName("plotshape");
+var projectID = getParameterByName("pid");
+var plotID = getParameterByName("plotid");
 var theSplit = decodeURI(projAOI).replace("[", "").replace("]", "").split(",");
 var projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
 var mapWidgetArray = [];

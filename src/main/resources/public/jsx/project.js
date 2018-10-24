@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -118,6 +120,9 @@ class Project extends React.Component {
             var formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("plot-distribution-csv-file", document.getElementById("plot-distribution-csv-file").files[0]);
+            formData.append("plot-distribution-shp-file", document.getElementById("plot-distribution-shp-file").files[0]);
+            formData.append("sample-distribution-csv-file", document.getElementById("sample-distribution-csv-file").files[0]);
+            formData.append("sample-distribution-shp-file", document.getElementById("sample-distribution-shp-file").files[0]);
             formData.append("sample-values", JSON.stringify(this.state.details.sampleValues));
             var ref = this;
             $.ajax({
@@ -408,7 +413,7 @@ class Project extends React.Component {
     getParentSurveyQuestions(sampleSurvey) {
         return sampleSurvey.filter(
             function (surveyQuestion) {
-                return surveyQuestion.parent_question == -1;
+                return surveyQuestion.parent_question==-1;
             }
         );
     }
@@ -417,12 +422,12 @@ class Project extends React.Component {
         sampleSurvey.map((sq) => {
                 var parent_value = document.getElementById("value-parent");
 
-                var parent = parent_value.options[parent_value.selectedIndex].value;
-                if (sq.id == parent) {
-                    ans = sq.answers;
+                if(parent_value!=null) {
+                    var parent = parent_value.options[parent_value.selectedIndex].value;
+                    if (sq.id == parent) {
+                        ans = sq.answers;
+                    }
                 }
-
-
             }
         );
         return ans;
@@ -450,6 +455,29 @@ class Project extends React.Component {
         );
     }
 
+    // topoSort(sampleSurvey) {
+    //     var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
+    //     console.log(parentSurveyQuestions);
+    //     var parentChildGroups = this.getParentChildGroups(parentSurveyQuestions,sampleSurvey);
+    //     return parentChildGroups;
+    // }
+    // getParentChildGroups(parentSurveyQuestions,sampleSurvey){
+    //     var parentChildGroups = parentSurveyQuestions.map(
+    //         function (parentSurveyQuestion) {
+    //             var childSurveyQuestions = sampleSurvey.filter(
+    //                 function (sampleValue) {
+    //                     return sampleValue.parent_question == parentSurveyQuestion.id && sampleValue.parent_question!=-1;
+    //                 }
+    //             );
+    //             console.log("from topo");
+    //             console.log((parentSurveyQuestions).concat(childSurveyQuestions));
+    //             return (parentSurveyQuestions).concat(childSurveyQuestions);
+    //         },
+    //         this
+    //     );
+    //     return [].concat.apply([], parentChildGroups);
+    //
+    // }
     topoSort(sampleSurvey) {
         var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
         var parentChildGroups = parentSurveyQuestions.map(
@@ -465,8 +493,7 @@ class Project extends React.Component {
         );
         return [].concat.apply([], parentChildGroups);
     }
-
-    addSurveyQuestion() {
+    addSurveyQuestion(){
         if (this.state.details != null) {
             var questionText = document.getElementById("surveyQuestionText").value;
             var parent_value = document.getElementById("value-parent");
@@ -574,7 +601,38 @@ class Project extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
-                    this.setState({details: data});
+                    var detailsNew=data;
+                    var sv=detailsNew.sampleValues;
+                    var newSV=[];
+                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+                    if(sv.length>0){
+                        sv.map((sq)=>{
+                                if(sq.name){
+                                    tempSQ.id=sq.id;
+                                    tempSQ.question=sq.name;
+                                    sq.values.map((sa)=>{
+                                        if(sa.name){
+                                            if(sa.id>0){
+                                                tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
+                                            }
+                                        }
+                                        else {
+                                            tempSQ.answers.push(sa);
+                                        }
+
+                                    });
+                                    if(tempSQ.id>0){
+                                        newSV.push(tempSQ);
+                                    }
+                                }
+                                else{
+                                    newSV.push(sq);
+                                }
+                            }
+                        );
+                    }
+                    detailsNew.sampleValues=newSV;
+                    this.setState({details: detailsNew});
                     if (this.state.details.id == 0) {
                         this.initialization(this.props.documentRoot, this.state.userId, projectId, this.state.institutionId);
                     } else {
@@ -862,7 +920,7 @@ function ProjectStats(props) {
 }
 
 function ProjectDesignForm(props) {
-    var addSurveyQuestionButton = "";
+    var addSurveyQuestionButton;
     if (props.projectId == "0") {
         addSurveyQuestionButton = <React.Fragment>
             <tr>
@@ -1169,7 +1227,7 @@ class PlotDesign extends React.Component {
                                             className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                             id="custom-shp-upload">
                                             <small>Upload SHP</small>
-                                            <input type="file" accept=".shp" id="plot-distribution-shp-file"
+                                            <input type="file" accept="application/zip" id="plot-distribution-shp-file"
                                                    onChange={this.encodeImageFileAsURL}
                                                    style={{display: "none"}} disabled/>
                                         </label>
@@ -1285,7 +1343,7 @@ class SampleDesign extends React.Component{
                                 <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                        id="sample-custom-shp-upload">
                                     <small>Upload SHP</small>
-                                    <input type="file" accept=".shp" id="sample-distribution-shp-file"
+                                    <input type="file" accept="application/zip" id="sample-distribution-shp-file"
                                            onChange={this.encodeImageFileAsURL}
                                            style={{display: "none"}} disabled/>
                                 </label>
@@ -1314,14 +1372,50 @@ class SampleDesign extends React.Component{
 
 function SurveyDesign(props){
     if (props.project.details != null) {
-        var answer_select="";
-        var answers= props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
-        if(answers.length>0){
-            answer_select=props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
+        var answer_select = "";
+        var dropdowns;
+        var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
+        if (answers.length > 0) {
+            answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
                 <option key={uid}
                         value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
             )
         }
+        if(props.projectId=="0") {
+
+            dropdowns = <React.Fragment>
+                <tr>
+                    <td>
+                        <label htmlFor="value-parent">Parent Question:</label>
+                    </td>
+                    <td>
+                        <select id="value-parent" className="form-control form-control-sm" size="1"
+                                onChange={(e) => props.handleInputParent(e)}>
+                            <option value="">None</option>
+                            {
+                                (props.project.details.sampleValues).map((parentSurveyQuestion, uid) =>
+                                    <option key={uid}
+                                            value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}</option>
+                                )
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label htmlFor="value-answer">Parent Answer:</label>
+                    </td>
+                    <td>
+                        <select id="value-answer" className="form-control form-control-sm" size="1"
+                                onChange={(e) => props.handleInputParent(e)}>
+                            <option value="">Any</option>
+                            {answer_select}
+                        </select>
+                    </td>
+                </tr>
+            </React.Fragment>;
+        }
+
 
         return (
             <div className="row mb-3">
@@ -1338,40 +1432,8 @@ function SurveyDesign(props){
                                             handleInputParent={props.handleInputParent}/>
                         <table>
                             <tbody>
-
-                                <tr>
-                                <td>
-                                    <label htmlFor="value-parent">Parent Question:</label>
-                                </td>
-                                    <td>
-                                    <select id="value-parent" className="form-control form-control-sm" size="1"
-                                            onChange={(e) => props.handleInputParent(e)}>
-                                        <option value="">None</option>
-                                        {
-                                            props.getParentSurveyQuestions(props.project.details.sampleValues).map((parentSurveyQuestion, uid) =>
-                                                <option key={uid}
-                                                        value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}</option>
-                                            )
-                                        }
-                                    </select>
-                                </td>
-
-                            </tr>
-                                <tr>
-                                    <td>
-                                    <label htmlFor="value-answer">Parent Answer:</label>
-                                </td>
-                                <td>
-                                    <select id="value-answer" className="form-control form-control-sm" size="1"
-                                            onChange={(e) => props.handleInputParent(e)}>
-                                        <option value="">Any</option>
-                                               {answer_select}
-                                        </select>
-                                </td>
-                            </tr>
-
-                                    {props.addSurveyQuestionButton}
-
+                            {dropdowns}
+                            {props.addSurveyQuestionButton}
                             </tbody>
                         </table>
                     </div>
@@ -1383,28 +1445,40 @@ function SurveyDesign(props){
         return(<span></span>);
     }
 }
-function SurveyQuestionTree(props) {
-    var project = props.project;
-    var sv=project.details.sampleValues;
-    var newSV=[];
-    if (project.details != null) {
+class SurveyQuestionTree extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+    getCurrent = (node) => this.props.project.details.sampleValues.filter(cNode => cNode.parent_question == node).map((cNode,uid) => (
+            <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
+                <li>
+        <SurveyQuestion prop={this.props} surveyQuestion={cNode}/>
+        {this.getCurrent(cNode.id)}
+                </li>
 
+            </ul>
+    ))
+    render() {
+        var project = this.props.project;
+   if (project.details != null) {
             return (
-            props.topoSort(sv).map((surveyQuestion, _uid) =>
-                <SurveyQuestion key={_uid} prop={props} surveyQuestion={surveyQuestion}/>
-            )
-        );
-    }
-    else{
-        return(<span></span>);
+                <div>
+                    {this.getCurrent(-1)}
+                </div>
+            );
+        }
+        else {
+            return (<span></span>);
+        }
     }
 }
 
 function SurveyQuestion(properties) {
     var props=properties.prop;
     var project = props.project;
-    var parentStyle = {fontStyle: 'normal'};
-    var childStyle = {fontStyle: 'italic', textIndent: '20px'};
+    if(properties.surveyQuestion.answers==null){
+        console.log("answers null");
+    }
     if (project.details != null) {
         return (
                 <div className="sample-value-info">
@@ -1412,7 +1486,7 @@ function SurveyQuestion(properties) {
                         <RemoveSurveyQuestionButton projectId={props.projectId}
                                                       removeSurveyQuestion={props.removeSurveyQuestion}
                                                       surveyQuestion={properties.surveyQuestion}/>
-                        <label  style={(properties.surveyQuestion.parent_question == -1) ? parentStyle : childStyle}> Survey Question: {properties.surveyQuestion.question}</label>
+                        <label> Survey Question: {properties.surveyQuestion.question}</label>
                     </h3>
                     <table className="table table-sm">
                         <thead>
@@ -1425,7 +1499,9 @@ function SurveyQuestion(properties) {
                         </thead>
                         <tbody>
                         {
+
                             (properties.surveyQuestion.answers).map((surveyAnswer, uid) => {
+
                                 return <tr key={uid}>
                                         <td>
                                             <RemoveSurveyQuestionRowButton projectId={props.projectId}
@@ -1434,7 +1510,7 @@ function SurveyQuestion(properties) {
                                                                               surveyAnswer={surveyAnswer}/>
                                         </td>
 
-                                        <td style={parentStyle}>
+                                        <td>
                                             {surveyAnswer.answer}
                                         </td>
                                         <td>

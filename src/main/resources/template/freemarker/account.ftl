@@ -12,7 +12,7 @@
          documentRoot: "${root}",
          userId:       "${userid}",
          accountId:    "${account_id}",
-         username:     "${username}"
+         userName:     "${username}"
      });
  };
 </script>
