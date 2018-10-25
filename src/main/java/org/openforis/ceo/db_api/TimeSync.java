@@ -11,5 +11,7 @@ public interface TimeSync {
     String getVerticesForPlot(Request req, Response res);
     String getVerticesForProject(Request req, Response res);
     String saveVertex(Request req, Response res);
+    String saveComment(Request req, Response res);
+    String getComment(Request req, Response res);
 
 }

@@ -35,4 +35,14 @@ public class JsonTimeSync implements TimeSync {
     public String saveVertex(Request req, Response res) {
         return null;
     }
+
+    @Override
+    public String saveComment(Request req, Response res) {
+        return null;
+    }
+
+    @Override
+    public String getComment(Request req, Response res) {
+        return null;
+    }
 }
