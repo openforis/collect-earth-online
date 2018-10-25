@@ -8,6 +8,7 @@ class Home extends React.Component {
         this.state = {
             projects: []
         };
+
     }
 
     componentDidMount() {
@@ -41,8 +42,12 @@ class MapPanel extends React.Component {
         super(props);
         this.state = {
             imagery: [],
-            mapConfig: null
+            mapConfig: null,
+            popUpOpen:false,
+            pixelLocation:null
         };
+        this.showProjectPopup=this.showProjectPopup.bind(this);
+
     }
 
     componentDidMount() {
@@ -59,11 +64,63 @@ class MapPanel extends React.Component {
             this.setState({mapConfig: mapConfig});
         }
         if (this.state.mapConfig != null && this.props.projects.length > 0) {
-            mercator.addProjectMarkersAndZoom(this.state.mapConfig,
-                                              this.props.projects,
-                                              this.props.documentRoot,
-                                              40); // clusterDistance = 40, use null to disable clustering
+            // mercator.addProjectMarkersAndZoom(this.state.mapConfig,
+            //                                   this.props.projects,
+            //                                   this.props.documentRoot,
+            //                                   40); // clusterDistance = 40, use null to disable clustering
+            var clusterDistance=40;
+            var projectSource = mercator.projectsToVectorSource(this.props.projects);
+
+            if (clusterDistance == null) {
+                mercator.addVectorLayer(this.state.mapConfig,
+                    "projectMarkers",
+                    projectSource,
+                    ceoMapStyles.ceoIcon);
+            } else {
+                var clusterSource = new ol.source.Cluster({source:   projectSource,
+                    distance: clusterDistance});
+                mercator.addVectorLayer(this.state.mapConfig,
+                    "projectMarkers",
+                    clusterSource,
+                    function (feature) {
+                        var numProjects = feature.get("features").length;
+                        return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numProjects, "#ffffff");
+                    });
+            }
+
+           // mercator.addOverlay(this.state.mapConfig ,"projectPopup" ,document.getElementById("test"));
+            let overlay = mercator.getOverlayByTitle(this.state.mapConfig, "projectPopup");
+          //  console.log(overlay);
+            var ref=this;
+            this.state.mapConfig.map.on("click",
+                function (event) {
+                    if (ref.state.mapConfig.map.hasFeatureAtPixel(event.pixel)) {
+                        console.log(event);
+                        ref.setState({popUpOpen:true,pixelLocation:[event.originalEvent.clientX,event.originalEvent.clientY]});
+                            // ref.state.mapConfig.map.forEachFeatureAtPixel(event.pixel,
+                            //    ref.showProjectPopup.bind(null, ref.state.mapConfig, overlay, ref.props.documentRoot));
+                    }
+                    else{
+                        ref.setState({popUpOpen:false});
+                      //  overlay.setPosition(undefined);
+                    }
+
+                });
+            mercator.zoomMapToExtent(this.state.mapConfig, projectSource.getExtent());
         }
+    }
+
+    showProjectPopup(mapConfig, overlay, documentRoot, feature){
+        //overlay.getElement().innerHTML =  <h1>It worked new</h1>;
+        overlay.setPosition(mercator.isCluster(feature)
+            ? feature.get("features")[0].getGeometry().getCoordinates()
+            : feature.getGeometry().getCoordinates());
+    }
+    getPopupContent()
+    {
+        return
+            <h1>It worked</h1>;
+
     }
 
     render() {
@@ -81,6 +138,7 @@ class MapPanel extends React.Component {
                         <div id="home-map-pane" style={{width: "100%", height: "100%", position: "fixed"}}></div>
                     </div>
                 </div>
+                <GetPopupContent id="test" popUpOpen={this.state.popUpOpen} pixelLocation={this.state.pixelLocation}/>
             </div>
         );
     }
@@ -220,6 +278,75 @@ function Project(props) {
                 </div>
             </div>
         );
+    }
+}
+
+class GetPopupContent extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+    componentDidMount(){
+        console.log("pixel loc");
+        console.log(this.props.pixelLocation);
+    }
+    render()
+    {
+          if(this.props.popUpOpen){
+              return(
+                  <div className="ol-overlaycontainer" style={{position: "fixed",top:this.props.pixelLocation[1]+"px",left:this.props.pixelLocation[0]+"px"}}>  <h1>it workwd</h1></div>
+              );
+          }
+          else{
+              return(
+               <span></span>
+              );
+          }
+
+    //     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
+    //         return (
+    //             <React.Fragment>
+    //                 <div className="cTitle"><h1>
+    //                     {mercator.isCluster(feature) ? "Cluster info" : "Project info"}
+    //                 </h1></div>
+    //                 <div className="cContent>">
+    //                     <table className="table table-sm">
+    //                         <tbody>
+    //                         {mercator.isCluster(feature)
+    //                             ? feature.get("features").map(mercator.makeRows.bind(null, documentRoot)).join("\n")
+    //                             : mercator.makeRows(documentRoot, feature)}
+    //                         </tbody>
+    //                     </table>
+    //                 </div>
+    //
+    //                 <button onClick={mercator.zoomMapToExtent(mapConfig, [mercator.getClusterExtent(feature)])}
+    //                         className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+    //                         style={{cursor: "pointer", minWidth: "350px"}}>
+    //                     <i className="fa fa-search-plus"></i> Zoom to cluster
+    //                 </button>
+    //             </React.Fragment>
+    //         );
+    //     }
+    //     else {
+    //         return (
+    //             <React.Fragment>
+    //                 <div className="cTitle"><h1>
+    //                     {mercator.isCluster(feature) ? "Cluster info" : "Project info"}
+    //                 </h1></div>
+    //                 <div className="cContent>">
+    //                     <table className="table table-sm">
+    //                         <tbody>
+    //                         {mercator.isCluster(feature)
+    //                             ? feature.get("features").map(mercator.makeRows.bind(null, documentRoot)).join("\n")
+    //                             : mercator.makeRows(documentRoot, feature)}
+    //                         </tbody>
+    //                     </table>
+    //                 </div>
+    //             </React.Fragment>
+    //         );
+    //     }
+    //   return(
+    //       <div></div>
+    //   );
     }
 }
 

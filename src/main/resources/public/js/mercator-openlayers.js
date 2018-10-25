@@ -808,9 +808,10 @@ mercator.getDragBoxExtent = function (dragBox) {
 
 // [Side Effects] Adds a new empty overlay to mapConfig's map object
 // with id set to overlayTitle.
-mercator.addOverlay = function (mapConfig, overlayTitle) {
+mercator.addOverlay = function (mapConfig, overlayTitle, element) {
+
     var overlay = new ol.Overlay({id: overlayTitle,
-                                  element: document.createElement("div")});
+                                  element: element});//?element:document.createElement("div")});
     mapConfig.map.addOverlay(overlay);
     return mapConfig;
 };
@@ -951,16 +952,16 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
     }
 
     mercator.addOverlay(mapConfig, "projectPopup");
-    var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    mapConfig.map.on("click",
-                     function (event) {
-                         if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
-                             mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                                                 mercator.showProjectPopup.bind(null, mapConfig, overlay, documentRoot));
-                         } else {
-                             overlay.setPosition(undefined);
-                         }
-                     });
+    //var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
+    // mapConfig.map.on("click",
+    //                  function (event) {
+    //                      if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
+    //                          mapConfig.map.forEachFeatureAtPixel(event.pixel,
+    //                                                              mercator.showProjectPopup.bind(null, mapConfig, overlay, documentRoot));
+    //                      } else {
+    //                          overlay.setPosition(undefined);
+    //                      }
+    //                  });
 
     mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
     return mapConfig;
