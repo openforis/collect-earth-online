@@ -230,7 +230,6 @@ public class PostgresProjects implements Projects {
     }
 
     private static JsonArray getSampleJsonArray(Integer plot_id) {
-
         var sampleSQL = "SELECT * FROM select_plot_samples(?)";
         try (var conn = connect()) {
             var samplePstmt = conn.prepareStatement(sampleSQL) ;

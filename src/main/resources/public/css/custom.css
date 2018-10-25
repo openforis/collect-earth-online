@@ -462,6 +462,18 @@ ul.samplevalue{
           page-break-inside: avoid;
                break-inside: avoid;	
 }
+#imagery-info {
+    position: absolute;
+    top: 0px;
+    left: 20%;
+    height: 2rem;
+    width: 60%;
+    padding: 0.25rem;
+    text-align: center;
+    color: white;
+    background-color: rgba(75,75,150,1.0);
+    z-index: 100;
+}
 /*********************************************************************/
 /* NEW COLLECTION PAGE */
 /*********************************************************************/

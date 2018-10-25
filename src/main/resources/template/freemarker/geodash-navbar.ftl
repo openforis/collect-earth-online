@@ -13,7 +13,7 @@
 			     </li>
 			</ul>
 		     <ul class="navbar-nav mr-0">
-				<#if username??>
+				<#if username != "">
 			    	<#if navlink == "Logout">
 			            <li id="username" class="nav-item my-auto">
 			            	<span class="nav-link disabled">${username}</span> 

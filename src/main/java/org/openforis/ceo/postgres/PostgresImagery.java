@@ -99,6 +99,11 @@ public class PostgresImagery implements Imagery {
         }
     }
 
+    // FIXME: stub
+    public String addGeoDashImagery(Request req, Response res) {
+        return "";
+    }
+
     // FIXME add check to validate the user has permission to delete
     public String deleteInstitutionImagery(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();

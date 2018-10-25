@@ -9,6 +9,7 @@ public interface Projects {
     String getAllProjects(Request req, Response res);
     String getProjectById(Request req, Response res);
     String getProjectPlots(Request req, Response res);
+    String getProjectPlot(Request req, Response res);
     String getProjectStats(Request req, Response res);
     String getUnassignedPlot(Request req, Response res);
     String getUnassignedPlotById(Request req, Response res);
