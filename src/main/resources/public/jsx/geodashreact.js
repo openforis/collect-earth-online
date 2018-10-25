@@ -18,9 +18,22 @@ class Geodash extends React.Component {
                 widget.swipeValue = "1.0";
                 return widget;}))
             .then(data => this.setState({ widgets: data, callbackComplete: true}));
+        window.addEventListener("resize", this.handleResize);
+    };
+    handleResize = e => {
+        this.state.widgets.forEach(function(widget){
+            if(graphWidgetArray["widgetgraph_" + widget.id] != null)
+            {
+                const gwidget = document.getElementById("widgetgraph_" + widget.id);
+                graphWidgetArray["widgetgraph_" + widget.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
+            }
+            else if(mapWidgetArray["widgetgraph_" + widget.id] != null){
+                mapWidgetArray["widgetmap_" + widget.id].updateSize();
+            }
+        })
     };
     render() {
-        return (<React.Fragment>
+        return ( <React.Fragment>
             <Widgets widgets={this.state.widgets}
                      projAOI={this.state.projAOI}
                      onFullScreen={this.handleFullScreen}
@@ -29,7 +42,7 @@ class Geodash extends React.Component {
                      onSwipeChange={this.handleSwipeChange}
                      callbackComplete={this.state.callbackComplete}
             />
-        </React.Fragment>);
+        </React.Fragment> );
     };
     handleFullScreen = (widget, type) => {
         const widgets = [...this.state.widgets];
@@ -45,7 +58,7 @@ class Geodash extends React.Component {
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].opacity = evt.target.value;
-        setOpacity($("#rangeWidget_" + id).val(), 'widgetmap_' + id);
+        setOpacity(evt.target.value, 'widgetmap_' + id);
         this.setState({ widgets });
     };
     handleSliderChange = (widget) => {
@@ -63,24 +76,16 @@ class Geodash extends React.Component {
         this.setState({ widgets });
     };
 }
-$( window ).resize(function() {
-    const fwidget = $(".placeholder.fullwidget");
-    const gwidget = $('#widgetgraph_' + id);
-    if(fwidget.length > 0)
-    {
-        const id = fwidget[0].childNodes[0].id.substring(fwidget[0].childNodes[0].id.indexOf('_') + 1);
-        if(graphWidgetArray["widgetgraph_" + id] != null)
-        {
-            graphWidgetArray['widgetgraph_' + id].setSize(gwidget.outerWidth(), gwidget.outerHeight(), true);
-        }
-        else if(mapWidgetArray["widgetgraph_" + id] != null){
-            mapWidgetArray["widgetmap_" + id].updateSize();
-        }
-    }
-});
+
 function updateSize(which, type)
 {
-    $('body').toggleClass('bodyfull');
+    if(which.isFull)
+    {
+        document.body.classList.remove('bodyfull');
+    }
+    else{
+        document.body.classList.add('bodyfull');
+    }
     const doc = document.documentElement;
     if((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0) === 0)
     {
@@ -97,8 +102,8 @@ function updateSize(which, type)
     mapWidgetArray["widgetmap_" + which.id].updateSize();
     }
     else if(type === 'graphwidget'){
-        const gwidget = $('#widgetgraph_'+ which.id);
-        graphWidgetArray['widgetgraph_'+ which.id].setSize(gwidget.outerWidth(), gwidget.outerHeight(), true);
+        const gwidget = document.getElementById('widgetgraph_'+ which.id);
+        graphWidgetArray['widgetgraph_'+ which.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
     }
 }
 
@@ -326,7 +331,7 @@ class MapWidget extends React.Component {
         let visParams;
         if(widget.visParams) {
             try {
-                visParams = $.parseJSON(widget.visParams);
+                visParams = JSON.parse(widget.visParams);
             }
             catch (e) {
                 visParams = widget.visParams;
@@ -391,7 +396,7 @@ class MapWidget extends React.Component {
             projAOI = [-108.30322265625, 21.33544921875, -105.347900390625, 23.53271484375];
         } else {
             if (typeof projAOI === "string") {
-                projAOI = $.parseJSON(projAOI);
+                projAOI = JSON.parse(projAOI);
             }
         }
         if (projAOI) {
@@ -456,7 +461,7 @@ class MapWidget extends React.Component {
 
 
 
-            //Create the ajax object for the second call here
+            //Create the fetch object for the second call here
             dualImageObject = {};
             dualImageObject.collectionName = secondImage.collectionType;
             dualImageObject.index = dualImageObject.collectionName === "ImageCollectionNDVI" ? 'NDVI' : dualImageObject.collectionName === "ImageCollectionEVI" ? 'EVI' : dualImageObject.collectionName === "ImageCollectionEVI2" ? 'EVI2' : dualImageObject.collectionName === "ImageCollectionNDMI" ? 'NDMI' : dualImageObject.collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
@@ -514,7 +519,7 @@ class MapWidget extends React.Component {
         postObject.collectionName = collectionName;
         postObject.dateFrom = dateFrom;
         postObject.dateTo= dateTo;
-        postObject.geometry= $.parseJSON(projPairAOI);
+        postObject.geometry= JSON.parse(projPairAOI);
         postObject.index= requestedIndex;
 
         fetch(url, {
@@ -541,11 +546,11 @@ class MapWidget extends React.Component {
         })
             .then(function(isValid){
                 if(isValid) {
-                    let secondObject;
+                   // let secondObject;
                     if (widget.dualLayer) {
-                        secondObject = postObject;
-                        secondObject.dateFrom = widget.dualStart;
-                        secondObject.dateTo = widget.dualEnd;
+                       // secondObject = postObject;
+                        postObject.dateFrom = widget.dualStart;
+                        postObject.dateTo = widget.dualEnd;
 
                         fetch(url, {
                             method: 'POST',
@@ -553,7 +558,7 @@ class MapWidget extends React.Component {
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(secondObject)
+                            body: JSON.stringify(postObject)
                         })
                             .then(function(res){return res.json();})
                             .then(function(data){
@@ -576,17 +581,15 @@ class MapWidget extends React.Component {
                             workingObject = dualImageObject;
                         }
                         if (workingObject != null) {
-                            secondObject = workingObject;
                             fetch(workingObject.url, {
                                 method: 'POST',
                                 headers: {
                                     'Accept': 'application/json',
                                     'Content-Type': 'application/json'
                                 },
-                                body: JSON.stringify(secondObject)
+                                body: JSON.stringify(workingObject)
                             })
                                 .then(function(res){return res.json();})
-
                                 .then(function(data){
                                     if (data.hasOwnProperty("mapid")) {
                                         let mapId = data.mapid;
@@ -644,51 +647,44 @@ class GraphWidget extends React.Component {
         let collectionName = widget.properties[1];
         let indexName = widget.properties[4];
         let date = new Date();
-        let url = '';
-        if(collectionName.trim().length > 0)
-        {
-            url = "http://collect.earth:8888/timeSeriesIndex";
-        }
-        else{
-            url = "http://collect.earth:8888/timeSeriesIndex2";
-        }
-        $.ajax({
-            url: url,
-            type: "POST",
-            async: true,
-            indexVal: widget.id,
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify({
-                collectionNameTimeSeries: widget.properties[1],
-                polygon: $.parseJSON(projPairAOI),
-                indexName: widget.properties[4],
+        let url = collectionName.trim().length > 0 ? "http://collect.earth:8888/timeSeriesIndex":  "http://collect.earth:8888/timeSeriesIndex2";
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                collectionNameTimeSeries: collectionName,
+                polygon: JSON.parse(projPairAOI),
+                indexName: indexName,
                 dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : '2000-01-01',
                 dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() :  date.yyyymmdd()
             })
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            console.warn(jqXHR + textStatus + errorThrown);
-        }).done(function (data) {
-            if (data.errMsg) {
-                console.warn(data.errMsg);
-            } else {
-                if (data.hasOwnProperty("timeseries")) {
-
-                    let timeseriesData = [];
-                    $.each(data.timeseries, function (ignore, value) {
-                        if (value[0] !== null) {
-                            timeseriesData.push([value[0], value[1]]);
-                        }
-                    });
-                    timeseriesData = timeseriesData.sort(sortData);
-                    let $this = this;
-                    graphWidgetArray["widgetgraph_" + $this.indexVal] = createChart($this.indexVal, indexName, timeseriesData);
-                    graphWidgetArray["widgetgraph_" + $this.indexVal].id = $this.indexVal;
+        })
+            .then(function(res){return res.json();})
+            .then(function(data)
+            {
+                if (data.errMsg) {
+                    console.warn(data.errMsg);
                 } else {
-                    console.warn("Wrong Data Returned");
+                    if (data.hasOwnProperty("timeseries")) {
+
+                        let timeseriesData = [];
+                        data.timeseries.forEach(function (value) {
+                            if (value[0] !== null) {
+                                timeseriesData.push([value[0], value[1]]);
+                            }
+                        });
+                        timeseriesData = timeseriesData.sort(sortData);
+
+                        graphWidgetArray["widgetgraph_" + widget.id] = createChart(widget.id, indexName, timeseriesData);
+                        graphWidgetArray["widgetgraph_" + widget.id].id = widget.id;
+                    } else {
+                        console.warn("Wrong Data Returned");
+                    }
                 }
-            }
-        });
+            })
     };
 }
 
@@ -743,30 +739,28 @@ class StatsWidget extends React.Component {
 
     componentDidMount() {
         const widget = this.props.widget;
-        $.ajax({
-            url: "http://collect.earth:8888/getStats",
-            type: "POST",
-            async: true,
-            indexVal: widget.id,
-            polyVal: $.parseJSON(projPairAOI),
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify({
-                paramValue: $.parseJSON(projPairAOI)
-            })
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            console.warn(jqXHR + textStatus + errorThrown);
-        }).done(function (data, _textStatus, _jqXHR) {
-            if (data.errMsg) {
-                console.warn(e.message + _textStatus + _jqXHR);
-            } else {
-                const $this = this;
-                $("#totalPop_" + $this.indexVal).text(numberWithCommas(data.pop));
-                $("#totalArea_" + $this.indexVal).text(calculateArea($this.polyVal) + " ha");
-                $("#elevationRange_" + $this.indexVal).text(numberWithCommas(data.minElev) + " - " + numberWithCommas(data.maxElev) + " m");
 
-            }
-        });
+        fetch("http://collect.earth:8888/getStats", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                paramValue: JSON.parse(projPairAOI)
+            })
+        })
+            .then(function(res){return res.json();})
+            .then(function(data) {
+                if (data.errMsg) {
+                    console.warn(e.message + _textStatus + _jqXHR);
+                } else {
+                    document.getElementById("totalPop_" + widget.id).innerHTML = numberWithCommas(data.pop);
+                    document.getElementById("totalArea_" + widget.id).innerHTML = calculateArea(JSON.parse(projPairAOI)) + " ha";
+                    document.getElementById("elevationRange_" + widget.id).innerHTML = numberWithCommas(data.minElev) + " - " + numberWithCommas(data.maxElev) + " m";
+
+                }
+            })
     };
 }
 function sortData(a, b){
@@ -836,9 +830,8 @@ function createChart (wIndex, wText, wTimeseriesData) {
             color: "#31bab0"
         }]
     }, function () {
-            $("#widgettitle_" +wIndex ).text(wText);
-            $("#widgetgraph_" + wIndex + " .highcharts-yaxis").children()[0].innerHTML = wText;
-
+        document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
+        document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
     });
 }
 
@@ -972,19 +965,10 @@ function addBuffer (whichMap) {
             whichMap.addLayer(layer);
         }
         else{
-            $.ajax({
-                url: theURL.replace('/geo-dash', '') + "/get-project-plot/" + projectID + "/" + plotID,
-                type: "GET",
-                async: true,
-                theMap: whichMap,
-                contentType: "application/json"
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.warn(jqXHR + textStatus + errorThrown);
-            }).done(function (data, _textStatus, _jqXHR) {
-                if (data.errMsg) {
-                    console.warn(e.message + _textStatus + _jqXHR);
-                } else {
-                    let whichMap = this.theMap;
+
+            fetch(theURL.replace('/geo-dash', '') + "/get-project-plot/" + projectID + "/" + plotID)
+                .then(function(res){return res.json();})
+                .then(function(data){
                     const _geojson_object = typeof(data) === 'string' ? JSON.parse(data) : data;
                     const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
                     let mapConfig = {};
@@ -1006,8 +990,7 @@ function addBuffer (whichMap) {
                             mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
                         });
                     }
-                }
-            });
+                })
         }
     } catch (e) {
         console.warn("buffer failed: " + e.message);
