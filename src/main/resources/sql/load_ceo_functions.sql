@@ -676,22 +676,20 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
 	)
 	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
 	,p.sample_survey,p.csv_file,p.classification_start_date,p.classification_end_date,p.classification_timestep,true AS editable
-	FROM project_roles,projects as p
+	FROM project_roles as p
 	WHERE role = 'admin'
-	  AND p.privacy_level IN ('public','private','institution')
-	  AND p.availability IN ('unpublished','published','closed')
     UNION
 	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
 	,p.sample_survey,p.csv_file,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
-	FROM project_roles,projects as p
+	FROM project_roles as p
 	WHERE role = 'member'
 	  AND p.privacy_level IN ('public','institution')
 	  AND p.availability  =  'published'
 	UNION
 	SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,p.samples_per_plot,p.sample_resolution
 	,p.sample_survey,p.csv_file,p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
-	FROM project_roles,projects as p
-	WHERE role NOT IN ('admin','member')
+	FROM project_roles as p
+	WHERE (role NOT IN ('admin','member') OR role IS NULL)
 	  AND p.privacy_level IN ('public','institution')
 	  AND p.availability  =  'published'
 
@@ -736,7 +734,7 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 	  center     text,
 	  flagged    integer,
 	  assigned   integer,
-		username 	text
+	  username 	text
 	) AS $$
 	WITH username AS (
 		SELECT DISTINCT email, plot_id 
@@ -932,27 +930,31 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 $$ LANGUAGE SQL;
 
 --Returns project raw data
+--FIXME correct flagged and assigned once we discus
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer) 
 	RETURNS TABLE (
 	       plot_id integer,
 		   sample_id integer,
 	       lon float,
 	       lat float,
-		   user_id integer,
+		   email text,
 		   confidence integer,
 		   flagged boolean,
+			assigned boolean,
 		   collection_time timestamp,
 		   imagery_title text,
 		   imagery_date date,
 		   value jsonb
 	) AS $$
+
 	SELECT plots.id as plot_id,
 	       samples.id AS sample_id,
 		   ST_X(point) AS lon,
 		   ST_Y(point) AS lat,
-		   user_id AS user,
+		   users.email,
 		   confidence,
-		   user_plots.flagged AS flagged,
+		   (CASE WHEN user_plots.flagged IS NULL THEN false ELSE user_plots.flagged END) AS flagged,
+		   (CASE WHEN user_plots.flagged IS NOT NULL AND user_plots.flagged = false THEN true ELSE false END) AS assigned,
 		   collection_time::timestamp,
 		   title AS imagery_title,
 		   imagery_date,
@@ -960,15 +962,18 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 	FROM projects
 	INNER JOIN plots
 		ON plots.project_id = projects.id
-	INNER JOIN user_plots
-		ON user_plots.plot_id = plots.id
-	INNER JOIN sample_values
-		ON sample_values.user_plot_id = user_plots.id
 	INNER JOIN samples
+		ON samples.plot_id = plots.id
+	LEFT JOIN user_plots
+		ON user_plots.plot_id = plots.id
+	LEFT JOIN sample_values
 		ON samples.id = sample_values.sample_id
-	INNER JOIN imagery
+	LEFT JOIN imagery
 		ON imagery.id = sample_values.imagery_id
+	LEFT JOIN users
+		ON users.id = user_id
 	WHERE projects.id = _project_id
+
 $$ LANGUAGE SQL;
 
 
@@ -1007,9 +1012,10 @@ CREATE OR REPLACE FUNCTION archive_project(_project_id integer)
 LANGUAGE SQL;
 
 --Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_time timestamp) 
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_name text, _collection_time timestamp) 
 	RETURNS integer AS 
 	$$
+	
 	UPDATE user_plots
 	SET flagged = true, 
 		user_id = _user_id, 

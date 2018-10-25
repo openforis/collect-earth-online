@@ -82,20 +82,18 @@ public class PostgresGeoDash implements GeoDash {
     // Creates a dashboard widget for a specific project
     public String createDashBoardWidgetById(Request req, Response res) {
 
-        var jsonInputs              = parseJson(req.body()).getAsJsonObject();
-        var projectId               = jsonInputs.get("pID").getAsInt();
-        var dashboardId             = jsonInputs.get("dashID").getAsString();
-        var widgetJsonString        = jsonInputs.get("widgetJSON").getAsString();
-        var callback = req.queryParams("callback");
+        var projectId               = req.queryParams("pID");
+        var dashboardId             = req.queryParams("dashID");
+        var widgetJsonString        = req.queryParams("widgetJSON");
+        var callback                = req.queryParams("callback");
 
         var SQL = "SELECT * FROM add_project_widget(?, ?, ?::JSONB)";
         try (var conn = connect();
         var pstmt = conn.prepareStatement(SQL)) {
-            pstmt.setInt(1, projectId);
+            pstmt.setInt(1, Integer.parseInt(projectId));
             pstmt.setObject(2, UUID.fromString(dashboardId));
             pstmt.setString(3, widgetJsonString);
             var rs = pstmt.executeQuery();
-            System.out.println(pstmt.toString());
             return returnBlank(callback);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -106,10 +104,9 @@ public class PostgresGeoDash implements GeoDash {
 
     // Updates a dashboard widget by widget_id
     public String updateDashBoardWidgetById(Request req, Response res) {
-        var widgetId = req.params(":id");
-        var jsonInputs              = parseJson(req.body()).getAsJsonObject();
-        var widgetJsonString        = jsonInputs.get("widgetJSON").getAsString();
-        var callback = req.queryParams("callback");
+        var widgetId                = req.params(":id");
+        var widgetJsonString        = req.queryParams("widgetJSON");
+        var callback                = req.queryParams("callback");
         var SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?::JSONB)";
 
         try (var conn = connect();

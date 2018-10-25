@@ -217,7 +217,8 @@ public class PostgresProjects implements Projects {
                 singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
                 singlePlot.addProperty("analysis",rs.getInt("assigned"));
                 singlePlot.addProperty("user",rs.getString("username"));
-                singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
+                // singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
+                // singlePlot.add("samples", new JsonArray());
 
                 plots.add(singlePlot);
             }
@@ -395,23 +396,61 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    private static String JsonKeytoString(String jsonStr, String key) {
+        if (jsonStr.contains(key)) {
+            return parseJson(jsonStr).getAsJsonObject().get(key).toString();
+        } else {
+            return jsonStr;
+        }
+        
+    }
+    private static String valueOrBlank(String input) {
+
+        return input == null || input.equals("null") ? "" : input;
+    }
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         var projectId = req.params(":id");
+
         try (var conn = connect()) {
+            var csvContent = "";
             var SQL = "SELECT * FROM select_project(?)";
-            var pstmt= conn.prepareStatement(SQL) ;
+            var pstmt = conn.prepareStatement(SQL);
             pstmt.setInt(1,Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
-            if (rs.next()) {
+            if (rs.next()){
                 var SqlDump = "SELECT * FROM dump_project_sample_data(?)";
                 var pstmtDump = conn.prepareStatement(SqlDump) ;
                 pstmtDump.setInt(1,Integer.parseInt(projectId));
                 var rsDump = pstmtDump.executeQuery();
-                return res.raw();
+                rsDump.
+                while (rsDump.next()) {
+                    csvContent = csvContent + 
+                            rsDump.getString("plot_id") +","+
+                            rsDump.getString("sample_id") +","+
+                            rsDump.getString("lon") +","+
+                            rsDump.getString("lat") +","+
+                            rsDump.getBoolean("flagged") +","+
+                            rsDump.getBoolean("assigned") +","+
+                            valueOrBlank(rsDump.getString("email")) +","+
+                            valueOrBlank(rsDump.getString("collection_time")) +","+
+                            JsonKeytoString(valueOrBlank(rsDump.getString("value")), "LULC") +","+
+                            "\n";
+                } 
+
             } else {
                 res.raw().setStatus(SC_NO_CONTENT);
                 return res.raw();
             }
+
+            var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "timestamp", "LULC"};
+            var csvHeader = Arrays.stream(fields).map(String::toUpperCase).collect(Collectors.joining(","));
+
+            var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
+            var currentDate = LocalDate.now().toString();
+            var outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate;
+            
+            return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
+
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return res.raw();
@@ -511,13 +550,13 @@ public class PostgresProjects implements Projects {
     public String flagPlot(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var plotId = jsonInputs.get("plotId").getAsString();
-        var collectionTime = Timestamp.valueOf(jsonInputs.get("collection_time").getAsString());
-        var userId = jsonInputs.get("userId").getAsString();
+        var collectionTime = new Timestamp(System.currentTimeMillis());
+        var userName = jsonInputs.get("userId").getAsString();
         try (var conn = connect()) {
             var SQL = "SELECT * FROM flag_plot(?,?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(plotId));
-            pstmt.setInt(2,Integer.parseInt(userId));
+            pstmt.setString(2,userName);
             pstmt.setTimestamp(3,collectionTime);
             var rs = pstmt.executeQuery();
             var idReturn = "";

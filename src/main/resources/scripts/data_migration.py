@@ -98,7 +98,7 @@ def insert_project_widgets(project_id,dash_id,conn):
         dirname = os.path.dirname(os.path.realpath(__file__))
         dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/dash-'+dash_id+'.json'))), "r").read() 
         widget = demjson.decode(dash_json)
-        if widget['projectID'] is not None and project_id==widget['projectID']:
+        if widget['projectID'] is not None and int(project_id)==int(widget['projectID']) and len(str(widget['widgets']))>2:
             for awidget in widget['widgets']:
                 cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(awidget)))
                 conn.commit()
@@ -141,8 +141,9 @@ def insert_projects():
 
                     for dash in dashArr:
                         dash_id=dash['dashboard']
-                        if dash['projectID'] == str(project_id):
+                        if int(dash['projectID']) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
+                            
                     insert_plots(project_id,conn)
                     conn.commit()
             except(Exception, psycopg2.DatabaseError) as error:
