@@ -422,7 +422,7 @@ public class PostgresProjects implements Projects {
                 var pstmtDump = conn.prepareStatement(SqlDump) ;
                 pstmtDump.setInt(1,Integer.parseInt(projectId));
                 var rsDump = pstmtDump.executeQuery();
-                rsDump.
+                
                 while (rsDump.next()) {
                     csvContent = csvContent + 
                             rsDump.getString("plot_id") +","+
