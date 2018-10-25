@@ -865,26 +865,26 @@ CREATE OR REPLACE FUNCTION flag_plot(plot_id integer,user_id integer,collection_
 
 $$ LANGUAGE SQL;
 
---YANG: seems awkard implementation
 --Add user samples
--- CREATE OR REPLACE FUNCTION add_user_samples(project_id integer,plot_id integer,user_id integer,confidence  integer,value jsonb,imagery_id integer,imagery_date date) RETURNS integer AS $$
---  UPDATE plots
---  SET assigned = assigned + 1
---  WHERE plot_id = plot_id;
---
---  WITH user_plot_table AS(
---      INSERT INTO user_plots(user_id,plot_id,confidence) VALUES (user_id,plot_id,confidence)
---      RETURNING id)
---
---  INSERT INTO sample_values(user_plot_id,sample_id,imagery_id,imagery_date,value)
---
---  SELECT upt.id,s.id,imagery_id,imagery_date,value
---        FROM samples AS s
---        CROSS JOIN user_plot_table AS upt
---        WHERE s.plot_id = plot_id
---  RETURNING count(sample_id)
---
--- $$ LANGUAGE SQL;
+CREATE OR REPLACE FUNCTION add_user_samples(project_id integer,plot_id integer,user_id integer,confidence  integer,value jsonb,imagery_id integer,imagery_date date) RETURNS integer AS $$
+  UPDATE plots
+  SET assigned = assigned + 1
+  WHERE plot_id = plot_id;
+
+  WITH user_plot_table AS(
+    INSERT INTO user_plots(user_id,plot_id,confidence) VALUES (user_id,plot_id,confidence)
+      RETURNING id)
+
+  INSERT INTO sample_values(user_plot_id,sample_id,imagery_id,imagery_date,value)
+
+   (SELECT upt.id,s.id,imagery_id,imagery_date,value
+      FROM samples AS s
+      CROSS JOIN user_plot_table AS upt
+      WHERE s.plot_id = plot_id)
+
+  RETURNING sample_id
+
+$$ LANGUAGE SQL
 
 --Returns all institutions
 CREATE OR REPLACE FUNCTION select_all_institutions() RETURNS TABLE
@@ -1036,8 +1036,8 @@ CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interprete
     ON plots.id = ts_plot_comments.plot_id
         AND plots.project_id = ts_plot_comments.project_id
         AND ts_plot_comments.interpreter = interpreter_id
-    WHERE plots.project_id=prj_id
         AND ts_plot_comments.packet_id = -1
+    WHERE plots.project_id=prj_id
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interpreter_id integer, packet integer) RETURNS TABLE
@@ -1051,14 +1051,17 @@ CREATE OR REPLACE FUNCTION get_project_plots_for_user(prj_id integer, interprete
     packet_id integer
 ) AS $$
     SELECT plots.project_id, plots.id as plot_id,
-       ST_X(center) as lng, ST_Y(center) as lat,
-       is_complete, is_example, -1 as packet_id
-    FROM plots left outer join ts_plot_comments
+           ST_X(center) as lng, ST_Y(center) as lat,
+           is_complete, is_example, ts_packets.packet_id
+    FROM plots inner join ts_packets
+    ON plots.project_id = ts_packets.project_id
+        AND plots.id = ts_packets.plot_id
+    LEFT OUTER JOIN ts_plot_comments
     ON plots.id = ts_plot_comments.plot_id
         AND plots.project_id = ts_plot_comments.project_id
         AND ts_plot_comments.interpreter = interpreter_id
-        AND ts_plot_comments.packet_id = -1
-    WHERE plots.project_id=prj_id
+    WHERE plots.project_id = prj_id
+        AND ts_packets.packet_id = packet
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_plot_comments(interpreter_id integer, prj_id integer, plotid integer, packet integer) RETURNS TABLE

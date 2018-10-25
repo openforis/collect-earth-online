@@ -146,6 +146,11 @@ public class Server implements SparkApplication {
 
         // Routing Table: TimeSync API
         get("/timesync/version",                      timeSync::getVersion);
+        get("/timesync/project/:interpreter",         timeSync::getAssignedProjects);
+        get("/timesync/plot/:interpreter/:project_id/:packet", timeSync::getPlots);
+        get("/timesync/vertex/:interpreter/:project_id/:plotid/:packet", timeSync::getVerticesForPlot);
+        get("/timesync/vertex/:project_id",           timeSync::getVerticesForProject);
+        post("/timesync/vertex/save",                 timeSync::saveVertex);
 
         // Routing Table: Page Not Found
         get("*",                                      Views.pageNotFound(freemarker));

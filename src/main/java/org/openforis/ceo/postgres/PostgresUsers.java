@@ -268,12 +268,16 @@ public class PostgresUsers implements Users {
             try (var conn = connect();
                  var pstmt_users = conn.prepareStatement(SQL_users)) {
                 var rs_users = pstmt_users.executeQuery();
-                var all_users = new JsonObject();
-                all_users.addProperty("id", rs_users.getInt("id"));
-                all_users.addProperty("email", rs_users.getString("email"));
-                all_users.addProperty("administrator", rs_users.getBoolean("administrator"));
-                all_users.addProperty("resetKey", rs_users.getString("reset_key"));
+                var all_users = new JsonArray();
 
+                while (rs_users.next()) {
+                    var this_user = new JsonObject();
+                    this_user.addProperty("id", rs_users.getInt("id"));
+                    this_user.addProperty("email", rs_users.getString("email"));
+                    this_user.addProperty("administrator", rs_users.getBoolean("administrator"));
+                    this_user.addProperty("resetKey", rs_users.getString("reset_key"));
+                    all_users.add(this_user);
+                }
                 return all_users.toString();
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
