@@ -864,7 +864,7 @@ mercator.getClusterExtent = function (clusterFeature) {
 };
 
 // [Pure] Returns a string of HTML to display in a popup box on the map.
-mercator.getPopupContent = function (documentRoot, feature) {
+mercator.getPopupContent = function (mapConfig, documentRoot, feature) {
     var title = "<div class=\"cTitle\"><h1>"
               + (mercator.isCluster(feature) ? "Cluster info" : "Project info")
               + "</h1></div>";
@@ -877,7 +877,7 @@ mercator.getPopupContent = function (documentRoot, feature) {
     var contentEnd = "</div>";
 
     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfigMercator, ["
+        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, ["
             + mercator.getClusterExtent(feature) + "])\" "
             + "class=\"mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
             + "<i class=\"fa fa-search-plus\"></i> Zoom to cluster</button>";
@@ -891,8 +891,8 @@ mercator.getPopupContent = function (documentRoot, feature) {
 // containing the feature's name, description, and numPlots fields as
 // well as a link to its data collection page and then displays the
 // overlay on the map at the feature's coordinates.
-mercator.showProjectPopup = function (overlay, documentRoot, feature) {
-    overlay.getElement().innerHTML = mercator.getPopupContent(documentRoot, feature);
+mercator.showProjectPopup = function (mapConfig, overlay, documentRoot, feature) {
+    overlay.getElement().innerHTML = mercator.getPopupContent(mapConfig, documentRoot, feature);
     overlay.setPosition(mercator.isCluster(feature)
                         ? feature.get("features")[0].getGeometry().getCoordinates()
                         : feature.getGeometry().getCoordinates());
@@ -956,7 +956,7 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
                      function (event) {
                          if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
                              mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                                                 mercator.showProjectPopup.bind(null, overlay, documentRoot));
+                                                                 mercator.showProjectPopup.bind(null, mapConfig, overlay, documentRoot));
                          } else {
                              overlay.setPosition(undefined);
                          }
