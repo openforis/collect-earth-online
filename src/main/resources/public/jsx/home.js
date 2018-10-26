@@ -8,7 +8,6 @@ class Home extends React.Component {
         this.state = {
             projects: []
         };
-
     }
 
     componentDidMount() {
@@ -43,11 +42,10 @@ class MapPanel extends React.Component {
         this.state = {
             imagery: [],
             mapConfig: null,
-            popUpOpen:false,
-            pixelLocation:null
+            clusterExtent: [],
+            clickedFeatures: [],
+            projectMarkersShown: false
         };
-        this.showProjectPopup=this.showProjectPopup.bind(this);
-
     }
 
     componentDidMount() {
@@ -63,64 +61,57 @@ class MapPanel extends React.Component {
             mercator.setVisibleLayer(mapConfig, this.state.imagery[0].title);
             this.setState({mapConfig: mapConfig});
         }
-        if (this.state.mapConfig != null && this.props.projects.length > 0) {
-            // mercator.addProjectMarkersAndZoom(this.state.mapConfig,
-            //                                   this.props.projects,
-            //                                   this.props.documentRoot,
-            //                                   40); // clusterDistance = 40, use null to disable clustering
-            var clusterDistance=40;
-            var projectSource = mercator.projectsToVectorSource(this.props.projects);
-
-            if (clusterDistance == null) {
-                mercator.addVectorLayer(this.state.mapConfig,
-                    "projectMarkers",
-                    projectSource,
-                    ceoMapStyles.ceoIcon);
-            } else {
-                var clusterSource = new ol.source.Cluster({source:   projectSource,
-                    distance: clusterDistance});
-                mercator.addVectorLayer(this.state.mapConfig,
-                    "projectMarkers",
-                    clusterSource,
-                    function (feature) {
-                        var numProjects = feature.get("features").length;
-                        return mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, numProjects, "#ffffff");
-                    });
-            }
-
-           // mercator.addOverlay(this.state.mapConfig ,"projectPopup" ,document.getElementById("test"));
-            let overlay = mercator.getOverlayByTitle(this.state.mapConfig, "projectPopup");
-          //  console.log(overlay);
-            var ref=this;
-            this.state.mapConfig.map.on("click",
-                function (event) {
-                    if (ref.state.mapConfig.map.hasFeatureAtPixel(event.pixel)) {
-                        console.log(event);
-                        ref.setState({popUpOpen:true,pixelLocation:[event.originalEvent.clientX,event.originalEvent.clientY]});
-                            // ref.state.mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                            //    ref.showProjectPopup.bind(null, ref.state.mapConfig, overlay, ref.props.documentRoot));
-                    }
-                    else{
-                        ref.setState({popUpOpen:false});
-                      //  overlay.setPosition(undefined);
-                    }
-
-                });
-            mercator.zoomMapToExtent(this.state.mapConfig, projectSource.getExtent());
+        if (this.state.mapConfig && this.props.projects.length > 0 && this.state.projectMarkersShown == false) {
+            this.addProjectMarkersAndZoom(this.state.mapConfig,
+                                          this.props.projects,
+                                          this.props.documentRoot,
+                                          40); // clusterDistance = 40, use null to disable clustering
         }
     }
+    addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
+        const projectSource = mercator.projectsToVectorSource(projects);
+        if (clusterDistance == null) {
+            mercator.addVectorLayer(mapConfig,
+                                    "projectMarkers",
+                                    projectSource,
+                                    ceoMapStyles.ceoIcon);
+        } else {
+            const clusterSource = new ol.source.Cluster({
+                source: projectSource,
+                distance: clusterDistance
+            });
+            mercator.addVectorLayer(mapConfig,
+                                    "projectMarkers",
+                                    clusterSource,
+                                    feature => mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, feature.get("features").length, "#ffffff"));
+        }
 
-    showProjectPopup(mapConfig, overlay, documentRoot, feature){
-        //overlay.getElement().innerHTML =  <h1>It worked new</h1>;
-        overlay.setPosition(mercator.isCluster(feature)
-            ? feature.get("features")[0].getGeometry().getCoordinates()
-            : feature.getGeometry().getCoordinates());
+        mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
+        const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
+        mapConfig.map.on("click",
+                         event => {
+                             if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
+                                 let clickedFeatures = [];
+                                 mapConfig.map.forEachFeatureAtPixel(event.pixel, feature => clickedFeatures.push(feature));
+                                 this.showProjectPopup(mapConfig, overlay, documentRoot, clickedFeatures[0]);
+                             } else {
+                                 overlay.setPosition(undefined);
+                             }
+                         });
+        mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
+        this.setState({projectMarkersShown: true});
     }
-    getPopupContent()
-    {
-        return
-            <h1>It worked</h1>;
 
+    showProjectPopup(mapConfig, overlay, documentRoot, feature) {
+        if (mercator.isCluster(feature)) {
+            overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
+            this.setState({clusterExtent: mercator.getClusterExtent(feature),
+                           clickedFeatures: feature.get("features")});
+        } else {
+            overlay.setPosition(feature.getGeometry().getCoordinates());
+            this.setState({clusterExtent: [],
+                           clickedFeatures: feature.get("features")});
+        }
     }
 
     render() {
@@ -138,7 +129,10 @@ class MapPanel extends React.Component {
                         <div id="home-map-pane" style={{width: "100%", height: "100%", position: "fixed"}}></div>
                     </div>
                 </div>
-                <GetPopupContent id="test" popUpOpen={this.state.popUpOpen} pixelLocation={this.state.pixelLocation}/>
+                <ProjectPopup features={this.state.clickedFeatures}
+                              mapConfig={this.state.mapConfig}
+                              clusterExtent={this.state.clusterExtent}
+                              documentRoot={this.props.documentRoot} test={this.test}/>
             </div>
         );
     }
@@ -281,72 +275,71 @@ function Project(props) {
     }
 }
 
-class GetPopupContent extends React.Component {
+class ProjectPopup extends React.Component {
     constructor(props) {
         super(props);
-    };
-    componentDidMount(){
-        console.log("pixel loc");
-        console.log(this.props.pixelLocation);
     }
-    render()
-    {
-          if(this.props.popUpOpen){
-              return(
-                  <div className="ol-overlaycontainer" style={{position: "fixed",top:this.props.pixelLocation[1]+"px",left:this.props.pixelLocation[0]+"px"}}>  <h1>it workwd</h1></div>
-              );
-          }
-          else{
-              return(
-               <span></span>
-              );
-          }
+    componentDidMount(){
+        let ref=this;
+        document.getElementById("zoomToCluster").onclick=function () {
+          mercator.zoomMapToExtent(ref.props.mapConfig, ref.props.clusterExtent);
+        };
+    }
+    render() {
+        return (
 
-    //     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-    //         return (
-    //             <React.Fragment>
-    //                 <div className="cTitle"><h1>
-    //                     {mercator.isCluster(feature) ? "Cluster info" : "Project info"}
-    //                 </h1></div>
-    //                 <div className="cContent>">
-    //                     <table className="table table-sm">
-    //                         <tbody>
-    //                         {mercator.isCluster(feature)
-    //                             ? feature.get("features").map(mercator.makeRows.bind(null, documentRoot)).join("\n")
-    //                             : mercator.makeRows(documentRoot, feature)}
-    //                         </tbody>
-    //                     </table>
-    //                 </div>
-    //
-    //                 <button onClick={mercator.zoomMapToExtent(mapConfig, [mercator.getClusterExtent(feature)])}
-    //                         className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
-    //                         style={{cursor: "pointer", minWidth: "350px"}}>
-    //                     <i className="fa fa-search-plus"></i> Zoom to cluster
-    //                 </button>
-    //             </React.Fragment>
-    //         );
-    //     }
-    //     else {
-    //         return (
-    //             <React.Fragment>
-    //                 <div className="cTitle"><h1>
-    //                     {mercator.isCluster(feature) ? "Cluster info" : "Project info"}
-    //                 </h1></div>
-    //                 <div className="cContent>">
-    //                     <table className="table table-sm">
-    //                         <tbody>
-    //                         {mercator.isCluster(feature)
-    //                             ? feature.get("features").map(mercator.makeRows.bind(null, documentRoot)).join("\n")
-    //                             : mercator.makeRows(documentRoot, feature)}
-    //                         </tbody>
-    //                     </table>
-    //                 </div>
-    //             </React.Fragment>
-    //         );
-    //     }
-    //   return(
-    //       <div></div>
-    //   );
+            <div id="projectPopUp">
+                <div className="cTitle">
+                    <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
+                </div>
+
+                <div className="cContent>">
+                    <table className="table table-sm">
+                        <tbody>
+                        {
+                            this.props.features.map((feature, uid) =>
+                                <React.Fragment key={uid}>
+                                    <tr className="d-flex">
+                                        <td className="small col-6 px-0 my-auto">
+                                            <h3 className="my-auto">Name</h3>
+
+                                        </td>
+                                        <td className="small col-6 pr-0">
+                                            <a href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
+                                               className="btn btn-sm btn-block btn-outline-lightgreen"
+                                               style={{
+                                                   whiteSpace: "nowrap",
+                                                   overflow: "hidden",
+                                                   textOverflow: "ellipsis"
+                                               }}>
+                                                {feature.get("name")}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    < tr className="d-flex">
+                                        <td className="small col-6 px-0 my-auto">Description</td>
+                                        <td className="small col-6 pr-0">{feature.get("description") == "" ? "N/A" : feature.get("description")}</td>
+                                    </tr>
+                                    <tr className="d-flex">
+                                        <td className="small col-6 px-0 my-auto">Number of plots</td>
+                                        <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
+                                    </tr>
+                                </React.Fragment>
+                            )
+                        }
+                        </tbody>
+                    </table>
+                </div>
+                <button id="zoomToCluster" className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+                        style={{
+                            cursor: "pointer",
+                            minWidth: "350px",
+                            display: this.props.features.length > 1 ? "block" : "none"
+                        }}>
+                    <i className="fa fa-search-plus"></i> Zoom to cluster
+                </button>
+            </div>
+        );
     }
 }
 

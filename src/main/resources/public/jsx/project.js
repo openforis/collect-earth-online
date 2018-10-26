@@ -83,22 +83,22 @@ class Project extends React.Component {
             else if (this.state.details.id != 0) {
                 if (document.getElementById("num-plots") != null) {
                     if (document.getElementById("plot-distribution-gridded").checked)
-                        document.getElementById("plot-design-text").innerHTML = "Description about gridded";
+                        document.getElementById("plot-design-text").innerHTML = "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
                     if (document.getElementById("plot-distribution-random").checked)
-                        document.getElementById("plot-design-text").innerHTML = "Description about random";
+                        document.getElementById("plot-design-text").innerHTML = "Plot centers will be randomly distributed within the AOI.";
                     if (document.getElementById("plot-distribution-csv").checked)
-                        document.getElementById("plot-design-text").innerHTML ="Description about csv upload";
+                        document.getElementById("plot-design-text").innerHTML ="Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
                     if (document.getElementById("plot-distribution-shp").checked)
-                        document.getElementById("plot-design-text").innerHTML ="Description about shp upload";
+                        document.getElementById("plot-design-text").innerHTML ="Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
 
                     if (document.getElementById("sample-distribution-gridded").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Description about gridded";
+                        document.getElementById("sample-design-text").innerHTML = "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.";
                     if (document.getElementById("sample-distribution-random").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Description about random";
+                        document.getElementById("sample-design-text").innerHTML = "Sample points will be randomly distributed within the plot boundary.";
                     if (document.getElementById("sample-distribution-csv").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Description about csv upload";
+                        document.getElementById("sample-design-text").innerHTML = "Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.";
                     if (document.getElementById("sample-distribution-shp").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Description about shp upload";
+                        document.getElementById("sample-design-text").innerHTML = "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.";
 
                 }
                 this.getProjectStats(projectId);
@@ -332,7 +332,7 @@ class Project extends React.Component {
                     utils.disable_element("plot-spacing");
                     utils.disable_element("plot-distribution-csv-file");
                     utils.disable_element("plot-distribution-shp-file");
-                    document.getElementById("plot-design-text").innerHTML="Description about random";
+                    document.getElementById("plot-design-text").innerHTML="Plot centers will be randomly distributed within the AOI.";
 
                 } else if (plotDistribution == "gridded") {
                     utils.enable_element("plot-size");
@@ -340,7 +340,7 @@ class Project extends React.Component {
                     utils.enable_element("plot-spacing");
                     utils.disable_element("plot-distribution-csv-file");
                     utils.disable_element("plot-distribution-shp-file");
-                    document.getElementById("plot-design-text").innerHTML="Description about gridded";
+                    document.getElementById("plot-design-text").innerHTML="Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
 
                 } else if(plotDistribution == "csv"){
                     utils.enable_element("plot-size");
@@ -348,7 +348,7 @@ class Project extends React.Component {
                     utils.disable_element("plot-spacing");
                     utils.disable_element("plot-distribution-shp-file");
                     utils.enable_element("plot-distribution-csv-file");
-                    document.getElementById("plot-design-text").innerHTML="Description about csv upload";
+                    document.getElementById("plot-design-text").innerHTML="Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
 
                 }
                 else{
@@ -357,7 +357,7 @@ class Project extends React.Component {
                     utils.disable_element("plot-spacing");
                     utils.disable_element("plot-distribution-csv-file");
                     utils.enable_element("plot-distribution-shp-file");
-                    document.getElementById("plot-design-text").innerHTML="Description about shp upload";
+                    document.getElementById("plot-design-text").innerHTML="Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
 
                 }
             }
@@ -383,28 +383,28 @@ class Project extends React.Component {
                     utils.disable_element("sample-resolution");
                     utils.disable_element("sample-distribution-csv-file");
                     utils.disable_element("sample-distribution-shp-file");
-                    document.getElementById("sample-design-text").innerHTML="Description about random";
+                    document.getElementById("sample-design-text").innerHTML="Sample points will be randomly distributed within the plot boundary.";
 
                 } else if(sampleDistribution == "gridded") {
                     utils.disable_element("samples-per-plot");
                     utils.enable_element("sample-resolution");
                     utils.disable_element("sample-distribution-csv-file");
                     utils.disable_element("sample-distribution-shp-file");
-                    document.getElementById("sample-design-text").innerHTML="Description about gridded";
+                    document.getElementById("sample-design-text").innerHTML="Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.";
                 }
                 else if(sampleDistribution == "csv"){
                     utils.disable_element("samples-per-plot");
                     utils.disable_element("sample-resolution");
                     utils.disable_element("sample-distribution-shp-file");
                     utils.enable_element("sample-distribution-csv-file");
-                    document.getElementById("sample-design-text").innerHTML="Description about csv upload";
+                    document.getElementById("sample-design-text").innerHTML="Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.";
                 }
                 else{
                     utils.disable_element("samples-per-plot");
                     utils.disable_element("sample-resolution");
                     utils.disable_element("sample-distribution-csv-file");
                     utils.enable_element("sample-distribution-shp-file");
-                    document.getElementById("sample-design-text").innerHTML="Description about shp upload";
+                    document.getElementById("sample-design-text").innerHTML="Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.";
                 }
         }
     }
@@ -1232,7 +1232,7 @@ class PlotDesign extends React.Component {
                                                    style={{display: "none"}} disabled/>
                                         </label>
                                     </div>
-                                    <p id="plot-design-text">Description about random</p>
+                                    <p id="plot-design-text">Plot centers will be randomly distributed within the AOI.</p>
 
                                     <div className="form-group mb-1">
                                         <p htmlFor="num-plots">Number of plots</p>
@@ -1348,7 +1348,7 @@ class SampleDesign extends React.Component{
                                            style={{display: "none"}} disabled/>
                                 </label>
                             </div>
-                            <p id="sample-design-text">Description about random</p>
+                            <p id="sample-design-text">Sample points will be randomly distributed within the plot boundary.</p>
                             <div className="form-group mb-1">
                                 <p htmlFor="samples-per-plot">Samples per plot</p>
                                 <input className="form-control form-control-sm" type="number" id="samples-per-plot"
