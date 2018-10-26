@@ -877,8 +877,8 @@ mercator.getPopupContent = function (mapConfig, documentRoot, feature) {
     var contentEnd = "</div>";
 
     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, ["
-            + mercator.getClusterExtent(feature) + "])\" "
+        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, "
+            + mercator.getClusterExtent(feature) + ")\" "
             + "class=\"mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
             + "<i class=\"fa fa-search-plus\"></i> Zoom to cluster</button>";
         return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
