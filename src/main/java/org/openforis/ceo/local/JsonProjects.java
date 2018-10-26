@@ -28,6 +28,7 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.stream.Collector;
@@ -724,7 +726,7 @@ public class JsonProjects implements Projects {
                 .toArray(Double[][]::new);
     }
 
-    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON, LAT, PLOTID
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID
     private static HashMap<String, Double[]> loadCsvPlotPoints(String filename) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
             var plotPoints = new HashMap<String, Double[]>();
@@ -739,11 +741,11 @@ public class JsonProjects implements Projects {
                     });
             return plotPoints;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.");
         }
     }
 
-    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON, LAT, PLOTID, SAMPLEID
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID,SAMPLEID
     private static HashMap<String, HashMap<String, Double[]>> loadCsvSamplePoints(String filename) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
             var samplesByPlot = new HashMap<String, HashMap<String, Double[]>>();
@@ -766,7 +768,7 @@ public class JsonProjects implements Projects {
                     });
             return samplesByPlot;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Malformed sample CSV. Fields must be LON,LAT,PLOTID,SAMPLEID.");
         }
     }
 
@@ -790,70 +792,107 @@ public class JsonProjects implements Projects {
         return obj.get(field).isJsonNull() ? new JsonPrimitive("") : obj.get(field);
     }
 
+    private static void deleteShapeFileDirectory(String shapeFileDirectory) {
+        var shapeFileDirectoryPath = Paths.get(expandResourcePath("/shp"), shapeFileDirectory);
+        try {
+            if (shapeFileDirectoryPath.toFile().exists()) {
+                System.out.println("Deleting directory at: " + shapeFileDirectoryPath);
+                Files.walk(shapeFileDirectoryPath)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+            } else {
+                System.out.println("No directory found at: " + shapeFileDirectoryPath);
+            }
+        } catch (Exception e) {
+            System.out.println("Error deleting directory at: " + shapeFileDirectoryPath);
+        }
+    }
+
+    private static void deleteShapeFileDirectories(int projectId) {
+        deleteShapeFileDirectory("project-" + projectId + "-plots");
+        deleteShapeFileDirectory("project-" + projectId + "-samples");
+    }
+
     private static void extractZipFileToGeoJson(int projectId, String plotsOrSamples) {
         try {
             System.out.println("Converting the uploaded ZIP file into GeoJSON.");
             var pb = new ProcessBuilder("/bin/sh", "shp2geojson.sh", "project-" + projectId + "-" + plotsOrSamples);
             pb.directory(new File(expandResourcePath("/shp")));
             var p = pb.start();
-            p.waitFor();
-            System.out.println("Conversion complete.");
+            if (p.waitFor(10L, TimeUnit.SECONDS)) {
+                System.out.println("Conversion complete.");
+            } else {
+                p.destroy();
+                throw new RuntimeException("");
+            }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Error in processing the zipped Shapefile. Please check the format and try again.");
         }
     }
 
     // The uploaded GeoJson must contain Polygon geometries with PLOTID properties
     private static HashMap<String, JsonObject> getGeoJsonPlotGeometries(int projectId) {
-        var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
-                                   + "/project-" + projectId + "-plots.json").getAsJsonObject();
-        if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
-            var plotGeoms = new HashMap<String, JsonObject>();
-            toStream(geoJson.get("features").getAsJsonArray())
-                .filter(feature -> {
-                        var geometry = feature.get("geometry").getAsJsonObject();
-                        return geometry.get("type").getAsString().equals("Polygon");
-                    })
-                .forEach(feature -> {
-                        var geometry = feature.get("geometry").getAsJsonObject();
-                        var properties = feature.get("properties").getAsJsonObject();
-                        var plotId = properties.get("PLOTID").getAsString();
-                        plotGeoms.put(plotId, geometry);
-                    });
-            return plotGeoms;
-        } else {
-            return new HashMap<String, JsonObject>();
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
+                                       + "/project-" + projectId + "-plots.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                var plotGeoms = new HashMap<String, JsonObject>();
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var plotId = properties.get("PLOTID").getAsString();
+                            plotGeoms.put(plotId, geometry);
+                        });
+                return plotGeoms;
+            } else {
+                throw new RuntimeException("");
+            }
+        } catch (Exception e) {
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.");
         }
     }
 
     // The uploaded GeoJson must contain Polygon geometries with PLOTID and SAMPLEID properties
     private static HashMap<String, HashMap<String, JsonObject>> getGeoJsonSampleGeometries(int projectId) {
-        var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
-                                   + "/project-" + projectId + "-samples.json").getAsJsonObject();
-        if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
-            var sampleGeomsByPlot = new HashMap<String, HashMap<String, JsonObject>>();
-            toStream(geoJson.get("features").getAsJsonArray())
-                .filter(feature -> {
-                        var geometry = feature.get("geometry").getAsJsonObject();
-                        return geometry.get("type").getAsString().equals("Polygon");
-                    })
-                .forEach(feature -> {
-                        var geometry = feature.get("geometry").getAsJsonObject();
-                        var properties = feature.get("properties").getAsJsonObject();
-                        var plotId = properties.get("PLOTID").getAsString();
-                        var sampleId = properties.get("SAMPLEID").getAsString();
-                        if (sampleGeomsByPlot.containsKey(plotId)) {
-                            var sampleGeoms = sampleGeomsByPlot.get(plotId);
-                            sampleGeoms.put(sampleId, geometry);
-                        } else {
-                            var sampleGeoms = new HashMap<String, JsonObject>();
-                            sampleGeoms.put(sampleId, geometry);
-                            sampleGeomsByPlot.put(plotId, sampleGeoms);
-                        }
-                    });
-            return sampleGeomsByPlot;
-        } else {
-            return new HashMap<String, HashMap<String, JsonObject>>();
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
+                                       + "/project-" + projectId + "-samples.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                var sampleGeomsByPlot = new HashMap<String, HashMap<String, JsonObject>>();
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var plotId = properties.get("PLOTID").getAsString();
+                            var sampleId = properties.get("SAMPLEID").getAsString();
+                            if (sampleGeomsByPlot.containsKey(plotId)) {
+                                var sampleGeoms = sampleGeomsByPlot.get(plotId);
+                                sampleGeoms.put(sampleId, geometry);
+                            } else {
+                                var sampleGeoms = new HashMap<String, JsonObject>();
+                                sampleGeoms.put(sampleId, geometry);
+                                sampleGeomsByPlot.put(plotId, sampleGeoms);
+                            }
+                        });
+                return sampleGeomsByPlot;
+            } else {
+                throw new RuntimeException("");
+            }
+        } catch (Exception e) {
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.");
         }
     }
 
@@ -1160,7 +1199,7 @@ public class JsonProjects implements Projects {
             return newProjectId + "";
         } catch (Exception e) {
             // Indicate that an error occurred with project creation
-            throw new RuntimeException(e);
+            return e.getMessage();
         }
     }
 
