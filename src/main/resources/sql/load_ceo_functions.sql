@@ -314,12 +314,13 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_id integer)
   LANGUAGE SQL;
 
 --  updates a update_project_widget_by_widget_id from the database.
-CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_id integer, _widget  jsonb)
+CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_id integer, _dash_id uuid, _widget  jsonb)
     RETURNS integer  AS
     $$
         UPDATE project_widgets
         SET widget = _widget
-        WHERE id = _id
+        WHERE CAST(jsonb_extract_path_text(widget, 'id') as int) = _id
+		AND dashboard_id = _dash_id
         RETURNING id
     $$
   LANGUAGE SQL;
@@ -524,11 +525,11 @@ LANGUAGE SQL;
 
 
 --create project plots for migration
-CREATE OR REPLACE FUNCTION create_project_plots(_project_id integer, _flagged integer, _plot_points geometry(Point,4326)) 
+CREATE OR REPLACE FUNCTION create_project_plots(_project_id integer, _plot_points geometry(Point,4326)) 
 	RETURNS integer AS 
 	$$
-		INSERT INTO plots (project_id, flagged, center)
-		(SELECT _project_id, _flagged, _plot_points)
+		INSERT INTO plots (project_id, center)
+		(SELECT _project_id, _plot_points)
 		RETURNING id
 	$$ 
 LANGUAGE SQL;
@@ -728,6 +729,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_id inte
 $$ LANGUAGE SQL;
 
 -- select plots
+-- FIXME when multiple users can be assigned to plots, returning a single username does not make sense
 CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum integer) 
 	RETURNS TABLE (
 	  id         integer,
@@ -741,11 +743,24 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 		FROM users 
 		INNER JOIN user_plots
 			ON users.id = user_plots.user_id
+	),
+	plotsum AS (
+		SELECT cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
+			cast(count(flagged) as int) as assigned, 
+			plot_id
+		FROM user_plots
+		GROUP BY plot_id
+		  
 	)
-	SELECT plots.id, ST_AsGeoJSON(center), flagged, assigned, username.email
+	SELECT plots.id, ST_AsGeoJSON(center), 
+		(case when plotsum.flagged is null then 0 else plotsum.flagged end),
+		(case when plotsum.assigned is null then 0 else plotsum.assigned end),
+		(case when username.email is null then '' else username.email end)
 	FROM plots
+	LEFT JOIN plotsum
+		ON plots.id = plotsum.plot_id
 	LEFT JOIN username
-		ON plot_id = id
+		ON plots.id = username.plot_id
 	WHERE project_id = _project_id
 	LIMIT _maximum
 
@@ -816,6 +831,7 @@ CREATE OR REPLACE FUNCTION select_project_users(_project_id integer)
 $$ LANGUAGE SQL;
 
 --Returns project statistics
+-- FIXME in the future a plot could have both an assigned piece and a flagged piece
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer) 
 	RETURNS TABLE(
 		flagged_plots integer,
@@ -828,23 +844,42 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
 		SELECT count(distinct user_id) as members
 		FROM select_project_users(_project_id)
 	),
-		sums AS(
-			SELECT count(distinct up.user_id) as contributors, sum(pl.flagged) as flagged, sum(pl.assigned) as assigned,count(distinct pl.id) as plots
-			FROM projects prj
-			INNER JOIN plots pl
-			  ON prj.id =  pl.project_id
-			LEFT JOIN user_plots up
-			  ON up.plot_id = pl.id
-			WHERE prj.id = _project_id
-			  
+	plotsum AS (
+		SELECT plot_id,
+			sum(flagged::int) > 0 as flagged, 
+			cast(count(user_id) as int)  > 0 and sum(flagged::int) = 0 as assigned
+		FROM user_plots
+		GROUP BY plot_id
+		  
+	),
+	sums AS(
+		SELECT (CASE WHEN sum(ps.flagged::int) IS NULL THEN 0 ELSE sum(ps.flagged::int) END) as flagged, 
+			(CASE WHEN sum(ps.assigned::int) IS NULL THEN 0 ELSE sum(ps.assigned::int) END) as assigned,
+			count(distinct pl.id) as plots
+		FROM projects prj
+		INNER JOIN plots pl
+		  ON prj.id =  pl.project_id
+		LEFT JOIN plotsum ps
+		  ON ps.plot_id = pl.id
+		WHERE prj.id = _project_id  
+	),
+	users_count as (
+		SELECT COUNT (DISTINCT user_id) as users
+		FROM projects prj
+		INNER JOIN plots pl
+		  ON prj.id =  pl.project_id
+			AND prj.id = _project_id
+		LEFT JOIN user_plots up
+		  ON up.plot_id = pl.id
 	)
 	SELECT CAST(flagged AS int) AS flagged_plots,
 		   CAST(assigned AS int) assigned_plots,
 		   CAST(GREATEST(0,(plots-flagged-assigned)) as int) AS unassigned_plots,
 		   CAST(members AS int) AS members,
-	       CAST(contributors AS int) AS contributors
-	FROM members, sums
+	       CAST(users_count.users AS int) AS contributors
+	FROM members, sums, users_count
 $$ LANGUAGE SQL;
+
 
 --Returns unanalyzed plots
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
@@ -930,7 +965,6 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 $$ LANGUAGE SQL;
 
 --Returns project raw data
---FIXME correct flagged and assigned once we discus
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer) 
 	RETURNS TABLE (
 	       plot_id integer,
@@ -1012,16 +1046,13 @@ CREATE OR REPLACE FUNCTION archive_project(_project_id integer)
 LANGUAGE SQL;
 
 --Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_name text, _collection_time timestamp) 
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_time timestamp) 
 	RETURNS integer AS 
 	$$
 	
-	UPDATE user_plots
-	SET flagged = true, 
-		user_id = _user_id, 
-		collection_time = _collection_time
-	WHERE plot_id = _plot_id
-	RETURNING plot_id
+	INSERT INTO user_plots (user_id, plot_id, flagged, confidence, collection_time)
+	VALUES (_user_id, _plot_id, true, 100, _collection_time)
+	RETURNING _plot_id
 	$$
 LANGUAGE SQL;
 

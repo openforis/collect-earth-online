@@ -106,13 +106,15 @@ public class PostgresGeoDash implements GeoDash {
     public String updateDashBoardWidgetById(Request req, Response res) {
         var widgetId                = req.params(":id");
         var widgetJsonString        = req.queryParams("widgetJSON");
+        var dashboardId             = req.queryParams("dashID");
         var callback                = req.queryParams("callback");
-        var SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?::JSONB)";
+        var SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?, ?::JSONB)";
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
-            pstmt.setString(2, widgetJsonString);
+            pstmt.setObject(2, UUID.fromString(dashboardId));
+            pstmt.setString(3, widgetJsonString);
             var rs = pstmt.executeQuery();
             return returnBlank(callback);
         } catch (SQLException e) {

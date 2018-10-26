@@ -47,9 +47,7 @@ CREATE TABLE projects (
 CREATE TABLE plots (
   id         serial primary key,
   project_id integer not null references projects (id) on delete cascade on update cascade,
-  center     geometry(Point,4326),
-  flagged    integer default 0,
-  assigned   integer default 0
+  center     geometry(Point,4326)
 );
 
 CREATE TABLE samples (

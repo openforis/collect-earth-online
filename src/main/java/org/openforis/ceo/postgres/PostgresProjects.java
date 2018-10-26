@@ -229,6 +229,13 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    public String getProjectPlot(Request req, Response res) {
+        var projectId = req.params(":project-id");
+        var plotId = req.params(":plot-id");
+
+        return "";
+    }
+
     private static JsonArray getSampleJsonArray(Integer plot_id) {
         var sampleSQL = "SELECT * FROM select_plot_samples(?)";
         try (var conn = connect()) {
@@ -772,7 +779,7 @@ public class PostgresProjects implements Projects {
             lonMax = csvBounds[2];
             latMax = csvBounds[3];
             try (var conn = connect()) {
-                var Sql = "SELECT * FROM update_project_csv(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
+                var Sql = "SELECT * FROM update_project_csv(?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
                 var pstmt = conn.prepareStatement(Sql) ;
                 pstmt.setInt(1,Integer.parseInt(newProject.get("projId").getAsString()));     
                 pstmt.setString(2, newProject.get("csv").getAsString());
