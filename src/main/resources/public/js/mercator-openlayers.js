@@ -411,7 +411,6 @@ mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
 
 // [Side Effects] Zooms the map view to contain the passed in extent.
 mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
-    console.log("from zoom: ");
     mapConfig.view.fit(extent,
                        mapConfig.map.getSize(),
                        {maxZoom: maxZoom || 19});

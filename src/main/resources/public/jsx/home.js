@@ -8,7 +8,6 @@ class Home extends React.Component {
         this.state = {
             projects: []
         };
-
     }
 
     componentDidMount() {
@@ -69,7 +68,6 @@ class MapPanel extends React.Component {
                                           40); // clusterDistance = 40, use null to disable clustering
         }
     }
-
     addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
         const projectSource = mercator.projectsToVectorSource(projects);
         if (clusterDistance == null) {
@@ -107,7 +105,7 @@ class MapPanel extends React.Component {
     showProjectPopup(mapConfig, overlay, documentRoot, feature) {
         if (mercator.isCluster(feature)) {
             overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
-            this.setState({clusterExtent: [mercator.getClusterExtent(feature)],
+            this.setState({clusterExtent: mercator.getClusterExtent(feature),
                            clickedFeatures: feature.get("features")});
         } else {
             overlay.setPosition(feature.getGeometry().getCoordinates());
@@ -134,7 +132,7 @@ class MapPanel extends React.Component {
                 <ProjectPopup features={this.state.clickedFeatures}
                               mapConfig={this.state.mapConfig}
                               clusterExtent={this.state.clusterExtent}
-                              documentRoot={this.props.documentRoot}/>
+                              documentRoot={this.props.documentRoot} test={this.test}/>
             </div>
         );
     }
@@ -277,58 +275,72 @@ function Project(props) {
     }
 }
 
-function ProjectPopup(props) {
-    return (
-        <div id="projectPopUp">
-            <div className="cTitle">
-                <h1>{props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
+class ProjectPopup extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    componentDidMount(){
+        let ref=this;
+        document.getElementById("zoomToCluster").onclick=function () {
+          mercator.zoomMapToExtent(ref.props.mapConfig, ref.props.clusterExtent);
+        };
+    }
+    render() {
+        return (
+
+            <div id="projectPopUp">
+                <div className="cTitle">
+                    <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
+                </div>
+
+                <div className="cContent>">
+                    <table className="table table-sm">
+                        <tbody>
+                        {
+                            this.props.features.map((feature, uid) =>
+                                <React.Fragment key={uid}>
+                                    <tr className="d-flex">
+                                        <td className="small col-6 px-0 my-auto">
+                                            <h3 className="my-auto">Name</h3>
+
+                                        </td>
+                                        <td className="small col-6 pr-0">
+                                            <a href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
+                                               className="btn btn-sm btn-block btn-outline-lightgreen"
+                                               style={{
+                                                   whiteSpace: "nowrap",
+                                                   overflow: "hidden",
+                                                   textOverflow: "ellipsis"
+                                               }}>
+                                                {feature.get("name")}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    < tr className="d-flex">
+                                        <td className="small col-6 px-0 my-auto">Description</td>
+                                        <td className="small col-6 pr-0">{feature.get("description") == "" ? "N/A" : feature.get("description")}</td>
+                                    </tr>
+                                    <tr className="d-flex">
+                                        <td className="small col-6 px-0 my-auto">Number of plots</td>
+                                        <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
+                                    </tr>
+                                </React.Fragment>
+                            )
+                        }
+                        </tbody>
+                    </table>
+                </div>
+                <button id="zoomToCluster" className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+                        style={{
+                            cursor: "pointer",
+                            minWidth: "350px",
+                            display: this.props.features.length > 1 ? "block" : "none"
+                        }}>
+                    <i className="fa fa-search-plus"></i> Zoom to cluster
+                </button>
             </div>
-            <div className="cContent>">
-                <table className="table table-sm">
-                    <tbody>
-                    {
-                        props.features.map((feature, uid) =>
-                            <React.Fragment key={uid}>
-                                <tr className="d-flex">
-                                    <td className="small col-6 px-0 my-auto">
-                                        <h3 className="my-auto">Name</h3>
-                                    </td>
-                                    <td className="small col-6 pr-0">
-                                        <a href={props.documentRoot + "/collection/" + feature.get("projectId")}
-                                           className="btn btn-sm btn-block btn-outline-lightgreen"
-                                           style={{whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>
-                                            {feature.get("name")}
-                                        </a>
-                                    </td>
-                                </tr>
-                                < tr className="d-flex">
-                                    <td className="small col-6 px-0 my-auto">Description</td>
-                                    <td className="small col-6 pr-0">{feature.get("description") == "" ? "N/A" : feature.get("description")}</td>
-                                </tr>
-                                <tr className="d-flex">
-                                    <td className="small col-6 px-0 my-auto">Number of plots</td>
-                                    <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
-                                </tr>
-                            </React.Fragment>
-                        )
-                    }
-                    </tbody>
-                </table>
-            </div>
-            <button onClick={() => {
-                console.log("clicked");
-               // mercator.zoomMapToExtent(props.mapConfig, props.clusterExtent)}
-            }}
-                    className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
-                    style={{
-                        cursor: "pointer",
-                        minWidth: "350px",
-                        display: props.features.length > 1 ? "block" : "none"
-                    }}>
-                <i className="fa fa-search-plus"></i> Zoom to cluster
-            </button>
-        </div>
-    );
+        );
+    }
 }
 
 export function renderHomePage(args) {

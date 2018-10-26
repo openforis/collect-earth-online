@@ -2,11 +2,18 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
 
-let geeTimeout = {};
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { widgets: [ ], callbackComplete: false };
+        this.state = { widgets: [ ],
+            callbackComplete: false,
+            left: 0,
+            ptop: 0,
+            projAOI: getParameterByName("aoi"),
+            projPairAOI: ""
+        };
+        let theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
+        this.state.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
     };
     componentDidMount() {
         fetch(theURL + "/id/" + pid,)
@@ -36,6 +43,7 @@ class Geodash extends React.Component {
         return ( <React.Fragment>
             <Widgets widgets={this.state.widgets}
                      projAOI={this.state.projAOI}
+                     projPairAOI={this.state.projPairAOI}
                      onFullScreen={this.handleFullScreen}
                      onOpacityChanged={this.handleOpacityChange}
                      onSliderChange={this.handleSliderChange}
@@ -50,7 +58,7 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-            function() { updateSize(widget, type);}
+            function() { this.updateSize(widget, type);}
          );
     };
     handleOpacityChange = (widget, id, evt) => {
@@ -58,7 +66,7 @@ class Geodash extends React.Component {
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].opacity = evt.target.value;
-        setOpacity(evt.target.value, 'widgetmap_' + id);
+        this.setOpacity(evt.target.value, 'widgetmap_' + id);
         this.setState({ widgets });
     };
     handleSliderChange = (widget) => {
@@ -75,38 +83,47 @@ class Geodash extends React.Component {
         widgets[index].swipeValue = evt.target.value;
         this.setState({ widgets });
     };
-}
-
-function updateSize(which, type)
-{
-    if(which.isFull)
+    updateSize(which, type)
     {
-        document.body.classList.remove('bodyfull');
+        if(which.isFull)
+        {
+            document.body.classList.remove('bodyfull');
+        }
+        else{
+            document.body.classList.add('bodyfull');
+        }
+        const doc = document.documentElement;
+        if((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0) === 0)
+        {
+            window.scrollTo(this.state.left, this.state.ptop);
+            this.state.left = 0;
+            this.state.ptop = 0;
+        }
+        else{
+            this.state.left = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+            this.state.ptop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+            window.scrollTo(0,0);
+        }
+        if(type === 'mapwidget'){
+            mapWidgetArray["widgetmap_" + which.id].updateSize();
+        }
+        else if(type === 'graphwidget'){
+            const gwidget = document.getElementById('widgetgraph_'+ which.id);
+            graphWidgetArray['widgetgraph_'+ which.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
+        }
     }
-    else{
-        document.body.classList.add('bodyfull');
-    }
-    const doc = document.documentElement;
-    if((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0) === 0)
-    {
-        window.scrollTo(left, ptop);
-        left = 0;
-        ptop = 0;
-    }
-    else{
-        left = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
-        ptop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
-        window.scrollTo(0,0);
-    }
-    if(type === 'mapwidget'){
-    mapWidgetArray["widgetmap_" + which.id].updateSize();
-    }
-    else if(type === 'graphwidget'){
-        const gwidget = document.getElementById('widgetgraph_'+ which.id);
-        graphWidgetArray['widgetgraph_'+ which.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
-    }
+    setOpacity (value, layerID) {
+        try{
+            const id = layerID;
+            mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
+                if (id === lyr.get('id') || id + '_dual' === lyr.get('id')) {
+                    lyr.setOpacity(value);
+                }
+            });
+        }
+        catch(e){}
+    };
 }
-
 
 class Widgets extends React.Component {
     render() {
@@ -118,6 +135,8 @@ class Widgets extends React.Component {
                     key={widget.id}
                     id={widget.id}
                     widget={widget}
+                    projAOI={this.props.projAOI}
+                    projPairAOI={this.props.projPairAOI}
                     onFullScreen ={this.props.onFullScreen}
                     onOpacityChanged = {this.props.onOpacityChanged}
                     opacityValue = {this.props.opacityValue}
@@ -225,13 +244,13 @@ class Widget extends React.Component {
         let wtext = widget.properties[0];
         if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0))
         {
-            return <div className="front"><MapWidget widget={widget} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
+            return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
 
             </div>
         }else if (this.graphControlList.includes(wtext)) {
-            return <div className="front"><GraphWidget widget={widget}/></div>
+            return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} /></div>
         }else if (wtext === "getStats") {
-            return <div className="front"><StatsWidget widget={widget}/></div>
+            return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} /></div>
         }
         else {
             return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" />;
@@ -365,6 +384,8 @@ class MapWidget extends React.Component {
         const widget = this.props.widget;
         const basemap = widget.baseMap;
         const raster =  MapWidget.getRasterByBasemapConfig(basemap);
+        let projAOI = this.props.projAOI;
+        let projPairAOI= this.props.projPairAOI;
 
         const mapdiv = "widgetmap_" + widget.id;
         let map = new ol.Map({
@@ -419,6 +440,7 @@ class MapWidget extends React.Component {
         let url = '';
         let dualImageObject = null;
         let bands = "";
+        const ref = this;
         if (widget.properties.length === 5) {
             bands = widget.properties[4];
         }
@@ -537,7 +559,7 @@ class MapWidget extends React.Component {
                 let mapId = data.mapid;
                 let token = data.token;
                 let dualImage = JSON.stringify(dualImageObject);
-                addTileServer(mapId, token, "widgetmap_" + widget.id);
+                ref.addTileServer(mapId, token, "widgetmap_" + widget.id);
                 return true;
             } else {
                 console.warn("Wrong Data Returned");
@@ -566,7 +588,7 @@ class MapWidget extends React.Component {
                                     let mapId = data.mapid;
                                     let token = data.token;
 
-                                    addDualLayer(mapId, token, "widgetmap_" + widget.id);
+                                    ref.addDualLayer(mapId, token, "widgetmap_" + widget.id);
                                 } else {
                                     console.warn("Wrong Data Returned");
                                 }
@@ -595,7 +617,7 @@ class MapWidget extends React.Component {
                                         let mapId = data.mapid;
                                         let token = data.token;
 
-                                        addDualLayer(mapId, token, "widgetmap_" + widget.id);
+                                        ref.addDualLayer(mapId, token, "widgetmap_" + widget.id);
                                     } else {
                                         console.warn("Wrong Data Returned");
                                     }
@@ -630,9 +652,151 @@ class MapWidget extends React.Component {
             })
         }, 1000);
     };
+    addTileServer (imageid, token, mapdiv, isDual) {
+        let googleLayer = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
+            }),
+            id: mapdiv
+        });
+        mapWidgetArray[mapdiv].addLayer(googleLayer);
+        if(!isDual)
+        {
+            this.addBuffer(mapWidgetArray[mapdiv]);
+        }
+    };
+    addDualLayer (imageid, token, mapdiv) {
+        let googleLayer = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
+            }),
+            id: mapdiv + '_dual'
+        });
+        mapWidgetArray[mapdiv].addLayer(googleLayer);
+        let swipe = document.getElementById('swipeWidget_' + mapdiv.replace('widgetmap_', ''));
+
+        googleLayer.on('precompose', function(event) {
+            let ctx = event.context;
+            const width = ctx.canvas.width * (swipe.value);
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
+            ctx.clip();
+        });
+
+        googleLayer.on('postcompose', function(event) {
+            let ctx = event.context;
+            ctx.restore();
+        });
+        swipe.addEventListener('input', function() {mapWidgetArray[mapdiv].render();}, false);
+        this.addBuffer(mapWidgetArray[mapdiv]);
+    };
+    addBuffer (whichMap) {
+        "use strict";
+        try {
+            //check to see the shape here...
+            const bradius = getParameterByName("bradius");
+            const bcenter = getParameterByName("bcenter");
+            const plotshape = getParameterByName("plotshape");
+            const projectID = getParameterByName("pid");
+            const plotID = getParameterByName("plotid");
+            if (plotshape && plotshape === 'square') {
+                const centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
+                const pointFeature = new ol.Feature(centerPoint);
+                const poitnExtent = pointFeature.getGeometry().getExtent();
+                const bufferedExtent = new ol.extent.buffer(poitnExtent,parseInt(bradius));
+                const bufferPolygon = new ol.geom.Polygon(
+                    [
+                        [[bufferedExtent[0],bufferedExtent[1]],
+                            [bufferedExtent[0],bufferedExtent[3]],
+                            [bufferedExtent[2],bufferedExtent[3]],
+                            [bufferedExtent[2],bufferedExtent[1]],
+                            [bufferedExtent[0],bufferedExtent[1]]]
+                    ]
+                );
+                const bufferedFeature = new ol.Feature(bufferPolygon);
+                const vectorSource = new ol.source.Vector({});
+                vectorSource.addFeatures([bufferedFeature]);
+                const layer = new ol.layer.Vector({
+                    source: vectorSource,
+                    style: [
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: "#8b2323",
+                                width: 2
+                            }),
+                            fill: null
+                        })
+                    ]
+                });
+                whichMap.addLayer(layer);
+            }
+            else if(plotshape && plotshape === 'circle') {
+                const circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
+                const CircleFeature = new ol.Feature(circle);
+                let vectorSource = new ol.source.Vector({});
+                vectorSource.addFeatures([CircleFeature]);
+                const layer = new ol.layer.Vector({
+                    source: vectorSource,
+                    style: [
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: "#8b2323",
+                                width: 2
+                            }),
+                            fill: null
+                        })
+                    ]
+                });
+                whichMap.addLayer(layer);
+            }
+            else{
+
+                fetch(theURL.replace('/geo-dash', '') + "/get-project-plot/" + projectID + "/" + plotID)
+                    .then(function(res){return res.json();})
+                    .then(function(data){
+                        const _geojson_object = typeof(data) === 'string' ? JSON.parse(data) : data;
+                        const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
+                        let mapConfig = {};
+                        mapConfig.map = whichMap;
+                        const style = [
+                            new ol.style.Style({
+                                stroke: new ol.style.Stroke({
+                                    color: "yellow",
+                                    width: 3
+                                }),
+                                fill: null
+                            })
+                        ];
+                        mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
+
+                        if (_geojson_object.samples) {
+                            _geojson_object.samples.forEach(function (element) {
+                                const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
+                                mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
+                            });
+                        }
+                    })
+            }
+        } catch (e) {
+            console.warn("buffer failed: " + e.message);
+        }
+    };
 }
 
 class GraphWidget extends React.Component {
+    constructor(props){
+        super(props);
+        Date.prototype.yyyymmdd = function() {
+            let mm = this.getMonth() + 1; // getMonth() is zero-based
+            let dd = this.getDate();
+
+            return [this.getFullYear(),
+                (mm>9 ? '' : '0') + mm,
+                (dd>9 ? '' : '0') + dd
+            ].join('-');
+        };
+    }
     render() {
         const widget = this.props.widget;
         return <div id={"widgetgraph_" + widget.id} className="minmapwidget">
@@ -648,6 +812,7 @@ class GraphWidget extends React.Component {
         let indexName = widget.properties[4];
         let date = new Date();
         let url = collectionName.trim().length > 0 ? "http://collect.earth:8888/timeSeriesIndex":  "http://collect.earth:8888/timeSeriesIndex2";
+        const ref = this;
         fetch(url, {
             method: 'POST',
             headers: {
@@ -656,7 +821,7 @@ class GraphWidget extends React.Component {
             },
             body: JSON.stringify({
                 collectionNameTimeSeries: collectionName,
-                polygon: JSON.parse(projPairAOI),
+                polygon: JSON.parse(this.props.projPairAOI),
                 indexName: indexName,
                 dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : '2000-01-01',
                 dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() :  date.yyyymmdd()
@@ -676,9 +841,9 @@ class GraphWidget extends React.Component {
                                 timeseriesData.push([value[0], value[1]]);
                             }
                         });
-                        timeseriesData = timeseriesData.sort(sortData);
+                        timeseriesData = timeseriesData.sort(ref.sortData);
 
-                        graphWidgetArray["widgetgraph_" + widget.id] = createChart(widget.id, indexName, timeseriesData);
+                        graphWidgetArray["widgetgraph_" + widget.id] = ref.createChart(widget.id, indexName, timeseriesData);
                         graphWidgetArray["widgetgraph_" + widget.id].id = widget.id;
                     } else {
                         console.warn("Wrong Data Returned");
@@ -686,8 +851,77 @@ class GraphWidget extends React.Component {
                 }
             })
     };
+    sortData(a, b){
+        if (a[0] < b[0]) return -1;
+        if (a[0] > b[0]) return 1;
+        return 0;
+    }
+    createChart (wIndex, wText, wTimeseriesData) {
+        "use strict";
+        return Highcharts.chart("graphcontainer_" + wIndex, {
+            chart: {
+                zoomType: "x"
+            },
+            title: {
+                text: ""
+            },
+            subtitle: {
+                text: document.ontouchstart === undefined
+                    ? "Click and drag in the plot area to zoom in"
+                    : "Pinch the chart to zoom in"
+            },
+            xAxis: {
+                type: "datetime"
+            },
+            yAxis: {
+                title: {
+                    text: wText
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
+                        },
+                        stops: [
+                            [0, "#31bab0"],
+                            [1, Highcharts.Color("#31bab0").setOpacity(0).get("rgba")]
+                        ]
+                    },
+                    marker: {
+                        radius: 2
+                    },
+                    lineWidth: 1,
+                    states: {
+                        hover: {
+                            lineWidth: 1
+                        }
+                    },
+                    threshold: null
+                }
+            },
+            tooltip: {
+                pointFormat: "Value: {point.y}"
+            },
+            series: [{
+                type: "area",
+                name: wText,
+                data: wTimeseriesData,
+                color: "#31bab0"
+            }]
+        }, function () {
+            document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
+            document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
+        });
+    };
 }
-
 class StatsWidget extends React.Component {
     render() {
         const widget = this.props.widget;
@@ -738,8 +972,9 @@ class StatsWidget extends React.Component {
         };
 
     componentDidMount() {
+        const ref = this;
         const widget = this.props.widget;
-
+        const projPairAOI = this.props.projPairAOI;
         fetch("http://collect.earth:8888/getStats", {
             method: 'POST',
             headers: {
@@ -755,266 +990,49 @@ class StatsWidget extends React.Component {
                 if (data.errMsg) {
                     console.warn(e.message + _textStatus + _jqXHR);
                 } else {
-                    document.getElementById("totalPop_" + widget.id).innerHTML = numberWithCommas(data.pop);
-                    document.getElementById("totalArea_" + widget.id).innerHTML = calculateArea(JSON.parse(projPairAOI)) + " ha";
-                    document.getElementById("elevationRange_" + widget.id).innerHTML = numberWithCommas(data.minElev) + " - " + numberWithCommas(data.maxElev) + " m";
+                    document.getElementById("totalPop_" + widget.id).innerHTML = ref.numberWithCommas(data.pop);
+                    document.getElementById("totalArea_" + widget.id).innerHTML = ref.calculateArea(JSON.parse(projPairAOI)) + " ha";
+                    document.getElementById("elevationRange_" + widget.id).innerHTML = ref.numberWithCommas(data.minElev) + " - " + ref.numberWithCommas(data.maxElev) + " m";
 
                 }
             })
     };
-}
-function sortData(a, b){
-
-    if (a[0] < b[0]) return -1;
-    if (a[0] > b[0]) return 1;
-    return 0;
-}
-function createChart (wIndex, wText, wTimeseriesData) {
-    "use strict";
-    return Highcharts.chart("graphcontainer_" + wIndex, {
-        chart: {
-            zoomType: "x"
-        },
-        title: {
-            text: ""
-        },
-        subtitle: {
-            text: document.ontouchstart === undefined
-                ? "Click and drag in the plot area to zoom in"
-                : "Pinch the chart to zoom in"
-        },
-        xAxis: {
-            type: "datetime"
-        },
-        yAxis: {
-            title: {
-                text: wText
+    calculateArea (poly) {
+        const sphere = new ol.Sphere(6378137);
+        const area_m = sphere.geodesicArea(poly);
+        let area_ha = area_m / 10000;
+        if (area_ha < 0) {
+            area_ha = area_ha * -1;
+        }
+        area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
+        return this.numberWithCommas(area_ha);
+    }
+    numberWithCommas(x) {
+        if (typeof x === "number") {
+            try {
+                const parts = x.toString().split(".");
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return parts.join(".");
+            } catch (e) {
+                console.warn(e.message);
             }
-        },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            area: {
-                fillColor: {
-                    linearGradient: {
-                        x1: 0,
-                        y1: 0,
-                        x2: 0,
-                        y2: 1
-                    },
-                    stops: [
-                        [0, "#31bab0"],
-                        [1, Highcharts.Color("#31bab0").setOpacity(0).get("rgba")]
-                    ]
-                },
-                marker: {
-                    radius: 2
-                },
-                lineWidth: 1,
-                states: {
-                    hover: {
-                        lineWidth: 1
-                    }
-                },
-                threshold: null
-            }
-        },
-        tooltip: {
-            pointFormat: "Value: {point.y}"
-        },
-        series: [{
-            type: "area",
-            name: wText,
-            data: wTimeseriesData,
-            color: "#31bab0"
-        }]
-    }, function () {
-        document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
-        document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
-    });
+        }
+        return "N/A";
+    }
+    calculateArea (poly) {
+        const sphere = new ol.Sphere(6378137);
+        const area_m = sphere.geodesicArea(poly);
+        let area_ha = area_m / 10000;
+        if (area_ha < 0) {
+            area_ha = area_ha * -1;
+        }
+        area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
+        return this.numberWithCommas(area_ha);
+    }
 }
 
-
-function numberWithCommas(x) {
-    if (typeof x === "number") {
-        try {
-            const parts = x.toString().split(".");
-            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            return parts.join(".");
-        } catch (e) {
-            console.warn(e.message);
-        }
-    }
-    return "N/A";
-}
-function calculateArea (poly) {
-    const sphere = new ol.Sphere(6378137);
-    const area_m = sphere.geodesicArea(poly);
-    let area_ha = area_m / 10000;
-    if (area_ha < 0) {
-        area_ha = area_ha * -1;
-    }
-    area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
-    return numberWithCommas(area_ha);
-}
-function addTileServer (imageid, token, mapdiv, isDual) {
-    let googleLayer = new ol.layer.Tile({
-        source: new ol.source.XYZ({
-            url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
-        }),
-        id: mapdiv
-    });
-    mapWidgetArray[mapdiv].addLayer(googleLayer);
-    if(!isDual)
-    {
-        addBuffer(mapWidgetArray[mapdiv]);
-    }
-};
-
-function addDualLayer (imageid, token, mapdiv) {
-    let googleLayer = new ol.layer.Tile({
-        source: new ol.source.XYZ({
-            url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
-        }),
-        id: mapdiv + '_dual'
-    });
-    mapWidgetArray[mapdiv].addLayer(googleLayer);
-    let swipe = document.getElementById('swipeWidget_' + mapdiv.replace('widgetmap_', ''));
-
-    googleLayer.on('precompose', function(event) {
-        let ctx = event.context;
-        const width = ctx.canvas.width * (swipe.value);
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
-        ctx.clip();
-    });
-
-    googleLayer.on('postcompose', function(event) {
-        let ctx = event.context;
-        ctx.restore();
-    });
-    swipe.addEventListener('input', function() {mapWidgetArray[mapdiv].render();}, false);
-    addBuffer(mapWidgetArray[mapdiv]);
-};
-
-function setOpacity (value, layerID) {
-    try{
-    const id = layerID;
-    mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
-        if (id === lyr.get('id') || id + '_dual' === lyr.get('id')) {
-            lyr.setOpacity(value);
-        }
-    });
-    }
-    catch(e){}
-};
-function addBuffer (whichMap) {
-    "use strict";
-    try {
-        //check to see the shape here...
-        if (plotshape && plotshape === 'square') {
-            const centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
-            const pointFeature = new ol.Feature(centerPoint);
-            const poitnExtent = pointFeature.getGeometry().getExtent();
-            const bufferedExtent = new ol.extent.buffer(poitnExtent,parseInt(bradius));
-            const bufferPolygon = new ol.geom.Polygon(
-                [
-                    [[bufferedExtent[0],bufferedExtent[1]],
-                        [bufferedExtent[0],bufferedExtent[3]],
-                        [bufferedExtent[2],bufferedExtent[3]],
-                        [bufferedExtent[2],bufferedExtent[1]],
-                        [bufferedExtent[0],bufferedExtent[1]]]
-                ]
-            );
-            const bufferedFeature = new ol.Feature(bufferPolygon);
-            const vectorSource = new ol.source.Vector({});
-            vectorSource.addFeatures([bufferedFeature]);
-            const layer = new ol.layer.Vector({
-                source: vectorSource,
-                style: [
-                    new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: "#8b2323",
-                            width: 2
-                        }),
-                        fill: null
-                    })
-                ]
-            });
-            whichMap.addLayer(layer);
-        }
-        else if(plotshape && plotshape === 'circle') {
-            const circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
-            const CircleFeature = new ol.Feature(circle);
-            let vectorSource = new ol.source.Vector({});
-            vectorSource.addFeatures([CircleFeature]);
-            const layer = new ol.layer.Vector({
-                source: vectorSource,
-                style: [
-                    new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: "#8b2323",
-                            width: 2
-                        }),
-                        fill: null
-                    })
-                ]
-            });
-            whichMap.addLayer(layer);
-        }
-        else{
-
-            fetch(theURL.replace('/geo-dash', '') + "/get-project-plot/" + projectID + "/" + plotID)
-                .then(function(res){return res.json();})
-                .then(function(data){
-                    const _geojson_object = typeof(data) === 'string' ? JSON.parse(data) : data;
-                    const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
-                    let mapConfig = {};
-                    mapConfig.map = whichMap;
-                    const style = [
-                        new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: "yellow",
-                                width: 3
-                            }),
-                            fill: null
-                        })
-                    ];
-                    mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
-
-                    if (_geojson_object.samples) {
-                        _geojson_object.samples.forEach(function (element) {
-                            const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
-                            mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
-                        });
-                    }
-                })
-        }
-    } catch (e) {
-        console.warn("buffer failed: " + e.message);
-    }
-};
-Date.prototype.yyyymmdd = function() {
-    let mm = this.getMonth() + 1; // getMonth() is zero-based
-    let dd = this.getDate();
-
-    return [this.getFullYear(),
-        (mm>9 ? '' : '0') + mm,
-        (dd>9 ? '' : '0') + dd
-    ].join('-');
-};
-let left = 0;
-let ptop = 0;
-const bradius = getParameterByName("bradius");
-const bcenter = getParameterByName("bcenter");
-let projAOI = getParameterByName("aoi");
-const plotshape = getParameterByName("plotshape");
-const projectID = getParameterByName("pid");
-const plotID = getParameterByName("plotid");
-const theSplit = decodeURI(projAOI).replace("[", "").replace("]", "").split(",");
-const projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
+/* Todo: move these variables into the component */
+let geeTimeout = {};
 let mapWidgetArray = [];
 let graphWidgetArray = [];
 
