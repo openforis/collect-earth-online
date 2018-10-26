@@ -178,7 +178,9 @@ public class Views {
     }
 
     public static Route timeSync(FreeMarkerEngine freemarker) {
-        return makeRoute("TimeSync", freemarker);
+        Function<Request, String> getAccountId = (req) -> req.params(":id");
+        return makeAuthenticatedRoute("TimeSync", freemarker,
+                Map.of("interpreter", getAccountId));
     }
 
     public static Route pageNotFound(FreeMarkerEngine freemarker) {

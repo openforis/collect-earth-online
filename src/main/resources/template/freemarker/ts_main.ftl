@@ -16,7 +16,7 @@
     <script type="text/javascript" src="${root}/js/ts_specIndexStretch.js"></script>
 
     <script>
-        var userID = 1; //${userid};
+        var userID = ${interpreter};
         var authHeader = "authHeader";
     </script>
 </head>
