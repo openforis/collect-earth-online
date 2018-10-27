@@ -304,6 +304,7 @@ class Collection extends React.Component {
                                    userSamples: {}});
                     this.showProjectPlot(newPlot);
                     this.showGeoDash(newPlot);
+                    this.showTimeSync(newPlot);
                 }
             });
     }
@@ -346,6 +347,10 @@ class Collection extends React.Component {
                                          + "]&daterange=&bcenter=" + plot.center
                                          + "&bradius=" + plotRadius),
                     "_geo-dash");
+    }
+
+    showTimeSync(plot) {
+
     }
 
     nextPlot() {
