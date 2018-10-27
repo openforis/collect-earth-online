@@ -270,7 +270,7 @@ function addProjectData(sessionInfo){
 }
 
 function getUrls(sessionInfo, year){
-    var server = 'https://timesync.forestry.oregonstate.edu/_ts3'
+    var server = 'SERVER';
     var urls = {
         "annualSpec": server + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID+'/'+year,
         "selectedSpec": server + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
