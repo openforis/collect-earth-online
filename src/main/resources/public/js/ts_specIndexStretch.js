@@ -1,3 +1,9 @@
+navigator.serviceWorker.register('ts_sw.js', {
+    scope: './ts'
+});
+
+navigator.serviceWorker.ready.then(()=>console.log("service worker ready!"));
+
 //define the mean and stdev of indices for stretching
 var stretch={
     "B1":{
