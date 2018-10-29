@@ -51,7 +51,7 @@ public class PostgresInstitutions implements Institutions {
         return "";
     }
 
-    private static String getInstitution(Integer instId) {
+    public static String getInstitutionById(Integer instId) {
         var SQL = "SELECT * FROM select_institution_by_id(?)";
         try (var conn = connect();
             var pstmt = conn.prepareStatement(SQL)) {
@@ -92,7 +92,7 @@ public class PostgresInstitutions implements Institutions {
 
     public String getInstitutionDetails(Request req, Response res) {
         var institutionId = Integer.parseInt(req.params(":id"));
-        return getInstitution(institutionId);
+        return getInstitutionById(institutionId);
     }
     
     public String updateInstitution(Request req, Response res) {
@@ -148,7 +148,7 @@ public class PostgresInstitutions implements Institutions {
                         adminPstmt.setInt(3,1);
                         var adminRs = adminPstmt.executeQuery();
   
-                        return getInstitution(newInstitutionId);
+                        return getInstitutionById(newInstitutionId);
                     }
 
                 } catch (SQLException e) {
@@ -204,13 +204,13 @@ public class PostgresInstitutions implements Institutions {
     }
 
     public String archiveInstitution(Request req, Response res) {
-        var institutionId = req.params(":id");
+        var institutionId = Integer.parseInt(req.params(":id"));
         var SQL = "SELECT * FROM archive_institution(?)";
         try (var conn = connect();
              var pstmt = conn.prepareStatement(SQL)) {
-            pstmt.setInt(1, Integer.parseInt(institutionId));
+            pstmt.setInt(1, institutionId);
             var rs = pstmt.executeQuery();
-            return "";
+            return getInstitutionById(institutionId);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

@@ -86,7 +86,7 @@ public class PostgresImagery implements Imagery {
                 pstmt.setString(2, "private");
                 pstmt.setString(3, imageryTitle);
                 pstmt.setString(4, imageryAttribution);
-                pstmt.setString(5, null); // no where to add extent in UI
+                pstmt.setString(5, "null"); // no where to add extent in UI
                 pstmt.setString(6, sourceConfig.toString());
                 var rs = pstmt.executeQuery();
                 return "";

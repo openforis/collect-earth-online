@@ -94,7 +94,12 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setObject(2, UUID.fromString(dashboardId));
             pstmt.setString(3, widgetJsonString);
             var rs = pstmt.executeQuery();
-            return returnBlank(callback);
+
+            if (callback != null) {
+                return callback + "()";
+            } else {
+                return "";
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -116,7 +121,12 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setObject(2, UUID.fromString(dashboardId));
             pstmt.setString(3, widgetJsonString);
             var rs = pstmt.executeQuery();
-            return returnBlank(callback);
+
+            if (callback != null) {
+                return callback + "()";
+            } else {
+                return "";
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -134,7 +144,12 @@ public class PostgresGeoDash implements GeoDash {
             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
             var rs = pstmt.executeQuery();
-            return returnBlank(callback);
+            
+            if (callback != null) {
+                return callback + "()";
+            } else {
+                return "";
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

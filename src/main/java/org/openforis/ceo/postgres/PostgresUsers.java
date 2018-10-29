@@ -1,6 +1,7 @@
 package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
+import static org.openforis.ceo.postgres.PostgresInstitutions.getInstitutionById;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
@@ -351,6 +352,8 @@ public class PostgresUsers implements Users {
                 addPstmt.setString(3,role);
                 var addrs = addPstmt.executeQuery();
             } 
+            return getInstitutionById(Integer.parseInt(institutionId));
+
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -369,6 +372,7 @@ public class PostgresUsers implements Users {
             pstmt.setInt(2,Integer.parseInt(userId.toString()));
             pstmt.setInt(3,3);
             var rs = pstmt.executeQuery();
+            return getInstitutionById(Integer.parseInt(institutionId)); 
         }
         catch (SQLException e) {
             System.out.println(e.getMessage());

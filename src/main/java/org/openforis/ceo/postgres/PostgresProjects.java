@@ -123,15 +123,12 @@ public class PostgresProjects implements Projects {
         }
     }
 
-
-    public String getProjectById(Request req, Response res) {
-        var projectId = req.params(":id");
+    private static String projectById(Integer projectId) {
         var project = new JsonObject();
-
         try (var conn = connect()) {
             var SQL = "SELECT * FROM select_project(?)";
             var pstmt = conn.prepareStatement(SQL) ;
-            pstmt.setInt(1,Integer.parseInt(projectId));
+            pstmt.setInt(1, projectId);
             var rs = pstmt.executeQuery();
             if(rs.next()) {
                 project.addProperty("id", rs.getInt("id"));
@@ -159,8 +156,6 @@ public class PostgresProjects implements Projects {
                 project.addProperty("classification_start_date", safeDateToString(classificationStartDate));
                 project.addProperty("classification_end_date", safeDateToString(classificationEndDate));
                 project.addProperty("classification_timestep", rs.getInt("classification_timestep"));
-                // FIXME: if editable is needed, add to table and function
-                // project.addProperty("editable", rs.getBoolean("editable"));
 
                 return project.toString();
 
@@ -184,11 +179,11 @@ public class PostgresProjects implements Projects {
                 project.addProperty("archived", false);
                 project.add("sampleValues", parseJson("[]").getAsJsonArray());
 
+
                 // project.addProperty("classification_start_date", "");
                 // project.addProperty("classification_end_date", "");
                 // project.addProperty("classification_timestep", 0);
-                // // FIXME: if editable is needed, add to table and function
-                // // project.addProperty("editable", rs.getBoolean("editable"));
+
                 return project.toString();
             }
 
@@ -196,6 +191,13 @@ public class PostgresProjects implements Projects {
             System.out.println(e.getMessage());
             return "";
         }
+    }
+
+    public String getProjectById(Request req, Response res) {
+        var projectId = req.params(":id");
+        
+        return projectById(Integer.parseInt(projectId));
+        
     }
 
     public  String getProjectPlots(Request req, Response res) {
@@ -470,11 +472,11 @@ public class PostgresProjects implements Projects {
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
-            var idReturn = "";
+            var idReturn = 0;
             if (rs.next()) {
-                idReturn = Integer.toString(rs.getInt("publish_project"));
+                idReturn = rs.getInt("publish_project");
             }
-            return "" + idReturn;
+            return projectById(idReturn);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -488,11 +490,11 @@ public class PostgresProjects implements Projects {
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
-            var idReturn = "";
+            var idReturn = 0;
             if (rs.next()) {
-                idReturn = Integer.toString(rs.getInt("close_project"));
+                idReturn = rs.getInt("close_project");
             }
-            return "" + idReturn;
+            return projectById(idReturn);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -506,11 +508,36 @@ public class PostgresProjects implements Projects {
             var pstmt = conn.prepareStatement(SQL) ;
             pstmt.setInt(1,Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
-            var idReturn = "";
+            var idReturn = 0;
             if (rs.next()) {
-                idReturn = Integer.toString(rs.getInt("archive_project"));
+                idReturn = rs.getInt("archive_project");
             }
-            return "" + idReturn;
+            return projectById(idReturn);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
+    public  String getSinglePlot(Integer plotId) {
+        
+        try (var conn = connect()) {
+            var plots = new JsonArray();
+            var SQL = "SELECT * FROM select_single_plot(?)";
+            var pstmt = conn.prepareStatement(SQL) ;
+            pstmt.setInt(1, plotId);
+            var rs = pstmt.executeQuery();
+            var singlePlot = new JsonObject();
+            if (rs.next()) {
+                singlePlot.addProperty("id",rs.getInt("id"));
+                singlePlot.addProperty("projectId",rs.getString("project_id"));
+                singlePlot.addProperty("center",rs.getString("center"));
+                singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
+                singlePlot.addProperty("analysis",rs.getInt("assigned"));
+                singlePlot.addProperty("user",rs.getString("username"));
+                singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
+            }
+            return  singlePlot.toString();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -545,6 +572,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setObject(6, null); //imageryID
                 pstmt.setDate(7, new java.sql.Date(System.currentTimeMillis()) );
                 var rs = pstmt.executeQuery();
+                return getSinglePlot(Integer.parseInt(plotId));
             }
             return "";
         } catch (SQLException e) {
@@ -558,6 +586,7 @@ public class PostgresProjects implements Projects {
         var plotId = jsonInputs.get("plotId").getAsString();
         var collectionTime = new Timestamp(System.currentTimeMillis());
         var userName = jsonInputs.get("userId").getAsString();
+        
         try (var conn = connect()) {
             var SQL = "SELECT * FROM flag_plot(?,?,?)";
             var pstmt = conn.prepareStatement(SQL) ;
@@ -565,12 +594,12 @@ public class PostgresProjects implements Projects {
             pstmt.setString(2,userName);
             pstmt.setTimestamp(3,collectionTime);
             var rs = pstmt.executeQuery();
-            var idReturn = "";
+            var idReturn = 0;
             if (rs.next()) {
-                idReturn = Integer.toString(rs.getInt("flag_plot"));
+                idReturn = rs.getInt("flag_plot");
             }
 
-            return "" + idReturn;
+            return getSinglePlot(idReturn);
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());

@@ -311,7 +311,7 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_id integer)
     RETURNS integer AS $$
 
 	DELETE FROM project_widgets
-	WHERE id = _id
+	WHERE CAST(jsonb_extract_path_text(widget, 'id') as int) = _id
 	RETURNING id
 
 $$ LANGUAGE SQL;
@@ -784,6 +784,45 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 	WHERE all_plots.rows % 
 		(CASE WHEN _maximum > all_plots.total_plots THEN 0.5 ELSE all_plots.total_plots / _maximum END) = 0
 	LIMIT _maximum;
+$$ LANGUAGE SQL;
+
+--Select singe plot
+CREATE OR REPLACE FUNCTION select_single_plot(_plot_id integer) 
+    RETURNS TABLE (
+      id         integer,      
+      project_id integer,
+      center     text,
+      flagged    integer,
+      assigned   integer,
+      username     text
+    ) AS $$
+	WITH username AS (
+        SELECT DISTINCT email, plot_id 
+        FROM users 
+        INNER JOIN user_plots
+            ON users.id = user_plots.user_id
+    ),
+    plotsum AS (
+        SELECT cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
+            cast(count(flagged) as int) as assigned, 
+            plot_id
+        FROM user_plots
+        GROUP BY plot_id
+          
+    )
+	SELECT plots.id as id,
+		plots.project_id as project_id,
+		ST_AsGeoJSON(center) as center, 
+		(case when plotsum.flagged is null then 0 else plotsum.flagged end) as flagged,
+		(case when plotsum.assigned is null then 0 else plotsum.assigned end) as assigned,
+		(case when username.email is null then '' else username.email end) as username
+
+	FROM plots
+	LEFT JOIN plotsum
+		ON plots.id = plotsum.plot_id
+	LEFT JOIN username
+		ON plots.id = username.plot_id
+	WHERE plots.id = _plot_id
 $$ LANGUAGE SQL;
 
 -- select samples to add to plots
