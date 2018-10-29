@@ -34,22 +34,22 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setInt(1, Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
             if(rs.next()) {
-                var newDashboard = new JsonObject();
-                newDashboard.addProperty("projectID", projectId);
-                newDashboard.addProperty("projectTitle", projectTitle);
-                newDashboard.addProperty("dashboardID", rs.getString("dashboard_id"));
+                var dashboard = new JsonObject();
+                dashboard.addProperty("projectID", projectId);
+                dashboard.addProperty("projectTitle", rs.getString("project_title"));
+                dashboard.addProperty("dashboardID", rs.getString("dashboard_id"));
                 var widgetsJson = new JsonArray();
 
                 do {
                     widgetsJson.add(parseJson(rs.getString("widget")).getAsJsonObject());
                 } while (rs.next());
 
-                newDashboard.add("widgets", widgetsJson);
+                dashboard.add("widgets", widgetsJson);
                 
                 if (callback != null) {
-                    return callback + "(" + newDashboard.toString() + ")";
+                    return callback + "(" + dashboard.toString() + ")";
                 } else {
-                    return newDashboard.toString();
+                    return dashboard.toString();
                 }
             }
             else{
@@ -89,7 +89,7 @@ public class PostgresGeoDash implements GeoDash {
 
         var SQL = "SELECT * FROM add_project_widget(?, ?, ?::JSONB)";
         try (var conn = connect();
-        var pstmt = conn.prepareStatement(SQL)) {
+            var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(projectId));
             pstmt.setObject(2, UUID.fromString(dashboardId));
             pstmt.setString(3, widgetJsonString);

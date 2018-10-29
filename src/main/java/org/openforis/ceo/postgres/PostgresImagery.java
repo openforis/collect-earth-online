@@ -41,7 +41,9 @@ public class PostgresImagery implements Imagery {
                 newImagery.addProperty("visibility", rs.getString("visibility"));
                 newImagery.addProperty("title", rs.getString("title"));
                 newImagery.addProperty("attribution", rs.getString("attribution"));
-                newImagery.add("extent", rs.getString("extent").equals("null") ? null : parseJson(rs.getString("extent")).getAsJsonArray() );
+                newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null") 
+                    ? null 
+                    : parseJson(rs.getString("extent")).getAsJsonArray());
                 newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
 
                 imageryArray.add(newImagery);
@@ -84,7 +86,7 @@ public class PostgresImagery implements Imagery {
                 pstmt.setString(2, "private");
                 pstmt.setString(3, imageryTitle);
                 pstmt.setString(4, imageryAttribution);
-                pstmt.setString(5, null);
+                pstmt.setString(5, null); // no where to add extent in UI
                 pstmt.setString(6, sourceConfig.toString());
                 var rs = pstmt.executeQuery();
                 return "";

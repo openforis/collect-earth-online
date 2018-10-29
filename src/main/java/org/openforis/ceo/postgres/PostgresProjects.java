@@ -439,7 +439,7 @@ public class PostgresProjects implements Projects {
                             rsDump.getBoolean("assigned") +","+
                             valueOrBlank(rsDump.getString("email")) +","+
                             valueOrBlank(rsDump.getString("collection_time")) +","+
-                            JsonKeytoString(valueOrBlank(rsDump.getString("value")), "LULC") +","+
+                            // JsonKeytoString(valueOrBlank(rsDump.getString("value")), "LULC") +","+
                             "\n";
                 } 
 
@@ -808,11 +808,10 @@ public class PostgresProjects implements Projects {
             Arrays.stream(newPlotCenters)
             .forEach(plotCenter -> {
                     try {
-                        var SqlPlots = "SELECT * FROM create_project_plots(?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
+                        var SqlPlots = "SELECT * FROM create_project_plots(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
                         var pstmtPlots = conn.prepareStatement(SqlPlots) ;
-                        pstmtPlots.setInt(1,Integer.parseInt(newProject.get("projId").getAsString()));
-                        pstmtPlots.setInt(2, 0);            
-                        pstmtPlots.setString(3, makeGeoJsonPoint(plotCenter[0], plotCenter[1] ).toString());
+                        pstmtPlots.setInt(1,Integer.parseInt(newProject.get("projId").getAsString()));    
+                        pstmtPlots.setString(2, makeGeoJsonPoint(plotCenter[0], plotCenter[1] ).toString());
                         var rsPlots = pstmtPlots.executeQuery();
                         if (rsPlots.next()) {
                             var newPlotId = rsPlots.getInt("create_project_plots");

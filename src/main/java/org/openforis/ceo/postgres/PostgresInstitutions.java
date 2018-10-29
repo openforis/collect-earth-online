@@ -8,8 +8,8 @@ import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.util.Date;
 import java.sql.SQLException;
-import java.util.Optional;
 import javax.servlet.MultipartConfigElement;
 import org.openforis.ceo.db_api.Institutions;
 import spark.Request;
@@ -51,13 +51,11 @@ public class PostgresInstitutions implements Institutions {
         return "";
     }
 
-    public String getInstitutionDetails(Request req, Response res) {
-        var institutionId = Integer.parseInt(req.params(":id"));
+    private static String getInstitution(Integer instId) {
         var SQL = "SELECT * FROM select_institution_by_id(?)";
-
         try (var conn = connect();
             var pstmt = conn.prepareStatement(SQL)) {
-            pstmt.setInt(1, institutionId);
+            pstmt.setInt(1, instId);
             var rs = pstmt.executeQuery();
             var newInstitution = new JsonObject();
             if(rs.next()) {
@@ -71,12 +69,10 @@ public class PostgresInstitutions implements Institutions {
                 newInstitution.add("members", parseJson(rs.getString("members")).getAsJsonArray());
                 newInstitution.add("admins", parseJson(rs.getString("admins")).getAsJsonArray());
                 newInstitution.add("pending", parseJson(rs.getString("pending")).getAsJsonArray());
-            
-
             } else {
                 // create a blank institution json to send back
                 newInstitution.addProperty("id"         , -1);
-                newInstitution.addProperty("name"       , "No institution with ID=" + institutionId);
+                newInstitution.addProperty("name"       , "No institution with ID=" + instId);
                 newInstitution.addProperty("logo"       , "");
                 newInstitution.addProperty("description", "");
                 newInstitution.addProperty("url"        , "");
@@ -92,6 +88,11 @@ public class PostgresInstitutions implements Institutions {
             System.out.println(e.getMessage());
         }
         return "";
+    }
+
+    public String getInstitutionDetails(Request req, Response res) {
+        var institutionId = Integer.parseInt(req.params(":id"));
+        return getInstitution(institutionId);
     }
     
     public String updateInstitution(Request req, Response res) {
@@ -147,9 +148,9 @@ public class PostgresInstitutions implements Institutions {
                         adminPstmt.setInt(3,1);
                         var adminRs = adminPstmt.executeQuery();
   
+                        return getInstitution(newInstitutionId);
                     }
 
-                    return "";
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
                 }
@@ -183,6 +184,11 @@ public class PostgresInstitutions implements Institutions {
                         pstmt.setString(5, url);
                         pstmt.setBoolean(6, false);
                         pstmt.execute();
+
+                        var updatedInstitution = new JsonObject();
+                        updatedInstitution.addProperty("id", institutionId);
+                        updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
+                        return updatedInstitution.toString();
 
                     }
                 } catch (SQLException e) {

@@ -169,7 +169,7 @@ def insert_plots(project_id,conn):
                     plot['flagged']=0
                 else:
                     plot['flagged']=1
-                cur_plot.execute("select * from create_project_plots(%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['flagged'],plot['center']))
+                cur_plot.execute("select * from create_project_plots(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['center']))
                 plot_id = cur_plot.fetchone()[0]
                 if plot['user'] is not None:
                     user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)

@@ -103,7 +103,7 @@ public class PostgresUsers implements Users {
                         // Assign the username and role session attributes
                         req.session().attribute("userid", Integer.toString(rs.getInt("add_user")));
                         req.session().attribute("username", inputEmail);
-                        req.session().attribute("administrator", false);
+                        req.session().attribute("role", "user");
 
                         // Redirect to the Home page
                         res.redirect(CeoConfig.documentRoot + "/home");
@@ -120,7 +120,7 @@ public class PostgresUsers implements Users {
     public Request logout(Request req, Response res) {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
-        req.session().removeAttribute("administrator");
+        req.session().removeAttribute("role");
         return req;
     }
 
@@ -279,7 +279,7 @@ public class PostgresUsers implements Users {
                     var userJson = new JsonObject();
                     userJson.addProperty("id", rs.getInt("id"));
                     userJson.addProperty("email", rs.getString("email"));
-                    userJson.addProperty("administrator", rs.getBoolean("administrator"));
+                    userJson.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user" );
                     userJson.addProperty("resetKey", rs.getString("reset_key"));
                     
                     allUsers.add(userJson);
@@ -300,7 +300,7 @@ public class PostgresUsers implements Users {
                     var instUsers = new JsonObject();
                     instUsers.addProperty("id", rs.getInt("id"));
                     instUsers.addProperty("email", rs.getString("email"));
-                    instUsers.addProperty("administrator", rs.getBoolean("administrator"));
+                    instUsers.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");
                     instUsers.addProperty("resetKey", rs.getString("reset_key"));
                     instUsers.addProperty("institutionRole", rs.getString("institution_role"));
                     instAllUsers.add(instUsers);
