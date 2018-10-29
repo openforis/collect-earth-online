@@ -809,7 +809,6 @@ mercator.getDragBoxExtent = function (dragBox) {
 // [Side Effects] Adds a new empty overlay to mapConfig's map object
 // with id set to overlayTitle.
 mercator.addOverlay = function (mapConfig, overlayTitle, element) {
-
     var overlay = new ol.Overlay({id: overlayTitle,
                                   element: element});//?element:document.createElement("div")});
     mapConfig.map.addOverlay(overlay);
@@ -829,27 +828,27 @@ mercator.isCluster = function (feature) {
 
 // [Pure] Returns a string of HTML representing several table rows
 // that describe the passed in project.
-mercator.makeRows = function (documentRoot, project) {
+mercator.makeRows = function () {
     var rowStart = "<tr class=\"d-flex\">";
     var rowEnd = "</tr>";
     var leftColStart = "<td class=\"small col-6 px-0 my-auto\">";
     var rightColStart = "<td class=\"small col-6 pr-0\">";
     var colEnd = "</td>";
-    var linkStart = "<a href=\"" + documentRoot + "/collection/" + project.get("projectId") + "\" "
+    var linkStart = "<a href=\"" + '{documentRoot}' + "/collection/" + '{project.get("projectId")}' + "\" "
                   + "class=\"btn btn-sm btn-block btn-outline-lightgreen\" "
                   + "style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis\">";
     var linkEnd = "</a>";
     return rowStart
         + leftColStart + "<h3 class=\"my-auto\">Name</h3>" + colEnd
-        + rightColStart + linkStart + project.get("name") + linkEnd + colEnd
+        + rightColStart + linkStart + '{project.get("name")}' + linkEnd + colEnd
         + rowEnd
         + rowStart
         + leftColStart + "Description" + colEnd
-        + rightColStart + (project.get("description") == "" ? "N/A" : project.get("description")) + colEnd
+        + rightColStart + '{(project.get("description")} == "" ? "N/A" : project.get("description"))}' + colEnd
         + rowEnd
         + rowStart
         + leftColStart + "Number of plots" + colEnd
-        + rightColStart + project.get("numPlots") + colEnd
+        + rightColStart + '{project.get("numPlots")}' + colEnd
         + rowEnd;
 };
 
@@ -878,8 +877,8 @@ mercator.getPopupContent = function (mapConfig, documentRoot, feature) {
     var contentEnd = "</div>";
 
     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, ["
-            + mercator.getClusterExtent(feature) + "])\" "
+        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, "
+            + mercator.getClusterExtent(feature) + ")\" "
             + "class=\"mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
             + "<i class=\"fa fa-search-plus\"></i> Zoom to cluster</button>";
         return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
