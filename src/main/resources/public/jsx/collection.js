@@ -38,7 +38,8 @@ class Collection extends React.Component {
         this.flagPlot              = this.flagPlot.bind(this);
         this.saveValues            = this.saveValues.bind(this);
         this.hideShowAnswers       = this.hideShowAnswers.bind(this);
-        this.hideShowQuestions     = this.hideShowQuestions.bind(this);
+        this.showQuestions         = this.showQuestions.bind(this);
+        this.hideQuestions         = this.hideQuestions.bind(this);
         this.setCurrentValue       = this.setCurrentValue.bind(this);
         this.redirectToHomePage    = this.redirectToHomePage.bind(this);
     }
@@ -64,7 +65,7 @@ class Collection extends React.Component {
         }
         if (this.state.currentProject.sampleValues.length > 0 && Object.keys(this.state.surveyQuestionsVisible).length == 0) {
             const topLevelNodes = this.state.currentProject.sampleValues.filter(surveyNode => surveyNode.parent_question == -1);
-            this.hideShowQuestions(topLevelNodes.map(surveyNode => surveyNode.id));
+            this.showQuestions(topLevelNodes);
         }
     }
 
@@ -429,15 +430,15 @@ class Collection extends React.Component {
         this.setState({surveyAnswersVisible: surveyAnswersVisible});
     }
 
-    hideShowQuestions(surveyNodeIds) {
+    showQuestions(surveyNodes) {
         let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        surveyNodeIds.forEach(surveyNodeId => {
-            if (surveyQuestionsVisible[surveyNodeId]) {
-                surveyQuestionsVisible[surveyNodeId] = false;
-            } else {
-                surveyQuestionsVisible[surveyNodeId] = true;
-            }
-        });
+        surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = true);
+        this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
+    }
+
+    hideQuestions(surveyNodes) {
+        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
+        surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = false);
         this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
     }
 
@@ -503,7 +504,8 @@ class Collection extends React.Component {
                          surveyAnswersVisible={this.state.surveyAnswersVisible}
                          surveyQuestionsVisible={this.state.surveyQuestionsVisible}
                          hideShowAnswers={this.hideShowAnswers}
-                         hideShowQuestions={this.hideShowQuestions}
+                         showQuestions={this.showQuestions}
+                         hideQuestions={this.hideQuestions}
                          setCurrentValue={this.setCurrentValue}/>
                 <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
@@ -545,7 +547,8 @@ function SideBar(props) {
                              surveyAnswersVisible={props.surveyAnswersVisible}
                              surveyQuestionsVisible={props.surveyQuestionsVisible}
                              hideShowAnswers={props.hideShowAnswers}
-                             hideShowQuestions={props.hideShowQuestions}
+                             showQuestions={props.showQuestions}
+                             hideQuestions={props.hideQuestions}
                              setCurrentValue={props.setCurrentValue}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
@@ -712,7 +715,8 @@ function SurveyQuestions(props) {
                                                                            surveyAnswersVisible={props.surveyAnswersVisible}
                                                                            surveyQuestionsVisible={props.surveyQuestionsVisible}
                                                                            hideShowAnswers={props.hideShowAnswers}
-                                                                           hideShowQuestions={props.hideShowQuestions}
+                                                                           showQuestions={props.showQuestions}
+                                                                           hideQuestions={props.hideQuestions}
                                                                            setCurrentValue={props.setCurrentValue}/>)
             }
         </fieldset>
@@ -739,7 +743,8 @@ function SurveyQuestionTree(props) {
                                                                              answer={ans.answer}
                                                                              color={ans.color}
                                                                              childNodes={childNodes}
-                                                                             hideShowQuestions={props.hideShowQuestions}
+                                                                             showQuestions={props.showQuestions}
+                                                                             hideQuestions={props.hideQuestions}
                                                                              setCurrentValue={props.setCurrentValue}/>)
                 }
             </ul>
@@ -750,7 +755,8 @@ function SurveyQuestionTree(props) {
                                                                         surveyAnswersVisible={props.surveyAnswersVisible}
                                                                         surveyQuestionsVisible={props.surveyQuestionsVisible}
                                                                         hideShowAnswers={props.hideShowAnswers}
-                                                                        hideShowQuestions={props.hideShowQuestions}
+                                                                        showQuestions={props.showQuestions}
+                                                                        hideQuestions={props.hideQuestions}
                                                                         setCurrentValue={props.setCurrentValue}/>)
             }
         </fieldset>
@@ -759,7 +765,6 @@ function SurveyQuestionTree(props) {
 
 function SurveyAnswer(props) {
     const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == props.id);
-    const childQuestionIds = childNodes.map(surveyNode => surveyNode.id);
     return (
         <li className="mb-1">
             <button type="button"
@@ -768,7 +773,8 @@ function SurveyAnswer(props) {
                     name={props.answer + "_" + props.id}
                     onClick={() => {
                         props.setCurrentValue(props.question, props.id, props.answer, props.color);
-                        props.hideShowQuestions(childQuestionIds);
+                        props.hideQuestions(props.childNodes);
+                        props.showQuestions(childNodes);
                     }}>
                 <div className="circle"
                      style={{
