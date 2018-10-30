@@ -77,17 +77,11 @@ class MapPanel extends React.Component {
                                     projectSource,
                                     ceoMapStyles.ceoIcon);
         } else {
-            // FIXME: Move ol.source.Cluster call back into mercator-openlayers.js
-            const clusterSource = new ol.source.Cluster({
-                source: projectSource,
-                distance: clusterDistance
-            });
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
-                                    clusterSource,
+                                    mercator.makeClusterSource(projectSource, clusterDistance),
                                     feature => mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, feature.get("features").length, "#ffffff"));
         }
-
         mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
         const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
         mapConfig.map.on("click",

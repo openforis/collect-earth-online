@@ -821,6 +821,14 @@ mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
     return mapConfig.map.getOverlayById(overlayTitle);
 };
 
+// [Pure] Returns a new ol.source.Cluster given the unclusteredSource and clusterDistance.
+mercator.makeClusterSource = function (unclusteredSource, clusterDistance) {
+    return new ol.source.Cluster({
+        source: unclusteredSource,
+        distance: clusterDistance
+    });
+};
+
 // [Pure] Returns true if the feature is a cluster, false otherwise.
 mercator.isCluster = function (feature) {
     return feature && feature.get("features") && feature.get("features").length > 0;
