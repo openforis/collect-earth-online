@@ -59,8 +59,16 @@ var sessionInfo = {
     "tsa":"999999",
     "plotID":"",
     "isDirty":false,
-    "plotSize":1
+    "plotSize":1,
+    //TSCEO workaround for CEO API.
+    "numPlots":1000, 
+    "tsStartYear": 1985,
+    "tsEndYear": 2017,
+    "tsTargetDay": 215,
+    "currentLocation": null,
+    "plots": []
 }
+
 
 var packetInfo = {}
 
@@ -106,7 +114,23 @@ var flickerTL;
 var windowH = $(window).height();
 var windowW = $(window).width();
 
-
+function getUrls(sessionInfo, year){
+    var server = 'https://localhost:8080';
+    var geeServer = 'https://localhost:8888'
+    var urls = {
+        "annualSpec": server + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID+'/'+year,
+        "selectedSpec": geeServer + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
+        "projectList": server + '/get-all-projects',
+        "plotInterp": server + '/index.php/vertex/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
+        "plotComment": server + '/comment/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
+        "plotList": server + '/get-project-plots/'+sessionInfo.projectID+'/'+sessionInfo.numPlots,
+        "respDesign": server + '/config/response/'+sessionInfo.projectID,
+        "chipOverRide": server + '/image/override',
+        "vertInfoSave": server + '/vertex/save',
+        "commentSave": server + '/comment/save'
+    }
+    return urls
+}
 
 
 //DEFINE LOADING FUNCTIONS AND LISTENERS//
@@ -258,10 +282,160 @@ function getData(sessionInfo,specIndex,activeRedSpecIndex,activeGreenSpecIndex,a
     });
 }
 
+/************************ BEGIN OSU PORT ***************************/
+//DEFINE LOADING FUNCTIONS AND LISTENERS//
+function getDataOSU(sessionInfo,specIndex,activeRedSpecIndex,activeGreenSpecIndex,activeBlueSpecIndex,ylabel){
+    $.getJSON(getUrls(sessionInfo).selectedSpec).done(function(returnedData){ //origData
+        $("#targetDOY").text("(Target DOY: "+returnedData[0].target_day + ")")
+        origData = returnedData; //reset global
+        n_chips = origData.length; //reset global
+        lastIndex = n_chips-1; //reset global
+        data = {"Values":[]}; //reset global
+        allData = {"Values":[]}; //reset global
+        chipInfo = {useThisChip:[],canvasIDs:[],imgIDs:[],sxOrig:[],syOrig:[],sWidthOrig:[],sxZoom:[],syZoom:[],sWidthZoom:[],chipsInStrip:[],year:[],julday:[],src:[],sensor:[]}; //reset global
+        yearList = []; //reset gobal
+
+        for(var i=0;i<n_chips;i++){
+            data.Values.push(parseSpectralData(origData,i));
+            yearList.push(origData[i].image_year);
+        }
+
+        //set the default x domain max to the max year of the data, plus 1 to get a line at the end of the year
+        var maxXdomain = d3.max(yearList)+1;
+        var minXdomain = d3.min(yearList)-1;
+        defaultDomain.year.max = maxXdomain;
+        currentDomain.year.max = maxXdomain;
+        defaultDomain.year.min = minXdomain;
+        currentDomain.year.min = minXdomain;
+
+
+        data = calcIndices(data); //reset global - calculate the spectral indices
+        rgbColor = scaledRGB(data, activeRedSpecIndex, activeGreenSpecIndex, activeBlueSpecIndex, stretch, 2, n_chips); //reset global - calculate the rbg color
+        data = calcDecDate(data); //could wrap this into data appending push function
+        /*	YANG: 2016.08.06: warren want to change it to global stretch
+        Yang: 2016.08.31: warren want to change it back to always local stretch */
+        if (!currentDomain.hasCustomizedXY) {
+            updateStretch();
+        }
+        /**/
+        var urlList = [];
+        var count = [];
+        for(var i=0;i<n_chips;i++){
+            urlList.push(getUrls(sessionInfo, origData[i].image_year).annualSpec)
+            count.push(0)
+        }
+
+        urlList.forEach(function(listItem,index){
+            $.getJSON(listItem).done(function(returnedData){
+                for(var i=0;i<returnedData.length;i++){
+                    allData.Values.push(parseSpectralData(returnedData,i));
+                }
+                //make sure that all of the urls have been added to "allData" before getting the plot interps and plotting the points - need "selectThese" to be determined first - any other way and asynchronous loading will mess it up
+                count[index] = 1//++;
+                if (d3.sum(count) == n_chips){
+                    allData = calcIndices(allData); //reset global - calculate the spectral indices
+                    allDataRGBcolor = scaledRGB(allData, activeRedSpecIndex, activeGreenSpecIndex, activeBlueSpecIndex, stretch, 2, allData.Values.length); //reset global - calculate the rbg color
+                    allData = calcDecDate(allData); //could wrap this into data appending push function
+                    allDecdate = [];
+
+                    allData.Values.forEach(function(v){
+                        allDecdate.push(v.decDate)
+                    })
+
+                    //get the plot interpretations
+                    $.getJSON(getUrls(sessionInfo).plotInterp).done(function(vertices){
+                        if (vertices.length > 0 && vertices[0].plotid != sessionInfo.plotID) {
+                            return;
+                        }
+
+                        vertInfo = [];
+                        vertices.forEach(function(v) {
+                            vertInfo.push({
+                                year: v.image_year,
+                                julday: v.image_julday,
+                                index: yearList.indexOf(v.image_year),//idx,
+                                landUse: {
+                                    primary: {
+                                        landUse: v.dominant_landuse,
+                                        notes: parseNote(v.dominant_landuse_notes, 'landuse')
+                                    },
+                                    secondary: {
+                                        landUse: v.secondary_landuse,
+                                        notes: parseNote(v.secondary_landuse_notes, 'landuse')
+                                    }
+                                },
+                                landCover: {
+                                    landCover: v.dominant_landcover,
+                                    other: parseNote(v.dominant_landcover_notes, 'landcover')
+                                },
+                                changeProcess: {
+                                    changeProcess: v.change_process,
+                                    notes: parseNote(v.change_process_notes, 'process')
+                                }
+                            });
+                        });
+
+                        //fill in the comment box and the isExampleCheckbox
+                        $.getJSON(getUrls(sessionInfo).plotComment).done(function(commentObj){
+                            $("#commentInput").val(commentObj.comment);
+                            $("#isExampleCheckbox").prop("checked",commentObj.is_example == 1);
+                        });
+
+                        //check to see if vert info has been filled in for this plot
+                        if(vertInfo.length !=0){
+                            for(var i=0;i<vertInfo.length;i++){
+                                selectThese.push(vertInfo[i].index); //reset global
+                            }
+                        } else{
+                            selectThese = [0,lastIndex]
+                            for(var i=0;i<selectThese.length;i++){
+                                vertInfo.push({year:origData[selectThese[i]].image_year,julday:origData[selectThese[i]].image_julday,index:selectThese[i],landUse:{
+                                        //dominant:"",notes:{wetland:false,mining:false,rowCrop:false,orchardTreeFarm:false,vineyardsOtherWoody:false}
+                                        primary:{landUse:"",notes:{wetland:false,mining:false,rowCrop:false,orchardTreeFarm:false,vineyardsOtherWoody:false}},
+                                        secondary:{landUse:"",notes:{wetland:false,mining:false,rowCrop:false,orchardTreeFarm:false,vineyardsOtherWoody:false}}
+                                    },landCover:{landCover:"",other:{trees:false,shrubs:false,grassForbHerb:false,impervious:false,naturalBarren:false,snowIce:false,water:false}},changeProcess:{changeProcess:"",notes:{natural:false,prescribed:false,sitePrepFire:false,airphotoOnly:false,clearcut:false,thinning:false,flooding:false,reserviorLakeFlux:false,wetlandDrainage:false}}})
+                            }
+                        }
+
+                        //$(".segment").remove(); //reset the form
+                        //$(".vertex").remove(); //reset the form
+
+                        fillInForm() //fill out the form inputs
+                        plotInt(); //draw the points
+                        makeChipInfo("json", origData)
+                        appendSrcImg(); //append the src imgs
+                        appendChips("annual",selectThese); //append the chip div/canvas/img set
+
+                        //once the imgs have loaded make the chip info and draw the img to the canvas and display the time-lapse feature
+                        $("#img-gallery").imagesLoaded(function(){
+                            //makeChipInfo("json", origData); //chip info array gets set in "appendChips" gets filled out here because we have to wait until the imgs have loaded to get their height (used when chip strip is the src - not needed when chips are singles)
+                            drawAllChips("annual");	//draw the imgs to the canvas
+                            //tlInt(); //draw the time-lapse img - this is for the time lapse video - not used
+                            /* 										if ((expandedChipWindow != null) && expandedChipWindow.closed == false){
+                                                                        var selectedColor = $("#selectedColor").prop("value");
+                                                                        var pass_data = {
+                                                                            "action":"init_chips", //hard assign
+                                                                            "selectThese":selectThese, //selectThese, //"n_chips":"40", //get this from the img metadata
+                                                                            "chipInfo":chipInfo,
+                                                                            "n_chips":n_chips,
+                                                                            "chipDisplayProps":chipDisplayProps,
+                                                                            "selectedColor":selectedColor
+                                                                        };
+                                                                        expandedChipWindow.postMessage(JSON.stringify(pass_data),"*");
+                                                                    } */
+                        });
+                    });
+                    //plotInt(); //draw the points
+                };
+            });
+        });
+    });
+}
 
 //function to populate the project list when #projectList element finishes loading
-function addProjectData(sessionInfo){
+function addProjectDataOSU(sessionInfo){
     $.getJSON(getUrls(sessionInfo).projectList).done(function(object){
+        console.log(object);
         for(var i=0;i<object.length;i++){
             $("#projectList").append('<li value="' + object[i].project_id + '" data-size="' + object[i].plot_size + '">'+object[i].project_code+'</li>')
             packetInfo[object[i].project_id] = object[i].packet_ids;
@@ -269,8 +443,8 @@ function addProjectData(sessionInfo){
     });
 }
 
-function getUrls(sessionInfo, year){
-    var server = 'SERVER';
+function getUrlsFromOSU(sessionInfo, year){
+    var server = 'https://timesync.forestry.oregonstate.edu/_ts3';
     var urls = {
         "annualSpec": server + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID+'/'+year,
         "selectedSpec": server + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
@@ -285,6 +459,79 @@ function getUrls(sessionInfo, year){
     }
     return urls
 }
+
+function appendPlotsOSU(sessionInfo){
+    $("#projBtn").empty().append(sessionInfo.projectCode+'<span class="caret projBtn"></span>');
+    $("#plotList").empty();
+
+    $.getJSON(getUrls(sessionInfo).plotList).done(function(object){
+        console.log(object);
+        for(var i=0;i<object.length;i++){
+            if(object[i].is_complete == 1){
+                //$("#plotList").append('<li class="done">'+object[i].plotid+'</li>');
+                if(object[i].is_example != 1){
+                    $("#plotList").append('<li style="display:none"><small><span class="glyphicon glyphicon-ok" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                } else{
+                    $("#plotList").append('<li style="display:none" class="example"><small><span class="glyphicon glyphicon-ok" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                }
+            } else {
+                //$("#plotList").append('<li>'+object[i].plotid+'</li>');
+                if(object[i].is_example != 1){
+                    $("#plotList").append('<li style="display:none"><small><span class="glyphicon glyphicon-none" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                } else{
+                    $("#plotList").append('<li style="display:none" class="example"><small><span class="glyphicon glyphicon-none" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                }
+            }
+        }
+
+        //show the plot in the list - depends on the status of the exmaplePlots checkbox
+        if($("#examplePlots").prop("checked")){
+            $(".example").show()
+        } else{
+            $("#plotList li").show()
+        }
+
+        //checkAllPlots(sessionInfo);
+        //append the tooltips
+        if($("#toolTipsCheck").hasClass("glyphicon-ok")){
+            $("#plotList li").prop("title","This is a plot selector. Clicking on it will load the plot's spectral time series data and the corresponding image chips. Each time you select a new plot the display properties of the previous plot will be saved for the session. Segmentation and vertex interpretations will also be saved.")
+            $("#plotList li").find("span").prop("title","This is a plot complete indicator. A checkmark will appear when a plot's interpretation is complete.")
+        }
+    })
+}
+/************************ END OSU PORT ***************************/
+
+//function to populate the project list when #projectList element finishes loading
+function addProjectData(sessionInfo){
+    $.getJSON(getUrls(sessionInfo).projectList).done(function(object){
+        console.log(object);
+        for(var i=0;i<object.length;i++){
+            /*TSCEO
+                1. add ts_plot_size, ts_target_day, ts_start_year, ts_end_year
+            */
+            var tsConfig = {
+                'tsPlotSize': 1,
+                'tsTargetDay': 215,
+                'tsStartYear': 1985,
+                'tsEndYear': 2017,
+                'numPlots': object[i].numPlots
+            }
+
+            var prjItem = `<li value="${object[i].id}" 
+                                data-size="1" 
+                                data-ts-target-day="${tsConfig.tsTargetDay}" 
+                                data-ts-start-year="${tsConfig.tsStartYear}"
+                                data-ts-end-year="${tsConfig.tsEndYear}"
+                                data-num-plots="${tsConfig.numPlots}">${object[i].name}</li>`;
+
+            // $("#projectList").append('<li value="' + object[i].id + '" data-size="' + 1 + '" data-ts-config="' + 'JSON.stringify(tsConfig)' + '">'+object[i].name+'</li>')
+            $("#projectList").append(prjItem);
+            packetInfo[object[i].id] = object[i].packet_ids === undefined ? null : object[i].packet_ids;
+        }
+    });
+}
+
+
 
 function parseSpectralData(origData,i){
     var vertInfoSpec = {
@@ -339,7 +586,8 @@ $("body").on("click", "#projectList li", function(){
     sessionInfo.projectID = $(this).val();
     sessionInfo.projectCode = $(this).text();
     sessionInfo.plotID = ""; //defaulted as "" when application is first opened, do this to reset to default if a new project is selected from the same session or else the plotID will still be assigned, but from the last project
-    sessionInfo.plotSize = $(this).data().size;
+    sessionInfo.plots = [];
+    sessionInfo = {...sessionInfo, ...$(this).data()};
     chipDisplayProps.box = $(this).data().size;
 
     var thesePackets = packetInfo[sessionInfo.projectID];
@@ -424,26 +672,6 @@ function checkPlot(sessionInfo, vertInfo){
     return done;
 }
 
-//function checkAllPlots(sessionInfo){
-//	$("#plotList li").each(function(i){
-//		var tempSessionInfo = $.extend(true, {}, sessionInfo)
-//		tempSessionInfo.plotID = $(this).text();
-//		var tempVertInfo = [];
-//		$.getJSON(getUrls(tempSessionInfo).plotInterp).done(function(vertices){
-//			vertices.forEach(function(v){
-//				tempVertInfo.push({
-//					landUse: {
-//						primary: {landUse: v.dominant_landuse}
-//					},
-//					landCover:{landCover: v.dominant_landcover},
-//					changeProcess: {changeProcess: v.change_process}
-//				});
-//			});
-//		checkPlot(tempSessionInfo, tempVertInfo)
-//		});
-//	});
-//}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -476,20 +704,45 @@ function appendPlots(sessionInfo){
     $("#plotList").empty();
 
     $.getJSON(getUrls(sessionInfo).plotList).done(function(object){
+        console.log(object);
+        //TSCEO keep a copy of the plots list
+        sessionInfo.plots = object;
         for(var i=0;i<object.length;i++){
+            //TSCEO: temporaly force to have value for is_complete and is_example
+            object[i].is_complete = 0;
+            object[i].is_example = 0;
+
+            let center = object[i].center;
+
             if(object[i].is_complete == 1){
                 //$("#plotList").append('<li class="done">'+object[i].plotid+'</li>');
                 if(object[i].is_example != 1){
-                    $("#plotList").append('<li style="display:none"><small><span class="glyphicon glyphicon-ok" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                    let pLi = `<li style="display:none" data-center='${center}'>
+                                    <small>
+                                        <span class="glyphicon glyphicon-ok" style="margin-right:3px"></span>
+                                    </small>${object[i].id}</li>`;
+                    $("#plotList").append(pLi);
                 } else{
-                    $("#plotList").append('<li style="display:none" class="example"><small><span class="glyphicon glyphicon-ok" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                    let pLi = `<li style="display:none" class="example" data-center='${center}'>
+                    <small>
+                        <span class="glyphicon glyphicon-ok" style="margin-right:3px"></span>
+                    </small>${object[i].id}</li>`;                   
+                    $("#plotList").append(pLi);
                 }
             } else {
                 //$("#plotList").append('<li>'+object[i].plotid+'</li>');
                 if(object[i].is_example != 1){
-                    $("#plotList").append('<li style="display:none"><small><span class="glyphicon glyphicon-none" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                    let pLi = `<li style="display:none" data-center='${center}'>
+                                    <small>
+                                        <span class="glyphicon glyphicon-none" style="margin-right:3px"></span>
+                                    </small>${object[i].id}</li>`;
+                    $("#plotList").append(pLi);
                 } else{
-                    $("#plotList").append('<li style="display:none" class="example"><small><span class="glyphicon glyphicon-none" style="margin-right:3px"></span></small>'+object[i].plotid+'</li>');
+                    let pLi = `<li style="display:none" class="example" data-center='${center}'>
+                                    <small>
+                                        <span class="glyphicon glyphicon-none" style="margin-right:3px"></span>
+                                    </small>${object[i].id}</li>`;
+                    $("#plotList").append(pLi);
                 }
             }
         }
@@ -555,6 +808,7 @@ $("body").on("click", "#plotList li", function(e){
     //get and set the sessionInfo.plotID
     var index = $("#plotList li").index($(this));
     sessionInfo.plotID = $(this).text()
+    sessionInfo.currentLocation = $(this).data().center;
 
     currentDomain = getSetting(sessionInfo.projectID, sessionInfo.plotID, defaultDomain)
     currentDomain.dirty = 0; //need to reset this since it is "clean" now
@@ -568,10 +822,6 @@ $("body").on("click", "#plotList li", function(e){
 
     vertInfo = [] //plotFormInfo[index];
 
-
-    //activeRedSpecIndex = $("#redList li.active").attr('id');
-    //activeGreenSpecIndex = $("#greenList li.active").attr('id');
-    //activeBlueSpecIndex = $("#blueList li.active").attr('id');
     specIndex = $("#indexList li.active").attr('id');
     ylabel = $("#"+specIndex).text() //check to see if this one needs to be passed to the getData function
 
@@ -1383,9 +1633,9 @@ $(document).ready(function(){
             else if(thisListID == "blueList"){$("#btnBlue div").replaceWith('<div><small>RG</small><strong>B</strong><br><small>'+$("#"+thisSpecIndexID).text()+'</small><span class="caret specPlot"></span></div>')};
 
             //these could be global, they are retrieved again when a chip is replaced.
-            activeRedSpecIndex = $("#redList li.active").attr('id')
-            activeGreenSpecIndex = $("#greenList li.active").attr('id')
-            activeBlueSpecIndex = $("#blueList li.active").attr('id')
+            // activeRedSpecIndex = $("#redList li.active").attr('id')
+            // activeGreenSpecIndex = $("#greenList li.active").attr('id')
+            // activeBlueSpecIndex = $("#blueList li.active").attr('id')
 
             rgbColor = scaledRGB(data, activeRedSpecIndex, activeGreenSpecIndex, activeBlueSpecIndex, stretch, 2, n_chips);
             allDataRGBcolor = scaledRGB(allData, activeRedSpecIndex, activeGreenSpecIndex, activeBlueSpecIndex, stretch, 2, allData.Values.length);
@@ -3450,9 +3700,27 @@ function changeDefaultChip(sessionInfo, year, newDOY, oldDOY){
         });
 }
 
+function IsJsonString(json){
+    var str = json.toString();
+    try {
+        JSON.parse(str);
+    }
+    catch (e)
+    {
+        return false;
+    }
+     
+    return true;
+}
 
 $(window).on("message onmessage",function(e){
-    var remoteMessage = JSON.parse(e.originalEvent.data);
+    try {
+        var remoteMessage = JSON.parse(e.originalEvent.data);
+    }
+    catch (e) {
+        return;
+    }
+
     if(remoteMessage.action == "replace_chip"){
         //capture info to send to the server
         var oldDOY = data.Values[remoteMessage.originChipIndex].doy

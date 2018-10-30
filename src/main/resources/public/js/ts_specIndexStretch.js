@@ -1,5 +1,5 @@
-navigator.serviceWorker.register('ts_sw.js', {
-    scope: './ts'
+navigator.serviceWorker.register('/ts_sw.js', {
+    scope: '/timesync'
 });
 
 navigator.serviceWorker.ready.then(()=>console.log("service worker ready!"));
