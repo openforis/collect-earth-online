@@ -456,14 +456,16 @@ class Collection extends React.Component {
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples});
             utils.blink_border(answerText + "_" + answerId);
-            selectedFeatures.clear();
-            this.checkIfAllSamplesAssigned();
+            this.allowSaveIfSurveyComplete();
+            return true;
         } else {
             alert("No samples selected. Please click some first.");
+            return false;
         }
     }
 
-    checkIfAllSamplesAssigned() {
+    // FIXME: Make sure that each sample has answered all questions along its explored survey question tree
+    allowSaveIfSurveyComplete() {
         const assignedSamples   = Object.keys(this.state.userSamples);
         const assignedQuestions = Object.values(this.state.userSamples);
         const totalSamples      = this.state.currentPlot.samples;
@@ -772,9 +774,10 @@ function SurveyAnswer(props) {
                     id={props.answer + "_" + props.id}
                     name={props.answer + "_" + props.id}
                     onClick={() => {
-                        props.setCurrentValue(props.question, props.id, props.answer, props.color);
-                        props.hideQuestions(props.childNodes);
-                        props.showQuestions(childNodes);
+                        if (props.setCurrentValue(props.question, props.id, props.answer, props.color)) {
+                            props.hideQuestions(props.childNodes);
+                            props.showQuestions(childNodes);
+                        }
                     }}>
                 <div className="circle"
                      style={{
