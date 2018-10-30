@@ -125,9 +125,9 @@ class MapPanel extends React.Component {
                         <div id="home-map-pane" style={{width: "100%", height: "100%", position: "fixed"}}></div>
                     </div>
                 </div>
-                <ProjectPopup features={this.state.clickedFeatures}
-                              mapConfig={this.state.mapConfig}
+                <ProjectPopup mapConfig={this.state.mapConfig}
                               clusterExtent={this.state.clusterExtent}
+                              features={this.state.clickedFeatures}
                               documentRoot={this.props.documentRoot}/>
             </div>
         );
@@ -271,11 +271,11 @@ function Project(props) {
 }
 
 class ProjectPopup extends React.Component {
-    // FIXME: nope
     componentDidMount() {
-        let ref=this;
-        document.getElementById("zoomToCluster").onclick=function () {
-            mercator.zoomMapToExtent(ref.props.mapConfig, ref.props.clusterExtent);
+        // There is some kind of bug in attaching this onClick handler directly to its button in render().
+        document.getElementById("zoomToCluster").onclick = () => {
+            mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent);
+            mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
         };
     }
 
@@ -291,10 +291,8 @@ class ProjectPopup extends React.Component {
                             {
                                 this.props.features.map((feature, uid) =>
                                     <React.Fragment key={uid}>
-                                        <tr className="d-flex">
-                                            <td className="small col-6 px-0 my-auto">
-                                                <h3 className="my-auto">Name</h3>
-                                            </td>
+                                        <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
+                                            <td className="small col-6 px-0 my-auto">Name</td>
                                             <td className="small col-6 pr-0">
                                                 <a href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
                                                    className="btn btn-sm btn-block btn-outline-lightgreen"
@@ -307,11 +305,11 @@ class ProjectPopup extends React.Component {
                                                 </a>
                                             </td>
                                         </tr>
-                                        < tr className="d-flex">
-                                            <td className="small col-6 px-0 my-auto">Description</td>
-                                            <td className="small col-6 pr-0">{feature.get("description") == "" ? "N/A" : feature.get("description")}</td>
-                                        </tr>
                                         <tr className="d-flex">
+                                            <td className="small col-6 px-0 my-auto">Description</td>
+                                            <td className="small col-6 pr-0">{feature.get("description")}</td>
+                                        </tr>
+                                        <tr className="d-flex" style={{borderBottom: "1px solid gray"}}>
                                             <td className="small col-6 px-0 my-auto">Number of plots</td>
                                             <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
                                         </tr>
@@ -321,7 +319,8 @@ class ProjectPopup extends React.Component {
                         </tbody>
                     </table>
                 </div>
-                <button id="zoomToCluster" className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+                <button id="zoomToCluster"
+                        className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
                         style={{
                             cursor: "pointer",
                             minWidth: "350px",
