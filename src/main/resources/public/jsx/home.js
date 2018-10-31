@@ -134,16 +134,62 @@ class MapPanel extends React.Component {
     }
 }
 
-function SideBar(props) {
-    return (
-        <div id="lPanel" className="col-lg-3 pr-0 pl-0">
-            <div className="bg-darkgreen">
-                <h1 className="tree_label" id="panelTitle">Institutions</h1>
+class SideBar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            filteredInstitutions: []
+        };
+        this.filterCall=this.filterCall.bind(this);
+    }
+    componentDidMount() {
+        // Fetch institutions
+        fetch(this.props.documentRoot + "/get-all-institutions")
+            .then(response => response.json())
+            .then(data => this.setState({filteredInstitutions: data}));
+    }
+    filterCall(e) {
+        const filterText = e.target.value;
+        fetch(this.props.documentRoot + "/get-all-institutions")
+            .then(response => response.json())
+            .then(data => {
+                if (filterText != '') {
+                    const filtered = data.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText));
+                    if(filtered.length>0) {
+                        this.setState({filteredInstitutions: filtered});
+                    }
+                    else{
+                        this.setState({filteredInstitutions: []});
+                    }
+                }
+                else{
+                    this.setState({filteredInstitutions: data});
+                }
+            });
+    }
+    render() {
+        return (
+            <div id="lPanel" className="col-lg-3 pr-0 pl-0">
+                <div className="bg-darkgreen">
+                    <h1 className="tree_label" id="panelTitle">Institutions</h1>
+                </div>
+                <ul className="tree">
+                    <CreateInstitutionButton userName={this.props.userName} documentRoot={this.props.documentRoot}/>
+                    <InstitutionFilter documentRoot={this.props.documentRoot} filterCall={this.filterCall}/>
+                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions} projects={this.props.projects}
+                                     documentRoot={this.props.documentRoot}/>
+                </ul>
             </div>
-            <ul className="tree">
-                <CreateInstitutionButton userName={props.userName} documentRoot={props.documentRoot}/>
-                <InstitutionList projects={props.projects} documentRoot={props.documentRoot}/>
-            </ul>
+        );
+    }
+}
+
+function InstitutionFilter(props) {
+    return (
+        <div id="filter-institution" className="form-control">
+            <input type="text" id="filterInstitution" autoComplete="off" placeholder="Filter by Institution Name"
+                   className="form-control"
+                   onChange={(e) => props.filterCall(e)}/>
         </div>
     );
 }
@@ -162,33 +208,17 @@ function CreateInstitutionButton(props) {
     }
 }
 
-class InstitutionList extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            institutions: []
-        };
-    }
-
-    componentDidMount() {
-        // Fetch institutions
-        fetch(this.props.documentRoot + "/get-all-institutions")
-            .then(response => response.json())
-            .then(data => this.setState({institutions: data}));
-    }
-
-    render() {
-        return (
-            this.state.institutions.map(
-                (institution, uid) =>
-                    <Institution key={uid}
-                                 id={institution.id}
-                                 name={institution.name}
-                                 documentRoot={this.props.documentRoot}
-                                 projects={this.props.projects.filter(project => project.institution == institution.id)}/>
-            )
-        );
-    }
+function InstitutionList(props) {
+    return (
+        props.filteredInstitutions.map(
+            (institution, uid) =>
+                <Institution key={uid}
+                             id={institution.id}
+                             name={institution.name}
+                             documentRoot={props.documentRoot}
+                             projects={props.projects.filter(project => project.institution == institution.id)}/>
+        )
+    );
 }
 
 function Institution(props) {
