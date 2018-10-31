@@ -138,7 +138,8 @@ class SideBar extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            filteredInstitutions: []
+            filteredInstitutions: [],
+            institutions: []
         };
         this.filterCall=this.filterCall.bind(this);
     }
@@ -146,26 +147,22 @@ class SideBar extends React.Component {
         // Fetch institutions
         fetch(this.props.documentRoot + "/get-all-institutions")
             .then(response => response.json())
-            .then(data => this.setState({filteredInstitutions: data}));
+            .then(data => this.setState({filteredInstitutions: data,institutions:data}));
     }
     filterCall(e) {
         const filterText = e.target.value;
-        fetch(this.props.documentRoot + "/get-all-institutions")
-            .then(response => response.json())
-            .then(data => {
-                if (filterText != '') {
-                    const filtered = data.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText));
-                    if(filtered.length>0) {
-                        this.setState({filteredInstitutions: filtered});
-                    }
-                    else{
-                        this.setState({filteredInstitutions: []});
-                    }
-                }
-                else{
-                    this.setState({filteredInstitutions: data});
-                }
-            });
+        if (filterText != '') {
+            const filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+            if (filtered.length > 0) {
+                this.setState({filteredInstitutions: filtered});
+            }
+            else {
+                this.setState({filteredInstitutions: []});
+            }
+        }
+        else {
+            this.setState({filteredInstitutions: this.state.institutions});
+        }
     }
     render() {
         return (
