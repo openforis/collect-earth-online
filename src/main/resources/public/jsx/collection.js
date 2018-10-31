@@ -169,7 +169,7 @@ class Collection extends React.Component {
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-                                ceoMapStyles.polygon);
+                                ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({mapConfig: mapConfig});
     }
@@ -329,13 +329,13 @@ class Collection extends React.Component {
                                                                   this.state.currentProject.plotSize,
                                                                   this.state.currentProject.plotShape)
                                 ),
-                                ceoMapStyles.polygon);
+                                ceoMapStyles.yellowPolygon);
         mercator.addVectorLayer(this.state.mapConfig,
                                 "currentSamples",
                                 mercator.samplesToVectorSource(plot.samples),
                                 plot.samples[0].geom
-                                    ? ceoMapStyles.polygon
-                                    : ceoMapStyles.yellowPoint);
+                                    ? ceoMapStyles.blackPolygon
+                                    : ceoMapStyles.blackCircle);
         mercator.enableSelection(this.state.mapConfig, "currentSamples");
         mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
     }
@@ -451,12 +451,21 @@ class Collection extends React.Component {
                 if (!userSamples[sampleId]) {
                     userSamples[sampleId] = {};
                 }
-                userSamples[sampleId][questionText] = answerText;
-                mercator.highlightSampleGeometry(feature, answerColor);
+                userSamples[sampleId][questionText] = {answer: answerText,
+                                                       color: answerColor};
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples});
+            const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+            allFeatures.forEach(feature => {
+                const sampleId = feature.get("sampleId");
+                const answerColor = (userSamples[sampleId] && userSamples[sampleId][questionText])
+                      ? userSamples[sampleId][questionText]["color"]
+                      : null;
+                mercator.highlightSampleGeometry(feature, answerColor);
+            });
+            // FIXME: Keep the border of the clicked answer highlighted until another one is selected for that question
             utils.blink_border(answerText + "_" + answerId);
-            this.allowSaveIfSurveyComplete();
+            this.allowSaveIfSurveyComplete(userSamples);
             return true;
         } else {
             alert("No samples selected. Please click some first.");
@@ -465,9 +474,9 @@ class Collection extends React.Component {
     }
 
     // FIXME: Make sure that each sample has answered all questions along its explored survey question tree
-    allowSaveIfSurveyComplete() {
-        const assignedSamples   = Object.keys(this.state.userSamples);
-        const assignedQuestions = Object.values(this.state.userSamples);
+    allowSaveIfSurveyComplete(userSamples) {
+        const assignedSamples   = Object.keys(userSamples);
+        const assignedQuestions = Object.values(userSamples);
         const totalSamples      = this.state.currentPlot.samples;
         const totalQuestions    = this.state.currentProject.sampleValues;
         if (assignedSamples.length == totalSamples.length
