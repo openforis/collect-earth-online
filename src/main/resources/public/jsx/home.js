@@ -215,8 +215,8 @@ function InstitutionList(props) {
                 <Institution key={uid}
                              id={institution.id}
                              name={institution.name}
-                             documentRoot={this.props.documentRoot}
-                             projects={this.props.projects.filter(project => project.institution == institution.id)}/>
+                             documentRoot={props.documentRoot}
+                             projects={props.projects.filter(project => project.institution == institution.id)}/>
         )
     );
 }
