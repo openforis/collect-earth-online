@@ -446,7 +446,7 @@ class Collection extends React.Component {
     highlightAnswer(questionText, answerText) {
         let selectedAnswers = this.state.selectedAnswers;
         selectedAnswers[questionText] = answerText;
-        this.state({selectedAnswers: selectedAnswers});
+        this.setState({selectedAnswers: selectedAnswers});
     }
 
     setCurrentValue(questionText, answerId, answerText, answerColor) {
@@ -482,16 +482,29 @@ class Collection extends React.Component {
         });
     }
 
-    // FIXME: Make sure that each sample has answered all questions along its explored survey question tree
     allowSaveIfSurveyComplete(userSamples) {
-        const assignedSamples   = Object.keys(userSamples);
-        const assignedQuestions = Object.values(userSamples);
-        const totalSamples      = this.state.currentPlot.samples;
-        const totalQuestions    = this.state.currentProject.sampleValues;
+        const assignedSamples = Object.keys(userSamples);
+        const totalSamples = this.state.currentPlot.samples;
         if (assignedSamples.length == totalSamples.length
-            && assignedQuestions.every(assignments => Object.keys(assignments).length == totalQuestions.length, this)) {
+            && assignedSamples.every(sampleId => this.surveyQuestionTreeComplete(userSamples[sampleId], -1))) {
             this.setState({saveValuesButtonDisabled: false});
         }
+    }
+
+    // FIXME: Make sure that each sample has answered all questions along its explored survey question tree
+    surveyQuestionTreeComplete(sampleAssignments, rootNodeId) {
+        return true;
+        // Actual (yet incomplete) code is below)
+        // const topLevelNodes = this.getChildNodes(-1);
+        // const rootNode = topLevelNodes[0];
+        // if (sampleAssignments[rootNode.question]) {
+        //     const childNodes = this.getChildNodes(rootNode.id);
+        //     return childNodes.every(childNode => this.surveyQuestionTreeComplete(sampleAssignments, childNode.id));
+        // }
+    }
+
+    getChildNodes(surveyNodeId) {
+        return this.state.currentProject.sampleValues.filter(surveyNode => surveyNode.parent_question == surveyNodeId);
     }
 
     redirectToHomePage() {
