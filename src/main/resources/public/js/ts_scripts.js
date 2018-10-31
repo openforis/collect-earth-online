@@ -65,7 +65,7 @@ var sessionInfo = {
     "tsStartYear": 1985,
     "tsEndYear": 2017,
     "tsTargetDay": 215,
-    "currentLocation": null,
+    "currentLocation": {"coordinates": [0,0]},
     "plots": []
 }
 
@@ -119,7 +119,7 @@ function getUrls(sessionInfo, year){
     var geeServer = 'https://localhost:8888'
     var urls = {
         "annualSpec": server + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID+'/'+year,
-        "selectedSpec": geeServer + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
+        "selectedSpec": `${geeServer}/ts/spectrals/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}`,
         "projectList": server + '/get-all-projects',
         "plotInterp": server + '/index.php/vertex/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
         "plotComment": server + '/comment/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
@@ -136,6 +136,8 @@ function getUrls(sessionInfo, year){
 //DEFINE LOADING FUNCTIONS AND LISTENERS//
 function getData(sessionInfo,specIndex,activeRedSpecIndex,activeGreenSpecIndex,activeBlueSpecIndex,ylabel){
     $.getJSON(getUrls(sessionInfo).selectedSpec).done(function(returnedData){ //origData
+        console.log(returnedData);
+
         $("#targetDOY").text("(Target DOY: "+returnedData[0].target_day + ")")
         origData = returnedData; //reset global
         n_chips = origData.length; //reset global
