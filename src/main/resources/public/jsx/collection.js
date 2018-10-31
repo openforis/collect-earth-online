@@ -455,14 +455,7 @@ class Collection extends React.Component {
                                                        color: answerColor};
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples});
-            const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
-            allFeatures.forEach(feature => {
-                const sampleId = feature.get("sampleId");
-                const answerColor = (userSamples[sampleId] && userSamples[sampleId][questionText])
-                      ? userSamples[sampleId][questionText]["color"]
-                      : null;
-                mercator.highlightSampleGeometry(feature, answerColor);
-            });
+            this.highlightSamplesByQuestion(userSamples, questionText);
             // FIXME: Keep the border of the clicked answer highlighted until another one is selected for that question
             utils.blink_border(answerText + "_" + answerId);
             this.allowSaveIfSurveyComplete(userSamples);
@@ -471,6 +464,17 @@ class Collection extends React.Component {
             alert("No samples selected. Please click some first.");
             return false;
         }
+    }
+
+    highlightSamplesByQuestion(userSamples, questionText) {
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+        allFeatures.forEach(feature => {
+            const sampleId = feature.get("sampleId");
+            const answerColor = (userSamples[sampleId] && userSamples[sampleId][questionText])
+                ? userSamples[sampleId][questionText]["color"]
+                : null;
+            mercator.highlightSampleGeometry(feature, answerColor);
+        });
     }
 
     // FIXME: Make sure that each sample has answered all questions along its explored survey question tree
