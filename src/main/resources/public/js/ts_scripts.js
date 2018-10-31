@@ -118,8 +118,8 @@ function getUrls(sessionInfo, year){
     var server = 'https://localhost:8080';
     var geeServer = 'https://localhost:8888'
     var urls = {
-        "annualSpec": server + '/data/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID+'/'+year,
-        "selectedSpec": `${geeServer}/ts/spectrals/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}`,
+        "annualSpec": `${geeServer}/ts/spectrals/year/${year}/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}`,
+        "selectedSpec": `${geeServer}/ts/spectrals/day/${sessionInfo.tsTargetDay}/${sessionInfo.currentLocation.coordinates[0]}/${sessionInfo.currentLocation.coordinates[1]}`,
         "projectList": server + '/get-all-projects',
         "plotInterp": server + '/index.php/vertex/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
         "plotComment": server + '/comment/'+sessionInfo.userID+'/'+sessionInfo.projectID+'/'+sessionInfo.tsa+'/'+sessionInfo.plotID,
@@ -132,14 +132,29 @@ function getUrls(sessionInfo, year){
     return urls
 }
 
+function parseSpectralData(origData,i){
+    var vertInfoSpec = {
+        "Year":origData[i].image_year,
+        "doy":origData[i].image_julday,
+        "B1":parseInt(origData[i].B1)/10000,
+        "B2":parseInt(origData[i].B2)/10000,
+        "B3":parseInt(origData[i].B3)/10000,
+        "B4":parseInt(origData[i].B4)/10000,
+        "B5":parseInt(origData[i].B5)/10000,
+        "B7":parseInt(origData[i].B7)/10000,
+        "cloud_cover": parseInt(origData[i].cfmask)
+    }
+    return vertInfoSpec
+}
 
 //DEFINE LOADING FUNCTIONS AND LISTENERS//
 function getData(sessionInfo,specIndex,activeRedSpecIndex,activeGreenSpecIndex,activeBlueSpecIndex,ylabel){
     $.getJSON(getUrls(sessionInfo).selectedSpec).done(function(returnedData){ //origData
         console.log(returnedData);
 
-        $("#targetDOY").text("(Target DOY: "+returnedData[0].target_day + ")")
-        origData = returnedData; //reset global
+        // $("#targetDOY").text("(Target DOY: "+returnedData[0].target_day + ")")
+        $("#targetDOY").text("(Target DOY: "+sessionInfo.tsTargetDay + ")");
+        origData = returnedData.timeseries; //reset global
         n_chips = origData.length; //reset global
         lastIndex = n_chips-1; //reset global
         data = {"Values":[]}; //reset global
@@ -535,20 +550,6 @@ function addProjectData(sessionInfo){
 
 
 
-function parseSpectralData(origData,i){
-    var vertInfoSpec = {
-        "Year":origData[i].image_year,
-        "doy":origData[i].image_julday,
-        "B1":parseInt(origData[i].b1)/10000,
-        "B2":parseInt(origData[i].b2)/10000,
-        "B3":parseInt(origData[i].b3)/10000,
-        "B4":parseInt(origData[i].b4)/10000,
-        "B5":parseInt(origData[i].b5)/10000,
-        "B7":parseInt(origData[i].b7)/10000,
-        "cloud_cover": parseInt(origData[i].cloud_cover)
-    }
-    return vertInfoSpec
-}
 
 //listener/action for when the body has loaded - append the projects to the projects list
 $("#projectList").load(addProjectData(sessionInfo))
