@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { utils } from "../js/utils.js";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -26,7 +25,8 @@ class Collection extends React.Component {
             surveyAnswersVisible: {},
             surveyQuestionsVisible: {},
             currentPlot: null,
-            userSamples: {}
+            userSamples: {},
+            selectedAnswers: {}
         };
         this.setBaseMapSource      = this.setBaseMapSource.bind(this);
         this.setImageryYearDG      = this.setImageryYearDG.bind(this);
@@ -40,6 +40,7 @@ class Collection extends React.Component {
         this.hideShowAnswers       = this.hideShowAnswers.bind(this);
         this.showQuestions         = this.showQuestions.bind(this);
         this.hideQuestions         = this.hideQuestions.bind(this);
+        this.highlightAnswer       = this.highlightAnswer.bind(this);
         this.setCurrentValue       = this.setCurrentValue.bind(this);
         this.redirectToHomePage    = this.redirectToHomePage.bind(this);
     }
@@ -442,6 +443,12 @@ class Collection extends React.Component {
         this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
     }
 
+    highlightAnswer(questionText, answerText) {
+        let selectedAnswers = this.state.selectedAnswers;
+        selectedAnswers[questionText] = answerText;
+        this.state({selectedAnswers: selectedAnswers});
+    }
+
     setCurrentValue(questionText, answerId, answerText, answerColor) {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
@@ -456,8 +463,6 @@ class Collection extends React.Component {
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples});
             this.highlightSamplesByQuestion(userSamples, questionText);
-            // FIXME: Keep the border of the clicked answer highlighted until another one is selected for that question
-            utils.blink_border(answerText + "_" + answerId);
             this.allowSaveIfSurveyComplete(userSamples);
             return true;
         } else {
@@ -521,7 +526,9 @@ class Collection extends React.Component {
                          hideShowAnswers={this.hideShowAnswers}
                          showQuestions={this.showQuestions}
                          hideQuestions={this.hideQuestions}
-                         setCurrentValue={this.setCurrentValue}/>
+                         highlightAnswer={this.highlightAnswer}
+                         setCurrentValue={this.setCurrentValue}
+                         selectedAnswers={this.state.selectedAnswers}/>
                 <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
         );
@@ -564,7 +571,9 @@ function SideBar(props) {
                              hideShowAnswers={props.hideShowAnswers}
                              showQuestions={props.showQuestions}
                              hideQuestions={props.hideQuestions}
-                             setCurrentValue={props.setCurrentValue}/>
+                             highlightAnswer={props.highlightAnswer}
+                             setCurrentValue={props.setCurrentValue}
+                             selectedAnswers={props.selectedAnswers}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
                     <SaveValuesButton saveValues={props.saveValues}
@@ -732,7 +741,9 @@ function SurveyQuestions(props) {
                                                                            hideShowAnswers={props.hideShowAnswers}
                                                                            showQuestions={props.showQuestions}
                                                                            hideQuestions={props.hideQuestions}
-                                                                           setCurrentValue={props.setCurrentValue}/>)
+                                                                           highlightAnswer={props.highlightAnswer}
+                                                                           setCurrentValue={props.setCurrentValue}
+                                                                           selectedAnswers={props.selectedAnswers}/>)
             }
         </fieldset>
     );
@@ -760,7 +771,9 @@ function SurveyQuestionTree(props) {
                                                                              childNodes={childNodes}
                                                                              showQuestions={props.showQuestions}
                                                                              hideQuestions={props.hideQuestions}
-                                                                             setCurrentValue={props.setCurrentValue}/>)
+                                                                             highlightAnswer={props.highlightAnswer}
+                                                                             setCurrentValue={props.setCurrentValue}
+                                                                             selectedAnswers={props.selectedAnswers}/>)
                 }
             </ul>
             {
@@ -772,7 +785,9 @@ function SurveyQuestionTree(props) {
                                                                         hideShowAnswers={props.hideShowAnswers}
                                                                         showQuestions={props.showQuestions}
                                                                         hideQuestions={props.hideQuestions}
-                                                                        setCurrentValue={props.setCurrentValue}/>)
+                                                                        highlightAnswer={props.highlightAnswer}
+                                                                        setCurrentValue={props.setCurrentValue}
+                                                                        selectedAnswers={props.selectedAnswers}/>)
             }
         </fieldset>
     );
@@ -786,10 +801,14 @@ function SurveyAnswer(props) {
                     className="btn btn-outline-darkgray btn-sm btn-block pl-1"
                     id={props.answer + "_" + props.id}
                     name={props.answer + "_" + props.id}
+                    style={{boxShadow: (props.selectedAnswers[props.question] == props.answer)
+                        ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                        : "initial"}}
                     onClick={() => {
                         if (props.setCurrentValue(props.question, props.id, props.answer, props.color)) {
                             props.hideQuestions(props.childNodes);
                             props.showQuestions(childNodes);
+                            props.highlightAnswer(props.question, props.answer);
                         }
                     }}>
                 <div className="circle"
