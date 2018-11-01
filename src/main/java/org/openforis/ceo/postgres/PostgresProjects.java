@@ -6,7 +6,9 @@ import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -420,38 +422,78 @@ public class PostgresProjects implements Projects {
         var projectId = req.params(":id");
 
         try (var conn = connect()) {
-            var csvContent = "";
+            // check if project exists
             var SQL = "SELECT * FROM select_project(?)";
             var pstmt = conn.prepareStatement(SQL);
             pstmt.setInt(1,Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
+
+            var sampleSummaries = new JsonArray();
+            var sampleValueGroups = new JsonArray();
+            var csvContent = "";
             if (rs.next()){
-                var SqlDump = "SELECT * FROM dump_project_sample_data(?)";
+                sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
+
+                var SqlDump = "SELECT * FROM dump_project_sample_data_test(?)";
                 var pstmtDump = conn.prepareStatement(SqlDump) ;
                 pstmtDump.setInt(1,Integer.parseInt(projectId));
                 var rsDump = pstmtDump.executeQuery();
                 
-                while (rsDump.next()) {
-                    csvContent = csvContent + 
-                            rsDump.getString("plot_id") +","+
-                            rsDump.getString("sample_id") +","+
-                            rsDump.getString("lon") +","+
-                            rsDump.getString("lat") +","+
-                            rsDump.getBoolean("flagged") +","+
-                            rsDump.getBoolean("assigned") +","+
-                            valueOrBlank(rsDump.getString("email")) +","+
-                            valueOrBlank(rsDump.getString("collection_time")) +","+
-                            // JsonKeytoString(valueOrBlank(rsDump.getString("value")), "LULC") +","+
-                            "\n";
+                if (rsDump.next()) {
+                    csvContent = rsDump.getString("entire_string");
                 } 
+                // while (rsDump.next()) {
+                //     var csvRow = new JsonObject();
+                //     csvRow.addProperty("plot_id", rsDump.getString("plot_id"));
+                //     csvRow.addProperty("sample_id", rsDump.getString("sample_id"));
+                //     csvRow.addProperty("lon", rsDump.getString("lon"));
+                //     csvRow.addProperty("lat", rsDump.getString("lat"));
+                //     csvRow.addProperty("flagged", rsDump.getBoolean("flagged"));
+                //     csvRow.addProperty("assigned", rsDump.getBoolean("assigned"));
+                //     csvRow.addProperty("email", valueOrBlank(rsDump.getString("email")));
+                //     csvRow.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
+                //     sampleSummaries.add(csvRow);
+                // } 
+
+
 
             } else {
                 res.raw().setStatus(SC_NO_CONTENT);
                 return res.raw();
             }
 
-            var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "timestamp", "LULC"};
-            var csvHeader = Arrays.stream(fields).map(String::toUpperCase).collect(Collectors.joining(","));
+
+            
+            var sampleValueGroupNames = toStream(sampleValueGroups)
+                    .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
+                            sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
+                            (a, b) -> b));
+
+            var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "timestamp"};
+            var labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+            
+            var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+
+            // var csvContent = toStream(sampleSummaries)
+            //         .map(sampleSummary -> {
+            //             var fieldStream = Arrays.stream(fields);
+            //             var labelStream = Arrays.stream(labels);
+            //             return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
+            //                     labelStream.map(label -> {
+            //                         var value = sampleSummary.get("value");
+            //                         if (value.isJsonNull()) {
+            //                             return "";
+            //                         } else if (value.isJsonPrimitive()) {
+            //                             return sampleValueTranslations
+            //                                     .getOrDefault(value.getAsInt(), "LULC:NoValue")
+            //                                     .split(":")[1];
+            //                         } else {
+            //                             return value.getAsJsonObject().get(label).getAsString();
+            //                         }}))
+            //                     .collect(Collectors.joining(","));
+            //         })
+            //         .collect(Collectors.joining("\n"));
+
 
             var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
             var currentDate = LocalDate.now().toString();

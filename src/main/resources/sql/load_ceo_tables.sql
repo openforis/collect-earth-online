@@ -117,6 +117,17 @@ CREATE INDEX sample_values_id ON sample_values (id);
 CREATE INDEX project_widgets_project_id ON project_widgets (project_id);
 CREATE INDEX project_widgets_dashboard_id ON project_widgets (dashboard_id);
 
+--indecies on FK
+CREATE INDEX plots_projects_id ON plots (project_id);
+CREATE INDEX samples_plot_id on samples (plot_id);
+CREATE INDEX imagery_institution_id on imagery (institution_id);
+CREATE INDEX institution_users_institution_id on institution_users (institution_id);
+CREATE INDEX institution_users_user_id on institution_users (user_id);
+CREATE INDEX user_plots_plot_id on user_plots (plot_id);
+CREATE INDEX user_plots_user_id on user_plots (user_id);
+CREATE INDEX sample_values_user_plot_id on sample_values (user_plot_id);
+CREATE INDEX sample_values_sample_id on sample_values (sample_id);
+CREATE INDEX sample_values_imagery_id on sample_values (imagery_id);
 
 
 -- TS related tables
