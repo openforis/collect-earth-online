@@ -763,7 +763,7 @@ class Project extends React.Component {
             mercator.addVectorLayer(this.state.mapConfig,
                 "currentAOI",
                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
-                ceoMapStyles.polygon);
+                ceoMapStyles.yellowPolygon);
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
 
             // Force reloading of the plotList
