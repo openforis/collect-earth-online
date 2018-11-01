@@ -22,6 +22,7 @@ class Home extends React.Component {
 
     toggleSidebar() {
         let sidebarcss = (this.state.showHideSideBar === "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9") ? "col-lg-9 col-md-12 pl-0" : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9";
+        document.getElementById("tog-symb").children[0].classList.toggle('fa-caret-left');
         document.getElementById("tog-symb").children[0].classList.toggle('fa-caret-right');
         let lpanelcss = (this.state.showHideLpanel === "col-lg-3 pr-0 pl-0 d-none col-xl-3") ? "col-lg-3 pr-0 pl-0" : "col-lg-3 pr-0 pl-0 d-none col-xl-3";
         this.setState({showHideSideBar: sidebarcss, showHideLpanel: lpanelcss});
