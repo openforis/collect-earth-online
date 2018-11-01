@@ -271,8 +271,8 @@ public class PostgresProjects implements Projects {
             var rs = pstmt.executeQuery();
             if (rs.next()){
                 stats.addProperty("flaggedPlots",rs.getInt("flagged_plots"));
-                stats.addProperty("assignedPlots",rs.getInt("assigned_plots"));
-                stats.addProperty("unassignedPlots",rs.getInt("unassigned_plots"));
+                stats.addProperty("analyzedPlots",rs.getInt("assigned_plots"));
+                stats.addProperty("unanalyzedPlots",rs.getInt("unassigned_plots"));
                 stats.addProperty("members",rs.getInt("members"));
                 stats.addProperty("contributors",rs.getInt("contributors"));
             }
@@ -879,13 +879,13 @@ public class PostgresProjects implements Projects {
             Arrays.stream(newPlotCenters)
             .forEach(plotCenter -> {
                     try {
-                        var SqlPlots = "SELECT * FROM create_project_plots(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
+                        var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
                         var pstmtPlots = conn.prepareStatement(SqlPlots) ;
                         pstmtPlots.setInt(1,Integer.parseInt(newProject.get("projId").getAsString()));    
                         pstmtPlots.setString(2, makeGeoJsonPoint(plotCenter[0], plotCenter[1] ).toString());
                         var rsPlots = pstmtPlots.executeQuery();
                         if (rsPlots.next()) {
-                            var newPlotId = rsPlots.getInt("create_project_plots");
+                            var newPlotId = rsPlots.getInt("create_project_plot");
                             var newSamplePoints = sampleDistribution.equals("gridded")
                                 ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
                                 : createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot);
@@ -893,7 +893,7 @@ public class PostgresProjects implements Projects {
                             Arrays.stream(newSamplePoints)
                                 .forEach(point -> {
                                     try {
-                                        var SqlSamples = "SELECT * FROM create_project_plot_samples(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
+                                        var SqlSamples = "SELECT * FROM create_project_plot_sample(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
                                         var pstmtSamples = conn.prepareStatement(SqlSamples) ;
                                         pstmtSamples.setInt(1,newPlotId);
                                         pstmtSamples.setString(2,makeGeoJsonPoint(point[0], point[1]).toString());

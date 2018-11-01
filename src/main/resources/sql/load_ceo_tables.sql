@@ -11,6 +11,7 @@ CREATE TABLE institutions (
   id            serial primary key,
   name          text not null,
   logo          text not null,
+  logo_data     base64 image, --find correct type
   description   text not null,
   url           text not null,
   archived      boolean default false
@@ -34,7 +35,10 @@ CREATE TABLE projects (
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
-  csv_file                  text,
+  plots_csv_file            text,
+  plots_shp_file            text,
+  samples_csv_file          text,
+  samples_shp_file          text,
   classification_start_date	date,
   classification_end_date   date,
   classification_timestep   integer,
@@ -45,15 +49,17 @@ CREATE TABLE projects (
 );
 
 CREATE TABLE plots (
-  id         serial primary key,
-  project_id integer not null references projects (id) on delete cascade on update cascade,
-  center     geometry(Point,4326)
+  id            serial primary key,
+  project_id    integer not null references projects (id) on delete cascade on update cascade,
+  center        geometry(Point,4326),
+  extra_fields  text
 );
 
 CREATE TABLE samples (
-  id      serial primary key,
-  plot_id integer not null references plots (id) on delete cascade on update cascade,
-  point   geometry(Point,4326)
+  id            serial primary key,
+  plot_id       integer not null references plots (id) on delete cascade on update cascade,
+  point         geometry(Point,4326),
+  extra_fields  text
 );
 
 CREATE TABLE imagery (

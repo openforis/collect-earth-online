@@ -529,23 +529,23 @@ CREATE OR REPLACE FUNCTION update_project_csv(
 $$ LANGUAGE SQL;
 
 
---create project plots for migration
-CREATE OR REPLACE FUNCTION create_project_plots(_project_id integer, _plot_points geometry(Point,4326)) 
+--Create a single project plot
+CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _plot_point geometry(Point,4326)) 
     RETURNS integer AS $$
 
 	INSERT INTO plots (project_id, center)
-	(SELECT _project_id, _plot_points)
+	(SELECT _project_id, _plot_point)
 	RETURNING id
 
 $$ LANGUAGE SQL;
 
 
---Create project plot samples
-CREATE OR REPLACE FUNCTION create_project_plot_samples(_plot_id integer, _sample_points geometry(Point,4326)) 
+--Create project plot sample
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_point geometry(Point,4326)) 
     RETURNS integer AS $$
 
 	INSERT INTO samples (plot_id, point)
-	(SELECT _plot_id, _sample_points)
+	(SELECT _plot_id, _sample_point)
 	RETURNING id
 
 $$ LANGUAGE SQL;
