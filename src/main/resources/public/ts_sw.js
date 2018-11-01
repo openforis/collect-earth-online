@@ -6,7 +6,7 @@ self.addEventListener('install', function(evt) {
 });
 
 self.addEventListener('fetch', function(evt) {
-    console.log('The service worker is serving the asset.');
+    console.log('The service worker is serving the asset.', evt.request.url);
     evt.respondWith(fromNetwork(evt.request, 24000).catch(function () {
         return fromCache(evt.request);
     }));
