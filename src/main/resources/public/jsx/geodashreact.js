@@ -66,14 +66,14 @@ class Geodash extends React.Component {
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
         widgets[index].opacity = evt.target.value;
-        this.setOpacity(evt.target.value, 'widgetmap_' + id);
+        this.setOpacity(evt.target.value, "widgetmap_" + id);
         this.setState({ widgets });
     };
     handleSliderChange = (widget) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
-        widgets[index].sliderType = widgets[index].sliderType === 'opacity'? 'swipe': 'opacity';
+        widgets[index].sliderType = widgets[index].sliderType === "opacity"? "swipe": "opacity";
         this.setState({ widgets });
     };
     handleSwipeChange = (widget, id, evt) => {
@@ -87,10 +87,10 @@ class Geodash extends React.Component {
     {
         if(which.isFull)
         {
-            document.body.classList.remove('bodyfull');
+            document.body.classList.remove("bodyfull");
         }
         else{
-            document.body.classList.add('bodyfull');
+            document.body.classList.add("bodyfull");
         }
         const doc = document.documentElement;
         if((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0) === 0)
@@ -104,19 +104,19 @@ class Geodash extends React.Component {
             this.state.ptop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
             window.scrollTo(0,0);
         }
-        if(type === 'mapwidget'){
+        if(type === "mapwidget"){
             mapWidgetArray["widgetmap_" + which.id].updateSize();
         }
-        else if(type === 'graphwidget'){
-            const gwidget = document.getElementById('widgetgraph_'+ which.id);
-            graphWidgetArray['widgetgraph_'+ which.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
+        else if(type === "graphwidget"){
+            const gwidget = document.getElementById("widgetgraph_"+ which.id);
+            graphWidgetArray["widgetgraph_"+ which.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
         }
     }
     setOpacity (value, layerID) {
         try{
             const id = layerID;
             mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
-                if (id === lyr.get('id') || id + '_dual' === lyr.get('id')) {
+                if (id === lyr.get("id") || id + "_dual" === lyr.get("id")) {
                     lyr.setOpacity(value);
                 }
             });
@@ -149,7 +149,7 @@ class Widgets extends React.Component {
         else{
             return ( <div className="row placeholders">
                 <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
-                    <h1 id="noWidgetMessage" style={{display: this.props.callbackComplete === false? 'none' : 'block' }}>The Administrator has not configured any Geo-Dash Widgets for this project</h1>
+                    <h1 id="noWidgetMessage" style={{display: this.props.callbackComplete === false? "none" : "block" }}>The Administrator has not configured any Geo-Dash Widgets for this project</h1>
                 </div>
             </div> );
         }
@@ -169,7 +169,7 @@ class Widget extends React.Component {
     getWidgetHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         if(widget.gridcolumn || widget.layout)
         {
-            return (<div className={ Widget.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: '', widget.gridrow != null? widget.gridrow: widget.layout != null? 'span ' + widget.layout.h: '') }
+            return (<div className={ Widget.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: "", widget.gridrow != null? widget.gridrow: widget.layout != null? "span " + widget.layout.h: "") }
                         style={{gridColumn:widget.gridcolumn != null? widget.gridcolumn: Widget.generategridcolumn(widget.layout.x, widget.layout.w), gridRow:widget.gridrow != null? widget.gridrow: Widget.generategridrow(widget.layout.y, widget.layout.h)}}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
                     <div className="panel-heading">
@@ -186,7 +186,7 @@ class Widget extends React.Component {
             </div>);
         }
         else{
-            return (<div className={widget.isFull? 'fullwidget columnSpan3 rowSpan1 placeholder': 'columnSpan3 rowSpan1 placeholder'}>
+            return (<div className={widget.isFull? "fullwidget columnSpan3 rowSpan1 placeholder": "columnSpan3 rowSpan1 placeholder"}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
@@ -203,10 +203,10 @@ class Widget extends React.Component {
         }
     };
     static generategridcolumn(x, w){
-        return (x + 1) + ' / span ' + w;
+        return (x + 1) + " / span " + w;
     };
     static generategridrow(x, h){
-        return (x + 1) + ' / span ' + h;
+        return (x + 1) + " / span " + h;
     };
     getWidgetType(awidget)
     {
@@ -229,7 +229,7 @@ class Widget extends React.Component {
     };
     static getClassNames(fullState, c, r)
     {
-        let classnames = 'placeholder';
+        let classnames = "placeholder";
         if(fullState)
         {
             classnames += " fullwidget";
@@ -275,10 +275,10 @@ class MapWidget extends React.Component {
         const onSwipeChange = this.props.onSwipeChange;
 
         if(widget.dualLayer || widget.dualImageCollection){
-            const oStyle = {display: widget.sliderType === 'opacity'? 'block': 'none'};
-            const sStyle = {display: widget.sliderType === 'swipe'? 'block': 'none'};
+            const oStyle = {display: widget.sliderType === "opacity"? "block": "none"};
+            const sStyle = {display: widget.sliderType === "swipe"? "block": "none"};
            return <div>
-                    <input type="button" value={this.props.widget.sliderType === 'opacity'? 'swipe': 'opacity'} style={{width: "80px", float: "left", margin: "8px 0 0 5px"}} onClick={() => onSliderChange(widget)}/>
+                    <input type="button" value={this.props.widget.sliderType === "opacity"? "swipe": "opacity"} style={{width: "80px", float: "left", margin: "8px 0 0 5px"}} onClick={() => onSliderChange(widget)}/>
                     <input type = "range" className = "mapRange dual" id = {"rangeWidget_" + widget.id}
                            value = {this.props.widget.opacity}
                            min = "0"
@@ -309,7 +309,7 @@ class MapWidget extends React.Component {
     static getRasterByBasemapConfig(basemap)
     {
         let raster;
-        if(basemap == null || basemap.id === 'osm')
+        if(basemap == null || basemap.id === "osm")
         {
             raster = new ol.layer.Tile({
                 source: new ol.source.OSM()
@@ -324,16 +324,16 @@ class MapWidget extends React.Component {
         return raster;
     };
     static getGatewayUrl(widget, collectionName){
-        let url = '';
+        let url = "";
         if(widget.filterType != null && widget.filterType.length > 0){
-            const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
+            const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
             url = "http://collect.earth:8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
             url = "http://collect.earth:8888/image";
         }
-        else if('ImageCollectionCustom' === widget.properties[0]){
+        else if("ImageCollectionCustom" === widget.properties[0]){
             url = "http://collect.earth:8888/meanImageByMosaicCollections";
         }
         else if(collectionName.trim().length > 0)
@@ -353,6 +353,7 @@ class MapWidget extends React.Component {
                 visParams = JSON.parse(widget.visParams);
             }
             catch (e) {
+                console.log('parse issue');
                 visParams = widget.visParams;
             }
         }
@@ -398,14 +399,14 @@ class MapWidget extends React.Component {
             }),
             id: "widgetmapobject_" + widget.id
         });
-        map.getView().on('propertychange', onpropertychange);
+        map.getView().on("propertychange", onpropertychange);
 
         function onpropertychange(){
-            map.dispatchEvent('movestart');
+            map.dispatchEvent("movestart");
             let view = map.getView();
-            view.un('propertychange', onpropertychange);
-            map.on('moveend', function() {
-                view.on('propertychange', onpropertychange);
+            view.un("propertychange", onpropertychange);
+            map.on("moveend", function() {
+                view.on("propertychange", onpropertychange);
             });
         }
 
@@ -433,11 +434,11 @@ class MapWidget extends React.Component {
         }
 
         let postObject = {};
-        let collectionName = '';
-        let dateFrom = '';
-        let dateTo = '';
-        let requestedIndex = '';
-        let url = '';
+        let collectionName = "";
+        let dateFrom = "";
+        let dateTo = "";
+        let requestedIndex = "";
+        let url = "";
         let dualImageObject = null;
         let bands = "";
         const ref = this;
@@ -458,8 +459,8 @@ class MapWidget extends React.Component {
             let firstImage = widget.dualImageCollection[0];
             let secondImage = widget.dualImageCollection[1];
             collectionName = firstImage.collectionType;
-            requestedIndex = collectionName === "ImageCollectionNDVI" ? 'NDVI' : collectionName === "ImageCollectionEVI" ? 'EVI' : collectionName === "ImageCollectionEVI2" ? 'EVI2' : collectionName === "ImageCollectionNDMI" ? 'NDMI' : collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
-            collectionName = collectionName === "ImageCollectionNDVI" ? '' : collectionName === "ImageCollectionEVI" ? '' : collectionName === "ImageCollectionEVI2" ? '' : collectionName === "ImageCollectionNDMI" ? '' : collectionName === "ImageCollectionNDWI" ? '' : collectionName;
+            requestedIndex = collectionName === "ImageCollectionNDVI" ? "NDVI" : collectionName === "ImageCollectionEVI" ? "EVI" : collectionName === "ImageCollectionEVI2" ? "EVI2" : collectionName === "ImageCollectionNDMI" ? "NDMI" : collectionName === "ImageCollectionNDWI" ? "NDWI" : "";
+            collectionName = collectionName === "ImageCollectionNDVI" ? "" : collectionName === "ImageCollectionEVI" ? "" : collectionName === "ImageCollectionEVI2" ? "" : collectionName === "ImageCollectionNDMI" ? "" : collectionName === "ImageCollectionNDWI" ? "" : collectionName;
             dateFrom = firstImage.startDate;
             dateTo = firstImage.endDate;
 
@@ -469,9 +470,9 @@ class MapWidget extends React.Component {
             shortWidget.properties.push(collectionName);
             url = MapWidget.getGatewayUrl(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
-            shortWidget.min = firstImage.min != null? firstImage.min: '';
-            shortWidget.max = firstImage.max != null? firstImage.max: '';
-            shortWidget.band = firstImage.band != null? firstImage.band: '';
+            shortWidget.min = firstImage.min != null? firstImage.min: "";
+            shortWidget.max = firstImage.max != null? firstImage.max: "";
+            shortWidget.band = firstImage.band != null? firstImage.band: "";
             postObject.visParams = MapWidget.getImageParams(shortWidget);
 
             if(postObject.visParams.cloudLessThan) {
@@ -486,8 +487,8 @@ class MapWidget extends React.Component {
             //Create the fetch object for the second call here
             dualImageObject = {};
             dualImageObject.collectionName = secondImage.collectionType;
-            dualImageObject.index = dualImageObject.collectionName === "ImageCollectionNDVI" ? 'NDVI' : dualImageObject.collectionName === "ImageCollectionEVI" ? 'EVI' : dualImageObject.collectionName === "ImageCollectionEVI2" ? 'EVI2' : dualImageObject.collectionName === "ImageCollectionNDMI" ? 'NDMI' : dualImageObject.collectionName === "ImageCollectionNDWI" ? 'NDWI' : '';
-            dualImageObject.collectionName = dualImageObject.collectionName === "ImageCollectionNDVI" ? '' : dualImageObject.collectionName === "ImageCollectionEVI" ? '' : dualImageObject.collectionName === "ImageCollectionEVI2" ? '' : dualImageObject.collectionName === "ImageCollectionNDMI" ? '' : dualImageObject.collectionName === "ImageCollectionNDWI" ? '' : dualImageObject.collectionName;
+            dualImageObject.index = dualImageObject.collectionName === "ImageCollectionNDVI" ? "NDVI" : dualImageObject.collectionName === "ImageCollectionEVI" ? "EVI" : dualImageObject.collectionName === "ImageCollectionEVI2" ? "EVI2" : dualImageObject.collectionName === "ImageCollectionNDMI" ? "NDMI" : dualImageObject.collectionName === "ImageCollectionNDWI" ? "NDWI" : "";
+            dualImageObject.collectionName = dualImageObject.collectionName === "ImageCollectionNDVI" ? "" : dualImageObject.collectionName === "ImageCollectionEVI" ? "" : dualImageObject.collectionName === "ImageCollectionEVI2" ? "" : dualImageObject.collectionName === "ImageCollectionNDMI" ? "" : dualImageObject.collectionName === "ImageCollectionNDWI" ? "" : dualImageObject.collectionName;
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
             let shortWidget2 = {};
@@ -498,9 +499,9 @@ class MapWidget extends React.Component {
             dualImageObject.url = MapWidget.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
 
             shortWidget2.visParams = secondImage.visParams;
-            shortWidget2.min = secondImage.min != null? secondImage.min: '';
-            shortWidget2.max = secondImage.max != null? secondImage.max: '';
-            shortWidget2.band = secondImage.band != null? secondImage.band: '';
+            shortWidget2.min = secondImage.min != null? secondImage.min: "";
+            shortWidget2.max = secondImage.max != null? secondImage.max: "";
+            shortWidget2.band = secondImage.band != null? secondImage.band: "";
             if(shortWidget2.visParams && shortWidget2.visParams.cloudLessThan != null) {
                 dualImageObject.bands = shortWidget2.visParams.bands;
                 dualImageObject.min = shortWidget2.visParams.min;
@@ -521,7 +522,7 @@ class MapWidget extends React.Component {
             collectionName = widget.properties[1];
             dateFrom = widget.properties[2];
             dateTo = widget.properties[3];
-            requestedIndex = widget.properties[0] === "ImageCollectionNDVI" ? 'NDVI' : widget.properties[0] === "ImageCollectionEVI" ? 'EVI' : widget.properties[0] === "ImageCollectionEVI2" ? 'EVI2' : widget.properties[0] === "ImageCollectionNDMI" ? 'NDMI' : widget.properties[0] === "ImageCollectionNDWI" ? 'NDWI' : '';
+            requestedIndex = widget.properties[0] === "ImageCollectionNDVI" ? "NDVI" : widget.properties[0] === "ImageCollectionEVI" ? "EVI" : widget.properties[0] === "ImageCollectionEVI2" ? "EVI2" : widget.properties[0] === "ImageCollectionNDMI" ? "NDMI" : widget.properties[0] === "ImageCollectionNDWI" ? "NDWI" : "";
 
             url = MapWidget.getGatewayUrl(widget, collectionName);
             postObject.visParams = MapWidget.getImageParams(widget);
@@ -545,10 +546,10 @@ class MapWidget extends React.Component {
         postObject.index= requestedIndex;
 
         fetch(url, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                "Accept": "application/json",
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(postObject)
         })
@@ -575,10 +576,10 @@ class MapWidget extends React.Component {
                         postObject.dateTo = widget.dualEnd;
 
                         fetch(url, {
-                            method: 'POST',
+                            method: "POST",
                             headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
+                                "Accept": "application/json",
+                                "Content-Type": "application/json"
                             },
                             body: JSON.stringify(postObject)
                         })
@@ -604,10 +605,10 @@ class MapWidget extends React.Component {
                         }
                         if (workingObject != null) {
                             fetch(workingObject.url, {
-                                method: 'POST',
+                                method: "POST",
                                 headers: {
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json'
+                                    "Accept": "application/json",
+                                    "Content-Type": "application/json"
                                 },
                                 body: JSON.stringify(workingObject)
                             })
@@ -632,21 +633,21 @@ class MapWidget extends React.Component {
     {
         let layers = e.target.getLayers().getArray();
         layers.forEach(function(lyr){
-            if(lyr.get('id') && lyr.get('id').indexOf('widget') === 0){
+            if(lyr.get("id") && lyr.get("id").indexOf("widget") === 0){
                 lyr.setVisible(false);
             }
         })
     };
     resumeGeeLayer(e)
     {
-        if(geeTimeout[e.target.get('target')]){
-            window.clearTimeout(geeTimeout[e.target.get('target')]);
-            delete geeTimeout[e.target.get('target')];
+        if(geeTimeout[e.target.get("target")]){
+            window.clearTimeout(geeTimeout[e.target.get("target")]);
+            delete geeTimeout[e.target.get("target")];
         }
-        geeTimeout[e.target.get('target')] = window.setTimeout(function(){
+        geeTimeout[e.target.get("target")] = window.setTimeout(function(){
             let layers = e.target.getLayers().getArray();
             layers.forEach(function(lyr){
-                if(lyr.get('id') && lyr.get('id').indexOf('widget') === 0){
+                if(lyr.get("id") && lyr.get("id").indexOf("widget") === 0){
                     lyr.setVisible(true);
                 }
             })
@@ -670,12 +671,12 @@ class MapWidget extends React.Component {
             source: new ol.source.XYZ({
                 url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
             }),
-            id: mapdiv + '_dual'
+            id: mapdiv + "_dual"
         });
         mapWidgetArray[mapdiv].addLayer(googleLayer);
-        let swipe = document.getElementById('swipeWidget_' + mapdiv.replace('widgetmap_', ''));
+        let swipe = document.getElementById("swipeWidget_" + mapdiv.replace("widgetmap_", ""));
 
-        googleLayer.on('precompose', function(event) {
+        googleLayer.on("precompose", function(event) {
             let ctx = event.context;
             const width = ctx.canvas.width * (swipe.value);
             ctx.save();
@@ -684,11 +685,11 @@ class MapWidget extends React.Component {
             ctx.clip();
         });
 
-        googleLayer.on('postcompose', function(event) {
+        googleLayer.on("postcompose", function(event) {
             let ctx = event.context;
             ctx.restore();
         });
-        swipe.addEventListener('input', function() {mapWidgetArray[mapdiv].render();}, false);
+        swipe.addEventListener("input", function() {mapWidgetArray[mapdiv].render();}, false);
         this.addBuffer(mapWidgetArray[mapdiv]);
     };
     addBuffer (whichMap) {
@@ -700,7 +701,7 @@ class MapWidget extends React.Component {
             const plotshape = getParameterByName("plotshape");
             const projectID = getParameterByName("pid");
             const plotID = getParameterByName("plotid");
-            if (plotshape && plotshape === 'square') {
+            if (plotshape && plotshape === "square") {
                 const centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
                 const pointFeature = new ol.Feature(centerPoint);
                 const poitnExtent = pointFeature.getGeometry().getExtent();
@@ -731,7 +732,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             }
-            else if(plotshape && plotshape === 'circle') {
+            else if(plotshape && plotshape === "circle") {
                 const circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
                 const CircleFeature = new ol.Feature(circle);
                 let vectorSource = new ol.source.Vector({});
@@ -752,10 +753,10 @@ class MapWidget extends React.Component {
             }
             else{
 
-                fetch(theURL.replace('/geo-dash', '') + "/get-project-plot/" + projectID + "/" + plotID)
+                fetch(theURL.replace("/geo-dash", "") + "/get-project-plot/" + projectID + "/" + plotID)
                     .then(function(res){return res.json();})
                     .then(function(data){
-                        const _geojson_object = typeof(data) === 'string' ? JSON.parse(data) : data;
+                        const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
                         const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
                         let mapConfig = {};
                         mapConfig.map = whichMap;
@@ -768,12 +769,12 @@ class MapWidget extends React.Component {
                                 fill: null
                             })
                         ];
-                        mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
+                        mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
 
                         if (_geojson_object.samples) {
                             _geojson_object.samples.forEach(function (element) {
                                 const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
-                                mercator.addVectorLayer(mapConfig, 'geeLayer', vectorSource, style);
+                                mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
                             });
                         }
                     })
@@ -792,9 +793,9 @@ class GraphWidget extends React.Component {
             let dd = this.getDate();
 
             return [this.getFullYear(),
-                (mm>9 ? '' : '0') + mm,
-                (dd>9 ? '' : '0') + dd
-            ].join('-');
+                (mm>9 ? "" : "0") + mm,
+                (dd>9 ? "" : "0") + dd
+            ].join("-");
         };
     }
     render() {
@@ -814,16 +815,16 @@ class GraphWidget extends React.Component {
         let url = collectionName.trim().length > 0 ? "http://collect.earth:8888/timeSeriesIndex":  "http://collect.earth:8888/timeSeriesIndex2";
         const ref = this;
         fetch(url, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                "Accept": "application/json",
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 collectionNameTimeSeries: collectionName,
                 polygon: JSON.parse(this.props.projPairAOI),
                 indexName: indexName,
-                dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : '2000-01-01',
+                dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
                 dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() :  date.yyyymmdd()
             })
         })
@@ -976,10 +977,10 @@ class StatsWidget extends React.Component {
         const widget = this.props.widget;
         const projPairAOI = this.props.projPairAOI;
         fetch("http://collect.earth:8888/getStats", {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                "Accept": "application/json",
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 paramValue: JSON.parse(projPairAOI)
