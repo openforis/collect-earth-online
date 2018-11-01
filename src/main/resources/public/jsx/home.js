@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator } from "../js/mercator-openlayers.js";
+import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
 class Home extends React.Component {
     constructor(props) {
@@ -68,6 +68,7 @@ class MapPanel extends React.Component {
                                           40); // clusterDistance = 40, use null to disable clustering
         }
     }
+
     addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
         const projectSource = mercator.projectsToVectorSource(projects);
         if (clusterDistance == null) {
@@ -76,16 +77,11 @@ class MapPanel extends React.Component {
                                     projectSource,
                                     ceoMapStyles.ceoIcon);
         } else {
-            const clusterSource = new ol.source.Cluster({
-                source: projectSource,
-                distance: clusterDistance
-            });
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
-                                    clusterSource,
+                                    mercator.makeClusterSource(projectSource, clusterDistance),
                                     feature => mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, feature.get("features").length, "#ffffff"));
         }
-
         mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
         const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
         mapConfig.map.on("click",
@@ -129,26 +125,68 @@ class MapPanel extends React.Component {
                         <div id="home-map-pane" style={{width: "100%", height: "100%", position: "fixed"}}></div>
                     </div>
                 </div>
-                <ProjectPopup features={this.state.clickedFeatures}
-                              mapConfig={this.state.mapConfig}
+                <ProjectPopup mapConfig={this.state.mapConfig}
                               clusterExtent={this.state.clusterExtent}
-                              documentRoot={this.props.documentRoot} test={this.test}/>
+                              features={this.state.clickedFeatures}
+                              documentRoot={this.props.documentRoot}/>
             </div>
         );
     }
 }
 
-function SideBar(props) {
-    return (
-        <div id="lPanel" className="col-lg-3 pr-0 pl-0">
-            <div className="bg-darkgreen">
-                <h1 className="tree_label" id="panelTitle">Institutions</h1>
+class SideBar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            filteredInstitutions: [],
+            institutions: []
+        };
+        this.filterCall=this.filterCall.bind(this);
+    }
+    componentDidMount() {
+        // Fetch institutions
+        fetch(this.props.documentRoot + "/get-all-institutions")
+            .then(response => response.json())
+            .then(data => this.setState({filteredInstitutions: data,institutions:data}));
+    }
+    filterCall(e) {
+        const filterText = e.target.value;
+        if (filterText != '') {
+            const filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+            if (filtered.length > 0) {
+                this.setState({filteredInstitutions: filtered});
+            }
+            else {
+                this.setState({filteredInstitutions: []});
+            }
+        }
+        else {
+            this.setState({filteredInstitutions: this.state.institutions});
+        }
+    }
+    render() {
+        return (
+            <div id="lPanel" className="col-lg-3 pr-0 pl-0">
+                <div className="bg-darkgreen">
+                    <h1 className="tree_label" id="panelTitle">Institutions</h1>
+                </div>
+                <ul className="tree">
+                    <CreateInstitutionButton userName={this.props.userName} documentRoot={this.props.documentRoot}/>
+                    <InstitutionFilter documentRoot={this.props.documentRoot} filterCall={this.filterCall}/>
+                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions} projects={this.props.projects}
+                                     documentRoot={this.props.documentRoot}/>
+                </ul>
             </div>
-            <ul className="tree">
-                <CreateInstitutionButton userName={props.userName} documentRoot={props.documentRoot}/>
-                <InstitutionList projects={props.projects} documentRoot={props.documentRoot}/>
-            </ul>
+        );
+    }
+}
 
+function InstitutionFilter(props) {
+    return (
+        <div id="filter-institution" className="form-control">
+            <input type="text" id="filterInstitution" autoComplete="off" placeholder="Filter by Institution Name"
+                   className="form-control"
+                   onChange={(e) => props.filterCall(e)}/>
         </div>
     );
 }
@@ -167,33 +205,17 @@ function CreateInstitutionButton(props) {
     }
 }
 
-class InstitutionList extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            institutions: []
-        };
-    }
-
-    componentDidMount() {
-        // Fetch institutions
-        fetch(this.props.documentRoot + "/get-all-institutions")
-            .then(response => response.json())
-            .then(data => this.setState({institutions: data}));
-    }
-
-    render() {
-        return (
-            this.state.institutions.map(
-                (institution, uid) =>
-                    <Institution key={uid}
-                                 id={institution.id}
-                                 name={institution.name}
-                                 documentRoot={this.props.documentRoot}
-                                 projects={this.props.projects.filter(project => project.institution == institution.id)}/>
-            )
-        );
-    }
+function InstitutionList(props) {
+    return (
+        props.filteredInstitutions.map(
+            (institution, uid) =>
+                <Institution key={uid}
+                             id={institution.id}
+                             name={institution.name}
+                             documentRoot={props.documentRoot}
+                             projects={props.projects.filter(project => project.institution == institution.id)}/>
+        )
+    );
 }
 
 function Institution(props) {
@@ -276,61 +298,56 @@ function Project(props) {
 }
 
 class ProjectPopup extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    componentDidMount(){
-        let ref=this;
-        document.getElementById("zoomToCluster").onclick=function () {
-          mercator.zoomMapToExtent(ref.props.mapConfig, ref.props.clusterExtent);
+    componentDidMount() {
+        // There is some kind of bug in attaching this onClick handler directly to its button in render().
+        document.getElementById("zoomToCluster").onclick = () => {
+            mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent);
+            mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
         };
     }
+
     render() {
         return (
-
             <div id="projectPopUp">
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
-
                 <div className="cContent>">
                     <table className="table table-sm">
                         <tbody>
-                        {
-                            this.props.features.map((feature, uid) =>
-                                <React.Fragment key={uid}>
-                                    <tr className="d-flex">
-                                        <td className="small col-6 px-0 my-auto">
-                                            <h3 className="my-auto">Name</h3>
-
-                                        </td>
-                                        <td className="small col-6 pr-0">
-                                            <a href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
-                                               className="btn btn-sm btn-block btn-outline-lightgreen"
-                                               style={{
-                                                   whiteSpace: "nowrap",
-                                                   overflow: "hidden",
-                                                   textOverflow: "ellipsis"
-                                               }}>
-                                                {feature.get("name")}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    < tr className="d-flex">
-                                        <td className="small col-6 px-0 my-auto">Description</td>
-                                        <td className="small col-6 pr-0">{feature.get("description") == "" ? "N/A" : feature.get("description")}</td>
-                                    </tr>
-                                    <tr className="d-flex">
-                                        <td className="small col-6 px-0 my-auto">Number of plots</td>
-                                        <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
-                                    </tr>
-                                </React.Fragment>
-                            )
-                        }
+                            {
+                                this.props.features.map((feature, uid) =>
+                                    <React.Fragment key={uid}>
+                                        <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
+                                            <td className="small col-6 px-0 my-auto">Name</td>
+                                            <td className="small col-6 pr-0">
+                                                <a href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
+                                                   className="btn btn-sm btn-block btn-outline-lightgreen"
+                                                   style={{
+                                                       whiteSpace: "nowrap",
+                                                       overflow: "hidden",
+                                                       textOverflow: "ellipsis"
+                                                   }}>
+                                                    {feature.get("name")}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr className="d-flex">
+                                            <td className="small col-6 px-0 my-auto">Description</td>
+                                            <td className="small col-6 pr-0">{feature.get("description")}</td>
+                                        </tr>
+                                        <tr className="d-flex" style={{borderBottom: "1px solid gray"}}>
+                                            <td className="small col-6 px-0 my-auto">Number of plots</td>
+                                            <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
+                                        </tr>
+                                    </React.Fragment>
+                                )
+                            }
                         </tbody>
                     </table>
                 </div>
-                <button id="zoomToCluster" className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+                <button id="zoomToCluster"
+                        className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
                         style={{
                             cursor: "pointer",
                             minWidth: "350px",

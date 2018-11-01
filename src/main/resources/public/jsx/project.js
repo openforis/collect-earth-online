@@ -137,12 +137,17 @@ class Project extends React.Component {
                 utils.hide_element("spinner");
                 alert("Error creating project. See console for details.");
             }).done(function (data) {
-                var detailsNew = ref.state.details;
-                detailsNew.availability = "unpublished";
-                ref.setState({details: detailsNew});
-                utils.hide_element("spinner");
-                var newProjectId = data;
-                window.location = ref.props.documentRoot + "/project/" + newProjectId;
+                if (parseInt(data)) {
+                    var detailsNew = ref.state.details;
+                    detailsNew.availability = "unpublished";
+                    ref.setState({details: detailsNew});
+                    utils.hide_element("spinner");
+                    var newProjectId = data;
+                    window.location = ref.props.documentRoot + "/project/" + newProjectId;
+                } else {
+                    utils.hide_element("spinner");
+                    alert(data);
+                }
             });
         }
     }
@@ -758,7 +763,7 @@ class Project extends React.Component {
             mercator.addVectorLayer(this.state.mapConfig,
                 "currentAOI",
                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
-                ceoMapStyles.polygon);
+                ceoMapStyles.yellowPolygon);
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
 
             // Force reloading of the plotList

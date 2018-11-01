@@ -480,19 +480,21 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
                                                             width: borderWidth})});
 };
 
-var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
-                    ceoIcon:      mercator.getIconStyle("ceoicon.png"),
-                    redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
-                    bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
-                    yellowPoint:  mercator.getCircleStyle(5, null, "yellow", 2),
-                    redCircle:    mercator.getCircleStyle(5, null, "red", 2),
-                    yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
-                    greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
-                    redSquare:    mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
-                    yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
-                    greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
-                    cluster:      mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
-                    polygon:      mercator.getPolygonStyle(null, "yellow", 3)};
+var ceoMapStyles = {icon:          mercator.getIconStyle("favicon.ico"),
+                    ceoIcon:       mercator.getIconStyle("ceoicon.png"),
+                    redPoint:      mercator.getCircleStyle(5, null, "#8b2323", 2),
+                    bluePoint:     mercator.getCircleStyle(5, null, "#23238b", 2),
+                    yellowPoint:   mercator.getCircleStyle(5, null, "yellow", 2),
+                    redCircle:     mercator.getCircleStyle(5, null, "red", 2),
+                    yellowCircle:  mercator.getCircleStyle(5, null, "yellow", 2),
+                    greenCircle:   mercator.getCircleStyle(5, null, "green", 2),
+                    blackCircle:   mercator.getCircleStyle(5, null, "#000000", 2),
+                    redSquare:     mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
+                    yellowSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
+                    greenSquare:   mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
+                    cluster:       mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
+                    yellowPolygon: mercator.getPolygonStyle(null, "yellow", 3),
+                    blackPolygon:  mercator.getPolygonStyle(null, "#000000", 3)};
 
 /*****************************************************************************
 ***
@@ -735,14 +737,23 @@ mercator.getSelectedSamples = function (mapConfig) {
     }
 };
 
+mercator.getAllFeatures = function (mapConfig, layerTitle) {
+    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer) {
+        return layer.getSource().getFeatures();
+    } else {
+        return null;
+    }
+};
+
 // [Side Effects] Sets the sample's style to be a circle with a black
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
     if (sample.get("shape") == "point") {
-        sample.setStyle(mercator.getCircleStyle(5, color || "#999999", "#000000", 2));
+        sample.setStyle(mercator.getCircleStyle(5, color, "#000000", 2));
     } else {
-        sample.setStyle(mercator.getPolygonStyle(color || "#999999", "#000000", 3));
+        sample.setStyle(mercator.getPolygonStyle(color, "#000000", 3));
     }
     return sample;
 };
@@ -779,7 +790,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
 mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     var drawLayer = new ol.layer.Vector({title: "dragBoxLayer",
                                          source: new ol.source.Vector({features: []}),
-                                         style: ceoMapStyles.polygon});
+                                         style: ceoMapStyles.yellowPolygon});
     var dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
     mapConfig.map.addLayer(drawLayer);
     mapConfig.map.addInteraction(dragBox);
@@ -819,6 +830,14 @@ mercator.addOverlay = function (mapConfig, overlayTitle, element) {
 // no such overlay exists.
 mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
     return mapConfig.map.getOverlayById(overlayTitle);
+};
+
+// [Pure] Returns a new ol.source.Cluster given the unclusteredSource and clusterDistance.
+mercator.makeClusterSource = function (unclusteredSource, clusterDistance) {
+    return new ol.source.Cluster({
+        source: unclusteredSource,
+        distance: clusterDistance
+    });
 };
 
 // [Pure] Returns true if the feature is a cluster, false otherwise.
@@ -877,8 +896,8 @@ mercator.getPopupContent = function (mapConfig, documentRoot, feature) {
     var contentEnd = "</div>";
 
     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, ["
-            + mercator.getClusterExtent(feature) + "])\" "
+        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, "
+            + mercator.getClusterExtent(feature) + ")\" "
             + "class=\"mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
             + "<i class=\"fa fa-search-plus\"></i> Zoom to cluster</button>";
         return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
@@ -1018,7 +1037,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 //        mercator.addVectorLayer(mapConfig,
 //                                "currentAOI",
 //                                mercator.geometryToVectorSource(mercator.parseGeoJson(polygon, true)),
-//                                ceoMapStyles.polygon);
+//                                ceoMapStyles.yellowPolygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentAOI");
 // FIXME: change calls from polygon_extent to mercator.parseGeoJson(polygon, false).getExtent()
 // FIXME: change calls from get_plot_extent to mercator.getPlotExtent
@@ -1027,7 +1046,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 //        mercator.addVectorLayer(mapConfig,
 //                                "currentPlot",
 //                                mercator.geometryToVectorSource(mercator.getPlotPolygon(center, size, shape)),
-//                                ceoMapStyles.polygon);
+//                                ceoMapStyles.yellowPolygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentPlot");
 // FIXME: change calls from draw_plots to mercator.addPlotOverviewLayers
 // FIXME: for plots shown with draw_plots, change references to their plot_id field to plotId
