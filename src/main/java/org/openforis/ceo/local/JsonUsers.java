@@ -117,6 +117,8 @@ public class JsonUsers implements Users {
         req.session().removeAttribute("userid");
         req.session().removeAttribute("username");
         req.session().removeAttribute("role");
+        
+        res.redirect(CeoConfig.documentRoot + "/home");
         return req;
     }
 

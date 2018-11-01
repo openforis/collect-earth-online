@@ -227,7 +227,6 @@ def insert_roles():
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (1,'admin'))
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (2,'member'))
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (3,'pending'))
-        cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (4,'not-member'))
         conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
