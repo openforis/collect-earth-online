@@ -319,7 +319,7 @@ class ProjectPopup extends React.Component {
 
     render() {
         return (
-            <div id="projectPopUp">
+            <div id="projectPopUp" style={{padding:"5px"}}>
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
