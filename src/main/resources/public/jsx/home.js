@@ -21,17 +21,10 @@ class Home extends React.Component {
     }
 
     toggleSidebar() {
-        var css = (this.state.showHideSideBar === "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9") ? "col-lg-9 col-md-12 pl-0" : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9";
-        //  var css1 = (this.state.showHideTogSym === "fa fa-caret-left fa-caret-left fa-caret-right") ? "fa fa-caret-left" : "fa fa-caret-left fa-caret-left fa-caret-right";
-        var css1 = (this.state.showHideTogSym === "hide") ? "show" : "hide";
-        if (document.getElementById("tog-symb").children[0].classList.contains('fa-caret-right')) {
-            document.getElementById("tog-symb").children[0].className ='fa fa-caret-left';
-        }
-        else {
-            document.getElementById("tog-symb").children[0].className ='fa fa-caret-left fa-caret-left fa-caret-right';
-        }
-        var css2 = (this.state.showHideLpanel === "col-lg-3 pr-0 pl-0 d-none col-xl-3") ? "col-lg-3 pr-0 pl-0" : "col-lg-3 pr-0 pl-0 d-none col-xl-3";
-        this.setState({showHideSideBar: css, showHideLpanel: css2});
+        let sidebarcss = (this.state.showHideSideBar === "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9") ? "col-lg-9 col-md-12 pl-0" : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9";
+        document.getElementById("tog-symb").children[0].classList.toggle('fa-caret-right');
+        let lpanelcss = (this.state.showHideLpanel === "col-lg-3 pr-0 pl-0 d-none col-xl-3") ? "col-lg-3 pr-0 pl-0" : "col-lg-3 pr-0 pl-0 d-none col-xl-3";
+        this.setState({showHideSideBar: sidebarcss, showHideLpanel: lpanelcss});
     }
 
     render() {
