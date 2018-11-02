@@ -11,7 +11,7 @@ CREATE TABLE institutions (
   id            serial primary key,
   name          text not null,
   logo          text not null,
-  logo_data     base64 image, --find correct type
+  logo_data     bytea,
   description   text not null,
   url           text not null,
   archived      boolean default false

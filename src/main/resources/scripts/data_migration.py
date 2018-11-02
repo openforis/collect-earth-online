@@ -18,6 +18,7 @@ def insert_users():
             cur.execute("select * from add_user(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
             user_id = cur.fetchone()[0]
             conn.commit()
+        cur.execute("select * from add_user(%s,%s::text,%s::text)", (user_id + 1, "guest",""))
         cur.execute("SELECT * FROM set_admin()")
         conn.commit()
         cur.close()
@@ -40,9 +41,9 @@ def insert_institutions():
         institution_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/institution-list.json'))), "r").read()
         institutions = demjson.decode(institution_list_json)
         for institution in institutions:
-            members=institution['members'];
-            admins=institution['admins'];
-            pendingUsers=institution['pending'];              
+            members=institution['members']
+            admins=institution['admins']
+            pendingUsers=institution['pending']             
             cur.execute("select * from add_institution(%s,%s::text,%s::text,%s::text,%s::text,%s)", (institution['id'],institution['name'],institution['logo'],institution['description'],institution['url'],institution['archived']))
             role_id=-1
             user_id=-1
@@ -126,17 +127,27 @@ def insert_projects():
             try:
                 if project['id']>0:
                     print("inserting project with project id"+str(project['id']))
-                    if project['numPlots'] is None:
-                        project['numPlots']=0
-                    if project['plotSpacing'] is None:
-                        project['plotSpacing']=0
-                    if project['plotSize'] is None:
-                        project['plotSize']=0
-                    if project['samplesPerPlot'] is None:
-                        project['samplesPerPlot']=0
-                    if project['sampleResolution'] is None:
-                        project['sampleResolution']=0
-                    cur.execute("select * from create_project(%s,%s,%s::text,%s::text,%s::text,%s::text,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,%s,%s,%s::jsonb,%s,%s,%s,%s)", (project['id'],project['institution'],project['availability'],project['name'],project['description'],project['privacyLevel'],project['boundary'],project['baseMapSource'],project['plotDistribution'],project['numPlots'],project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),json.dumps(project['csv']),None,None,0))
+                    if project['numPlots'] is None: project['numPlots']=0
+                    if project['plotSpacing'] is None: project['plotSpacing']=0
+                    if project['plotSize'] is None: project['plotSize']=0
+                    if project['samplesPerPlot'] is None: project['samplesPerPlot']=0
+                    if project['sampleResolution'] is None: project['sampleResolution']=0
+                    if not 'plot-csv' in project.keys() or project['plots-csv'] is None : project['plots-csv'] = ""
+                    if not project['csv'] is None : project['plots-csv'] = project['csv']
+                    if not 'plots-shp' in project.keys() or project['plots-shp'] is None : project['plots-shp'] = ""
+                    if not 'samples-csv' in project.keys() or project['samples-csv'] is None : project['samples-csv'] = ""
+                    if not 'samples-shp' in project.keys() or project['samples-shp'] is None : project['samples-shp'] = ""
+
+                    cur.execute("select * from create_project_migration(%s,%s,%s::text,%s::text,%s::text,%s::text,"
+                    + "ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,"
+                    + "%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)", 
+                    (project['id'],project['institution'],project['availability'], 
+                    project['name'],project['description'],project['privacyLevel'],project['boundary'],
+                    project['baseMapSource'],project['plotDistribution'],project['numPlots'],
+                    project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],
+                    project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),
+                    project['plots-csv'],project['plots-shp'],project['samples-csv'],project['samples-shp'], None,None,0))
+                    
                     project_id = cur.fetchone()[0]
 
                     for dash in dashArr:

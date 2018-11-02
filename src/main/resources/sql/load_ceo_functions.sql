@@ -178,6 +178,7 @@ CREATE OR REPLACE FUNCTION get_institution(_institution_id integer)
         id              integer,
         name            text,
         logo            text,
+        logo_data       bytea,
         description     text,
         url             text,
         archived        boolean
@@ -444,7 +445,7 @@ CREATE OR REPLACE FUNCTION select_public_imagery_by_institution(_institution_id 
 $$ LANGUAGE SQL;
 
 -- Create a project from migration
-CREATE OR REPLACE FUNCTION create_project(
+CREATE OR REPLACE FUNCTION create_project_migration(
         _id                         integer,
         _institution_id             integer,
         _availability               text,
@@ -462,7 +463,10 @@ CREATE OR REPLACE FUNCTION create_project(
         _samples_per_plot           integer,
         _sample_resolution          double precision,
         _sample_survey              jsonb,
-        _plot_csv_file              text,
+        _plots_csv_file             text,
+        _plots_shp_file             text,
+        _samples_csv_file           text,
+        _samples_shp_file           text,
         _classification_start_date  date,
         _classification_end_date    date,
         _classification_timestep    integer
@@ -470,11 +474,13 @@ CREATE OR REPLACE FUNCTION create_project(
 
     INSERT INTO projects (id, institution_id, availability, name, description, privacy_level, boundary, 
                             base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
-                            sample_distribution, samples_per_plot,sample_resolution, sample_survey, plot_csv_file,
+                            sample_distribution, samples_per_plot,sample_resolution, sample_survey, 
+                            plots_csv_file, plots_shp_file, samples_csv_file, samples_shp_file,
                             classification_start_date, classification_end_date, classification_timestep)
     VALUES (_id, _institution_id, _availability, _name, _description, _privacy_level, _boundary,
             _base_map_source, _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, 
-            _sample_distribution, _samples_per_plot, _sample_resolution, _sample_survey, _plot_csv_file,
+            _sample_distribution, _samples_per_plot, _sample_resolution, _sample_survey, 
+            _plots_csv_file, _plots_shp_file, _samples_csv_file, _samples_shp_file,
             _classification_start_date, _classification_end_date, _classification_timestep)
     RETURNING id
 
@@ -517,18 +523,18 @@ $$ LANGUAGE SQL;
 -- Upade data that requires the project number after a project is created
 CREATE OR REPLACE FUNCTION update_project_csv(
     _proj_id            integer,
-    _plot_csv_file      text,
-    _plot_shp_file      text,
-    _sample_csv_file    text,
-    _sample_shp_file    text,
+    _plots_csv_file      text,
+    _plots_shp_file      text,
+    _samples_csv_file    text,
+    _samples_shp_file    text,
     _boundary geometry(Polygon,4326)
     ) RETURNS integer AS $$
 
     UPDATE projects 
-    SET plot_csv_file = _plot_csv_file,
-        plot_shp_file = _plot_shp_file,
-        sample_csv_file = _sample_csv_file,
-        sample_shp_file = _sample_shp_file,
+    SET plots_csv_file = _plots_csv_file,
+        plots_shp_file = _plots_shp_file,
+        samples_csv_file = _samples_csv_file,
+        samples_shp_file = _samples_shp_file,
         boundary = _boundary
     WHERE id = _proj_id
     RETURNING id
@@ -576,10 +582,10 @@ CREATE OR REPLACE FUNCTION select_project(_id integer)
       samples_per_plot          integer,
       sample_resolution         float,
       sample_survey             jsonb,
-      plot_csv_file             text,
-      plot_shp_file             text,
-      sample_csv_file           text,
-      sample_shp_file           text,
+      plots_csv_file            text,
+      plots_shp_file            text,
+      samples_csv_file          text,
+      samples_shp_file          text,
       classification_start_date date,
       classification_end_date   date,
       classification_timestep   integer
@@ -587,7 +593,7 @@ CREATE OR REPLACE FUNCTION select_project(_id integer)
 
     SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
         plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-        sample_survey, plot_csv_file, plot_shp_file, sample_csv_file, sample_shp_file, classification_start_date, classification_end_date, classification_timestep
+        sample_survey, plots_csv_file, plots_shp_file, samples_csv_file, samples_csv_file, classification_start_date, classification_end_date, classification_timestep
     FROM projects
     WHERE id = _id
 
@@ -614,10 +620,10 @@ CREATE OR REPLACE FUNCTION select_all_projects()
       samples_per_plot          integer,
       sample_resolution         float,
       sample_survey             jsonb,
-      plot_csv_file             text,
-      plot_shp_file             text,
-      sample_csv_file           text,
-      sample_shp_file           text,
+      plots_csv_file            text,
+      plots_shp_file            text,
+      samples_csv_file          text,
+      samples_shp_file          text,
       classification_start_date date,
       classification_end_date   date,
       classification_timestep   integer,
@@ -626,7 +632,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 
     SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
         plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-        sample_survey, plot_csv_file, plot_shp_file, sample_csv_file, sample_shp_file, classification_start_date, classification_end_date, classification_timestep, false AS editable
+        sample_survey, plots_csv_file, plots_shp_file, samples_csv_file, samples_csv_file, classification_start_date, classification_end_date, classification_timestep, false AS editable
     FROM projects
     WHERE privacy_level  =  'public'
       AND availability  =  'published'
@@ -654,10 +660,10 @@ CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_id integ
       samples_per_plot          integer,
       sample_resolution         float,
       sample_survey             jsonb,
-      plot_csv_file             text,
-      plot_shp_file             text,
-      sample_csv_file           text,
-      sample_shp_file           text,
+      plots_csv_file            text,
+      plots_shp_file            text,
+      samples_csv_file          text,
+      samples_shp_file          text,
       classification_start_date date,
       classification_end_date   date,
       classification_timestep   integer,
@@ -692,10 +698,10 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
       samples_per_plot          integer,
       sample_resolution         float,
       sample_survey             jsonb,
-      plot_csv_file             text,
-      plot_shp_file             text,
-      sample_csv_file           text,
-      sample_shp_file           text,
+      plots_csv_file            text,
+      plots_shp_file            text,
+      samples_csv_file          text,
+      samples_shp_file          text,
       classification_start_date date,
       classification_end_date   date,
       classification_timestep   integer,
@@ -709,14 +715,14 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
     )
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plot_csv_file, p.plot_shp_file, p.sample_csv_file, p.sample_shp_file,
+        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plots_csv_file, p.plots_shp_file, p.samples_csv_file, p.samples_csv_file,
         p.classification_start_date,p.classification_end_date,p.classification_timestep,true AS editable
     FROM project_roles as p
     WHERE role = 'admin'
     UNION
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plot_csv_file, p.plot_shp_file, p.sample_csv_file, p.sample_shp_file,
+        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plots_csv_file, p.plots_shp_file, p.samples_csv_file, p.samples_csv_file,
         p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
     FROM project_roles as p
     WHERE role = 'member'
@@ -725,7 +731,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
     UNION
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plot_csv_file, p.plot_shp_file, p.sample_csv_file, p.sample_shp_file,
+        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plots_csv_file, p.plots_shp_file, p.samples_csv_file, p.samples_csv_file,
         p.classification_start_date,p.classification_end_date,p.classification_timestep,false AS editable
     FROM project_roles as p
     WHERE (role NOT IN ('admin','member') OR role IS NULL)
@@ -756,10 +762,10 @@ CREATE OR REPLACE FUNCTION select_institution_projects_with_roles( _user_id inte
       samples_per_plot          integer,
       sample_resolution         float,
       sample_survey             jsonb,
-      plot_csv_file             text,
-      plot_shp_file             text,
-      sample_csv_file           text,
-      sample_shp_file           text,
+      plots_csv_file            text,
+      plots_shp_file            text,
+      samples_csv_file          text,
+      samples_shp_file          text,
       classification_start_date date,
       classification_end_date   date,
       classification_timestep   integer,
@@ -1020,7 +1026,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
            user_id          integer,
            confidence       integer,
            flagged          boolean,
-           assigned         integer,
+           --assigned         integer,
            sample_points    bigint,
            collection_time  timestamp,
            imagery_title    text,
@@ -1036,7 +1042,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
            user_id,
            confidence,
            user_plots.flagged AS flagged,
-           assigned,
+           --assigned,
            count(point) AS sample_points,
            collection_time::timestamp,
            json_agg(title)::text AS imagery_title,
@@ -1054,7 +1060,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     INNER JOIN imagery
         ON imagery.id = sample_values.imagery_id
     WHERE projects.id = _project_id
-    GROUP BY plots.id,center,plot_shape,plot_size,user_id,confidence,user_plots.flagged,assigned,collection_time,imagery_date
+    GROUP BY plots.id,center,plot_shape,plot_size,user_id,confidence,user_plots.flagged,collection_time,imagery_date --,assigned
 
 $$ LANGUAGE SQL;
 
@@ -1239,7 +1245,7 @@ CREATE OR REPLACE FUNCTION select_all_institutions()
         GROUP BY institution_id
     )
     
-    SELECT i.*, 
+    SELECT i.id, i.name, i.logo, i.description, i.url, i.archived, 
         (CASE WHEN member_list IS NULL THEN '[]' ELSE member_list END), 
         (CASE WHEN admin_list IS NULL THEN '[]' ELSE admin_list END),
         (CASE WHEN pending_list IS NULL THEN '[]' ELSE pending_list END)
@@ -1261,6 +1267,7 @@ CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer)
       id            integer,
       name          text,
       logo          text,
+      logo_data     bytea,
       description   text,
       url           text,
       archived      boolean,
@@ -1269,10 +1276,45 @@ CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer)
       pending       jsonb
     ) AS $$
 
-    SELECT *
-    FROM select_all_institutions()
+    WITH inst_roles as (
+        SELECT user_id, title, institution_id
+        FROM institution_users as iu
+        LEFT JOIN roles
+            ON roles.id = iu.role_id
+    ),
+    members as (
+        SELECT jsonb_agg(user_id) as member_list, institution_id
+        FROM inst_roles        
+        WHERE title = 'member'
+            OR title = 'admin'
+        GROUP BY institution_id
+    ),
+    admins as (
+        SELECT jsonb_agg(user_id) as admin_list, institution_id
+        FROM inst_roles        
+        WHERE title = 'admin'
+        GROUP BY institution_id
+    ),
+    pending as (
+        SELECT jsonb_agg(user_id) as pending_list, institution_id
+        FROM inst_roles        
+        WHERE title = 'pending'
+        GROUP BY institution_id
+    )
+    
+    SELECT i.id, i.name, i.logo, i.logo_data, i.description, i.url, i.archived, 
+        (CASE WHEN member_list IS NULL THEN '[]' ELSE member_list END), 
+        (CASE WHEN admin_list IS NULL THEN '[]' ELSE admin_list END),
+        (CASE WHEN pending_list IS NULL THEN '[]' ELSE pending_list END)
+    FROM institutions as i
+    LEFT JOIN members as m
+        ON i.id = m.institution_id
+    LEFT JOIN admins as a
+        ON i.id = a.institution_id
+    LEFT JOIN pending as p
+        ON i.id = p.institution_id
     WHERE id = _institution_id
-       AND archived = false
+        AND archived = false
 
 $$ LANGUAGE SQL;
 

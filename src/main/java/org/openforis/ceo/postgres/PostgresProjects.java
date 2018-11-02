@@ -53,36 +53,9 @@ public class PostgresProjects implements Projects {
 
     }
 
-    public String getAllProjects(Request req, Response res) {
-        var userId = req.queryParams("userId");
-        var institutionId = req.queryParams("institutionId");
 
-        
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("");) {
-            
-
-            var editable = false;
-
-            if (userId == null || userId.isEmpty()) {
-                if (institutionId == null || institutionId.isEmpty()) {
-                    pstmt = conn.prepareStatement("SELECT * FROM select_all_projects()");
-                } else {
-                    pstmt = conn.prepareStatement("SELECT * FROM select_all_institution_projects(?)");
-                    pstmt.setInt(1, Integer.parseInt(institutionId));
-                }
-            } else {
-                if (institutionId == null || institutionId.isEmpty()) {
-                    pstmt = conn.prepareStatement("SELECT * FROM select_all_user_projects(?)");
-                    pstmt.setInt(1, Integer.parseInt(userId));
-                } else {
-                    pstmt = conn.prepareStatement("SELECT * FROM select_institution_projects_with_roles(?,?)");
-                    pstmt.setInt(1, Integer.parseInt(userId));
-                    pstmt.setInt(2, Integer.parseInt(institutionId));
-                }
-            }
-
-            var allProjects = new JsonArray();
+    private static String queryProjectGet(PreparedStatement pstmt) {
+        var allProjects = new JsonArray();
             try(var rs = pstmt.executeQuery()){
                 while(rs.next()) {
                     var newProject = new JsonObject();
@@ -113,12 +86,48 @@ public class PostgresProjects implements Projects {
                     newProject.addProperty("classification_end_date",safeDateToString(classificationEndDate));
                     newProject.addProperty("classification_timestep",rs.getInt("classification_timestep"));
 
-                    newProject.addProperty("editable", editable);
+                    newProject.addProperty("editable", false);
 
                     allProjects.add(newProject);
                 }
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+                return "[]";
             }
             return allProjects.toString();
+    }
+
+    public String getAllProjects(Request req, Response res) {
+        var userId =            req.queryParams("userId");
+        var institutionId =     req.queryParams("institutionId");
+        
+        try (var conn = connect()) {
+        
+            if (userId == null || userId.isEmpty()) {
+                if (institutionId == null || institutionId.isEmpty()) {
+                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_all_projects()")) {
+                        return queryProjectGet(pstmt);
+                    }
+                } else {
+                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_all_institution_projects(?)")) {
+                        pstmt.setInt(1, Integer.parseInt(institutionId));
+                        return queryProjectGet(pstmt);
+                    }
+                }
+            } else {
+                if (institutionId == null || institutionId.isEmpty()) {
+                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_all_user_projects(?)")) {
+                        pstmt.setInt(1, Integer.parseInt(userId));
+                        return queryProjectGet(pstmt);
+                    }
+                } else {
+                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_institution_projects_with_roles(?,?)")) {
+                        pstmt.setInt(1, Integer.parseInt(userId));
+                        pstmt.setInt(2, Integer.parseInt(institutionId));
+                        return queryProjectGet(pstmt);
+                    }
+                }
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "[]";
