@@ -6,8 +6,11 @@ class Home extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projects: []
+            projects: [],
+            showHideSideBar:"col-lg-9 col-md-12 pl-0",
+            showHideLpanel:"col-lg-3 pr-0 pl-0"
         };
+        this.toggleSidebar=this.toggleSidebar.bind(this);
     }
 
     componentDidMount() {
@@ -15,6 +18,14 @@ class Home extends React.Component {
         fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
             .then(response => response.json())
             .then(data => this.setState({projects: data}));
+    }
+
+    toggleSidebar() {
+        let sidebarcss = (this.state.showHideSideBar === "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9") ? "col-lg-9 col-md-12 pl-0" : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9";
+        document.getElementById("tog-symb").children[0].classList.toggle('fa-caret-left');
+        document.getElementById("tog-symb").children[0].classList.toggle('fa-caret-right');
+        let lpanelcss = (this.state.showHideLpanel === "col-lg-3 pr-0 pl-0 d-none col-xl-3") ? "col-lg-3 pr-0 pl-0" : "col-lg-3 pr-0 pl-0 d-none col-xl-3";
+        this.setState({showHideSideBar: sidebarcss, showHideLpanel: lpanelcss});
     }
 
     render() {
@@ -25,10 +36,10 @@ class Home extends React.Component {
                     <div className="row tog-effect">
                         <SideBar documentRoot={this.props.documentRoot}
                                  userName={this.props.userName}
-                                 projects={this.state.projects}/>
+                                 projects={this.state.projects} showHideLpanel={this.state.showHideLpanel}/>
                         <MapPanel documentRoot={this.props.documentRoot}
                                   userId={this.props.userId}
-                                  projects={this.state.projects}/>
+                                  projects={this.state.projects} toggleSidebar={this.toggleSidebar} showHideSideBar={this.state.showHideSideBar} showHideTogSym={this.state.showHideTogSym}/>
                     </div>
                 </div>
             </div>
@@ -44,7 +55,7 @@ class MapPanel extends React.Component {
             mapConfig: null,
             clusterExtent: [],
             clickedFeatures: [],
-            projectMarkersShown: false
+            projectMarkersShown: false,
         };
     }
 
@@ -112,9 +123,9 @@ class MapPanel extends React.Component {
 
     render() {
         return (
-            <div id="mapPanel" className="col-lg-9 col-md-12 pl-0 pr-0">
+            <div id="mapPanel" className={this.props.showHideSideBar}>
                 <div className="row no-gutters ceo-map-toggle">
-                    <div id="togbutton" className="button col-xl-1 bg-lightgray d-none d-xl-block">
+                    <div id="togbutton" className="button col-xl-1 bg-lightgray d-none d-xl-block" onClick={this.props.toggleSidebar}>
                         <div className="row h-100">
                             <div className="col-lg-12 my-auto no-gutters text-center">
                                 <span id="tog-symb"><i className="fa fa-caret-left"></i></span>
@@ -166,7 +177,7 @@ class SideBar extends React.Component {
     }
     render() {
         return (
-            <div id="lPanel" className="col-lg-3 pr-0 pl-0">
+            <div id="lPanel" className={this.props.showHideLpanel}>
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
@@ -312,7 +323,7 @@ class ProjectPopup extends React.Component {
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
-                <div className="cContent>">
+                <div className="cContent" style={{padding:"10px"}}>
                     <table className="table table-sm">
                         <tbody>
                             {
