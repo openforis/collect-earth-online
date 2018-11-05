@@ -234,22 +234,22 @@ class BasicLayout extends React.PureComponent{
 
         if(widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            url = "http://collect.earth:8888/" + fts[widget.filterType];
+            url = "https://geegateway.servirglobal.net:8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
-            url = "http://collect.earth:8888/image";
+            url = "https://geegateway.servirglobal.net:8888/image";
         }
         else if(widget.properties && "ImageCollectionCustom" == widget.properties[0]){
-            url = "http://collect.earth:8888/meanImageByMosaicCollections";
+            url = "https://geegateway.servirglobal.net:8888/meanImageByMosaicCollections";
         }
         else if(collectionName.trim().length > 0)
         {
-            url = "http://collect.earth:8888/cloudMaskImageByMosaicCollection";
+            url = "https://geegateway.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
 
         }
         else{
-            url = "http://collect.earth:8888/ImageCollectionbyIndex";
+            url = "https://geegateway.servirglobal.net:8888/ImageCollectionbyIndex";
         }
         return url;
     };
@@ -430,8 +430,8 @@ class BasicLayout extends React.PureComponent{
         {
             widget.properties = ["","","","",""];
             widget.filterType = "";
-            widget.visParams = this.state.imageParams;
-            widget.ImageAsset = JSON.parse(this.state.imageCollection);
+            widget.visParams = JSON.parse(this.state.imageParams);
+            widget.ImageAsset = this.state.imageCollection;
             this.addCustomImagery(this.buildImageryObject({
                     ImageAsset: widget.ImageAsset,
                     startDate: "",
