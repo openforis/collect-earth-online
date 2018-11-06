@@ -494,6 +494,7 @@ CREATE OR REPLACE FUNCTION create_project(
         _name                       text, 
         _description                text,
         _privacy_level              text, 
+        _boundary                   geometry, 
         _base_map_source            text, 
         _plot_distribution          text, 
         _num_plots                  integer, 
@@ -509,11 +510,11 @@ CREATE OR REPLACE FUNCTION create_project(
         _classification_timestep    integer
         ) RETURNS integer AS $$
 
-    INSERT INTO projects (institution_id, availability, name, description, privacy_level, 
+    INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary 
                             base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
                             sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, 
                             classification_end_date, classification_timestep)
-    VALUES (_institution_id, _availability, _name, _description, _privacy_level, _base_map_source, 
+    VALUES (_institution_id, _availability, _name, _description, _privacy_level, _boundary, _base_map_source, 
             _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, _sample_distribution, _samples_per_plot,
             _sample_resolution, _sample_survey, _classification_start_date, _classification_end_date, _classification_timestep)
     RETURNING id

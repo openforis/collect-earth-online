@@ -1039,28 +1039,29 @@ public class PostgresProjects implements Projects {
         var plotDistribution =   newProject.get("plotDistribution").getAsString();
         var numPlots =           getOrZero(newProject,"numPlots").getAsInt();
         var plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
-        var plotShape =          newProject.get("plotShape").getAsString();
+        var plotShape =          getOrEmptyString(newProject,"plotShape").getAsString();
         var plotSize =           getOrZero(newProject,"plotSize").getAsDouble();
         var sampleDistribution = newProject.get("sampleDistribution").getAsString();
         var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
         var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
 
         // If plotDistribution is csv, calculate the lat/lon bounds from the csv contents
-        var csvPlotCenters = new HashMap<String, Double[]>();
-        var shpPlotGeoms = new HashMap<String, JsonObject>();
-        var shpPlotCenters = new HashMap<String, Double[]>();
+        var plotCenters = new HashMap<String, Double[]>();
         if (plotDistribution.equals("csv")) {
-            csvPlotCenters = loadCsvPlotPoints(newProject.get("plots-csv").getAsString());
-            var csvPlotBounds = calculateBounds(csvPlotCenters.values().toArray(new Double[][]{}), plotSize / 2.0);
+            plotCenters = loadCsvPlotPoints(newProject.get("plots-csv").getAsString());
+            var csvPlotBounds = calculateBounds(plotCenters.values().toArray(new Double[][]{}), plotSize / 2.0);
             lonMin = csvPlotBounds[0];
             latMin = csvPlotBounds[1];
             lonMax = csvPlotBounds[2];
             latMax = csvPlotBounds[3];
-        } else if (plotDistribution.equals("shp")) {
+        } 
+        
+        var shpPlotGeoms = new HashMap<String, JsonObject>();
+        if (plotDistribution.equals("shp")) {
             extractZipFileToGeoJson(projectId, "plots");
             shpPlotGeoms = getGeoJsonPlotGeometries(projectId);
-            shpPlotCenters = getPlotGeometryCenters(shpPlotGeoms);
-            var shpPlotBounds = calculateBounds(shpPlotCenters.values().toArray(new Double[][]{}), 500.0); // FIXME: replace hard-coded padding with a calculated value
+            plotCenters = getPlotGeometryCenters(shpPlotGeoms);
+            var shpPlotBounds = calculateBounds(plotCenters.values().toArray(new Double[][]{}), 500.0); // FIXME: replace hard-coded padding with a calculated value
             lonMin = shpPlotBounds[0];
             latMin = shpPlotBounds[1];
             lonMax = shpPlotBounds[2];
@@ -1114,8 +1115,7 @@ public class PostgresProjects implements Projects {
         var newPlotCenters =
         plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
         : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
-        : plotDistribution.equals("csv") ? csvPlotCenters.entrySet().toArray()
-        : shpPlotCenters.entrySet().toArray();
+        : plotCenters.entrySet().toArray();
 
         
         try (var conn = connect()) {
@@ -1211,7 +1211,13 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
             newProject.addProperty("availability", "unpublished");
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
+            var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
+            var latMin =             getOrZero(newProject,"latMin").getAsDouble();
+            var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
+            var latMax =             getOrZero(newProject,"latMax").getAsDouble();
+            newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
+
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 
@@ -1220,24 +1226,25 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(3,newProject.get("name").getAsString());
                 pstmt.setString(4, newProject.get("description").getAsString());
                 pstmt.setString(5, newProject.get("privacyLevel").getAsString());
-                pstmt.setString(6, newProject.get("baseMapSource").getAsString());
-                pstmt.setString(7, newProject.get("plotDistribution").getAsString());
-                pstmt.setInt(8, getOrZero(newProject, "numPlots").getAsInt());
-                pstmt.setFloat(9, getOrZero(newProject, "plotSpacing").getAsFloat());
-                pstmt.setString(10, newProject.get("plotShape").getAsString());
-                pstmt.setFloat(11,  getOrZero(newProject, "plotSize").getAsFloat());
-                pstmt.setString(12, newProject.get("sampleDistribution").getAsString());
-                pstmt.setInt(13, getOrZero(newProject, "samplesPerPlot").getAsInt());
-                pstmt.setFloat(14, getOrZero(newProject, "sampleResolution").getAsFloat());
-                pstmt.setString(15, newProject.get("sampleValues").getAsJsonArray().toString());
+                pstmt.setString(6, newProject.get("boundary").getAsString());
+                pstmt.setString(7, newProject.get("baseMapSource").getAsString());
+                pstmt.setString(8, newProject.get("plotDistribution").getAsString());
+                pstmt.setInt(9, getOrZero(newProject, "numPlots").getAsInt());
+                pstmt.setFloat(10, getOrZero(newProject, "plotSpacing").getAsFloat());
+                pstmt.setString(11, newProject.get("plotShape").getAsString());
+                pstmt.setFloat(12,  getOrZero(newProject, "plotSize").getAsFloat());
+                pstmt.setString(13, newProject.get("sampleDistribution").getAsString());
+                pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
+                pstmt.setFloat(15, getOrZero(newProject, "sampleResolution").getAsFloat());
+                pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
                 
                 // FIXME not implimented in JS or JSON
                 // pstmt.setDate(16,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
                 // pstmt.setDate(17, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
                 // pstmt.setInt(18, newProject.get("classification_timestep").getAsInt());
-                pstmt.setDate(16,  new java.sql.Date(System.currentTimeMillis()));
-                pstmt.setDate(17, new java.sql.Date(System.currentTimeMillis()));
-                pstmt.setInt(18, 0);
+                pstmt.setDate(17,  new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setDate(18, new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setInt(19, 0);
 
                 try(var rs = pstmt.executeQuery()){
                     var newProjectId = "";
