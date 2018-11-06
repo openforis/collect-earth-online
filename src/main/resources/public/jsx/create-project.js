@@ -40,10 +40,6 @@ class Project extends React.Component {
         this.setPlotDistribution = this.setPlotDistribution.bind(this);
         this.setPlotShape = this.setPlotShape.bind(this);
         this.setSampleDistribution = this.setSampleDistribution.bind(this);
-        this.configureGeoDash = this.configureGeoDash.bind(this);
-        this.downloadPlotData = this.downloadPlotData.bind(this);
-        this.downloadSampleData = this.downloadSampleData.bind(this);
-        this.closeProject = this.closeProject.bind(this);
         this.changeAvailability = this.changeAvailability.bind(this);
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.addSurveyQuestion = this.addSurveyQuestion.bind(this);

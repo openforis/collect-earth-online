@@ -36,10 +36,6 @@ class Project extends React.Component {
                 archived: "Archive"
             },
         };
-        this.setPrivacyLevel = this.setPrivacyLevel.bind(this);
-        this.setPlotDistribution = this.setPlotDistribution.bind(this);
-        this.setPlotShape = this.setPlotShape.bind(this);
-        this.setSampleDistribution = this.setSampleDistribution.bind(this);
         this.configureGeoDash = this.configureGeoDash.bind(this);
         this.downloadPlotData = this.downloadPlotData.bind(this);
         this.downloadSampleData = this.downloadSampleData.bind(this);
@@ -47,13 +43,8 @@ class Project extends React.Component {
         this.changeAvailability = this.changeAvailability.bind(this);
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.getParentSurveyQuestions = this.getParentSurveyQuestions.bind(this);
-        this.setProjectTemplate = this.setProjectTemplate.bind(this);
         this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
         this.getParentSurveyQuestionAnswers=this.getParentSurveyQuestionAnswers.bind(this);
-        this.handleInputName = this.handleInputName.bind(this);
-        this.handleInputColor = this.handleInputColor.bind(this);
-        this.handleInputParent = this.handleInputParent.bind(this);
-        this.handleChange = this.handleChange.bind(this);
         this.topoSort = this.topoSort.bind(this);
         this.getParentSurveyAnswers=this.getParentSurveyAnswers.bind(this);
     };
@@ -206,68 +197,6 @@ class Project extends React.Component {
         window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.details.id, "_blank");
     }
 
-    setProjectTemplate(event) {
-        this.setState({templateId: event.target.value});
-        const templateProject = this.state.projectList.find(
-            function (project) {
-                return project.id == event.target.value;
-            },
-            this
-        );
-        var sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
-        var newSV=[];
-        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
-        var dNew = this.state.newValueEntry;
-
-        if(sv.length>0){
-
-            sv.map((sq)=>{
-                    if(sq.name){
-                        tempSQ.id=sq.id;
-                        tempSQ.question=sq.name;
-                        sq.values.map((sa)=>{
-                            if(sa.name){
-                                if(sa.id>0){
-                                    tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
-                                }
-                            }
-                            else {
-                                tempSQ.answers.push(sa);
-                            }
-
-                        });
-                        if(tempSQ.id>0){
-                            newSV.push(tempSQ);
-                            dNew[tempSQ.question] ={id:-1,answer:"",color:"#000000"};
-                            this.setState({newValueEntry: dNew});
-                        }
-                    }
-                    else{
-                        newSV.push(sq);
-                        dNew[sq.question] ={id:-1,answer:"",color:"#000000"};
-                        this.setState({newValueEntry: dNew});
-                    }
-                }
-            );
-        }
-
-        templateProject.sampleValues=newSV;
-        this.setState({details: JSON.parse(JSON.stringify(templateProject))},
-            function () {
-                this.updateUnmanagedComponents(this.state.templateId);
-            }
-        ); // clone project
-
-    }
-
-    setPrivacyLevel(privacyLevel) {
-        if (this.state.details != null) {
-            var detailsNew = this.state.details;
-            detailsNew.privacyLevel = privacyLevel;
-            this.setState({details: detailsNew});
-        }
-    }
-
     setBaseMapSource() {
         var e = document.getElementById("base-map-source");
         var bms = e.options[e.selectedIndex].value;
@@ -277,96 +206,6 @@ class Project extends React.Component {
         this.setState({details: detailsNew});
         mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
     }
-
-    setPlotDistribution(plotDistribution) {
-        if (this.state.details != null) {
-            var detailsNew = this.state.details;
-            detailsNew.plotDistribution = plotDistribution;
-            this.setState({details: detailsNew});
-            if (document.getElementById("num-plots") != null) {
-                if (plotDistribution == "random") {
-                    utils.enable_element("plot-size");
-                    utils.enable_element("num-plots");
-                    utils.disable_element("plot-spacing");
-                    utils.disable_element("plot-distribution-csv-file");
-                    utils.disable_element("plot-distribution-shp-file");
-                    document.getElementById("plot-design-text").innerHTML="Plot centers will be randomly distributed within the AOI.";
-
-                } else if (plotDistribution == "gridded") {
-                    utils.enable_element("plot-size");
-                    utils.disable_element("num-plots");
-                    utils.enable_element("plot-spacing");
-                    utils.disable_element("plot-distribution-csv-file");
-                    utils.disable_element("plot-distribution-shp-file");
-                    document.getElementById("plot-design-text").innerHTML="Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
-
-                } else if(plotDistribution == "csv"){
-                    utils.enable_element("plot-size");
-                    utils.disable_element("num-plots");
-                    utils.disable_element("plot-spacing");
-                    utils.disable_element("plot-distribution-shp-file");
-                    utils.enable_element("plot-distribution-csv-file");
-                    document.getElementById("plot-design-text").innerHTML="Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
-
-                }
-                else{
-                    utils.disable_element("plot-size");
-                    utils.disable_element("num-plots");
-                    utils.disable_element("plot-spacing");
-                    utils.disable_element("plot-distribution-csv-file");
-                    utils.enable_element("plot-distribution-shp-file");
-                    document.getElementById("plot-design-text").innerHTML="Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
-
-                }
-            }
-        }
-    }
-
-    setPlotShape(plotShape) {
-        if (this.state.details != null) {
-            var detailsNew = this.state.details;
-            detailsNew.plotShape = plotShape;
-            this.setState({details: detailsNew});
-        }
-    }
-
-    setSampleDistribution(sampleDistribution) {
-        if (this.state.details != null) {
-            var detailsNew = this.state.details;
-            detailsNew.sampleDistribution = sampleDistribution;
-            this.setState({details: detailsNew});
-            if (document.getElementById("samples-per-plot") != null && document.getElementById("sample-resolution") != null)
-                if (sampleDistribution == "random") {
-                    utils.enable_element("samples-per-plot");
-                    utils.disable_element("sample-resolution");
-                    utils.disable_element("sample-distribution-csv-file");
-                    utils.disable_element("sample-distribution-shp-file");
-                    document.getElementById("sample-design-text").innerHTML="Sample points will be randomly distributed within the plot boundary.";
-
-                } else if(sampleDistribution == "gridded") {
-                    utils.disable_element("samples-per-plot");
-                    utils.enable_element("sample-resolution");
-                    utils.disable_element("sample-distribution-csv-file");
-                    utils.disable_element("sample-distribution-shp-file");
-                    document.getElementById("sample-design-text").innerHTML="Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.";
-                }
-                else if(sampleDistribution == "csv"){
-                    utils.disable_element("samples-per-plot");
-                    utils.disable_element("sample-resolution");
-                    utils.disable_element("sample-distribution-shp-file");
-                    utils.enable_element("sample-distribution-csv-file");
-                    document.getElementById("sample-design-text").innerHTML="Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.";
-                }
-                else{
-                    utils.disable_element("samples-per-plot");
-                    utils.disable_element("sample-resolution");
-                    utils.disable_element("sample-distribution-csv-file");
-                    utils.enable_element("sample-distribution-shp-file");
-                    document.getElementById("sample-design-text").innerHTML="Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.";
-                }
-        }
-    }
-
 
     getParentSurveyQuestions(sampleSurvey) {
         return sampleSurvey.filter(
@@ -665,42 +504,6 @@ class Project extends React.Component {
         }
     }
 
-    handleInputName(surveyQuestion, event) {
-        var newValueEntryNew = this.state.newValueEntry;
-        if (newValueEntryNew[surveyQuestion]) {
-            newValueEntryNew[surveyQuestion].answer = event.target.value;
-            this.setState({newValueEntry:newValueEntryNew});
-        }
-        else
-            this.setState({newValueEntry:{id:-1,answer: "", color: "#000000"}});
-    }
-
-    handleInputColor(surveyQuestion, event) {
-        var newValueEntryNew = this.state.newValueEntry;
-        newValueEntryNew[surveyQuestion].color = event.target.value;
-
-        this.setState({newValueEntry: newValueEntryNew});
-
-    }
-
-    handleInputParent(event) {
-        var detailsNew = this.state.details;
-        this.setState({details: detailsNew});
-    }
-
-    handleChange(event) {
-        var detailsNew = this.state.details;
-
-        if (event.target.id == "project-name") {
-            detailsNew.name = event.target.value;
-        }
-        else if (event.target.id = "project-description") {
-            detailsNew.description = event.target.value;
-        }
-        this.setState({details: detailsNew});
-
-    }
-
     render() {
         var header;
         if (this.props.projectId == "0") {
@@ -717,10 +520,7 @@ class Project extends React.Component {
                 <ProjectStats project={this.state} project_stats_visibility={this.props.project_stats_visibility}/>
                 <ProjectDesignForm projectId={this.props.projectId} project={this.state}
                                    project_template_visibility={this.props.project_template_visibility}
-                                   setProjectTemplate={this.setProjectTemplate} setPrivacyLevel={this.setPrivacyLevel}
-                                   setSampleDistribution={this.setSampleDistribution}
                                    setBaseMapSource={this.setBaseMapSource}
-                                   setPlotDistribution={this.setPlotDistribution} setPlotShape={this.setPlotShape}
                                    topoSort={this.topoSort} getParentSurveyQuestions={this.getParentSurveyQuestions} getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}/>
                 <ProjectManagement project={this.state} projectId={this.props.projectId}
                                    configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
@@ -792,13 +592,12 @@ function ProjectDesignForm(props) {
         <form id="project-design-form" className="px-2 pb-2" method="post"
               action={props.documentRoot + "/create-project"}
               encType="multipart/form-data">
-            <ProjectInfo project={props.project} handleChange={props.handleChange}/>
-            <ProjectVisibility project={props.project} setPrivacyLevel={props.setPrivacyLevel}/>
+            <ProjectInfo project={props.project}/>
+            <ProjectVisibility project={props.project}/>
             <ProjectAOI projectId={props.projectId} project={props.project}/>
             <ProjectImagery project={props.project} setBaseMapSource={props.setBaseMapSource}/>
-            <PlotDesign project={props.project} setPlotDistribution={props.setPlotDistribution}
-                        setPlotShape={props.setPlotShape}/>
-            <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
+            <PlotDesign project={props.project}/>
+            <SampleDesign project={props.project}/>
             <SurveyDesign project={props.project} projectId={props.projectId}
                           topoSort={props.topoSort}
                           getParentSurveyQuestions={props.getParentSurveyQuestions} getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}/>
@@ -819,13 +618,13 @@ function ProjectInfo(props) {
                             <h3 htmlFor="project-name">Name</h3>
                             <input className="form-control form-control-sm" type="text" id="project-name" name="name"
                                    autoComplete="off" defaultValue={project.details.name}
-                                   onChange={props.handleChange}/>
+                                   />
                         </div>
                         <div className="form-group">
                             <h3 htmlFor="project-description">Description</h3>
                             <textarea className="form-control form-control-sm" id="project-description"
                                       name="description"
-                                      value={project.details.description} onChange={props.handleChange}></textarea>
+                                      value={project.details.description}></textarea>
                         </div>
                     </div>
                 </div>
@@ -848,12 +647,12 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
                                    value="public" checked={props.project.details.privacyLevel === 'public'}
-                                   onChange={() => props.setPrivacyLevel('public')}/>
+                                   />
                             <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
                         </div>
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
-                                   value="private" onChange={() => props.setPrivacyLevel('private')}
+                                   value="private"
                                    checked={props.project.details.privacyLevel === 'private'}/>
                             <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
                                 Admins</i></label>
@@ -861,7 +660,7 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-institution"
                                    name="privacy-level"
-                                   value="institution" onChange={() => props.setPrivacyLevel('institution')}
+                                   value="institution"
                                    checked={props.project.details.privacyLevel === 'institution'}/>
                             <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
                                 Members</i></label>
@@ -869,7 +668,7 @@ function ProjectVisibility(props) {
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-invitation"
                                    name="privacy-level"
-                                   value="invitation" onChange={() => props.setPrivacyLevel('invitation')} disabled
+                                   value="invitation" disabled
                                    checked={props.project.details.privacyLevel === 'invitation'}/>
                             <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
                                 Soon</i></label>
@@ -1004,7 +803,6 @@ class PlotDesign extends React.Component {
                                     <div className="form-check form-check-inline">
                                         <input className="form-check-input" type="radio" id="plot-distribution-random"
                                                name="plot-distribution" value="random"
-                                               onChange={() => this.props.setPlotDistribution('random')}
                                                checked={this.props.project.details.plotDistribution === 'random'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-distribution-random">Random</label>
@@ -1012,7 +810,6 @@ class PlotDesign extends React.Component {
                                     <div className="form-check form-check-inline">
                                         <input className="form-check-input" type="radio" id="plot-distribution-gridded"
                                                name="plot-distribution" defaultValue="gridded"
-                                               onChange={() => this.props.setPlotDistribution('gridded')}
                                                checked={this.props.project.details.plotDistribution === 'gridded'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-distribution-gridded">Gridded</label>
@@ -1020,28 +817,24 @@ class PlotDesign extends React.Component {
                                     <div className="form-check form-check-inline">
                                         <input className="form-check-input" type="radio" id="plot-distribution-csv"
                                                name="plot-distribution" defaultValue="csv"
-                                               onChange={() => this.props.setPlotDistribution('csv')}
                                                checked={this.props.project.details.plotDistribution === 'csv'}/>
                                         <label
                                             className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                             id="custom-csv-upload">
                                             <small>Upload CSV</small>
                                             <input type="file" accept="text/csv" id="plot-distribution-csv-file"
-                                                   onChange={this.encodeImageFileAsURL}
                                                    style={{display: "none"}} disabled/>
                                         </label>
                                     </div>
                                     <div className="form-check form-check-inline">
                                         <input className="form-check-input" type="radio" id="plot-distribution-shp"
                                                name="plot-distribution" defaultValue="shp"
-                                               onChange={() => this.props.setPlotDistribution('shp')}
                                                checked={this.props.project.details.plotDistribution === 'shp'}/>
                                         <label
                                             className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                             id="custom-shp-upload">
                                             <small>Upload SHP</small>
                                             <input type="file" accept="application/zip" id="plot-distribution-shp-file"
-                                                   onChange={this.encodeImageFileAsURL}
                                                    style={{display: "none"}} disabled/>
                                         </label>
                                     </div>
@@ -1069,7 +862,6 @@ class PlotDesign extends React.Component {
                                     <div className="form-check form-check-inline">
                                         <input className="form-check-input" type="radio" id="plot-shape-circle"
                                                name="plot-shape" defaultValue="circle"
-                                               onChange={() => this.props.setPlotShape('circle')}
                                                checked={this.props.project.details.plotShape === 'circle'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-shape-circle">Circle</label>
@@ -1077,7 +869,6 @@ class PlotDesign extends React.Component {
                                     <div className="form-check form-check-inline">
                                         <input className="form-check-input" type="radio" id="plot-shape-square"
                                                name="plot-shape" defaultValue="square"
-                                               onChange={() => this.props.setPlotShape('square')}
                                                checked={this.props.project.details.plotShape === 'square'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-shape-square">Square</label>
@@ -1122,7 +913,6 @@ class SampleDesign extends React.Component{
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" id="sample-distribution-random"
                                        name="sample-distribution" defaultValue="random"
-                                       onChange={() => this.props.setSampleDistribution('random')}
                                        checked={this.props.project.details.sampleDistribution === 'random'}/>
                                 <label className="form-check-label small"
                                        htmlFor="sample-distribution-random">Random</label>
@@ -1130,7 +920,6 @@ class SampleDesign extends React.Component{
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" id="sample-distribution-gridded"
                                        name="sample-distribution" defaultValue="gridded"
-                                       onChange={() => this.props.setSampleDistribution('gridded')}
                                        checked={this.props.project.details.sampleDistribution === 'gridded'}/>
                                 <label className="form-check-label small"
                                        htmlFor="sample-distribution-gridded">Gridded</label>
@@ -1138,26 +927,22 @@ class SampleDesign extends React.Component{
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" id="sample-distribution-csv"
                                        name="sample-distribution" defaultValue="csv"
-                                       onChange={() => this.props.setSampleDistribution('csv')}
                                        checked={this.props.project.details.sampleDistribution === 'csv'}/>
                                 <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                        id="sample-custom-csv-upload">
                                     <small>Upload CSV</small>
                                     <input type="file" accept="text/csv" id="sample-distribution-csv-file"
-                                           onChange={this.encodeImageFileAsURL}
                                            style={{display: "none"}} disabled/>
                                 </label>
                             </div>
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" id="sample-distribution-shp"
                                        name="sample-distribution" defaultValue="shp"
-                                       onChange={() => this.props.setSampleDistribution('shp')}
                                        checked={this.props.project.details.sampleDistribution === 'shp'}/>
                                 <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                        id="sample-custom-shp-upload">
                                     <small>Upload SHP</small>
                                     <input type="file" accept="application/zip" id="sample-distribution-shp-file"
-                                           onChange={this.encodeImageFileAsURL}
                                            style={{display: "none"}} disabled/>
                                 </label>
                             </div>
@@ -1185,14 +970,6 @@ class SampleDesign extends React.Component{
 
 function SurveyDesign(props){
     if (props.project.details != null) {
-        var answer_select = "";
-        var answers = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues);
-        if (answers.length > 0) {
-            answer_select = props.getParentSurveyQuestionAnswers(props.project.details.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
-                <option key={uid}
-                        value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
-            )
-        }
         return (
             <div className="row mb-3">
                 <div className="col">
@@ -1296,14 +1073,11 @@ function ProjectManagement(props) {
                    name="configure-geo-dash" value="Configure Geo-Dash"
                    onClick={props.configureGeoDash}
                    style={{display: project.details.availability == 'unpublished' || project.details.availability == 'published' ? 'block' : 'none'}}/>
-
-
             <input type="button" id="download-plot-data"
                    className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="download-plot-data" value="Download Plot Data"
                    onClick={props.downloadPlotData}
                    style={{display: project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none'}}/>
-
             <input type="button" id="download-sample-data"
                    className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="download-sample-data" value="Download Sample Data"
