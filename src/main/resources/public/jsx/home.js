@@ -323,7 +323,7 @@ class ProjectPopup extends React.Component {
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
-                <div className="cContent>">
+                <div className="cContent" style={{padding:"10px"}}>
                     <table className="table table-sm">
                         <tbody>
                             {

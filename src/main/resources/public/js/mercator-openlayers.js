@@ -102,7 +102,16 @@ mercator.createSource = function (sourceConfig) {
         //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
         //const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
         const url = sourceConfig.geeUrl;
-        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): '';
+        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): "";
+        let visParams;
+        try{
+            visParams = JSON.parse(sourceConfig.geeParams.visParams);
+        }
+        catch(e)
+        {
+            visParams = sourceConfig.geeParams.visParams;
+        }
+        console.log(visParams);
         let theJson = {
             dateFrom: sourceConfig.geeParams.startDate,
             dateTo: sourceConfig.geeParams.endDate,
@@ -110,19 +119,19 @@ mercator.createSource = function (sourceConfig) {
             min: sourceConfig.geeParams.visParams.min,
             max: sourceConfig.geeParams.visParams.max,
             cloudLessThan: cloudVar,
-            visParams: sourceConfig.geeParams.visParams
+            visParams: visParams
         };
         if(sourceConfig.geeParams.ImageAsset)
         {
             theJson.imageName = sourceConfig.geeParams.ImageAsset;
         }
-        const theID = Math.random().toString(36).substr(2, 16) + '_' + Math.random().toString(36).substr(2, 9);
+        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
         let geeLayer = new ol.source.XYZ({
             url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
             id: theID
         });
         geeLayer.setProperties({id: theID});
-        let createtype = 'test';
+        let createtype = "test";
         if(sourceConfig.create) {
 
 
@@ -148,7 +157,7 @@ mercator.createSource = function (sourceConfig) {
                         var layer;
                         const LayerId = this.LayerId;
                         mercator.currentMap.getLayers().forEach(function (lyr) {
-                            if (LayerId && LayerId == lyr.getSource().get('id')) {
+                            if (LayerId && LayerId == lyr.getSource().get("id")) {
                                 layer = lyr;
                                 layer.setSource(geeLayer);
                             }
