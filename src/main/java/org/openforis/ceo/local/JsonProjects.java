@@ -1065,8 +1065,8 @@ public class JsonProjects implements Projects {
                               ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
                               : new Double[][]{plotCenter})
                            : (sampleDistribution.equals("csv")
-                              ? csvSamplePointsFinal.get(plotId).entrySet().toArray()
-                              : shpSampleCentersFinal.get(plotId).entrySet().toArray()));
+                              ? csvSamplePointsFinal.getOrDefault(plotId,  new HashMap<String, Double[]>()).entrySet().toArray()
+                              : shpSampleCentersFinal.getOrDefault(plotId, new HashMap<String, Double[]>()).entrySet().toArray()));
 
                     var sampleIndexer = makeCounter();
 
