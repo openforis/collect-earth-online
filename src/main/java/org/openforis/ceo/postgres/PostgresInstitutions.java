@@ -9,6 +9,7 @@ import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.Date;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.servlet.MultipartConfigElement;
 import org.openforis.ceo.db_api.Institutions;
@@ -20,6 +21,25 @@ import spark.Response;
  */
 public class PostgresInstitutions implements Institutions {
 
+    private static JsonObject buildInstitutionJson( ResultSet rs) {
+        var newInstitution = new JsonObject();
+        try {
+            newInstitution.addProperty("id", rs.getInt("id"));
+            newInstitution.addProperty("name", rs.getString("name"));
+            newInstitution.addProperty("logo", rs.getString("logo"));
+            newInstitution.addProperty("description", rs.getString("description"));
+            newInstitution.addProperty("url", rs.getObject("url").toString());
+            newInstitution.addProperty("archived", rs.getObject("archived").toString());
+            newInstitution.add("members", parseJson(rs.getString("members")).getAsJsonArray());
+            newInstitution.add("admins", parseJson(rs.getString("admins")).getAsJsonArray());
+            newInstitution.add("pending", parseJson(rs.getString("pending")).getAsJsonArray());
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return newInstitution;
+    }
+
+
     public String getAllInstitutions(Request req, Response res) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_all_institutions()");
@@ -28,18 +48,7 @@ public class PostgresInstitutions implements Institutions {
             var institutionArray = new JsonArray();
             while(rs.next()) {
                 //create institution json to send back
-                var newInstitution = new JsonObject();
-                newInstitution.addProperty("id", rs.getInt("id"));
-                newInstitution.addProperty("name", rs.getString("name"));
-                newInstitution.addProperty("logo", rs.getString("logo"));
-                newInstitution.addProperty("description", rs.getString("description"));
-                newInstitution.addProperty("url", rs.getObject("url").toString());
-                newInstitution.addProperty("archived", rs.getObject("archived").toString());
-                newInstitution.add("members", parseJson(rs.getString("members")).getAsJsonArray());
-                newInstitution.add("admins", parseJson(rs.getString("admins")).getAsJsonArray());
-                newInstitution.add("pending", parseJson(rs.getString("pending")).getAsJsonArray());
-
-                institutionArray.add(newInstitution);
+                institutionArray.add(buildInstitutionJson(rs));
             }
             
             return institutionArray.toString();
@@ -59,15 +68,7 @@ public class PostgresInstitutions implements Institutions {
             try(var rs = pstmt.executeQuery()){
                 if(rs.next()) {
                     //create institution json to send back
-                    newInstitution.addProperty("id", rs.getInt("id"));
-                    newInstitution.addProperty("name", rs.getString("name"));
-                    newInstitution.addProperty("logo", rs.getString("logo"));
-                    newInstitution.addProperty("description", rs.getString("description"));
-                    newInstitution.addProperty("url", rs.getObject("url").toString());
-                    newInstitution.addProperty("archived", rs.getObject("archived").toString());
-                    newInstitution.add("members", parseJson(rs.getString("members")).getAsJsonArray());
-                    newInstitution.add("admins", parseJson(rs.getString("admins")).getAsJsonArray());
-                    newInstitution.add("pending", parseJson(rs.getString("pending")).getAsJsonArray());
+                    return buildInstitutionJson(rs).toString();
                 } else {
                     // create a blank institution json to send back
                     newInstitution.addProperty("id"         , -1);
@@ -79,11 +80,9 @@ public class PostgresInstitutions implements Institutions {
                     newInstitution.add("admins"             , parseJson("[]").getAsJsonArray());
                     newInstitution.add("pending"            , parseJson("[]").getAsJsonArray());
                     newInstitution.addProperty("archived"   , false);
+                    return newInstitution.toString();
                 }
             }
-            
-            return newInstitution.toString();
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

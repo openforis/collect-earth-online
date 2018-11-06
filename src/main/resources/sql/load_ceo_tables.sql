@@ -52,6 +52,8 @@ CREATE TABLE plots (
   id            serial primary key,
   project_id    integer not null references projects (id) on delete cascade on update cascade,
   center        geometry(Point,4326),
+  external_id   text,
+  geom          geometry(Polygon,4326),
   extra_fields  text
 );
 
@@ -59,6 +61,8 @@ CREATE TABLE samples (
   id            serial primary key,
   plot_id       integer not null references plots (id) on delete cascade on update cascade,
   point         geometry(Point,4326),
+  external_id   text,
+  geom          geometry(Polygon,4326),
   extra_fields  text
 );
 

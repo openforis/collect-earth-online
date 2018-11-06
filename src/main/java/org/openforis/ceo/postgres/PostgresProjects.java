@@ -6,6 +6,8 @@ import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 
@@ -18,19 +20,22 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import java.io.IOException;
+import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.IntSupplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,41 +59,53 @@ public class PostgresProjects implements Projects {
     }
 
 
+    private static JsonObject buildProjectJson(ResultSet rs) {
+        var newProject = new JsonObject();
+        try {
+            newProject.addProperty("id",rs.getInt("id"));
+            newProject.addProperty("institution",rs.getInt("institution_id"));
+            newProject.addProperty("availability",rs.getString("availability"));
+            newProject.addProperty("name",rs.getString("name"));
+            newProject.addProperty("description",rs.getString("description"));
+            newProject.addProperty("privacyLevel",rs.getString("privacy_level"));
+            newProject.addProperty("boundary",rs.getString("boundary"));
+            newProject.addProperty("baseMapSource",rs.getString("base_map_source"));
+            newProject.addProperty("plotDistribution",rs.getString("plot_distribution"));
+            newProject.addProperty("numPlots",rs.getInt("num_plots"));
+            newProject.addProperty("plotSpacing",rs.getFloat("plot_spacing"));
+            newProject.addProperty("plotShape",rs.getString("plot_shape"));
+            newProject.addProperty("plotSize",rs.getFloat("plot_size"));
+            newProject.addProperty("plotsCsvFile", rs.getString("plots_csv_file"));
+            newProject.addProperty("plotsShpFile", rs.getString("plots_shp_file"));
+            newProject.addProperty("samplesCsvFile", rs.getString("samples_csv_file"));
+            newProject.addProperty("samplesShpFile", rs.getString("samples_shp_file"));
+            newProject.addProperty("archived", rs.getString("availability").equals("archived"));
+            newProject.addProperty("sampleDistribution",rs.getString("sample_distribution"));
+            newProject.addProperty("samplesPerPlot",rs.getInt("samples_per_plot"));
+            newProject.addProperty("sampleResolution",rs.getFloat("sample_resolution"));
+            newProject.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
+
+            // FIXME: this is not in JSON
+            var classificationStartDate = rs.getDate("classification_start_date");
+            var classificationEndDate = rs.getDate("classification_end_date");
+            newProject.addProperty("classification_start_date",safeDateToString(classificationStartDate));
+            newProject.addProperty("classification_end_date",safeDateToString(classificationEndDate));
+            newProject.addProperty("classification_timestep",rs.getInt("classification_timestep"));
+
+            newProject.addProperty("editable", false);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return newProject;
+    }
+
     private static String queryProjectGet(PreparedStatement pstmt) {
         var allProjects = new JsonArray();
             try(var rs = pstmt.executeQuery()){
                 while(rs.next()) {
-                    var newProject = new JsonObject();
-                    newProject.addProperty("id",rs.getInt("id"));
-                    newProject.addProperty("institution",rs.getInt("institution_id"));
-                    newProject.addProperty("availability",rs.getString("availability"));
-                    newProject.addProperty("name",rs.getString("name"));
-                    newProject.addProperty("description",rs.getString("description"));
-                    newProject.addProperty("privacyLevel",rs.getString("privacy_level"));
-                    newProject.addProperty("boundary",rs.getString("boundary"));
-                    newProject.addProperty("baseMapSource",rs.getString("base_map_source"));
-                    newProject.addProperty("plotDistribution",rs.getString("plot_distribution"));
-                    newProject.addProperty("numPlots",rs.getInt("num_plots"));
-                    newProject.addProperty("plotSpacing",rs.getFloat("plot_spacing"));
-                    newProject.addProperty("plotShape",rs.getString("plot_shape"));
-                    newProject.addProperty("plotSize",rs.getFloat("plot_size"));
-                    newProject.addProperty("csv", rs.getString("csv_file"));
-                    newProject.addProperty("archived", rs.getString("availability").equals("archived"));
-                    newProject.addProperty("sampleDistribution",rs.getString("sample_distribution"));
-                    newProject.addProperty("samplesPerPlot",rs.getInt("samples_per_plot"));
-                    newProject.addProperty("sampleResolution",rs.getFloat("sample_resolution"));
-                    newProject.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
 
-                    // FIXME: this is not in JSON
-                    var classificationStartDate = rs.getDate("classification_start_date");
-                    var classificationEndDate = rs.getDate("classification_end_date");
-                    newProject.addProperty("classification_start_date",safeDateToString(classificationStartDate));
-                    newProject.addProperty("classification_end_date",safeDateToString(classificationEndDate));
-                    newProject.addProperty("classification_timestep",rs.getInt("classification_timestep"));
-
-                    newProject.addProperty("editable", false);
-
-                    allProjects.add(newProject);
+                    allProjects.add(buildProjectJson(rs));
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -142,31 +159,7 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(1, projectId);
             try(var rs = pstmt.executeQuery()){
                 if(rs.next()) {
-                    project.addProperty("id", rs.getInt("id"));
-                    project.addProperty("institution", rs.getInt("institution_id"));
-                    project.addProperty("availability", rs.getString("availability"));
-                    project.addProperty("name", rs.getString("name"));
-                    project.addProperty("description", rs.getString("description"));
-                    project.addProperty("privacyLevel", rs.getString("privacy_level"));
-                    project.addProperty("boundary", rs.getString("boundary"));
-                    project.addProperty("baseMapSource", rs.getString("base_map_source"));
-                    project.addProperty("plotDistribution", rs.getString("plot_distribution"));
-                    project.addProperty("numPlots", rs.getInt("num_plots"));
-                    project.addProperty("plotSpacing", rs.getFloat("plot_spacing"));
-                    project.addProperty("plotShape", rs.getString("plot_shape"));
-                    project.addProperty("plotSize", rs.getFloat("plot_size"));
-                    project.addProperty("csv", rs.getString("csv_file"));
-                    project.addProperty("archived", false);
-                    project.addProperty("sampleDistribution", rs.getString("sample_distribution"));
-                    project.addProperty("samplesPerPlot", rs.getInt("samples_per_plot"));
-                    project.addProperty("sampleResolution", rs.getFloat("sample_resolution"));
-                    project.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
-
-                    var classificationStartDate = rs.getDate("classification_start_date");
-                    var classificationEndDate = rs.getDate("classification_end_date");
-                    project.addProperty("classification_start_date", safeDateToString(classificationStartDate));
-                    project.addProperty("classification_end_date", safeDateToString(classificationEndDate));
-                    project.addProperty("classification_timestep", rs.getInt("classification_timestep"));
+                    return buildProjectJson(rs).toString();
                 } else {
                     project.addProperty("id", 0);
                     project.addProperty("institution",0);
@@ -190,10 +183,9 @@ public class PostgresProjects implements Projects {
                     // project.addProperty("classification_start_date", "");
                     // project.addProperty("classification_end_date", "");
                     // project.addProperty("classification_timestep", 0);
+                    return project.toString();
                 }
             }
-            return project.toString();
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -205,6 +197,23 @@ public class PostgresProjects implements Projects {
         
         return projectById(Integer.parseInt(projectId));
         
+    }
+
+    private static JsonObject buildPlotJson(ResultSet rs) {
+        var singlePlot = new JsonObject();
+        try {
+            singlePlot.addProperty("id",rs.getInt("id"));
+            singlePlot.addProperty("projectId",rs.getInt("project_id"));
+            singlePlot.addProperty("center",rs.getString("center"));
+            singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
+            singlePlot.addProperty("analysis",rs.getInt("assigned"));
+            singlePlot.addProperty("user",rs.getString("username"));
+            singlePlot.addProperty("plotId",rs.getString("external_id"));
+            singlePlot.addProperty("geom",rs.getString("geom"));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return singlePlot;
     }
 
     public  String getProjectPlots(Request req, Response res) {
@@ -219,16 +228,8 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(2,maxPlots);
             try(var rs = pstmt.executeQuery()){
                 while (rs.next()) {
-                    var singlePlot = new JsonObject();
-                    singlePlot.addProperty("id",rs.getInt("id"));
-                    singlePlot.addProperty("projectId",Integer.parseInt(projectId));
-                    singlePlot.addProperty("center",rs.getString("center"));
-                    singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
-                    singlePlot.addProperty("analysis",rs.getInt("assigned"));
-                    singlePlot.addProperty("user",rs.getString("username"));
                     // singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
-
-                    plots.add(singlePlot);
+                    plots.add(buildPlotJson(rs));
                 }
             }
             return  plots.toString();
@@ -256,6 +257,8 @@ public class PostgresProjects implements Projects {
                     var sample = new JsonObject();
                     sample.addProperty("id", sampleRs.getString("id"));
                     sample.addProperty("point", sampleRs.getString("point"));
+                    sample.addProperty("sampleId",sampleRs.getString("external_id"));
+                    sample.addProperty("geom",sampleRs.getString("geom"));
                     if (sampleRs.getString("value").length() > 2) sample.add("value", parseJson(sampleRs.getString("value")).getAsJsonObject());
                     samples.add(sample);
                 }
@@ -302,12 +305,7 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(2,Integer.parseInt(currentPlotId));
             try(var rs = pstmt.executeQuery()){
                 if (rs.next()) {     
-                    singlePlot.addProperty("id",rs.getInt("id"));
-                    singlePlot.addProperty("projectId",Integer.parseInt(projectId));
-                    singlePlot.addProperty("center",rs.getString("center"));
-                    singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
-                    singlePlot.addProperty("analysis",rs.getInt("assigned"));
-                    singlePlot.addProperty("user",rs.getString("username"));
+                    singlePlot = buildPlotJson(rs);
                     singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
                 }
             }
@@ -330,12 +328,7 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(2,Integer.parseInt(plotId));
             try(var rs = pstmt.executeQuery()){
                 if (rs.next()) {
-                    singlePlot.addProperty("id",rs.getInt("id"));
-                    singlePlot.addProperty("projectId",Integer.parseInt(projectId));
-                    singlePlot.addProperty("center",rs.getString("center"));
-                    singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
-                    singlePlot.addProperty("analysis",rs.getInt("assigned"));
-                    singlePlot.addProperty("user",rs.getString("username"));
+                    singlePlot = buildPlotJson(rs);
                     singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
                 }
             }
@@ -586,6 +579,8 @@ public class PostgresProjects implements Projects {
                     singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
                     singlePlot.addProperty("analysis",rs.getInt("assigned"));
                     singlePlot.addProperty("user",rs.getString("username"));
+                    singlePlot.addProperty("plotId",rs.getString("external_id"));
+                    singlePlot.addProperty("geom",rs.getString("geom"));
                     singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
                 }
                 return  singlePlot.toString();
@@ -733,10 +728,10 @@ public class PostgresProjects implements Projects {
         var xRange = right - left;
         var yRange = top - bottom;
         return Stream.generate(() -> new Double[]{left + Math.random() * xRange,
-                                                  bottom + Math.random() * yRange})
-            .limit(numPoints)
-            .map(point -> reprojectPoint(point, 3857, 4326))
-            .toArray(Double[][]::new);
+                bottom + Math.random() * yRange})
+                .limit(numPoints)
+                .map(point -> reprojectPoint(point, 3857, 4326))
+                .toArray(Double[][]::new);
     }
 
     // NOTE: Inputs are in Web Mercator and outputs are in WGS84 lat/lon
@@ -748,11 +743,11 @@ public class PostgresProjects implements Projects {
         var xPadding = (xRange - xSteps * spacing) / 2.0;
         var yPadding = (yRange - ySteps * spacing) / 2.0;
         return Stream.iterate(left + xPadding, x -> x + spacing)
-            .limit(xSteps + 1)
-            .flatMap(x -> Stream.iterate(bottom + yPadding, y -> y + spacing)
-                     .limit(ySteps + 1)
-                     .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
-            .toArray(Double[][]::new);
+                .limit(xSteps + 1)
+                .flatMap(x -> Stream.iterate(bottom + yPadding, y -> y + spacing)
+                        .limit(ySteps + 1)
+                        .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
+                .toArray(Double[][]::new);
     }
 
     private static Double[][] createRandomSampleSet(Double[] plotCenter, String plotShape, double plotSize, int samplesPerPlot) {
@@ -766,14 +761,14 @@ public class PostgresProjects implements Projects {
         var bottom = plotY - radius;
         if (plotShape.equals("circle")) {
             return Stream.generate(() -> 2.0 * Math.PI * Math.random())
-                .limit(samplesPerPlot)
-                .map(offsetAngle -> {
+                    .limit(samplesPerPlot)
+                    .map(offsetAngle -> {
                         var offsetMagnitude = radius * Math.random();
                         var xOffset = offsetMagnitude * Math.cos(offsetAngle);
                         var yOffset = offsetMagnitude * Math.sin(offsetAngle);
                         return reprojectPoint(new Double[]{plotX + xOffset, plotY + yOffset}, 3857, 4326);
                     })
-                .toArray(Double[][]::new);
+                    .toArray(Double[][]::new);
         } else {
             return createRandomPointsInBounds(left, bottom, right, top, samplesPerPlot);
         }
@@ -796,26 +791,57 @@ public class PostgresProjects implements Projects {
         var steps = (long) Math.floor(plotSize / sampleResolution);
         var padding = (plotSize - steps * sampleResolution) / 2.0;
         return Stream.iterate(left + padding, x -> x + sampleResolution)
-            .limit(steps + 1)
-            .flatMap(x -> Stream.iterate(bottom + padding, y -> y + sampleResolution)
-                     .limit(steps + 1)
-                     .filter(y -> plotShape.equals("square") || squareDistance(x, y, centerX, centerY) < radiusSquared)
-                     .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
-            .toArray(Double[][]::new);
+                .limit(steps + 1)
+                .flatMap(x -> Stream.iterate(bottom + padding, y -> y + sampleResolution)
+                        .limit(steps + 1)
+                        .filter(y -> plotShape.equals("square") || squareDistance(x, y, centerX, centerY) < radiusSquared)
+                        .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
+                .toArray(Double[][]::new);
     }
 
-    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: lon, lat, ...
-    private static Double[][] loadCsvPoints(String filename) {
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID
+    private static HashMap<String, Double[]> loadCsvPlotPoints(String filename) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
-            return lines.skip(1)
-                .map(line -> {
+            var plotPoints = new HashMap<String, Double[]>();
+            lines
+                .skip(1)
+                .forEach(line -> {
                         var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
-                        return new Double[]{Double.parseDouble(fields[0]),
-                                            Double.parseDouble(fields[1])};
-                    })
-                .toArray(Double[][]::new);
+                        var plotId = fields[2];
+                        var plotCenter = new Double[]{Double.parseDouble(fields[0]),
+                                                      Double.parseDouble(fields[1])};
+                        plotPoints.put(plotId, plotCenter);
+                    });
+            return plotPoints;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.");
+        }
+    }
+
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID,SAMPLEID
+    private static HashMap<String, HashMap<String, Double[]>> loadCsvSamplePoints(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            var samplesByPlot = new HashMap<String, HashMap<String, Double[]>>();
+            lines
+                .skip(1)
+                .forEach(line -> {
+                        var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
+                        var plotId = fields[2];
+                        var sampleId = fields[3];
+                        var sampleCenter = new Double[]{Double.parseDouble(fields[0]),
+                                                        Double.parseDouble(fields[1])};
+                        if (samplesByPlot.containsKey(plotId)) {
+                            var samplePoints = samplesByPlot.get(plotId);
+                            samplePoints.put(sampleId, sampleCenter);
+                        } else {
+                            var samplePoints = new HashMap<String, Double[]>();
+                            samplePoints.put(sampleId, sampleCenter);
+                            samplesByPlot.put(plotId, samplePoints);
+                        }
+                    });
+            return samplesByPlot;
+        } catch (Exception e) {
+            throw new RuntimeException("Malformed sample CSV. Fields must be LON,LAT,PLOTID,SAMPLEID.");
         }
     }
 
@@ -835,8 +861,177 @@ public class PostgresProjects implements Projects {
         return obj.get(field).isJsonNull() ? new JsonPrimitive(0) : obj.get(field);
     }
 
+    private static JsonElement getOrEmptyString(JsonObject obj, String field) {
+        return obj.get(field).isJsonNull() ? new JsonPrimitive("") : obj.get(field);
+    }
+
+    private static void deleteShapeFileDirectory(String shapeFileDirectory) {
+        var shapeFileDirectoryPath = Paths.get(expandResourcePath("/shp"), shapeFileDirectory);
+        try {
+            if (shapeFileDirectoryPath.toFile().exists()) {
+                System.out.println("Deleting directory at: " + shapeFileDirectoryPath);
+                Files.walk(shapeFileDirectoryPath)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+            } else {
+                System.out.println("No directory found at: " + shapeFileDirectoryPath);
+            }
+        } catch (Exception e) {
+            System.out.println("Error deleting directory at: " + shapeFileDirectoryPath);
+        }
+    }
+
+    private static void deleteShapeFileDirectories(int projectId) {
+        deleteShapeFileDirectory("project-" + projectId + "-plots");
+        deleteShapeFileDirectory("project-" + projectId + "-samples");
+    }
+
+    private static void extractZipFileToGeoJson(int projectId, String plotsOrSamples) {
+        try {
+            System.out.println("Converting the uploaded ZIP file into GeoJSON.");
+            var pb = new ProcessBuilder("/bin/sh", "shp2geojson.sh", "project-" + projectId + "-" + plotsOrSamples);
+            pb.directory(new File(expandResourcePath("/shp")));
+            var p = pb.start();
+            if (p.waitFor(10L, TimeUnit.SECONDS)) {
+                System.out.println("Linux Conversion complete.");
+            } else {
+                p.destroy();
+                throw new RuntimeException("");
+            }
+        } catch (Exception e) {
+            // for windows
+            try {
+                System.out.println("Converting the uploaded ZIP file into GeoJSON with git bash.");
+                var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", "shp2geojson.sh", "project-" + projectId + "-" + plotsOrSamples);
+                pb.directory(new File(expandResourcePath("/shp")));
+                var p = pb.start();
+                if (p.waitFor(10L, TimeUnit.SECONDS)) {
+                    System.out.println("Git bash Conversion complete.");
+                } else {
+                    p.destroy();
+                    throw new RuntimeException("");
+                }
+            } catch (Exception e2) {
+                deleteShapeFileDirectories(projectId);
+                throw new RuntimeException("Error in processing the zipped Shapefile. Please check the format and try again.");
+            }
+        }
+    }
+
+    // The uploaded GeoJson must contain Polygon geometries with PLOTID properties
+    private static HashMap<String, JsonObject> getGeoJsonPlotGeometries(int projectId) {
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
+                                       + "/project-" + projectId + "-plots.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                var plotGeoms = new HashMap<String, JsonObject>();
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var plotId = properties.get("PLOTID").getAsString();
+                            plotGeoms.put(plotId, geometry);
+                        });
+                return plotGeoms;
+            } else {
+                throw new RuntimeException("");
+            }
+        } catch (Exception e) {
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.");
+        }
+    }
+
+    // The uploaded GeoJson must contain Polygon geometries with PLOTID and SAMPLEID properties
+    private static HashMap<String, HashMap<String, JsonObject>> getGeoJsonSampleGeometries(int projectId) {
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
+                                       + "/project-" + projectId + "-samples.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                var sampleGeomsByPlot = new HashMap<String, HashMap<String, JsonObject>>();
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var plotId = properties.get("PLOTID").getAsString();
+                            var sampleId = properties.get("SAMPLEID").getAsString();
+                            if (sampleGeomsByPlot.containsKey(plotId)) {
+                                var sampleGeoms = sampleGeomsByPlot.get(plotId);
+                                sampleGeoms.put(sampleId, geometry);
+                            } else {
+                                var sampleGeoms = new HashMap<String, JsonObject>();
+                                sampleGeoms.put(sampleId, geometry);
+                                sampleGeomsByPlot.put(plotId, sampleGeoms);
+                            }
+                        });
+                return sampleGeomsByPlot;
+            } else {
+                throw new RuntimeException("");
+            }
+        } catch (Exception e) {
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.");
+        }
+    }
+
+    private static Double[] getGeometryCentroid(JsonObject geoJsonGeometry) {
+        var coordinates = geoJsonGeometry.get("coordinates").getAsJsonArray();
+        var exteriorRing = coordinates.get(0).getAsJsonArray();
+        var centroidX = toElementStream(exteriorRing)
+            .skip(1) // linear rings repeat the same point as their first and last vertex
+            .mapToDouble(point -> point.getAsJsonArray().get(0).getAsDouble())
+            .average()
+            .getAsDouble();
+        var centroidY = toElementStream(exteriorRing)
+            .skip(1) // linear rings repeat the same point as their first and last vertex
+            .mapToDouble(point -> point.getAsJsonArray().get(1).getAsDouble())
+            .average()
+            .getAsDouble();
+        return new Double[]{centroidX, centroidY};
+    }
+
+    // FIXME: Can you re-implement this using the Collectors functions?
+    private static HashMap<String, Double[]> getPlotGeometryCenters(HashMap<String, JsonObject> plotGeoms) {
+        var plotCenters = new HashMap<String, Double[]>();
+        plotGeoms.entrySet().forEach(plot -> {
+                var plotId = plot.getKey();
+                var plotGeom = plot.getValue();
+                var centroid = getGeometryCentroid(plotGeom);
+                plotCenters.put(plotId, centroid);
+            });
+        return plotCenters;
+    }
+
+    // FIXME: Can you re-implement this using the Collectors functions?
+    private static HashMap<String, HashMap<String, Double[]>> getSampleGeometryCenters(HashMap<String, HashMap<String, JsonObject>> sampleGeomsByPlot) {
+        var sampleCentersByPlot = new HashMap<String, HashMap<String, Double[]>>();
+        sampleGeomsByPlot.entrySet().forEach(plot -> {
+                var plotId = plot.getKey();
+                var sampleGeoms = plot.getValue();
+                var sampleCenters = new HashMap<String, Double[]>();
+                sampleGeoms.entrySet().forEach(sample -> {
+                        var sampleId = sample.getKey();
+                        var sampleGeom = sample.getValue();
+                        var centroid = getGeometryCentroid(sampleGeom);
+                        sampleCenters.put(sampleId, centroid);
+                    });
+                sampleCentersByPlot.put(plotId, sampleCenters);
+            });
+        return sampleCentersByPlot;
+    }
+
     private static void createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
+        var projectId =          newProject.get("id").getAsInt();
         var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
         var latMin =             getOrZero(newProject,"latMin").getAsDouble();
         var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
@@ -845,32 +1040,65 @@ public class PostgresProjects implements Projects {
         var numPlots =           getOrZero(newProject,"numPlots").getAsInt();
         var plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
         var plotShape =          newProject.get("plotShape").getAsString();
-        var plotSize =           newProject.get("plotSize").getAsDouble();
+        var plotSize =           getOrZero(newProject,"plotSize").getAsDouble();
         var sampleDistribution = newProject.get("sampleDistribution").getAsString();
         var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
         var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
 
         // If plotDistribution is csv, calculate the lat/lon bounds from the csv contents
-        var csvPoints = new Double[][]{};
+        var csvPlotCenters = new HashMap<String, Double[]>();
+        var shpPlotGeoms = new HashMap<String, JsonObject>();
+        var shpPlotCenters = new HashMap<String, Double[]>();
         if (plotDistribution.equals("csv")) {
-            csvPoints = loadCsvPoints(newProject.get("csv").getAsString());
-            var csvBounds = calculateBounds(csvPoints, plotSize / 2.0);
-            lonMin = csvBounds[0];
-            latMin = csvBounds[1];
-            lonMax = csvBounds[2];
-            latMax = csvBounds[3];
-            try (var conn = connect();
-                 var pstmt = 
-                     conn.prepareStatement("SELECT * FROM update_project_csv(?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))")) {
-                    
-                    pstmt.setInt(1,Integer.parseInt(newProject.get("projId").getAsString()));     
-                    pstmt.setString(2, newProject.get("csv").getAsString());
-                    pstmt.setString(3, makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
-                    pstmt.execute();
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
+            csvPlotCenters = loadCsvPlotPoints(newProject.get("plots-csv").getAsString());
+            var csvPlotBounds = calculateBounds(csvPlotCenters.values().toArray(new Double[][]{}), plotSize / 2.0);
+            lonMin = csvPlotBounds[0];
+            latMin = csvPlotBounds[1];
+            lonMax = csvPlotBounds[2];
+            latMax = csvPlotBounds[3];
+        } else if (plotDistribution.equals("shp")) {
+            extractZipFileToGeoJson(projectId, "plots");
+            shpPlotGeoms = getGeoJsonPlotGeometries(projectId);
+            shpPlotCenters = getPlotGeometryCenters(shpPlotGeoms);
+            var shpPlotBounds = calculateBounds(shpPlotCenters.values().toArray(new Double[][]{}), 500.0); // FIXME: replace hard-coded padding with a calculated value
+            lonMin = shpPlotBounds[0];
+            latMin = shpPlotBounds[1];
+            lonMax = shpPlotBounds[2];
+            latMax = shpPlotBounds[3];
+        }
+        final var shpPlotGeomsFinal = shpPlotGeoms;
 
+        // If sampleDistribution is csv, calculate the lat/lon bounds from the csv contents
+        var csvSamplePoints = new HashMap<String, HashMap<String, Double[]>>();
+        if (sampleDistribution.equals("csv")) {
+            csvSamplePoints = loadCsvSamplePoints(newProject.get("samples-csv").getAsString());
+        }
+        final var csvSamplePointsFinal = csvSamplePoints;
+
+        // If sampleDistribution is shp, calculate the lat/lon bounds from the shp contents
+        var shpSampleGeoms = new HashMap<String, HashMap<String, JsonObject>>();
+        var shpSampleCenters = new HashMap<String, HashMap<String, Double[]>>();
+        if (sampleDistribution.equals("shp")) {
+            extractZipFileToGeoJson(projectId, "samples");
+            shpSampleGeoms = getGeoJsonSampleGeometries(projectId);
+            shpSampleCenters = getSampleGeometryCenters(shpSampleGeoms);
+        }
+        final var shpSampleGeomsFinal = shpSampleGeoms;
+        final var shpSampleCentersFinal = shpSampleCenters;
+        
+        try (var conn = connect();
+             var pstmt = 
+                conn.prepareStatement("SELECT * FROM update_project_csv(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))")) {
+                
+                pstmt.setInt(1,Integer.parseInt(newProject.get("id").getAsString()));     
+                pstmt.setString(2, newProject.get("plots-csv").getAsString());
+                pstmt.setString(3, newProject.get("plots-shp").getAsString());
+                pstmt.setString(4, newProject.get("samples-csv").getAsString());
+                pstmt.setString(5, newProject.get("samples-shp").getAsString());
+                pstmt.setString(6, makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
+                pstmt.execute();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
 
         // Convert the lat/lon boundary coordinates to Web Mercator (units: meters) and apply an interior buffer of plotSize / 2
@@ -881,41 +1109,81 @@ public class PostgresProjects implements Projects {
         var right = paddedBounds[2];
         var top = paddedBounds[3];
 
-        // Generate the plot objects and their associated sample points
-        var newPlotCenters = plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
-            : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
-            : csvPoints;
 
+        // Generate the plot objects and their associated sample points
+        var newPlotCenters =
+        plotDistribution.equals("random") ? createRandomPointsInBounds(left, bottom, right, top, numPlots)
+        : plotDistribution.equals("gridded") ? createGriddedPointsInBounds(left, bottom, right, top, plotSpacing)
+        : plotDistribution.equals("csv") ? csvPlotCenters.entrySet().toArray()
+        : shpPlotCenters.entrySet().toArray();
+
+        
         try (var conn = connect()) {
             Arrays.stream(newPlotCenters)
-            .forEach(plotCenter -> {
-                    var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
-                    try(var pstmtPlots = conn.prepareStatement(SqlPlots)) {
-                        pstmtPlots.setInt(1,Integer.parseInt(newProject.get("projId").getAsString()));    
-                        pstmtPlots.setString(2, makeGeoJsonPoint(plotCenter[0], plotCenter[1] ).toString());
-                        try(var rsPlots = pstmtPlots.executeQuery()){
-                            if (rsPlots.next()) {
-                                var newPlotId = rsPlots.getInt("create_project_plot");
-                                var newSamplePoints = sampleDistribution.equals("gridded")
-                                    ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
-                                    : createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot);
+            .forEach(plotEntry -> {
+                var plotCenter =
+                    List.of("csv", "shp").contains(plotDistribution)
+                    ? (Double[]) ((Map.Entry) plotEntry).getValue()
+                    : (Double[]) plotEntry;    
+                var plotId =
+                    List.of("csv", "shp").contains(plotDistribution)
+                    ? (String) ((Map.Entry) plotEntry).getKey()
+                    : "";
 
-                                Arrays.stream(newSamplePoints)
-                                    .forEach(point -> {
-                                        var SqlSamples = "SELECT * FROM create_project_plot_sample(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
-                                        try (var pstmtSamples = conn.prepareStatement(SqlSamples)) {
-                                            pstmtSamples.setInt(1,newPlotId);
-                                            pstmtSamples.setString(2,makeGeoJsonPoint(point[0], point[1]).toString());
-                                            pstmtSamples.execute();
-                                        } catch (SQLException e) {
-                                            System.out.println(e.getMessage());
-                                        }
+                var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,ST_Force2d(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)))";
+                try(var pstmtPlots = conn.prepareStatement(SqlPlots)) {
+                    pstmtPlots.setInt(1,Integer.parseInt(newProject.get("id").getAsString()));    
+                    pstmtPlots.setString(2, makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());    
+                    pstmtPlots.setString(3, plotId);    
+                    pstmtPlots.setString(4, plotDistribution.equals("shp") 
+                        ? shpPlotGeomsFinal.get(plotId).toString() 
+                        : null);
+                    try(var rsPlots = pstmtPlots.executeQuery()){
+                        if (rsPlots.next()) {
+                            var newPlotId = rsPlots.getInt("create_project_plot");
+                            var newSamplePoints =
+                                sampleDistribution.equals("random")
+                                ? (List.of("random", "gridded").contains(plotDistribution)
+                                ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
+                                : new Double[][]{plotCenter})
+                                : (sampleDistribution.equals("gridded")
+                                ? (List.of("random", "gridded").contains(plotDistribution)
+                                    ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
+                                    : new Double[][]{plotCenter})
+                                : (sampleDistribution.equals("csv")
+                                    ? csvSamplePointsFinal.getOrDefault(plotId,  new HashMap<String, Double[]>()).entrySet().toArray()
+                                    : shpSampleCentersFinal.getOrDefault(plotId, new HashMap<String, Double[]>()).entrySet().toArray()));
+
+                            Arrays.stream(newSamplePoints)
+                                .forEach(sampleEntry -> {
+                                    var SqlSamples = "SELECT * FROM create_project_plot_sample(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,ST_Force2d(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)))";
+                                    var sampleId =
+                                        List.of("csv", "shp").contains(sampleDistribution)
+                                        ? (String) ((Map.Entry) sampleEntry).getKey()
+                                        : "";
+
+                                    var sampleCenter =
+                                        List.of("csv", "shp").contains(sampleDistribution)
+                                        ? (Double[]) ((Map.Entry) sampleEntry).getValue()
+                                        : (Double[]) sampleEntry;
+
+                                    try (var pstmtSamples = conn.prepareStatement(SqlSamples)) {
+                                        pstmtSamples.setInt(1,newPlotId);
+                                        pstmtSamples.setString(2,makeGeoJsonPoint(sampleCenter[0], sampleCenter[1]).toString());
+                                        pstmtSamples.setString(3, sampleId);
+                                        pstmtSamples.setString(4, sampleDistribution.equals("shp") 
+                                            ? shpSampleGeomsFinal.get(plotId).get(sampleId).toString() 
+                                            : null);
+                                        pstmtSamples.execute();
+                                    } catch (SQLException e) {
+                                        System.out.println(e.getMessage());
+                                    }
                                 });
-                            }
                         }
-                    } catch (SQLException e) {
-                        System.out.println(e.getMessage());
                     }
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage());
+                }
             });
         }
         catch (SQLException e) {
@@ -943,14 +1211,7 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
             newProject.addProperty("availability", "unpublished");
 
-             // Store the lat/lon bounding box coordinates as GeoJSON
-            var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
-            var latMin =             getOrZero(newProject,"latMin").getAsDouble();
-            var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
-            var latMax =             getOrZero(newProject,"latMax").getAsDouble();
-            newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
-
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 
@@ -959,31 +1220,30 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(3,newProject.get("name").getAsString());
                 pstmt.setString(4, newProject.get("description").getAsString());
                 pstmt.setString(5, newProject.get("privacyLevel").getAsString());
-                pstmt.setString(6, newProject.get("boundary").getAsString());
-                pstmt.setString(7, newProject.get("baseMapSource").getAsString());
-                pstmt.setString(8, newProject.get("plotDistribution").getAsString());
-                pstmt.setInt(9, getOrZero(newProject, "numPlots").getAsInt());
-                pstmt.setFloat(10, getOrZero(newProject, "plotSpacing").getAsFloat());
-                pstmt.setString(11, newProject.get("plotShape").getAsString());
-                pstmt.setFloat(12,  getOrZero(newProject, "plotSize").getAsFloat());
-                pstmt.setString(13, newProject.get("sampleDistribution").getAsString());
-                pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
-                pstmt.setFloat(15, getOrZero(newProject, "sampleResolution").getAsFloat());
-                pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
+                pstmt.setString(6, newProject.get("baseMapSource").getAsString());
+                pstmt.setString(7, newProject.get("plotDistribution").getAsString());
+                pstmt.setInt(8, getOrZero(newProject, "numPlots").getAsInt());
+                pstmt.setFloat(9, getOrZero(newProject, "plotSpacing").getAsFloat());
+                pstmt.setString(10, newProject.get("plotShape").getAsString());
+                pstmt.setFloat(11,  getOrZero(newProject, "plotSize").getAsFloat());
+                pstmt.setString(12, newProject.get("sampleDistribution").getAsString());
+                pstmt.setInt(13, getOrZero(newProject, "samplesPerPlot").getAsInt());
+                pstmt.setFloat(14, getOrZero(newProject, "sampleResolution").getAsFloat());
+                pstmt.setString(15, newProject.get("sampleValues").getAsJsonArray().toString());
                 
                 // FIXME not implimented in JS or JSON
-                // pstmt.setDate(17,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
-                // pstmt.setDate(18, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
-                // pstmt.setInt(19, newProject.get("classification_timestep").getAsInt());
-                pstmt.setDate(17,  new java.sql.Date(System.currentTimeMillis()));
-                pstmt.setDate(18, new java.sql.Date(System.currentTimeMillis()));
-                pstmt.setInt(19, 0);
+                // pstmt.setDate(16,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
+                // pstmt.setDate(17, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
+                // pstmt.setInt(18, newProject.get("classification_timestep").getAsInt());
+                pstmt.setDate(16,  new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setDate(17, new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setInt(18, 0);
 
                 try(var rs = pstmt.executeQuery()){
                     var newProjectId = "";
                     if (rs.next()){
                         newProjectId = Integer.toString(rs.getInt("create_project"));
-                        newProject.addProperty("projId", newProjectId);
+                        newProject.addProperty("id", newProjectId);
                         
                         // Upload the plot-distribution-csv-file if one was provided
                         // not stored in database
@@ -991,11 +1251,43 @@ public class PostgresProjects implements Projects {
                             var csvFileName = writeFilePart(req,
                                     "plot-distribution-csv-file",
                                     expandResourcePath("/csv"),
-                                    "project-" + newProjectId);
-                            newProject.addProperty("csv", csvFileName);
-
+                                    "project-" + newProjectId + "-plots");
+                            newProject.addProperty("plots-csv", csvFileName);
                         } else {
-                            newProject.add("csv", null);
+                            newProject.addProperty("plots-csv", "");
+                        }
+
+                        // Upload the sample-distribution-csv-file if one was provided
+                        if (newProject.get("sampleDistribution").getAsString().equals("csv")) {
+                            var csvFileName = writeFilePart(req,
+                                    "sample-distribution-csv-file",
+                                    expandResourcePath("/csv"),
+                                    "project-" + newProjectId + "-samples");
+                            newProject.addProperty("samples-csv", csvFileName);
+                        } else {
+                            newProject.addProperty("samples-csv", "");
+                        }
+
+                        // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
+                        if (newProject.get("plotDistribution").getAsString().equals("shp")) {
+                            var shpFileName = writeFilePart(req,
+                                                            "plot-distribution-shp-file",
+                                                            expandResourcePath("/shp"),
+                                                            "project-" + newProjectId + "-plots");
+                            newProject.addProperty("plots-shp", shpFileName);
+                        } else {
+                            newProject.addProperty("plots-shp", "");
+                        }
+
+                        // Upload the sample-distribution-shp-file if one was provided (this should be a ZIP file)
+                        if (newProject.get("sampleDistribution").getAsString().equals("shp")) {
+                            var shpFileName = writeFilePart(req,
+                                                            "sample-distribution-shp-file",
+                                                            expandResourcePath("/shp"),
+                                                            "project-" + newProjectId + "-samples");
+                            newProject.addProperty("samples-shp", shpFileName);
+                        } else {
+                            newProject.addProperty("samples-shp", "");
                         }
                         // Create the requested plot set and write it to plot-data-<newProjectId>.json
                         createProjectPlots(newProject);

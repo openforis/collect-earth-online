@@ -130,6 +130,7 @@ CREATE OR REPLACE FUNCTION get_all_users()
 	SELECT id, email, administrator, reset_key
 	FROM users
 	WHERE email <> 'admin@openforis.org'
+        AND email <> 'guest'
 
 $$ LANGUAGE SQL;
 
@@ -493,7 +494,6 @@ CREATE OR REPLACE FUNCTION create_project(
         _name                       text, 
         _description                text,
         _privacy_level              text, 
-        _boundary                   geometry(Polygon,4326), 
         _base_map_source            text, 
         _plot_distribution          text, 
         _num_plots                  integer, 
@@ -509,11 +509,11 @@ CREATE OR REPLACE FUNCTION create_project(
         _classification_timestep    integer
         ) RETURNS integer AS $$
 
-    INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, 
+    INSERT INTO projects (institution_id, availability, name, description, privacy_level, 
                             base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
                             sample_distribution, samples_per_plot,sample_resolution, sample_survey, classification_start_date, 
                             classification_end_date, classification_timestep)
-    VALUES (_institution_id, _availability, _name, _description, _privacy_level, _boundary, _base_map_source, 
+    VALUES (_institution_id, _availability, _name, _description, _privacy_level, _base_map_source, 
             _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, _sample_distribution, _samples_per_plot,
             _sample_resolution, _sample_survey, _classification_start_date, _classification_end_date, _classification_timestep)
     RETURNING id
@@ -521,7 +521,7 @@ CREATE OR REPLACE FUNCTION create_project(
 $$ LANGUAGE SQL;
 
 -- Upade data that requires the project number after a project is created
-CREATE OR REPLACE FUNCTION update_project_csv(
+CREATE OR REPLACE FUNCTION update_project_files(
     _proj_id            integer,
     _plots_csv_file      text,
     _plots_shp_file      text,
@@ -542,22 +542,22 @@ $$ LANGUAGE SQL;
 
 
 -- Create a single project plot
-CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _plot_point geometry(Point,4326)) 
+CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center geometry(Point,4326), _external_id text, _geom geometry(Polygon,4326)) 
     RETURNS integer AS $$
 
-	INSERT INTO plots (project_id, center)
-	(SELECT _project_id, _plot_point)
+	INSERT INTO plots (project_id, center, external_id, geom)
+	(SELECT _project_id, _center, _external_id, _geom)
 	RETURNING id
 
 $$ LANGUAGE SQL;
 
 
 -- Create project plot sample
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_point geometry(Point,4326)) 
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_point geometry(Point,4326), _external_id text, _geom geometry(Polygon,4326)) 
     RETURNS integer AS $$
 
-	INSERT INTO samples (plot_id, point)
-	(SELECT _plot_id, _sample_point)
+	INSERT INTO samples (plot_id, point, external_id, geom)
+	(SELECT _plot_id, _sample_point, _external_id, _geom)
 	RETURNING id
 
 $$ LANGUAGE SQL;
@@ -784,10 +784,13 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum integer) 
     RETURNS TABLE (
       id         integer,
+      project_id integer,
       center     text,
       flagged    integer,
       assigned   integer,
-      username   text
+      username   text,
+      external_id   text,
+      geom          text
     ) AS $$
 
 	WITH username AS (
@@ -804,13 +807,18 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
         GROUP BY plot_id
           
     )
-	SELECT all_plots.id, all_plots.center, all_plots.flagged, all_plots.assigned, all_plots.username FROM (
+	SELECT all_plots.id, all_plots.project_id, all_plots.center, all_plots.flagged, all_plots.assigned, all_plots.username,
+            all_plots.external_id, all_plots.geom
+     FROM (
 		SELECT plots.id as id, 
+            project_id,
 			ST_AsGeoJSON(center) as center, 
 			(case when plotsum.flagged is null then 0 else plotsum.flagged end) as flagged,
 			(case when plotsum.assigned is null then 0 else plotsum.assigned end) as assigned,
 			(case when username.email is null then '' else username.email end) as username,
-			row_number() OVER(ORDER BY id) AS rows, -- sorting by geo doesnt seem to work better for many projects ST_XMax(center), ST_YMax(center)
+		 	external_id,
+		 	ST_AsGeoJSON(geom) as geom,
+			row_number() OVER(ORDER BY id) AS rows,
 			count(*) OVER() as total_plots
 		FROM plots
 		LEFT JOIN plotsum
@@ -833,7 +841,9 @@ CREATE OR REPLACE FUNCTION select_single_plot(_plot_id integer)
       center     text,
       flagged    integer,
       assigned   integer,
-      username   text
+      username   text,
+      external_id   text,
+      geom          text
     ) AS $$
 
 	WITH username AS (
@@ -855,7 +865,9 @@ CREATE OR REPLACE FUNCTION select_single_plot(_plot_id integer)
 		ST_AsGeoJSON(center) as center, 
 		(case when plotsum.flagged is null then 0 else plotsum.flagged end) as flagged,
 		(case when plotsum.assigned is null then 0 else plotsum.assigned end) as assigned,
-		(case when username.email is null then '' else username.email end) as username
+		(case when username.email is null then '' else username.email end) as username,
+		external_id,
+		ST_AsGeoJSON(geom) as geom
 	FROM plots
 	LEFT JOIN plotsum
 		ON plots.id = plotsum.plot_id
@@ -865,15 +877,16 @@ CREATE OR REPLACE FUNCTION select_single_plot(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
--- Select samples from a plot
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer) 
     RETURNS TABLE (
-      id        integer,
-      point     text,
-      value     jsonb
+      id            integer,
+      point         text,
+	  external_id   text,
+	  geom	        text,
+      value         jsonb
     ) AS $$
     
-    SELECT samples.id, ST_AsGeoJSON(point) as point, 
+    SELECT samples.id, ST_AsGeoJSON(point) as point, external_id, ST_AsGeoJSON(geom) as geom,
         (CASE WHEN sample_values.value IS NULL THEN '{}' ELSE sample_values.value END)
     FROM samples
     LEFT JOIN sample_values
@@ -980,13 +993,17 @@ $$ LANGUAGE SQL;
 
 
 -- Returns unanalyzed plots
+DROP FUNCTION select_unassigned_plot(integer,integer);
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS TABLE (
-      id         integer,
-      center     text,
-      flagged    integer,
-      assigned   integer,
-      username   text
+      id            integer,
+	  project_id integer,
+      center        text,
+      flagged       integer,
+      assigned      integer,
+      username      text,
+      external_id   text,
+      geom          text
     ) AS $$
 
     SELECT * from select_project_plots(_project_id, 2147483647) as spp
@@ -999,13 +1016,17 @@ CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id 
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
+DROP FUNCTION select_unassigned_plots_by_plot_id(integer,integer);
 CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(_project_id integer,_plot_id integer) 
     RETURNS TABLE (
       id         integer,
+	  project_id integer,
       center     text,
       flagged    integer,
       assigned   integer,
-      username   text
+      username   text,
+      external_id   text,
+      geom          text
     ) AS $$
 
     SELECT * from select_project_plots(_project_id, 2147483647) as spp

@@ -17,8 +17,8 @@ public class PostgresImagery implements Imagery {
 
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
-        var hasInstitutionId = institutionId == null || institutionId.isEmpty();
-
+        var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
+        
         try (var conn = connect();
              var pstmt = hasInstitutionId 
                 ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
