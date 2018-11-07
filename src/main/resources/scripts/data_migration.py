@@ -133,7 +133,7 @@ def insert_projects():
                     if project['samplesPerPlot'] is None: project['samplesPerPlot']=0
                     if project['sampleResolution'] is None: project['sampleResolution']=0
                     if not 'plot-csv' in project.keys() or project['plots-csv'] is None : project['plots-csv'] = ""
-                    if not project['csv'] is None : project['plots-csv'] = project['csv']
+                    if 'csv' in project.keys() and not project['csv'] is None : project['plots-csv'] = project['csv']
                     if not 'plots-shp' in project.keys() or project['plots-shp'] is None : project['plots-shp'] = ""
                     if not 'samples-csv' in project.keys() or project['samples-csv'] is None : project['samples-csv'] = ""
                     if not 'samples-shp' in project.keys() or project['samples-shp'] is None : project['samples-shp'] = ""
