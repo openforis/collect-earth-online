@@ -1057,11 +1057,11 @@ public class JsonProjects implements Projects {
 
                     var newSamplePoints =
                         sampleDistribution.equals("random")
-                        ? (List.of("random", "gridded").contains(plotDistribution)
+                        ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                            ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
                            : new Double[][]{plotCenter})
                         : (sampleDistribution.equals("gridded")
-                           ? (List.of("random", "gridded").contains(plotDistribution)
+                           ? (List.of("random", "gridded", "csv").contains(plotDistribution)
                               ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
                               : new Double[][]{plotCenter})
                            : (sampleDistribution.equals("csv")
