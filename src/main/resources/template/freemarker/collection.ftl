@@ -5,8 +5,8 @@
     <#assign username = "guest">
 </#if>
 <div id="collection" class="row"></div>
-<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~widgetlayouteditor.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/collection~geodashreact~home~project.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~create_project~geodashreact~home~institution~review_project~widgetlayoute~33e7a6f8.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/ collection~create_project~geodashreact~home~review_project.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/collection.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {

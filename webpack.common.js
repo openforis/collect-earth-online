@@ -5,7 +5,8 @@ module.exports = {
         home:               path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
         institution:        path.resolve(__dirname, "src/main/resources/public/jsx/institution.js"),
         collection:         path.resolve(__dirname, "src/main/resources/public/jsx/collection.js"),
-        project:            path.resolve(__dirname, "src/main/resources/public/jsx/project.js"),
+        create_project:     path.resolve(__dirname, "src/main/resources/public/jsx/create-project.js"),
+        review_project:     path.resolve(__dirname, "src/main/resources/public/jsx/review-project.js"),
         account:            path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
         geodashreact:       path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
         widgetlayouteditor: path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
