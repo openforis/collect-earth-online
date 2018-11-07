@@ -6,3 +6,5 @@ CREATE EXTENSION postgis;
 \q
 psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ceo_tables.sql --echo-errors
 psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ceo_functions.sql --echo-errors
+psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ts_tables.sql --echo-errors
+psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ts_functions.sql --echo-errors

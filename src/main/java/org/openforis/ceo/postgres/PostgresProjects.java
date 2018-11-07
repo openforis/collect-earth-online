@@ -208,7 +208,7 @@ public class PostgresProjects implements Projects {
             singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
             singlePlot.addProperty("analysis",rs.getInt("assigned"));
             singlePlot.addProperty("user",rs.getString("username"));
-            singlePlot.addProperty("plotId",rs.getString("external_id"));
+            singlePlot.addProperty("plotId",rs.getString("plot_id"));
             singlePlot.addProperty("geom",rs.getString("geom"));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -257,7 +257,7 @@ public class PostgresProjects implements Projects {
                     var sample = new JsonObject();
                     sample.addProperty("id", sampleRs.getString("id"));
                     sample.addProperty("point", sampleRs.getString("point"));
-                    sample.addProperty("sampleId",sampleRs.getString("external_id"));
+                    sample.addProperty("sampleId",sampleRs.getString("sample_id"));
                     sample.addProperty("geom",sampleRs.getString("geom"));
                     if (sampleRs.getString("value").length() > 2) sample.add("value", parseJson(sampleRs.getString("value")).getAsJsonObject());
                     samples.add(sample);
@@ -579,7 +579,7 @@ public class PostgresProjects implements Projects {
                     singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
                     singlePlot.addProperty("analysis",rs.getInt("assigned"));
                     singlePlot.addProperty("user",rs.getString("username"));
-                    singlePlot.addProperty("plotId",rs.getString("external_id"));
+                    singlePlot.addProperty("plotId",rs.getString("plot_id"));
                     singlePlot.addProperty("geom",rs.getString("geom"));
                     singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
                 }
