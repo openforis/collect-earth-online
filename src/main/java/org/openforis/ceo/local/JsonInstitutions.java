@@ -53,6 +53,7 @@ public class JsonInstitutions implements Institutions {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
             req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
+            System.out.println(req.raw());
             var userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
             var name = partToString(req.raw().getPart("institution-name"));
             var url = partToString(req.raw().getPart("institution-url"));
@@ -67,7 +68,10 @@ public class JsonInstitutions implements Institutions {
                 // Generate a new institution id
                 var newInstitutionId = getNextId(institutions);
                 // Upload the logo image if one was provided
-                var logoFileName = writeFilePart(req, "institution-logo", expandResourcePath("/public/img/institution-logos"), "institution-" + newInstitutionId);
+                var logoFileName = writeFilePart(req,
+                                                "institution-logo",
+                                                expandResourcePath("/public/img/institution-logos"),
+                                                "institution-" + newInstitutionId);
                 var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
 
                 var members = new JsonArray();

@@ -172,6 +172,7 @@ class Institution extends React.Component {
     }
 
     updateInstitution() {
+        console.log("calling update");
         var formData = new FormData();
         formData.append("userid", this.props.userId);
         formData.append("institution-name", this.state.details.name);
@@ -193,6 +194,7 @@ class Institution extends React.Component {
             alert("Error updating institution details. See console for details.");
         }).done(function (data) {
             var parsedData = JSON.parse(data);
+            console.log(parsedData);
             if (holdRef.state.details.id == 0) {
                 window.location = documentRoot + "/institution/" + parsedData.id;
             } else {

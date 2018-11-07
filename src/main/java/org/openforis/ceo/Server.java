@@ -109,12 +109,12 @@ public class Server implements SparkApplication {
         get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnassignedPlotById);
         get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
         get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
-        post("/create-project",                       projects::createProject);
-        post("/publish-project/:id",                  projects::publishProject);
-        post("/close-project/:id",                    projects::closeProject);
-        post("/archive-project/:id",                  projects::archiveProject);
         post("/add-user-samples",                     projects::addUserSamples);
+        post("/create-project",                       projects::createProject);
+        post("/archive-project/:id",                  projects::archiveProject);
+        post("/close-project/:id",                    projects::closeProject);
         post("/flag-plot",                            projects::flagPlot);
+        post("/publish-project/:id",                  projects::publishProject);
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
@@ -136,6 +136,7 @@ public class Server implements SparkApplication {
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                       geoDash::geodashId);
         get("/geo-dash/update/id/:id",                geoDash::updateDashBoardById);
+        // FIXME: should these be POST?
         get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetById);
         get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
         get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);

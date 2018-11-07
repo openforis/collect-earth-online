@@ -1,6 +1,7 @@
 package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -33,21 +34,22 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setInt(1, Integer.parseInt(projectId));
             var rs = pstmt.executeQuery();
             if(rs.next()) {
-                var newDashboard = new JsonObject();
-                newDashboard.addProperty("projectID", projectId);
-                newDashboard.addProperty("projectTitle", projectTitle);
-                newDashboard.addProperty("dashboardID", rs.getString("dashboard_id"));
+                var dashboard = new JsonObject();
+                dashboard.addProperty("projectID", projectId);
+                dashboard.addProperty("projectTitle", rs.getString("project_title"));
+                dashboard.addProperty("dashboardID", rs.getString("dashboard_id"));
+                var widgetsJson = new JsonArray();
 
-                var widgets = new JsonArray();
                 do {
-                    var widgetJson = rs.getString("widget");
-                    widgets.add(widgetJson);
+                    widgetsJson.add(parseJson(rs.getString("widget")).getAsJsonObject());
                 } while (rs.next());
-                newDashboard.add("widgets", widgets);
+
+                dashboard.add("widgets", widgetsJson);
+                
                 if (callback != null) {
-                    return callback + "(" + newDashboard.toString() + ")";
+                    return callback + "(" + dashboard.toString() + ")";
                 } else {
-                    return newDashboard.toString();
+                    return dashboard.toString();
                 }
             }
             else{
@@ -79,19 +81,25 @@ public class PostgresGeoDash implements GeoDash {
 
     // Creates a dashboard widget for a specific project
     public String createDashBoardWidgetById(Request req, Response res) {
-        var projectId = req.queryParams("pID");
-        var dashboardId = req.queryParams("dashID");
-        var widgetJson = req.queryParams("widgetJSON");
-        var callback = req.queryParams("callback");
-        var SQL = "SELECT * FROM add_project_widget(?, ?, ?::JSONB)";
 
+        var projectId               = req.queryParams("pID");
+        var dashboardId             = req.queryParams("dashID");
+        var widgetJsonString        = req.queryParams("widgetJSON");
+        var callback                = req.queryParams("callback");
+
+        var SQL = "SELECT * FROM add_project_widget(?, ?, ?::JSONB)";
         try (var conn = connect();
-             var pstmt = conn.prepareStatement(SQL)) {
+            var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(projectId));
-            pstmt.setString(2, dashboardId);
-            pstmt.setString(3, widgetJson);
+            pstmt.setObject(2, UUID.fromString(dashboardId));
+            pstmt.setString(3, widgetJsonString);
             var rs = pstmt.executeQuery();
-            return returnBlank(callback);
+
+            if (callback != null) {
+                return callback + "()";
+            } else {
+                return "";
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -101,17 +109,24 @@ public class PostgresGeoDash implements GeoDash {
 
     // Updates a dashboard widget by widget_id
     public String updateDashBoardWidgetById(Request req, Response res) {
-        var widgetId = req.params(":id");
-        var widgetJson = req.queryParams("widgetJSON");
-        var callback = req.queryParams("callback");
-        var SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?::JSONB)";
+        var widgetId                = req.params(":id");
+        var widgetJsonString        = req.queryParams("widgetJSON");
+        var dashboardId             = req.queryParams("dashID");
+        var callback                = req.queryParams("callback");
+        var SQL = "SELECT * FROM update_project_widget_by_widget_id(?, ?, ?::JSONB)";
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
-            pstmt.setString(2, widgetJson);
+            pstmt.setObject(2, UUID.fromString(dashboardId));
+            pstmt.setString(3, widgetJsonString);
             var rs = pstmt.executeQuery();
-            return returnBlank(callback);
+
+            if (callback != null) {
+                return callback + "()";
+            } else {
+                return "";
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -129,7 +144,12 @@ public class PostgresGeoDash implements GeoDash {
             var pstmt = conn.prepareStatement(SQL)) {
             pstmt.setInt(1, Integer.parseInt(widgetId));
             var rs = pstmt.executeQuery();
-            return returnBlank(callback);
+            
+            if (callback != null) {
+                return callback + "()";
+            } else {
+                return "";
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

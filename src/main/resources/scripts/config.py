@@ -1,12 +1,13 @@
 #!/usr/bin/python
 from configparser import ConfigParser
+import os
  
  
 def config(filename='database.ini', section='postgresql'):
     # create a parser
     parser = ConfigParser()
     # read config file
-    parser.read(filename)
+    parser.read(os.path.join(os.path.dirname(__file__), filename))
  
     # get section, default to postgresql
     db = {}

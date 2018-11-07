@@ -34,6 +34,7 @@ CREATE TABLE projects (
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
+  csv_file                  text,
   classification_start_date	date,
   classification_end_date   date,
   classification_timestep   integer,
@@ -46,9 +47,7 @@ CREATE TABLE projects (
 CREATE TABLE plots (
   id         serial primary key,
   project_id integer not null references projects (id) on delete cascade on update cascade,
-  center     geometry(Point,4326),
-  flagged    integer default 0,
-  assigned   integer default 0
+  center     geometry(Point,4326)
 );
 
 CREATE TABLE samples (
