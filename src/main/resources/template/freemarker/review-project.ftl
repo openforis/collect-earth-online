@@ -20,7 +20,7 @@
 <script type="text/javascript" src="${root}/js/review_project.bundle.js"></script>
 <script type="text/javascript">
     window.onload = function () {
-        project.renderProjectPage({
+       review_project.renderReviewProjectPage({
             documentRoot:                "${root}",
             userId:                      "${userid}",
             projectId:                   "${project_id}",

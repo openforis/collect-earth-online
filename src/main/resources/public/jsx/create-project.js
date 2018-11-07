@@ -139,7 +139,7 @@ class Project extends React.Component {
                     ref.setState({details: detailsNew});
                     utils.hide_element("spinner");
                     var newProjectId = data;
-                    window.location = ref.props.documentRoot + "/project/" + newProjectId;
+                    window.location = ref.props.documentRoot + "/review-project/" + newProjectId;
                 } else {
                     utils.hide_element("spinner");
                     alert(data);

@@ -288,7 +288,7 @@ function Project(props) {
                 </div>
                 <div className="col-lg-4 pl-lg-0">
                     <a className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                       href={props.documentRoot + "/project/" + props.id}>
+                       href={props.documentRoot + "/review-project/" + props.id}>
                         <i className="fa fa-edit"></i> Review
                     </a>
                 </div>

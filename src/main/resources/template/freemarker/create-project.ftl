@@ -20,7 +20,7 @@
 <script type="text/javascript" src="${root}/js/create_project.bundle.js"></script>
 <script type="text/javascript">
     window.onload = function () {
-        project.renderProjectPage({
+        create_project.renderCreateProjectPage({
             documentRoot:                "${root}",
             userId:                      "${userid}",
             projectId:                   "${project_id}",

@@ -125,12 +125,20 @@ public class Views {
                          Map.of("project_id", getProjectId));
     }
 
-    public static Route project(FreeMarkerEngine freemarker) {
+    public static Route createProject(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
-        return makeAuthenticatedRoute("Project", freemarker,
+        return makeAuthenticatedRoute("Create-Project", freemarker,
                                       Map.of("project_id", getProjectId,
                                              "institution_id", getInstitutionId));
+    }
+
+    public static Route reviewProject(FreeMarkerEngine freemarker) {
+        Function<Request, String> getProjectId = (req) -> req.params(":id");
+        Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
+        return makeAuthenticatedRoute("Review-Project", freemarker,
+                Map.of("project_id", getProjectId,
+                        "institution_id", getInstitutionId));
     }
 
     public static Route login(FreeMarkerEngine freemarker) {
