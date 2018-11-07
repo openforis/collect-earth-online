@@ -180,7 +180,7 @@ def insert_plots(project_id,conn):
                     plot['flagged']=0
                 else:
                     plot['flagged']=1
-                cur_plot.execute("select * from create_project_plot(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['center']))
+                cur_plot.execute("select * from create_project_plot_migration(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(project_id,plot['center']))
                 plot_id = cur_plot.fetchone()[0]
                 if plot['user'] is not None:
                     user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
@@ -211,7 +211,7 @@ def insert_samples(plot_id,samples,user_plot_id,conn):
     cur_sample = conn.cursor()
     for sample in samples:
         try:
-            cur_sample.execute("select * from create_project_plot_sample(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(plot_id,sample['point']))
+            cur_sample.execute("select * from create_project_plot_sample_migration(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",(plot_id,sample['point']))
             sample_id = cur_sample.fetchone()[0]
             if user_plot_id != -1 and 'value' in sample:
                 insert_sample_values(user_plot_id,sample_id,sample['value'],conn)

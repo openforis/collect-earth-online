@@ -563,6 +563,27 @@ CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_
 
 $$ LANGUAGE SQL;
 
+-- Create a single project plot
+CREATE OR REPLACE FUNCTION create_project_plot_migration(_project_id integer, _center geometry(Point,4326)) 
+    RETURNS integer AS $$
+
+	INSERT INTO plots (project_id, center)
+	(SELECT _project_id, _center)
+	RETURNING id
+
+$$ LANGUAGE SQL;
+
+
+-- Create project plot sample
+CREATE OR REPLACE FUNCTION create_project_plot_sample_migration(_plot_id integer, _sample_point geometry(Point,4326))
+    RETURNS integer AS $$
+
+	INSERT INTO samples (plot_id, point)
+	(SELECT _plot_id, _sample_point)
+	RETURNING id
+
+$$ LANGUAGE SQL;
+
 -- Returns a row in projects by id.
 CREATE OR REPLACE FUNCTION select_project(_id integer) 
     RETURNS TABLE (
