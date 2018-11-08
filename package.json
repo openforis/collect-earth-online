@@ -35,6 +35,10 @@
         {
             "name": "Alfonso SanchezPausDiaz",
             "email": "alfonso.sanchezpausdiaz@fao.org"
+        },
+        {
+            "name": "Matt Spencer",
+            "email": "semail@snasa.io"
         }
     ],
     "license": "MIT",
@@ -74,6 +78,6 @@
         "webpack-prod": "webpack --config webpack.prod.js",
         "server-json": "mvn compile exec:java -Dexec.args=JSON",
         "server-pg": "mvn compile exec:java -Dexec.args=POSTGRES",
-        "start" : "concurrently --kill-others \"npm run webpack-dev\" \"npm run server-pg\""
+        "start": "concurrently --kill-others \"npm run webpack-dev\" \"npm run server-pg\""
     }
 }

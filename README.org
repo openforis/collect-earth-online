@@ -190,6 +190,7 @@ sudo $TOMCAT_HOME/bin/startup.sh
 - Stefano Ricci (FAO)
 - Roberto Fontanarosa (FAO)
 - Alfonso SanchezPausDiaz (FAO)
+- Matt Spencer (SIG)
 
 *Emails:*
 
@@ -200,3 +201,4 @@ sudo $TOMCAT_HOME/bin/startup.sh
 - stefano.ricci@fao.org
 - roberto.fontanarosa@fao.org
 - alfonso.sanchezpausdiaz@fao.org
+- semail@snasa.io
