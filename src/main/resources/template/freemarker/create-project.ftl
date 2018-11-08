@@ -19,16 +19,16 @@
 <script type="text/javascript" src="${root}/js/collection~create_project~geodashreact~home~review_project.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/create_project.bundle.js"></script>
 <script type="text/javascript">
-    window.onload = function () {
-        create_project.renderCreateProjectPage({
-            documentRoot:                "${root}",
-            userId:                      "${userid}",
-            projectId:                   "${project_id}",
-            institutionId:               "${institution_id}",
-            project_stats_visibility:    "${project_stats_visibility}",
-            project_template_visibility: "${project_template_visibility}"
-        });
-    };
+ window.onload = function () {
+     create_project.renderCreateProjectPage({
+         documentRoot:                "${root}",
+         userId:                      "${userid}",
+         projectId:                   "${project_id}",
+         institutionId:               "${institution_id}",
+         project_stats_visibility:    "${project_stats_visibility}",
+         project_template_visibility: "${project_template_visibility}"
+     });
+ };
 </script>
 <#include "end-content.ftl">
 <#include "footer.ftl">
