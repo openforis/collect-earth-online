@@ -624,7 +624,7 @@ function ProjectInfo(props) {
                             <h3 htmlFor="project-description">Description</h3>
                             <textarea className="form-control form-control-sm" id="project-description"
                                       name="description"
-                                      value={project.details.description}></textarea>
+                                      defaultValue={project.details.description}></textarea>
                         </div>
                     </div>
                 </div>
@@ -646,14 +646,14 @@ function ProjectVisibility(props) {
                     <div id="project-visibility" className="mb-3">
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
-                                   value="public" checked={props.project.details.privacyLevel === 'public'}
+                                   value="public" defaultChecked={props.project.details.privacyLevel === 'public'}
                                    />
                             <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
                         </div>
                         <div className="form-check form-check-inline">
                             <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
                                    value="private"
-                                   checked={props.project.details.privacyLevel === 'private'}/>
+                                   defaultChecked={props.project.details.privacyLevel === 'private'}/>
                             <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
                                 Admins</i></label>
                         </div>
@@ -661,7 +661,7 @@ function ProjectVisibility(props) {
                             <input className="form-check-input" type="radio" id="privacy-institution"
                                    name="privacy-level"
                                    value="institution"
-                                   checked={props.project.details.privacyLevel === 'institution'}/>
+                                   defaultChecked={props.project.details.privacyLevel === 'institution'}/>
                             <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
                                 Members</i></label>
                         </div>
@@ -669,7 +669,7 @@ function ProjectVisibility(props) {
                             <input className="form-check-input" type="radio" id="privacy-invitation"
                                    name="privacy-level"
                                    value="invitation" disabled
-                                   checked={props.project.details.privacyLevel === 'invitation'}/>
+                                   defaultChecked={props.project.details.privacyLevel === 'invitation'}/>
                             <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
                                 Soon</i></label>
                         </div>

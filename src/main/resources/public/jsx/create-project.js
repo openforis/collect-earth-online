@@ -72,20 +72,24 @@ class Project extends React.Component {
             if (this.state.details.id == 0) {
                 this.state.details.privacyLevel = "private";
                 this.state.details.projectDistribution = "random";
+                if (document.getElementById("sample-distribution-random") != null) {
+                    document.getElementById("sample-distribution-random").disabled = false;
+                    document.getElementById("sample-distribution-gridded").disabled = false;
+                    document.getElementById("sample-distribution-csv").disabled = true;
+                    document.getElementById("sample-distribution-shp").disabled = true;
+                }
                 this.state.details.plotShape = "circle";
                 this.state.details.sampleDistribution = "random";
                 this.getProjectList(userId, projectId);
             }
             else if (this.state.details.id != 0) {
                 if (document.getElementById("num-plots") != null) {
-                    document.getElementById("sample-distribution-random").disabled=false;
-                    document.getElementById("sample-distribution-gridded").disabled=false;
-                    document.getElementById("sample-distribution-csv").disabled=true;
-                    document.getElementById("sample-distribution-shp").disabled=true;
+
                     if (document.getElementById("plot-distribution-gridded").checked)
                         document.getElementById("plot-design-text").innerHTML = "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
-                    if (document.getElementById("plot-distribution-random").checked)
+                    if (document.getElementById("plot-distribution-random").checked) {
                         document.getElementById("plot-design-text").innerHTML = "Plot centers will be randomly distributed within the AOI.";
+                    }
                     if (document.getElementById("plot-distribution-csv").checked)
                         document.getElementById("plot-design-text").innerHTML ="Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
                     if (document.getElementById("plot-distribution-shp").checked)
@@ -1099,7 +1103,7 @@ class PlotDesign extends React.Component {
                                     <h3>Spatial Distribution</h3>
                                     <div className="form-check form-check-inline">
                                         <input className="form-check-input" type="radio" id="plot-distribution-random"
-                                               name="plot-distribution" value="random"
+                                               name="plot-distribution" defaultValue="random"
                                                onChange={() => this.props.setPlotDistribution('random')}
                                                defaultChecked={this.props.project.details.plotDistribution === 'random'}/>
                                         <label className="form-check-label small"
@@ -1166,7 +1170,7 @@ class PlotDesign extends React.Component {
                                         <input className="form-check-input" type="radio" id="plot-shape-circle"
                                                name="plot-shape" defaultValue="circle"
                                                onChange={() => this.props.setPlotShape('circle')}
-                                               checked={this.props.project.details.plotShape === 'circle'}/>
+                                               defaultChecked={this.props.project.details.plotShape === 'circle'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-shape-circle">Circle</label>
                                     </div>
@@ -1174,7 +1178,7 @@ class PlotDesign extends React.Component {
                                         <input className="form-check-input" type="radio" id="plot-shape-square"
                                                name="plot-shape" defaultValue="square"
                                                onChange={() => this.props.setPlotShape('square')}
-                                               checked={this.props.project.details.plotShape === 'square'}/>
+                                               defaultChecked={this.props.project.details.plotShape === 'square'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-shape-square">Square</label>
                                     </div>
