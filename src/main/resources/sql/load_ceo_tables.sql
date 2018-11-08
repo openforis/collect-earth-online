@@ -39,7 +39,7 @@ CREATE TABLE projects (
   plots_shp_file            text,
   samples_csv_file          text,
   samples_shp_file          text,
-  created_date              date default now(),
+  created_date              date,
   publish_date              date,
   close_date                date,
   archive_date              date,

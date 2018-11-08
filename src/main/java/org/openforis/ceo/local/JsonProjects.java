@@ -119,15 +119,20 @@ public class JsonProjects implements Projects {
         }
     }
 
-    public String getProjectById(Request req, Response res) {
-        var projectId = req.params(":id");
+    
+    private static JsonObject singleProjectJson(String projectId){
         var projects = readJsonFile("project-list.json").getAsJsonArray();
         var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
-            return matchingProject.get().toString();
+            return matchingProject.get();
         } else {
-            return "";
+            return new JsonObject();
         }
+    }
+
+    public String getProjectById(Request req, Response res) {
+        var projectId = req.params(":id");
+        return singleProjectJson(projectId).toString();
     }
 
     public String getProjectPlots(Request req, Response res) {
@@ -217,6 +222,7 @@ public class JsonProjects implements Projects {
         var flaggedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == true);
         var analyzedPlots = filterJsonArray(plots, plot -> plot.get("analyses").getAsInt() > 0);
         var members = getProjectUsers(projectId);
+        var project = singleProjectJson(projectId);
         var contributors = toStream(plots)
                 .filter(plot -> !plot.get("user").isJsonNull())
                 .map(plot -> plot.get("user").getAsString())
@@ -229,6 +235,10 @@ public class JsonProjects implements Projects {
         stats.addProperty("unanalyzedPlots", Math.max(0, plots.size() - flaggedPlots.size() - analyzedPlots.size()));
         stats.addProperty("members", members.length);
         stats.addProperty("contributors", contributors.length);
+        stats.add("created_date", project.get("created_date"));
+        stats.add("publish_date", project.get("publish_date"));
+        stats.add("archive_date", project.get("archive_date"));
+        stats.add("close_date", project.get("close_date"));
         return stats.toString();
     }
 
@@ -487,6 +497,7 @@ public class JsonProjects implements Projects {
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
                         project.addProperty("availability", "published");
+                        project.addProperty("publish_date", LocalDate.now().toString());
                         return project;
                     } else {
                         return project;
@@ -501,6 +512,7 @@ public class JsonProjects implements Projects {
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
                         project.addProperty("availability", "closed");
+                        project.addProperty("close_date", LocalDate.now().toString());
                         return project;
                     } else {
                         return project;
@@ -515,6 +527,7 @@ public class JsonProjects implements Projects {
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
                         project.addProperty("availability", "archived");
+                        project.addProperty("archive_date", LocalDate.now().toString());
                         project.addProperty("archived", true);
                         return project;
                     } else {
@@ -827,8 +840,22 @@ public class JsonProjects implements Projects {
                 throw new RuntimeException("");
             }
         } catch (Exception e) {
-            deleteShapeFileDirectories(projectId);
-            throw new RuntimeException("Error in processing the zipped Shapefile. Please check the format and try again.");
+             // for windows
+             try {
+                System.out.println("Converting the uploaded ZIP file into GeoJSON with git bash.");
+                var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", "shp2geojson.sh", "project-" + projectId + "-" + plotsOrSamples);
+                pb.directory(new File(expandResourcePath("/shp")));
+                var p = pb.start();
+                if (p.waitFor(10L, TimeUnit.SECONDS)) {
+                    System.out.println("Git bash Conversion complete.");
+                } else {
+                    p.destroy();
+                    throw new RuntimeException("");
+                }
+            } catch (Exception e2) {
+                deleteShapeFileDirectories(projectId);
+                throw new RuntimeException("Error in processing the zipped Shapefile. Please check the format and try again.");
+            }
         }
     }
 
@@ -1187,6 +1214,8 @@ public class JsonProjects implements Projects {
             // Add some missing fields that don't come from the web UI
             newProject.addProperty("archived", false);
             newProject.addProperty("availability", "unpublished");
+
+            newProject.addProperty("created_date", LocalDate.now().toString());
 
             // Create the requested plot set and write it to plot-data-<newProjectId>.json
             var newProjectUpdated = createProjectPlots(newProject);

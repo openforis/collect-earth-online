@@ -106,7 +106,7 @@ def insert_project_widgets(project_id,dash_id,conn):
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print("project widgets: "+ str(error))    
-            
+
 def insert_projects():
     conn = None
     try:
@@ -117,10 +117,10 @@ def insert_projects():
         cur.execute("TRUNCATE TABLE plots RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
         cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
-        dirname = os.path.dirname(os.path.realpath(__file__))
-        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/project-list.json'))), "r", encoding="utf8").read()
+        dirname = os.path.dirname(os.path.realpath(__file__)) 
+        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/project-list.json'))), "r").read()
         projectArr = demjson.decode(project_list_json)
-        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r", encoding="utf8").read()
+        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/proj.json'))), "r").read()
         dashArr = demjson.decode(project_dash_list_json)
         print(len(projectArr))
         for project in projectArr:
@@ -149,13 +149,12 @@ def insert_projects():
                     project['plots-csv'],project['plots-shp'],project['samples-csv'],project['samples-shp'], None,None,0))
                     
                     project_id = cur.fetchone()[0]
-
+                    conn.commit()   
                     for dash in dashArr:
                         dash_id=dash['dashboard']
                         if int(dash['projectID']) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
-                            
-                    insert_plots(project_id,conn)
+                    insert_plots_samples_by_file(project_id,conn)
                     conn.commit()
             except(Exception, psycopg2.DatabaseError) as error:
                 print("project for loop: "+ str(error))
@@ -166,7 +165,24 @@ def insert_projects():
         if conn is not None:
             conn.close()
 
+def insert_plots_samples_by_file(project_id,conn):
+    cur_plot = conn.cursor()
+    try:
+        print("insert by file")
+        dirname = os.path.dirname(os.path.realpath(__file__))
+        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, r'../json/plot-data-'+str(project_id)+'.json')))
+        if os.path.isfile(filename):
+            cur_plot.execute("select * from add_plots_by_json(%s,%s::text)",(project_id, filename))
+            conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("plot file error: "+ str(error))
+        conn.commit()
+        cur_plot.close()
+        insert_plots(project_id,conn)
+    cur_plot.close()
+
 def insert_plots(project_id,conn):
+    print("inserting plot the old way")
     cur_plot = conn.cursor()
     user_plot_id=-1
     dirname = os.path.dirname(os.path.realpath(__file__))

@@ -114,7 +114,7 @@ public class PostgresInstitutions implements Institutions {
                     pstmt.setString(1, name);
                     pstmt.setString(2, "");
                     pstmt.setString(3, description);
-                    pstmt.setString(4, url); //This is the extent
+                    pstmt.setString(4, url);
                     pstmt.setBoolean(5, false);
                     try(var rs = pstmt.executeQuery()){
                         if (rs.next()) {
@@ -174,13 +174,12 @@ public class PostgresInstitutions implements Institutions {
                                 logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
                             }
                             try(var updatePstmt = 
-                                 conn.prepareStatement("SELECT * FROM update_institution(?, ?, ?, ?, ?, ?)")){
+                                 conn.prepareStatement("SELECT * FROM update_institution(?, ?, ?, ?, ?)")){
                                 updatePstmt.setInt(1, Integer.parseInt(institutionId));
                                 updatePstmt.setString(2, name);
                                 updatePstmt.setString(3, logoPath);
                                 updatePstmt.setString(4, description);
                                 updatePstmt.setString(5, url);
-                                updatePstmt.setBoolean(6, false);
                                 updatePstmt.execute();
                             }
 

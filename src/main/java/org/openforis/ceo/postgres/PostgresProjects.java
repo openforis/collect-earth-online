@@ -284,6 +284,10 @@ public class PostgresProjects implements Projects {
                     stats.addProperty("unanalyzedPlots",rs.getInt("unassigned_plots"));
                     stats.addProperty("members",rs.getInt("members"));
                     stats.addProperty("contributors",rs.getInt("contributors"));
+                    stats.addProperty("createdDate",rs.getInt("created_date"));
+                    stats.addProperty("publishDate",rs.getInt("publish_date"));
+                    stats.addProperty("closeDate",rs.getInt("close_date"));
+                    stats.addProperty("archiveDate",rs.getInt("archive_date"));
                 }
             }
             return  stats.toString();
@@ -1217,7 +1221,7 @@ public class PostgresProjects implements Projects {
             var latMax =             getOrZero(newProject,"latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::Date,?::Date,?)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?,?,?)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 
@@ -1242,8 +1246,8 @@ public class PostgresProjects implements Projects {
                 // pstmt.setDate(16,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
                 // pstmt.setDate(17, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
                 // pstmt.setInt(18, newProject.get("classification_timestep").getAsInt());
-                pstmt.setDate(17,  new java.sql.Date(System.currentTimeMillis()));
-                pstmt.setDate(18, new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setDate(17,  null);
+                pstmt.setDate(18, null);
                 pstmt.setInt(19, 0);
 
                 try(var rs = pstmt.executeQuery()){
