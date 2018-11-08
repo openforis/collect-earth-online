@@ -78,6 +78,10 @@ class Project extends React.Component {
             }
             else if (this.state.details.id != 0) {
                 if (document.getElementById("num-plots") != null) {
+                    document.getElementById("sample-distribution-random").disabled=false;
+                    document.getElementById("sample-distribution-gridded").disabled=false;
+                    document.getElementById("sample-distribution-csv").disabled=true;
+                    document.getElementById("sample-distribution-shp").disabled=true;
                     if (document.getElementById("plot-distribution-gridded").checked)
                         document.getElementById("plot-design-text").innerHTML = "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
                     if (document.getElementById("plot-distribution-random").checked)
@@ -292,6 +296,10 @@ class Project extends React.Component {
                     utils.disable_element("plot-spacing");
                     utils.disable_element("plot-distribution-csv-file");
                     utils.disable_element("plot-distribution-shp-file");
+                    document.getElementById("sample-distribution-random").disabled=false;
+                    document.getElementById("sample-distribution-gridded").disabled=false;
+                    document.getElementById("sample-distribution-csv").disabled=true;
+                    document.getElementById("sample-distribution-shp").disabled=true;
                     document.getElementById("plot-design-text").innerHTML="Plot centers will be randomly distributed within the AOI.";
 
                 } else if (plotDistribution == "gridded") {
@@ -300,14 +308,21 @@ class Project extends React.Component {
                     utils.enable_element("plot-spacing");
                     utils.disable_element("plot-distribution-csv-file");
                     utils.disable_element("plot-distribution-shp-file");
+                    document.getElementById("sample-distribution-random").disabled=false;
+                    document.getElementById("sample-distribution-gridded").disabled=false;
+                    document.getElementById("sample-distribution-csv").disabled=true;
+                    document.getElementById("sample-distribution-shp").disabled=true;
                     document.getElementById("plot-design-text").innerHTML="Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
-
                 } else if(plotDistribution == "csv"){
                     utils.enable_element("plot-size");
                     utils.disable_element("num-plots");
                     utils.disable_element("plot-spacing");
                     utils.disable_element("plot-distribution-shp-file");
                     utils.enable_element("plot-distribution-csv-file");
+                    document.getElementById("sample-distribution-random").disabled=false;
+                    document.getElementById("sample-distribution-gridded").disabled=false;
+                    document.getElementById("sample-distribution-csv").disabled=false;
+                    document.getElementById("sample-distribution-shp").disabled=false;
                     document.getElementById("plot-design-text").innerHTML="Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
 
                 }
@@ -317,6 +332,10 @@ class Project extends React.Component {
                     utils.disable_element("plot-spacing");
                     utils.disable_element("plot-distribution-csv-file");
                     utils.enable_element("plot-distribution-shp-file");
+                    document.getElementById("sample-distribution-random").disabled=true;
+                    document.getElementById("sample-distribution-gridded").disabled=true;
+                    document.getElementById("sample-distribution-csv").disabled=false;
+                    document.getElementById("sample-distribution-shp").disabled=false;
                     document.getElementById("plot-design-text").innerHTML="Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
 
                 }
@@ -343,6 +362,7 @@ class Project extends React.Component {
                     utils.disable_element("sample-resolution");
                     utils.disable_element("sample-distribution-csv-file");
                     utils.disable_element("sample-distribution-shp-file");
+
                     document.getElementById("sample-design-text").innerHTML="Sample points will be randomly distributed within the plot boundary.";
 
                 } else if(sampleDistribution == "gridded") {
@@ -364,6 +384,7 @@ class Project extends React.Component {
                     utils.disable_element("sample-resolution");
                     utils.disable_element("sample-distribution-csv-file");
                     utils.enable_element("sample-distribution-shp-file");
+
                     document.getElementById("sample-design-text").innerHTML="Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.";
                 }
         }
@@ -1080,7 +1101,7 @@ class PlotDesign extends React.Component {
                                         <input className="form-check-input" type="radio" id="plot-distribution-random"
                                                name="plot-distribution" value="random"
                                                onChange={() => this.props.setPlotDistribution('random')}
-                                               checked={this.props.project.details.plotDistribution === 'random'}/>
+                                               defaultChecked={this.props.project.details.plotDistribution === 'random'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-distribution-random">Random</label>
                                     </div>
@@ -1088,7 +1109,7 @@ class PlotDesign extends React.Component {
                                         <input className="form-check-input" type="radio" id="plot-distribution-gridded"
                                                name="plot-distribution" defaultValue="gridded"
                                                onChange={() => this.props.setPlotDistribution('gridded')}
-                                               checked={this.props.project.details.plotDistribution === 'gridded'}/>
+                                               defaultChecked={this.props.project.details.plotDistribution === 'gridded'}/>
                                         <label className="form-check-label small"
                                                htmlFor="plot-distribution-gridded">Gridded</label>
                                     </div>
@@ -1096,7 +1117,7 @@ class PlotDesign extends React.Component {
                                         <input className="form-check-input" type="radio" id="plot-distribution-csv"
                                                name="plot-distribution" defaultValue="csv"
                                                onChange={() => this.props.setPlotDistribution('csv')}
-                                               checked={this.props.project.details.plotDistribution === 'csv'}/>
+                                               defaultChecked={this.props.project.details.plotDistribution === 'csv'}/>
                                         <label
                                             className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                             id="custom-csv-upload">
@@ -1110,7 +1131,7 @@ class PlotDesign extends React.Component {
                                         <input className="form-check-input" type="radio" id="plot-distribution-shp"
                                                name="plot-distribution" defaultValue="shp"
                                                onChange={() => this.props.setPlotDistribution('shp')}
-                                               checked={this.props.project.details.plotDistribution === 'shp'}/>
+                                               defaultChecked={this.props.project.details.plotDistribution === 'shp'}/>
                                         <label
                                             className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                             id="custom-shp-upload">
@@ -1198,7 +1219,7 @@ class SampleDesign extends React.Component{
                                 <input className="form-check-input" type="radio" id="sample-distribution-random"
                                        name="sample-distribution" defaultValue="random"
                                        onChange={() => this.props.setSampleDistribution('random')}
-                                       checked={this.props.project.details.sampleDistribution === 'random'}/>
+                                       defaultChecked={this.props.project.details.sampleDistribution === 'random'}/>
                                 <label className="form-check-label small"
                                        htmlFor="sample-distribution-random">Random</label>
                             </div>
@@ -1206,7 +1227,7 @@ class SampleDesign extends React.Component{
                                 <input className="form-check-input" type="radio" id="sample-distribution-gridded"
                                        name="sample-distribution" defaultValue="gridded"
                                        onChange={() => this.props.setSampleDistribution('gridded')}
-                                       checked={this.props.project.details.sampleDistribution === 'gridded'}/>
+                                       defaultChecked={this.props.project.details.sampleDistribution === 'gridded'}/>
                                 <label className="form-check-label small"
                                        htmlFor="sample-distribution-gridded">Gridded</label>
                             </div>
@@ -1214,7 +1235,7 @@ class SampleDesign extends React.Component{
                                 <input className="form-check-input" type="radio" id="sample-distribution-csv"
                                        name="sample-distribution" defaultValue="csv"
                                        onChange={() => this.props.setSampleDistribution('csv')}
-                                       checked={this.props.project.details.sampleDistribution === 'csv'}/>
+                                       defaultChecked={this.props.project.details.sampleDistribution === 'csv'}/>
                                 <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                        id="sample-custom-csv-upload">
                                     <small>Upload CSV</small>
@@ -1227,7 +1248,7 @@ class SampleDesign extends React.Component{
                                 <input className="form-check-input" type="radio" id="sample-distribution-shp"
                                        name="sample-distribution" defaultValue="shp"
                                        onChange={() => this.props.setSampleDistribution('shp')}
-                                       checked={this.props.project.details.sampleDistribution === 'shp'}/>
+                                       defaultChecked={this.props.project.details.sampleDistribution === 'shp'}/>
                                 <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                                        id="sample-custom-shp-upload">
                                     <small>Upload SHP</small>
