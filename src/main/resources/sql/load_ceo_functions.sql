@@ -401,7 +401,6 @@ $$ LANGUAGE SQL;
 --  IMAGERY FUNCTIONS
 --
 
-
 -- Adds institution imagery
 CREATE OR REPLACE  FUNCTION add_institution_imagery_auto_id(_institution_id integer, _visibility text, _title text, _attribution text, _extent jsonb, _source_config jsonb) 
     RETURNS integer AS $$
@@ -495,7 +494,6 @@ $$ LANGUAGE SQL;
 --  WIDGET FUNCTIONS
 --
 
-
 -- Adds a project_widget to the database.
 CREATE OR REPLACE FUNCTION add_project_widget(_project_id integer, _dashboard_id  uuid, _widget  jsonb)
     RETURNS integer AS $$
@@ -538,11 +536,14 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer
         id              integer,
         project_id      integer,
         dashboard_id    uuid,
-        widget          jsonb
+        widget          jsonb,
+		project_title	text
     ) AS $$
 
-	SELECT *
-	FROM project_widgets
+	SELECT pw.*, p.name
+	FROM project_widgets pw
+	INNER JOIN projects p
+		ON p.id = pw.project_id
 	WHERE project_id = _project_id
 
 $$ LANGUAGE SQL;
@@ -1134,17 +1135,75 @@ CREATE OR REPLACE FUNCTION create_project_plot_migration(_project_id integer, _c
 $$ LANGUAGE SQL;
 
 -- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_time timestamp) 
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _username text, _confidence integer) 
     RETURNS integer AS $$
 
+    with user_id as (
+		SELECT id FROM users WHERE email = _username
+	)
 	INSERT INTO user_plots (user_id, plot_id, flagged, confidence, collection_time)
-	VALUES (_user_id, _plot_id, true, 100, _collection_time)
+	SELECT user_id.id, _plot_id, true, _confidence, Now()
+	FROM user_id
 	RETURNING _plot_id
 
 $$ LANGUAGE SQL;
 
 -- Select plots
 -- FIXME when multiple users can be assigned to plots, returning a single username does not make sense
+DROP FUNCTION select_all_plots();
+CREATE OR REPLACE FUNCTION select_all_plots()
+	RETURNS TABLE (
+      id         integer,
+      project_id integer,
+      center     text,
+      flagged    integer,
+      assigned   integer,
+      username   text,
+	  confidence integer,
+	  collection_time timestamp with time zone,
+      plot_id   integer,
+      geom          text,
+	  extra_fields	text
+    ) AS $$
+
+ WITH username AS (
+        SELECT MAX(email) as email, plot_id 
+        FROM users 
+        INNER JOIN user_plots
+            ON users.id = user_plots.user_id
+		GROUP BY plot_id
+    ),
+    plotsum AS (
+        SELECT cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
+            cast(count(1) - sum(case when flagged then 1 else 0 end)  as int) as assigned, 
+			MAX(confidence) as confidence,
+			MAX(collection_time) as collection_time,
+            plot_id
+        FROM user_plots
+        GROUP BY plot_id
+    )
+	SELECT plots.id as id, 
+		project_id,
+		ST_AsGeoJSON(center) as center, 
+		(case when plotsum.flagged is null then 0 else plotsum.flagged end) as flagged,
+		(case when plotsum.assigned is null then 0 else plotsum.assigned end) as assigned,
+		(case when username.email is null then '' else username.email end) as username,
+		plotsum.confidence,
+		plotsum.collection_time,
+		plotsum.plot_id,
+		ST_AsGeoJSON(geom) as geom,
+		extra_fields
+	FROM plots
+	LEFT JOIN plotsum
+		ON plots.id = plotsum.plot_id
+	LEFT JOIN username
+		ON plots.id = username.plot_id
+
+$$ LANGUAGE SQL;
+
+-- Select plots
+-- FIXME when multiple users can be assigned to plots, returning a single username does not make sense
+DROP FUNCTION select_project_plots(integer,integer);
 CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum integer) 
     RETURNS TABLE (
       id         integer,
@@ -1153,42 +1212,20 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
       flagged    integer,
       assigned   integer,
       username   text,
-      plot_id   text,
-      geom          text
+	  confidence integer,
+	  collection_time timestamp with time zone,
+      plot_id   integer,
+      geom          text,
+	  extra_fields	text
     ) AS $$
 
-	WITH username AS (
-        SELECT DISTINCT email, plot_id 
-        FROM users 
-        INNER JOIN user_plots
-            ON users.id = user_plots.user_id
-    ),
-    plotsum AS (
-        SELECT cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
-            cast(count(flagged) as int) as assigned, 
-            plot_id
-        FROM user_plots
-        GROUP BY plot_id
-          
-    )
 	SELECT all_plots.id, all_plots.project_id, all_plots.center, all_plots.flagged, all_plots.assigned, all_plots.username,
-            all_plots.plot_id, all_plots.geom
+            all_plots.confidence, all_plots.collection_time, all_plots.plot_id, all_plots.geom, all_plots.extra_fields
      FROM (
-		SELECT plots.id as id, 
-            project_id,
-			ST_AsGeoJSON(center) as center, 
-			(case when plotsum.flagged is null then 0 else plotsum.flagged end) as flagged,
-			(case when plotsum.assigned is null then 0 else plotsum.assigned end) as assigned,
-			(case when username.email is null then '' else username.email end) as username,
-		 	plot_id,
-		 	ST_AsGeoJSON(geom) as geom,
+		SELECT *,
 			row_number() OVER(ORDER BY id) AS rows,
 			count(*) OVER() as total_plots
-		FROM plots
-		LEFT JOIN plotsum
-			ON plots.id = plotsum.plot_id
-		LEFT JOIN username
-			ON plots.id = username.plot_id
+		FROM select_all_plots()
 		WHERE project_id = _project_id
 	) as all_plots
 	WHERE all_plots.rows % 
@@ -1198,64 +1235,47 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 $$ LANGUAGE SQL;
 
 -- Select singe plot
+DROP FUNCTION select_single_plot(integer);
 CREATE OR REPLACE FUNCTION select_single_plot(_plot_id integer) 
     RETURNS TABLE (
-      id         integer,      
+      id         integer,
       project_id integer,
       center     text,
       flagged    integer,
       assigned   integer,
       username   text,
-      plot_id   text,
-      geom          text
+	  confidence integer,
+	  collection_time timestamp with time zone,
+      plot_id   integer,
+      geom          text,
+	  extra_fields	text
     ) AS $$
 
-	WITH username AS (
-        SELECT DISTINCT email, plot_id 
-        FROM users 
-        INNER JOIN user_plots
-            ON users.id = user_plots.user_id
-    ),
-    plotsum AS (
-        SELECT cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
-            cast(count(flagged) as int) as assigned, 
-            plot_id
-        FROM user_plots
-        GROUP BY plot_id
-          
-    )
-	SELECT plots.id as id,
-		plots.project_id as project_id,
-		ST_AsGeoJSON(center) as center, 
-		(case when plotsum.flagged is null then 0 else plotsum.flagged end) as flagged,
-		(case when plotsum.assigned is null then 0 else plotsum.assigned end) as assigned,
-		(case when username.email is null then '' else username.email end) as username,
-		plot_id,
-		ST_AsGeoJSON(geom) as geom
-	FROM plots
-	LEFT JOIN plotsum
-		ON plots.id = plotsum.plot_id
-	LEFT JOIN username
-		ON plots.id = username.plot_id
-	WHERE plots.id = _plot_id
+	SELECT * FROM select_all_plots()
+	WHERE id = _plot_id
 
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots
+DROP FUNCTION select_unassigned_plot(integer,integer);
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS TABLE (
-      id            integer,
-	  project_id integer,
-      center        text,
-      flagged       integer,
-      assigned      integer,
-      username      text,
-      plot_id       text,
-      geom          text
+      id         integer,
+      project_id integer,
+      center     text,
+      flagged    integer,
+      assigned   integer,
+      username   text,
+	  confidence integer,
+	  collection_time timestamp with time zone,
+      plot_id   integer,
+      geom          text,
+	  extra_fields	text
     ) AS $$
 
-    SELECT * from select_project_plots(_project_id, 2147483647) as spp
+    SELECT * from select_all_plots() as spp
     WHERE spp.id <> _plot_id
+	AND spp.project_id = _project_id
     AND flagged = 0
     AND assigned = 0
     ORDER BY random()
@@ -1264,20 +1284,25 @@ CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id 
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
+DROP FUNCTION select_unassigned_plots_by_plot_id(integer, integer);
 CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(_project_id integer,_plot_id integer) 
     RETURNS TABLE (
       id         integer,
-	  project_id integer,
+      project_id integer,
       center     text,
       flagged    integer,
       assigned   integer,
       username   text,
-      plot_id   text,
-      geom          text
+	  confidence integer,
+	  collection_time timestamp with time zone,
+      plot_id   integer,
+      geom          text,
+	  extra_fields	text
     ) AS $$
 
-    SELECT * from select_project_plots(_project_id, 2147483647) as spp
+    SELECT * from select_all_plots() as spp
     WHERE spp.id = _plot_id
+	AND spp.project_id = _project_id
     AND flagged = 0
     AND assigned = 0
 
@@ -1311,12 +1336,12 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer)
     RETURNS TABLE (
       id            integer,
       point         text,
-	  sample_id   text,
+	  sample_id   integer,
 	  geom	        text,
       value         jsonb
     ) AS $$
     
-    SELECT samples.id, ST_AsGeoJSON(point) as point, sample_id, ST_AsGeoJSON(geom) as geom,
+    SELECT samples.id, ST_AsGeoJSON(point) as point, samples.sample_id, ST_AsGeoJSON(geom) as geom,
         (CASE WHEN sample_values.value IS NULL THEN '{}' ELSE sample_values.value END)
     FROM samples
     LEFT JOIN sample_values
@@ -1338,7 +1363,8 @@ CREATE OR REPLACE FUNCTION add_user_samples(
     RETURNS integer AS $$
 
 	WITH user_plot_table AS(
-		INSERT INTO user_plots(user_id, plot_id, confidence) VALUES (_user_id, _plot_id, _confidence)
+		INSERT INTO user_plots(user_id, plot_id, confidence, collection_time) 
+            VALUES (_user_id, _plot_id, _confidence, Now())
 		RETURNING id
 	),
 	sample_values AS (
@@ -1366,6 +1392,10 @@ CREATE OR REPLACE FUNCTION add_sample_values(_user_plot_id integer, _sample_id i
 	RETURNING id
 
 $$ LANGUAGE SQL;
+
+--
+-- USER PLOTS FUNCTION
+--
 
 -- Add user plots for migration
 CREATE OR REPLACE FUNCTION add_user_plots(_plot_id integer, _username text, _flagged boolean) 
@@ -1421,6 +1451,7 @@ CREATE or replace function read_json_file( _file_name text)
 
 $$ LANGUAGE PLPGSQL;
 
+-- Add then entire json plots file directly
 CREATE OR REPLACE FUNCTION add_plots_by_json(_project_id integer, _file_name text)
 	RETURNS integer AS $$
 

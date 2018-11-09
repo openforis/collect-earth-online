@@ -97,8 +97,8 @@ CREATE TABLE user_plots(
 	user_id         integer not null references users (id) on delete cascade on update cascade,
     plot_id         integer not null references plots (id) on delete cascade on update cascade,
     flagged         boolean default false,
-	confidence      integer default 100 CHECK (confidence >= 0 AND confidence <= 100),
-	collection_time timestamp with time zone default now()
+	confidence      integer CHECK (confidence >= 0 AND confidence <= 100),
+	collection_time timestamp
 );
 
 CREATE TABLE sample_values(

@@ -208,6 +208,8 @@ public class PostgresProjects implements Projects {
             singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
             singlePlot.addProperty("analysis",rs.getInt("assigned"));
             singlePlot.addProperty("user",rs.getString("username"));
+            singlePlot.addProperty("confidence",rs.getInt("confidence"));
+            singlePlot.addProperty("collectionTime", rs.getString("collection_time"));
             singlePlot.addProperty("plotId",rs.getString("plot_id"));
             singlePlot.addProperty("geom",rs.getString("geom"));
         } catch (SQLException e) {
@@ -569,6 +571,7 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    // used to get a single plot for a return value
     public  String getSinglePlot(Integer plotId) {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_single_plot(?)")) {
@@ -576,18 +579,11 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(1, plotId);
             try(var rs = pstmt.executeQuery()){
                 var singlePlot = new JsonObject();
-                if (rs.next()) {
-                    singlePlot.addProperty("id",rs.getInt("id"));
-                    singlePlot.addProperty("projectId",rs.getString("project_id"));
-                    singlePlot.addProperty("center",rs.getString("center"));
-                    singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
-                    singlePlot.addProperty("analysis",rs.getInt("assigned"));
-                    singlePlot.addProperty("user",rs.getString("username"));
-                    singlePlot.addProperty("plotId",rs.getString("plot_id"));
-                    singlePlot.addProperty("geom",rs.getString("geom"));
+                if (rs.next()) {     
+                    singlePlot = buildPlotJson(rs);
                     singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
                 }
-                return  singlePlot.toString();
+                return singlePlot.toString();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -613,15 +609,16 @@ public class PostgresProjects implements Projects {
             try(var userRs = userPstmt.executeQuery()){
                 if (userRs.next()){
                     var userId = userRs.getInt("id");
-                    var SQL = "SELECT * FROM add_user_samples(?,?,?,?,?::jsonb,?,?)";
+                    // fixme add collection time, null imagery date
+                    var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::jsonb,?::int,?::date)";
                     var pstmt = conn.prepareStatement(SQL) ;
                     pstmt.setInt(1, Integer.parseInt(projectId));
                     pstmt.setInt(2, Integer.parseInt(plotId));
                     pstmt.setInt(3, userId);
-                    pstmt.setInt(4, 100); //confidence
+                    pstmt.setString(4, null); //confidence
                     pstmt.setString(5, userSamples.toString());
-                    pstmt.setObject(6, null); //imageryID
-                    pstmt.setDate(7, new java.sql.Date(System.currentTimeMillis()) );
+                    pstmt.setString(6, null); //imageryID
+                    pstmt.setDate(7, null ); //imagery date
                     pstmt.execute();
                     return getSinglePlot(Integer.parseInt(plotId));
                 }
@@ -636,15 +633,14 @@ public class PostgresProjects implements Projects {
     public String flagPlot(Request req, Response res) {
         var jsonInputs =        parseJson(req.body()).getAsJsonObject();
         var plotId =            jsonInputs.get("plotId").getAsString();
-        var collectionTime =    new Timestamp(System.currentTimeMillis());
         var userName =          jsonInputs.get("userId").getAsString();
         
         try (var conn = connect();
-            var pstmt = conn.prepareStatement("SELECT * FROM flag_plot(?,?,?)")) {
+            var pstmt = conn.prepareStatement("SELECT * FROM flag_plot(?,?,?::int)")) {
             
             pstmt.setInt(1,Integer.parseInt(plotId));
             pstmt.setString(2,userName);
-            pstmt.setTimestamp(3,collectionTime);
+            pstmt.setString(3,null); //confidence
             try(var rs = pstmt.executeQuery()){
                 var idReturn = 0;
                 if (rs.next()) {

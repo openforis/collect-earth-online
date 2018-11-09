@@ -376,13 +376,13 @@ public class JsonProjects implements Projects {
                         plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                         plotSummary.addProperty("sample_points", samples.size());
                         plotSummary.add("user_id", plot.get("user"));
-                        plotSummary.add("timestamp", plot.get("timestamp"));
+                        plotSummary.add("collectTime", plot.get("collectTime"));
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, sampleValueTranslations));
                         return plotSummary;
                     });
 
-            var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "timestamp"};
+            var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collectionTime"};
             var labels = getValueDistributionLabels(project);
 
             var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
@@ -429,7 +429,7 @@ public class JsonProjects implements Projects {
                         var flagged = plot.get("flagged").getAsBoolean();
                         var analyses = plot.get("analyses").getAsInt();
                         var userId = plot.get("user");
-                        var timestamp = plot.get("timestamp");
+                        var collectionTime = plot.get("collectionTime");
                         var samples = plot.get("samples").getAsJsonArray();
                         return toStream(samples).map(sample -> {
                             var center = parseJson(sample.get("point").getAsString())
@@ -443,7 +443,7 @@ public class JsonProjects implements Projects {
                             sampleSummary.addProperty("flagged", flagged);
                             sampleSummary.addProperty("analyses", analyses);
                             sampleSummary.add("user_id", userId);
-                            sampleSummary.add("timestamp", timestamp);
+                            sampleSummary.add("collectionTime", collectionTime);
                             sampleSummary.add("value", sample.get("value"));
                             return sampleSummary;
                         });
@@ -455,7 +455,7 @@ public class JsonProjects implements Projects {
                             sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
                             (a, b) -> b));
 
-            var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "timestamp"};
+            var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collectionTime"};
             var labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
 
             var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
@@ -558,7 +558,7 @@ public class JsonProjects implements Projects {
                                     return sample;
                                 });
                         plot.add("samples", updatedSamples);
-                        plot.addProperty("timestamp", LocalDateTime.now().toString());
+                        plot.addProperty("collectionTime", LocalDateTime.now().toString());
                         return plot;
                     } else {
                         return plot;
@@ -579,7 +579,7 @@ public class JsonProjects implements Projects {
                     if (plot.get("id").getAsString().equals(plotId)) {
                         plot.addProperty("flagged", true);
                         plot.addProperty("user", userName);
-                        plot.addProperty("timestamp", LocalDateTime.now().toString());
+                        plot.addProperty("collectionTime", LocalDateTime.now().toString());
                         return plot;
                     } else {
                         return plot;
