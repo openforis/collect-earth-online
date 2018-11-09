@@ -78,7 +78,8 @@ public class Server implements SparkApplication {
         get("/about",                                 Views.about(freemarker));
         get("/support",                               Views.support(freemarker));
         get("/account/:id",                           Views.account(freemarker));
-        get("/institution/:id",                       Views.institution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/create-institution/:id",                Views.createInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
         get("/collection/:id",                        Views.collection(freemarker));
         get("/geo-dash",                              Views.geodash(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));

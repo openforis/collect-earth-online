@@ -515,7 +515,8 @@ class Collection extends React.Component {
         return (
             <React.Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
-                <SideBar currentProject={this.state.currentProject}
+                <SideBar plotId={this.state.currentPlot?this.state.currentPlot.id:""}
+                         currentProject={this.state.currentProject}
                          navButtonsShown={this.state.navButtonsShown}
                          newPlotButtonDisabled={this.state.newPlotButtonDisabled}
                          flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
@@ -562,7 +563,8 @@ function SideBar(props) {
     return (
         <div id="sidebar" className="col-xl-3">
             <ProjectName projectName={props.currentProject.name}/>
-            <PlotNavigation navButtonsShown={props.navButtonsShown}
+            <PlotNavigation plotId={props.plotId}
+                            navButtonsShown={props.navButtonsShown}
                             nextPlot={props.nextPlot}
                             flagPlot={props.flagPlot}
                             newPlotButtonDisabled={props.newPlotButtonDisabled}
@@ -610,7 +612,7 @@ function ProjectName(props) {
 function PlotNavigation(props) {
     return (
         <fieldset className="mb-3 text-center">
-            <h3>Plot Navigation</h3>
+            <h3>{"Plot Navigation "+(props.plotId==""?"":"(Current Plot Id: "+props.plotId+")")}</h3>
             <div className={props.navButtonsShown == 1 ? "row" : "row d-none"} id="go-to-first-plot">
                 <div className="col">
                     <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"

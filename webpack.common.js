@@ -3,7 +3,8 @@ const path = require("path");
 module.exports = {
     entry: {
         home:               path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
-        institution:        path.resolve(__dirname, "src/main/resources/public/jsx/institution.js"),
+        create_institution: path.resolve(__dirname, "src/main/resources/public/jsx/create-institution.js"),
+        review_institution: path.resolve(__dirname, "src/main/resources/public/jsx/review-institution.js"),
         collection:         path.resolve(__dirname, "src/main/resources/public/jsx/collection.js"),
         create_project:     path.resolve(__dirname, "src/main/resources/public/jsx/create-project.js"),
         review_project:     path.resolve(__dirname, "src/main/resources/public/jsx/review-project.js"),

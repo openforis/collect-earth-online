@@ -105,12 +105,26 @@ public class Views {
                                       Map.of("account_id", getAccountId));
     }
 
-    public static Route institution(FreeMarkerEngine freemarker, String storage) {
+    public static Route createInstitution(FreeMarkerEngine freemarker, String storage) {
         Function<Request, String> getInstitutionId = (req) -> req.params(":id");
-        var baseRoute = makeRoute("Institution", freemarker,
+        var baseRoute = makeRoute("Create-Institution", freemarker,
                                     Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
                                            "institution_id", getInstitutionId,
                                            "storage", storage));
+        return (req, res) -> {
+            if (req.params(":id").equals("0")) {
+                authenticateOrRedirect(req, res);
+            }
+            return baseRoute.handle(req, res);
+        };
+    }
+
+    public static Route reviewInstitution(FreeMarkerEngine freemarker, String storage) {
+        Function<Request, String> getInstitutionId = (req) -> req.params(":id");
+        var baseRoute = makeRoute("Review-Institution", freemarker,
+                Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
+                        "institution_id", getInstitutionId,
+                        "storage", storage));
         return (req, res) -> {
             if (req.params(":id").equals("0")) {
                 authenticateOrRedirect(req, res);

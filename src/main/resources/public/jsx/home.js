@@ -205,7 +205,7 @@ function InstitutionFilter(props) {
 function CreateInstitutionButton(props) {
     if (props.userName != "") {
         return (
-            <a className="create-institution" href={props.documentRoot + "/institution/0"}>
+            <a className="create-institution" href={props.documentRoot + "/create-institution/0"}>
                 <li className="bg-yellow text-center p-2"><i className="fa fa-file"></i> Create New Institution</li>
             </a>
         );
@@ -247,7 +247,7 @@ function Institution(props) {
                     </div>
                     <div className="col-lg-1">
                         <a className="institution_info btn btn-sm btn-outline-lightgreen"
-                           href={props.documentRoot + "/institution/" + props.id}>
+                           href={props.documentRoot + "/review-institution/" + props.id}>
                             <i className="fa fa-info" style={{color: "white"}}></i>
                         </a>
                     </div>
