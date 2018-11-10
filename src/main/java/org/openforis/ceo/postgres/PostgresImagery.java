@@ -78,7 +78,7 @@ public class PostgresImagery implements Imagery {
 
             try (var conn = connect();
                 var pstmt = conn.prepareStatement( 
-                    "SELECT * FROM add_institution_imagery_auto_id(?, ?, ?, ?, ?::JSONB, ?::JSONB)")) {
+                    "SELECT * FROM add_institution_imagery(?, ?, ?, ?, ?::JSONB, ?::JSONB)")) {
 
                 pstmt.setInt(1, institutionId);
                 pstmt.setString(2, "private");

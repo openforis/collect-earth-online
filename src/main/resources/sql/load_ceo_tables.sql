@@ -35,6 +35,7 @@ CREATE TABLE projects (
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
+  -- FIXME the file names do not need to be stored because the are calculated
   plots_csv_file            text,
   plots_shp_file            text,
   samples_csv_file          text,
@@ -43,9 +44,7 @@ CREATE TABLE projects (
   publish_date              date,
   close_date                date,
   archive_date              date,
-  classification_start_date	date,
-  classification_end_date   date,
-  classification_timestep   integer,
+  classification_times      jsonb,
   ts_start_year             integer default 1985,
   ts_end_year               integer,
   ts_target_day             integer default 215,
@@ -56,18 +55,16 @@ CREATE TABLE plots (
   id            serial primary key,
   project_id    integer not null references projects (id) on delete cascade on update cascade,
   center        geometry(Point,4326),
-  plot_id       integer,
-  geom          geometry(Polygon,4326),
-  extra_fields  text
+  plotId        text,
+  geom          geometry(Polygon,4326)
 );
 
 CREATE TABLE samples (
   id            serial primary key,
   plot_id       integer not null references plots (id) on delete cascade on update cascade,
   point         geometry(Point,4326),
-  sample_id     integer,
-  geom          geometry(Polygon,4326),
-  extra_fields  text
+  sampleId      text,
+  geom          geometry(Polygon,4326)
 );
 
 CREATE TABLE imagery (

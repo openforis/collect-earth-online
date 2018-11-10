@@ -159,7 +159,7 @@ public class PostgresInstitutions implements Institutions {
 
                 
                 try (var conn = connect(); 
-                     var pstmt = conn.prepareStatement("SELECT * FROM get_institution(?)")) {
+                     var pstmt = conn.prepareStatement("SELECT * FROM select_institution_by_id(?)")) {
 
                     pstmt.setInt(1, Integer.parseInt(institutionId));
                     try(var rs = pstmt.executeQuery()){

@@ -83,14 +83,8 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("sampleDistribution",rs.getString("sample_distribution"));
             newProject.addProperty("samplesPerPlot",rs.getInt("samples_per_plot"));
             newProject.addProperty("sampleResolution",rs.getFloat("sample_resolution"));
+            newProject.addProperty("classification_times","");
             newProject.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
-
-            // FIXME: this is not in JSON
-            var classificationStartDate = rs.getDate("classification_start_date");
-            var classificationEndDate = rs.getDate("classification_end_date");
-            newProject.addProperty("classification_start_date",safeDateToString(classificationStartDate));
-            newProject.addProperty("classification_end_date",safeDateToString(classificationEndDate));
-            newProject.addProperty("classification_timestep",rs.getInt("classification_timestep"));
 
             newProject.addProperty("editable", false);
         } catch (SQLException e) {
@@ -180,9 +174,6 @@ public class PostgresProjects implements Projects {
                     project.addProperty("archived", false);
                     project.add("sampleValues", parseJson("[]").getAsJsonArray());
 
-                    // project.addProperty("classification_start_date", "");
-                    // project.addProperty("classification_end_date", "");
-                    // project.addProperty("classification_timestep", 0);
                     return project.toString();
                 }
             }
@@ -206,11 +197,11 @@ public class PostgresProjects implements Projects {
             singlePlot.addProperty("projectId",rs.getInt("project_id"));
             singlePlot.addProperty("center",rs.getString("center"));
             singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
-            singlePlot.addProperty("analysis",rs.getInt("assigned"));
+            singlePlot.addProperty("analyses",rs.getInt("assigned"));
             singlePlot.addProperty("user",rs.getString("username"));
             singlePlot.addProperty("confidence",rs.getInt("confidence"));
             singlePlot.addProperty("collectionTime", rs.getString("collection_time"));
-            singlePlot.addProperty("plotId",rs.getString("plot_id"));
+            singlePlot.addProperty("plotId",rs.getString("plotId"));
             singlePlot.addProperty("geom",rs.getString("geom"));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -259,7 +250,7 @@ public class PostgresProjects implements Projects {
                     var sample = new JsonObject();
                     sample.addProperty("id", sampleRs.getString("id"));
                     sample.addProperty("point", sampleRs.getString("point"));
-                    sample.addProperty("sampleId",sampleRs.getString("sample_id"));
+                    sample.addProperty("sampleId",sampleRs.getString("sampleId"));
                     sample.addProperty("geom",sampleRs.getString("geom"));
                     if (sampleRs.getString("value").length() > 2) sample.add("value", parseJson(sampleRs.getString("value")).getAsJsonObject());
                     samples.add(sample);
@@ -286,10 +277,10 @@ public class PostgresProjects implements Projects {
                     stats.addProperty("unanalyzedPlots",rs.getInt("unassigned_plots"));
                     stats.addProperty("members",rs.getInt("members"));
                     stats.addProperty("contributors",rs.getInt("contributors"));
-                    stats.addProperty("createdDate",rs.getInt("created_date"));
-                    stats.addProperty("publishDate",rs.getInt("publish_date"));
-                    stats.addProperty("closeDate",rs.getInt("close_date"));
-                    stats.addProperty("archiveDate",rs.getInt("archive_date"));
+                    stats.addProperty("createdDate",rs.getString("created_date"));
+                    stats.addProperty("publishDate",rs.getString("publish_date"));
+                    stats.addProperty("closeDate",rs.getString("close_date"));
+                    stats.addProperty("archiveDate",rs.getString("archive_date"));
                 }
             }
             return  stats.toString();
@@ -620,7 +611,7 @@ public class PostgresProjects implements Projects {
                     pstmt.setString(6, null); //imageryID
                     pstmt.setDate(7, null ); //imagery date
                     pstmt.execute();
-                    return getSinglePlot(Integer.parseInt(plotId));
+                    return plotId;
                 }
                 return "";
             }
@@ -646,7 +637,7 @@ public class PostgresProjects implements Projects {
                 if (rs.next()) {
                     idReturn = rs.getInt("flag_plot");
                 }
-                return getSinglePlot(idReturn);
+                return Integer.toString(idReturn);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -1089,7 +1080,7 @@ public class PostgresProjects implements Projects {
         
         try (var conn = connect();
              var pstmt = 
-                conn.prepareStatement("SELECT * FROM update_project_csv(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))")) {
+                conn.prepareStatement("SELECT * FROM update_project_files(?,?::text,?::text,?::text,?::text,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))")) {
                 
                 pstmt.setInt(1,Integer.parseInt(newProject.get("id").getAsString()));     
                 pstmt.setString(2, newProject.get("plots-csv").getAsString());
@@ -1130,8 +1121,8 @@ public class PostgresProjects implements Projects {
                     ? (String) ((Map.Entry) plotEntry).getKey()
                     : "";
 
-                var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,ST_Force2d(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)))";
-                try(var pstmtPlots = conn.prepareStatement(SqlPlots)) {
+                    var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,ST_Force2d(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)))";
+                    try(var pstmtPlots = conn.prepareStatement(SqlPlots)) {
                     pstmtPlots.setInt(1,Integer.parseInt(newProject.get("id").getAsString()));    
                     pstmtPlots.setString(2, makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());    
                     pstmtPlots.setString(3, plotId);    
@@ -1203,8 +1194,7 @@ public class PostgresProjects implements Projects {
                                                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                                                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
                                                             "samples-per-plot", "sample-resolution", "sample-values",
-                                                            "classification_start_date", "classification_end_date",
-                                                            "classification_timestep"});
+                                                            "classification_times"});
 
             // Manually add the name and description fields since they may be invalid JSON
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
@@ -1217,7 +1207,7 @@ public class PostgresProjects implements Projects {
             var latMax =             getOrZero(newProject,"latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?,?,?)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?,?,?,?,?::jsonb)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 
@@ -1237,14 +1227,12 @@ public class PostgresProjects implements Projects {
                 pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
                 pstmt.setFloat(15, getOrZero(newProject, "sampleResolution").getAsFloat());
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
-                
-                // FIXME not implimented in JS or JSON
-                // pstmt.setDate(16,  new java.sql.Date(newProject.get("classification_start_date").getAsLong()));
-                // pstmt.setDate(17, new java.sql.Date(newProject.get("classification_end_date").getAsLong()));
-                // pstmt.setInt(18, newProject.get("classification_timestep").getAsInt());
-                pstmt.setDate(17,  null);
-                pstmt.setDate(18, null);
-                pstmt.setInt(19, 0);
+                pstmt.setString(17,  null); // file values
+                pstmt.setString(18,  null);
+                pstmt.setString(19,  null);
+                pstmt.setString(20,  null);
+                pstmt.setString(21,  null);  //classification times
+
 
                 try(var rs = pstmt.executeQuery()){
                     var newProjectId = "";
