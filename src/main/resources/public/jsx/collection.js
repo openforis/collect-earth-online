@@ -515,7 +515,7 @@ class Collection extends React.Component {
         return (
             <React.Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
-                <SideBar plotId={this.state.currentPlot?this.state.currentPlot.id:""}
+                <SideBar plotId={this.state.currentPlot?(this.state.currentPlot.plotId?this.state.currentPlot.plotId:""):""}
                          currentProject={this.state.currentProject}
                          navButtonsShown={this.state.navButtonsShown}
                          newPlotButtonDisabled={this.state.newPlotButtonDisabled}
