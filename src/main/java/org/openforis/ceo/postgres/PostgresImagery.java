@@ -17,36 +17,33 @@ public class PostgresImagery implements Imagery {
 
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
-        var SQL = "";
-        var hasInstitutionId = false;
-
-        if (institutionId == null || institutionId.isEmpty()) {
-            SQL = "SELECT * FROM select_public_imagery()";
-        } else {
-            SQL = "SELECT * FROM select_public_imagery_by_institution(?)";
-            hasInstitutionId = true;
-        }
+        var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
+        
         try (var conn = connect();
-             var pstmt = conn.prepareStatement(SQL)) {
+             var pstmt = hasInstitutionId 
+                ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
+                : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
+
             if(hasInstitutionId) {
                 pstmt.setInt(1, Integer.parseInt(institutionId));
             }
             var imageryArray = new JsonArray();
-            var rs = pstmt.executeQuery();
-            while(rs.next()) {
-                //create imagery json to send back
-                var newImagery = new JsonObject();
-                newImagery.addProperty("id", rs.getInt("id"));
-                newImagery.addProperty("institution", rs.getInt("institution_id"));
-                newImagery.addProperty("visibility", rs.getString("visibility"));
-                newImagery.addProperty("title", rs.getString("title"));
-                newImagery.addProperty("attribution", rs.getString("attribution"));
-                newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null") 
-                    ? null 
-                    : parseJson(rs.getString("extent")).getAsJsonArray());
-                newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
+            try(var rs = pstmt.executeQuery()) {
+                while(rs.next()) {
+                    //create imagery json to send back
+                    var newImagery = new JsonObject();
+                    newImagery.addProperty("id", rs.getInt("id"));
+                    newImagery.addProperty("institution", rs.getInt("institution_id"));
+                    newImagery.addProperty("visibility", rs.getString("visibility"));
+                    newImagery.addProperty("title", rs.getString("title"));
+                    newImagery.addProperty("attribution", rs.getString("attribution"));
+                    newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null") 
+                        ? null 
+                        : parseJson(rs.getString("extent")).getAsJsonArray());
+                    newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
 
-                imageryArray.add(newImagery);
+                    imageryArray.add(newImagery);
+                }
             }
             return imageryArray.toString();
 
@@ -78,17 +75,18 @@ public class PostgresImagery implements Imagery {
             sourceConfig.addProperty("type", "GeoServer");
             sourceConfig.addProperty("geoserverUrl", geoserverURL);
             sourceConfig.add("geoserverParams", geoserverParams);
-            var SQL = "SELECT * FROM add_institution_imagery_auto_id(?, ?, ?, ?, ?::JSONB, ?::JSONB)";
 
             try (var conn = connect();
-                var pstmt = conn.prepareStatement(SQL)) {
+                var pstmt = conn.prepareStatement( 
+                    "SELECT * FROM add_institution_imagery(?, ?, ?, ?, ?::JSONB, ?::JSONB)")) {
+
                 pstmt.setInt(1, institutionId);
                 pstmt.setString(2, "private");
                 pstmt.setString(3, imageryTitle);
                 pstmt.setString(4, imageryAttribution);
                 pstmt.setString(5, "null"); // no where to add extent in UI
                 pstmt.setString(6, sourceConfig.toString());
-                var rs = pstmt.executeQuery();
+                pstmt.execute();
                 return "";
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -108,14 +106,14 @@ public class PostgresImagery implements Imagery {
 
     // FIXME add check to validate the user has permission to delete
     public String deleteInstitutionImagery(Request req, Response res) {
-        var jsonInputs = parseJson(req.body()).getAsJsonObject();
-        var imageryId = jsonInputs.get("imageryId").getAsString();
-        var SQL = "SELECT * FROM delete_imagery(?)";
+        var jsonInputs =    parseJson(req.body()).getAsJsonObject();
+        var imageryId =     jsonInputs.get("imageryId").getAsString();
 
         try (var conn = connect();
-             var pstmt = conn.prepareStatement(SQL)) {
+             var pstmt = conn.prepareStatement("SELECT * FROM delete_imagery(?)")) {
+                 
             pstmt.setInt(1, Integer.parseInt(imageryId));
-            var rs = pstmt.executeQuery();
+            pstmt.execute();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

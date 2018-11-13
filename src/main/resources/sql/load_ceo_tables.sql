@@ -11,6 +11,7 @@ CREATE TABLE institutions (
   id            serial primary key,
   name          text not null,
   logo          text not null,
+  logo_data     bytea,
   description   text not null,
   url           text not null,
   archived      boolean default false
@@ -34,10 +35,16 @@ CREATE TABLE projects (
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
-  csv_file                  text,
-  classification_start_date	date,
-  classification_end_date   date,
-  classification_timestep   integer,
+  -- FIXME the file names do not need to be stored because the are calculated
+  plots_csv_file            text,
+  plots_shp_file            text,
+  samples_csv_file          text,
+  samples_shp_file          text,
+  created_date              date,
+  publish_date              date,
+  close_date                date,
+  archive_date              date,
+  classification_times      jsonb,
   ts_start_year             integer default 1985,
   ts_end_year               integer,
   ts_target_day             integer default 215,
@@ -45,15 +52,19 @@ CREATE TABLE projects (
 );
 
 CREATE TABLE plots (
-  id         serial primary key,
-  project_id integer not null references projects (id) on delete cascade on update cascade,
-  center     geometry(Point,4326)
+  id            serial primary key,
+  project_id    integer not null references projects (id) on delete cascade on update cascade,
+  center        geometry(Point,4326),
+  plotId        text,
+  geom          geometry(Polygon,4326)
 );
 
 CREATE TABLE samples (
-  id      serial primary key,
-  plot_id integer not null references plots (id) on delete cascade on update cascade,
-  point   geometry(Point,4326)
+  id            serial primary key,
+  plot_id       integer not null references plots (id) on delete cascade on update cascade,
+  point         geometry(Point,4326),
+  sampleId      text,
+  geom          geometry(Polygon,4326)
 );
 
 CREATE TABLE imagery (
@@ -83,8 +94,8 @@ CREATE TABLE user_plots(
 	user_id         integer not null references users (id) on delete cascade on update cascade,
     plot_id         integer not null references plots (id) on delete cascade on update cascade,
     flagged         boolean default false,
-	confidence      integer default 100 CHECK (confidence >= 0 AND confidence <= 100),
-	collection_time timestamp with time zone default now()
+	confidence      integer CHECK (confidence >= 0 AND confidence <= 100),
+	collection_time timestamp
 );
 
 CREATE TABLE sample_values(
@@ -117,100 +128,14 @@ CREATE INDEX sample_values_id ON sample_values (id);
 CREATE INDEX project_widgets_project_id ON project_widgets (project_id);
 CREATE INDEX project_widgets_dashboard_id ON project_widgets (dashboard_id);
 
-
-
--- TS related tables
-DROP TABLE IF EXISTS ts_packets cascade;
-CREATE TABLE ts_packets (
-	id             serial primary key,
-    project_id     integer not null references projects(id) on delete cascade on update cascade,
-	packet_id      integer not null,
-    plot_id        integer not null references user_plots (id) on delete cascade on update cascade
-);
-CREATE INDEX packets_pp ON ts_packets USING btree (project_id, packet_id);
-
-
-DROP TABLE IF EXISTS ts_project_user cascade;
-CREATE TABLE ts_project_user (
-  id            bigserial primary key,
-  project_id    integer not null references projects(id) on delete cascade on update cascade,
-  packet_id     integer DEFAULT NULL,
-  user_id       integer not null references users (id) on delete cascade on update cascade,
-  date_assigned timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  isactive      integer DEFAULT 1,
-  complete_date timestamp NULL DEFAULT NULL
-);
-
-DROP TABLE IF EXISTS ts_response_design cascade;
-CREATE TABLE ts_response_design (
-    id       serial primary key,
-    project_id      integer not null references projects(id) on delete cascade on update cascade,
-    landuse         text NOT NULL,
-    landcover       text NOT NULL,
-    change_process  text NOT NULL
-);
-DROP INDEX IF EXISTS prjid;
-CREATE UNIQUE INDEX prjid on ts_response_design (project_id);
-
-DROP TABLE IF EXISTS ts_plot_comments cascade;
-CREATE TABLE ts_plot_comments (
-  id                    bigserial primary key,
-  project_id            integer not null references projects(id) on update cascade,
-  plot_id               integer not null references user_plots (id) on delete cascade on update cascade,
-  interpreter           integer not null references users (id) on update cascade,
-  comment               text,
-  is_example            integer DEFAULT NULL,
-  is_complete           integer DEFAULT NULL,
-  is_wetland            integer DEFAULT NULL,
-  uncertainty           integer DEFAULT NULL,
-  last_modified_date    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  packet_id             integer default -1
-);
-DROP INDEX IF EXISTS comments_ppi;
-CREATE UNIQUE INDEX comments_ppi ON ts_plot_comments USING btree (project_id, plot_id, interpreter, packet_id);
-
-
-DROP TABLE IF EXISTS ts_vertex cascade;
-CREATE TABLE ts_vertex (
-  vertex_id                 bigserial PRIMARY KEY,
-  project_id                integer not null references projects(id) on update cascade,
-  plot_id                   integer not null references user_plots (id) on delete cascade on update cascade,
-  image_year                integer DEFAULT NULL,
-  image_julday              integer DEFAULT NULL,
-  image_id                  text,
-  dominant_landuse          varchar(50) DEFAULT NULL,
-  secondary_landuse         varchar(50) DEFAULT NULL,
-  dominant_landuse_notes    text,
-  secondary_landuse_notes   text,
-  dominant_landcover        varchar(50) DEFAULT NULL,
-  secondary_landcover       varchar(50) DEFAULT NULL,
-  dominant_landcover_notes  text,
-  secondary_landcover_notes text,
-  landcover_ephemeral       smallint DEFAULT NULL,
-  change_process            varchar(30) DEFAULT NULL,
-  change_process_notes      varchar(255) DEFAULT NULL,
-  comments                  varchar(255) DEFAULT NULL,
-  interpreter               integer not null references users (id) on update cascade,
-  last_modified             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  history_flag              integer DEFAULT 0,
-  packet_id                 integer DEFAULT -1
-);
-DROP INDEX IF EXISTS vertex_ptp;
-CREATE INDEX vertex_ptp ON ts_vertex USING btree (project_id, plot_id, interpreter);
-
-
-DROP TABLE IF EXISTS ts_image_preference cascade;
---TODO: with GEE as the backend, is it still necessary to keep image_year, image_julday, and priority
-CREATE TABLE ts_image_preference (
-    id              serial primary key,
-    project_id      integer not null references projects(id) on delete cascade on update cascade,
-    plot_id         integer not null,
-    image_id        text,
-    image_year      integer not null,
-    image_julday    integer not null,
-    interpreter     integer not null references users (id) on update cascade,
-    "priority"      integer not null,
-    packet_id       integer default -1
-);
-DROP INDEX IF EXISTS image_uindex_pppiip;
-CREATE UNIQUE INDEX image_uindex_pppiip ON public.ts_image_preference (project_id, plot_id, image_year, interpreter, packet_id);
+--indecies on FK
+CREATE INDEX plots_projects_id ON plots (project_id);
+CREATE INDEX samples_plot_id on samples (plot_id);
+CREATE INDEX imagery_institution_id on imagery (institution_id);
+CREATE INDEX institution_users_institution_id on institution_users (institution_id);
+CREATE INDEX institution_users_user_id on institution_users (user_id);
+CREATE INDEX user_plots_plot_id on user_plots (plot_id);
+CREATE INDEX user_plots_user_id on user_plots (user_id);
+CREATE INDEX sample_values_user_plot_id on sample_values (user_plot_id);
+CREATE INDEX sample_values_sample_id on sample_values (sample_id);
+CREATE INDEX sample_values_imagery_id on sample_values (imagery_id);

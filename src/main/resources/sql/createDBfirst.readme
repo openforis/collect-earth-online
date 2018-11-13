@@ -1,8 +1,5 @@
-psql -U postgres -p5432
-CREATE ROLE ceo WITH LOGIN CREATEDB PASSWORD 'ceo'; --ommit after created once
-CREATE DATABASE ceo WITH OWNER ceo;
-\c ceo
-CREATE EXTENSION postgis;
-\q
+psql -U postgres -p5432 -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\create_ceo_db.sql --echo-errors
 psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ceo_tables.sql --echo-errors
 psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ceo_functions.sql --echo-errors
+psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ts_tables.sql --echo-errors
+psql -U ceo -p5432 -d ceo -a -f C:\Code\GitHub\collect-earth-online\src\main\resources\sql\load_ts_functions.sql --echo-errors
