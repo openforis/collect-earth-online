@@ -200,7 +200,7 @@ public class PostgresProjects implements Projects {
             singlePlot.addProperty("analyses",rs.getInt("assigned"));
             singlePlot.addProperty("user",rs.getString("username"));
             singlePlot.addProperty("confidence",rs.getInt("confidence"));
-            singlePlot.addProperty("collectionTime", rs.getString("collection_time"));
+            singlePlot.addProperty("collection_time", rs.getString("collection_time"));
             singlePlot.addProperty("plotId",rs.getString("plotId"));
             singlePlot.addProperty("geom",rs.getString("geom"));
         } catch (SQLException e) {
@@ -278,9 +278,9 @@ public class PostgresProjects implements Projects {
                     stats.addProperty("members",rs.getInt("members"));
                     stats.addProperty("contributors",rs.getInt("contributors"));
                     stats.addProperty("createdDate",rs.getString("created_date"));
-                    stats.addProperty("publishDate",rs.getString("publish_date"));
-                    stats.addProperty("closeDate",rs.getString("close_date"));
-                    stats.addProperty("archiveDate",rs.getString("archive_date"));
+                    stats.addProperty("publishDate",rs.getString("published_date"));
+                    stats.addProperty("closeDate",rs.getString("closed_date"));
+                    stats.addProperty("archiveDate",rs.getString("archived_date"));
                 }
             }
             return  stats.toString();

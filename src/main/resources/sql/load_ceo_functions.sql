@@ -819,9 +819,9 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         members             integer,
         contributors        integer,
 		created_date        date,
-  	    publish_date        date,
-        close_date          date,
-        archive_date        date
+  	    published_date        date,
+        closed_date          date,
+        archived_date        date
     ) AS $$
 
     WITH members AS(
@@ -837,9 +837,9 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     ),
     sums AS(
         SELECT MAX(prj.created_date) as created_date, 
-			MAX(prj.publish_date) as publish_date, 
-			MAX(prj.close_date) as close_date, 
-			MAX(prj.archive_date) as archive_date,
+			MAX(prj.published_date) as published_date, 
+			MAX(prj.closed_date) as closed_date, 
+			MAX(prj.archived_date) as archived_date,
 			(CASE WHEN sum(ps.flagged::int) IS NULL THEN 0 ELSE sum(ps.flagged::int) END) as flagged, 
             (CASE WHEN sum(ps.assigned::int) IS NULL THEN 0 ELSE sum(ps.assigned::int) END) as assigned,
             count(distinct pl.id) as plots
@@ -864,7 +864,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
            CAST(GREATEST(0,(plots-flagged-assigned)) as int) AS unassigned_plots,
            CAST(members AS int) AS members,
            CAST(users_count.users AS int) AS contributors,
-           created_date, publish_date, close_date, archive_date
+           created_date, published_date, closed_date, archived_date
     FROM members, sums, users_count
 $$ LANGUAGE SQL;
 
@@ -894,7 +894,7 @@ CREATE OR REPLACE FUNCTION publish_project(_project_id integer)
 
 	UPDATE projects
 	SET availability = 'published',
-		publish_date = Now()
+		published_date = Now()
 	WHERE id = _project_id
 	RETURNING _project_id
 
@@ -906,7 +906,7 @@ CREATE OR REPLACE FUNCTION close_project(_project_id integer)
 
 	UPDATE projects
 	SET availability = 'closed',
-		close_date = Now()
+		closed_date = Now()
 	WHERE id = _project_id
 	RETURNING _project_id
 
@@ -918,7 +918,7 @@ CREATE OR REPLACE FUNCTION archive_project(_project_id integer)
 
 	UPDATE projects
 	SET availability = 'archived',
-		archive_date = Now()
+		archived_date = Now()
 	WHERE id = _project_id
 	RETURNING _project_id
 
@@ -1206,7 +1206,7 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_id integer, _file_name tex
         FROM
         jvalue s
         CROSS JOIN LATERAL
-        json_to_record(s.values::json) as t(center text, flagged bool, "user" text, samples json, plotId text, geom text, collectionTime timestamp)
+        json_to_record(s.values::json) as t(center text, flagged bool, "user" text, samples json, plotId text, geom text, collection_time timestamp)
 	),
 	plot_index as (
 		SELECT create_project_plot(

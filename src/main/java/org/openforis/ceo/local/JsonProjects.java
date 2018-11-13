@@ -236,9 +236,9 @@ public class JsonProjects implements Projects {
         stats.addProperty("members", members.length);
         stats.addProperty("contributors", contributors.length);
         stats.add("created_date", project.get("created_date"));
-        stats.add("publish_date", project.get("publish_date"));
-        stats.add("archive_date", project.get("archive_date"));
-        stats.add("close_date", project.get("close_date"));
+        stats.add("published_date", project.get("published_date"));
+        stats.add("archived_date", project.get("archived_date"));
+        stats.add("closed_date", project.get("closed_date"));
         return stats.toString();
     }
 
@@ -382,7 +382,7 @@ public class JsonProjects implements Projects {
                         return plotSummary;
                     });
 
-            var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collectionTime"};
+            var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collection_time"};
             var labels = getValueDistributionLabels(project);
 
             var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
@@ -429,7 +429,7 @@ public class JsonProjects implements Projects {
                         var flagged = plot.get("flagged").getAsBoolean();
                         var analyses = plot.get("analyses").getAsInt();
                         var userId = plot.get("user");
-                        var collectionTime = plot.get("collectionTime");
+                        var collection_time = plot.get("collection_time");
                         var samples = plot.get("samples").getAsJsonArray();
                         return toStream(samples).map(sample -> {
                             var center = parseJson(sample.get("point").getAsString())
@@ -443,7 +443,7 @@ public class JsonProjects implements Projects {
                             sampleSummary.addProperty("flagged", flagged);
                             sampleSummary.addProperty("analyses", analyses);
                             sampleSummary.add("user_id", userId);
-                            sampleSummary.add("collectionTime", collectionTime);
+                            sampleSummary.add("collection_time", collection_time);
                             sampleSummary.add("value", sample.get("value"));
                             return sampleSummary;
                         });
@@ -455,7 +455,7 @@ public class JsonProjects implements Projects {
                             sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
                             (a, b) -> b));
 
-            var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collectionTime"};
+            var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collection_time"};
             var labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
 
             var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
@@ -497,7 +497,7 @@ public class JsonProjects implements Projects {
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
                         project.addProperty("availability", "published");
-                        project.addProperty("publish_date", LocalDate.now().toString());
+                        project.addProperty("published_date", LocalDate.now().toString());
                         return project;
                     } else {
                         return project;
@@ -512,7 +512,7 @@ public class JsonProjects implements Projects {
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
                         project.addProperty("availability", "closed");
-                        project.addProperty("close_date", LocalDate.now().toString());
+                        project.addProperty("closed_date", LocalDate.now().toString());
                         return project;
                     } else {
                         return project;
@@ -527,7 +527,7 @@ public class JsonProjects implements Projects {
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
                         project.addProperty("availability", "archived");
-                        project.addProperty("archive_date", LocalDate.now().toString());
+                        project.addProperty("archived_date", LocalDate.now().toString());
                         project.addProperty("archived", true);
                         return project;
                     } else {
@@ -558,7 +558,7 @@ public class JsonProjects implements Projects {
                                     return sample;
                                 });
                         plot.add("samples", updatedSamples);
-                        plot.addProperty("collectionTime", LocalDateTime.now().toString());
+                        plot.addProperty("collection_time", LocalDateTime.now().toString());
                         return plot;
                     } else {
                         return plot;
@@ -579,7 +579,7 @@ public class JsonProjects implements Projects {
                     if (plot.get("id").getAsString().equals(plotId)) {
                         plot.addProperty("flagged", true);
                         plot.addProperty("user", userName);
-                        plot.addProperty("collectionTime", LocalDateTime.now().toString());
+                        plot.addProperty("collection_time", LocalDateTime.now().toString());
                         return plot;
                     } else {
                         return plot;
