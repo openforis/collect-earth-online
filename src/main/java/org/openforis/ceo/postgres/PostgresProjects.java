@@ -339,24 +339,70 @@ public class PostgresProjects implements Projects {
     private static Collector<String, ?, Map<String, Long>> countDistinct =
         Collectors.groupingBy(Function.identity(), Collectors.counting());
 
-    private static String[] getValueDistributionLabels(JsonObject project) {
-        return new String[]{};
-    }
+        private static String[] getSampleKeys(JsonArray sampleValueGroups) {
+            var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
+            if (firstGroup.has("name")) {
+                return new String[]{"name", "values", "name"};
+            }
+            if (firstGroup.has("question")) {
+                return new String[]{"question", "answers", "answer"};
+            }
+            return new String[]{};
+        }
 
-    private static Map<Integer, String> getSampleValueTranslations(JsonObject project) {
-        return new HashMap<Integer, String>();
-    }
-
-    // Returns a JsonObject like this:
-    // {"Land Use:Timber" 10.0,
-    //  "Land Use:Agriculture": 20.0,
-    //  "Land Use:Urban": 70.0,
-    //  "Land Cover:Forest": 10.0,
-    //  "Land Cover:Grassland": 40.0,
-    //  "Land Cover:Impervious": 50.0}
-    private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueTranslations) {
-        return new JsonObject();
-    }
+        private static String[] getValueDistributionLabels(JsonArray sampleValueGroups, String[] keys) {
+            return toStream(sampleValueGroups)
+                    .flatMap(group -> {
+                        var sampleValues = group.get(keys[1]).getAsJsonArray();
+                        return toStream(sampleValues)
+                                .map(sampleValue -> group.get(keys[0]).getAsString() + ":" + sampleValue.get(keys[2]).getAsString());
+                    })
+                    .toArray(String[]::new);
+        }
+    
+        private static Map<Integer, String> getSampleValueTranslations(JsonArray sampleValueGroups, String[] keys) {
+            var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
+            var firstGroupName =  firstGroup.get(keys[0]).getAsString();
+            return toStream(firstGroup.get(keys[1]).getAsJsonArray())
+                    .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
+                            sampleValue -> firstGroupName + ":" + sampleValue.get(keys[2]).getAsString(),
+                            (a, b) -> b));
+        }
+    
+        // Returns a JsonObject like this:
+        // {"Land Use:Timber" 10.0,
+        //  "Land Use:Agriculture": 20.0,
+        //  "Land Use:Urban": 70.0,
+        //  "Land Cover:Forest": 10.0,
+        //  "Land Cover:Grassland": 40.0,
+        //  "Land Cover:Impervious": 50.0}
+        private static JsonObject getValueDistribution(JsonArray samples, Map<Integer, String> sampleValueTranslations) {
+            var firstSample = samples.get(0).getAsJsonObject();
+            if (!firstSample.has("value")) {
+                return new JsonObject();
+            } else if (firstSample.get("value").isJsonPrimitive()) {
+                var valueCounts = toStream(samples)
+                        .map(sample -> sample.get("value").getAsInt())
+                        .map(value -> sampleValueTranslations.getOrDefault(value, "NoValue"))
+                        .collect(countDistinct);
+                var valueDistribution = new JsonObject();
+                valueCounts.forEach((name, count) -> valueDistribution.addProperty(name, 100.0 * count / samples.size()));
+                return valueDistribution;
+            } else {
+                var valueCounts = toStream(samples)
+                        .flatMap(sample -> sample.get("value").getAsJsonObject().entrySet().stream())
+                        .collect(Collectors.groupingBy(Map.Entry::getKey,
+                                Collectors.mapping(entry -> entry.getValue().isJsonPrimitive()
+                                        ? entry.getValue().getAsString()
+                                        : entry.getValue().getAsJsonObject().get("answer").getAsString(),
+                                        countDistinct)));
+                var valueDistribution = new JsonObject();
+                valueCounts.forEach((group, frequencies) -> {
+                    frequencies.forEach((name, count) -> valueDistribution.addProperty(group + ":" + name, 100.0 * count / samples.size()));
+                });
+                return valueDistribution;
+            }
+        }
 
     private static HttpServletResponse writeCsvFile(HttpServletResponse response, String header, String content,
                                                     String outputFileName) {
@@ -375,44 +421,81 @@ public class PostgresProjects implements Projects {
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         var projectId = req.params(":id");
+
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
-            
-            pstmt.setInt(1,Integer.parseInt(projectId));
+            // check if project exists
+            pstmt.setInt(1,Integer.parseInt(projectId));      
             try(var rs = pstmt.executeQuery()){
                 if (rs.next()) {
-                    var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
-                    var currentDate = LocalDate.now().toString();
-                    var outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate;
-                    System.out.println(projectName);
+                    var plotSummaries = new JsonArray();
+                    var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
+                    var sampleValueKeys = getSampleKeys(sampleValueGroups);
 
-                    var SqlDump = "SELECT * FROM dump_project_plot_data(?)";
-                    var pstmtDump = conn.prepareStatement(SqlDump) ;
-                    pstmtDump.setInt(1,Integer.parseInt(projectId));
-                    var rsDump = pstmtDump.executeQuery();
+                    var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups, sampleValueKeys);
 
-                    while (rsDump.next()){
-                        System.out.println(rsDump.toString());
+                    try(var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_plot_data(?)")){
+                        pstmtDump.setInt(1, Integer.parseInt(projectId));
+                        
+                        try(var rsDump = pstmtDump.executeQuery()){
+                        
+                            while (rsDump.next()) {
+                                var plotSummary = new JsonObject();
+                                plotSummary.addProperty("plot_id", rsDump.getString("plot_id"));
+                                plotSummary.addProperty("center_lon", rsDump.getString("lon"));
+                                plotSummary.addProperty("center_lat", rsDump.getString("lat"));
+                                plotSummary.addProperty("size_m", rsDump.getDouble("plot_size"));
+                                plotSummary.addProperty("shape", rsDump.getString("plot_shape"));
+                                plotSummary.addProperty("flagged", rsDump.getInt("flagged") > 0);
+                                plotSummary.addProperty("analyses", rsDump.getInt("assigned"));
+                                var samples = parseJson(rsDump.getString("samples")).getAsJsonArray();
+                                plotSummary.addProperty("sample_points", samples.size());
+                                plotSummary.addProperty("user_id", valueOrBlank(rsDump.getString("email")));
+                                plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
+                                plotSummary.add("distribution",
+                                        getValueDistribution(samples, sampleValueTranslations));
+                                
+                                plotSummaries.add(plotSummary);
+                            } 
+                        }
+
+                        var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collection_time"};
+                        var labels = getValueDistributionLabels(sampleValueGroups, sampleValueKeys);
+
+                        var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+                        var csvContent = toStream(plotSummaries)
+                                .map(plotSummary -> {
+                                    var fieldStream = Arrays.stream(fields);
+                                    var labelStream = Arrays.stream(labels);
+                                    var distribution = plotSummary.get("distribution").getAsJsonObject();
+                                    return Stream.concat(
+                                            fieldStream.map(field -> plotSummary.get(field).isJsonNull()
+                                                    ? ""
+                                                    : plotSummary.get(field).getAsString()),
+                                            labelStream.map(label -> distribution.has(label)
+                                                    ? distribution.getAsJsonObject().get(label).isJsonPrimitive() 
+                                                        ? distribution.get(label).getAsString()
+                                                        : distribution.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString()
+                                                    : "0.0")
+                                            ).collect(Collectors.joining(","));
+                                    }).collect(Collectors.joining("\n"));
+
+                        var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
+                        var currentDate = LocalDate.now().toString();
+                        var outputFileName = "ceo-" + projectName + "-plot-data-" + currentDate;
+
+                        return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
                     }
-                    return writeCsvFile(res.raw(), "header", "body", outputFileName);
-                } else {
-                    res.raw().setStatus(SC_NO_CONTENT);
-                    return res.raw();
-                }
             }
+        }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return res.raw();
         }
+        res.raw().setStatus(SC_NO_CONTENT);
+        return res.raw();
     }
-
-    private static String JsonKeytoString(String jsonStr, String key) {
-        if (jsonStr.contains(key)) {
-            return parseJson(jsonStr).getAsJsonObject().get(key).toString();
-        } else {
-            return jsonStr;
-        }
-    }
+    
 
     private static String valueOrBlank(String input) {
 
@@ -425,84 +508,87 @@ public class PostgresProjects implements Projects {
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
             // check if project exists
-            
-            pstmt.setInt(1,Integer.parseInt(projectId));
-            
-            var sampleSummaries = new JsonArray();
-            var sampleValueGroups = new JsonArray();
-            var csvContent = "";
+            pstmt.setInt(1,Integer.parseInt(projectId));      
             try(var rs = pstmt.executeQuery()){
-                if (rs.next()){
-                    sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
+                if (rs.next()) {
+                    var sampleSummaries = new JsonArray();
+                    var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
+                    var sampleValueKeys = getSampleKeys(sampleValueGroups);
 
-                    var SqlDump = "SELECT * FROM dump_project_sample_data_test(?)";
-                    var pstmtDump = conn.prepareStatement(SqlDump) ;
-                    pstmtDump.setInt(1,Integer.parseInt(projectId));
-                    var rsDump = pstmtDump.executeQuery();
-                    
-                    if (rsDump.next()) {
-                        csvContent = rsDump.getString("entire_string");
-                    } 
-                    // while (rsDump.next()) {
-                    //     var csvRow = new JsonObject();
-                    //     csvRow.addProperty("plot_id", rsDump.getString("plot_id"));
-                    //     csvRow.addProperty("sample_id", rsDump.getString("sample_id"));
-                    //     csvRow.addProperty("lon", rsDump.getString("lon"));
-                    //     csvRow.addProperty("lat", rsDump.getString("lat"));
-                    //     csvRow.addProperty("flagged", rsDump.getBoolean("flagged"));
-                    //     csvRow.addProperty("assigned", rsDump.getBoolean("assigned"));
-                    //     csvRow.addProperty("email", valueOrBlank(rsDump.getString("email")));
-                    //     csvRow.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
-                    //     sampleSummaries.add(csvRow);
-                    // } 
+                    try(var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_sample_data(?)")){
+                        pstmtDump.setInt(1, Integer.parseInt(projectId));
+                        
+                        try(var rsDump = pstmtDump.executeQuery()){
+                            while (rsDump.next()) {
+                                var plotSummary = new JsonObject();
+                                plotSummary.addProperty("plot_id", rsDump.getString("plot_id"));
+                                plotSummary.addProperty("sample_id", rsDump.getString("sample_id"));
+                                plotSummary.addProperty("lon", rsDump.getString("lon"));
+                                plotSummary.addProperty("lat", rsDump.getString("lat"));
+                                plotSummary.addProperty("flagged", rsDump.getInt("flagged") > 0);
+                                plotSummary.addProperty("analyses", rsDump.getInt("assigned"));
+                                plotSummary.addProperty("user_id", valueOrBlank(rsDump.getString("email")));
+                                plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
+                                if (rsDump.getString("value") != null && parseJson(rsDump.getString("value")).isJsonPrimitive()) {
+                                    plotSummary.addProperty("value", rsDump.getString("value"));
+                                } else {
+                                    plotSummary.add("value", rsDump.getString("value") == null ? null : parseJson(rsDump.getString("value")).getAsJsonObject());
+                                }
+                                sampleSummaries.add(plotSummary);
+                            } 
+                        }
 
-                } else {
-                    res.raw().setStatus(SC_NO_CONTENT);
-                    return res.raw();
-                }
-            
-            
-                var sampleValueGroupNames = toStream(sampleValueGroups)
+                        var sampleValueGroupNames = toStream(sampleValueGroups)
                         .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
-                                sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
+                                sampleValueGroup -> sampleValueGroup.get(sampleValueKeys[0]).getAsString(),
                                 (a, b) -> b));
 
-                var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "timestamp"};
-                var labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
-                
-                var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+                        var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collection_time"};
+                        var labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
 
-                // var csvContent = toStream(sampleSummaries)
-                //         .map(sampleSummary -> {
-                //             var fieldStream = Arrays.stream(fields);
-                //             var labelStream = Arrays.stream(labels);
-                //             return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
-                //                     labelStream.map(label -> {
-                //                         var value = sampleSummary.get("value");
-                //                         if (value.isJsonNull()) {
-                //                             return "";
-                //                         } else if (value.isJsonPrimitive()) {
-                //                             return sampleValueTranslations
-                //                                     .getOrDefault(value.getAsInt(), "LULC:NoValue")
-                //                                     .split(":")[1];
-                //                         } else {
-                //                             return value.getAsJsonObject().get(label).getAsString();
-                //                         }}))
-                //                     .collect(Collectors.joining(","));
-                //         })
-                //         .collect(Collectors.joining("\n"));
+                        var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
 
+                        var csvContent = toStream(sampleSummaries)
+                                .map(sampleSummary -> {
+                                    var fieldStream = Arrays.stream(fields);
+                                    var labelStream = Arrays.stream(labels);
+                                    return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
+                                            labelStream.map(label -> {
+                                                var value = sampleSummary.get("value");
+                                                if (value.isJsonNull()) {
+                                                    return "";
+                                                // original format is single integer index
+                                                } else if (value.isJsonPrimitive()) {
+                                                    var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups, sampleValueKeys);
+                                                    return sampleValueTranslations
+                                                            .getOrDefault(value.getAsInt(), "LULC:NoValue")
+                                                            .split(":")[1];
+                                                } else if (value.getAsJsonObject().has(label)) {
+                                                    if (value.getAsJsonObject().get(label).isJsonPrimitive()){
+                                                        return value.getAsJsonObject().get(label).getAsString();
+                                                    }
+                                                    // newest format nests the answer in another json object
+                                                    return value.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString();
+                                                } else {
+                                                    return "";
+                                                }
+                                            })).collect(Collectors.joining(","));         
+                                }).collect(Collectors.joining("\n"));
 
-                var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
-                var currentDate = LocalDate.now().toString();
-                var outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate;
-                
-                return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
+                        var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
+                        var currentDate = LocalDate.now().toString();
+                        var outputFileName = "ceo-" + projectName + "-sample-data-" + currentDate;
+
+                        return writeCsvFile(res.raw(), csvHeader, csvContent, outputFileName);
+                    }
             }
+        }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return res.raw();
         }
+        res.raw().setStatus(SC_NO_CONTENT);
+        return res.raw();
     }
 
     public String publishProject(Request req, Response res) {

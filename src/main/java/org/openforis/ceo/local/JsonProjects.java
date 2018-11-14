@@ -279,30 +279,36 @@ public class JsonProjects implements Projects {
     private static Collector<String, ?, Map<String, Long>> countDistinct =
             Collectors.groupingBy(Function.identity(), Collectors.counting());
 
-    // FIXME: Update this function for the new surveyQuestion JSON structure
-    private static String[] getValueDistributionLabels(JsonObject project) {
-        var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+    private static String[] getSampleKeys(JsonArray sampleValueGroups) {
+        var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
+        if (firstGroup.has("name")) {
+            return new String[]{"name", "values", "name"};
+        }
+        if (firstGroup.has("question")) {
+            return new String[]{"question", "answers", "answer"};
+        }
+        return new String[]{};
+    }
+
+    private static String[] getValueDistributionLabels(JsonArray sampleValueGroups, String[] keys) {
         return toStream(sampleValueGroups)
                 .flatMap(group -> {
-                    var sampleValues = group.get("values").getAsJsonArray();
+                    var sampleValues = group.get(keys[1]).getAsJsonArray();
                     return toStream(sampleValues)
-                            .map(sampleValue -> group.get("name").getAsString() + ":" + sampleValue.get("name").getAsString());
+                            .map(sampleValue -> group.get(keys[0]).getAsString() + ":" + sampleValue.get(keys[2]).getAsString());
                 })
                 .toArray(String[]::new);
     }
 
-    // FIXME: Update this function for the new surveyQuestion JSON structure
-    private static Map<Integer, String> getSampleValueTranslations(JsonObject project) {
-        var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+    private static Map<Integer, String> getSampleValueTranslations(JsonArray sampleValueGroups, String[] keys) {
         var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
-        var firstGroupName = firstGroup.get("name").getAsString();
-        return toStream(firstGroup.get("values").getAsJsonArray())
+        var firstGroupName =  firstGroup.get(keys[0]).getAsString();
+        return toStream(firstGroup.get(keys[1]).getAsJsonArray())
                 .collect(Collectors.toMap(sampleValue -> sampleValue.get("id").getAsInt(),
-                        sampleValue -> firstGroupName + ":" + sampleValue.get("name").getAsString(),
+                        sampleValue -> firstGroupName + ":" + sampleValue.get(keys[2]).getAsString(),
                         (a, b) -> b));
     }
 
-    // FIXME: Update this function for the new surveyQuestion JSON structure
     // Returns a JsonObject like this:
     // {"Land Use:Timber" 10.0,
     //  "Land Use:Agriculture": 20.0,
@@ -326,7 +332,10 @@ public class JsonProjects implements Projects {
             var valueCounts = toStream(samples)
                     .flatMap(sample -> sample.get("value").getAsJsonObject().entrySet().stream())
                     .collect(Collectors.groupingBy(Map.Entry::getKey,
-                            Collectors.mapping(entry -> entry.getValue().getAsString(),
+                            Collectors.mapping(entry -> entry.getValue().isJsonPrimitive()
+                                    ? entry.getValue().getAsString()
+                                    // new answer is store in a nested obect (and therefore isnt a primitive at this point)
+                                    : entry.getValue().getAsJsonObject().get("answer").getAsString(),
                                     countDistinct)));
             var valueDistribution = new JsonObject();
             valueCounts.forEach((group, frequencies) -> {
@@ -351,7 +360,6 @@ public class JsonProjects implements Projects {
         return response;
     }
 
-    // FIXME: Update this function for the new surveyQuestion JSON structure
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         var projectId = req.params(":id");
         var projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -359,7 +367,11 @@ public class JsonProjects implements Projects {
 
         if (matchingProject.isPresent()) {
             var project = matchingProject.get();
-            var sampleValueTranslations = getSampleValueTranslations(project);
+            var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+            var sampleValueKeys = getSampleKeys(sampleValueGroups);
+
+            var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups, sampleValueKeys);
+
             var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             var plotSummaries = mapJsonArray(plots,
                     plot -> {
@@ -376,31 +388,32 @@ public class JsonProjects implements Projects {
                         plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                         plotSummary.addProperty("sample_points", samples.size());
                         plotSummary.add("user_id", plot.get("user"));
-                        plotSummary.add("collectTime", plot.get("collectTime"));
+                        plotSummary.add("collection_time", plot.get("collection_time"));
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, sampleValueTranslations));
                         return plotSummary;
                     });
 
             var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collection_time"};
-            var labels = getValueDistributionLabels(project);
+            var labels = getValueDistributionLabels(sampleValueGroups, sampleValueKeys);
 
             var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
-
             var csvContent = toStream(plotSummaries)
                     .map(plotSummary -> {
                         var fieldStream = Arrays.stream(fields);
                         var labelStream = Arrays.stream(labels);
                         var distribution = plotSummary.get("distribution").getAsJsonObject();
-                        return Stream.concat(fieldStream.map(field -> plotSummary.get(field).isJsonNull()
+                        return Stream.concat(
+                                fieldStream.map(field -> plotSummary.get(field).isJsonNull()
                                         ? ""
                                         : plotSummary.get(field).getAsString()),
                                 labelStream.map(label -> distribution.has(label)
-                                        ? distribution.get(label).getAsString()
-                                        : "0.0"))
-                                .collect(Collectors.joining(","));
-                    })
-                    .collect(Collectors.joining("\n"));
+                                        ? distribution.getAsJsonObject().get(label).isJsonPrimitive() 
+                                            ? distribution.get(label).getAsString()
+                                            : distribution.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString()
+                                        : "0.0")
+                                ).collect(Collectors.joining(","));
+                        }).collect(Collectors.joining("\n"));
 
             var projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
             var currentDate = LocalDate.now().toString();
@@ -413,7 +426,6 @@ public class JsonProjects implements Projects {
         }
     }
 
-    // FIXME: Update this function for the new surveyQuestion JSON structure
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         var projectId = req.params(":id");
         var projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -421,7 +433,9 @@ public class JsonProjects implements Projects {
 
         if (matchingProject.isPresent()) {
             var project = matchingProject.get();
-            var sampleValueTranslations = getSampleValueTranslations(project);
+            var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+            var sampleValueKeys = getSampleKeys(sampleValueGroups);
+
             var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             var sampleSummaries = flatMapJsonArray(plots,
                     plot -> {
@@ -449,10 +463,9 @@ public class JsonProjects implements Projects {
                         });
                     });
 
-            var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
-            var sampleValueGroupNames = toStream(sampleValueGroups)
+                    var sampleValueGroupNames = toStream(sampleValueGroups)
                     .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
-                            sampleValueGroup -> sampleValueGroup.get("name").getAsString(),
+                            sampleValueGroup -> sampleValueGroup.get(sampleValueKeys[0]).getAsString(),
                             (a, b) -> b));
 
             var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collection_time"};
@@ -469,13 +482,22 @@ public class JsonProjects implements Projects {
                                     var value = sampleSummary.get("value");
                                     if (value.isJsonNull()) {
                                         return "";
+                                    // original format is single integer index
                                     } else if (value.isJsonPrimitive()) {
+                                        var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups, sampleValueKeys);
                                         return sampleValueTranslations
                                                 .getOrDefault(value.getAsInt(), "LULC:NoValue")
                                                 .split(":")[1];
+                                    } else if (value.getAsJsonObject().has(label)) {
+                                        if (value.getAsJsonObject().get(label).isJsonPrimitive()){
+                                            return value.getAsJsonObject().get(label).getAsString();
+                                        }
+                                        // newest format nests the answer in another json object
+                                        return value.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString();
                                     } else {
-                                        return value.getAsJsonObject().get(label).getAsString();
-                                    }}))
+                                        return "";
+                                    }
+                                }))
                                 .collect(Collectors.joining(","));
                     })
                     .collect(Collectors.joining("\n"));
