@@ -47,7 +47,10 @@ class Institution extends React.Component {
     updateInstitution() {
         var formData = new FormData();
         formData.append("userid", this.props.userId);
-        formData.append("institution-name", this.state.details.name);
+        if(this.state.details.name=="") {
+            formData.append("institution-name", "Lost_institution_name");
+        }
+        else formData.append("institution-name", this.state.details.name);
         formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
         formData.append("institution-url", this.state.details.url);
         formData.append("institution-description", this.state.details.description);
