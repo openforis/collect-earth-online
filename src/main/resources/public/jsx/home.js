@@ -156,7 +156,7 @@ class SideBar extends React.Component {
             tempChecked:[]
         };
         this.filterCall=this.filterCall.bind(this);
-        this.testFun=this.testFun.bind(this);
+        this.filterAlphabetically=this.filterAlphabetically.bind(this);
     }
     componentDidMount() {
         // Fetch institutions
@@ -182,6 +182,7 @@ class SideBar extends React.Component {
                 this.setState({tempChecked:tchecked});
                 this.setState({filteredInstitutions: data,institutions:data})});
     }
+
     filterCall(e) {
         const filterText = e.target.value;
         if (filterText != '') {
@@ -196,8 +197,12 @@ class SideBar extends React.Component {
         else {
             this.setState({filteredInstitutions: this.state.institutions});
         }
+        var x=this.state.checkedInstitutions;
+        var result = this.state.filteredInstitutions.filter(function(n) {
+            return x.indexOf(n) > -1;
+        });
     }
-    testFun(e) {
+    filterAlphabetically(e) {
         var tchecked = this.state.tempChecked;
         tchecked.map((checkedInst) => {
             if (checkedInst["alphabet"].toLocaleUpperCase() == e.target.innerHTML.toLocaleUpperCase() && checkedInst["isChecked"] == false) {
@@ -210,7 +215,6 @@ class SideBar extends React.Component {
         this.setState({tempChecked: tchecked});
         let checkedInsts = this.state.checkedInstitutions;
         let checkedInst = tchecked.filter((ch) => (ch["alphabet"].toLocaleUpperCase() == e.target.innerHTML.toLocaleUpperCase()));
-        console.log(checkedInst[0]["isChecked"]);
         if (checkedInst[0]["isChecked"] == true) {
             const filtered = this.state.institutions.filter(inst => (inst.name.substring(0, 1).toLocaleLowerCase()) == checkedInst[0]["alphabet"].toLocaleLowerCase());
             let finalArr = checkedInsts.concat(filtered);
@@ -242,7 +246,9 @@ class SideBar extends React.Component {
                 <ul className="tree">
                     <CreateInstitutionButton userName={this.props.userName} documentRoot={this.props.documentRoot}/>
                     <InstitutionFilter documentRoot={this.props.documentRoot} filterCall={this.filterCall}/>
-                    <div className="form-control" style={{textAlign:"center"}}><Test filteredInstitutions={this.state.institutions} testFun={this.testFun} tempChecked={this.state.tempChecked}/></div>
+                    <div className="form-control" style={{textAlign:"center"}}>
+                        <FilterAlphabetically filteredInstitutions={this.state.institutions} filterAlphabetically={this.filterAlphabetically} tempChecked={this.state.tempChecked}/>
+                    </div>
                     <InstitutionList filteredInstitutions={this.state.filteredInstitutions} projects={this.props.projects}
                                      documentRoot={this.props.documentRoot}/>
                 </ul>
@@ -288,7 +294,7 @@ function InstitutionList(props) {
     );
 }
 
-function Test(props) {
+function FilterAlphabetically(props) {
     let tmp=props.tempChecked.sort(function(a,b){
         if( a["alphabet"].toLocaleUpperCase() > b["alphabet"].toLocaleUpperCase()){
             return 1;
@@ -297,12 +303,10 @@ function Test(props) {
         }
         return 0;
     });
-    console.log("from test");
-    console.log(tmp);
     return (
        tmp.map((letter, uid) =>
             <React.Fragment key={uid}>
-                <button className={letter["isChecked"]==true?"btn btn-sm bg-lightgreen":"btn btn-sm btn-outline-lightgreen"} onClick={(e)=>props.testFun(e)}>{letter["alphabet"].toLocaleUpperCase()}</button>
+                <button className={letter["isChecked"]==true?"btn btn-sm bg-lightgreen":"btn btn-sm btn-outline-lightgreen"} onClick={(e)=>props.filterAlphabetically(e)}>{letter["alphabet"].toLocaleUpperCase()}</button>
             </React.Fragment>
         )
     );
