@@ -60,16 +60,13 @@ class Project extends React.Component {
     };
 
     componentDidMount() {
-        this.initialization(this.props.documentRoot, this.state.userId, this.state.projectId, this.state.institutionId);
-    }
-
-    initialization(documentRoot, userId, projectId, institutionId) {
+        let institution = this.state.institutionId;
         if (this.state.details == null) {
-            this.getProjectById(projectId);
+            this.getProjectById(this.state.projectId);
         }
         else {
-
             if (this.state.details.id == 0) {
+                institution = this.state.institutionId;
                 this.state.details.privacyLevel = "private";
                 this.state.details.projectDistribution = "random";
                 if (document.getElementById("sample-distribution-random") != null) {
@@ -80,21 +77,20 @@ class Project extends React.Component {
                 }
                 this.state.details.plotShape = "circle";
                 this.state.details.sampleDistribution = "random";
-                this.getProjectList(userId, projectId);
+                this.getProjectList(this.state.userId, this.state.projectId);
             }
-            else if (this.state.details.id != 0) {
+            if (this.state.details.id != 0) {
+                institution = this.state.details.institution;
                 if (document.getElementById("num-plots") != null) {
-
                     if (document.getElementById("plot-distribution-gridded").checked)
                         document.getElementById("plot-design-text").innerHTML = "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
                     if (document.getElementById("plot-distribution-random").checked) {
                         document.getElementById("plot-design-text").innerHTML = "Plot centers will be randomly distributed within the AOI.";
                     }
                     if (document.getElementById("plot-distribution-csv").checked)
-                        document.getElementById("plot-design-text").innerHTML ="Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
+                        document.getElementById("plot-design-text").innerHTML = "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
                     if (document.getElementById("plot-distribution-shp").checked)
-                        document.getElementById("plot-design-text").innerHTML ="Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
-
+                        document.getElementById("plot-design-text").innerHTML = "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
                     if (document.getElementById("sample-distribution-gridded").checked)
                         document.getElementById("sample-design-text").innerHTML = "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.";
                     if (document.getElementById("sample-distribution-random").checked)
@@ -103,21 +99,16 @@ class Project extends React.Component {
                         document.getElementById("sample-design-text").innerHTML = "Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.";
                     if (document.getElementById("sample-distribution-shp").checked)
                         document.getElementById("sample-design-text").innerHTML = "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.";
-
                 }
-                this.getProjectStats(projectId);
+                this.getProjectStats(this.state.projectId);
             }
-            if (this.state.imageryList == null) {
-                this.getImageryList(institutionId);
-            }
-            else this.updateUnmanagedComponents(projectId);
+
+        }
+        if (this.state.imageryList == null) {
+            this.getImageryList(institution);
         }
     }
 
-    // var logFormData=function(formData)
-    // {
-    //     console.log(new Map(formData.entries()));
-    // };
     createProject() {
         if (confirm("Do you REALLY want to create this project?")) {
             utils.show_element("spinner");
@@ -618,11 +609,7 @@ class Project extends React.Component {
                     }
                     detailsNew.sampleValues=newSV;
                     this.setState({details: detailsNew});
-                    if (this.state.details.id == 0) {
-                        this.initialization(this.props.documentRoot, this.state.userId, projectId, this.state.institutionId);
-                    } else {
-                        this.initialization(this.props.documentRoot, this.state.userId, projectId, this.state.details.institution);
-                    }
+                    this.updateUnmanagedComponents(this.state.projectId);
                 }
             });
     }
@@ -644,6 +631,7 @@ class Project extends React.Component {
                 this.setState({projectList: projList});
                 this.setState({userId: userId});
                 this.setState({projectId: "" + projectId});
+                this.updateUnmanagedComponents(this.state.projectId);
             });
     }
 
@@ -659,7 +647,6 @@ class Project extends React.Component {
             })
             .then(data => {
                 this.setState({imageryList: data});
-                this.initialization(this.props.documentRoot, this.props.userId, this.state.details.id, this.props.institutionId);
             });
     }
 
@@ -1034,7 +1021,7 @@ function ProjectAOI(props) {
 function ProjectImagery(props) {
     var project = props.project;
     if (project.imageryList != null) {
-        if(project.details.baseMapSource==null){
+        if(project.details && project.details.baseMapSource==null){
             project.details.baseMapSource="";
         }
         return (
@@ -1046,7 +1033,7 @@ function ProjectImagery(props) {
                             <h3 htmlFor="base-map-source">Basemap Source</h3>
                             <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                                     size="1"
-                                    value={project.details.baseMapSource} onChange={props.setBaseMapSource}>
+                                    value={project.details?project.details.baseMapSource:""} onChange={props.setBaseMapSource}>
                                 {
                                     project.imageryList.map((imagery,uid) =>
                                         <option key={uid} value={imagery.title}>{imagery.title}</option>

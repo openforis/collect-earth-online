@@ -87,9 +87,9 @@ class Project extends React.Component {
                     if (document.getElementById("plot-distribution-random").checked)
                         document.getElementById("plot-design-text").innerHTML = "Plot centers will be randomly distributed within the AOI.";
                     if (document.getElementById("plot-distribution-csv").checked)
-                        document.getElementById("plot-design-text").innerHTML ="Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
+                        document.getElementById("plot-design-text").innerHTML = "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
                     if (document.getElementById("plot-distribution-shp").checked)
-                        document.getElementById("plot-design-text").innerHTML ="Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
+                        document.getElementById("plot-design-text").innerHTML = "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
 
                     if (document.getElementById("sample-distribution-gridded").checked)
                         document.getElementById("sample-design-text").innerHTML = "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.";
@@ -103,10 +103,12 @@ class Project extends React.Component {
                 }
                 this.getProjectStats(projectId);
             }
-            if (this.state.imageryList == null) {
+            else if (this.state.imageryList == null) {
                 this.getImageryList(institutionId);
             }
-            else this.updateUnmanagedComponents(projectId);
+            else
+                this.updateUnmanagedComponents(projectId);
+
         }
     }
 

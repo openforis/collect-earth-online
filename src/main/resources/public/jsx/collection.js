@@ -773,7 +773,7 @@ function SurveyQuestionTree(props) {
                     className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                     onClick={() => props.hideShowAnswers(props.surveyNode.id)}
                     style={{marginBottom: "10px"}}>
-                Survey Question: {props.surveyNode.question}
+                 {props.surveyNode.question}
             </button>
             <ul className={"samplevalue justify-content-center"
                            + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
