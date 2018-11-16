@@ -41,6 +41,7 @@
             the data provided. Users are, however, kindly asked to
             report any errors or deficiencies in this product.
         </p>
+        <p>Please access <a href="http://www.openforis.org/tools/sepal.html" target="_blank">OpenForis-SEPAL</a> for more information about SEPAL.</p>
         <#include "logo-banner.ftl">
     </div>
 </section>
