@@ -585,7 +585,6 @@ $$ LANGUAGE SQL;
 
 -- Returns project aggregate data
 DROP FUNCTION dump_project_plot_data(integer);
-DROP FUNCTION dump_project_plot_data(integer);
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer) 
     RETURNS TABLE (
            plot_id          integer,
@@ -1048,14 +1047,6 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 
 $$ LANGUAGE SQL;
 
--- Select singe plot
-CREATE OR REPLACE FUNCTION select_single_plot(_plot_id integer) 
-    RETURNS setOf plots_return AS $$
-
-	SELECT * FROM select_all_plots()
-	WHERE id = _plot_id
-
-$$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 

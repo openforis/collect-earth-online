@@ -1,8 +1,6 @@
 package org.openforis.ceo.utils;
 
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
-import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
-import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 
 import com.google.gson.JsonArray;
@@ -18,9 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.function.Function;
@@ -268,6 +265,7 @@ public class ProjectUtils {
         return new Double[]{lowerLeft[0], lowerLeft[1], upperRight[0], upperRight[1]};
     }
 
+    // add internal padding before calculating centers so the exterior of the plot is within the bounds
     public static Double[] padBounds(double left, double bottom, double right, double top, double buffer) {
         return new Double[]{left + buffer, bottom + buffer, right - buffer, top - buffer};
     }
@@ -348,52 +346,6 @@ public class ProjectUtils {
                 .toArray(Double[][]::new);
     }
 
-    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID
-    public static HashMap<String, Double[]> loadCsvPlotPoints(String filename) {
-        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
-            var plotPoints = new HashMap<String, Double[]>();
-            lines
-                .skip(1)
-                .forEach(line -> {
-                        var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
-                        var plotId = fields[2];
-                        var plotCenter = new Double[]{Double.parseDouble(fields[0]),
-                                                      Double.parseDouble(fields[1])};
-                        plotPoints.put(plotId, plotCenter);
-                    });
-            return plotPoints;
-        } catch (Exception e) {
-            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.");
-        }
-    }
-
-    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID,SAMPLEID
-    public static HashMap<String, HashMap<String, Double[]>> loadCsvSamplePoints(String filename) {
-        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
-            var samplesByPlot = new HashMap<String, HashMap<String, Double[]>>();
-            lines
-                .skip(1)
-                .forEach(line -> {
-                        var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
-                        var plotId = fields[2];
-                        var sampleId = fields[3];
-                        var sampleCenter = new Double[]{Double.parseDouble(fields[0]),
-                                                        Double.parseDouble(fields[1])};
-                        if (samplesByPlot.containsKey(plotId)) {
-                            var samplePoints = samplesByPlot.get(plotId);
-                            samplePoints.put(sampleId, sampleCenter);
-                        } else {
-                            var samplePoints = new HashMap<String, Double[]>();
-                            samplePoints.put(sampleId, sampleCenter);
-                            samplesByPlot.put(plotId, samplePoints);
-                        }
-                    });
-            return samplesByPlot;
-        } catch (Exception e) {
-            throw new RuntimeException("Malformed sample CSV. Fields must be LON,LAT,PLOTID,SAMPLEID.");
-        }
-    }
-
     public static Double[] calculateBounds(Double[][] points, double buffer) {
         var lons = Arrays.stream(points).map(point -> point[0]).toArray(Double[]::new);
         var lats = Arrays.stream(points).map(point -> point[1]).toArray(Double[]::new);
@@ -414,33 +366,12 @@ public class ProjectUtils {
         return obj.get(field).isJsonNull() ? new JsonPrimitive("") : obj.get(field);
     }
 
-    private static void deleteShapeFileDirectory(String shapeFileDirectory) {
-        var shapeFileDirectoryPath = Paths.get(expandResourcePath("/shp"), shapeFileDirectory);
+    public static void runBashScriptForProject(int projectId, String plotsOrSamples, String script, String rpath) {
         try {
-            if (shapeFileDirectoryPath.toFile().exists()) {
-                System.out.println("Deleting directory at: " + shapeFileDirectoryPath);
-                Files.walk(shapeFileDirectoryPath)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-            } else {
-                System.out.println("No directory found at: " + shapeFileDirectoryPath);
-            }
-        } catch (Exception e) {
-            System.out.println("Error deleting directory at: " + shapeFileDirectoryPath);
-        }
-    }
-
-    private static void deleteShapeFileDirectories(int projectId) {
-        deleteShapeFileDirectory("project-" + projectId + "-plots");
-        deleteShapeFileDirectory("project-" + projectId + "-samples");
-    }
-
-    public static void extractZipFileToGeoJson(int projectId, String plotsOrSamples) {
-        try {
-            System.out.println("Converting the uploaded ZIP file into GeoJSON.");
-            var pb = new ProcessBuilder("/bin/sh", "shp2geojson.sh", "project-" + projectId + "-" + plotsOrSamples);
-            pb.directory(new File(expandResourcePath("/shp")));
+            System.out.println("Runnin " + script);
+            var pb = new ProcessBuilder("/bin/sh", script, "project-" + projectId + "-" + plotsOrSamples);
+            pb.directory(new File(expandResourcePath(rpath)));
+            pb.redirectOutput(new File("out.txt"));
             var p = pb.start();
             if (p.waitFor(10L, TimeUnit.SECONDS)) {
                 System.out.println("Linux Conversion complete.");
@@ -451,9 +382,11 @@ public class ProjectUtils {
         } catch (Exception e) {
             // for windows
             try {
-                System.out.println("Converting the uploaded ZIP file into GeoJSON with git bash.");
-                var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", "shp2geojson.sh", "project-" + projectId + "-" + plotsOrSamples);
-                pb.directory(new File(expandResourcePath("/shp")));
+                System.out.println("Runnin " + script + " with git bash.");
+                var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", script, "project-" + projectId + "-" + plotsOrSamples);
+                pb.directory(new File(expandResourcePath(rpath)));
+                // For some reason shp2pgsql needs this to work
+                pb.redirectOutput(new File("out.txt"));
                 var p = pb.start();
                 if (p.waitFor(10L, TimeUnit.SECONDS)) {
                     System.out.println("Git bash Conversion complete.");
@@ -468,113 +401,27 @@ public class ProjectUtils {
         }
     }
 
-    // The uploaded GeoJson must contain Polygon geometries with PLOTID properties
-    public static HashMap<String, JsonObject> getGeoJsonPlotGeometries(int projectId) {
+    private static void deleteShapeFileDirectory(String shapeFileDirectory) {
+        var shapeFileDirectoryPath = Paths.get(expandResourcePath("/shp"), shapeFileDirectory);
         try {
-            var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
-                                       + "/project-" + projectId + "-plots.json").getAsJsonObject();
-            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
-                var plotGeoms = new HashMap<String, JsonObject>();
-                toStream(geoJson.get("features").getAsJsonArray())
-                    .filter(feature -> {
-                            var geometry = feature.get("geometry").getAsJsonObject();
-                            return geometry.get("type").getAsString().equals("Polygon");
-                        })
-                    .forEach(feature -> {
-                            var geometry = feature.get("geometry").getAsJsonObject();
-                            var properties = feature.get("properties").getAsJsonObject();
-                            var plotId = properties.get("PLOTID").getAsString();
-                            plotGeoms.put(plotId, geometry);
-                        });
-                return plotGeoms;
+            if (shapeFileDirectoryPath.toFile().exists()) {
+                // System.out.println("Deleting directory at: " + shapeFileDirectoryPath);
+                Files.walk(shapeFileDirectoryPath)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
             } else {
-                throw new RuntimeException("");
+                // System.out.println("No directory found at: " + shapeFileDirectoryPath);
             }
         } catch (Exception e) {
-            deleteShapeFileDirectories(projectId);
-            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.");
+            System.out.println("Error deleting directory at: " + shapeFileDirectoryPath);
         }
     }
 
-    // The uploaded GeoJson must contain Polygon geometries with PLOTID and SAMPLEID properties
-    public static HashMap<String, HashMap<String, JsonObject>> getGeoJsonSampleGeometries(int projectId) {
-        try {
-            var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
-                                       + "/project-" + projectId + "-samples.json").getAsJsonObject();
-            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
-                var sampleGeomsByPlot = new HashMap<String, HashMap<String, JsonObject>>();
-                toStream(geoJson.get("features").getAsJsonArray())
-                    .filter(feature -> {
-                            var geometry = feature.get("geometry").getAsJsonObject();
-                            return geometry.get("type").getAsString().equals("Polygon");
-                        })
-                    .forEach(feature -> {
-                            var geometry = feature.get("geometry").getAsJsonObject();
-                            var properties = feature.get("properties").getAsJsonObject();
-                            var plotId = properties.get("PLOTID").getAsString();
-                            var sampleId = properties.get("SAMPLEID").getAsString();
-                            if (sampleGeomsByPlot.containsKey(plotId)) {
-                                var sampleGeoms = sampleGeomsByPlot.get(plotId);
-                                sampleGeoms.put(sampleId, geometry);
-                            } else {
-                                var sampleGeoms = new HashMap<String, JsonObject>();
-                                sampleGeoms.put(sampleId, geometry);
-                                sampleGeomsByPlot.put(plotId, sampleGeoms);
-                            }
-                        });
-                return sampleGeomsByPlot;
-            } else {
-                throw new RuntimeException("");
-            }
-        } catch (Exception e) {
-            deleteShapeFileDirectories(projectId);
-            throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.");
-        }
+    public static void deleteShapeFileDirectories(int projectId) {
+        deleteShapeFileDirectory("project-" + projectId + "-plots");
+        deleteShapeFileDirectory("project-" + projectId + "-samples");
     }
 
-    private static Double[] getGeometryCentroid(JsonObject geoJsonGeometry) {
-        var coordinates = geoJsonGeometry.get("coordinates").getAsJsonArray();
-        var exteriorRing = coordinates.get(0).getAsJsonArray();
-        var centroidX = toElementStream(exteriorRing)
-            .skip(1) // linear rings repeat the same point as their first and last vertex
-            .mapToDouble(point -> point.getAsJsonArray().get(0).getAsDouble())
-            .average()
-            .getAsDouble();
-        var centroidY = toElementStream(exteriorRing)
-            .skip(1) // linear rings repeat the same point as their first and last vertex
-            .mapToDouble(point -> point.getAsJsonArray().get(1).getAsDouble())
-            .average()
-            .getAsDouble();
-        return new Double[]{centroidX, centroidY};
-    }
-
-    // FIXME: Can you re-implement this using the Collectors functions?
-    public static HashMap<String, Double[]> getPlotGeometryCenters(HashMap<String, JsonObject> plotGeoms) {
-        var plotCenters = new HashMap<String, Double[]>();
-        plotGeoms.entrySet().forEach(plot -> {
-                var plotId = plot.getKey();
-                var plotGeom = plot.getValue();
-                var centroid = getGeometryCentroid(plotGeom);
-                plotCenters.put(plotId, centroid);
-            });
-        return plotCenters;
-    }
-
-    // FIXME: Can you re-implement this using the Collectors functions?
-    public static HashMap<String, HashMap<String, Double[]>> getSampleGeometryCenters(HashMap<String, HashMap<String, JsonObject>> sampleGeomsByPlot) {
-        var sampleCentersByPlot = new HashMap<String, HashMap<String, Double[]>>();
-        sampleGeomsByPlot.entrySet().forEach(plot -> {
-                var plotId = plot.getKey();
-                var sampleGeoms = plot.getValue();
-                var sampleCenters = new HashMap<String, Double[]>();
-                sampleGeoms.entrySet().forEach(sample -> {
-                        var sampleId = sample.getKey();
-                        var sampleGeom = sample.getValue();
-                        var centroid = getGeometryCentroid(sampleGeom);
-                        sampleCenters.put(sampleId, centroid);
-                    });
-                sampleCentersByPlot.put(plotId, sampleCenters);
-            });
-        return sampleCentersByPlot;
-    }
+    
 }

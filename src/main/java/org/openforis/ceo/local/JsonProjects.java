@@ -19,13 +19,14 @@ import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
 import static org.openforis.ceo.utils.ProjectUtils.*;
 
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -452,6 +453,162 @@ public class JsonProjects implements Projects {
         return () -> { counter[0] += 1; return counter[0]; };
     }
 
+     // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID
+    private static HashMap<String, Double[]> loadCsvPlotPoints(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            var plotPoints = new HashMap<String, Double[]>();
+            lines
+                .skip(1)
+                .forEach(line -> {
+                        var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
+                        var plotId = fields[2];
+                        var plotCenter = new Double[]{Double.parseDouble(fields[0]),
+                                                      Double.parseDouble(fields[1])};
+                        plotPoints.put(plotId, plotCenter);
+                    });
+            return plotPoints;
+        } catch (Exception e) {
+            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.");
+        }
+    }
+
+    // NOTE: The CSV file should contain a header row (which will be skipped) and these fields: LON,LAT,PLOTID,SAMPLEID
+    private static HashMap<String, HashMap<String, Double[]>> loadCsvSamplePoints(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            var samplesByPlot = new HashMap<String, HashMap<String, Double[]>>();
+            lines
+                .skip(1)
+                .forEach(line -> {
+                        var fields = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
+                        var plotId = fields[2];
+                        var sampleId = fields[3];
+                        var sampleCenter = new Double[]{Double.parseDouble(fields[0]),
+                                                        Double.parseDouble(fields[1])};
+                        if (samplesByPlot.containsKey(plotId)) {
+                            var samplePoints = samplesByPlot.get(plotId);
+                            samplePoints.put(sampleId, sampleCenter);
+                        } else {
+                            var samplePoints = new HashMap<String, Double[]>();
+                            samplePoints.put(sampleId, sampleCenter);
+                            samplesByPlot.put(plotId, samplePoints);
+                        }
+                    });
+            return samplesByPlot;
+        } catch (Exception e) {
+            throw new RuntimeException("Malformed sample CSV. Fields must be LON,LAT,PLOTID,SAMPLEID.");
+        }
+    }
+
+    // The uploaded GeoJson must contain Polygon geometries with PLOTID properties
+    private static HashMap<String, JsonObject> getGeoJsonPlotGeometries(int projectId) {
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
+                                       + "/project-" + projectId + "-plots.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                var plotGeoms = new HashMap<String, JsonObject>();
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var plotId = properties.get("PLOTID").getAsString();
+                            plotGeoms.put(plotId, geometry);
+                        });
+                return plotGeoms;
+            } else {
+                throw new RuntimeException("");
+            }
+        } catch (Exception e) {
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.");
+        }
+    }
+
+    // The uploaded GeoJson must contain Polygon geometries with PLOTID and SAMPLEID properties
+    private static HashMap<String, HashMap<String, JsonObject>> getGeoJsonSampleGeometries(int projectId) {
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
+                                       + "/project-" + projectId + "-samples.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                var sampleGeomsByPlot = new HashMap<String, HashMap<String, JsonObject>>();
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var plotId = properties.get("PLOTID").getAsString();
+                            var sampleId = properties.get("SAMPLEID").getAsString();
+                            if (sampleGeomsByPlot.containsKey(plotId)) {
+                                var sampleGeoms = sampleGeomsByPlot.get(plotId);
+                                sampleGeoms.put(sampleId, geometry);
+                            } else {
+                                var sampleGeoms = new HashMap<String, JsonObject>();
+                                sampleGeoms.put(sampleId, geometry);
+                                sampleGeomsByPlot.put(plotId, sampleGeoms);
+                            }
+                        });
+                return sampleGeomsByPlot;
+            } else {
+                throw new RuntimeException("");
+            }
+        } catch (Exception e) {
+            deleteShapeFileDirectories(projectId);
+            throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.");
+        }
+    }
+
+    private static Double[] getGeometryCentroid(JsonObject geoJsonGeometry) {
+        var coordinates = geoJsonGeometry.get("coordinates").getAsJsonArray();
+        var exteriorRing = coordinates.get(0).getAsJsonArray();
+        var centroidX = toElementStream(exteriorRing)
+            .skip(1) // linear rings repeat the same point as their first and last vertex
+            .mapToDouble(point -> point.getAsJsonArray().get(0).getAsDouble())
+            .average()
+            .getAsDouble();
+        var centroidY = toElementStream(exteriorRing)
+            .skip(1) // linear rings repeat the same point as their first and last vertex
+            .mapToDouble(point -> point.getAsJsonArray().get(1).getAsDouble())
+            .average()
+            .getAsDouble();
+        return new Double[]{centroidX, centroidY};
+    }
+
+    // FIXME: Can you re-implement this using the Collectors functions?
+    private static HashMap<String, Double[]> getPlotGeometryCenters(HashMap<String, JsonObject> plotGeoms) {
+        var plotCenters = new HashMap<String, Double[]>();
+        plotGeoms.entrySet().forEach(plot -> {
+                var plotId = plot.getKey();
+                var plotGeom = plot.getValue();
+                var centroid = getGeometryCentroid(plotGeom);
+                plotCenters.put(plotId, centroid);
+            });
+        return plotCenters;
+    }
+
+    // FIXME: Can you re-implement this using the Collectors functions?
+    private static HashMap<String, HashMap<String, Double[]>> getSampleGeometryCenters(HashMap<String, HashMap<String, JsonObject>> sampleGeomsByPlot) {
+        var sampleCentersByPlot = new HashMap<String, HashMap<String, Double[]>>();
+        sampleGeomsByPlot.entrySet().forEach(plot -> {
+                var plotId = plot.getKey();
+                var sampleGeoms = plot.getValue();
+                var sampleCenters = new HashMap<String, Double[]>();
+                sampleGeoms.entrySet().forEach(sample -> {
+                        var sampleId = sample.getKey();
+                        var sampleGeom = sample.getValue();
+                        var centroid = getGeometryCentroid(sampleGeom);
+                        sampleCenters.put(sampleId, centroid);
+                    });
+                sampleCentersByPlot.put(plotId, sampleCenters);
+            });
+        return sampleCentersByPlot;
+    }
+
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         var projectId =          newProject.get("id").getAsInt();
@@ -490,7 +647,7 @@ public class JsonProjects implements Projects {
         var shpPlotGeoms = new HashMap<String, JsonObject>();
         var shpPlotCenters = new HashMap<String, Double[]>();
         if (plotDistribution.equals("shp")) {
-            extractZipFileToGeoJson(projectId, "plots");
+            runBashScriptForProject(projectId, "plots", "shp2geojson.sh", "/shp");
             shpPlotGeoms = getGeoJsonPlotGeometries(projectId);
             shpPlotCenters = getPlotGeometryCenters(shpPlotGeoms);
             var shpPlotBounds = calculateBounds(shpPlotCenters.values().toArray(new Double[][]{}), 500.0); // FIXME: replace hard-coded padding with a calculated value
@@ -505,7 +662,7 @@ public class JsonProjects implements Projects {
         var shpSampleGeoms = new HashMap<String, HashMap<String, JsonObject>>();
         var shpSampleCenters = new HashMap<String, HashMap<String, Double[]>>();
         if (sampleDistribution.equals("shp")) {
-            extractZipFileToGeoJson(projectId, "samples");
+            runBashScriptForProject(projectId, "samples", "shp2geojson.sh", "/shp");
             shpSampleGeoms = getGeoJsonSampleGeometries(projectId);
             shpSampleCenters = getSampleGeometryCenters(shpSampleGeoms);
         }

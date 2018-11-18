@@ -27,11 +27,13 @@ CREATE TABLE projects (
   boundary                  geometry(Polygon,4326),
   base_map_source           text,
   plot_distribution         text,
+  -- FIXME this chould be counted instead of stored
   num_plots                 integer,
   plot_spacing              float,
   plot_shape                text,
   plot_size                 float,
   sample_distribution       text,
+  -- FIXME this could be counted instead of stored
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
