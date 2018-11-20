@@ -539,13 +539,13 @@ class BasicLayout extends React.PureComponent{
         this.setState({imageCollection: event.target.value});
     };
     onImageParamsChange = event => {
-        this.setState({imageParams: event.target.value});
+        this.setState({imageParams: event.target.value.replace(/\s/g,'')});
     };
     onWidgetDualLayerChange = event => {
         this.setState({dualLayer: event.target.checked});
     };
     onWidgetBandsChange = event => {
-        this.setState({widgetBands: event.target.value});
+        this.setState({widgetBands: event.target.value.replace(/\s/g,'')});
     };
     onWidgetMinChange = event => {
         this.setState({widgetMin: event.target.value});
@@ -590,10 +590,10 @@ class BasicLayout extends React.PureComponent{
         this.setState({imageCollectionDual: event.target.value});
     };
     onImageParamsChangeDual = event => {
-        this.setState({imageParamsDual: event.target.value});
+        this.setState({imageParamsDual: event.target.value.replace(/\s/g,'')});
     };
     onWidgetBandsChangeDual = event => {
-        this.setState({widgetBandsDual: event.target.value});
+        this.setState({widgetBandsDual: event.target.value.replace(/\s/g,'')});
     };
     onWidgetMinChangeDual = event => {
         this.setState({widgetMinDual: event.target.value});
