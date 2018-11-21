@@ -660,11 +660,14 @@ class MapWidget extends React.Component {
             }),
             id: mapdiv
         });
-        mapWidgetArray[mapdiv].addLayer(googleLayer);
-        if(!isDual)
-        {
-            this.addBuffer(mapWidgetArray[mapdiv]);
-        }
+        let ref = this;
+        window.setTimeout(function () {
+            mapWidgetArray[mapdiv].addLayer(googleLayer);
+            if(!isDual)
+            {
+                ref.addBuffer(mapWidgetArray[mapdiv]);
+            }
+        }, 250);
     };
     addDualLayer (imageid, token, mapdiv) {
         let googleLayer = new ol.layer.Tile({

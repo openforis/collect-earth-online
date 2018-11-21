@@ -584,6 +584,7 @@ CREATE OR REPLACE FUNCTION create_project(
 $$ LANGUAGE SQL;
 
 -- Returns project aggregate data
+DROP FUNCTION dump_project_plot_data(integer);
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer) 
     RETURNS TABLE (
            plot_id          integer,
@@ -591,48 +592,77 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
            lat              float,
            plot_shape       text,
            plot_size        float,
-           user_id          integer,
+           email            text,
            confidence       integer,
-           flagged          boolean,
-           --assigned         integer,
-           sample_points    bigint,
+           flagged          integer,
+           assigned         integer,
            collection_time  timestamp,
            imagery_title    text,
            imagery_date     date,
-           value            jsonb
+           samples          text
     ) AS $$
-
-    SELECT plots.id as plot_id,
+	WITH username AS (
+			SELECT MAX(email) as email, plot_id 
+			FROM users 
+			INNER JOIN user_plots
+				ON users.id = user_plots.user_id
+			GROUP BY plot_id
+		),
+		plotsum AS (
+			SELECT cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
+				cast(count(1) - sum(case when flagged then 1 else 0 end)  as int) as assigned, 
+				MAX(confidence) as confidence,
+				MAX(collection_time) as collection_time,
+				plot_id
+			FROM user_plots
+			GROUP BY plot_id
+		),
+		plots_array AS (
+			SELECT plot_id, format('[%s]', string_agg(valuejson , ',')) as samples, MAX(imagery_id) as imagery_id, MAX(imagery_date) as imagery_date 
+			FROM (
+				SELECT plot_id, imagery_id, imagery_date, 
+					(CASE WHEN value is NULL THEN
+						format('{"%s":"%s"}','id', samples.id)
+					 ELSE
+					 	format('{"%s":"%s", "%s":%s}','id', samples.id, 'value', "value") 
+					 END) as valuejson
+				FROM samples
+				LEFT JOIN sample_values
+				ON samples.id = sample_values.sample_id
+			) s
+			group by plot_id
+		)
+    SELECT p.id as plot_id,
            ST_X(center) AS lon,
            ST_Y(center) AS lat,
            plot_shape,
            plot_size,
-           user_id,
+           un.email,
            confidence,
-           user_plots.flagged AS flagged,
-           --assigned,
-           count(point) AS sample_points,
+           ps.flagged AS flagged,
+           ps.assigned,
            collection_time::timestamp,
-           json_agg(title)::text AS imagery_title,
+           i.title AS imagery_title,
            imagery_date,
-           json_agg(value)::jsonb
+           samples
     FROM projects
-    INNER JOIN plots
-        ON plots.project_id = projects.id
-    INNER JOIN user_plots
-        ON user_plots.plot_id = plots.id
-    INNER JOIN sample_values
-        ON sample_values.user_plot_id = user_plots.id
-    INNER JOIN samples
-        ON samples.id = sample_values.sample_id
-    INNER JOIN imagery
-        ON imagery.id = sample_values.imagery_id
+    INNER JOIN plots p
+        ON p.project_id = projects.id
+    LEFT JOIN plots_array pa
+		ON pa.plot_id = p.id
+    LEFT JOIN plotsum ps
+		ON p.id = ps.plot_id
+	LEFT JOIN username un
+		ON p.id = un.plot_id
+    LEFT JOIN imagery i
+        ON i.id = pa.imagery_id
     WHERE projects.id = _project_id
-    GROUP BY plots.id,center,plot_shape,plot_size,user_id,confidence,user_plots.flagged,collection_time,imagery_date --,assigned
+    
 
 $$ LANGUAGE SQL;
 
 -- Returns project raw data
+DROP FUNCTION dump_project_sample_data(integer)
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer) 
     RETURNS TABLE (
            plot_id          integer,
@@ -641,40 +671,32 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
            lat              float,
            email            text,
            confidence       integer,
-           flagged          boolean,
-           assigned         boolean,
+           flagged          integer,
+           assigned         integer,
            collection_time  timestamp,
            imagery_title    text,
            imagery_date     date,
            value            jsonb
     ) AS $$
-
-    SELECT plots.id as plot_id,
-           samples.id AS sample_id,
-           ST_X(point) AS lon,
-           ST_Y(point) AS lat,
-           users.email,
-           confidence,
-           (CASE WHEN user_plots.flagged IS NULL THEN false ELSE user_plots.flagged END) AS flagged,
-           (CASE WHEN user_plots.flagged IS NOT NULL AND user_plots.flagged = false THEN true ELSE false END) AS assigned,
-           collection_time::timestamp,
-           title AS imagery_title,
-           imagery_date,
-           value
-    FROM projects
-    INNER JOIN plots
-        ON plots.project_id = projects.id
-    INNER JOIN samples
-        ON samples.plot_id = plots.id
-    LEFT JOIN user_plots
-        ON user_plots.plot_id = plots.id
-    LEFT JOIN sample_values
-        ON samples.id = sample_values.sample_id
-    LEFT JOIN imagery
-        ON imagery.id = sample_values.imagery_id
-    LEFT JOIN users
-        ON users.id = user_id
-    WHERE projects.id = _project_id
+	SELECT p.id as plot_id,
+	   samples.id AS sample_id,
+	   ST_X(point) AS lon,
+	   ST_Y(point) AS lat,
+	   p.username,
+	   p.confidence,
+	   p.flagged,
+	   p.assigned,
+	   p.collection_time::timestamp,
+	   title AS imagery_title,
+	   imagery_date,
+	   value
+	FROM select_all_project_plots(_project_id) p
+	INNER JOIN samples
+		ON samples.plot_id = p.id
+	LEFT JOIN sample_values
+		ON samples.id = sample_values.sample_id
+	LEFT JOIN imagery
+		ON imagery.id = sample_values.imagery_id
 
 $$ LANGUAGE SQL;
 
@@ -1025,14 +1047,6 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 
 $$ LANGUAGE SQL;
 
--- Select singe plot
-CREATE OR REPLACE FUNCTION select_single_plot(_plot_id integer) 
-    RETURNS setOf plots_return AS $$
-
-	SELECT * FROM select_all_plots()
-	WHERE id = _plot_id
-
-$$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
