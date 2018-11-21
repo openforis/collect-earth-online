@@ -160,7 +160,6 @@ class SideBar extends React.Component {
         };
         this.filterCall = this.filterCall.bind(this);
         this.filterText = this.filterText.bind(this);
-        this.filterChecked = this.filterChecked.bind(this);
     }
 
     componentDidMount() {
@@ -180,18 +179,6 @@ class SideBar extends React.Component {
         }
         else {
             this.filterCall(this.state.radioValue, filterText);
-        }
-    }
-
-    filterChecked(e) {
-        if (e.target.checked == true) {
-            let filtered = this.state.institutions.filter(inst => (inst.name.substring(0, 1).toLocaleLowerCase()) == this.state.filterText.toLocaleLowerCase());
-            this.setState({filteredInstitutions: filtered});
-            this.setState({checked: true});
-        }
-        else {
-            this.filterCall(this.state.radioValue, this.state.filterText);
-            this.setState({checked: false});
         }
     }
 
@@ -240,7 +227,7 @@ class SideBar extends React.Component {
                     <div className="form-control" style={{textAlign: "center"}}>
                         <FilterAlphabetically filteredInstitutions={this.state.institutions}
                                               radioValue={this.state.radioValue} filterCall={this.filterCall}
-                                              filterText={this.state.filterText} filterChecked={this.filterChecked} checked={this.state.checked}/>
+                                              filterText={this.state.filterText}/>
                     </div>
                     <InstitutionList filteredInstitutions={this.state.filteredInstitutions}
                                      projects={this.props.projects}
@@ -301,11 +288,6 @@ function FilterAlphabetically(props) {
             <input className="form-check-input" type="radio" id="filter-by-letter"
                        name="filter-institution" defaultValue="project" onChange={()=>props.filterCall("project",props.filterText)} defaultChecked={props.radioValue==="project"}/>
                 Project
-            </div>
-            <div className="form-check form-check-inline">
-            <input className="form-check-input" type="checkbox" id="filter-by-first-letter"
-                       name="filter-institution-box" onChange={(e)=>props.filterChecked(e)} defaultChecked={props.checked}/>
-                Match first letter
             </div>
         </React.Fragment>
     );
