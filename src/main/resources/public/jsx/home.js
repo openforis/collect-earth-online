@@ -8,7 +8,7 @@ class Home extends React.Component {
         this.state = {
             projects: [],
             showHideSideBar:"col-lg-9 col-md-12 pl-0",
-            showHideLpanel:"col-lg-3 pr-0 pl-0"
+            showHideLpanel:"col-lg-3 pr-0 pl-0",
         };
         this.toggleSidebar=this.toggleSidebar.bind(this);
 
@@ -37,7 +37,8 @@ class Home extends React.Component {
                     <div className="row tog-effect">
                         <SideBar documentRoot={this.props.documentRoot}
                                  userName={this.props.userName}
-                                 projects={this.state.projects} showHideLpanel={this.state.showHideLpanel}/>
+                                 projects={this.state.projects} showHideLpanel={this.state.showHideLpanel}
+                        />
                         <MapPanel documentRoot={this.props.documentRoot}
                                   userId={this.props.userId}
                                   projects={this.state.projects} toggleSidebar={this.toggleSidebar} showHideSideBar={this.state.showHideSideBar} showHideTogSym={this.state.showHideTogSym}/>
@@ -151,92 +152,82 @@ class SideBar extends React.Component {
         super(props);
         this.state = {
             filteredInstitutions: [],
-            checkedInstitutions:[],
             institutions: [],
-            tempChecked:[]
+            radioValue: "institution",
+            filterText: "",
+            checked: false
+
         };
-        this.filterCall=this.filterCall.bind(this);
-        this.filterAlphabetically=this.filterAlphabetically.bind(this);
+        this.filterCall = this.filterCall.bind(this);
+        this.filterText = this.filterText.bind(this);
+        this.filterChecked = this.filterChecked.bind(this);
     }
+
     componentDidMount() {
         // Fetch institutions
         fetch(this.props.documentRoot + "/get-all-institutions")
             .then(response => response.json())
             .then(data => {
-
-                var tmp=[];
-                var x=[];
-                data.map((inst) => {
-                    x.push(inst.name.substring(0, 1))
-                });
-                var y = x.filter(function (item, pos) {
-                    return x.indexOf(item) == pos;
-                });
-                y.map((inst) => {
-                    tmp.push({"alphabet":inst,"isChecked":false});
-                });
-                var tchecked=[];
-                y.map(t=>{
-                    tchecked.push({"alphabet":t,"isChecked":false});
-                });
-                this.setState({tempChecked:tchecked});
-                this.setState({filteredInstitutions: data,institutions:data})});
+                this.setState({filteredInstitutions: data, institutions: data})
+            });
     }
 
-    filterCall(e) {
-        const filterText = e.target.value;
-        if (filterText != '') {
-            const filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
-            if (filtered.length > 0) {
-                this.setState({filteredInstitutions: filtered});
-            }
-            else {
-                this.setState({filteredInstitutions: []});
-            }
-        }
-        else {
+    filterText(e) {
+        var filterText = e.target.value;
+        this.setState({filterText: filterText});
+        if (filterText == "") {
             this.setState({filteredInstitutions: this.state.institutions});
         }
-        var x=this.state.checkedInstitutions;
-        var result = this.state.filteredInstitutions.filter(function(n) {
-            return x.indexOf(n) > -1;
-        });
-    }
-    filterAlphabetically(e) {
-        var tchecked = this.state.tempChecked;
-        tchecked.map((checkedInst) => {
-            if (checkedInst["alphabet"].toLocaleUpperCase() == e.target.innerHTML.toLocaleUpperCase() && checkedInst["isChecked"] == false) {
-                checkedInst["isChecked"] = true;
-            }
-            else if (checkedInst["alphabet"].toLocaleUpperCase() == e.target.innerHTML.toLocaleUpperCase() && checkedInst["isChecked"] == true) {
-                checkedInst["isChecked"] = false;
-            }
-        });
-        this.setState({tempChecked: tchecked});
-        let checkedInsts = this.state.checkedInstitutions;
-        let checkedInst = tchecked.filter((ch) => (ch["alphabet"].toLocaleUpperCase() == e.target.innerHTML.toLocaleUpperCase()));
-        if (checkedInst[0]["isChecked"] == true) {
-            const filtered = this.state.institutions.filter(inst => (inst.name.substring(0, 1).toLocaleLowerCase()) == checkedInst[0]["alphabet"].toLocaleLowerCase());
-            let finalArr = checkedInsts.concat(filtered);
-            if (finalArr.length > 0) {
-                this.setState({checkedInstitutions: finalArr});
-                this.setState({filteredInstitutions: finalArr});
-            } else {
-                this.setState({checkedInstitutions: []});
-                this.setState({filteredInstitutions: []});
-            }
-        }
-        else if (checkedInst[0]["isChecked"] == false) {
-            const filtered = this.state.checkedInstitutions.filter(inst => (inst.name.substring(0, 1).toLocaleLowerCase()) != checkedInst[0]["alphabet"].toLocaleLowerCase());
-            if (filtered.length > 0) {
-                this.setState({filteredInstitutions: filtered});
-            }
-            else {
-                this.setState({filteredInstitutions: this.state.institutions});
-            }
-            this.setState({checkedInstitutions: filtered});
+        else {
+            this.filterCall(this.state.radioValue, filterText);
         }
     }
+
+    filterChecked(e) {
+        if (e.target.checked == true) {
+            let filtered = this.state.institutions.filter(inst => (inst.name.substring(0, 1).toLocaleLowerCase()) == this.state.filterText.toLocaleLowerCase());
+            this.setState({filteredInstitutions: filtered});
+            this.setState({checked: true});
+        }
+        else {
+            this.filterCall(this.state.radioValue, this.state.filterText);
+            this.setState({checked: false});
+        }
+    }
+
+    filterCall(radioValue, filterText) {
+        let filtered = [], filteredInstProjects = [];
+        this.setState({radioValue: radioValue});
+        if (filterText == "") {
+            this.setState({filteredInstitutions: this.state.institutions});
+        }
+        else {
+
+            if (radioValue == "institution" && filterText != "") {
+                filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+                if (filtered.length > 0) {
+                    this.setState({filteredInstitutions: filtered});
+                }
+                else {
+                    this.setState({filteredInstitutions: []});
+                }
+            }
+
+            if (radioValue == "project" && filterText != "") {
+                this.state.institutions.map(inst => {
+                    const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+                    if (projects.length > 0) filteredInstProjects.push(inst);
+                });
+                if (filteredInstProjects.length > 0) {
+                    this.setState({filteredInstitutions: filteredInstProjects});
+                }
+                else {
+                    this.setState({filteredInstitutions: []});
+                }
+            }
+        }
+    }
+
     render() {
         return (
             <div id="lPanel" className={this.props.showHideLpanel}>
@@ -245,11 +236,14 @@ class SideBar extends React.Component {
                 </div>
                 <ul className="tree">
                     <CreateInstitutionButton userName={this.props.userName} documentRoot={this.props.documentRoot}/>
-                    <InstitutionFilter documentRoot={this.props.documentRoot} filterCall={this.filterCall}/>
-                    <div className="form-control" style={{textAlign:"center"}}>
-                        <FilterAlphabetically filteredInstitutions={this.state.institutions} filterAlphabetically={this.filterAlphabetically} tempChecked={this.state.tempChecked}/>
+                    <InstitutionFilter documentRoot={this.props.documentRoot} filterText={this.filterText}/>
+                    <div className="form-control" style={{textAlign: "center"}}>
+                        <FilterAlphabetically filteredInstitutions={this.state.institutions}
+                                              radioValue={this.state.radioValue} filterCall={this.filterCall}
+                                              filterText={this.state.filterText} filterChecked={this.filterChecked} checked={this.state.checked}/>
                     </div>
-                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions} projects={this.props.projects}
+                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions}
+                                     projects={this.props.projects}
                                      documentRoot={this.props.documentRoot}/>
                 </ul>
             </div>
@@ -260,9 +254,9 @@ class SideBar extends React.Component {
 function InstitutionFilter(props) {
     return (
         <div id="filter-institution" className="form-control">
-            <input type="text" id="filterInstitution" autoComplete="off" placeholder="Filter by Institution Name"
+            <input type="text" id="filterInstitution" autoComplete="off" placeholder="Enter text to filter"
                    className="form-control"
-                   onChange={(e) => props.filterCall(e)}/>
+                   onChange={(e)=>props.filterText(e)}/>
         </div>
     );
 }
@@ -270,9 +264,10 @@ function InstitutionFilter(props) {
 function CreateInstitutionButton(props) {
     if (props.userName != "") {
         return (
-            <a className="create-institution" href={props.documentRoot + "/create-institution/0"}>
-                <li className="bg-yellow text-center p-2"><i className="fa fa-file"></i> Create New Institution</li>
-            </a>
+
+                <li className="bg-yellow text-center p-2">
+                    <a className="create-institution" style={{display:"block"}} href={props.documentRoot + "/create-institution/0"}>
+                    <i className="fa fa-file"></i> Create New Institution </a></li>
         );
     } else {
         return (
@@ -295,20 +290,24 @@ function InstitutionList(props) {
 }
 
 function FilterAlphabetically(props) {
-    let tmp=props.tempChecked.sort(function(a,b){
-        if( a["alphabet"].toLocaleUpperCase() > b["alphabet"].toLocaleUpperCase()){
-            return 1;
-        }else if( a["alphabet"].toLocaleUpperCase()  < b["alphabet"].toLocaleUpperCase() ){
-            return -1;
-        }
-        return 0;
-    });
     return (
-       tmp.map((letter, uid) =>
-            <React.Fragment key={uid}>
-                <button className={letter["isChecked"]==true?"btn btn-sm bg-lightgreen":"btn btn-sm btn-outline-lightgreen"} onClick={(e)=>props.filterAlphabetically(e)}>{letter["alphabet"].toLocaleUpperCase()}</button>
-            </React.Fragment>
-        )
+        <React.Fragment>
+            <div className="form-check form-check-inline">
+                <input className="form-check-input" type="radio" id="filter-by-word"
+                       name="filter-institution" defaultValue="institution" onChange={()=>props.filterCall("institution",props.filterText)} defaultChecked={props.radioValue==="institution"}/>
+                Institution
+            </div>
+            <div className="form-check form-check-inline">
+            <input className="form-check-input" type="radio" id="filter-by-letter"
+                       name="filter-institution" defaultValue="project" onChange={()=>props.filterCall("project",props.filterText)} defaultChecked={props.radioValue==="project"}/>
+                Project
+            </div>
+            <div className="form-check form-check-inline">
+            <input className="form-check-input" type="checkbox" id="filter-by-first-letter"
+                       name="filter-institution-box" onChange={(e)=>props.filterChecked(e)} defaultChecked={props.checked}/>
+                Match first letter
+            </div>
+        </React.Fragment>
     );
 }
 
