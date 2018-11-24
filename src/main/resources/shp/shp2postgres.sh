@@ -1,4 +1,4 @@
-unzip -d $1 $1.zip
+unzip -o -d $1 $1.zip
 cd $1
 sname=$(find . -type f -iname "*.shp" -exec basename {} .shp ';')
 tablename=${1//-/_}_shp

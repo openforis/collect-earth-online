@@ -577,7 +577,7 @@ public class PostgresProjects implements Projects {
                 var plots_table = "project_" +  projectId + "_plots_csv";
                 // add emptye table to the database
                 try(var pstmt = conn.prepareStatement("SELECT * FROM create_new_table(?,?)")){
-                    pstmt.setString(1,plots_table);
+                    pstmt.setString(1, plots_table);
                     pstmt.setString(2, loadCsvHeaders(plotsFile));
                     pstmt.execute();
                 }
@@ -649,10 +649,6 @@ public class PostgresProjects implements Projects {
         var samplesFile =        newProject.has("samples_file") ? newProject.get("samples_file").getAsString() : "";
         try (var conn = connect()) {
             // load files into the database
-            
-            // SAMPLES
-            
-
             try (var pstmt = 
                 conn.prepareStatement("SELECT * FROM update_project_tables(?,?::text,?::text)")) {
                 pstmt.setInt(1, Integer.parseInt(newProject.get("id").getAsString()));     
@@ -666,7 +662,6 @@ public class PostgresProjects implements Projects {
                 pstmt.setDouble(2, plotSize);
                 pstmt.execute();
             } 
-
             
             // if both are files, adding plots and samples is done inside PG
             if (List.of("csv", "shp").contains(plotDistribution) && List.of("csv", "shp").contains(sampleDistribution)) {
@@ -773,7 +768,7 @@ public class PostgresProjects implements Projects {
             var latMax =             getOrZero(newProject,"latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?,?,?,?,?::jsonb)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::jsonb)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 
@@ -793,11 +788,7 @@ public class PostgresProjects implements Projects {
                 pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
                 pstmt.setFloat(15, getOrZero(newProject, "sampleResolution").getAsFloat());
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
-                pstmt.setString(17,  null); // file values
-                pstmt.setString(18,  null);
-                pstmt.setString(19,  null);
-                pstmt.setString(20,  null);
-                pstmt.setString(21,  null);  //classification times
+                pstmt.setString(17,  null);  //classification times
 
 
                 try(var rs = pstmt.executeQuery()){
