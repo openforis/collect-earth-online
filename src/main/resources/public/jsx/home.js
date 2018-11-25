@@ -155,12 +155,12 @@ class SideBar extends React.Component {
             institutions: [],
             radioValue: "institution",
             filterText: "",
-            checked: false
+            checked: false,
+            expandInstWithProject:false
 
         };
         this.filterCall = this.filterCall.bind(this);
         this.filterText = this.filterText.bind(this);
-        this.expandInstWithProject=this.expandInstWithProject.bind(this);
         this.filterChecked = this.filterChecked.bind(this);
     }
 
@@ -180,19 +180,14 @@ class SideBar extends React.Component {
             if(this.state.checked==true){
                 let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())));
                 console.log("from statte checled");
-                filtered.map(ins=>this.expandInstWithProject(ins.id,false));
-
-                this.setState({filteredInstitutions: filtered,checked: true});
+                this.setState({filteredInstitutions: filtered,expandInstWithProject:false,checked: true});
             }
             else{
                 this.filterCall(this.state.radioValue, filterText);
             }
-
         }
         else {
-            this.state.institutions.map(ins=>this.expandInstWithProject(ins.id,false));
-
-            this.setState({filteredInstitutions: this.state.institutions});
+            this.setState({expandInstWithProject:false,filteredInstitutions: this.state.institutions});
         }
     }
 
@@ -200,28 +195,11 @@ class SideBar extends React.Component {
         if (e.target.checked == true) {
             console.log("filter text"+this.state.filterText);
             let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())));
-            filtered.map(ins=>this.expandInstWithProject(ins.id,false));
-            this.setState({filteredInstitutions: filtered,checked: true});
+            this.setState({filteredInstitutions: filtered,checked: true,expandInstWithProject:false});
         }
         else {
             this.filterCall(this.state.radioValue, this.state.filterText);
             this.setState({checked: false});
-        }
-    }
-    expandInstWithProject(insId,flag) {
-        if (insId) {
-            if (document.getElementById("collapse" + insId)) {
-                if (flag) {
-                    document.getElementById("collapse" + insId).classList.remove("collapse");
-                }
-                else {
-                    console.log("from else");
-                    if (!document.getElementById("collapse" + insId).classList.contains("collapse")) {
-                        console.log("from does not contain");
-                        document.getElementById("collapse" + insId).classList.add("collapse");
-                    }
-                }
-            }
         }
     }
 
@@ -235,15 +213,11 @@ class SideBar extends React.Component {
             if (radioValue == "institution" && filterText != "") {
                 filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
                 if (filtered.length > 0) {
-                    filtered.map(ins=>this.expandInstWithProject(ins.id,false));
-
-                    this.setState({filteredInstitutions: filtered});
-
+                    this.setState({filteredInstitutions: filtered,expandInstWithProject:false});
                 }
                 else {
                     this.setState({filteredInstitutions: []});
                 }
-
             }
 
             if (radioValue == "project" && filterText != "") {
@@ -252,12 +226,10 @@ class SideBar extends React.Component {
                     if (projects.length > 0) filteredInstProjects.push(inst);
                 });
                 if (filteredInstProjects.length > 0) {
-                    filteredInstProjects.map(ins=>this.expandInstWithProject(ins.id,true));
-                    this.setState({filteredInstitutions: filteredInstProjects});
+                    this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
                 }
                 else {
                     this.setState({filteredInstitutions: []});
-
                 }
             }
         }
@@ -279,7 +251,7 @@ class SideBar extends React.Component {
                     </div>
                     <InstitutionList filteredInstitutions={this.state.filteredInstitutions}
                                      projects={this.props.projects}
-                                     documentRoot={this.props.documentRoot}/>
+                                     documentRoot={this.props.documentRoot} expandInstWithProject={this.state.expandInstWithProject}/>
                 </ul>
             </div>
         );
@@ -319,7 +291,7 @@ function InstitutionList(props) {
                              id={institution.id}
                              name={institution.name}
                              documentRoot={props.documentRoot}
-                             projects={props.projects.filter(project => project.institution == institution.id)}/>
+                             projects={props.projects.filter(project => project.institution == institution.id)} expandInstWithProject={props.expandInstWithProject}/>
         )
     );
 }
@@ -373,14 +345,14 @@ function Institution(props) {
                     </div>
                 </div>
             </div>
-            <ProjectList id={props.id} projects={props.projects} documentRoot={props.documentRoot}/>
+            <ProjectList id={props.id} projects={props.projects} documentRoot={props.documentRoot} expandInstWithProject={props.expandInstWithProject}/>
         </li>
     );
 }
 
 function ProjectList(props) {
     return (
-        <div className="collapse" id={"collapse" + props.id}>
+        <div className={props.expandInstWithProject==false?"collapse":""} id={"collapse" + props.id}>
             {
                 props.projects.map(
                     (project, uid) =>
