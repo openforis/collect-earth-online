@@ -160,6 +160,8 @@ class SideBar extends React.Component {
         };
         this.filterCall = this.filterCall.bind(this);
         this.filterText = this.filterText.bind(this);
+        this.expandInstWithProject=this.expandInstWithProject.bind(this);
+        this.filterChecked = this.filterChecked.bind(this);
     }
 
     componentDidMount() {
@@ -174,11 +176,52 @@ class SideBar extends React.Component {
     filterText(e) {
         var filterText = e.target.value;
         this.setState({filterText: filterText});
-        if (filterText == "") {
-            this.setState({filteredInstitutions: this.state.institutions});
+        if (filterText != "") {
+            if(this.state.checked==true){
+                let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())));
+                console.log("from statte checled");
+                filtered.map(ins=>this.expandInstWithProject(ins.id,false));
+
+                this.setState({filteredInstitutions: filtered,checked: true});
+            }
+            else{
+                this.filterCall(this.state.radioValue, filterText);
+            }
+
         }
         else {
-            this.filterCall(this.state.radioValue, filterText);
+            this.state.institutions.map(ins=>this.expandInstWithProject(ins.id,false));
+
+            this.setState({filteredInstitutions: this.state.institutions});
+        }
+    }
+
+    filterChecked(e) {
+        if (e.target.checked == true) {
+            console.log("filter text"+this.state.filterText);
+            let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())));
+            filtered.map(ins=>this.expandInstWithProject(ins.id,false));
+            this.setState({filteredInstitutions: filtered,checked: true});
+        }
+        else {
+            this.filterCall(this.state.radioValue, this.state.filterText);
+            this.setState({checked: false});
+        }
+    }
+    expandInstWithProject(insId,flag) {
+        if (insId) {
+            if (document.getElementById("collapse" + insId)) {
+                if (flag) {
+                    document.getElementById("collapse" + insId).classList.remove("collapse");
+                }
+                else {
+                    console.log("from else");
+                    if (!document.getElementById("collapse" + insId).classList.contains("collapse")) {
+                        console.log("from does not contain");
+                        document.getElementById("collapse" + insId).classList.add("collapse");
+                    }
+                }
+            }
         }
     }
 
@@ -189,15 +232,18 @@ class SideBar extends React.Component {
             this.setState({filteredInstitutions: this.state.institutions});
         }
         else {
-
             if (radioValue == "institution" && filterText != "") {
                 filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
                 if (filtered.length > 0) {
+                    filtered.map(ins=>this.expandInstWithProject(ins.id,false));
+
                     this.setState({filteredInstitutions: filtered});
+
                 }
                 else {
                     this.setState({filteredInstitutions: []});
                 }
+
             }
 
             if (radioValue == "project" && filterText != "") {
@@ -206,10 +252,12 @@ class SideBar extends React.Component {
                     if (projects.length > 0) filteredInstProjects.push(inst);
                 });
                 if (filteredInstProjects.length > 0) {
+                    filteredInstProjects.map(ins=>this.expandInstWithProject(ins.id,true));
                     this.setState({filteredInstitutions: filteredInstProjects});
                 }
                 else {
                     this.setState({filteredInstitutions: []});
+
                 }
             }
         }
@@ -227,7 +275,7 @@ class SideBar extends React.Component {
                     <div className="form-control" style={{textAlign: "center"}}>
                         <FilterAlphabetically filteredInstitutions={this.state.institutions}
                                               radioValue={this.state.radioValue} filterCall={this.filterCall}
-                                              filterText={this.state.filterText}/>
+                                              filterText={this.state.filterText} filterChecked={this.filterChecked} checked={this.state.checked}/>
                     </div>
                     <InstitutionList filteredInstitutions={this.state.filteredInstitutions}
                                      projects={this.props.projects}
@@ -280,14 +328,22 @@ function FilterAlphabetically(props) {
     return (
         <React.Fragment>
             <div className="form-check form-check-inline">
+                Filter By:
+            </div>
+            <div className="form-check form-check-inline">
                 <input className="form-check-input" type="radio" id="filter-by-word"
-                       name="filter-institution" defaultValue="institution" onChange={()=>props.filterCall("institution",props.filterText)} defaultChecked={props.radioValue==="institution"}/>
+                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("institution",props.filterText)} defaultChecked={props.radioValue==="institution"}/>
                 Institution
             </div>
             <div className="form-check form-check-inline">
             <input className="form-check-input" type="radio" id="filter-by-letter"
-                       name="filter-institution" defaultValue="project" onChange={()=>props.filterCall("project",props.filterText)} defaultChecked={props.radioValue==="project"}/>
+                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("project",props.filterText)} defaultChecked={props.radioValue==="project"}/>
                 Project
+            </div>
+            <div className="form-check form-check-inline">
+            <input className="form-check-input" type="checkbox" id="filter-by-first-letter"
+                       name="filter-institution-box" onChange={(e)=>props.filterChecked(e)} defaultChecked={props.checked}/>
+                Match from beginning
             </div>
         </React.Fragment>
     );
