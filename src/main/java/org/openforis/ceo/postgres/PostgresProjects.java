@@ -50,10 +50,6 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("plotSpacing",rs.getFloat("plot_spacing"));
             newProject.addProperty("plotShape",rs.getString("plot_shape"));
             newProject.addProperty("plotSize",rs.getFloat("plot_size"));
-            newProject.addProperty("plotsCsvFile", rs.getString("plots_csv_file"));
-            newProject.addProperty("plotsShpFile", rs.getString("plots_shp_file"));
-            newProject.addProperty("samplesCsvFile", rs.getString("samples_csv_file"));
-            newProject.addProperty("samplesShpFile", rs.getString("samples_shp_file"));
             newProject.addProperty("archived", rs.getString("availability").equals("archived"));
             newProject.addProperty("sampleDistribution",rs.getString("sample_distribution"));
             newProject.addProperty("samplesPerPlot",rs.getInt("samples_per_plot"));
@@ -350,7 +346,7 @@ public class PostgresProjects implements Projects {
         }
         return sampleHeaders;
     }
-    
+
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         var projectId = Integer.parseInt(req.params(":id"));
 
