@@ -19,9 +19,11 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
@@ -310,21 +312,61 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    private static String valueOrBlank(String input) {
+
+        return input == null || input.equals("null") ? "" : input;
+    }
+
+    private static ArrayList<String> getPlotHeaders(Connection conn, Integer projectId) {
+        var plotHeaders  = new ArrayList<String>();
+        try (var pstmt = conn.prepareStatement("SELECT * FROM get_plot_headers(?)")){
+            pstmt.setInt(1, projectId);
+            try (var rs = pstmt.executeQuery()){
+                while (rs.next()) {
+                    if (!List.of("GID", "GEOM", "PLOT_GEOM").contains(rs.getString("column_names").toUpperCase())){
+                        plotHeaders.add(rs.getString("column_names"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return plotHeaders;
+    }
+
+    private static ArrayList<String> getSampleHeaders(Connection conn, Integer projectId) {
+        var sampleHeaders  = new ArrayList<String>();
+        try (var pstmt = conn.prepareStatement("SELECT * FROM get_sample_headers(?)")){
+            pstmt.setInt(1, projectId);
+            try (var rs = pstmt.executeQuery()){
+                while (rs.next()) {
+                    if (!List.of("GID", "GEOM", "LAT", "LON", "SAMPLE_GEOM").contains(rs.getString("column_names").toUpperCase())){
+                        sampleHeaders.add(rs.getString("column_names"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return sampleHeaders;
+    }
+    
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = Integer.parseInt(req.params(":id"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
             // check if project exists
-            pstmt.setInt(1,Integer.parseInt(projectId));      
+            pstmt.setInt(1,projectId);      
             try(var rs = pstmt.executeQuery()){
                 if (rs.next()) {
                     var plotSummaries = new JsonArray();
                     var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
                     var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
+                    var plotHeaders = getPlotHeaders(conn, projectId);
 
                     try(var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_plot_data(?)")){
-                        pstmtDump.setInt(1, Integer.parseInt(projectId));
+                        pstmtDump.setInt(1, projectId);
                         
                         try(var rsDump = pstmtDump.executeQuery()){
                         
@@ -343,11 +385,29 @@ public class PostgresProjects implements Projects {
                                 plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
                                 plotSummary.add("distribution",
                                         getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
+                                // FIXME GeoJson does not store in CVS columns will with comma as the main delimitator
+                                // geometry come seperate so it can be converted to GeoJson
+                                // if (valueOrBlank(rsDump.getString("plot_geom")) != "") {
+                                //     plotSummary.addProperty("plot_geom", quoteValueOrEmpty(rsDump.getString("plot_geom")));
+                                //     if (!plotHeaders.contains("plot_geom")) plotHeaders.add("plot_geom");
+                                // }
                                 
+                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
+                                    var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();
+
+                                    plotHeaders.forEach(head ->
+                                        plotSummary.addProperty("plot_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
+                                    );
+                                }
+
                                 plotSummaries.add(plotSummary);
                             } 
                         }
-                        return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName);
+                        var compbinedHeaders = Arrays.stream(plotHeaders.toArray())
+                                                .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head)
+                                                .toArray(String[]::new);
+
+                        return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, compbinedHeaders);
                     }
             }
         }
@@ -359,26 +419,23 @@ public class PostgresProjects implements Projects {
         return res.raw();
     }
     
-    private static String valueOrBlank(String input) {
-
-        return input == null || input.equals("null") ? "" : input;
-    }
-
-    public HttpServletResponse dumpProjectRawData(Request req, Response res) {
-        var projectId = req.params(":id");
+     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
+        var projectId =Integer.parseInt( req.params(":id"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
             // check if project exists
-            pstmt.setInt(1,Integer.parseInt(projectId));      
+            pstmt.setInt(1,projectId);      
             try(var rs = pstmt.executeQuery()){
                 if (rs.next()) {
                     var sampleSummaries = new JsonArray();
                     var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
                     var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
+                    var plotHeaders = getPlotHeaders(conn, projectId);
+                    var sampleHeaders = getSampleHeaders(conn, projectId);
 
                     try(var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_sample_data(?)")){
-                        pstmtDump.setInt(1, Integer.parseInt(projectId));
+                        pstmtDump.setInt(1, projectId);
 
                         try(var rsDump = pstmtDump.executeQuery()){
                             while (rsDump.next()) {
@@ -396,11 +453,40 @@ public class PostgresProjects implements Projects {
                                 } else {
                                     plotSummary.add("value", rsDump.getString("value") == null ? null : parseJson(rsDump.getString("value")).getAsJsonObject());
                                 }
+                                // FIXME GeoJson does not store in CVS columns will with comma as the main delimitator
+                                // geometry come seperate so it can be converted to GeoJson
+                                // if (valueOrBlank(rsDump.getString("plot_geom")) != "") {
+                                //     plotSummary.addProperty("plot_geom", quoteValueOrEmpty(rsDump.getString("plot_geom")));
+                                //     if (!plotHeaders.contains("plot_geom")) plotHeaders.add("plot_geom");
+                                // }
+                                // if (valueOrBlank(rsDump.getString("sample_geom")) != "") {
+                                //     plotSummary.addProperty("sample_geom", quoteValueOrEmpty(rsDump.getString("sample_geom")));
+                                //     if (!sampleHeaders.contains("sample_geom")) sampleHeaders.add("sample_geom");
+                                // }
+
+                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
+                                    var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();                              
+                                    plotHeaders.forEach(head ->
+                                        plotSummary.addProperty("plot_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
+                                    );
+                                }
+                                
+                                if (valueOrBlank(rsDump.getString("ext_sample_data")) != ""){
+                                    var ext_sample_data = parseJson(rsDump.getString("ext_sample_data")).getAsJsonObject();
+                                    sampleHeaders.forEach(head ->
+                                        plotSummary.addProperty("sample_" + head, getOrEmptyString(ext_sample_data, head).getAsString())
+                                    );
+                                }
                                 sampleSummaries.add(plotSummary);
                             } 
                         }
-
-                        return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName);
+                        // json object has plot_ or sample_ appended to differenciate
+                        
+                        var compbinedHeaders = Stream.concat(
+                                                Arrays.stream(plotHeaders.toArray()).map(head -> !head.toString().contains("plot_") ? "plot_" + head : head),
+                                                Arrays.stream(sampleHeaders.toArray()).map(head -> !head.toString().contains("sample_") ? "sample_" + head : head))
+                                                .toArray(String[]::new);
+                        return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, compbinedHeaders);
 
                     }
             }

@@ -120,9 +120,14 @@ public class ProjectUtils {
         return response;
     }
 
-    public static HttpServletResponse outputAggregateCsv(Response res, JsonArray sampleValueGroups, JsonArray plotSummaries, String projectName){
+    public static HttpServletResponse outputAggregateCsv(Response res, JsonArray sampleValueGroups, JsonArray plotSummaries, String projectName, String[] externalHeaders){
         var sampleValueKeys = getSampleKeys(sampleValueGroups);
-        var fields = new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collection_time"};
+        // fileds are straight forward json values
+        var fields = Stream.concat(
+                        Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collection_time"}), 
+                        Arrays.stream(externalHeaders))
+                        .toArray(String[]::new);
+        // labels require interpretation of the next json object
         var labels = getValueDistributionLabels(sampleValueGroups, sampleValueKeys);
 
         var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
@@ -150,27 +155,36 @@ public class ProjectUtils {
         
     }
 
-    public static HttpServletResponse outputRawCsv(Response res, JsonArray sampleValueGroups, JsonArray sampleSummaries, String projectName) {
+    public static HttpServletResponse outputRawCsv(Response res, JsonArray sampleValueGroups, JsonArray sampleSummaries, String projectName, String[] externalHeaders) {
         var sampleValueKeys = getSampleKeys(sampleValueGroups);
         var sampleValueGroupNames = toStream(sampleValueGroups)
         .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
                 sampleValueGroup -> sampleValueGroup.get(sampleValueKeys[0]).getAsString(),
                 (a, b) -> b));
 
-        var fields = new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collection_time"};
-        var labels = sampleValueGroupNames.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toArray(String[]::new);
+        // fileds are straight forward json values
+        var fields = Stream.concat(
+                        Arrays.stream(new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collection_time"}), 
+                        Arrays.stream(externalHeaders))
+                        .toArray(String[]::new);
+        // labels require interpretation of the next json object
+        var labels = sampleValueGroupNames.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue)
+                        .toArray(String[]::new);
 
-        var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+        var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase)
+                        .collect(Collectors.joining(","));
 
         var csvContent = toStream(sampleSummaries)
                 .map(sampleSummary -> {
                     var fieldStream = Arrays.stream(fields);
                     var labelStream = Arrays.stream(labels);
-                    return Stream.concat(fieldStream.map(field -> sampleSummary.get(field).isJsonNull() ? "" : sampleSummary.get(field).getAsString()),
+                    return Stream.concat(fieldStream.map(field -> !sampleSummary.has(field) || sampleSummary.get(field).isJsonNull() 
+                        ? "" : sampleSummary.get(field).getAsString()),
                             labelStream.map(label -> {
                                 var value = sampleSummary.get("value");
                                 if (value.isJsonNull()) {
-                                    return "";
+                                    return "0";
                                 // original format is single integer index
                                 } else if (value.isJsonPrimitive()) {
                                     var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups);
@@ -184,7 +198,7 @@ public class ProjectUtils {
                                     // newest format nests the answer in another json object
                                     return value.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString();
                                 } else {
-                                    return "";
+                                    return "0";
                                 }
                             })).collect(Collectors.joining(","));         
                 }).collect(Collectors.joining("\n"));
@@ -363,7 +377,7 @@ public class ProjectUtils {
     }
 
     public static JsonElement getOrEmptyString(JsonObject obj, String field) {
-        return obj.get(field).isJsonNull() ? new JsonPrimitive("") : obj.get(field);
+        return !obj.has(field) || obj.get(field).isJsonNull() ? new JsonPrimitive("") : obj.get(field);
     }
 
     public static void runBashScriptForProject(int projectId, String plotsOrSamples, String script, String rpath) {

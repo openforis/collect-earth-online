@@ -48,6 +48,32 @@ CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
     END
 $$ LANGUAGE PLPGSQL;
 
+CREATE OR REPLACE FUNCTION get_plot_headers(_project_id integer)
+ RETURNS TABLE (column_names text) AS $$
+	DECLARE 
+		_plots_ext_table text;
+	BEGIN
+		SELECT plots_ext_table  INTO _plots_ext_table FROM projects WHERE id = _project_id;
+		
+		RETURN QUERY EXECUTE 
+		'SELECT column_name::text FROM information_schema.columns 
+			WHERE table_name = '''|| _plots_ext_table || '''';
+	END
+$$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE FUNCTION get_sample_headers(_project_id integer)
+ RETURNS TABLE (column_names text)  AS $$
+	DECLARE 
+		_samples_ext_table text;
+	BEGIN
+		SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE id = _project_id;
+		
+		RETURN QUERY EXECUTE 
+		'SELECT column_name::text FROM information_schema.columns 
+		WHERE table_name = '''|| _samples_ext_table || '''';
+	END
+$$ LANGUAGE PLPGSQL;
+
 --
 --  USER FUCNTIONS
 --
@@ -547,10 +573,6 @@ CREATE TYPE project_return AS (
       samples_per_plot          integer,
       sample_resolution         float,
       sample_survey             jsonb,
-      plots_csv_file            text,
-      plots_shp_file            text,
-      samples_csv_file          text,
-      samples_shp_file          text,
       classification_times      jsonb,
       editable                  boolean
     );
@@ -627,7 +649,7 @@ CREATE OR REPLACE FUNCTION select_project(_id integer)
 
     SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
         plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-        sample_survey, plots_csv_file, plots_shp_file, samples_csv_file, samples_csv_file, classification_times, false as editable
+        sample_survey, classification_times, false as editable
     FROM projects
     WHERE id = _id
 
@@ -639,7 +661,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 
     SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
         plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-        sample_survey, plots_csv_file, plots_shp_file, samples_csv_file, samples_csv_file, classification_times, false AS editable
+        sample_survey, classification_times, false AS editable
     FROM projects
     WHERE privacy_level  =  'public'
       AND availability  =  'published'
@@ -669,14 +691,14 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
     )
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plots_csv_file, p.plots_shp_file, p.samples_csv_file, p.samples_csv_file,
+        p.samples_per_plot,p.sample_resolution,p.sample_survey,
         p.classification_times,true AS editable
     FROM project_roles as p
     WHERE role = 'admin'
     UNION
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plots_csv_file, p.plots_shp_file, p.samples_csv_file, p.samples_csv_file,
+        p.samples_per_plot,p.sample_resolution,p.sample_survey,
         p.classification_times,false AS editable
     FROM project_roles as p
     WHERE role = 'member'
@@ -685,7 +707,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
     UNION
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,p.plots_csv_file, p.plots_shp_file, p.samples_csv_file, p.samples_csv_file,
+        p.samples_per_plot,p.sample_resolution,p.sample_survey,
         p.classification_times,false AS editable
     FROM project_roles as p
     WHERE (role NOT IN ('admin','member') OR role IS NULL)
@@ -1161,7 +1183,11 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 			cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
 			cast(count(1) - sum(case when flagged then 1 else 0 end)  as int) as assigned, 
 			MAX(collection_time) as collection_time,
-			format('[%s]', string_agg(format('{"%s":"%s", "%s":%s}','id', m_samples_id, 'value', "value")  , ',')) as samples,
+			format('[%s]', string_agg((CASE WHEN "value" IS NULL THEN
+			 	format('{"%s":"%s"}','id', m_samples_id)  			 
+			ELSE
+				format('{"%s":"%s", "%s":%s}','id', m_samples_id, 'value', "value")
+			END) , ',')) as samples,
 			MAX(title) as imagery_title,
            	MAX(imagery_date) as imagery_date,
 			MAX(pl_ext_id) as pl_ext_id
@@ -1188,7 +1214,6 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 		LEFT JOIN plots_file_data pfd
 			ON pl_ext_id = pfd.ext_id
 			
-				   
 $$ LANGUAGE SQL;
     
 
