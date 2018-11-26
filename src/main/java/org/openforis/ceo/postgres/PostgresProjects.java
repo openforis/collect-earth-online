@@ -808,7 +808,9 @@ public class PostgresProjects implements Projects {
         var newSamplePoints =
         sampleDistribution.equals("random")
             ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
-            : createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution);              
+            : sampleDistribution.equals("random")
+                ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
+                : new Double[][]{plotCenter};              
 
         Arrays.stream(newSamplePoints)
             .forEach(sampleEntry -> {
