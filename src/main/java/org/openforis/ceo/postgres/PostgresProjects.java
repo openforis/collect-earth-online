@@ -759,7 +759,7 @@ public class PostgresProjects implements Projects {
                     conn.prepareStatement("SELECT * FROM add_file_plots(?)")) {
                     pstmt.setInt(1,Integer.parseInt(newProject.get("id").getAsString())); 
                     try (var rs = pstmt.executeQuery()) {
-                        while (rs.next()){
+                        while (plotDistribution == "csv" && rs.next()){
                             var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
                             createProjectSamples(conn, rs.getInt("id"), sampleDistribution, 
                                 plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution);
