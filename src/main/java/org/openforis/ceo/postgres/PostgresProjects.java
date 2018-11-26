@@ -759,10 +759,10 @@ public class PostgresProjects implements Projects {
                     conn.prepareStatement("SELECT * FROM add_file_plots(?)")) {
                     pstmt.setInt(1,Integer.parseInt(newProject.get("id").getAsString())); 
                     try (var rs = pstmt.executeQuery()) {
-                        while (plotDistribution == "csv" && rs.next()){
+                        while (rs.next()){
                             var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
                             createProjectSamples(conn, rs.getInt("id"), sampleDistribution, 
-                                plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution);
+                                plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, plotDistribution.equals("shp"));
                         }
                     }
                 } 
@@ -791,7 +791,8 @@ public class PostgresProjects implements Projects {
                         try(var rsPlots = pstmtPlots.executeQuery()){
                             if (rsPlots.next()) {
                                 var newPlotId = rsPlots.getInt("create_project_plot");
-                                createProjectSamples(conn, newPlotId, sampleDistribution, plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution);
+                                createProjectSamples(conn, newPlotId, sampleDistribution, 
+                                    plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, false);
                             }
                         }
                     } catch (SQLException e) {
@@ -804,13 +805,14 @@ public class PostgresProjects implements Projects {
         }        
     }
 
-    private static void createProjectSamples(Connection conn, Integer newPlotId, String sampleDistribution, Double[] plotCenter, String plotShape, Double plotSize, Integer samplesPerPlot, Double sampleResolution) {
+    private static void createProjectSamples(Connection conn, Integer newPlotId, String sampleDistribution, Double[] plotCenter, String plotShape, Double plotSize, Integer samplesPerPlot, Double sampleResolution, Boolean isShp) {
+        
         var newSamplePoints =
-        sampleDistribution.equals("random")
+        isShp || !List.of("random", "gridded").contains(sampleDistribution)
+        ? new Double[][]{plotCenter}
+        : sampleDistribution.equals("random")
             ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
-            : sampleDistribution.equals("random")
-                ? createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution)
-                : new Double[][]{plotCenter};              
+            : createGriddedSampleSet(plotCenter, plotShape, plotSize, sampleResolution);              
 
         Arrays.stream(newSamplePoints)
             .forEach(sampleEntry -> {
