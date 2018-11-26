@@ -179,7 +179,6 @@ class SideBar extends React.Component {
         if (filterText != "") {
             if(this.state.checked==true){
                 let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())));
-                console.log("from statte checled");
                 this.setState({filteredInstitutions: filtered,expandInstWithProject:false,checked: true});
             }
             else{
@@ -249,7 +248,7 @@ class SideBar extends React.Component {
                                               radioValue={this.state.radioValue} filterCall={this.filterCall}
                                               filterText={this.state.filterText} filterChecked={this.filterChecked} checked={this.state.checked}/>
                     </div>
-                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions}
+                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions} filterText={this.state.filterText}
                                      projects={this.props.projects}
                                      documentRoot={this.props.documentRoot} expandInstWithProject={this.state.expandInstWithProject}/>
                 </ul>
@@ -291,7 +290,7 @@ function InstitutionList(props) {
                              id={institution.id}
                              name={institution.name}
                              documentRoot={props.documentRoot}
-                             projects={props.projects.filter(project => project.institution == institution.id)} expandInstWithProject={props.expandInstWithProject}/>
+                             projects={props.projects.filter(project => project.institution == institution.id&& (project.name.toLocaleLowerCase()).includes(props.filterText.toLocaleLowerCase()))} expandInstWithProject={props.expandInstWithProject}/>
         )
     );
 }
