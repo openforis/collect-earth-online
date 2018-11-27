@@ -297,7 +297,7 @@ public class JsonProjects implements Projects {
                         return plotSummary;
                     });
 
-            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName);
+            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, new String[0]);
 
         } else {
             res.raw().setStatus(SC_NO_CONTENT);
@@ -342,7 +342,7 @@ public class JsonProjects implements Projects {
                     });
 
             var projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
-            return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName);
+            return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, new String[0]);
                     
         } else {
             res.raw().setStatus(SC_NO_CONTENT);
