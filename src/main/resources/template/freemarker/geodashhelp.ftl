@@ -84,13 +84,13 @@
                                         Landsat 5 - B1, B2, B3, B4, B5, B6, B7
                                     </li>
                                     <li>
-                                        B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
+                                        Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
                                     </li>
                                     <li>
-                                        B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
+                                        Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
                                     </li>
                                     <li>
-                                        B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
+                                        Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
                                     </li>
                                 </ol>
                             </li>
@@ -198,13 +198,13 @@
                                 Landsat 5 - B1, B2, B3, B4, B5, B6, B7
                             </li>
                             <li>
-                                B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
+                                Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
                             </li>
                             <li>
-                                B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
+                                Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
                             </li>
                             <li>
-                                B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
+                                Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
                             </li>
                         </ol>
                     </li>
@@ -240,13 +240,13 @@
                                 Landsat 5 - B1, B2, B3, B4, B5, B6, B7
                             </li>
                             <li>
-                                B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
+                                Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
                             </li>
                             <li>
-                                B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
+                                Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
                             </li>
                             <li>
-                                B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
+                                Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
                             </li>
                         </ol>
                     </li>
