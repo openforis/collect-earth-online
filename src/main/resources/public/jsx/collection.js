@@ -90,7 +90,6 @@ class Collection extends React.Component {
                     window.location = this.props.documentRoot + "/home";
                 } else {
                     const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues);
-                    console.log(surveyQuestions);
                     project.sampleValues = surveyQuestions;
                     this.setState({currentProject: project});
                 }
