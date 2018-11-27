@@ -19,6 +19,7 @@ class Collection extends React.Component {
             imageryMonthPlanet: "03",
             projectPlotsShown: false,
             navButtonsShown: 1,
+            prevPlotButtonDisabled:false,
             newPlotButtonDisabled: false,
             flagPlotButtonDisabled: false,
             saveValuesButtonDisabled: true,
@@ -34,6 +35,7 @@ class Collection extends React.Component {
         this.setImageryYearPlanet  = this.setImageryYearPlanet.bind(this);
         this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
         this.getPlotData           = this.getPlotData.bind(this);
+        this.prevPlot              = this.prevPlot.bind(this);
         this.nextPlot              = this.nextPlot.bind(this);
         this.flagPlot              = this.flagPlot.bind(this);
         this.saveValues            = this.saveValues.bind(this);
@@ -180,6 +182,7 @@ class Collection extends React.Component {
                               this.state.plotList,
                               feature => {
                                   this.setState({navButtonsShown: 2,
+                                                 prevPlotButtonDisabled:false,
                                                  newPlotButtonDisabled: false,
                                                  flagPlotButtonDisabled: false,
                                                  saveValuesButtonDisabled: true});
@@ -278,6 +281,9 @@ class Collection extends React.Component {
     }
 
     getPlotData(plotId) {
+        if(plotId==1){
+            this.setState({prevPlotButtonDisabled:true});
+        }
         const url = (plotId == "random")
             ? this.props.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId
             : this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId;
@@ -355,9 +361,34 @@ class Collection extends React.Component {
                                          + "&bradius=" + plotRadius),
                     "_geo-dash");
     }
+    prevPlot() {
+        console.log(this.state.plotList);
+        if(this.state.currentPlot!=null) {
+            this.setState({
+                navButtonsShown: 2,
+                prevPlotButtonDisabled:false,
+                newPlotButtonDisabled: false,
+                flagPlotButtonDisabled: false,
+                saveValuesButtonDisabled: true
+            });
+
+            let plot = this.state.plotList.filter(pl => pl.id == this.state.currentPlot.id);
+            if(plot[0].flagged==true){
+            }
+            else if (plot[0].id > 1 && plot[0].analyses==0) {
+
+                this.getPlotData(plot[0].id - 1);
+            }
+            else {
+                this.setState({prevPlotButtonDisabled:true});
+            }
+        }
+    }
 
     nextPlot() {
+
         this.setState({navButtonsShown: 2,
+                       prevPlotButtonDisabled:false,
                        newPlotButtonDisabled: false,
                        flagPlotButtonDisabled: false,
                        saveValuesButtonDisabled: true});
@@ -512,14 +543,18 @@ class Collection extends React.Component {
     }
 
     render() {
+        console.log("current plot");
+        console.log(this.state.currentPlot);
         return (
             <React.Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
                 <SideBar plotId={this.state.currentPlot?(this.state.currentPlot.plotId?this.state.currentPlot.plotId:""):""}
                          currentProject={this.state.currentProject}
                          navButtonsShown={this.state.navButtonsShown}
+                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                          newPlotButtonDisabled={this.state.newPlotButtonDisabled}
                          flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
+                         prevPlot={this.prevPlot}
                          nextPlot={this.nextPlot}
                          flagPlot={this.flagPlot}
                          imageryList={this.state.imageryList}
@@ -565,8 +600,10 @@ function SideBar(props) {
             <ProjectName projectName={props.currentProject.name}/>
             <PlotNavigation plotId={props.plotId}
                             navButtonsShown={props.navButtonsShown}
+                            prevPlot={props.prevPlot}
                             nextPlot={props.nextPlot}
                             flagPlot={props.flagPlot}
+                            prevPlotButtonDisabled={props.prevPlotButtonDisabled}
                             newPlotButtonDisabled={props.newPlotButtonDisabled}
                             flagPlotButtonDisabled={props.flagPlotButtonDisabled}/>
             <ImageryOptions baseMapSource={props.currentProject.baseMapSource}
@@ -612,23 +649,31 @@ function ProjectName(props) {
 function PlotNavigation(props) {
     return (
         <fieldset className="mb-3 text-center">
-            <h3>{"Plot Navigation "+(props.plotId==""?"":"(Current Plot Id: "+props.plotId+")")}</h3>
+            <h3>Plot Navigation</h3>
+            <h3>{(props.plotId==""?"":"Current Plot ID: "+props.plotId)}</h3>
+
             <div className={props.navButtonsShown == 1 ? "row" : "row d-none"} id="go-to-first-plot">
                 <div className="col">
                     <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
                            type="button" name="new-plot" value="Go to first plot" onClick={props.nextPlot}/>
                 </div>
             </div>
-            <div className={props.navButtonsShown == 2 ? "row" : "row d-none"} id="plot-nav">
-                <div className="col-sm-6 pr-2">
-                    <input id="new-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
+            <div className={props.navButtonsShown == 2 ? "row" : "row d-none"} id="plot-nav" style={{display:"inline-flex"}}>
+                <div className="pr-2">
+                    <input id="prev-plot-button" className="btn btn-outline-lightgreen"
+                           type="button" name="new-plot" value="Prev" onClick={props.prevPlot}
+                           style={{opacity: props.prevPlotButtonDisabled ? "0.5" : "1.0"}}
+                           disabled={props.prevPlotButtonDisabled}/>
+                </div>
+                <div className="pr-2">
+                    <input id="new-plot-button" className="btn btn-outline-lightgreen"
                            type="button" name="new-plot" value="Skip" onClick={props.nextPlot}
                            style={{opacity: props.newPlotButtonDisabled ? "0.5" : "1.0"}}
                            disabled={props.newPlotButtonDisabled}/>
                 </div>
-                <div className="col-sm-6 pl-2">
-                    <input id="flag-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                           type="button" name="flag-plot" value="Flag Plot as Bad" onClick={props.flagPlot}
+                <div className="pr-2">
+                    <input id="flag-plot-button" className="btn btn-outline-lightgreen"
+                           type="button" name="flag-plot" value="Flag" onClick={props.flagPlot}
                            style={{opacity: props.flagPlotButtonDisabled ? "0.5" : "1.0"}}
                            disabled={props.flagPlotButtonDisabled}/>
                 </div>

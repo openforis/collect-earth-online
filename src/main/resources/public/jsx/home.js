@@ -192,7 +192,6 @@ class SideBar extends React.Component {
 
     filterChecked(e) {
         if (e.target.checked == true) {
-            console.log("filter text"+this.state.filterText);
             let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())));
             this.setState({filteredInstitutions: filtered,checked: true,expandInstWithProject:false});
         }
