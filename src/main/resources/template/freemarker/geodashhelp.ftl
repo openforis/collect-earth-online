@@ -303,6 +303,24 @@
         </ol>
         <br style="clear:both;" />
 
+        <img src="${root}/img/change_widget_layout.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
+        <br class="previewbreak" />
+        <ol>
+            <li>
+                Drag and drop
+            </li>
+            <li>
+                Resize by dragging from the bottom right corner
+            </li>
+            <li>
+                Widgets are updated in realtime
+            </li>
+            <li>
+                View rendered results in the Geo-Dash window
+            </li>
+        </ol>
+        <br style="clear:both;" />
+
 
         <p>Please access <a href="http://www.openforis.org/tools/sepal.html" target="_blank">OpenForis-SEPAL</a> for more information about SEPAL.</p>
         <#include "logo-banner.ftl">
