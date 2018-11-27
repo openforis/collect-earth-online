@@ -60,6 +60,7 @@ class Project extends React.Component {
     };
 
     componentDidMount() {
+        this.getProjectList(this.state.userId, this.state.projectId);
         let institution = this.state.institutionId;
         if (this.state.details == null) {
             this.getProjectById(this.state.projectId);
@@ -77,7 +78,6 @@ class Project extends React.Component {
                 }
                 this.state.details.plotShape = "circle";
                 this.state.details.sampleDistribution = "random";
-                this.getProjectList(this.state.userId, this.state.projectId);
             }
             if (this.state.details.id != 0) {
                 institution = this.state.details.institution;
@@ -625,12 +625,12 @@ class Project extends React.Component {
                 }
             })
             .then(data => {
+
                 this.setState({projectList: data});
-                var projList = this.state.projectList;
+                console.log(data);
+                let projList = this.state.projectList;
                 projList.unshift(JSON.parse(JSON.stringify(this.state.details)));
-                this.setState({projectList: projList});
-                this.setState({userId: userId});
-                this.setState({projectId: "" + projectId});
+                this.setState({projectList: projList,userId: userId,projectId: "" + projectId});;
                 this.updateUnmanagedComponents(this.state.projectId);
             });
     }
@@ -843,7 +843,7 @@ function ProjectDesignForm(props) {
         <form id="project-design-form" className="px-2 pb-2" method="post"
               action={props.documentRoot + "/create-project"}
               encType="multipart/form-data">
-            <ProjectTemplateVisibility project={props.project} setProjectTemplate={props.setProjectTemplate}/>
+            <ProjectTemplateVisibility project={props.project} setProjectTemplate={props.setProjectTemplate} project_template_visibility={props.project_template_visibility}/>
             <ProjectInfo project={props.project} handleChange={props.handleChange}/>
             <ProjectVisibility project={props.project} setPrivacyLevel={props.setPrivacyLevel}/>
             <ProjectAOI projectId={props.projectId} project={props.project}/>
@@ -865,7 +865,8 @@ function ProjectDesignForm(props) {
 }
 
 function ProjectTemplateVisibility(props) {
-    var project = props.project;
+    let project = props.project;
+    console.log(project);
     if (project.projectList != null) {
         return (
             <div className={"row " + props.project_template_visibility}>
