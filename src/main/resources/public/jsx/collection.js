@@ -362,7 +362,6 @@ class Collection extends React.Component {
                     "_geo-dash");
     }
     prevPlot() {
-        console.log(this.state.plotList);
         if(this.state.currentPlot!=null) {
             this.setState({
                 navButtonsShown: 2,
