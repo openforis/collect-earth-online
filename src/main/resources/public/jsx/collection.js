@@ -54,6 +54,7 @@ class Collection extends React.Component {
     }
 
     componentDidUpdate() {
+
         if (this.state.currentProject.institution && this.state.imageryList.length == 0) {
             this.getImageryList(this.state.currentProject.institution);
         }
@@ -281,9 +282,6 @@ class Collection extends React.Component {
     }
 
     getPlotData(plotId) {
-        if(plotId==1){
-            this.setState({prevPlotButtonDisabled:true});
-        }
         const url = (plotId == "random")
             ? this.props.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId
             : this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId;
@@ -362,40 +360,46 @@ class Collection extends React.Component {
                     "_geo-dash");
     }
     prevPlot() {
-        if(this.state.currentPlot!=null) {
-            this.setState({
-                navButtonsShown: 2,
-                prevPlotButtonDisabled:false,
-                newPlotButtonDisabled: false,
-                flagPlotButtonDisabled: false,
-                saveValuesButtonDisabled: true
-            });
-
-            let plot = this.state.plotList.filter(pl => pl.id == this.state.currentPlot.id);
-            if(plot[0].flagged==true){
-            }
-            else if (plot[0].id > 1 && plot[0].analyses==0) {
-
-                this.getPlotData(plot[0].id - 1);
+        this.setState({
+            navButtonsShown: 2,
+            prevPlotButtonDisabled: false,
+            newPlotButtonDisabled: false,
+            flagPlotButtonDisabled: false,
+            saveValuesButtonDisabled: true
+        });
+        if (this.state.currentPlot) {
+            let plot = this.state.plotList.filter(pl => pl.plotId == this.state.currentPlot.plotId);
+            let newPlot = this.state.plotList.filter(pl => pl.id==plot[0].id-1);
+            if (newPlot[0].id > 1 && newPlot[0].analyses == 0 && newPlot[0].flagged == false) {
+                this.getPlotData(newPlot[0].id);
             }
             else {
-                this.setState({prevPlotButtonDisabled:true});
+                alert("No more previous plots, please skip to randomize!")
+                this.setState({prevPlotButtonDisabled: true});
             }
         }
     }
 
     nextPlot() {
-
         this.setState({navButtonsShown: 2,
                        prevPlotButtonDisabled:false,
                        newPlotButtonDisabled: false,
                        flagPlotButtonDisabled: false,
                        saveValuesButtonDisabled: true});
         this.getPlotData("random");
+        if(this.state.currentPlot){
+            if(this.state.currentPlot.id==1) {
+                this.setState({prevPlotButtonDisabled: true});
+            }
+        }
     }
 
     flagPlot() {
         if (this.state.currentPlot != null) {
+            if(this.state.currentPlot.plotId=="1")
+            {
+                this.setState({prevPlotButtonDisabled:true});
+            }
             fetch(this.props.documentRoot + "/flag-plot",
                   {
                       method: "post",
@@ -542,8 +546,7 @@ class Collection extends React.Component {
     }
 
     render() {
-        console.log("current plot");
-        console.log(this.state.currentPlot);
+
         return (
             <React.Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
@@ -901,6 +904,7 @@ class ProjectStats extends React.Component {
     }
 
     render() {
+
         return (
             <React.Fragment>
                 <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"

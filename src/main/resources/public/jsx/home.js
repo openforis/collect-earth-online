@@ -174,12 +174,13 @@ class SideBar extends React.Component {
     }
 
     filterText(e) {
-        var filterText = e.target.value;
+        let filterText = e.target.value;
         this.setState({filterText: filterText});
         if (filterText != "") {
+            let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(filterText.toLocaleLowerCase())));
             if(this.state.checked==true){
-                let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())));
-                this.setState({filteredInstitutions: filtered,expandInstWithProject:false,checked: true});
+                this.setState({filteredInstitutions: filtered});
+                this.setState({expandInstWithProject:false,checked: true});
             }
             else{
                 this.filterCall(this.state.radioValue, filterText);
