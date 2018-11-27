@@ -95,6 +95,8 @@ public class Views {
         return makeRoute("About", freemarker);
     }
 
+    public static Route geodashhelp(FreeMarkerEngine freemarker) { return makeRoute("geodashhelp", freemarker); }
+
     public static Route support(FreeMarkerEngine freemarker) {
         return makeRoute("Support", freemarker);
     }
