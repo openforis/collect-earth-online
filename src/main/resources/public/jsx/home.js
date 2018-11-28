@@ -196,7 +196,7 @@ class SideBar extends React.Component {
 
     filterBoth(checked,radioValue,filterText) {
         if (checked == true) {
-            let filteredInstProjects = [];
+            let filteredInstProjects = [],onlyProjects=[];
             if (filterText != "") {
                 if (radioValue == "institution") {
                     let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(filterText.toLocaleLowerCase())));
@@ -205,13 +205,13 @@ class SideBar extends React.Component {
                 if (radioValue == "project") {
                     this.state.institutions.map(inst => {
                         const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).startsWith(filterText.toLocaleLowerCase()));
-                        if (projects.length > 0) {
-                            filteredInstProjects.push(inst);
-                            this.setState({filteredProjects: projects});
+                        if (projects.length > 0) {filteredInstProjects.push(inst);
+                            onlyProjects=onlyProjects.concat(projects);
                         }
                     });
+                    this.setState({filteredProjects:onlyProjects});
                     if (filteredInstProjects.length > 0) {
-                        this.setState({filteredInstitutions: filteredInstProjects, expandInstWithProject: true});
+                        this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
                     }
                     else {
                         this.setState({filteredInstitutions: []});
@@ -228,7 +228,7 @@ class SideBar extends React.Component {
     }
 
     filterCall(radioValue, filterText) {
-        let filtered = [], filteredInstProjects = [];
+        let filtered = [], filteredInstProjects = [],onlyProjects=[];
         this.setState({radioValue: radioValue});
         if (filterText == "") {
             this.setState({filteredInstitutions: this.state.institutions,filteredProjects:this.props.projects});
@@ -248,9 +248,10 @@ class SideBar extends React.Component {
                 this.state.institutions.map(inst => {
                     const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
                     if (projects.length > 0) {filteredInstProjects.push(inst);
-                    this.setState({filteredProjects:projects});
+                        onlyProjects=onlyProjects.concat(projects);
                     }
                 });
+                this.setState({filteredProjects:onlyProjects});
                 if (filteredInstProjects.length > 0) {
                     this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
                 }
