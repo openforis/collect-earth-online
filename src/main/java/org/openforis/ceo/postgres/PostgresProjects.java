@@ -634,7 +634,7 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private static void deleteCsvFile(String csvFile) {
+    private static void deleteFile(String csvFile) {
         var csvFilePath = Paths.get(expandResourcePath("/csv"), csvFile);
         try {
             if (csvFilePath.toFile().exists()) {
@@ -648,9 +648,11 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private static void deleteCsvFiles(int projectId) {
-        deleteCsvFile("project-" + projectId + "-plots.csv");
-        deleteCsvFile("project-" + projectId + "-samples.csv");
+    private static void deleteFiles(int projectId) {
+        deleteFile("project-" + projectId + "-plots.csv");
+        deleteFile("project-" + projectId + "-samples.csv");        
+        deleteFile("project-" + projectId + "-plots.zip");
+        deleteFile("project-" + projectId + "-samples.zip");
     }
 
     private static String loadPlots(Connection conn, String plotDistribution, Integer projectId, String plotsFile) {
@@ -933,7 +935,7 @@ public class PostgresProjects implements Projects {
                             // Create the requested plot set and write it to plot-data-<newProjectId>.json
                             createProjectPlots(newProject);
 
-                            deleteCsvFiles(Integer.parseInt(newProjectId));
+                            deleteFiles(Integer.parseInt(newProjectId));
                             deleteShapeFileDirectories(Integer.parseInt(newProjectId));
                         }
                     }
