@@ -293,6 +293,10 @@ public class JsonUsers implements Users {
         }
     }
 
+    public String getUserStats(Request req, Response res) {
+        return "";
+    }
+    
     public Map<Integer, String> getInstitutionRoles(int userId) {
         var institutions = readJsonFile("institution-list.json").getAsJsonArray();
         var userIdJson = new JsonPrimitive(userId);
