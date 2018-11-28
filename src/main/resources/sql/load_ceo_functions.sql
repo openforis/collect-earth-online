@@ -552,7 +552,7 @@ CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_id integer, _dash
 $$ LANGUAGE SQL;
 
 --
--- PROJECT FUNCTIONS
+-- CREATING PROJECTS FUNCTIONS
 --
 
 CREATE TYPE project_return AS (
@@ -642,6 +642,300 @@ CREATE OR REPLACE FUNCTION create_project(
     RETURNING id
 
 $$ LANGUAGE SQL;
+
+-- Update counts after plots are created
+CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
+ RETURNS void AS $$
+	with project_plots AS (
+		select p.id as p_id, pl.id as pl_id, s.id as s_id
+		FROM
+		projects p
+		INNER JOIN plots pl
+			ON pl.project_id = p.id
+		INNER JOIN samples s
+			ON pl.id = s.plot_id
+		WHERE project_id = _project_id
+	)
+	UPDATE projects
+	SET num_plots = plots,
+		samples_per_plot = samples
+	FROM (
+		SELECT Count(DISTINCT pl_id) AS plots, 
+			(CASE WHEN Count(DISTINCT pl_id) = 0 THEN 0 ELSE Count(s_id) / Count(DISTINCT pl_id) END) as samples 
+		FROM project_plots
+	) a
+	WHERE id = _project_id
+
+$$ LANGUAGE SQL;
+
+-- CSV REQUIRED FUNCTIONS
+
+-- Create empty table before loading csv
+CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
+ RETURNS void AS $$
+	DECLARE 
+	iter text;
+	BEGIN
+	EXECUTE 'CREATE TABLE ' || _table_name || '()';
+		
+		FOREACH iter IN ARRAY string_to_array(_cols, ',')
+		loop
+			execute format('alter table ' || _table_name || ' add column %s ;', iter);
+		end loop;
+		
+	END
+$$ LANGUAGE PLPGSQL;
+
+-- Add index to csv file for reference later
+CREATE OR REPLACE FUNCTION add_index_col(_table_name text)
+ RETURNS void AS $$
+	BEGIN
+	EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN gid serial primary key';
+	END
+$$ LANGUAGE PLPGSQL;
+
+--	CLEAN UP FUNCTIONS
+
+-- Delete duplicates after loading
+CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
+ RETURNS void AS $$
+	BEGIN
+	IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
+	EXECUTE	
+		'WITH duplicates as (
+			SELECT * FROM
+				(SELECT *, count(*) OVER
+					(PARTITION BY
+					' || _on_cols || '
+					) AS count
+		FROM ' || _table_name || ') tableWithCount
+		WHERE tableWithCount.count > 1
+						)
+		DELETE FROM ' || _table_name || ' WHERE gid IN
+		(SELECT DISTINCT ON (' || _on_cols || ') gid FROM duplicates)';
+	END
+$$ LANGUAGE PLPGSQL;
+
+-- Calculates boundary from for csv data
+CREATE OR REPLACE FUNCTION csv_boundary(_project_id integer, _m_buffer float)
+ RETURNS void AS $$
+	UPDATE projects SET boundary = b
+	FROM (
+		SELECT ST_Expand(ST_SetSRID(ST_Extent(center) , 4326) , _m_buffer / 1000.0) as b
+	 	FROM select_partial_table_by_name(
+			(SELECT plots_ext_table 
+		 	FROM projects 
+			WHERE id = _project_id)
+		)
+	) bb
+	WHERE id = _project_id
+$$ LANGUAGE SQL;
+
+-- Calculates boundary from shp file using geometry.  Padding not needed
+CREATE OR REPLACE FUNCTION shp_boundary(_project_id integer)
+ RETURNS void AS $$
+	
+	UPDATE projects SET boundary = b
+	FROM (
+		SELECT ST_SetSRID(ST_Extent(geom), 4326) AS b 
+		FROM select_partial_table_by_name(
+			(SELECT plots_ext_table 
+			 FROM projects 
+			 WHERE id = _project_id)
+			)
+	) bb
+	WHERE id = _project_id
+
+$$ LANGUAGE SQL;
+
+-- Runs a few functions after data has been uploaded
+CREATE OR REPLACE FUNCTION cleanup_project_tables(_project_id integer, _m_buffer float)
+ RETURNS void AS $$
+	DECLARE 
+		_plots_ext_table text;
+		_samples_ext_table text;
+	BEGIN
+		SELECT plots_ext_table  INTO _plots_ext_table FROM projects WHERE id = _project_id;
+		SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE id = _project_id;
+		
+		IF _plots_ext_table similar to '%(_csv)' THEN
+			PERFORM csv_boundary(_project_id, _m_buffer);
+		ELSIF  _plots_ext_table similar to '%(_shp)' THEN
+			PERFORM shp_boundary(_project_id);
+		END IF;
+		
+		PERFORM delete_duplicates(_plots_ext_table,'plotid');
+		PERFORM delete_duplicates(_samples_ext_table,'plotid,sampleid');
+	END
+$$ LANGUAGE PLPGSQL;
+
+-- Add plots from file
+CREATE OR REPLACE FUNCTION add_file_plots(_project_id integer)
+ RETURNS TABLE (
+		id		integer,
+		plotid	text,
+		lon  	float,
+		lat		float
+	) AS $$
+	WITH plot_tbl AS (
+		SELECT * from select_partial_table_by_name((
+			SELECT plots_ext_table 
+			FROM projects 
+			WHERE id = _project_id
+		))
+	),
+	plotrows AS (
+        INSERT INTO plots (project_id, center, ext_id)
+		SELECT _project_id, center, ext_id
+		FROM plot_tbl
+		RETURNING id, ext_id, center
+	)
+	SELECT id, plotid::text, ST_X(plotrows.center), ST_Y(plotrows.center)
+	FROM plotrows 
+	INNER JOIN plot_tbl 
+		ON plotrows.ext_id = plot_tbl.ext_id
+$$ LANGUAGE SQL;
+
+-- Add samples from file assuming plot data will also come from a file
+CREATE OR REPLACE FUNCTION samples_from_plots_with_files(_project_id integer)
+ RETURNS integer AS $$
+	WITH sample_tbl AS (
+		SELECT * FROM select_partial_table_by_name((
+			SELECT samples_ext_table 
+			FROM projects 
+			WHERE id = _project_id
+		)) as st
+		INNER JOIN add_file_plots(_project_id) asp
+			ON asp.plotId = st.plotId
+	),
+	samplerows AS (
+        INSERT INTO samples (plot_id, point, ext_id)
+		SELECT id, center as point, ext_id
+		FROM sample_tbl
+		RETURNING id, ext_id, point
+	)
+	SELECT COUNT(*)::integer
+	FROM samplerows 
+	INNER JOIN sample_tbl 
+		ON samplerows.ext_id = sample_tbl.ext_id
+$$ LANGUAGE SQL;
+
+-- Upade tables for external data after project is created
+CREATE OR REPLACE FUNCTION update_project_tables(
+	_proj_id            integer,
+	_plots_ext_table 	text,
+	_samples_ext_table 	text
+	) 
+ RETURNS void AS $$
+	BEGIN
+		UPDATE projects 
+		SET plots_ext_table = _plots_ext_table,
+			samples_ext_table = _samples_ext_table
+		WHERE id = _proj_id;
+
+	END
+$$ LANGUAGE PLPGSQL;
+
+-- TEMPLATE RELATED
+
+-- Copy the tables related to file data if they exist and update the projects table
+CREATE OR REPLACE FUNCTION copy_file_tables(_old_project_id integer, _new_project_id integer)
+ RETURNS VOID AS $$
+    DECLARE
+        _plots_ext_table text;
+        _samples_ext_table text;
+        _plots_ext_table_new text;
+        _samples_ext_table_new text;
+    BEGIN
+        SELECT plots_ext_table  INTO _plots_ext_table FROM projects WHERE id = _old_project_id;
+        SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE id = _old_project_id;
+        
+        IF _plots_ext_table IS NOT NULL AND _plots_ext_table <> '' THEN
+            EXECUTE 
+                'SELECT regexp_replace(''' ||_plots_ext_table|| ''', ''(\d+)'', ''' ||  _new_project_id || ''')'
+                    INTO _plots_ext_table_new;
+            EXECUTE 'CREATE TABLE ' || _plots_ext_table_new || ' AS SELECT * FROM ' || _plots_ext_table;
+            EXECUTE 'UPDATE projects SET plots_ext_table = ''' || _plots_ext_table_new || ''' WHERE id = ' || _new_project_id;
+        END IF;
+        IF _samples_ext_table IS NOT NULL AND _samples_ext_table <> '' THEN
+            EXECUTE 'SELECT regexp_replace(''' || _samples_ext_table || ''', ''(\d+)'', ''' ||  _new_project_id || ''')'
+                INTO _samples_ext_table_new;
+            EXECUTE 'CREATE TABLE ' || _samples_ext_table_new || ' AS SELECT * FROM ' || _samples_ext_table;
+            EXECUTE 'UPDATE projects SET samples_ext_table = ''' || _samples_ext_table_new || ''' WHERE id = ' || _new_project_id;
+        END IF;
+    END;
+$$ language PLPGSQL;
+
+-- Copy plot data and sample data
+CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_id integer, _new_project_id integer)
+ RETURNS integer AS $$
+	WITH project_plots AS (
+		SELECT center, ext_id, pl.id as plid_old, row_number() OVER(order by pl.id) as rowid
+		FROM projects p
+		INNER JOIN plots pl
+			ON pl.project_id = p.id
+			AND project_id = _old_project_id
+	), inserting as (
+		INSERT INTO plots (project_id, center, ext_id) 
+		SELECT _new_project_id, center, ext_id
+		FROM project_plots
+		RETURNING plots.id as plid
+	),
+	new_ordered as (
+		SELECT plid, row_number() OVER(order by plid) as rowid FROM inserting
+	),
+	combined as (
+		SELECT * from new_ordered inner join project_plots USING (rowid)
+	),
+	inserting_samples AS (
+		INSERT INTO samples (plot_id, point, ext_id)
+		SELECT plid, point, ext_id
+		FROM (
+			SELECT plid, point, s.ext_id
+			FROM combined c
+			INNER JOIN samples s
+				ON c.plid_old = s.plot_id
+		) B
+		RETURNING samples.id
+	)
+	SELECT Count(1)::int FROM inserting_samples
+$$ LANGUAGE SQL;
+
+-- Copy other project fields that may not have been correctly passed from UI
+CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _new_project_id integer)
+ RETURNS void AS $$
+ 
+ 	UPDATE projects
+	SET boundary = n.boundary,
+  		base_map_source = n.base_map_source,
+  		plot_distribution = n.plot_distribution,
+  		num_plots = n.num_plots,
+  		plot_spacing = n.plot_spacing,
+  		plot_shape = n.plot_shape,
+  		plot_size = n.plot_size,
+  		sample_distribution = n.sample_distribution,
+  		samples_per_plot = n.samples_per_plot,
+  		sample_resolution = n.sample_resolution
+	FROM (SELECT boundary, base_map_source, plot_distribution, num_plots,
+  		plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
+  		sample_resolution, sample_survey
+		 FROM projects WHERE id = _old_project_id) n
+	WHERE 
+		id = _new_project_id
+	
+$$ LANGUAGE SQL;
+
+-- Combines individual funtions needed to copy all plot and sample information.
+CREATE OR REPLACE FUNCTION copy_template_plots(_old_project_id integer, _new_project_id integer)
+ RETURNS VOID AS $$
+    SELECT * FROM copy_project_plots_samples(_old_project_id, _new_project_id);
+    SELECT * FROM copy_file_tables(_old_project_id, _new_project_id);
+    SELECT * FROM copy_project_plots_stats(_old_project_id, _new_project_id);
+$$ LANGUAGE SQL;
+
+--
+-- USING PROJECT FUNCTIONS
+--
 
 -- Returns a row in projects by id.
 CREATE OR REPLACE FUNCTION select_project(_id integer) 
@@ -1216,7 +1510,6 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 			
 $$ LANGUAGE SQL;
     
-
 -- Returns project raw data
 CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer) 
     RETURNS TABLE (
@@ -1278,176 +1571,6 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 
 $$ LANGUAGE SQL;
 
-
-
--- CSV REQUIRED FUNCTIONS
-
--- Create empty table before loading csv
-CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
- RETURNS void AS $$
-	DECLARE 
-	iter text;
-	BEGIN
-	EXECUTE 'CREATE TABLE ' || _table_name || '()';
-		
-		FOREACH iter IN ARRAY string_to_array(_cols, ',')
-		loop
-			execute format('alter table ' || _table_name || ' add column %s ;', iter);
-		end loop;
-		
-	END
-$$ LANGUAGE PLPGSQL;
-
--- Add index to csv file for reference later
-CREATE OR REPLACE FUNCTION add_index_col(_table_name text)
- RETURNS void AS $$
-	BEGIN
-	EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN gid serial primary key';
-	END
-$$ LANGUAGE PLPGSQL;
-
---	CLEAN UP FUNCTIONS
-
--- Delete duplicates after loading
-CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
- RETURNS void AS $$
-	BEGIN
-	IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
-	EXECUTE	
-		'WITH duplicates as (
-			SELECT * FROM
-				(SELECT *, count(*) OVER
-					(PARTITION BY
-					' || _on_cols || '
-					) AS count
-		FROM ' || _table_name || ') tableWithCount
-		WHERE tableWithCount.count > 1
-						)
-		DELETE FROM ' || _table_name || ' WHERE gid IN
-		(SELECT DISTINCT ON (' || _on_cols || ') gid FROM duplicates)';
-	END
-$$ LANGUAGE PLPGSQL;
-
--- Calculates boundary from for csv data
-CREATE OR REPLACE FUNCTION csv_boundary(_project_id integer, _m_buffer float)
- RETURNS void AS $$
-	UPDATE projects SET boundary = b
-	FROM (
-		SELECT ST_Expand(ST_SetSRID(ST_Extent(center) , 4326) , _m_buffer / 1000.0) as b
-	 	FROM select_partial_table_by_name(
-			(SELECT plots_ext_table 
-		 	FROM projects 
-			WHERE id = _project_id)
-		)
-	) bb
-	WHERE id = _project_id
-$$ LANGUAGE SQL;
-
--- Calculates boundary from shp file using geometry.  Padding not needed
-CREATE OR REPLACE FUNCTION shp_boundary(_project_id integer)
- RETURNS void AS $$
-	
-	UPDATE projects SET boundary = b
-	FROM (
-		SELECT ST_SetSRID(ST_Extent(geom), 4326) AS b 
-		FROM select_partial_table_by_name(
-			(SELECT plots_ext_table 
-			 FROM projects 
-			 WHERE id = _project_id)
-			)
-	) bb
-	WHERE id = _project_id
-
-$$ LANGUAGE SQL;
-
--- Runs a few functions after data has been uploaded
-CREATE OR REPLACE FUNCTION cleanup_project_tables(_project_id integer, _m_buffer float)
- RETURNS void AS $$
-	DECLARE 
-		_plots_ext_table text;
-		_samples_ext_table text;
-	BEGIN
-		SELECT plots_ext_table  INTO _plots_ext_table FROM projects WHERE id = _project_id;
-		SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE id = _project_id;
-		
-		IF _plots_ext_table similar to '%(_csv)' THEN
-			PERFORM csv_boundary(_project_id, _m_buffer);
-		ELSIF  _plots_ext_table similar to '%(_shp)' THEN
-			PERFORM shp_boundary(_project_id);
-		END IF;
-		
-		PERFORM delete_duplicates(_plots_ext_table,'plotid');
-		PERFORM delete_duplicates(_samples_ext_table,'plotid,sampleid');
-	END
-$$ LANGUAGE PLPGSQL;
-
--- Add plots from file
-CREATE OR REPLACE FUNCTION add_file_plots(_project_id integer)
- RETURNS TABLE (
-		id		integer,
-		plotid	text,
-		lon  	float,
-		lat		float
-	) AS $$
-	WITH plot_tbl AS (
-		SELECT * from select_partial_table_by_name((
-			SELECT plots_ext_table 
-			FROM projects 
-			WHERE id = _project_id
-		))
-	),
-	plotrows AS (
-        INSERT INTO plots (project_id, center, ext_id)
-		SELECT _project_id, center, ext_id
-		FROM plot_tbl
-		RETURNING id, ext_id, center
-	)
-	SELECT id, plotid::text, ST_X(plotrows.center), ST_Y(plotrows.center)
-	FROM plotrows 
-	INNER JOIN plot_tbl 
-		ON plotrows.ext_id = plot_tbl.ext_id
-$$ LANGUAGE SQL;
-
--- Add samples from file assuming plot data will also come from a file
-CREATE OR REPLACE FUNCTION samples_from_plots_with_files(_project_id integer)
- RETURNS integer AS $$
-	WITH sample_tbl AS (
-		SELECT * FROM select_partial_table_by_name((
-			SELECT samples_ext_table 
-			FROM projects 
-			WHERE id = _project_id
-		)) as st
-		INNER JOIN add_file_plots(_project_id) asp
-			ON asp.plotId = st.plotId
-	),
-	samplerows AS (
-        INSERT INTO samples (plot_id, point, ext_id)
-		SELECT id, center as point, ext_id
-		FROM sample_tbl
-		RETURNING id, ext_id, point
-	)
-	SELECT COUNT(*)::integer
-	FROM samplerows 
-	INNER JOIN sample_tbl 
-		ON samplerows.ext_id = sample_tbl.ext_id
-$$ LANGUAGE SQL;
-
--- Upade data that requires the project number after a project is created
-CREATE OR REPLACE FUNCTION update_project_tables(
-	_proj_id            integer,
-	_plots_ext_table 	text,
-	_samples_ext_table 	text
-	) 
- RETURNS void AS $$
-	BEGIN
-		UPDATE projects 
-		SET plots_ext_table = _plots_ext_table,
-			samples_ext_table = _samples_ext_table
-		WHERE id = _proj_id;
-
-	END
-$$ LANGUAGE PLPGSQL;
-
 --
 --  MAINT FUNCTIONS
 --
@@ -1470,6 +1593,7 @@ CREATE OR REPLACE FUNCTION update_sequence(_table text)
 
 $$ LANGUAGE PLPGSQL;
 
+-- Reads json file with dynamic name
 CREATE or replace function read_json_file( _file_name text)
 	RETURNS table (valuestr text) as $$
 	

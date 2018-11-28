@@ -719,28 +719,28 @@ public class PostgresProjects implements Projects {
         var latMin =             getOrZero(newProject,"latMin").getAsDouble();
         var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
         var latMax =             getOrZero(newProject,"latMax").getAsDouble();
-        var plotDistribution =   newProject.get("plotDistribution").getAsString();
+        var plotDistribution =   getOrEmptyString(newProject, "plotDistribution").getAsString();
         var numPlots =           getOrZero(newProject,"numPlots").getAsInt();
         var plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
         var plotShape =          getOrEmptyString(newProject,"plotShape").getAsString();
         var plotSize =           getOrZero(newProject,"plotSize").getAsDouble();
-        var sampleDistribution = newProject.get("sampleDistribution").getAsString();
+        var sampleDistribution = getOrEmptyString(newProject, "sampleDistribution").getAsString();
         var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
         var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
         var plotsFile =          newProject.has("plots_file") ? newProject.get("plots_file").getAsString() : "";
         var samplesFile =        newProject.has("samples_file") ? newProject.get("samples_file").getAsString() : "";
         try (var conn = connect()) {
-            // load files into the database
+            // load files into the database (loadPlot, loadSamples) and update projects
             try (var pstmt = 
                 conn.prepareStatement("SELECT * FROM update_project_tables(?,?::text,?::text)")) {
-                pstmt.setInt(1, Integer.parseInt(newProject.get("id").getAsString()));     
+                pstmt.setInt(1, projectId);     
                 pstmt.setString(2, loadPlots(conn, plotDistribution, projectId, plotsFile));
                 pstmt.setString(3, loadSamples(conn, sampleDistribution, projectId, samplesFile));
                 pstmt.execute();
             } 
             try (var pstmt = 
                 conn.prepareStatement("SELECT * FROM cleanup_project_tables(?,?)")) {
-                pstmt.setInt(1, Integer.parseInt(newProject.get("id").getAsString()));     
+                pstmt.setInt(1, projectId);     
                 pstmt.setDouble(2, plotSize);
                 pstmt.execute();
             } 
@@ -749,15 +749,14 @@ public class PostgresProjects implements Projects {
             if (List.of("csv", "shp").contains(plotDistribution) && List.of("csv", "shp").contains(sampleDistribution)) {
                 try (var pstmt = 
                     conn.prepareStatement("SELECT * FROM samples_from_plots_with_files(?)")) {
-                    pstmt.setInt(1, Integer.parseInt(newProject.get("id").getAsString()));     
+                    pstmt.setInt(1, projectId);     
                     pstmt.execute();
                 } 
-                return;
             // Add plots from file and use returned plot ID to create samples
             } else if (List.of("csv", "shp").contains(plotDistribution)) {
                 try (var pstmt = 
                     conn.prepareStatement("SELECT * FROM add_file_plots(?)")) {
-                    pstmt.setInt(1,Integer.parseInt(newProject.get("id").getAsString())); 
+                    pstmt.setInt(1,projectId); 
                     try (var rs = pstmt.executeQuery()) {
                         while (rs.next()){
                             var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
@@ -786,7 +785,7 @@ public class PostgresProjects implements Projects {
                     var plotCenter = (Double[]) plotEntry;    
                         var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
                         try(var pstmtPlots = conn.prepareStatement(SqlPlots)) {
-                        pstmtPlots.setInt(1,Integer.parseInt(newProject.get("id").getAsString()));    
+                        pstmtPlots.setInt(1, projectId);    
                         pstmtPlots.setString(2, makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());       
                         try(var rsPlots = pstmtPlots.executeQuery()){
                             if (rsPlots.next()) {
@@ -799,6 +798,12 @@ public class PostgresProjects implements Projects {
                         System.out.println(e.getMessage());
                     }
                 });
+            }
+
+            // Update numPlots and samplesPerPlot to match the numbers that were generated
+            try (var pstmt = conn.prepareStatement("SELECT * FROM update_project_counts(?)")) {
+                pstmt.setInt(1, projectId);
+                pstmt.execute();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -841,7 +846,7 @@ public class PostgresProjects implements Projects {
                                                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                                                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
                                                             "samples-per-plot", "sample-resolution", "sample-values",
-                                                            "classification_times"});
+                                                            "classification_times", "project-template", "use-template-plots"});
 
             // Manually add the name and description fields since they may be invalid JSON
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
@@ -864,13 +869,13 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(4, newProject.get("description").getAsString());
                 pstmt.setString(5, newProject.get("privacyLevel").getAsString());
                 pstmt.setString(6, newProject.get("boundary").getAsString());
-                pstmt.setString(7, newProject.get("baseMapSource").getAsString());
-                pstmt.setString(8, newProject.get("plotDistribution").getAsString());
+                pstmt.setString(7, getOrEmptyString(newProject, "baseMapSource").getAsString());
+                pstmt.setString(8, getOrEmptyString(newProject, "plotDistribution").getAsString());
                 pstmt.setInt(9, getOrZero(newProject, "numPlots").getAsInt());
                 pstmt.setFloat(10, getOrZero(newProject, "plotSpacing").getAsFloat());
-                pstmt.setString(11, newProject.get("plotShape").getAsString());
+                pstmt.setString(11, getOrEmptyString(newProject, "plotShape").getAsString());
                 pstmt.setFloat(12,  getOrZero(newProject, "plotSize").getAsFloat());
-                pstmt.setString(13, newProject.get("sampleDistribution").getAsString());
+                pstmt.setString(13, getOrEmptyString(newProject, "sampleDistribution").getAsString());
                 pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
                 pstmt.setFloat(15, getOrZero(newProject, "sampleResolution").getAsFloat());
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
@@ -882,48 +887,55 @@ public class PostgresProjects implements Projects {
                     if (rs.next()){
                         newProjectId = Integer.toString(rs.getInt("create_project"));
                         newProject.addProperty("id", newProjectId);
-                        
-                        // Upload the plot-distribution-csv-file if one was provided
-                        // not stored in database
-                        if (newProject.get("plotDistribution").getAsString().equals("csv")) {
-                            var csvFileName = writeFilePart(req,
-                                    "plot-distribution-csv-file",
-                                    expandResourcePath("/csv"),
-                                    "project-" + newProjectId + "-plots");
-                            newProject.addProperty("plots_file", csvFileName);
-                        } 
+                        if (getOrZero(newProject, "useTemplatePlots").getAsBoolean()) {
+                            try(var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")){
+                                copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
+                                copyPstmt.setInt(2, Integer.parseInt(newProjectId));
+                                copyPstmt.execute();
+                            }
+                        } else {
+                            // Upload the plot-distribution-csv-file if one was provided
+                            // not stored in database
+                            if (newProject.get("plotDistribution").getAsString().equals("csv")) {
+                                var csvFileName = writeFilePart(req,
+                                        "plot-distribution-csv-file",
+                                        expandResourcePath("/csv"),
+                                        "project-" + newProjectId + "-plots");
+                                newProject.addProperty("plots_file", csvFileName);
+                            } 
 
-                        // Upload the sample-distribution-csv-file if one was provided
-                        if (newProject.get("sampleDistribution").getAsString().equals("csv")) {
-                            var csvFileName = writeFilePart(req,
-                                    "sample-distribution-csv-file",
-                                    expandResourcePath("/csv"),
-                                    "project-" + newProjectId + "-samples");
-                            newProject.addProperty("samples_file", csvFileName);
-                        } 
+                            // Upload the sample-distribution-csv-file if one was provided
+                            if (newProject.get("sampleDistribution").getAsString().equals("csv")) {
+                                var csvFileName = writeFilePart(req,
+                                        "sample-distribution-csv-file",
+                                        expandResourcePath("/csv"),
+                                        "project-" + newProjectId + "-samples");
+                                newProject.addProperty("samples_file", csvFileName);
+                            } 
 
-                        // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
-                        if (newProject.get("plotDistribution").getAsString().equals("shp")) {
-                            var shpFileName = writeFilePart(req,
-                                                            "plot-distribution-shp-file",
-                                                            expandResourcePath("/shp"),
-                                                            "project-" + newProjectId + "-plots");
-                            newProject.addProperty("plots_file", shpFileName);
+                            // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
+                            if (newProject.get("plotDistribution").getAsString().equals("shp")) {
+                                var shpFileName = writeFilePart(req,
+                                                                "plot-distribution-shp-file",
+                                                                expandResourcePath("/shp"),
+                                                                "project-" + newProjectId + "-plots");
+                                newProject.addProperty("plots_file", shpFileName);
+                            }
+
+                            // Upload the sample-distribution-shp-file if one was provided (this should be a ZIP file)
+                            if (newProject.get("sampleDistribution").getAsString().equals("shp")) {
+                                var shpFileName = writeFilePart(req,
+                                                                "sample-distribution-shp-file",
+                                                                expandResourcePath("/shp"),
+                                                                "project-" + newProjectId + "-samples");
+                                newProject.addProperty("samples_file", shpFileName);
+                            } 
+                            // Create the requested plot set and write it to plot-data-<newProjectId>.json
+                            createProjectPlots(newProject);
+
+                            deleteCsvFiles(Integer.parseInt(newProjectId));
+                            deleteShapeFileDirectories(Integer.parseInt(newProjectId));
                         }
-
-                        // Upload the sample-distribution-shp-file if one was provided (this should be a ZIP file)
-                        if (newProject.get("sampleDistribution").getAsString().equals("shp")) {
-                            var shpFileName = writeFilePart(req,
-                                                            "sample-distribution-shp-file",
-                                                            expandResourcePath("/shp"),
-                                                            "project-" + newProjectId + "-samples");
-                            newProject.addProperty("samples_file", shpFileName);
-                        } 
-                        // Create the requested plot set and write it to plot-data-<newProjectId>.json
-                        createProjectPlots(newProject);
-
-                        deleteCsvFiles(Integer.parseInt(newProjectId));
-                        deleteShapeFileDirectories(Integer.parseInt(newProjectId));
                     }
                     // Indicate that the project was created successfully
                     return newProjectId;
