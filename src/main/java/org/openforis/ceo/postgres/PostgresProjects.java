@@ -11,14 +11,13 @@ import static org.openforis.ceo.utils.ProjectUtils.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,13 +46,13 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("baseMapSource",rs.getString("base_map_source"));
             newProject.addProperty("plotDistribution",rs.getString("plot_distribution"));
             newProject.addProperty("numPlots",rs.getInt("num_plots"));
-            newProject.addProperty("plotSpacing",rs.getFloat("plot_spacing"));
+            newProject.addProperty("plotSpacing",rs.getDouble("plot_spacing"));
             newProject.addProperty("plotShape",rs.getString("plot_shape"));
-            newProject.addProperty("plotSize",rs.getFloat("plot_size"));
+            newProject.addProperty("plotSize",rs.getDouble("plot_size"));
             newProject.addProperty("archived", rs.getString("availability").equals("archived"));
             newProject.addProperty("sampleDistribution",rs.getString("sample_distribution"));
             newProject.addProperty("samplesPerPlot",rs.getInt("samples_per_plot"));
-            newProject.addProperty("sampleResolution",rs.getFloat("sample_resolution"));
+            newProject.addProperty("sampleResolution",rs.getDouble("sample_resolution"));
             newProject.addProperty("classification_times","");
             newProject.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
 
@@ -553,16 +552,16 @@ public class PostgresProjects implements Projects {
     }
 
     public String addUserSamples(Request req, Response res) {
-        var jsonInputs =    parseJson(req.body()).getAsJsonObject();
-        var projectId =     jsonInputs.get("projectId").getAsString();
-        var plotId =        jsonInputs.get("plotId").getAsString();
-        var userName =      jsonInputs.get("userId").getAsString();
-        // var confidence =     jsonInputs.get("confidence").getAsString();
-        // var imageryId =      jsonInputs.get("imagery_id").getAsString();
-        // var imageryDate =    new Date(jsonInputs.get("imagery_date").getAsLong());
-        // var value =          jsonInputs.get("value").getAsJsonObject();
-        var userSamples =   jsonInputs.get("userSamples").getAsJsonObject();
+        var jsonInputs =            parseJson(req.body()).getAsJsonObject();
+        var projectId =             jsonInputs.get("projectId").getAsString();
+        var plotId =                jsonInputs.get("plotId").getAsString();
+        var userName =              jsonInputs.get("userId").getAsString();
+        var confidence =            jsonInputs.get("confidence").getAsInt();
+        var collectionStart =       jsonInputs.get("collectionStart").getAsString();
+        var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
+        var userImages =            jsonInputs.get("userImages").getAsJsonObject();
 
+        
         try (var conn = connect();
             var userPstmt = conn.prepareStatement("SELECT * FROM get_user(?)")) {
             
@@ -570,16 +569,15 @@ public class PostgresProjects implements Projects {
             try(var userRs = userPstmt.executeQuery()){
                 if (userRs.next()){
                     var userId = userRs.getInt("id");
-                    // fixme add collection time, null imagery date
-                    var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::jsonb,?::int,?::date)";
+                    var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
                     var pstmt = conn.prepareStatement(SQL) ;
                     pstmt.setInt(1, Integer.parseInt(projectId));
                     pstmt.setInt(2, Integer.parseInt(plotId));
                     pstmt.setInt(3, userId);
-                    pstmt.setString(4, null); //confidence
-                    pstmt.setString(5, userSamples.toString());
-                    pstmt.setString(6, null); //imageryID
-                    pstmt.setDate(7, null ); //imagery date
+                    pstmt.setString(4, confidence == -1 ? null : Integer.toString(confidence));
+                    pstmt.setTimestamp(5, new Timestamp(Long.parseLong(collectionStart)));
+                    pstmt.setString(6, userSamples.toString());
+                    pstmt.setString(7, userImages.toString());
                     pstmt.execute();
                     return plotId;
                 }
@@ -874,12 +872,12 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(7, getOrEmptyString(newProject, "baseMapSource").getAsString());
                 pstmt.setString(8, getOrEmptyString(newProject, "plotDistribution").getAsString());
                 pstmt.setInt(9, getOrZero(newProject, "numPlots").getAsInt());
-                pstmt.setFloat(10, getOrZero(newProject, "plotSpacing").getAsFloat());
+                pstmt.setDouble(10, getOrZero(newProject, "plotSpacing").getAsDouble());
                 pstmt.setString(11, getOrEmptyString(newProject, "plotShape").getAsString());
-                pstmt.setFloat(12,  getOrZero(newProject, "plotSize").getAsFloat());
+                pstmt.setDouble(12,  getOrZero(newProject, "plotSize").getAsDouble());
                 pstmt.setString(13, getOrEmptyString(newProject, "sampleDistribution").getAsString());
                 pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
-                pstmt.setFloat(15, getOrZero(newProject, "sampleResolution").getAsFloat());
+                pstmt.setDouble(15, getOrZero(newProject, "sampleResolution").getAsDouble());
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
                 pstmt.setString(17,  null);  //classification times
 
