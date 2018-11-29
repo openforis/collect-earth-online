@@ -461,17 +461,6 @@ public class PostgresProjects implements Projects {
 
                                 }
 
-                                // FIXME GeoJson does not store in CVS columns will with comma as the main delimitator
-                                // geometry come seperate so it can be converted to GeoJson
-                                // if (valueOrBlank(rsDump.getString("plot_geom")) != "") {
-                                //     plotSummary.addProperty("plot_geom", quoteValueOrEmpty(rsDump.getString("plot_geom")));
-                                //     if (!plotHeaders.contains("plot_geom")) plotHeaders.add("plot_geom");
-                                // }
-                                // if (valueOrBlank(rsDump.getString("sample_geom")) != "") {
-                                //     plotSummary.addProperty("sample_geom", quoteValueOrEmpty(rsDump.getString("sample_geom")));
-                                //     if (!sampleHeaders.contains("sample_geom")) sampleHeaders.add("sample_geom");
-                                // }
-
                                 if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
                                     var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();                              
                                     plotHeaders.forEach(head ->
