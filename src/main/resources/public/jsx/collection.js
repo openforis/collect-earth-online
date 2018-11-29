@@ -392,62 +392,54 @@ class Collection extends React.Component {
             flagPlotButtonDisabled: false,
             saveValuesButtonDisabled: true
         });
-        console.log(this.state.currentProject);
-        if (this.state.currentProject.plotDistribution == "csv" || this.state.currentProject.plotDistribution == "shp") {
-            if (this.state.currentPlot) {
-                let plot = this.state.plotList.filter(pl => pl.plotId == this.state.currentPlot.plotId);
-                let newPlot = this.state.plotList.filter(pl => pl.id == plot[0].id - 1 && pl.analyses == 0 && pl.flagged == false);
-                if (newPlot != null) {
-                    if (newPlot.length > 0 && newPlot[0].id == 1) {
-                        alert("No more previous plots, please skip to randomize!")
-                        this.setState({prevPlotButtonDisabled: true});
-                    }
-                    else if (newPlot.length > 0 && newPlot[0].id > 1) {
-                        this.getPlotData(newPlot[0].id);
-                    }
-                    else {
-                        alert(" is analyzed already");
-                    }
+        let sortedPlotList = this.state.plotList;
+        let sortById = function (property) {
+            return function (x, y) {
+                return ((x[property] === y[property]) ? 0 : ((x[property] > y[property]) ? 1 : -1));
+            };
+        };
+        if (this.state.currentPlot) {
+            if (this.state.currentProject.plotDistribution == "csv" || this.state.currentProject.plotDistribution == "shp") {
+                let plotListIds = [];
+                sortedPlotList.map(pl => {
+                    if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(parseInt(pl.plotId));
+                });
+                plotListIds.sort(function(a,b){return a - b});
+                let newPlotId = this.findPrevPlot(plotListIds, parseInt(this.state.currentPlot.plotId));
+                if (newPlotId > 0) {
+                    let newPlot = sortedPlotList.filter(s => parseInt(s.plotId) ==  newPlotId)[0];
+                    this.getPlotData(newPlot.id);
+                }
+                else {
+                    alert("No more previous plots, please skip to randomize!")
                 }
             }
-        }
-        else {
-            let plotListIds=[];
-            console.log("you are in  random or gridded plot");
-            console.log(this.state.plotList);
-            console.log(this.state.currentPlot);
-            if (this.state.currentPlot) {
-                this.state.plotList.map(pl => {
+            else {
+                let plotListIds = [];
+                sortedPlotList.sort(sortById('id'));
+                sortedPlotList.map(pl => {
                     if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(pl.id);
                 });
-                let newPlot = this.findPrevPlot(plotListIds, this.state.currentPlot.id);
-                if (newPlot) {
-                    if (newPlot.id == 1) {
-                        alert("No more previous plots, please skip to randomize!")
-                        this.setState({prevPlotButtonDisabled: true});
-                    }
-                    else if (newPlot.id > 1) {
-                        console.log("from hereee");
-                        this.getPlotData(newPlot.id);
-                    }
+                let newPlotId = this.findPrevPlot(plotListIds, this.state.currentPlot.id);
+                if (newPlotId > 0) {
+                    let newPlot = sortedPlotList.filter(s => s.id == newPlotId)[0];
+                    this.getPlotData(newPlot.id);
                 }
-                else{
-                    console.log("no prev plots,skip!");
+                else {
+                    alert("No more previous plots, please skip to randomize!")
                 }
             }
         }
     }
 
     findPrevPlot(plotListIds, plotId) {
-        let currentPlotId = plotId;
-        if (plotListIds.indexOf(plotId - 1) > -1) {
-            console.log("from in if");
-            console.log(this.state.plotList[plotListIds.indexOf(plotId - 1)]);
-            return this.state.plotList[plotListIds.indexOf(plotId - 1)];
+        if(plotId-1==0)
+            return 0;
+        else if (plotListIds.indexOf(plotId - 1) > -1) {
+            return plotId - 1;
         }
         else {
-            console.log("frome selse");
-            this.findPrevPlot(plotListIds, currentPlotId - 1);
+            return this.findPrevPlot(plotListIds, plotId - 1);
         }
     }
 
@@ -458,19 +450,10 @@ class Collection extends React.Component {
                        flagPlotButtonDisabled: false,
                        saveValuesButtonDisabled: true});
         this.getPlotData("random");
-        if(this.state.currentPlot){
-            if(this.state.currentPlot.id==1) {
-                this.setState({prevPlotButtonDisabled: true});
-            }
-        }
     }
 
     flagPlot() {
         if (this.state.currentPlot != null) {
-            if(this.state.currentPlot.plotId=="1")
-            {
-                this.setState({prevPlotButtonDisabled:true});
-            }
             fetch(this.props.documentRoot + "/flag-plot",
                   {
                       method: "post",
