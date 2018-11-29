@@ -4,6 +4,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
@@ -11,6 +12,7 @@ import static org.openforis.ceo.utils.ProjectUtils.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -319,7 +321,7 @@ public class PostgresProjects implements Projects {
             try (var rs = pstmt.executeQuery()){
                 while (rs.next()) {
                     if (!List.of("GID", "GEOM", "PLOT_GEOM").contains(rs.getString("column_names").toUpperCase())){
-                        plotHeaders.add(rs.getString("column_names"));
+                        plotHeaders.add("plot_" + rs.getString("column_names"));
                     }
                 }
             }
@@ -336,7 +338,7 @@ public class PostgresProjects implements Projects {
             try (var rs = pstmt.executeQuery()){
                 while (rs.next()) {
                     if (!List.of("GID", "GEOM", "LAT", "LON", "SAMPLE_GEOM").contains(rs.getString("column_names").toUpperCase())){
-                        sampleHeaders.add(rs.getString("column_names"));
+                        sampleHeaders.add("samples_" + rs.getString("column_names"));
                     }
                 }
             }
@@ -377,15 +379,10 @@ public class PostgresProjects implements Projects {
                                 var samples = parseJson(rsDump.getString("samples")).getAsJsonArray();
                                 plotSummary.addProperty("sample_points", samples.size());
                                 plotSummary.addProperty("user_id", valueOrBlank(rsDump.getString("email")));
+                                plotSummary.addProperty("analysis_duration", valueOrBlank(rsDump.getString("analysis_duration")));
                                 plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
                                 plotSummary.add("distribution",
                                         getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
-                                // FIXME GeoJson does not store in CVS columns will with comma as the main delimitator
-                                // geometry come seperate so it can be converted to GeoJson
-                                // if (valueOrBlank(rsDump.getString("plot_geom")) != "") {
-                                //     plotSummary.addProperty("plot_geom", quoteValueOrEmpty(rsDump.getString("plot_geom")));
-                                //     if (!plotHeaders.contains("plot_geom")) plotHeaders.add("plot_geom");
-                                // }
                                 
                                 if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
                                     var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();
@@ -442,12 +439,28 @@ public class PostgresProjects implements Projects {
                                 plotSummary.addProperty("flagged", rsDump.getInt("flagged") > 0);
                                 plotSummary.addProperty("analyses", rsDump.getInt("assigned"));
                                 plotSummary.addProperty("user_id", valueOrBlank(rsDump.getString("email")));
+                                plotSummary.addProperty("analysis_duration", valueOrBlank(rsDump.getString("analysis_duration")));
                                 plotSummary.addProperty("collection_time", valueOrBlank(rsDump.getString("collection_time")));
                                 if (rsDump.getString("value") != null && parseJson(rsDump.getString("value")).isJsonPrimitive()) {
                                     plotSummary.addProperty("value", rsDump.getString("value"));
                                 } else {
                                     plotSummary.add("value", rsDump.getString("value") == null ? null : parseJson(rsDump.getString("value")).getAsJsonObject());
                                 }
+                                if (valueOrBlank(rsDump.getString("imagery_title")) != "") {
+                                    plotSummary.addProperty("imagery_title", rsDump.getString("imagery_title"));
+                                    if (!sampleHeaders.contains("imagery_title")) sampleHeaders.add("imagery_title");
+                                    
+                                    if (valueOrBlank(rsDump.getString("imagery_attributes")).length() > 2) {
+                                        var attributes = parseJson(rsDump.getString("imagery_attributes")).getAsJsonObject();
+                                        attributes.keySet().forEach(key -> {
+                                            plotSummary.addProperty(key, attributes.get(key).getAsString());
+                                            if (!sampleHeaders.contains(key)) sampleHeaders.add(key);
+                                        });
+
+                                    }
+
+                                }
+
                                 // FIXME GeoJson does not store in CVS columns will with comma as the main delimitator
                                 // geometry come seperate so it can be converted to GeoJson
                                 // if (valueOrBlank(rsDump.getString("plot_geom")) != "") {
@@ -478,9 +491,9 @@ public class PostgresProjects implements Projects {
                         // json object has plot_ or sample_ appended to differenciate
                         
                         var compbinedHeaders = Stream.concat(
-                                                Arrays.stream(plotHeaders.toArray()).map(head -> !head.toString().contains("plot_") ? "plot_" + head : head),
-                                                Arrays.stream(sampleHeaders.toArray()).map(head -> !head.toString().contains("sample_") ? "sample_" + head : head))
-                                                .toArray(String[]::new);
+                                                Arrays.stream(plotHeaders.toArray()),
+                                                Arrays.stream(sampleHeaders.toArray())
+                                                ).toArray(String[]::new);
                         return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, compbinedHeaders);
 
                     }

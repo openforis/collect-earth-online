@@ -1232,7 +1232,8 @@ CREATE TYPE plots_return  AS (
 	  collection_time   timestamp,
       ext_id            integer,
 	  plotId			text,
-      geom              text
+      geom              text,
+	  analysis_duration	integer
     );
 
 -- Create a single project plot with no external file data
@@ -1276,6 +1277,7 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
             cast(count(1) - sum(case when flagged then 1 else 0 end)  as int) as assigned, 
 			MAX(confidence) as confidence,
 			MAX(collection_time) as collection_time,
+			ROUND(AVG(EXTRACT(EPOCH FROM (collection_start - collection_time)))::numeric, 1) as analysis_duration,
             plot_id
         FROM user_plots
         GROUP BY plot_id
@@ -1298,7 +1300,8 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
 		plotsum.collection_time,
 		fd.ext_id,
 		fd.plotId,
-		ST_AsGeoJSON(fd.geom) as geom
+		ST_AsGeoJSON(fd.geom) as geom,
+		plotsum.analysis_duration
 	FROM plots
 	LEFT JOIN plotsum
 		ON plots.id = plotsum.plot_id
@@ -1316,7 +1319,7 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
     RETURNS setOf plots_return AS $$
 
 	SELECT all_plots.id, all_plots.project_id, all_plots.center, all_plots.flagged, all_plots.assigned, all_plots.username,
-            all_plots.confidence, all_plots.collection_time, all_plots.ext_id, all_plots.plotId, all_plots.geom
+            all_plots.confidence, all_plots.collection_time, all_plots.ext_id, all_plots.plotId, all_plots.geom, all_plots.analysis_duration
      FROM (
 		SELECT *,
 			row_number() OVER(ORDER BY id) AS rows,
@@ -1490,39 +1493,17 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
            flagged          	integer,
            assigned         	integer,
            collection_time  	timestamp,
-           imagery_title    	text,
-           imagery_attributes	text,
+		   analysis_duration	numeric,
            samples          	text,
 		   plot_geom			text,
 		   ext_plot_data		jsonb
     ) AS $$
-	WITH username AS (
-			SELECT MAX(email) as email, plot_id 
-			FROM projects p
-			INNER JOIN plots pl
-				ON p.id = pl.project_id
-			INNER JOIN user_plots up
-				ON pl.id = up.user_id
-			INNER JOIN users
-				ON users.id = up.plot_id
-			WHERE p.id = _project_id
-			GROUP BY plot_id
-		),
-		all_rows AS (SELECT pl.id as m_plot_id, samples.id as m_samples_id, pl.ext_id as pl_ext_id,  * 
-			FROM projects p
-			INNER JOIN plots pl
-				ON p.id = pl.project_id
+	WITH all_rows AS (SELECT pl.id as m_plot_id, samples.id as m_samples_id, pl.ext_id as pl_ext_id,  * 
+			FROM select_all_project_plots(_project_id) pl
 			INNER JOIN samples
 				ON samples.plot_id = pl.id
 			LEFT JOIN sample_values
 				ON samples.id = sample_values.sample_id
-			LEFT JOIN imagery
-				ON imagery.id = sample_values.imagery_id
-			LEFT JOIN user_plots up
-				ON up.plot_id = pl.id
-			LEFT JOIN username un
-				ON un.plot_id = pl.id
-			WHERE p.id = _project_id
 			),
 		tablenames AS (
 			SELECT plots_ext_table, samples_ext_table
@@ -1534,28 +1515,26 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 		),
 		plots_agg AS (
 			SELECT m_plot_id,
-			MAX(center) as center,
-			MAX(plot_shape) AS plot_shape,
-		   	MAX(plot_size) AS plot_size,
-		   	MAX(email) AS email,
-		   	MAX(confidence) as confidence,
-			cast(sum(case when flagged then 1 else 0 end) as int) as flagged, 
-			cast(count(1) - sum(case when flagged then 1 else 0 end)  as int) as assigned, 
-			MAX(collection_time) as collection_time,
-			format('[%s]', string_agg((CASE WHEN "value" IS NULL THEN
-			 	format('{"%s":"%s"}','id', m_samples_id)  			 
-			ELSE
-				format('{"%s":"%s", "%s":%s}','id', m_samples_id, 'value', "value")
-			END) , ',')) as samples,
-			MAX(title) as imagery_title,
-           	MAX(imagery_attributes::text) as imagery_attributes,
-			MAX(pl_ext_id) as pl_ext_id
+				center,
+				MAX(username) AS email,
+				MAX(confidence) as confidence,
+				cast(sum(case when flagged > 0 then 1 else 0 end) as int) as flagged, 
+				cast(count(1) - sum(case when flagged > 0 then 1 else 0 end)  as int) as assigned, 
+				MAX(collection_time) as collection_time,
+				MAX(analysis_duration) as analysis_duration,
+				format('[%s]', string_agg((CASE WHEN "value" IS NULL THEN
+					format('{"%s":"%s"}','id', m_samples_id)  			 
+				ELSE
+					format('{"%s":"%s", "%s":%s}','id', m_samples_id, 'value', "value")
+				END) , ',')) as samples,
+				pl_ext_id,
+				project_id
 			FROM all_rows
-			GROUP BY m_plot_id
+			GROUP BY m_plot_id, center, pl_ext_id, project_id
 		)
 		SELECT m_plot_id AS plot_id,
-		   ST_X(center) AS lon,
-		   ST_Y(center) AS lat,
+		   ST_X(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lon,
+		   ST_Y(ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)) AS lat,
 		   plot_shape,
 		   plot_size,
 		   email,
@@ -1563,13 +1542,13 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 		   flagged,
 		   assigned,
 		   collection_time::timestamp,
-		   imagery_title,
-		   imagery_attributes,
+		   analysis_duration,
 		   samples,
 		   pfd.geom,
 		   pfd.rem_data
-		FROM 
-		plots_agg
+		FROM projects p
+		INNER JOIN plots_agg pa
+			ON p.id = pa.project_id
 		LEFT JOIN plots_file_data pfd
 			ON pl_ext_id = pfd.ext_id
 			
@@ -1587,6 +1566,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
            flagged          	integer,
            assigned         	integer,
            collection_time  	timestamp,
+		   analysis_duration	numeric,
            imagery_title    	text,
            imagery_attributes   text,
            value            	jsonb,
@@ -1615,6 +1595,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 	   p.flagged,
 	   p.assigned,
 	   p.collection_time::timestamp,
+	   p.analysis_duration,
 	   title AS imagery_title,
 	   imagery_attributes::text,
 	   value,
@@ -1635,6 +1616,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 		ON samples.ext_id = sfd.ext_id
 
 $$ LANGUAGE SQL;
+
 --
 --  MAINT FUNCTIONS
 --
