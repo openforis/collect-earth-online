@@ -13,7 +13,8 @@ class BasicLayout extends React.PureComponent{
         items: 0,
         rowHeight: 300,
         onLayoutChange: function() {},
-        cols: 12
+        cols: 12,
+        graphReducer: "Min"
     }
     constructor(props) {
         super(props);
@@ -25,6 +26,8 @@ class BasicLayout extends React.PureComponent{
             selectedDataType: -1,
             WidgetTitle: "",
             imageCollection: "",
+            graphBand: "",
+            graphReducer: "Min",
             imageParams: "",
             dualLayer: false,
             WidgetBaseMap: "osm",
@@ -287,6 +290,8 @@ class BasicLayout extends React.PureComponent{
             selectedDataType: "-1",
             WidgetTitle: "",
             imageCollection: "",
+            graphBand: "",
+            graphReducer: "Min",
             imageParams: "",
             WidgetBaseMap: "osm",
             dualLayer: false,
@@ -336,6 +341,8 @@ class BasicLayout extends React.PureComponent{
             selectedDataType: "-1",
             WidgetTitle: "",
             imageCollection: "",
+            graphBand: "",
+            graphReducer: "Min",
             imageParams: "",
             WidgetBaseMap: "osm",
             dualLayer: false,
@@ -458,6 +465,8 @@ class BasicLayout extends React.PureComponent{
                 //more work to do to label the type and add
                 prop1 = this.state.imageCollection;
                 widget.visParams = this.state.imageParams;
+                widget.graphBand = this.state.graphBand;
+                widget.graphReducer = this.state.graphReducer;
             }
             properties[0] = wType;
             properties[1] = prop1;
@@ -510,6 +519,8 @@ class BasicLayout extends React.PureComponent{
                     selectedDataType: "-1",
                     WidgetTitle: "",
                     imageCollection: "",
+                    graphBand: "",
+                    graphReducer: "Min",
                     imageParams: "",
                     WidgetBaseMap: "osm",
                     dualLayer: false,
@@ -537,6 +548,12 @@ class BasicLayout extends React.PureComponent{
     };
     onImageCollectionChange = event => {
         this.setState({imageCollection: event.target.value});
+    };
+    onGraphBandChange = event => {
+        this.setState({graphBand: event.target.value});
+    };
+    onGraphReducerChanged = event => {
+        this.setState({graphReducer: event.target.value});
     };
     onImageParamsChange = event => {
         this.setState({imageParams: event.target.value.replace(/\s/g,'')});
@@ -1142,6 +1159,19 @@ class BasicLayout extends React.PureComponent{
                         <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
                                className="form-control" onChange={this.onImageCollectionChange}/>
                     </div>
+                  <div className="form-group">
+                      <label htmlFor="graphBand">Band to graph</label>
+                      <input type="text" name="graphBand" id="graphBand" placeholder={"B5"} value={this.state.graphBand}
+                             className="form-control" onChange={this.onGraphBandChange}/>
+                  </div>
+                  <div className="form-group">
+                      <label htmlFor="graphReducer">Reducer</label>
+                      <select name="graphReducer" value={this.state.graphReducer} className="form-control" id="widgetIndicesSelect" onChange={this.onGraphReducerChanged} >
+                          <option label="Min" value="Min">Min</option>
+                          <option label="Max" value="Max">Max</option>
+                          <option label="Mean" value="Mean">Mean</option>
+                      </select>
+                  </div>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
 
