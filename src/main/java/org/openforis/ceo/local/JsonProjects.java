@@ -231,16 +231,17 @@ public class JsonProjects implements Projects {
     }
 
     public String getUnassignedPlot(Request req, Response res) {
-        var projectId = req.params(":id");
+        var projectId = req.params(":projid");
+        var plotId = req.params(":id");
         var currentPlotId = req.queryParams("currentPlotId");
         var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
         var unanalyzedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == false
                 && plot.get("analyses").getAsInt() == 0
                 && !plot.get("id").getAsString().equals(currentPlotId));
-        var numPlots = unanalyzedPlots.size();
+        var x = filterJsonArray(unanalyzedPlots, plot -> Integer.parseInt(plot.get("id").getAsString()) == Integer.parseInt(plotId));
+        var numPlots = x.size();
         if (numPlots > 0) {
-            var randomIndex = (int) Math.floor(numPlots * Math.random());
-            return unanalyzedPlots.get(randomIndex).toString();
+            return x.get(0).toString();
         } else {
             return "done";
         }

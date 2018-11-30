@@ -45,7 +45,8 @@ class Collection extends React.Component {
         this.highlightAnswer = this.highlightAnswer.bind(this);
         this.setCurrentValue = this.setCurrentValue.bind(this);
         this.redirectToHomePage = this.redirectToHomePage.bind(this);
-        this.findPrevPlot = this.findPrevPlot.bind(this);
+        this.findPrevPlot = this.findPrevPlot.bind(this)
+        this.findNextPlot=this.findNextPlot.bind(this);
     }
 
     componentDidMount() {
@@ -298,9 +299,7 @@ class Collection extends React.Component {
     }
 
     getPlotData(plotId) {
-        const url = (plotId == "random")
-            ? this.props.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId
-            : this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId;
+        const url =  this.props.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId+ "/" + plotId;
         fetch(url)
             .then(response => {
                 if (response.ok) {
@@ -317,6 +316,8 @@ class Collection extends React.Component {
                         currentPlot: null,
                         userSamples: {}
                     });
+                    console.log("from plot id to see");
+                    console.log(plotId);
                     const msg = (plotId == "random")
                         ? "All plots have been analyzed for this project."
                         : "This plot has already been analyzed.";
@@ -393,63 +394,90 @@ class Collection extends React.Component {
             saveValuesButtonDisabled: true
         });
         let sortedPlotList = this.state.plotList;
-        let sortById = function (property) {
-            return function (x, y) {
-                return ((x[property] === y[property]) ? 0 : ((x[property] > y[property]) ? 1 : -1));
-            };
-        };
+        let plotListIds = [];
+        sortedPlotList.map(pl => {
+            if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(pl.plotId ? parseInt(pl.plotId) : pl.id);
+        });
+        plotListIds.sort(function (a, b) {
+            return a - b
+        });
         if (this.state.currentPlot) {
-            if (this.state.currentProject.plotDistribution == "csv" || this.state.currentProject.plotDistribution == "shp") {
-                let plotListIds = [];
-                sortedPlotList.map(pl => {
-                    if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(parseInt(pl.plotId));
-                });
-                plotListIds.sort(function(a,b){return a - b});
-                let newPlotId = this.findPrevPlot(plotListIds, parseInt(this.state.currentPlot.plotId));
-                if (newPlotId > 0) {
-                    let newPlot = sortedPlotList.filter(s => parseInt(s.plotId) ==  newPlotId)[0];
-                    this.getPlotData(newPlot.id);
-                }
-                else {
-                    alert("No more previous plots, please skip to randomize!")
-                }
+            //to go to previous plot
+            let newPlotId = this.findPrevPlot(plotListIds, this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
+            if (newPlotId == 1) {
+                this.setState({prevPlotButtonDisabled: true});
+                let newPlot = sortedPlotList.filter(pl => (pl.plotId ? parseInt(pl.plotId) : pl.id) == plotListIds[0])[0];
+                this.getPlotData(newPlot.id);
+            }
+            else if (newPlotId > 1) {
+                this.setState({prevPlotButtonDisabled: false});
+                let newPlot = sortedPlotList.filter(s => (s.plotId ? parseInt(s.plotId) : s.id) == newPlotId)[0];
+                this.getPlotData(newPlot.id);
             }
             else {
-                let plotListIds = [];
-                sortedPlotList.sort(sortById('id'));
-                sortedPlotList.map(pl => {
-                    if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(pl.id);
-                });
-                let newPlotId = this.findPrevPlot(plotListIds, this.state.currentPlot.id);
-                if (newPlotId > 0) {
-                    let newPlot = sortedPlotList.filter(s => s.id == newPlotId)[0];
-                    this.getPlotData(newPlot.id);
-                }
-                else {
-                    alert("No more previous plots, please skip to randomize!")
-                }
+                this.setState({prevPlotButtonDisabled: true});
+                alert("No previous plots available!");
             }
         }
     }
 
     findPrevPlot(plotListIds, plotId) {
-        if(plotId-1==0)
-            return 0;
-        else if (plotListIds.indexOf(plotId - 1) > -1) {
-            return plotId - 1;
-        }
-        else {
-            return this.findPrevPlot(plotListIds, plotId - 1);
-        }
+        return plotListIds.indexOf(plotId) - 1 == 0 ? 1 : plotListIds[plotListIds.indexOf(plotId) - 1];
+    }
+
+    findNextPlot(plotListIds, plotId) {
+        let nextPlotId = plotListIds.filter(i => (i > plotId))[0];
+        return plotListIds.indexOf(nextPlotId) == plotListIds.length - 1 ? 1 : nextPlotId;
     }
 
     nextPlot() {
-        this.setState({navButtonsShown: 2,
-                       prevPlotButtonDisabled:false,
-                       newPlotButtonDisabled: false,
-                       flagPlotButtonDisabled: false,
-                       saveValuesButtonDisabled: true});
-        this.getPlotData("random");
+        this.setState({
+            navButtonsShown: 2,
+            prevPlotButtonDisabled: false,
+            newPlotButtonDisabled: false,
+            flagPlotButtonDisabled: false,
+            saveValuesButtonDisabled: true
+        });
+        let sortedPlotList = this.state.plotList;
+        let plotListIds = [];
+        sortedPlotList.map(pl => {
+            if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(pl.plotId ? parseInt(pl.plotId) : pl.id);
+        });
+        plotListIds.sort(function (a, b) {
+            return a - b
+        });
+        if (this.state.currentPlot) {
+            //to go to next plot
+            let newPlotId = this.findNextPlot(plotListIds, this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
+            if (newPlotId == 1) {
+                this.setState({newPlotButtonDisabled: true});
+                let newPlot = sortedPlotList.filter(pl => (pl.plotId ? parseInt(pl.plotId) : pl.id) == plotListIds[plotListIds.length - 1])[0];
+                this.getPlotData(newPlot.id);
+            }
+            else if (newPlotId > 1) {
+                this.setState({newPlotButtonDisabled: false});
+                let newPlot = sortedPlotList.filter(s => (s.plotId ? parseInt(s.plotId) : s.id) == newPlotId)[0];
+                this.getPlotData(newPlot.id);
+            }
+        }
+        else {
+            //to go to the first plot
+            let newPlot = sortedPlotList.filter(pl => (pl.plotId ? parseInt(pl.plotId) : pl.id) == plotListIds[0])[0];
+            if (newPlot) {
+                this.getPlotData(newPlot.id);
+                this.setState({prevPlotButtonDisabled: true});
+            }
+            else {
+                this.setState({
+                    navButtonsShown: 2,
+                    prevPlotButtonDisabled: true,
+                    newPlotButtonDisabled: true,
+                    flagPlotButtonDisabled: true,
+                    saveValuesButtonDisabled: true
+                });
+                alert("all plots have been analyzed");
+            }
+        }
     }
 
     flagPlot() {
@@ -473,6 +501,9 @@ class Collection extends React.Component {
                         statistics.flaggedPlots = statistics.flaggedPlots + 1;
                         this.setState({stats: statistics});
                         this.nextPlot();
+                        this.getProjectPlots();
+                        console.log(this.state.plotList);
+
                     } else {
                         console.log(response);
                         alert("Error flagging plot as bad. See console for details.");
@@ -723,7 +754,7 @@ function PlotNavigation(props) {
                 </div>
                 <div className="pr-2">
                     <input id="new-plot-button" className="btn btn-outline-lightgreen"
-                           type="button" name="new-plot" value="Skip" onClick={props.nextPlot}
+                           type="button" name="new-plot" value="Next" onClick={props.nextPlot}
                            style={{opacity: props.newPlotButtonDisabled ? "0.5" : "1.0"}}
                            disabled={props.newPlotButtonDisabled}/>
                 </div>
