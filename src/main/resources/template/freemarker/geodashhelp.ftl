@@ -134,7 +134,18 @@
                         NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct band.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.
                     </li>
                     <li>
-                        Custom widget COMING SOON- (this feature currently is being updated and does not work, however soon it will be similar to the custom image so you will be able to add the bands you would like graphed) Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like
+                        Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name, the band you would like graphed, and how you would like the graph reduced, for example.
+                        <ol style="list-style-type: lower-roman">
+                            <li>
+                                GEE Image Collection - COPERNICUS/S5P/OFFL/L3_CO
+                            </li>
+                            <li>
+                                Band to graph - CO_column_number_density
+                            </li>
+                            <li>
+                                Select the Reducer in the dropdown
+                            </li>
+                        </ol>
                     </li>
                 </ol>
             </li>

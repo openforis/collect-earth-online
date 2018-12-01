@@ -825,10 +825,12 @@ class GraphWidget extends React.Component {
             },
             body: JSON.stringify({
                 collectionNameTimeSeries: collectionName,
-                polygon: JSON.parse(this.props.projPairAOI),
-                indexName: indexName,
+                geometry: JSON.parse(this.props.projPairAOI),
+                indexName: widget.graphBand != null? widget.graphBand: indexName,
                 dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
-                dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() :  date.yyyymmdd()
+                dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() :  date.yyyymmdd(),
+                reducer: widget.graphReducer != null? widget.graphReducer.toLowerCase(): '',
+                scale: 200
             })
         })
             .then(function(res){return res.json();})
@@ -847,7 +849,7 @@ class GraphWidget extends React.Component {
                         });
                         timeseriesData = timeseriesData.sort(ref.sortData);
 
-                        graphWidgetArray["widgetgraph_" + widget.id] = ref.createChart(widget.id, indexName, timeseriesData);
+                        graphWidgetArray["widgetgraph_" + widget.id] = ref.createChart(widget.id, indexName, timeseriesData, indexName);
                         graphWidgetArray["widgetgraph_" + widget.id].id = widget.id;
                     } else {
                         console.warn("Wrong Data Returned");
@@ -860,7 +862,8 @@ class GraphWidget extends React.Component {
         if (a[0] > b[0]) return 1;
         return 0;
     }
-    createChart (wIndex, wText, wTimeseriesData) {
+
+    createChart (wIndex, wText, wTimeseriesData, indexName) {
         "use strict";
         return Highcharts.chart("graphcontainer_" + wIndex, {
             chart: {
@@ -887,6 +890,7 @@ class GraphWidget extends React.Component {
             },
             plotOptions: {
                 area: {
+                    connectNulls: indexName.toLowerCase() == "custom" ? true : false,
                     fillColor: {
                         linearGradient: {
                             x1: 0,
