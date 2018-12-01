@@ -172,7 +172,8 @@ public class PostgresProjects implements Projects {
             singlePlot.addProperty("analyses",rs.getInt("assigned"));
             singlePlot.addProperty("user",rs.getString("username"));
             singlePlot.addProperty("confidence",rs.getInt("confidence"));
-            singlePlot.addProperty("collection_time", rs.getString("collection_time"));
+            singlePlot.addProperty("collectionTime", rs.getString("collection_time"));
+            singlePlot.addProperty("analysisDuration", rs.getString("analysis_duration"));
             singlePlot.addProperty("plotId",rs.getString("plotId"));
             singlePlot.addProperty("geom",rs.getString("geom"));
         } catch (SQLException e) {
@@ -320,8 +321,8 @@ public class PostgresProjects implements Projects {
             pstmt.setInt(1, projectId);
             try (var rs = pstmt.executeQuery()){
                 while (rs.next()) {
-                    if (!List.of("GID", "GEOM", "PLOT_GEOM").contains(rs.getString("column_names").toUpperCase())){
-                        plotHeaders.add("plot_" + rs.getString("column_names"));
+                    if (!List.of("GID", "GEOM", "PLOT_GEOM", "LAT", "LON").contains(rs.getString("column_names").toUpperCase())){
+                        plotHeaders.add(rs.getString("column_names"));
                     }
                 }
             }
@@ -338,7 +339,7 @@ public class PostgresProjects implements Projects {
             try (var rs = pstmt.executeQuery()){
                 while (rs.next()) {
                     if (!List.of("GID", "GEOM", "LAT", "LON", "SAMPLE_GEOM").contains(rs.getString("column_names").toUpperCase())){
-                        sampleHeaders.add("samples_" + rs.getString("column_names"));
+                        sampleHeaders.add(rs.getString("column_names"));
                     }
                 }
             }
@@ -425,6 +426,7 @@ public class PostgresProjects implements Projects {
                     var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
                     var plotHeaders = getPlotHeaders(conn, projectId);
                     var sampleHeaders = getSampleHeaders(conn, projectId);
+                    var imageryHeaders = new ArrayList<String>();
 
                     try(var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_sample_data(?)")){
                         pstmtDump.setInt(1, projectId);
@@ -448,17 +450,15 @@ public class PostgresProjects implements Projects {
                                 }
                                 if (valueOrBlank(rsDump.getString("imagery_title")) != "") {
                                     plotSummary.addProperty("imagery_title", rsDump.getString("imagery_title"));
-                                    if (!sampleHeaders.contains("imagery_title")) sampleHeaders.add("imagery_title");
+                                    if (!imageryHeaders.contains("imagery_title")) imageryHeaders.add("imagery_title");
                                     
                                     if (valueOrBlank(rsDump.getString("imagery_attributes")).length() > 2) {
                                         var attributes = parseJson(rsDump.getString("imagery_attributes")).getAsJsonObject();
                                         attributes.keySet().forEach(key -> {
                                             plotSummary.addProperty(key, attributes.get(key).getAsString());
-                                            if (!sampleHeaders.contains(key)) sampleHeaders.add(key);
+                                            if (!imageryHeaders.contains(key)) imageryHeaders.add(key);
                                         });
-
                                     }
-
                                 }
 
                                 if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
@@ -477,14 +477,17 @@ public class PostgresProjects implements Projects {
                                 sampleSummaries.add(plotSummary);
                             } 
                         }
-                        // json object has plot_ or sample_ appended to differenciate
-                        
-                        var compbinedHeaders = Stream.concat(
-                                                Arrays.stream(plotHeaders.toArray()),
-                                                Arrays.stream(sampleHeaders.toArray())
-                                                ).toArray(String[]::new);
+                        var compbinedHeaders = 
+                        Stream.concat(
+                            Arrays.stream(imageryHeaders.toArray()),
+                            Stream.concat(
+                                Arrays.stream(plotHeaders.toArray())
+                                    .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head),
+                                Arrays.stream(sampleHeaders.toArray())
+                                    .map(head -> !head.toString().contains("sample_") ? "sample_" + head : head)
+                                )
+                        ).toArray(String[]::new);
                         return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, compbinedHeaders);
-
                     }
             }
         }
@@ -615,22 +618,36 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private static String loadCsvHeaders(String filename) {
+    private static String loadCsvHeaders(String filename, List<String> mustInclude) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
-                        
-            var fields = Arrays.stream(
+            
+            List<String> colList = Arrays.stream(
                 lines.findFirst().orElse("").split(","))
                     .map(col -> {
+                        return col.toUpperCase();
+                    })
+                    .collect(Collectors.toList());
+
+            // check if all required fields are in csv
+            mustInclude.forEach(field -> {
+                if (!colList.contains(field.toUpperCase())) {
+                    throw new RuntimeException("Malformed plot CSV. Fields must be " + String.join("," , mustInclude));
+                }   
+            });
+
+            var fields = Arrays.stream(
+                colList.toArray(String[]::new))
+                    .map(col -> {
                         if (List.of("LON", "LAT").contains(col.toUpperCase())) {
-                            return col + " float";
+                            return col.toUpperCase() + " float";
                         }
-                        return col + " text";
+                        return col.toUpperCase() + " text";
                     })
                     .collect(Collectors.joining(","));
-                        
-            return fields;
+            
+            return String.join(",", fields);
         } catch (Exception e) {
-            throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.");
+            throw new RuntimeException("Error reading csv file");
         }
     }
 
@@ -662,24 +679,36 @@ public class PostgresProjects implements Projects {
                 // add emptye table to the database
                 try(var pstmt = conn.prepareStatement("SELECT * FROM create_new_table(?,?)")){
                     pstmt.setString(1, plots_table);
-                    pstmt.setString(2, loadCsvHeaders(plotsFile));
+                    pstmt.setString(2, loadCsvHeaders(plotsFile, List.of("lon","lat","plotId")));
                     pstmt.execute();
-                }
+                } 
                 // import csv file
                 runBashScriptForProject(projectId, "plots", "csv2postgres.sh", "/csv");
                 // add index for reference
                 try(var pstmt = conn.prepareStatement("SELECT * FROM add_index_col(?)")){
                     pstmt.setString(1,plots_table);
                     pstmt.execute();
-                }
+                } 
                 return plots_table;
             }            
             if (plotDistribution.equals("shp")) {
                 runBashScriptForProject(projectId, "plots", "shp2postgres.sh", "/shp");
-                return "project_" +  projectId + "_plots_shp";
+                var plots_table = "project_" +  projectId + "_plots_shp";
+                // run query to make sure all requred fields exist
+                try(var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")){
+                    pstmt.setString(1,plots_table);
+                    pstmt.execute();
+                } catch (SQLException s) {
+                    throw new RuntimeException("Missing sql columns");
+                }
+                return plots_table;
             }  
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            if (plotDistribution.equals("csv")) {
+                throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.");
+            } else {
+                throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.");
+            }
         } 
         return null;
     }
@@ -691,7 +720,7 @@ public class PostgresProjects implements Projects {
                 // create new table
                 try(var pstmt = conn.prepareStatement("SELECT * FROM create_new_table(?,?)")){
                     pstmt.setString(1,samples_table);
-                    pstmt.setString(2, loadCsvHeaders(samplesFile));
+                    pstmt.setString(2, loadCsvHeaders(samplesFile, List.of("lon","lat","plotId", "sampleId")));
                     pstmt.execute();
                 }
                 // fill table
@@ -705,10 +734,22 @@ public class PostgresProjects implements Projects {
             }            
             if (sampleDistribution.equals("shp")) {
                 runBashScriptForProject(projectId, "samples", "shp2postgres.sh", "/shp");
-                return "project_" +  projectId + "_samples_shp";
+                var samples_table = "project_" +  projectId + "_samples_shp";
+                // run query to make sure all requred fields exist
+                try(var pstmt = conn.prepareStatement("SELECT * FROM select_partial_sample_table_by_name(?)")){
+                    pstmt.setString(1,samples_table);
+                    pstmt.execute();
+                } catch (SQLException s) {
+                    throw new RuntimeException("Missing sql columns");
+                }
+                return samples_table;
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            if (sampleDistribution.equals("csv")) {
+                throw new RuntimeException("Malformed sample CSV. Fields must be LON,LAT,PLOTID,SAMPLEID.");
+            } else {
+                throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.");
+            }
         } 
 
         return null;
@@ -739,13 +780,19 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(2, loadPlots(conn, plotDistribution, projectId, plotsFile));
                 pstmt.setString(3, loadSamples(conn, sampleDistribution, projectId, samplesFile));
                 pstmt.execute();
+            } catch (SQLException e) {
+                System.out.println("catch update");
+                throw new  RuntimeException(e);
             } 
             try (var pstmt = 
                 conn.prepareStatement("SELECT * FROM cleanup_project_tables(?,?)")) {
                 pstmt.setInt(1, projectId);     
                 pstmt.setDouble(2, plotSize);
                 pstmt.execute();
-            } 
+            } catch (SQLException e) {
+                System.out.println("catch clean");
+                throw new  RuntimeException(e);
+            }
             
             // if both are files, adding plots and samples is done inside PG
             if (List.of("csv", "shp").contains(plotDistribution) && List.of("csv", "shp").contains(sampleDistribution)) {
@@ -753,7 +800,10 @@ public class PostgresProjects implements Projects {
                     conn.prepareStatement("SELECT * FROM samples_from_plots_with_files(?)")) {
                     pstmt.setInt(1, projectId);     
                     pstmt.execute();
-                } 
+                } catch (SQLException e) {
+                    System.out.println("catch adding 2");
+                    throw new  RuntimeException(e);
+                }
             // Add plots from file and use returned plot ID to create samples
             } else if (List.of("csv", "shp").contains(plotDistribution)) {
                 try (var pstmt = 
@@ -766,6 +816,9 @@ public class PostgresProjects implements Projects {
                                 plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, plotDistribution.equals("shp"));
                         }
                     }
+                } catch (SQLException e) {
+                    System.out.println("catch adding 1");
+                    throw new  RuntimeException(e);
                 } 
             } else {
                 // Convert the lat/lon boundary coordinates to Web Mercator (units: meters) and apply an interior buffer of plotSize / 2
@@ -838,6 +891,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String createProject(Request req, Response res) {
+        var newProjectId = "";
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
@@ -885,7 +939,6 @@ public class PostgresProjects implements Projects {
 
 
                 try(var rs = pstmt.executeQuery()){
-                    var newProjectId = "";
                     if (rs.next()){
                         newProjectId = Integer.toString(rs.getInt("create_project"));
                         newProject.addProperty("id", newProjectId);
@@ -950,7 +1003,30 @@ public class PostgresProjects implements Projects {
         }
         catch (Exception e) {
             // Indicate that an error occurred with project creation
-            throw new RuntimeException(e);
+            deleteFiles(Integer.parseInt(newProjectId));
+            deleteShapeFileDirectories(Integer.parseInt(newProjectId));
+            try (var conn = connect()) {
+                try (var pstmt = conn.prepareStatement("DELETE FROM projects WHERE id = ?")) {
+                    pstmt.setInt(1, Integer.parseInt(newProjectId));
+                    pstmt.execute();
+                } catch (SQLException sql) {
+                }
+                // CSV checks before adding so samples would never be added
+                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_plots_csv")) {
+                    pstmt.execute();
+                } catch (SQLException sql) {
+                }
+                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_plots_shp")) {
+                    pstmt.execute();
+                } catch (SQLException sql) {
+                }
+                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_samples_shp")) {
+                    pstmt.execute();
+                } catch (SQLException sql) {
+                }
+            } catch (SQLException sql) {
+            }
+            return e.getMessage();
         }
     }
 

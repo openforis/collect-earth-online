@@ -160,7 +160,7 @@ def insert_projects():
                         if int(dash['projectID']) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
 
-                    insert_plots_samples_by_file(project_id)
+                    insert_plots_samples_by_file(project_id, conn)
                     merge_files(project, project_id, conn)
                     conn.commit()
             except(Exception, psycopg2.DatabaseError) as error:
@@ -172,7 +172,7 @@ def insert_projects():
         if conn is not None:
             conn.close()
 
-def insert_plots_samples_by_file(project_id):
+def insert_plots_samples_by_file(project_id, mainconn):
     # need elevated permissions to use the copy function inside a querey
     conn = psycopg2.connect(**paramsElevated)
     cur_plot = conn.cursor()
@@ -188,7 +188,7 @@ def insert_plots_samples_by_file(project_id):
         conn.commit()
         cur_plot.close()
         conn.close()
-        insert_plots(project_id,conn)
+        insert_plots(project_id,mainconn)
     cur_plot.close()
     conn.close()
 
@@ -197,8 +197,9 @@ def insert_plots(project_id,conn):
     cur_plot = conn.cursor()
     user_plot_id=-1
     dirname = os.path.dirname(os.path.realpath(__file__))
-    if os.path.isfile(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'plot-data-'+str(project_id)+'.json')))):
-        plot_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'plot-data-'+str(project_id)+'.json'))), "r").read()
+    filename = os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'plot-data-'+str(project_id)+'.json')))
+    if os.path.isfile(filename):
+        plot_list_json= open(filename, "r").read()
         plotArr = demjson.decode(plot_list_json)
         for plot in plotArr:
             try:
@@ -207,8 +208,6 @@ def insert_plots(project_id,conn):
                     plot['flagged']=0
                 else:
                     plot['flagged']=1
-                if not 'plotId' in plot.keys(): plot['plotId'] = None
-                if not 'geom' in plot.keys(): plot['geom'] = None
 
                 cur_plot.execute("select * from create_project_plot(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",
                 (project_id,plot['center']))
@@ -243,9 +242,6 @@ def insert_samples(plot_id,samples,user_plot_id,conn):
     cur_sample = conn.cursor()
     for sample in samples:
         try:
-            if not 'sampleId' in sample.keys(): sample['sampleId'] = None
-            if not 'geom' in sample.keys(): sample['geom'] = None
-
             cur_sample.execute("select * from create_project_plot_sample(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",
              (plot_id,sample['point'] ))
 
@@ -286,36 +282,38 @@ def merge_files(project, project_id, conn):
     dirname = os.path.dirname(os.path.realpath(__file__))
     ### Plots
     try:
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , "project-" +  str(project_id) + "-plots.csv")))
-        if project['plotDistribution'] == 'csv' and os.path.isfile(filename): 
-            
+        fileprefix = "project-" +  str(project_id)
+        tableprefix = 'project_' +  str(project_id)
+         
+        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-plots.csv")))
+        if project['plotDistribution'] == 'csv' and (os.path.isfile(filename)): 
+            plots_table = tableprefix + '_plots_csv'
+
             cur.execute("SELECT * FROM create_new_table(%s,%s)", 
-            ['project_' +  str(project_id) + '_plots_csv', loadCsvHeaders(filename)])
+            [plots_table, loadCsvHeaders(filename)])
             conn.commit()
 
             # run sh to upload csv to postgres
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
-            subprocess.run(['bash', 'csv2postgres.sh', "project-" +  str(project_id) + "-plots"], cwd=shpath)
+            subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
 
             # add index 
-            cur.execute("SELECT * FROM add_index_col(%s)" , ['project_' +  str(project_id) + '_plots_csv'])
+            cur.execute("SELECT * FROM add_index_col(%s)" , [plots_table])
             conn.commit()
-            
-            plots_table = 'project_' +  str(project_id) + '_plots_csv'
 
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , "project-" +  str(project_id) + "-plots.zip")))
+        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-plots.zip")))
         if project['plotDistribution'] == 'shp' and os.path.isfile(filename):
             
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
-            subprocess.run(['bash', 'shp2postgres.sh', "project-" +  str(project_id) + "-plots"], cwd=shpath)
+            subprocess.run(['bash', 'shp2postgres.sh', fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
         
             plots_table = 'project_' +  str(project_id) + '_plots_shp'
         
         ### Samples
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , "project-" +  str(project_id) + "-samples.csv")))
+        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-samples.csv")))
         if project['sampleDistribution'] == 'csv' and os.path.isfile(filename): 
             
             cur.execute("SELECT * FROM create_new_table(%s,%s)", 
@@ -325,23 +323,22 @@ def merge_files(project, project_id, conn):
             # run sh to upload csv to postgres
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
-            subprocess.run(['bash', 'csv2postgres.sh', "project-" +  str(project_id) + "-samples"], cwd=shpath)
+            subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
 
             # add index 
             cur.execute("SELECT * FROM add_index_col(%s)" , ['project_' +  str(project_id) + '_samples_csv'])
-            conn.commit()
-
             samples_table = 'project_' +  str(project_id) + '_samples_csv'
 
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , "project-" +  str(project_id) + "-samples.zip")))
+        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-samples.zip")))
         if project['sampleDistribution'] == 'shp' and os.path.isfile(filename):
             
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
-            subprocess.run(['bash', 'shp2postgres.sh', "project-" +  str(project_id) + "-samples"], cwd=shpath)
+            subprocess.run(['bash', 'shp2postgres.sh', fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
 
             samples_table = 'project_' +  str(project_id) + '_samples_shp'
+
         # add table names to project
         cur.execute("SELECT * FROM update_project_tables(%s,%s,%s)" , [project_id, plots_table, samples_table])
         conn.commit()

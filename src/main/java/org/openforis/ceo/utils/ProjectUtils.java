@@ -137,7 +137,7 @@ public class ProjectUtils {
                     var labelStream = Arrays.stream(labels);
                     var distribution = plotSummary.get("distribution").getAsJsonObject();
                     return Stream.concat(
-                            fieldStream.map(field -> plotSummary.get(field).isJsonNull()
+                            fieldStream.map(field -> plotSummary.has(field) && plotSummary.get(field).isJsonNull()
                                     ? ""
                                     : plotSummary.get(field).getAsString()),
                             labelStream.map(label -> distribution.has(label)
@@ -184,7 +184,7 @@ public class ProjectUtils {
                             labelStream.map(label -> {
                                 var value = sampleSummary.get("value");
                                 if (value.isJsonNull()) {
-                                    return "0";
+                                    return "";
                                 // original format is single integer index
                                 } else if (value.isJsonPrimitive()) {
                                     var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups);
@@ -198,7 +198,7 @@ public class ProjectUtils {
                                     // newest format nests the answer in another json object
                                     return value.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString();
                                 } else {
-                                    return "0";
+                                    return "";
                                 }
                             })).collect(Collectors.joining(","));         
                 }).collect(Collectors.joining("\n"));

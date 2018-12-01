@@ -26,11 +26,29 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
     END
 $$ LANGUAGE PLPGSQL;
 
+-- Converts unknown colums to a single json colum for processsing in Java
 CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
 	RETURNS TABLE (
 		ext_id		integer,
-		geom		text,
 		rem_data	jsonb
+	) AS $$
+	DECLARE 
+		i integer;
+    BEGIN
+		IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
+    
+		RETURN QUERY EXECUTE 'SELECT gid, row_to_json(p)::jsonb FROM '|| _table_name || ' as p';
+    END
+$$ LANGUAGE PLPGSQL;
+
+-- Select known columns from a shp or csv file
+CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
+	RETURNS TABLE (
+		ext_id		integer,
+		plotId		text,
+		sampleId	text,
+		center		geometry,
+		geom		geometry
 	) AS $$
 	DECLARE 
 		i integer;
@@ -41,9 +59,9 @@ CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
 		GET DIAGNOSTICS i = ROW_COUNT;
 		IF i = 0 
 		THEN
-			RETURN QUERY EXECUTE 'SELECT gid, ST_AsGeoJSON(null), row_to_json(p)::jsonb FROM '|| _table_name || ' as p';
+			RETURN QUERY EXECUTE 'SELECT gid, plotid::text, sampleId::text, ST_SetSRID(ST_MakePoint(lon, lat),4326), ST_Centroid(null) as geom FROM '|| _table_name;
 		ELSE
-			RETURN QUERY EXECUTE 'SELECT gid, ST_AsGeoJSON(geom), row_to_json(p)::jsonb FROM '|| _table_name || ' as p';
+			RETURN QUERY EXECUTE 'SELECT gid, plotid::text, sampleId::text, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM '|| _table_name;	
 		END IF;
     END
 $$ LANGUAGE PLPGSQL;
@@ -165,7 +183,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
  	) AS $$
 	WITH users_plots as (
 		SELECT p.id as proj_id, pl.id as plot_id, 
-			EXTRACT(EPOCH FROM (collection_start - collection_time)) as seconds
+			EXTRACT(EPOCH FROM (collection_time - collection_start)) as seconds
 		FROM user_plots up
 		INNER JOIN plots pl
 			ON up.plot_id = pl.id
@@ -1233,7 +1251,7 @@ CREATE TYPE plots_return  AS (
       ext_id            integer,
 	  plotId			text,
       geom              text,
-	  analysis_duration	integer
+	  analysis_duration	numeric
     );
 
 -- Create a single project plot with no external file data
@@ -1277,7 +1295,7 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
             cast(count(1) - sum(case when flagged then 1 else 0 end)  as int) as assigned, 
 			MAX(confidence) as confidence,
 			MAX(collection_time) as collection_time,
-			ROUND(AVG(EXTRACT(EPOCH FROM (collection_start - collection_time)))::numeric, 1) as analysis_duration,
+			ROUND(AVG(EXTRACT(EPOCH FROM (collection_time - collection_start)))::numeric, 1) as analysis_duration,
             plot_id
         FROM user_plots
         GROUP BY plot_id
@@ -1495,7 +1513,6 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
            collection_time  	timestamp,
 		   analysis_duration	numeric,
            samples          	text,
-		   plot_geom			text,
 		   ext_plot_data		jsonb
     ) AS $$
 	WITH all_rows AS (SELECT pl.id as m_plot_id, samples.id as m_samples_id, pl.ext_id as pl_ext_id,  * 
@@ -1544,7 +1561,6 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 		   collection_time::timestamp,
 		   analysis_duration,
 		   samples,
-		   pfd.geom,
 		   pfd.rem_data
 		FROM projects p
 		INNER JOIN plots_agg pa
@@ -1570,9 +1586,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
            imagery_title    	text,
            imagery_attributes   text,
            value            	jsonb,
-		   plot_geom			text,
 		   ext_plot_data		jsonb,
-		   sample_geom			text,
 		   ext_sample_data		jsonb
     ) AS $$
 	with tablenames AS (
@@ -1599,9 +1613,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 	   title AS imagery_title,
 	   imagery_attributes::text,
 	   value,
-	   pfd.geom,
 	   pfd.rem_data,
-	   sfd.geom,
 	   sfd.rem_data
 	FROM select_all_project_plots(_project_id) p
 	INNER JOIN samples
@@ -1638,6 +1650,10 @@ CREATE OR REPLACE FUNCTION update_sequence(_table text)
     END
 
 $$ LANGUAGE PLPGSQL;
+
+--
+-- MIGRATION ONLY FUNCTIONS
+--
 
 -- Reads json file with dynamic name
 CREATE or replace function read_json_file( _file_name text)
@@ -1708,7 +1724,7 @@ CREATE OR REPLACE FUNCTION merge_plot_and_file(_project_id integer)
 	WITH tablenames AS (
 		SELECT plots_ext_table, samples_ext_table
 		FROM projects 
-		WHERE id = 353
+		WHERE id = _project_id
 	),
 	plots_file_data AS (
 		SELECT ext_id AS pl_ext_id, center, row_number() over(order by ST_X(center), ST_Y(center)) as row_id 
@@ -1723,7 +1739,7 @@ CREATE OR REPLACE FUNCTION merge_plot_and_file(_project_id integer)
 		FROM projects p
 		INNER JOIN plots pl
 			ON pl.project_id = p.id
-		WHERE project_id = 353
+		WHERE project_id = _project_id
 	),
 	row_with_file AS (
 		SELECT pl_row_id, pl_ext_id, pl_plot_id
@@ -1760,3 +1776,21 @@ CREATE OR REPLACE FUNCTION merge_plot_and_file(_project_id integer)
 											 										 
 	SELECT count(*)::int FROM update_samples
 $$ LANGUAGE SQL;
+
+-- Add missing standard columns to older files
+CREATE OR REPLACE FUNCTION add_missing_column(_table_name text, _column_name text)
+	RETURNS void AS $$
+	DECLARE 
+		i integer;
+    BEGIN
+		IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
+        -- FIXME might be case sensitive
+		EXECUTE 'SELECT * FROM information_schema.columns 
+						WHERE table_name = '''|| _table_name ||''' AND column_name = ''plotId''';
+		GET DIAGNOSTICS i = ROW_COUNT;
+		IF i = 0 
+		THEN
+			EXECUTE 'ALTER TABLE '|| _table_name || ' ADD COLUMN ' || _column_name ||' text';
+		END IF;
+    END
+$$ LANGUAGE PLPGSQL;
