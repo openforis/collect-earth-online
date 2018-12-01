@@ -196,9 +196,14 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
 	user_totals as (
 		SELECT
 			count(DISTINCT proj_id)::int as proj_count,
-			count(DISTINCT plot_id)::int as plot_count,
+			count(DISTINCT plot_id)::int as plot_count
+		FROM users_plots
+	),
+	average_totals as (
+		SELECT
 			round(avg(seconds)::numeric, 1) as sec_avg
 		FROM users_plots
+		WHERE seconds IS NOT null
 	),
 	proj_groups as (
 		SELECT proj_id,
@@ -217,7 +222,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
 				END) , ',')) as avg_json
 		FROM proj_groups
 	)
-	SELECT * FROM user_totals, proj_agg
+	SELECT * FROM user_totals, average_totals, proj_agg
 $$ LANGUAGE SQL;
 
 -- Adds a new role to the database.
