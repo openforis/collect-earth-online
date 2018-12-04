@@ -475,7 +475,7 @@ class Collection extends React.Component {
                     flagPlotButtonDisabled: true,
                     saveValuesButtonDisabled: true
                 });
-                alert("all plots have been analyzed");
+                alert("All plots have been analyzed for this project.");
             }
         }
     }
@@ -549,7 +549,6 @@ class Collection extends React.Component {
         }
         this.setState({surveyAnswersVisible: surveyAnswersVisible});
     }
-
     showQuestions(surveyNodes) {
         let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
         surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = true);
@@ -578,7 +577,7 @@ class Collection extends React.Component {
                     userSamples[sampleId] = {};
                 }
                 userSamples[sampleId][questionText] = {answer: answerText,
-                                                       color: answerColor};
+                    color: answerColor};
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples});
             this.highlightSamplesByQuestion(userSamples, questionText);
@@ -600,7 +599,6 @@ class Collection extends React.Component {
             mercator.highlightSampleGeometry(feature, answerColor);
         });
     }
-
     allowSaveIfSurveyComplete(userSamples) {
         const assignedSamples = Object.keys(userSamples);
         const totalSamples = this.state.currentPlot.samples;
@@ -900,15 +898,15 @@ function SurveyQuestionTree(props) {
     const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
     return (
         <fieldset className={"mb-1 justify-content-center text-center"
-                             + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
+        + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
             <button id={props.surveyNode.question + "_" + props.surveyNode.id}
                     className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                     onClick={() => props.hideShowAnswers(props.surveyNode.id)}
                     style={{marginBottom: "10px"}}>
-                 {props.surveyNode.question}
+                {props.surveyNode.question}
             </button>
             <ul className={"samplevalue justify-content-center"
-                           + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
+            + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
                 {
                     props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
                                                                              question={props.surveyNode.question}
@@ -949,8 +947,8 @@ function SurveyAnswer(props) {
                     id={props.answer + "_" + props.id}
                     name={props.answer + "_" + props.id}
                     style={{boxShadow: (props.selectedAnswers[props.question] == props.answer)
-                        ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                        : "initial"}}
+                            ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                            : "initial"}}
                     onClick={() => {
                         if (props.setCurrentValue(props.question, props.id, props.answer, props.color)) {
                             props.hideQuestions(props.childNodes);

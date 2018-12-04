@@ -47,16 +47,21 @@ class Project extends React.Component {
         this.getParentSurveyQuestionAnswers=this.getParentSurveyQuestionAnswers.bind(this);
         this.topoSort = this.topoSort.bind(this);
         this.getParentSurveyAnswers=this.getParentSurveyAnswers.bind(this);
+        this.gotoProjectDashboard=this.gotoProjectDashboard.bind(this);
     };
 
     componentDidMount() {
-        let institution = this.state.institutionId;
+        if (this.state.stats == null) {
+            this.getProjectStats(this.props.projectId);
+        }
+        if (this.state.imageryList == null) {
+            this.getImageryList(this.props.institutionId);
+        }
         if (this.state.details == null) {
-            this.getProjectById(this.state.projectId);
+            this.getProjectById(this.props.projectId);
         }
         else {
             if (this.state.details.id == 0) {
-                institution = this.state.institutionId;
                 this.state.details.privacyLevel = "private";
                 this.state.details.projectDistribution = "random";
                 if (document.getElementById("sample-distribution-random") != null) {
@@ -67,10 +72,9 @@ class Project extends React.Component {
                 }
                 this.state.details.plotShape = "circle";
                 this.state.details.sampleDistribution = "random";
-                this.getProjectList(this.state.userId, this.state.projectId);
+                this.getProjectList(this.props.userId, this.props.projectId);
             }
-            if (this.state.details.id != 0) {
-                institution = this.state.details.institution;
+            else if (this.state.details.id != 0) {
                 if (document.getElementById("num-plots") != null) {
                     if (document.getElementById("plot-distribution-gridded").checked)
                         document.getElementById("plot-design-text").innerHTML = "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
@@ -90,12 +94,7 @@ class Project extends React.Component {
                     if (document.getElementById("sample-distribution-shp").checked)
                         document.getElementById("sample-design-text").innerHTML = "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.";
                 }
-                this.getProjectStats(this.state.projectId);
             }
-
-        }
-        if (this.state.imageryList == null) {
-            this.getImageryList(institution);
         }
     }
 
@@ -378,18 +377,20 @@ class Project extends React.Component {
     }
 
     getProjectStats(projectId) {
-        fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json()
-                } else {
-                    console.log(response);
-                    alert("Error retrieving project stats. See console for details.");
-                }
-            })
-            .then(data => {
-                this.setState({stats: data});
-            });
+        if(projectId>0) {
+            fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json()
+                    } else {
+                        console.log(response);
+                        alert("Error retrieving project stats. See console for details.");
+                    }
+                })
+                .then(data => {
+                    this.setState({stats: data});
+                });
+        }
     }
 
     getImageryList(institutionId) {
@@ -493,7 +494,7 @@ class Project extends React.Component {
                 utils.enable_element("sample-resolution");
             }
 
-            if (this.state.imageryList.length > 0) {
+            if (this.state.imageryList && this.state.imageryList.length > 0) {
                 var detailsNew = this.state.details;
                 detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
@@ -502,6 +503,11 @@ class Project extends React.Component {
                 );
                 // Draw a map with the project AOI and a sampling of its plots
             }
+        }
+    }
+    gotoProjectDashboard(){
+        if (this.state.plotList != null && this.state.details != null) {
+            window.open(this.props.documentRoot + "/project-dashboard/"+this.state.details.id);
         }
     }
 
@@ -526,7 +532,7 @@ class Project extends React.Component {
                 <ProjectManagement project={this.state} projectId={this.props.projectId}
                                    configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
                                    downloadSampleData={this.downloadSampleData}
-                                   changeAvailability={this.changeAvailability}/>
+                                   changeAvailability={this.changeAvailability} gotoProjectDashboard={this.gotoProjectDashboard}/>
             </div>
         );
     }
@@ -1070,6 +1076,10 @@ function ProjectManagement(props) {
     var buttons = "";
     if (project.details != null) {
         buttons = <React.Fragment>
+            <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
+                   name="configure-geo-dash" value="Project Dashboard"
+                   onClick={props.gotoProjectDashboard}
+                   style={{display:'block'}}/>
             <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="configure-geo-dash" value="Configure Geo-Dash"
                    onClick={props.configureGeoDash}
