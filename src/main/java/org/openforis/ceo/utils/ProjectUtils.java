@@ -43,11 +43,11 @@ public class ProjectUtils {
         var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
         if (firstGroup.has("name")) {
             return new String[]{"name", "values", "name"};
-        }
-        if (firstGroup.has("question")) {
+        } else if (firstGroup.has("question")) {
             return new String[]{"question", "answers", "answer"};
+        } else {
+            return new String[]{};
         }
-        return new String[]{};
     }
 
     private static String[] getValueDistributionLabels(JsonArray sampleValueGroups, String[] keys) {
@@ -358,18 +358,6 @@ public class ProjectUtils {
                         .filter(y -> plotShape.equals("square") || squareDistance(x, y, centerX, centerY) < radiusSquared)
                         .map(y -> reprojectPoint(new Double[]{x, y}, 3857, 4326)))
                 .toArray(Double[][]::new);
-    }
-
-    public static Double[] calculateBounds(Double[][] points, double buffer) {
-        var lons = Arrays.stream(points).map(point -> point[0]).toArray(Double[]::new);
-        var lats = Arrays.stream(points).map(point -> point[1]).toArray(Double[]::new);
-        var lonMin = Arrays.stream(lons).min(Comparator.naturalOrder()).get();
-        var latMin = Arrays.stream(lats).min(Comparator.naturalOrder()).get();
-        var lonMax = Arrays.stream(lons).max(Comparator.naturalOrder()).get();
-        var latMax = Arrays.stream(lats).max(Comparator.naturalOrder()).get();
-        var bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, 4326, 3857);
-        var paddedBounds = padBounds(bounds[0], bounds[1], bounds[2], bounds[3], -buffer);
-        return reprojectBounds(paddedBounds[0], paddedBounds[1], paddedBounds[2], paddedBounds[3], 3857, 4326);
     }
 
     public static JsonElement getOrZero(JsonObject obj, String field) {

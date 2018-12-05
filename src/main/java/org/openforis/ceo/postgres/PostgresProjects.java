@@ -8,7 +8,22 @@ import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
-import static org.openforis.ceo.utils.ProjectUtils.*;
+import static org.openforis.ceo.utils.ProjectUtils.padBounds;
+import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
+import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
+import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
+import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
+import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
+import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
+import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
+import static org.openforis.ceo.utils.ProjectUtils.getValueDistribution;
+import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPoint;
+import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
+import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
+import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
+import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -252,9 +267,9 @@ public class PostgresProjects implements Projects {
                     stats.addProperty("members",rs.getInt("members"));
                     stats.addProperty("contributors",rs.getInt("contributors"));
                     stats.addProperty("createdDate",rs.getString("created_date"));
-                    stats.addProperty("publishDate",rs.getString("published_date"));
-                    stats.addProperty("closeDate",rs.getString("closed_date"));
-                    stats.addProperty("archiveDate",rs.getString("archived_date"));
+                    stats.addProperty("publishedDate",rs.getString("published_date"));
+                    stats.addProperty("closedDate",rs.getString("closed_date"));
+                    stats.addProperty("archivedDate",rs.getString("archived_date"));
                 }
             }
             return  stats.toString();
