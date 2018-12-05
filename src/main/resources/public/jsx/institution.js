@@ -250,7 +250,7 @@ class Institution extends React.Component {
         } else if (this.state.details.id == -1) {
             alert("Projects cannot be created without first selecting an institution.");
         } else {
-            window.location = this.props.documentRoot + "/project/0?institution=" + this.state.details.id;
+            window.location = this.props.documentRoot + "/create-project/0?institution=" + this.state.details.id;
         }
     }
 
@@ -873,7 +873,7 @@ function Project(props) {
                 </div>
                 <div className="col-3 pl-0">
                     <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                       href={documentRoot+"/project/"+ project.id }>
+                       href={documentRoot+"/review-project/"+ project.id }>
                         <span className="d-xl-none"><i className="fa fa-edit"></i></span><span
                         className="d-none d-xl-block"> Review</span></a>
                 </div>

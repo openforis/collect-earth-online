@@ -31,8 +31,8 @@
  }
  var institutionID = this.getParameterByName("institutionId") != null? this.getParameterByName("institutionId"): '1';
 </script>
-<script type="text/javascript" src="${root}/js/vendors~account~collection~geodashreact~home~institution~project~timesync~widgetlayouteditor.bundle.js"></script>
-<script type="text/javascript" src="${root}/js/vendors~widgetlayouteditor.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/vendors~account~collection~create_institution~create_project~geodashreact~home~project_dashboard~rev~1b583733.bundle.js"></script>
+<script type="text/javascript" src="${root}/js/ vendors~widgetlayouteditor.bundle.js"></script>
 <script type="text/javascript" src="${root}/js/widgetlayouteditor.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {

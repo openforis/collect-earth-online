@@ -35,6 +35,10 @@
         {
             "name": "Alfonso SanchezPausDiaz",
             "email": "alfonso.sanchezpausdiaz@fao.org"
+        },
+        {
+            "name": "Matt Spencer",
+            "email": "semail@snasa.io"
         }
     ],
     "license": "MIT",
@@ -49,6 +53,7 @@
     "private": true,
     "dependencies": {
         "lodash": "^4.17.11",
+        "ogr2ogr": "^1.3.0",
         "prop-types": "^15.6.2",
         "react": "^16.5.2",
         "react-dom": "^16.5.2"
@@ -70,6 +75,9 @@
     },
     "scripts": {
         "webpack-dev": "webpack --config webpack.dev.js",
-        "webpack-prod": "webpack --config webpack.prod.js"
+        "webpack-prod": "webpack --config webpack.prod.js",
+        "server-json": "mvn compile exec:java -Dexec.args=JSON",
+        "server-pg": "mvn compile exec:java -Dexec.args=POSTGRES",
+        "start": "npm run server-pg"
     }
 }

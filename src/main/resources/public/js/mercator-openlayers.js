@@ -102,7 +102,16 @@ mercator.createSource = function (sourceConfig) {
         //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
         //const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
         const url = sourceConfig.geeUrl;
-        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): '';
+        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): "";
+        let visParams;
+        try{
+            visParams = JSON.parse(sourceConfig.geeParams.visParams);
+        }
+        catch(e)
+        {
+            visParams = sourceConfig.geeParams.visParams;
+        }
+        console.log(visParams);
         let theJson = {
             dateFrom: sourceConfig.geeParams.startDate,
             dateTo: sourceConfig.geeParams.endDate,
@@ -110,19 +119,19 @@ mercator.createSource = function (sourceConfig) {
             min: sourceConfig.geeParams.visParams.min,
             max: sourceConfig.geeParams.visParams.max,
             cloudLessThan: cloudVar,
-            visParams: sourceConfig.geeParams.visParams
+            visParams: visParams
         };
         if(sourceConfig.geeParams.ImageAsset)
         {
             theJson.imageName = sourceConfig.geeParams.ImageAsset;
         }
-        const theID = Math.random().toString(36).substr(2, 16) + '_' + Math.random().toString(36).substr(2, 9);
+        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
         let geeLayer = new ol.source.XYZ({
             url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
             id: theID
         });
         geeLayer.setProperties({id: theID});
-        let createtype = 'test';
+        let createtype = "test";
         if(sourceConfig.create) {
 
 
@@ -148,7 +157,7 @@ mercator.createSource = function (sourceConfig) {
                         var layer;
                         const LayerId = this.LayerId;
                         mercator.currentMap.getLayers().forEach(function (lyr) {
-                            if (LayerId && LayerId == lyr.getSource().get('id')) {
+                            if (LayerId && LayerId == lyr.getSource().get("id")) {
                                 layer = lyr;
                                 layer.setSource(geeLayer);
                             }
@@ -480,19 +489,21 @@ mercator.getPolygonStyle = function (fillColor, borderColor, borderWidth) {
                                                             width: borderWidth})});
 };
 
-var ceoMapStyles = {icon:         mercator.getIconStyle("favicon.ico"),
-                    ceoIcon:      mercator.getIconStyle("ceoicon.png"),
-                    redPoint:     mercator.getCircleStyle(5, null, "#8b2323", 2),
-                    bluePoint:    mercator.getCircleStyle(5, null, "#23238b", 2),
-                    yellowPoint:  mercator.getCircleStyle(5, null, "yellow", 2),
-                    redCircle:    mercator.getCircleStyle(5, null, "red", 2),
-                    yellowCircle: mercator.getCircleStyle(5, null, "yellow", 2),
-                    greenCircle:  mercator.getCircleStyle(5, null, "green", 2),
-                    redSquare:    mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
-                    yellowSquare: mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
-                    greenSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
-                    cluster:      mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
-                    polygon:      mercator.getPolygonStyle(null, "yellow", 3)};
+var ceoMapStyles = {icon:          mercator.getIconStyle("favicon.ico"),
+                    ceoIcon:       mercator.getIconStyle("ceoicon.png"),
+                    redPoint:      mercator.getCircleStyle(5, null, "#8b2323", 2),
+                    bluePoint:     mercator.getCircleStyle(5, null, "#23238b", 2),
+                    yellowPoint:   mercator.getCircleStyle(5, null, "yellow", 2),
+                    redCircle:     mercator.getCircleStyle(5, null, "red", 2),
+                    yellowCircle:  mercator.getCircleStyle(5, null, "yellow", 2),
+                    greenCircle:   mercator.getCircleStyle(5, null, "green", 2),
+                    blackCircle:   mercator.getCircleStyle(5, null, "#000000", 2),
+                    redSquare:     mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
+                    yellowSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
+                    greenSquare:   mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
+                    cluster:       mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
+                    yellowPolygon: mercator.getPolygonStyle(null, "yellow", 3),
+                    blackPolygon:  mercator.getPolygonStyle(null, "#000000", 3)};
 
 /*****************************************************************************
 ***
@@ -735,14 +746,23 @@ mercator.getSelectedSamples = function (mapConfig) {
     }
 };
 
+mercator.getAllFeatures = function (mapConfig, layerTitle) {
+    var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    if (layer) {
+        return layer.getSource().getFeatures();
+    } else {
+        return null;
+    }
+};
+
 // [Side Effects] Sets the sample's style to be a circle with a black
 // border and filled with the passed in color. If color is null, the
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
     if (sample.get("shape") == "point") {
-        sample.setStyle(mercator.getCircleStyle(5, color || "#999999", "#000000", 2));
+        sample.setStyle(mercator.getCircleStyle(5, color, "#000000", 2));
     } else {
-        sample.setStyle(mercator.getPolygonStyle(color || "#999999", "#000000", 3));
+        sample.setStyle(mercator.getPolygonStyle(color, "#000000", 3));
     }
     return sample;
 };
@@ -779,7 +799,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
 mercator.enableDragBoxDraw = function (mapConfig, callBack) {
     var drawLayer = new ol.layer.Vector({title: "dragBoxLayer",
                                          source: new ol.source.Vector({features: []}),
-                                         style: ceoMapStyles.polygon});
+                                         style: ceoMapStyles.yellowPolygon});
     var dragBox = mercator.makeDragBoxDraw("dragBoxDraw", drawLayer, callBack);
     mapConfig.map.addLayer(drawLayer);
     mapConfig.map.addInteraction(dragBox);
@@ -808,9 +828,9 @@ mercator.getDragBoxExtent = function (dragBox) {
 
 // [Side Effects] Adds a new empty overlay to mapConfig's map object
 // with id set to overlayTitle.
-mercator.addOverlay = function (mapConfig, overlayTitle) {
+mercator.addOverlay = function (mapConfig, overlayTitle, element) {
     var overlay = new ol.Overlay({id: overlayTitle,
-                                  element: document.createElement("div")});
+                                  element: element});//?element:document.createElement("div")});
     mapConfig.map.addOverlay(overlay);
     return mapConfig;
 };
@@ -821,6 +841,14 @@ mercator.getOverlayByTitle = function (mapConfig, overlayTitle) {
     return mapConfig.map.getOverlayById(overlayTitle);
 };
 
+// [Pure] Returns a new ol.source.Cluster given the unclusteredSource and clusterDistance.
+mercator.makeClusterSource = function (unclusteredSource, clusterDistance) {
+    return new ol.source.Cluster({
+        source: unclusteredSource,
+        distance: clusterDistance
+    });
+};
+
 // [Pure] Returns true if the feature is a cluster, false otherwise.
 mercator.isCluster = function (feature) {
     return feature && feature.get("features") && feature.get("features").length > 0;
@@ -828,27 +856,27 @@ mercator.isCluster = function (feature) {
 
 // [Pure] Returns a string of HTML representing several table rows
 // that describe the passed in project.
-mercator.makeRows = function (documentRoot, project) {
+mercator.makeRows = function () {
     var rowStart = "<tr class=\"d-flex\">";
     var rowEnd = "</tr>";
     var leftColStart = "<td class=\"small col-6 px-0 my-auto\">";
     var rightColStart = "<td class=\"small col-6 pr-0\">";
     var colEnd = "</td>";
-    var linkStart = "<a href=\"" + documentRoot + "/collection/" + project.get("projectId") + "\" "
+    var linkStart = "<a href=\"" + '{documentRoot}' + "/collection/" + '{project.get("projectId")}' + "\" "
                   + "class=\"btn btn-sm btn-block btn-outline-lightgreen\" "
                   + "style=\"white-space:nowrap; overflow:hidden; text-overflow:ellipsis\">";
     var linkEnd = "</a>";
     return rowStart
         + leftColStart + "<h3 class=\"my-auto\">Name</h3>" + colEnd
-        + rightColStart + linkStart + project.get("name") + linkEnd + colEnd
+        + rightColStart + linkStart + '{project.get("name")}' + linkEnd + colEnd
         + rowEnd
         + rowStart
         + leftColStart + "Description" + colEnd
-        + rightColStart + (project.get("description") == "" ? "N/A" : project.get("description")) + colEnd
+        + rightColStart + '{(project.get("description")} == "" ? "N/A" : project.get("description"))}' + colEnd
         + rowEnd
         + rowStart
         + leftColStart + "Number of plots" + colEnd
-        + rightColStart + project.get("numPlots") + colEnd
+        + rightColStart + '{project.get("numPlots")}' + colEnd
         + rowEnd;
 };
 
@@ -864,7 +892,7 @@ mercator.getClusterExtent = function (clusterFeature) {
 };
 
 // [Pure] Returns a string of HTML to display in a popup box on the map.
-mercator.getPopupContent = function (documentRoot, feature) {
+mercator.getPopupContent = function (mapConfig, documentRoot, feature) {
     var title = "<div class=\"cTitle\"><h1>"
               + (mercator.isCluster(feature) ? "Cluster info" : "Project info")
               + "</h1></div>";
@@ -877,8 +905,8 @@ mercator.getPopupContent = function (documentRoot, feature) {
     var contentEnd = "</div>";
 
     if (mercator.isCluster(feature) && feature.get("features").length > 1) {
-        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfigMercator, ["
-            + mercator.getClusterExtent(feature) + "])\" "
+        var zoomLink = "<button onclick=\"mercator.zoomMapToExtent(mapConfig, "
+            + mercator.getClusterExtent(feature) + ")\" "
             + "class=\"mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow\" style=\"cursor:pointer; min-width:350px;\">"
             + "<i class=\"fa fa-search-plus\"></i> Zoom to cluster</button>";
         return title + contentStart + tableStart + tableRows + tableEnd + zoomLink + contentEnd;
@@ -891,8 +919,8 @@ mercator.getPopupContent = function (documentRoot, feature) {
 // containing the feature's name, description, and numPlots fields as
 // well as a link to its data collection page and then displays the
 // overlay on the map at the feature's coordinates.
-mercator.showProjectPopup = function (overlay, documentRoot, feature) {
-    overlay.getElement().innerHTML = mercator.getPopupContent(documentRoot, feature);
+mercator.showProjectPopup = function (mapConfig, overlay, documentRoot, feature) {
+    overlay.getElement().innerHTML = mercator.getPopupContent(mapConfig, documentRoot, feature);
     overlay.setPosition(mercator.isCluster(feature)
                         ? feature.get("features")[0].getGeometry().getCoordinates()
                         : feature.getGeometry().getCoordinates());
@@ -951,16 +979,16 @@ mercator.addProjectMarkersAndZoom = function (mapConfig, projects, documentRoot,
     }
 
     mercator.addOverlay(mapConfig, "projectPopup");
-    var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    mapConfig.map.on("click",
-                     function (event) {
-                         if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
-                             mapConfig.map.forEachFeatureAtPixel(event.pixel,
-                                                                 mercator.showProjectPopup.bind(null, overlay, documentRoot));
-                         } else {
-                             overlay.setPosition(undefined);
-                         }
-                     });
+    //var overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
+    // mapConfig.map.on("click",
+    //                  function (event) {
+    //                      if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
+    //                          mapConfig.map.forEachFeatureAtPixel(event.pixel,
+    //                                                              mercator.showProjectPopup.bind(null, mapConfig, overlay, documentRoot));
+    //                      } else {
+    //                          overlay.setPosition(undefined);
+    //                      }
+    //                  });
 
     mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
     return mapConfig;
@@ -1018,7 +1046,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 //        mercator.addVectorLayer(mapConfig,
 //                                "currentAOI",
 //                                mercator.geometryToVectorSource(mercator.parseGeoJson(polygon, true)),
-//                                ceoMapStyles.polygon);
+//                                ceoMapStyles.yellowPolygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentAOI");
 // FIXME: change calls from polygon_extent to mercator.parseGeoJson(polygon, false).getExtent()
 // FIXME: change calls from get_plot_extent to mercator.getPlotExtent
@@ -1027,7 +1055,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
 //        mercator.addVectorLayer(mapConfig,
 //                                "currentPlot",
 //                                mercator.geometryToVectorSource(mercator.getPlotPolygon(center, size, shape)),
-//                                ceoMapStyles.polygon);
+//                                ceoMapStyles.yellowPolygon);
 //        mercator.zoomMapToLayer(mapConfig, "currentPlot");
 // FIXME: change calls from draw_plots to mercator.addPlotOverviewLayers
 // FIXME: for plots shown with draw_plots, change references to their plot_id field to plotId

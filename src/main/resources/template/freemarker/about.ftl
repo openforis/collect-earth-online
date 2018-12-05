@@ -5,9 +5,11 @@
     <div class="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
         <h1>About Collect Earth Online</h1>
         <p>
-            Collect Earth Online is a custom built, open-source, high
-            resolution satellite image viewing and interpretation
-            system developed by SERVIR as a tool for use in projects
+            Collect Earth Online is a custom built, open-source,
+            satellite image viewing and interpretation system
+            developed by SERVIR - a joint NASA and USAID program
+            in partnership with regional technical organizations
+            around the world - and the FAO as a tool for use in projects
             that require land cover and/or land use reference data.
             Collect Earth Online promotes consistency in locating,
             interpreting, and labeling reference data plots for use in
@@ -15,8 +17,8 @@
             The full functionality of Collect Earth Online, including
             collaborative compilation of reference point databases, is
             implemented online so there is no need for desktop
-            installation. The Collect Earth Online codebase has been
-            shared with the Open Foris Initiative of the Food And
+            installation. The Collect Earth Online codebase is
+            shared through the Open Foris Initiative of the Food And
             Agriculture Organization of the United Nations.
         </p>
         <h1>Disclaimers</h1>
@@ -41,6 +43,7 @@
             the data provided. Users are, however, kindly asked to
             report any errors or deficiencies in this product.
         </p>
+        <p>Please access <a href="http://www.openforis.org/tools/sepal.html" target="_blank">OpenForis-SEPAL</a> for more information about SEPAL.</p>
         <#include "logo-banner.ftl">
     </div>
 </section>

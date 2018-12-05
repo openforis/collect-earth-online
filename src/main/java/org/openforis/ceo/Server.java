@@ -83,12 +83,15 @@ public class Server implements SparkApplication {
         get("/about",                                 Views.about(freemarker));
         get("/support",                               Views.support(freemarker));
         get("/account/:id",                           Views.account(freemarker));
-        get("/institution/:id",                       Views.institution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/create-institution/:id",                Views.createInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
         get("/collection/:id",                        Views.collection(freemarker));
         get("/geo-dash",                              Views.geodash(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
         get("/test-layout-editor",                    Views.testWidgetLayout(freemarker));
-        get("/project/:id",                           Views.project(freemarker));
+        get("/create-project/:id",                    Views.createProject(freemarker));
+        get("/review-project/:id",                    Views.reviewProject(freemarker));
+        get("/project-dashboard/:id",                 Views.projectDashboard(freemarker));
         get("/login",                                 Views.login(freemarker));
         get("/register",                              Views.register(freemarker));
         get("/password",                              Views.password(freemarker));
@@ -110,16 +113,16 @@ public class Server implements SparkApplication {
         get("/get-project-plots/:id/:max",            projects::getProjectPlots);
         get("/get-project-plot/:project-id/:plot-id", projects::getProjectPlot);
         get("/get-project-stats/:id",                 projects::getProjectStats);
-        get("/get-unanalyzed-plot/:id",               projects::getUnassignedPlot);
+        get("/get-unanalyzed-plot/:projid/:id",               projects::getUnassignedPlot);
         get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnassignedPlotById);
         get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
         get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
-        post("/create-project",                       projects::createProject);
-        post("/publish-project/:id",                  projects::publishProject);
-        post("/close-project/:id",                    projects::closeProject);
-        post("/archive-project/:id",                  projects::archiveProject);
         post("/add-user-samples",                     projects::addUserSamples);
+        post("/create-project",                       projects::createProject);
+        post("/archive-project/:id",                  projects::archiveProject);
+        post("/close-project/:id",                    projects::closeProject);
         post("/flag-plot",                            projects::flagPlot);
+        post("/publish-project/:id",                  projects::publishProject);
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
@@ -141,10 +144,11 @@ public class Server implements SparkApplication {
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                       geoDash::geodashId);
         get("/geo-dash/update/id/:id",                geoDash::updateDashBoardById);
+        // FIXME: should these be POST?
         get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetById);
         get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
         get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);
-
+        get("/geo-dash/geodashhelp",                  Views.geodashhelp(freemarker));
         // Routing Table: TimeSync API
         get("/timesync/version",                      timeSync::getVersion);
         get("/timesync/project/:interpreter",         timeSync::getAssignedProjects);

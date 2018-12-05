@@ -32,6 +32,14 @@
 	        This content is currently under development. Please check
 	        back later for updates.
 	    </p>
+        <h1>OpenForis Support</h1>
+        <p class="text-center col-lg-10 offset-lg-1 mb-4">
+            Please access <a href="http://www.openforis.org/support" target="_blank">OpenForis Support</a> for further support.
+        </p>
+        <h1>Geo-Dash Help Center</h1>
+        <p class="text-center col-lg-10 offset-lg-1 mb-4">
+            Please access the <a href="http://collect.earth/geo-dash/geodashhelp" target="_blank">Geo-Dash Help Center</a> for details on configuring the Geo-Dash for your project.
+        </p>
 	</div>
 </section>
 <#include "end-content.ftl">

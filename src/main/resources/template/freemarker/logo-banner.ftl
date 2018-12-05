@@ -53,6 +53,11 @@
         <div class="col-sm-4 text-center my-auto">
             <img class="img-fluid" id="google" src="${root}/img/google-logo.png">
         </div>
+
+        <div class="col-sm-4 text-center my-auto">
+            <img class="img-fluid" id="usfs"  width="60vh" src="${root}/img/usfs.png">
+        </div>
+
         <div class="col-sm-4 text-center my-auto">
             <img class="img-fluid" id="gtac" src="${root}/img/gtac-logo.png">
         </div>

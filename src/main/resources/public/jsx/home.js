@@ -1,13 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { mercator } from "../js/mercator-openlayers.js";
+import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
 class Home extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projects: []
+            projects: [],
+            showHideSideBar:"col-lg-9 col-md-12 pl-0",
+            showHideLpanel:"col-lg-3 pr-0 pl-0",
         };
+        this.toggleSidebar=this.toggleSidebar.bind(this);
+
     }
 
     componentDidMount() {
@@ -15,6 +19,14 @@ class Home extends React.Component {
         fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
             .then(response => response.json())
             .then(data => this.setState({projects: data}));
+    }
+
+    toggleSidebar() {
+        let sidebarcss = (this.state.showHideSideBar === "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9") ? "col-lg-9 col-md-12 pl-0" : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9";
+        document.getElementById("tog-symb").children[0].classList.toggle('fa-caret-left');
+        document.getElementById("tog-symb").children[0].classList.toggle('fa-caret-right');
+        let lpanelcss = (this.state.showHideLpanel === "col-lg-3 pr-0 pl-0 d-none col-xl-3") ? "col-lg-3 pr-0 pl-0" : "col-lg-3 pr-0 pl-0 d-none col-xl-3";
+        this.setState({showHideSideBar: sidebarcss, showHideLpanel: lpanelcss});
     }
 
     render() {
@@ -25,10 +37,11 @@ class Home extends React.Component {
                     <div className="row tog-effect">
                         <SideBar documentRoot={this.props.documentRoot}
                                  userName={this.props.userName}
-                                 projects={this.state.projects}/>
+                                 projects={this.state.projects} showHideLpanel={this.state.showHideLpanel}
+                        />
                         <MapPanel documentRoot={this.props.documentRoot}
                                   userId={this.props.userId}
-                                  projects={this.state.projects}/>
+                                  projects={this.state.projects} toggleSidebar={this.toggleSidebar} showHideSideBar={this.state.showHideSideBar} showHideTogSym={this.state.showHideTogSym}/>
                     </div>
                 </div>
             </div>
@@ -41,7 +54,10 @@ class MapPanel extends React.Component {
         super(props);
         this.state = {
             imagery: [],
-            mapConfig: null
+            mapConfig: null,
+            clusterExtent: [],
+            clickedFeatures: [],
+            projectMarkersShown: false,
         };
     }
 
@@ -58,19 +74,60 @@ class MapPanel extends React.Component {
             mercator.setVisibleLayer(mapConfig, this.state.imagery[0].title);
             this.setState({mapConfig: mapConfig});
         }
-        if (this.state.mapConfig != null && this.props.projects.length > 0) {
-            mercator.addProjectMarkersAndZoom(this.state.mapConfig,
-                                              this.props.projects,
-                                              this.props.documentRoot,
-                                              40); // clusterDistance = 40, use null to disable clustering
+        if (this.state.mapConfig && this.props.projects.length > 0 && this.state.projectMarkersShown == false) {
+            this.addProjectMarkersAndZoom(this.state.mapConfig,
+                                          this.props.projects,
+                                          this.props.documentRoot,
+                                          40); // clusterDistance = 40, use null to disable clustering
+        }
+    }
+
+    addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
+        const projectSource = mercator.projectsToVectorSource(projects);
+        if (clusterDistance == null) {
+            mercator.addVectorLayer(mapConfig,
+                                    "projectMarkers",
+                                    projectSource,
+                                    ceoMapStyles.ceoIcon);
+        } else {
+            mercator.addVectorLayer(mapConfig,
+                                    "projectMarkers",
+                                    mercator.makeClusterSource(projectSource, clusterDistance),
+                                    feature => mercator.getCircleStyle(10, "#3399cc", "#ffffff", 1, feature.get("features").length, "#ffffff"));
+        }
+        mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
+        const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
+        mapConfig.map.on("click",
+                         event => {
+                             if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
+                                 let clickedFeatures = [];
+                                 mapConfig.map.forEachFeatureAtPixel(event.pixel, feature => clickedFeatures.push(feature));
+                                 this.showProjectPopup(mapConfig, overlay, documentRoot, clickedFeatures[0]);
+                             } else {
+                                 overlay.setPosition(undefined);
+                             }
+                         });
+        mercator.zoomMapToExtent(mapConfig, projectSource.getExtent());
+        this.setState({projectMarkersShown: true});
+    }
+
+    showProjectPopup(mapConfig, overlay, documentRoot, feature) {
+        if (mercator.isCluster(feature)) {
+            overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
+            this.setState({clusterExtent: mercator.getClusterExtent(feature),
+                           clickedFeatures: feature.get("features")});
+        } else {
+            overlay.setPosition(feature.getGeometry().getCoordinates());
+            this.setState({clusterExtent: [],
+                           clickedFeatures: feature.get("features")});
         }
     }
 
     render() {
         return (
-            <div id="mapPanel" className="col-lg-9 col-md-12 pl-0 pr-0">
+            <div id="mapPanel" className={this.props.showHideSideBar}>
                 <div className="row no-gutters ceo-map-toggle">
-                    <div id="togbutton" className="button col-xl-1 bg-lightgray d-none d-xl-block">
+                    <div id="togbutton" className="button col-xl-1 bg-lightgray d-none d-xl-block" onClick={this.props.toggleSidebar}>
                         <div className="row h-100">
                             <div className="col-lg-12 my-auto no-gutters text-center">
                                 <span id="tog-symb"><i className="fa fa-caret-left"></i></span>
@@ -81,22 +138,159 @@ class MapPanel extends React.Component {
                         <div id="home-map-pane" style={{width: "100%", height: "100%", position: "fixed"}}></div>
                     </div>
                 </div>
+                <ProjectPopup mapConfig={this.state.mapConfig}
+                              clusterExtent={this.state.clusterExtent}
+                              features={this.state.clickedFeatures}
+                              documentRoot={this.props.documentRoot}/>
             </div>
         );
     }
 }
 
-function SideBar(props) {
-    return (
-        <div id="lPanel" className="col-lg-3 pr-0 pl-0">
-            <div className="bg-darkgreen">
-                <h1 className="tree_label" id="panelTitle">Institutions</h1>
-            </div>
-            <ul className="tree">
-                <CreateInstitutionButton userName={props.userName} documentRoot={props.documentRoot}/>
-                <InstitutionList projects={props.projects} documentRoot={props.documentRoot}/>
-            </ul>
+class SideBar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            filteredInstitutions: [],
+            filteredProjects:this.props.projects,
+            institutions: [],
+            radioValue: "institution",
+            filterText: "",
+            checked: false,
+            expandInstWithProject:false
 
+        };
+        this.filterCall = this.filterCall.bind(this);
+        this.filterText = this.filterText.bind(this);
+        this.filterChecked = this.filterChecked.bind(this);
+    }
+
+    componentDidMount() {
+        // Fetch institutions
+        fetch(this.props.documentRoot + "/get-all-institutions")
+            .then(response => response.json())
+            .then(data => {
+                this.setState({filteredInstitutions: data, institutions: data})
+            });
+    }
+
+    filterText(e) {
+        let filterText = e.target.value;
+        this.setState({filterText: filterText});
+        if (filterText != "") {
+            this.filterBoth(this.state.checked, this.state.radioValue, filterText);
+        }
+        else {
+            this.setState({
+                filteredInstitutions: this.state.institutions,
+                filteredProjects: this.props.projects,
+                expandInstWithProject: false
+            });
+        }
+    }
+
+    filterChecked(e) {
+        this.setState({checked: e.target.checked});
+        this.filterBoth(e.target.checked, this.state.radioValue, this.state.filterText);
+    }
+
+    filterBoth(checked,radioValue,filterText) {
+        if (checked == true) {
+            let filteredInstProjects = [],onlyProjects=[];
+            if (filterText != "") {
+                if (radioValue == "institution") {
+                    let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(filterText.toLocaleLowerCase())));
+                    this.setState({filteredInstitutions: filtered, expandInstWithProject: false});
+                }
+                if (radioValue == "project") {
+                    this.state.institutions.map(inst => {
+                        const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).startsWith(filterText.toLocaleLowerCase()));
+                        if (projects.length > 0) {filteredInstProjects.push(inst);
+                            onlyProjects=onlyProjects.concat(projects);
+                        }
+                    });
+                    this.setState({filteredProjects:onlyProjects});
+                    if (filteredInstProjects.length > 0) {
+                        this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
+                    }
+                    else {
+                        this.setState({filteredInstitutions: []});
+                    }
+                }
+            }
+            else {
+                this.setState({filteredInstitutions: this.state.institutions, filteredProjects: this.props.projects});
+            }
+        }
+        else {
+            this.filterCall(radioValue, filterText);
+        }
+    }
+
+    filterCall(radioValue, filterText) {
+        let filtered = [], filteredInstProjects = [],onlyProjects=[];
+        this.setState({radioValue: radioValue});
+        if (filterText == "") {
+            this.setState({filteredInstitutions: this.state.institutions,filteredProjects:this.props.projects});
+        }
+        else {
+            if (radioValue == "institution" && filterText != "") {
+                filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+                if (filtered.length > 0) {
+                    this.setState({filteredInstitutions: filtered,expandInstWithProject:false});
+                }
+                else {
+                    this.setState({filteredInstitutions: []});
+                }
+            }
+
+            if (radioValue == "project" && filterText != "") {
+                this.state.institutions.map(inst => {
+                    const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+                    if (projects.length > 0) {filteredInstProjects.push(inst);
+                        onlyProjects=onlyProjects.concat(projects);
+                    }
+                });
+                this.setState({filteredProjects:onlyProjects});
+                if (filteredInstProjects.length > 0) {
+                    this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
+                }
+                else {
+                    this.setState({filteredInstitutions: []});
+                }
+            }
+        }
+    }
+
+    render() {
+        return (
+            <div id="lPanel" className={this.props.showHideLpanel}>
+                <div className="bg-darkgreen">
+                    <h1 className="tree_label" id="panelTitle">Institutions</h1>
+                </div>
+                <ul className="tree">
+                    <CreateInstitutionButton userName={this.props.userName} documentRoot={this.props.documentRoot}/>
+                    <InstitutionFilter documentRoot={this.props.documentRoot} filterText={this.filterText}/>
+                    <div className="form-control" style={{textAlign: "center"}}>
+                        <FilterAlphabetically filteredInstitutions={this.state.institutions}
+                                              radioValue={this.state.radioValue} filterCall={this.filterCall}
+                                              filterText={this.state.filterText} filterChecked={this.filterChecked} checked={this.state.checked}/>
+                    </div>
+                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions} filterText={this.state.filterText}
+                                     projects={this.state.filteredProjects.length>0?this.state.filteredProjects:this.props.projects}
+                                     documentRoot={this.props.documentRoot} expandInstWithProject={this.state.expandInstWithProject}/>
+                </ul>
+            </div>
+        );
+    }
+}
+
+function InstitutionFilter(props) {
+    return (
+        <div id="filter-institution" className="form-control">
+            <input type="text" id="filterInstitution" autoComplete="off" placeholder="Enter text to filter"
+                   className="form-control"
+                   onChange={(e)=>props.filterText(e)}/>
         </div>
     );
 }
@@ -104,9 +298,10 @@ function SideBar(props) {
 function CreateInstitutionButton(props) {
     if (props.userName != "") {
         return (
-            <a className="create-institution" href={props.documentRoot + "/institution/0"}>
-                <li className="bg-yellow text-center p-2"><i className="fa fa-file"></i> Create New Institution</li>
-            </a>
+
+                <li className="bg-yellow text-center p-2">
+                    <a className="create-institution" style={{display:"block"}} href={props.documentRoot + "/create-institution/0"}>
+                    <i className="fa fa-file"></i> Create New Institution </a></li>
         );
     } else {
         return (
@@ -115,33 +310,42 @@ function CreateInstitutionButton(props) {
     }
 }
 
-class InstitutionList extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            institutions: []
-        };
-    }
+function InstitutionList(props) {
+    return(
+        props.filteredInstitutions.map(
+            (institution, uid) =>
+                <Institution key={uid}
+                             id={institution.id}
+                             name={institution.name}
+                             documentRoot={props.documentRoot}
+                             projects={props.projects.filter(project => project.institution == institution.id)} expandInstWithProject={props.expandInstWithProject}/>
+        )
+    );
+}
 
-    componentDidMount() {
-        // Fetch institutions
-        fetch(this.props.documentRoot + "/get-all-institutions")
-            .then(response => response.json())
-            .then(data => this.setState({institutions: data}));
-    }
-
-    render() {
-        return (
-            this.state.institutions.map(
-                (institution, uid) =>
-                    <Institution key={uid}
-                                 id={institution.id}
-                                 name={institution.name}
-                                 documentRoot={this.props.documentRoot}
-                                 projects={this.props.projects.filter(project => project.institution == institution.id)}/>
-            )
-        );
-    }
+function FilterAlphabetically(props) {
+    return (
+        <React.Fragment>
+            <div className="form-check form-check-inline">
+                Filter By:
+            </div>
+            <div className="form-check form-check-inline">
+                <input className="form-check-input" type="radio" id="filter-by-word"
+                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("institution",props.filterText)} defaultChecked={props.radioValue==="institution"}/>
+                Institution
+            </div>
+            <div className="form-check form-check-inline">
+            <input className="form-check-input" type="radio" id="filter-by-letter"
+                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("project",props.filterText)} defaultChecked={props.radioValue==="project"}/>
+                Project
+            </div>
+            <div className="form-check form-check-inline">
+            <input className="form-check-input" type="checkbox" id="filter-by-first-letter"
+                       name="filter-institution-box" onChange={(e)=>props.filterChecked(e)} defaultChecked={props.checked}/>
+                Match from beginning
+            </div>
+        </React.Fragment>
+    );
 }
 
 function Institution(props) {
@@ -162,20 +366,20 @@ function Institution(props) {
                     </div>
                     <div className="col-lg-1">
                         <a className="institution_info btn btn-sm btn-outline-lightgreen"
-                           href={props.documentRoot + "/institution/" + props.id}>
+                           href={props.documentRoot + "/review-institution/" + props.id}>
                             <i className="fa fa-info" style={{color: "white"}}></i>
                         </a>
                     </div>
                 </div>
             </div>
-            <ProjectList id={props.id} projects={props.projects} documentRoot={props.documentRoot}/>
+            <ProjectList id={props.id} projects={props.projects} documentRoot={props.documentRoot} expandInstWithProject={props.expandInstWithProject}/>
         </li>
     );
 }
 
 function ProjectList(props) {
     return (
-        <div className="collapse" id={"collapse" + props.id}>
+        <div className={props.expandInstWithProject==false?"collapse":""} id={"collapse" + props.id}>
             {
                 props.projects.map(
                     (project, uid) =>
@@ -203,7 +407,7 @@ function Project(props) {
                 </div>
                 <div className="col-lg-4 pl-lg-0">
                     <a className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                       href={props.documentRoot + "/project/" + props.id}>
+                       href={props.documentRoot + "/review-project/" + props.id}>
                         <i className="fa fa-edit"></i> Review
                     </a>
                 </div>
@@ -218,6 +422,69 @@ function Project(props) {
                         {props.name}
                     </a>
                 </div>
+            </div>
+        );
+    }
+}
+
+class ProjectPopup extends React.Component {
+    componentDidMount() {
+        // There is some kind of bug in attaching this onClick handler directly to its button in render().
+        document.getElementById("zoomToCluster").onclick = () => {
+            mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent);
+            mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
+        };
+    }
+
+    render() {
+        return (
+            <div id="projectPopUp">
+                <div className="cTitle">
+                    <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
+                </div>
+                <div className="cContent" style={{padding:"10px"}}>
+                    <table className="table table-sm">
+                        <tbody>
+                            {
+                                this.props.features.map((feature, uid) =>
+                                    <React.Fragment key={uid}>
+                                        <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
+                                            <td className="small col-6 px-0 my-auto">Name</td>
+                                            <td className="small col-6 pr-0">
+                                                <a href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
+                                                   className="btn btn-sm btn-block btn-outline-lightgreen"
+                                                   style={{
+                                                       whiteSpace: "nowrap",
+                                                       overflow: "hidden",
+                                                       textOverflow: "ellipsis"
+                                                   }}>
+                                                    {feature.get("name")}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr className="d-flex">
+                                            <td className="small col-6 px-0 my-auto">Description</td>
+                                            <td className="small col-6 pr-0">{feature.get("description")}</td>
+                                        </tr>
+                                        <tr className="d-flex" style={{borderBottom: "1px solid gray"}}>
+                                            <td className="small col-6 px-0 my-auto">Number of plots</td>
+                                            <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
+                                        </tr>
+                                    </React.Fragment>
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <button id="zoomToCluster"
+                        className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+                        style={{
+                            cursor: "pointer",
+                            minWidth: "350px",
+                            display: this.props.features.length > 1 ? "block" : "none"
+                        }}>
+                    <i className="fa fa-search-plus"></i> Zoom to cluster
+                </button>
             </div>
         );
     }
