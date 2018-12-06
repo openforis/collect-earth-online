@@ -243,7 +243,6 @@ class SideBar extends React.Component {
                     if (filteredInstProjects.length > 0) {
                         this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
                         this.getSortedInstitutions(filteredInstProjects,this.state.filteredProjects);
-
                     }
                     else {
                         this.setState({filteredInstitutions: []});
@@ -253,7 +252,6 @@ class SideBar extends React.Component {
             else {
                 this.setState({filteredInstitutions: this.state.institutions, filteredProjects: this.props.projects});
                 this.getSortedInstitutions(this.state.institutions,this.state.filteredProjects);
-
             }
         }
         else {
@@ -285,7 +283,7 @@ class SideBar extends React.Component {
 
             if (radioValue == "project" && filterText != "") {
                 if(checked) {
-                    this.state.filteredInstitutions.map(inst => {
+                    this.state.institutions.map(inst => {
                         const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).startsWith(filterText.toLocaleLowerCase()));
                         if (projects.length > 0) {
                             filteredInstProjects.push(inst);
@@ -294,7 +292,7 @@ class SideBar extends React.Component {
                     });
                 }
                 else {
-                    this.state.filteredInstitutions.map(inst => {
+                    this.state.institutions.map(inst => {
                         const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
                         if (projects.length > 0) {
                             filteredInstProjects.push(inst);
