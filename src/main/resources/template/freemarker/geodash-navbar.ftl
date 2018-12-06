@@ -58,7 +58,8 @@
 		     </ul>
 	    </div>
     </div>
-</nav><script type="text/javascript">
+</nav>
+<script type="text/javascript">
 	function openHelp(){
         var win = window.open("geo-dash/geodashhelp", "_blank");
         win.focus();
