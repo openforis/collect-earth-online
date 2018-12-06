@@ -43,11 +43,11 @@ public class ProjectUtils {
         var firstGroup = sampleValueGroups.get(0).getAsJsonObject();
         if (firstGroup.has("name")) {
             return new String[]{"name", "values", "name"};
-        }
-        if (firstGroup.has("question")) {
+        } else if (firstGroup.has("question")) {
             return new String[]{"question", "answers", "answer"};
+        } else {
+            return new String[]{};
         }
-        return new String[]{};
     }
 
     private static String[] getValueDistributionLabels(JsonArray sampleValueGroups, String[] keys) {
@@ -124,7 +124,7 @@ public class ProjectUtils {
         var sampleValueKeys = getSampleKeys(sampleValueGroups);
         // fileds are straight forward json values
         var fields = Stream.concat(
-                        Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "collection_time"}), 
+                        Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "analysis_duration", "collection_time"}), 
                         Arrays.stream(externalHeaders))
                         .toArray(String[]::new);
         // labels require interpretation of the next json object
@@ -137,7 +137,7 @@ public class ProjectUtils {
                     var labelStream = Arrays.stream(labels);
                     var distribution = plotSummary.get("distribution").getAsJsonObject();
                     return Stream.concat(
-                            fieldStream.map(field -> plotSummary.get(field).isJsonNull()
+                            fieldStream.map(field -> plotSummary.has(field) && plotSummary.get(field).isJsonNull()
                                     ? ""
                                     : plotSummary.get(field).getAsString()),
                             labelStream.map(label -> distribution.has(label)
@@ -164,7 +164,7 @@ public class ProjectUtils {
 
         // fileds are straight forward json values
         var fields = Stream.concat(
-                        Arrays.stream(new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "collection_time"}), 
+                        Arrays.stream(new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id", "analysis_duration", "collection_time"}), 
                         Arrays.stream(externalHeaders))
                         .toArray(String[]::new);
         // labels require interpretation of the next json object
@@ -184,7 +184,7 @@ public class ProjectUtils {
                             labelStream.map(label -> {
                                 var value = sampleSummary.get("value");
                                 if (value.isJsonNull()) {
-                                    return "0";
+                                    return "";
                                 // original format is single integer index
                                 } else if (value.isJsonPrimitive()) {
                                     var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups);
@@ -198,7 +198,7 @@ public class ProjectUtils {
                                     // newest format nests the answer in another json object
                                     return value.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString();
                                 } else {
-                                    return "0";
+                                    return "";
                                 }
                             })).collect(Collectors.joining(","));         
                 }).collect(Collectors.joining("\n"));
@@ -360,20 +360,8 @@ public class ProjectUtils {
                 .toArray(Double[][]::new);
     }
 
-    public static Double[] calculateBounds(Double[][] points, double buffer) {
-        var lons = Arrays.stream(points).map(point -> point[0]).toArray(Double[]::new);
-        var lats = Arrays.stream(points).map(point -> point[1]).toArray(Double[]::new);
-        var lonMin = Arrays.stream(lons).min(Comparator.naturalOrder()).get();
-        var latMin = Arrays.stream(lats).min(Comparator.naturalOrder()).get();
-        var lonMax = Arrays.stream(lons).max(Comparator.naturalOrder()).get();
-        var latMax = Arrays.stream(lats).max(Comparator.naturalOrder()).get();
-        var bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, 4326, 3857);
-        var paddedBounds = padBounds(bounds[0], bounds[1], bounds[2], bounds[3], -buffer);
-        return reprojectBounds(paddedBounds[0], paddedBounds[1], paddedBounds[2], paddedBounds[3], 3857, 4326);
-    }
-
     public static JsonElement getOrZero(JsonObject obj, String field) {
-        return obj.get(field).isJsonNull() ? new JsonPrimitive(0) : obj.get(field);
+        return obj.get(field).isJsonNull() || obj.get(field) == null ? new JsonPrimitive(0) : obj.get(field);
     }
 
     public static JsonElement getOrEmptyString(JsonObject obj, String field) {
