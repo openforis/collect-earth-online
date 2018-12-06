@@ -411,11 +411,11 @@ public class PostgresProjects implements Projects {
                                 plotSummaries.add(plotSummary);
                             } 
                         }
-                        var compbinedHeaders = Arrays.stream(plotHeaders.toArray())
-                                                .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head)
-                                                .toArray(String[]::new);
+                        var combinedHeaders = plotHeaders.stream()
+                            .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head)
+                            .toArray(String[]::new);
 
-                        return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, compbinedHeaders);
+                        return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, combinedHeaders);
                     }
             }
         }
@@ -492,17 +492,17 @@ public class PostgresProjects implements Projects {
                                 sampleSummaries.add(plotSummary);
                             } 
                         }
-                        var compbinedHeaders = 
+                        var combinedHeaders = 
                         Stream.concat(
-                            Arrays.stream(imageryHeaders.toArray()),
+                            imageryHeaders.stream(),
                             Stream.concat(
-                                Arrays.stream(plotHeaders.toArray())
+                                    plotHeaders.stream()
                                     .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head),
-                                Arrays.stream(sampleHeaders.toArray())
+                                    sampleHeaders.stream()
                                     .map(head -> !head.toString().contains("sample_") ? "sample_" + head : head)
                                 )
                         ).toArray(String[]::new);
-                        return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, compbinedHeaders);
+                        return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, combinedHeaders);
                     }
             }
         }
@@ -636,7 +636,7 @@ public class PostgresProjects implements Projects {
     private static String loadCsvHeaders(String filename, List<String> mustInclude) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
             
-            List<String> colList = Arrays.stream(
+            var colList = Arrays.stream(
                 lines.findFirst().orElse("").split(","))
                     .map(col -> {
                         return col.toUpperCase();
@@ -646,12 +646,11 @@ public class PostgresProjects implements Projects {
             // check if all required fields are in csv
             mustInclude.forEach(field -> {
                 if (!colList.contains(field.toUpperCase())) {
-                    throw new RuntimeException("Malformed plot CSV. Fields must be " + String.join("," , mustInclude));
+                    throw new RuntimeException("Malformed plot CSV. Fields must be " + String.join(",", mustInclude));
                 }   
             });
 
-            var fields = Arrays.stream(
-                colList.toArray(String[]::new))
+            var fields = colList.stream()
                     .map(col -> {
                         if (List.of("LON", "LAT").contains(col.toUpperCase())) {
                             return col.toUpperCase() + " float";
@@ -852,7 +851,7 @@ public class PostgresProjects implements Projects {
 
                 Arrays.stream(newPlotCenters)
                 .forEach(plotEntry -> {
-                    var plotCenter = (Double[]) plotEntry;    
+                    var plotCenter = plotEntry;
                         var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
                         try(var pstmtPlots = conn.prepareStatement(SqlPlots)) {
                         pstmtPlots.setInt(1, projectId);    
@@ -893,7 +892,7 @@ public class PostgresProjects implements Projects {
             .forEach(sampleEntry -> {
                 var SqlSamples = "SELECT * FROM create_project_plot_sample(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
 
-                var sampleCenter = (Double[]) sampleEntry;
+                var sampleCenter = sampleEntry;
 
                 try (var pstmtSamples = conn.prepareStatement(SqlSamples)) {
                     pstmtSamples.setInt(1, newPlotId);
