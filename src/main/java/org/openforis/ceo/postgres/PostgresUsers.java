@@ -300,6 +300,28 @@ public class PostgresUsers implements Users {
         return "";
     }
 
+    public String getUserStats(Request req, Response res) {
+        var userId =     req.params(":userid");
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
+                 
+            pstmt.setString(1, userId);
+            try(var rs = pstmt.executeQuery()){
+                var userJson = new JsonObject();
+                if (rs.next()) {
+                    userJson.addProperty("totalProjects", rs.getInt("total_projects"));
+                    userJson.addProperty("totalPlots", rs.getInt("total_plots"));
+                    userJson.addProperty("averageTime", rs.getInt("average_time"));
+                    userJson.add("plotsByProject", parseJson(rs.getString("plots_by_project")).getAsJsonObject());
+                    userJson.add("timeByProject", parseJson(rs.getString("time_by_project")).getAsJsonObject());
+                }
+                return userJson.toString();
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return "";
+    }
     // FIXME this appears to be unused.  Not tested
     public Map<Integer, String> getInstitutionRoles(int userId) {
         var inst = new HashMap<Integer,String>();

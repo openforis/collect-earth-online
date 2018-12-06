@@ -17,7 +17,22 @@ import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
-import static org.openforis.ceo.utils.ProjectUtils.*;
+import static org.openforis.ceo.utils.ProjectUtils.padBounds;
+import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
+import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
+import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
+import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
+import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
+import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
+import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
+import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
+import static org.openforis.ceo.utils.ProjectUtils.getValueDistribution;
+import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPoint;
+import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
+import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
+import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
+import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -28,6 +43,7 @@ import java.time.LocalDateTime;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -223,10 +239,10 @@ public class JsonProjects implements Projects {
         stats.addProperty("unanalyzedPlots", Math.max(0, plots.size() - flaggedPlots.size() - analyzedPlots.size()));
         stats.addProperty("members", members.length);
         stats.addProperty("contributors", contributors.length);
-        stats.add("created_date", project.get("created_date"));
-        stats.add("published_date", project.get("published_date"));
-        stats.add("archived_date", project.get("archived_date"));
-        stats.add("closed_date", project.get("closed_date"));
+        stats.add("createdDate", project.get("created_date"));
+        stats.add("publishedDate", project.get("published_date"));
+        stats.add("archivedDate", project.get("archived_date"));
+        stats.add("closedDate", project.get("closed_date"));
         return stats.toString();
     }
 
@@ -292,7 +308,7 @@ public class JsonProjects implements Projects {
                         plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
                         plotSummary.addProperty("sample_points", samples.size());
                         plotSummary.add("user_id", plot.get("user"));
-                        plotSummary.add("collection_time", plot.get("collection_time"));
+                        plotSummary.add("collection_time", plot.get("collectionTime"));
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
                         return plotSummary;
@@ -322,7 +338,7 @@ public class JsonProjects implements Projects {
                         var flagged = plot.get("flagged").getAsBoolean();
                         var analyses = plot.get("analyses").getAsInt();
                         var userId = plot.get("user");
-                        var collection_time = plot.get("collection_time");
+                        var collectionTime = plot.get("collectionTime");
                         var samples = plot.get("samples").getAsJsonArray();
                         return toStream(samples).map(sample -> {
                             var center = parseJson(sample.get("point").getAsString())
@@ -336,7 +352,7 @@ public class JsonProjects implements Projects {
                             sampleSummary.addProperty("flagged", flagged);
                             sampleSummary.addProperty("analyses", analyses);
                             sampleSummary.add("user_id", userId);
-                            sampleSummary.add("collection_time", collection_time);
+                            sampleSummary.add("collection_time", collectionTime);
                             sampleSummary.add("value", sample.get("value"));
                             return sampleSummary;
                         });
@@ -418,7 +434,7 @@ public class JsonProjects implements Projects {
                                     return sample;
                                 });
                         plot.add("samples", updatedSamples);
-                        plot.addProperty("collection_time", LocalDateTime.now().toString());
+                        plot.addProperty("collectionTime", LocalDateTime.now().toString());
                         return plot;
                     } else {
                         return plot;
@@ -439,7 +455,7 @@ public class JsonProjects implements Projects {
                     if (plot.get("id").getAsString().equals(plotId)) {
                         plot.addProperty("flagged", true);
                         plot.addProperty("user", userName);
-                        plot.addProperty("collection_time", LocalDateTime.now().toString());
+                        plot.addProperty("collectionTime", LocalDateTime.now().toString());
                         return plot;
                     } else {
                         return plot;
@@ -608,6 +624,18 @@ public class JsonProjects implements Projects {
                 sampleCentersByPlot.put(plotId, sampleCenters);
             });
         return sampleCentersByPlot;
+    }
+
+    private static Double[] calculateBounds(Double[][] points, double buffer) {
+        var lons = Arrays.stream(points).map(point -> point[0]).toArray(Double[]::new);
+        var lats = Arrays.stream(points).map(point -> point[1]).toArray(Double[]::new);
+        var lonMin = Arrays.stream(lons).min(Comparator.naturalOrder()).get();
+        var latMin = Arrays.stream(lats).min(Comparator.naturalOrder()).get();
+        var lonMax = Arrays.stream(lons).max(Comparator.naturalOrder()).get();
+        var latMax = Arrays.stream(lats).max(Comparator.naturalOrder()).get();
+        var bounds = reprojectBounds(lonMin, latMin, lonMax, latMax, 4326, 3857);
+        var paddedBounds = padBounds(bounds[0], bounds[1], bounds[2], bounds[3], -buffer);
+        return reprojectBounds(paddedBounds[0], paddedBounds[1], paddedBounds[2], paddedBounds[3], 3857, 4326);
     }
 
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
