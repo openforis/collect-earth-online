@@ -27,13 +27,11 @@ CREATE TABLE projects (
   boundary                  geometry(Polygon,4326),
   base_map_source           text,
   plot_distribution         text,
-  -- FIXME this chould be counted instead of stored
   num_plots                 integer,
   plot_spacing              float,
   plot_shape                text,
   plot_size                 float,
   sample_distribution       text,
-  -- FIXME this could be counted instead of stored
   samples_per_plot          integer,
   sample_resolution         float,
   sample_survey             jsonb,
@@ -87,21 +85,22 @@ CREATE TABLE institution_users (
 );
 
 CREATE TABLE user_plots(
-	id              serial primary key,
-	user_id         integer not null references users (id) on delete cascade on update cascade,
-    plot_id         integer not null references plots (id) on delete cascade on update cascade,
-    flagged         boolean default false,
-	confidence      integer CHECK (confidence >= 0 AND confidence <= 100),
-	collection_time timestamp
+	id                  serial primary key,
+	user_id             integer not null references users (id) on delete cascade on update cascade,
+    plot_id             integer not null references plots (id) on delete cascade on update cascade,
+    flagged             boolean default false,
+	confidence          integer CHECK (confidence >= 0 AND confidence <= 100),
+    collection_start    timestamp,
+	collection_time     timestamp
 );
 
 CREATE TABLE sample_values(
-	id             serial primary key,
-	user_plot_id   integer not null references user_plots (id) on delete cascade on update cascade,
-    sample_id      integer not null references samples (id) on delete cascade on update cascade,     
-	imagery_id     integer references imagery (id) on delete cascade on update cascade,
-	imagery_date   date,
-	value          jsonb
+	id                  serial primary key,
+	user_plot_id        integer not null references user_plots (id) on delete cascade on update cascade,
+    sample_id           integer not null references samples (id) on delete cascade on update cascade,     
+	imagery_id          integer references imagery (id) on delete cascade on update cascade,
+    imagery_attributes  jsonb,
+	value               jsonb
 );
 
 CREATE TABLE project_widgets(

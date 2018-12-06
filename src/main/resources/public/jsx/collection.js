@@ -28,7 +28,9 @@ class Collection extends React.Component {
             surveyQuestionsVisible: {},
             currentPlot: null,
             userSamples: {},
-            selectedAnswers: {}
+            userImages: {},
+            selectedAnswers: {},
+            collectionStart: 0
         };
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.setImageryYearDG = this.setImageryYearDG.bind(this);
@@ -44,6 +46,7 @@ class Collection extends React.Component {
         this.showQuestions = this.showQuestions.bind(this);
         this.hideQuestions = this.hideQuestions.bind(this);
         this.highlightAnswer = this.highlightAnswer.bind(this);
+        this.getImageryAttributes  = this.getImageryAttributes.bind(this);
         this.setCurrentValue = this.setCurrentValue.bind(this);
         this.redirectToHomePage = this.redirectToHomePage.bind(this);
         this.findPrevPlot = this.findPrevPlot.bind(this)
@@ -361,8 +364,15 @@ class Collection extends React.Component {
                 if (data == "done") {
                     this.setState({
                         currentPlot: null,
-                        userSamples: {}
+                        userSamples: {},
+                        userImages: {}
                     });
+<<<<<<< HEAD
+=======
+                    console.log("from plot id to see");
+                    console.log(plotId);
+
+>>>>>>> 4f56781abdd9d848e0bc99f75ef515d59428449e
                     const msg = (plotId == "random")
                         ? "All plots have been analyzed for this project."
                         : "This plot has already been analyzed.";
@@ -370,20 +380,25 @@ class Collection extends React.Component {
                 } else if (data == "not found") {
                     this.setState({
                         currentPlot: null,
-                        userSamples: {}
+                        userSamples: {},
+                        userImages: {}
                     });
                     alert("No plot with ID " + plotId + " found.");
                 } else if (data == "error") {
                     this.setState({
                         currentPlot: null,
-                        userSamples: {}
+                        userSamples: {},
+                        userImages: {}
                     });
                 } else {
                     const newPlot = JSON.parse(data);
                     this.setState({
                         currentPlot: newPlot,
-                        userSamples: {}
+                        userSamples: {},
+                        userImages: {},
+                        collectionStart: Date.now()
                     });
+
                     this.showProjectPlot(newPlot);
                     this.showGeoDash(newPlot);
                 }
@@ -567,7 +582,10 @@ class Collection extends React.Component {
                       projectId: this.props.projectId,
                       plotId: this.state.currentPlot.id,
                       userId: this.props.userName,
-                      userSamples: this.state.userSamples
+                      confidence: -1,
+                      collectionStart: this.state.collectionStart,
+                      userSamples: this.state.userSamples,
+                      userImages: this.state.userImages
                   })
               })
             .then(response => {
@@ -609,20 +627,37 @@ class Collection extends React.Component {
         selectedAnswers[questionText] = answerText;
         this.setState({selectedAnswers: selectedAnswers});
     }
-
+ 
+    getImageryAttributes () {
+        if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
+            return {imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG};
+        } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
+            return {imageryMonthPlanet: this.state.imageryMonthPlanet, imageryYearPlanet: this.state.imageryYearPlanet};
+        } else {
+            return {}
+        }
+    }
+    
     setCurrentValue(questionText, answerId, answerText, answerColor) {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
             let userSamples = this.state.userSamples;
+            let userImages = this.state.userImages;
             selectedFeatures.forEach(feature => {
                 const sampleId = feature.get("sampleId");
                 if (!userSamples[sampleId]) {
                     userSamples[sampleId] = {};
                 }
+                if (!userImages[sampleId]) {
+                    userImages[sampleId] = {};
+                }
                 userSamples[sampleId][questionText] = {answer: answerText,
-                    color: answerColor};
+                                                       color: answerColor};
+                userImages[sampleId] = {id: this.state.currentImagery.id,
+                                        attributes: this.getImageryAttributes()};
             }, this); // necessary to pass outer scope into function
-            this.setState({userSamples: userSamples});
+            this.setState({userSamples: userSamples,
+                           userImages: userImages});
             this.highlightSamplesByQuestion(userSamples, questionText);
             this.allowSaveIfSurveyComplete(userSamples);
             return true;
