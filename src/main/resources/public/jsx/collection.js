@@ -367,12 +367,6 @@ class Collection extends React.Component {
                         userSamples: {},
                         userImages: {}
                     });
-<<<<<<< HEAD
-=======
-                    console.log("from plot id to see");
-                    console.log(plotId);
-
->>>>>>> 4f56781abdd9d848e0bc99f75ef515d59428449e
                     const msg = (plotId == "random")
                         ? "All plots have been analyzed for this project."
                         : "This plot has already been analyzed.";
