@@ -411,11 +411,11 @@ public class PostgresProjects implements Projects {
                                 plotSummaries.add(plotSummary);
                             } 
                         }
-                        var compbinedHeaders = Arrays.stream(plotHeaders.toArray())
+                        var extraHeaders = Arrays.stream(plotHeaders.toArray())
                                                 .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head)
                                                 .toArray(String[]::new);
 
-                        return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, compbinedHeaders);
+                        return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, extraHeaders);
                     }
             }
         }
@@ -705,8 +705,7 @@ public class PostgresProjects implements Projects {
                     pstmt.execute();
                 } 
                 return plots_table;
-            }            
-            if (plotDistribution.equals("shp")) {
+            } else if (plotDistribution.equals("shp")) {
                 runBashScriptForProject(projectId, "plots", "shp2postgres.sh", "/shp");
                 var plots_table = "project_" +  projectId + "_plots_shp";
                 // run query to make sure all requred fields exist
@@ -717,7 +716,9 @@ public class PostgresProjects implements Projects {
                     throw new RuntimeException("Missing sql columns");
                 }
                 return plots_table;
-            }  
+            }  else {
+                return null;
+            }
         } catch (Exception e) {
             if (plotDistribution.equals("csv")) {
                 throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.");
@@ -725,7 +726,6 @@ public class PostgresProjects implements Projects {
                 throw new RuntimeException("Malformed plot Shapefile. All features must be of type polygon and include a PLOTID field.");
             }
         } 
-        return null;
     }
 
     private static String loadSamples(Connection conn, String sampleDistribution, Integer projectId, String samplesFile) {
@@ -746,8 +746,7 @@ public class PostgresProjects implements Projects {
                     pstmt.execute();
                 }
                 return samples_table;
-            }            
-            if (sampleDistribution.equals("shp")) {
+            } else if (sampleDistribution.equals("shp")) {
                 runBashScriptForProject(projectId, "samples", "shp2postgres.sh", "/shp");
                 var samples_table = "project_" +  projectId + "_samples_shp";
                 // run query to make sure all requred fields exist
@@ -758,6 +757,8 @@ public class PostgresProjects implements Projects {
                     throw new RuntimeException("Missing sql columns");
                 }
                 return samples_table;
+            } else {
+                return null;
             }
         } catch (Exception e) {
             if (sampleDistribution.equals("csv")) {
@@ -765,9 +766,7 @@ public class PostgresProjects implements Projects {
             } else {
                 throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.");
             }
-        } 
-
-        return null;
+        }
     }
 
     private static void createProjectPlots(JsonObject newProject) {
@@ -880,10 +879,10 @@ public class PostgresProjects implements Projects {
         }        
     }
 
-    private static void createProjectSamples(Connection conn, Integer newPlotId, String sampleDistribution, Double[] plotCenter, String plotShape, Double plotSize, Integer samplesPerPlot, Double sampleResolution, Boolean isShp) {
+    private static void createProjectSamples(Connection conn, Integer newPlotId, String sampleDistribution, Double[] plotCenter, String plotShape, Double plotSize, Integer samplesPerPlot, Double sampleResolution, Boolean isShpPlot) {
         
         var newSamplePoints =
-        isShp || !List.of("random", "gridded").contains(sampleDistribution)
+        isShpPlot || !List.of("random", "gridded").contains(sampleDistribution)
         ? new Double[][]{plotCenter}
         : sampleDistribution.equals("random")
             ? createRandomSampleSet(plotCenter, plotShape, plotSize, samplesPerPlot)
@@ -1026,8 +1025,11 @@ public class PostgresProjects implements Projects {
                     pstmt.execute();
                 } catch (SQLException sql) {
                 }
-                // CSV checks before adding so samples would never be added
                 try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_plots_csv")) {
+                    pstmt.execute();
+                } catch (SQLException sql) {
+                }
+                try (var pstmt = conn.prepareStatement("DROP TABLE project_" + newProjectId + "_samples_csv")) {
                     pstmt.execute();
                 } catch (SQLException sql) {
                 }

@@ -14,6 +14,7 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 		i integer;
     BEGIN
 		IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
+		-- FIXME look for table name like shp instead of column name
         EXECUTE 'SELECT * FROM information_schema.columns 
 						WHERE table_name = '''|| _table_name ||''' AND column_name = ''geom''';
 		GET DIAGNOSTICS i = ROW_COUNT;
@@ -1538,9 +1539,11 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 		plots_agg AS (
 			SELECT m_plot_id,
 				center,
+				-- FIXME add to group by
 				MAX(username) AS email,
 				MAX(confidence) as confidence,
 				cast(sum(case when flagged > 0 then 1 else 0 end) as int) as flagged, 
+				-- FIXME make sure assigned is total user plots - flagged.
 				cast(count(1) - sum(case when flagged > 0 then 1 else 0 end)  as int) as assigned, 
 				MAX(collection_time) as collection_time,
 				MAX(analysis_duration) as analysis_duration,
@@ -1589,7 +1592,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
            collection_time  	timestamp,
 		   analysis_duration	numeric,
            imagery_title    	text,
-           imagery_attributes   text,
+           imagery_attributes   jsonb,
            value            	jsonb,
 		   ext_plot_data		jsonb,
 		   ext_sample_data		jsonb
@@ -1616,7 +1619,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 	   p.collection_time::timestamp,
 	   p.analysis_duration,
 	   title AS imagery_title,
-	   imagery_attributes::text,
+	   imagery_attributes,
 	   value,
 	   pfd.rem_data,
 	   sfd.rem_data

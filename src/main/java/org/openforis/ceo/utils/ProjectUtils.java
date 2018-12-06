@@ -122,7 +122,7 @@ public class ProjectUtils {
 
     public static HttpServletResponse outputAggregateCsv(Response res, JsonArray sampleValueGroups, JsonArray plotSummaries, String projectName, String[] externalHeaders){
         var sampleValueKeys = getSampleKeys(sampleValueGroups);
-        // fileds are straight forward json values
+        // fields are straight forward json values
         var fields = Stream.concat(
                         Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id", "analysis_duration", "collection_time"}), 
                         Arrays.stream(externalHeaders))
