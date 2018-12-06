@@ -37,7 +37,7 @@ class Home extends React.Component {
                     <div className="row tog-effect">
                         <SideBar documentRoot={this.props.documentRoot}
                                  userName={this.props.userName}
-                                 projects={this.state.projects} showHideLpanel={this.state.showHideLpanel}
+                                 projects={this.state.projects} showHideLpanel={this.state.showHideLpanel} userId={this.props.userId}
                         />
                         <MapPanel documentRoot={this.props.documentRoot}
                                   userId={this.props.userId}
@@ -157,7 +157,8 @@ class SideBar extends React.Component {
             radioValue: "institution",
             filterText: "",
             checked: false,
-            expandInstWithProject:false
+            expandInstWithProject:false,
+            projects:this.props.projects,
 
         };
         this.filterCall = this.filterCall.bind(this);
@@ -170,7 +171,33 @@ class SideBar extends React.Component {
         fetch(this.props.documentRoot + "/get-all-institutions")
             .then(response => response.json())
             .then(data => {
-                this.setState({filteredInstitutions: data, institutions: data})
+                this.getSortedInstitutions(data,"");
+                this.setState({institutions: data});
+            });
+    }
+    getSortedInstitutions(institutions,p) {
+        let sortedInstitutions = [];
+        // Fetch projects
+        fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
+            .then(response => response.json())
+            .then(data => {
+                let obj = institutions.map(inst => {
+                    if(p=="") {
+                        const projects = data.filter(project => parseInt(project.institution) == inst.id);
+                        return {instId: inst.id, projectCount: projects.length};
+                    }
+                    else{
+                        const projects = p.filter(project => parseInt(project.institution) == inst.id);
+                        return {instId: inst.id, projectCount: projects.length};
+                    }
+                });
+                obj.sort((a, b) => b.projectCount - a.projectCount);
+                let i = institutions;
+                sortedInstitutions = obj.map(inst => {
+                    let institution = i.filter(ins => ins.id == inst.instId);
+                    return institution[0];
+                });
+                this.setState({filteredInstitutions: sortedInstitutions});
             });
     }
 
@@ -186,6 +213,7 @@ class SideBar extends React.Component {
                 filteredProjects: this.props.projects,
                 expandInstWithProject: false
             });
+            this.getSortedInstitutions(this.state.institutions,this.state.filteredProjects);
         }
     }
 
@@ -201,6 +229,8 @@ class SideBar extends React.Component {
                 if (radioValue == "institution") {
                     let filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(filterText.toLocaleLowerCase())));
                     this.setState({filteredInstitutions: filtered, expandInstWithProject: false});
+                    this.getSortedInstitutions(filtered,this.state.filteredProjects);
+
                 }
                 if (radioValue == "project") {
                     this.state.institutions.map(inst => {
@@ -212,6 +242,8 @@ class SideBar extends React.Component {
                     this.setState({filteredProjects:onlyProjects});
                     if (filteredInstProjects.length > 0) {
                         this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
+                        this.getSortedInstitutions(filteredInstProjects,this.state.filteredProjects);
+
                     }
                     else {
                         this.setState({filteredInstitutions: []});
@@ -220,24 +252,31 @@ class SideBar extends React.Component {
             }
             else {
                 this.setState({filteredInstitutions: this.state.institutions, filteredProjects: this.props.projects});
+                this.getSortedInstitutions(this.state.institutions,this.state.filteredProjects);
+
             }
         }
         else {
-            this.filterCall(radioValue, filterText);
+            this.filterCall(radioValue, filterText,false);
         }
     }
 
-    filterCall(radioValue, filterText) {
+    filterCall(radioValue, filterText,checked) {
         let filtered = [], filteredInstProjects = [],onlyProjects=[];
         this.setState({radioValue: radioValue});
         if (filterText == "") {
             this.setState({filteredInstitutions: this.state.institutions,filteredProjects:this.props.projects});
+            this.getSortedInstitutions(this.state.institutions,this.state.filteredProjects);
         }
         else {
             if (radioValue == "institution" && filterText != "") {
-                filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+                if(checked){
+                     filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase().startsWith(filterText.toLocaleLowerCase())));
+                }
+                else filtered = this.state.institutions.filter(inst => (inst.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
                 if (filtered.length > 0) {
                     this.setState({filteredInstitutions: filtered,expandInstWithProject:false});
+                    this.getSortedInstitutions(filtered,this.state.filteredProjects);
                 }
                 else {
                     this.setState({filteredInstitutions: []});
@@ -245,15 +284,28 @@ class SideBar extends React.Component {
             }
 
             if (radioValue == "project" && filterText != "") {
-                this.state.institutions.map(inst => {
-                    const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
-                    if (projects.length > 0) {filteredInstProjects.push(inst);
-                        onlyProjects=onlyProjects.concat(projects);
-                    }
-                });
+                if(checked) {
+                    this.state.filteredInstitutions.map(inst => {
+                        const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).startsWith(filterText.toLocaleLowerCase()));
+                        if (projects.length > 0) {
+                            filteredInstProjects.push(inst);
+                            onlyProjects = onlyProjects.concat(projects);
+                        }
+                    });
+                }
+                else {
+                    this.state.filteredInstitutions.map(inst => {
+                        const projects = this.props.projects.filter(project => project.institution == inst.id && (project.name.toLocaleLowerCase()).includes(filterText.toLocaleLowerCase()));
+                        if (projects.length > 0) {
+                            filteredInstProjects.push(inst);
+                            onlyProjects = onlyProjects.concat(projects);
+                        }
+                    });
+                }
                 this.setState({filteredProjects:onlyProjects});
                 if (filteredInstProjects.length > 0) {
                     this.setState({filteredInstitutions: filteredInstProjects,expandInstWithProject:true});
+                    this.getSortedInstitutions(filteredInstProjects,onlyProjects);
                 }
                 else {
                     this.setState({filteredInstitutions: []});
@@ -264,23 +316,27 @@ class SideBar extends React.Component {
 
     render() {
         return (
-            <div id="lPanel" className={this.props.showHideLpanel}>
+            <div id="lPanel" className={this.props.showHideLpanel} style={{height:"-webkit-fill-available",overflow:"hidden"}}>
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
-                <ul className="tree">
-                    <CreateInstitutionButton userName={this.props.userName} documentRoot={this.props.documentRoot}/>
-                    <InstitutionFilter documentRoot={this.props.documentRoot} filterText={this.filterText}/>
-                    <div className="form-control" style={{textAlign: "center"}}>
-                        <FilterAlphabetically filteredInstitutions={this.state.institutions}
-                                              radioValue={this.state.radioValue} filterCall={this.filterCall}
-                                              filterText={this.state.filterText} filterChecked={this.filterChecked} checked={this.state.checked}/>
-                    </div>
-                    <InstitutionList filteredInstitutions={this.state.filteredInstitutions} filterText={this.state.filterText}
+                <CreateInstitutionButton userName={this.props.userName} documentRoot={this.props.documentRoot}/>
+                <InstitutionFilter documentRoot={this.props.documentRoot} filterText={this.filterText}/>
+                <div className="form-control" style={{textAlign: "center"}}>
+                    <FilterAlphabetically filteredInstitutions={this.state.institutions}
+                                          radioValue={this.state.radioValue} filterCall={this.filterCall}
+                                          filterText={this.state.filterText} filterChecked={this.filterChecked} checked={this.state.checked}/>
+                </div>
+                <div>
+
+                <ul className="tree"  style={{height: "calc(100vh - 260px)",overflow: "scroll"}}>
+                    <InstitutionList institutions={this.state.institutions} filteredInstitutions={this.state.filteredInstitutions} filterText={this.state.filterText}
                                      projects={this.state.filteredProjects.length>0?this.state.filteredProjects:this.props.projects}
                                      documentRoot={this.props.documentRoot} expandInstWithProject={this.state.expandInstWithProject}/>
                 </ul>
             </div>
+            </div>
+
         );
     }
 }
@@ -299,9 +355,9 @@ function CreateInstitutionButton(props) {
     if (props.userName != "") {
         return (
 
-                <li className="bg-yellow text-center p-2">
+                <div className="bg-yellow text-center p-2">
                     <a className="create-institution" style={{display:"block"}} href={props.documentRoot + "/create-institution/0"}>
-                    <i className="fa fa-file"></i> Create New Institution </a></li>
+                    <i className="fa fa-file"></i> Create New Institution </a></div>
         );
     } else {
         return (
@@ -311,14 +367,16 @@ function CreateInstitutionButton(props) {
 }
 
 function InstitutionList(props) {
-    return(
-        props.filteredInstitutions.map(
-            (institution, uid) =>
-                <Institution key={uid}
+  return(
+    props.filteredInstitutions.map(
+            (institution, uid) => {
+               return <Institution key={uid}
                              id={institution.id}
                              name={institution.name}
                              documentRoot={props.documentRoot}
-                             projects={props.projects.filter(project => project.institution == institution.id)} expandInstWithProject={props.expandInstWithProject}/>
+                             projects={props.projects.filter(project => project.institution == institution.id)}
+                             expandInstWithProject={props.expandInstWithProject}/>
+            }
         )
     );
 }
@@ -331,12 +389,12 @@ function FilterAlphabetically(props) {
             </div>
             <div className="form-check form-check-inline">
                 <input className="form-check-input" type="radio" id="filter-by-word"
-                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("institution",props.filterText)} defaultChecked={props.radioValue==="institution"}/>
+                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("institution",props.filterText,props.checked)} defaultChecked={props.radioValue==="institution"}/>
                 Institution
             </div>
             <div className="form-check form-check-inline">
             <input className="form-check-input" type="radio" id="filter-by-letter"
-                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("project",props.filterText)} defaultChecked={props.radioValue==="project"}/>
+                       name="filter-institution" value={props.filterText} onChange={()=>props.filterCall("project",props.filterText,props.checked)} defaultChecked={props.radioValue==="project"}/>
                 Project
             </div>
             <div className="form-check form-check-inline">

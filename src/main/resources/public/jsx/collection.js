@@ -15,8 +15,9 @@ class Collection extends React.Component {
             imageryAttribution: "",
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
-            imageryYearPlanet: 2018,
+            imageryYearPlanet: "2018",
             imageryMonthPlanet: "03",
+            imageryMonthNamePlanet: "March",
             projectPlotsShown: false,
             navButtonsShown: 1,
             prevPlotButtonDisabled: false,
@@ -209,8 +210,8 @@ class Collection extends React.Component {
     }
 
     setImageryYearDG(event) {
-        const dropdown = event.target;
-        const newImageryYearDG = dropdown.options[dropdown.selectedIndex].value;
+        const slider = event.target;
+        const newImageryYearDG = slider.value;
         const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
         const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({
@@ -233,8 +234,8 @@ class Collection extends React.Component {
     }
 
     setImageryYearPlanet(event) {
-        const dropdown = event.target;
-        const newImageryYearPlanet = dropdown.options[dropdown.selectedIndex].value;
+        const slider = event.target;
+        const newImageryYearPlanet = slider.value;
         const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
         const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
         this.setState({
@@ -245,15 +246,61 @@ class Collection extends React.Component {
     }
 
     setImageryMonthPlanet(event) {
-        const dropdown = event.target;
-        const newImageryMonthPlanet = dropdown.options[dropdown.selectedIndex].value;
+        const slider = event.target;
+        let newImageryMonthPlanet = "";
+
+        let newImageryMonth=slider.value;
+
+        if(parseInt(newImageryMonth)==1){
+            newImageryMonthPlanet="January";
+
+        }
+        if(parseInt(newImageryMonth)==2){
+            newImageryMonthPlanet="February";
+        }
+        else if(parseInt(newImageryMonth)==3){
+            newImageryMonthPlanet="March";
+        }
+        else if(parseInt(newImageryMonth)==4){
+            newImageryMonthPlanet="April";
+        }
+        else if(parseInt(newImageryMonth)==5){
+            newImageryMonthPlanet="May";
+        }
+        else if(parseInt(newImageryMonth)==6){
+            newImageryMonthPlanet="June";
+        }
+        else if(parseInt(newImageryMonth)==7){
+            newImageryMonthPlanet="July";
+        }
+        else if(parseInt(newImageryMonth)==8){
+            newImageryMonthPlanet="August";
+        }
+        else if(parseInt(newImageryMonth)==9){
+            newImageryMonthPlanet="September";
+        }
+        else if(parseInt(newImageryMonth)==10){
+            newImageryMonthPlanet="October";
+        }
+        else if(parseInt(newImageryMonth)==11){
+            newImageryMonthPlanet="November";
+        }
+        else if(parseInt(newImageryMonth)==12){
+            newImageryMonthPlanet="December";
+        }
+
+
         const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
         const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
         this.setState({
-            imageryMonthPlanet: newImageryMonthPlanet,
+            imageryMonthPlanet: newImageryMonth,
+            imageryMonthNamePlanet:newImageryMonthPlanet,
             imageryAttribution: newImageryAttribution
         });
-        this.updatePlanetLayer(newImageryMonthPlanet, this.state.imageryYearPlanet);
+        if(parseInt(slider.value)<10){
+            newImageryMonth="0"+slider.value;
+        }
+        this.updatePlanetLayer(newImageryMonth, this.state.imageryYearPlanet);
     }
 
     updateMapImagery(newBaseMapSource) {
@@ -316,8 +363,6 @@ class Collection extends React.Component {
                         currentPlot: null,
                         userSamples: {}
                     });
-                    console.log("from plot id to see");
-                    console.log(plotId);
                     const msg = (plotId == "random")
                         ? "All plots have been analyzed for this project."
                         : "This plot has already been analyzed.";
@@ -502,8 +547,6 @@ class Collection extends React.Component {
                         this.setState({stats: statistics});
                         this.nextPlot();
                         this.getProjectPlots();
-                        console.log(this.state.plotList);
-
                     } else {
                         console.log(response);
                         alert("Error flagging plot as bad. See console for details.");
@@ -650,6 +693,7 @@ class Collection extends React.Component {
                          setStackingProfileDG={this.setStackingProfileDG}
                          imageryYearPlanet={this.state.imageryYearPlanet}
                          imageryMonthPlanet={this.state.imageryMonthPlanet}
+                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
                          setImageryYearPlanet={this.setImageryYearPlanet}
                          setImageryMonthPlanet={this.setImageryMonthPlanet}
                          stats={this.state.stats}
@@ -681,7 +725,7 @@ function ImageAnalysisPane(props) {
 
 function SideBar(props) {
     return (
-        <div id="sidebar" className="col-xl-3">
+        <div id="sidebar" className="col-xl-3" style={{overflow: "scroll"}}>
             <ProjectName projectName={props.currentProject.name}/>
             <PlotNavigation plotId={props.plotId}
                             navButtonsShown={props.navButtonsShown}
@@ -700,6 +744,7 @@ function SideBar(props) {
                             setStackingProfileDG={props.setStackingProfileDG}
                             imageryYearPlanet={props.imageryYearPlanet}
                             imageryMonthPlanet={props.imageryMonthPlanet}
+                            imageryMonthNamePlanet={props.imageryMonthNamePlanet}
                             setImageryYearPlanet={props.setImageryYearPlanet}
                             setImageryMonthPlanet={props.setImageryMonthPlanet}/>
             <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
@@ -789,6 +834,7 @@ function ImageryOptions(props) {
             <PlanetMenus baseMapSource={props.baseMapSource}
                          imageryYearPlanet={props.imageryYearPlanet}
                          imageryMonthPlanet={props.imageryMonthPlanet}
+                         imageryMonthNamePlanet={props.imageryMonthNamePlanet}
                          setImageryYearPlanet={props.setImageryYearPlanet}
                          setImageryMonthPlanet={props.setImageryMonthPlanet}/>
         </fieldset>
@@ -803,16 +849,21 @@ function DigitalGlobeMenus(props) {
     if (props.baseMapSource == "DigitalGlobeWMSImagery") {
         return (
             <React.Fragment>
-                <select className="form-control form-control-sm"
-                        id="dg-imagery-year"
-                        name="dg-imagery-year"
-                        size="1"
-                        value={props.imageryYearDG}
-                        onChange={props.setImageryYearDG}>
-                    {
-                        range(2018,1999,-1).map(year => <option key={year} value={year}>{year}</option>)
-                    }
-                </select>
+                {/*<select className="form-control form-control-sm"*/}
+                        {/*id="dg-imagery-year"*/}
+                        {/*name="dg-imagery-year"*/}
+                        {/*size="1"*/}
+                        {/*value={props.imageryYearDG}*/}
+                        {/*onChange={props.setImageryYearDG}>*/}
+                    {/*{*/}
+                        {/*range(2018,1999,-1).map(year => <option key={year} value={year}>{year}</option>)*/}
+                    {/*}*/}
+                {/*</select>*/}
+                <div className="slidecontainer form-control form-control-sm">
+                    <input type="range" min="2000" max="2018" value={props.imageryYearDG} className="slider" id="myRange"
+                           onChange={props.setImageryYearDG}/>
+                    <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
+                </div>
                 <select className="form-control form-control-sm"
                         id="dg-stacking-profile"
                         name="dg-stacking-profile"
@@ -831,43 +882,60 @@ function DigitalGlobeMenus(props) {
     }
 }
 
-function PlanetMenus(props) {
-    if (props.baseMapSource == "PlanetGlobalMosaic") {
-        return (
-            <React.Fragment>
-                <select className="form-control form-control-sm"
-                        id="planet-imagery-year"
-                        name="planet-imagery-year"
-                        size="1"
-                        value={props.imageryYearPlanet}
-                        onChange={props.setImageryYearPlanet}>
-                    {
-                        range(2018,2015,-1).map(year => <option key={year} value={year}>{year}</option>)
-                    }
-                </select>
-                <select className="form-control form-control-sm"
-                        id="planet-imagery-month"
-                        name="planet-imagery-month"
-                        size="1"
-                        value={props.imageryMonthPlanet}
-                        onChange={props.setImageryMonthPlanet}>
-                    <option value="01">January</option>
-                    <option value="02">February</option>
-                    <option value="03">March</option>
-                    <option value="04">April</option>
-                    <option value="05">May</option>
-                    <option value="06">June</option>
-                    <option value="07">July</option>
-                    <option value="08">August</option>
-                    <option value="09">September</option>
-                    <option value="10">October</option>
-                    <option value="11">November</option>
-                    <option value="12">December</option>
-                </select>
-            </React.Fragment>
-        );
-    } else {
-        return "";
+class PlanetMenus extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {value:"2018"}
+    }
+    render() {
+        if (this.props.baseMapSource == "PlanetGlobalMosaic") {
+            return (
+                <React.Fragment>
+                    {/*<select className="form-control form-control-sm"*/}
+                    {/*id="planet-imagery-year"*/}
+                    {/*name="planet-imagery-year"*/}
+                    {/*size="1"*/}
+                    {/*value={props.imageryYearPlanet}*/}
+                    {/*onChange={props.setImageryYearPlanet}>*/}
+                    {/*{*/}
+                    {/*range(2018,2015,-1).map(year => <option key={year} value={year}>{year}</option>)*/}
+                    {/*}*/}
+                    {/*</select>*/}
+                    <div className="slidecontainer form-control form-control-sm">
+                        <input type="range" min="2016" max="2018" value={this.props.imageryYearPlanet} className="slider" id="myRange"
+                               onChange={this.props.setImageryYearPlanet}/>
+                        <p>Year: <span id="demo">{this.props.imageryYearPlanet}</span></p>
+                    </div>
+                    <div className="slidecontainer form-control form-control-sm">
+                        <input type="range" min="1" max="12" value={this.props.imageryMonthPlanet} className="slider" id="myRangemonth"
+                               onChange={this.props.setImageryMonthPlanet}/>
+                        <p>Month: <span id="demo">{this.props.imageryMonthNamePlanet}</span></p>
+                    </div>
+
+                    {/*<select className="form-control form-control-sm"*/}
+                            {/*id="planet-imagery-month"*/}
+                            {/*name="planet-imagery-month"*/}
+                            {/*size="1"*/}
+                            {/*value={this.props.imageryMonthPlanet}*/}
+                            {/*onChange={this.props.setImageryMonthPlanet}>*/}
+                        {/*<option value="01">January</option>*/}
+                        {/*<option value="02">February</option>*/}
+                        {/*<option value="03">March</option>*/}
+                        {/*<option value="04">April</option>*/}
+                        {/*<option value="05">May</option>*/}
+                        {/*<option value="06">June</option>*/}
+                        {/*<option value="07">July</option>*/}
+                        {/*<option value="08">August</option>*/}
+                        {/*<option value="09">September</option>*/}
+                        {/*<option value="10">October</option>*/}
+                        {/*<option value="11">November</option>*/}
+                        {/*<option value="12">December</option>*/}
+                    {/*</select>*/}
+                </React.Fragment>
+            );
+        } else {
+            return "";
+        }
     }
 }
 
