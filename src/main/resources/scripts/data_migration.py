@@ -84,7 +84,6 @@ def insert_institutions():
             
 def insert_imagery():
     conn = None
-    imagery_id=-1
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
@@ -93,9 +92,11 @@ def insert_imagery():
         imagery_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'imagery-list.json'))), "r").read()
         imageryArr = demjson.decode(imagery_list_json)
         for imagery in imageryArr:
-            cur.execute("select * from add_institution_imagery_migration(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
-            imagery_id = cur.fetchone()[0]
-            conn.commit()
+            if imagery['institution'] > 1: 
+                cur.execute("select * from add_institution_imagery_migration(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", 
+                    (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],
+                    imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
+                conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -111,7 +112,8 @@ def insert_project_widgets(project_id,dash_id,conn):
         widget = demjson.decode(dash_json)
         if widget['projectID'] is not None and int(project_id)==int(widget['projectID']) and len(str(widget['widgets']))>2:
             for awidget in widget['widgets']:
-                cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(awidget)))
+                cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", 
+                    (widget['projectID'],widget['dashboardID'],json.dumps(awidget)))
                 conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -157,8 +159,9 @@ def insert_projects():
                     conn.commit()   
                     for dash in dashArr:
                         dash_id=dash['dashboard']
-                        if int(dash['projectID']) == int(project_id):
+                        if dash_id.isnumeric() and int(dash['projectID']) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
+                            break
 
                     insert_plots_samples_by_file(project_id, conn)
                     merge_files(project, project_id, conn)
@@ -285,22 +288,22 @@ def merge_files(project, project_id, conn):
         fileprefix = "project-" +  str(project_id)
         tableprefix = 'project_' +  str(project_id)
          
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-plots.csv")))
-        if project['plotDistribution'] == 'csv' and (os.path.isfile(filename)): 
-            plots_table = tableprefix + '_plots_csv'
+        # filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-plots.csv")))
+        # if project['plotDistribution'] == 'csv' and (os.path.isfile(filename)): 
+        #     plots_table = tableprefix + '_plots_csv'
 
-            cur.execute("SELECT * FROM create_new_table(%s,%s)", 
-            [plots_table, loadCsvHeaders(filename)])
-            conn.commit()
+        #     cur.execute("SELECT * FROM create_new_table(%s,%s)", 
+        #     [plots_table, loadCsvHeaders(filename)])
+        #     conn.commit()
 
-            # run sh to upload csv to postgres
-            dirname = os.path.dirname(os.path.realpath(__file__))
-            shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
-            subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
+        #     # run sh to upload csv to postgres
+        #     dirname = os.path.dirname(os.path.realpath(__file__))
+        #     shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
+        #     subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
 
-            # add index 
-            cur.execute("SELECT * FROM add_index_col(%s)" , [plots_table])
-            conn.commit()
+        #     # add index 
+        #     cur.execute("SELECT * FROM add_index_col(%s)" , [plots_table])
+        #     conn.commit()
 
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-plots.zip")))
         if project['plotDistribution'] == 'shp' and os.path.isfile(filename):
@@ -312,22 +315,22 @@ def merge_files(project, project_id, conn):
         
             plots_table = 'project_' +  str(project_id) + '_plots_shp'
         
-        ### Samples
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-samples.csv")))
-        if project['sampleDistribution'] == 'csv' and os.path.isfile(filename): 
+        # ### Samples
+        # filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-samples.csv")))
+        # if project['sampleDistribution'] == 'csv' and os.path.isfile(filename): 
             
-            cur.execute("SELECT * FROM create_new_table(%s,%s)", 
-            ['project_' +  str(project_id) + '_samples_csv', loadCsvHeaders(filename)])
-            conn.commit()
+        #     cur.execute("SELECT * FROM create_new_table(%s,%s)", 
+        #     ['project_' +  str(project_id) + '_samples_csv', loadCsvHeaders(filename)])
+        #     conn.commit()
 
-            # run sh to upload csv to postgres
-            dirname = os.path.dirname(os.path.realpath(__file__))
-            shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
-            subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
+        #     # run sh to upload csv to postgres
+        #     dirname = os.path.dirname(os.path.realpath(__file__))
+        #     shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
+        #     subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
 
-            # add index 
-            cur.execute("SELECT * FROM add_index_col(%s)" , ['project_' +  str(project_id) + '_samples_csv'])
-            samples_table = 'project_' +  str(project_id) + '_samples_csv'
+        #     # add index 
+        #     cur.execute("SELECT * FROM add_index_col(%s)" , ['project_' +  str(project_id) + '_samples_csv'])
+        #     samples_table = 'project_' +  str(project_id) + '_samples_csv'
 
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-samples.zip")))
         if project['sampleDistribution'] == 'shp' and os.path.isfile(filename):
