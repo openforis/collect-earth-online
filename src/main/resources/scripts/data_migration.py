@@ -137,7 +137,7 @@ def insert_projects():
         print(len(projectArr))
         for project in projectArr:
             try:
-                if project['id']>630:
+                if project['id']>0:
                     print("inserting project with project id"+str(project['id']))
                     if project['numPlots'] is None: project['numPlots']=0
                     if project['plotSpacing'] is None: project['plotSpacing']=0
