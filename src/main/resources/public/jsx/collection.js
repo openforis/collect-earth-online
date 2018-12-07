@@ -362,7 +362,7 @@ class Collection extends React.Component {
     }
 
     getPlotData(plotId) {
-        const url =  this.props.documentRoot + "/get-unanalyzed-plot/" + this.props.projectId+ "/" + plotId;
+        const url =  this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId+ "/" + plotId;
         fetch(url)
             .then(response => {
                 if (response.ok) {
