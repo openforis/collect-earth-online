@@ -288,22 +288,22 @@ def merge_files(project, project_id, conn):
         fileprefix = "project-" +  str(project_id)
         tableprefix = 'project_' +  str(project_id)
          
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-plots.csv")))
-        if project['plotDistribution'] == 'csv' and (os.path.isfile(filename)): 
-            plots_table = tableprefix + '_plots_csv'
+        # filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-plots.csv")))
+        # if project['plotDistribution'] == 'csv' and (os.path.isfile(filename)): 
+        #     plots_table = tableprefix + '_plots_csv'
 
-            cur.execute("SELECT * FROM create_new_table(%s,%s)", 
-            [plots_table, loadCsvHeaders(filename)])
-            conn.commit()
+        #     cur.execute("SELECT * FROM create_new_table(%s,%s)", 
+        #     [plots_table, loadCsvHeaders(filename)])
+        #     conn.commit()
 
-            # run sh to upload csv to postgres
-            dirname = os.path.dirname(os.path.realpath(__file__))
-            shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
-            subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
+        #     # run sh to upload csv to postgres
+        #     dirname = os.path.dirname(os.path.realpath(__file__))
+        #     shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
+        #     subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
 
-            # add index 
-            cur.execute("SELECT * FROM add_index_col(%s)" , [plots_table])
-            conn.commit()
+        #     # add index 
+        #     cur.execute("SELECT * FROM add_index_col(%s)" , [plots_table])
+        #     conn.commit()
 
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-plots.zip")))
         if project['plotDistribution'] == 'shp' and os.path.isfile(filename):
@@ -315,22 +315,22 @@ def merge_files(project, project_id, conn):
         
             plots_table = 'project_' +  str(project_id) + '_plots_shp'
         
-        ### Samples
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-samples.csv")))
-        if project['sampleDistribution'] == 'csv' and os.path.isfile(filename): 
+        # ### Samples
+        # filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-samples.csv")))
+        # if project['sampleDistribution'] == 'csv' and os.path.isfile(filename): 
             
-            cur.execute("SELECT * FROM create_new_table(%s,%s)", 
-            ['project_' +  str(project_id) + '_samples_csv', loadCsvHeaders(filename)])
-            conn.commit()
+        #     cur.execute("SELECT * FROM create_new_table(%s,%s)", 
+        #     ['project_' +  str(project_id) + '_samples_csv', loadCsvHeaders(filename)])
+        #     conn.commit()
 
-            # run sh to upload csv to postgres
-            dirname = os.path.dirname(os.path.realpath(__file__))
-            shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
-            subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
+        #     # run sh to upload csv to postgres
+        #     dirname = os.path.dirname(os.path.realpath(__file__))
+        #     shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
+        #     subprocess.run(['bash', 'csv2postgres.sh', fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
 
-            # add index 
-            cur.execute("SELECT * FROM add_index_col(%s)" , ['project_' +  str(project_id) + '_samples_csv'])
-            samples_table = 'project_' +  str(project_id) + '_samples_csv'
+        #     # add index 
+        #     cur.execute("SELECT * FROM add_index_col(%s)" , ['project_' +  str(project_id) + '_samples_csv'])
+        #     samples_table = 'project_' +  str(project_id) + '_samples_csv'
 
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-samples.zip")))
         if project['sampleDistribution'] == 'shp' and os.path.isfile(filename):
