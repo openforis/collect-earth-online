@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { utils } from "../js/utils.js";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -54,6 +55,8 @@ class Collection extends React.Component {
     }
 
     componentDidMount() {
+        utils.show_element("spinner");
+
         this.getProjectById();
         this.getProjectStats();
         this.getProjectPlots();
@@ -69,6 +72,14 @@ class Collection extends React.Component {
         }
         if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.projectPlotsShown == false) {
             this.showProjectPlots();
+        }
+        if(this.state.projectPlotsShown == true){
+            console.log(this.state.plotList);
+           utils.enable_element("go-to-first-plot-button");
+           utils.hide_element("spinner");
+        }
+        else{
+            utils.disable_element("go-to-first-plot-button");
         }
         if (this.state.mapConfig && this.state.currentImagery == null) {
             this.updateMapImagery(this.state.currentProject.baseMapSource);
@@ -188,6 +199,7 @@ class Collection extends React.Component {
     }
 
     showProjectPlots() {
+
         mercator.addPlotLayer(this.state.mapConfig,
             this.state.plotList,
             feature => {
@@ -201,6 +213,7 @@ class Collection extends React.Component {
                 this.getPlotData(feature.get("features")[0].get("plotId"));
             });
         this.setState({projectPlotsShown: true});
+
     }
 
     setBaseMapSource(event) {
@@ -530,6 +543,7 @@ class Collection extends React.Component {
                     saveValuesButtonDisabled: true
                 });
                 alert("All plots have been analyzed for this project.");
+                utils.disable_element("go-to-first-plot-button");
             }
         }
     }
@@ -744,11 +758,15 @@ class Collection extends React.Component {
 
 function ImageAnalysisPane(props) {
     return (
+
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
             <div id="imagery-info" className="row">
                 <p className="col small">{props.imageryAttribution}</p>
             </div>
+            <div id="spinner" style={{top:"45%"}}></div>
+
         </div>
+
     );
 }
 
@@ -878,16 +896,6 @@ function DigitalGlobeMenus(props) {
     if (props.baseMapSource == "DigitalGlobeWMSImagery") {
         return (
             <React.Fragment>
-                {/*<select className="form-control form-control-sm"*/}
-                        {/*id="dg-imagery-year"*/}
-                        {/*name="dg-imagery-year"*/}
-                        {/*size="1"*/}
-                        {/*value={props.imageryYearDG}*/}
-                        {/*onChange={props.setImageryYearDG}>*/}
-                    {/*{*/}
-                        {/*range(2018,1999,-1).map(year => <option key={year} value={year}>{year}</option>)*/}
-                    {/*}*/}
-                {/*</select>*/}
                 <div className="slidecontainer form-control form-control-sm">
                     <input type="range" min="2000" max="2018" value={props.imageryYearDG} className="slider" id="myRange"
                            onChange={props.setImageryYearDG}/>
@@ -920,16 +928,6 @@ class PlanetMenus extends React.Component {
         if (this.props.baseMapSource == "PlanetGlobalMosaic") {
             return (
                 <React.Fragment>
-                    {/*<select className="form-control form-control-sm"*/}
-                    {/*id="planet-imagery-year"*/}
-                    {/*name="planet-imagery-year"*/}
-                    {/*size="1"*/}
-                    {/*value={props.imageryYearPlanet}*/}
-                    {/*onChange={props.setImageryYearPlanet}>*/}
-                    {/*{*/}
-                    {/*range(2018,2015,-1).map(year => <option key={year} value={year}>{year}</option>)*/}
-                    {/*}*/}
-                    {/*</select>*/}
                     <div className="slidecontainer form-control form-control-sm">
                         <input type="range" min="2016" max="2018" value={this.props.imageryYearPlanet} className="slider" id="myRange"
                                onChange={this.props.setImageryYearPlanet}/>
@@ -940,26 +938,6 @@ class PlanetMenus extends React.Component {
                                onChange={this.props.setImageryMonthPlanet}/>
                         <p>Month: <span id="demo">{this.props.imageryMonthNamePlanet}</span></p>
                     </div>
-
-                    {/*<select className="form-control form-control-sm"*/}
-                            {/*id="planet-imagery-month"*/}
-                            {/*name="planet-imagery-month"*/}
-                            {/*size="1"*/}
-                            {/*value={this.props.imageryMonthPlanet}*/}
-                            {/*onChange={this.props.setImageryMonthPlanet}>*/}
-                        {/*<option value="01">January</option>*/}
-                        {/*<option value="02">February</option>*/}
-                        {/*<option value="03">March</option>*/}
-                        {/*<option value="04">April</option>*/}
-                        {/*<option value="05">May</option>*/}
-                        {/*<option value="06">June</option>*/}
-                        {/*<option value="07">July</option>*/}
-                        {/*<option value="08">August</option>*/}
-                        {/*<option value="09">September</option>*/}
-                        {/*<option value="10">October</option>*/}
-                        {/*<option value="11">November</option>*/}
-                        {/*<option value="12">December</option>*/}
-                    {/*</select>*/}
                 </React.Fragment>
             );
         } else {

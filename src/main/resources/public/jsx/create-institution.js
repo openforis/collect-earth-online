@@ -41,6 +41,7 @@ class Institution extends React.Component {
         if (this.state.details.id == "0") {
             this.setState({pageMode: "edit"});
         }
+
     }
 
 
@@ -48,9 +49,9 @@ class Institution extends React.Component {
         var formData = new FormData();
         formData.append("userid", this.props.userId);
         if(this.state.details.name=="") {
-            formData.append("institution-name", "Lost_institution_name");
+
         }
-        else formData.append("institution-name", this.state.details.name);
+        else{ formData.append("institution-name", this.state.details.name);
         formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
         formData.append("institution-url", this.state.details.url);
         formData.append("institution-description", this.state.details.description);
@@ -81,8 +82,8 @@ class Institution extends React.Component {
                 holdRef.setState({details: detailsNew});
                 holdRef.setState({isAdmin: true});
             }
-        });
-    }
+        });}
+}
 
     togglePageMode() {
         if (this.state.pageMode == "view") {
@@ -134,7 +135,13 @@ class Institution extends React.Component {
         if (target.id == "institution-details-description") {
             detailsNew.description = value;
         }
-        this.setState({details: detailsNew});
+        if(detailsNew.name==""||detailsNew.description==""){
+            utils.disable_element("create-institution");
+        }
+        else {
+         utils.enable_element("create-institution");
+            this.setState({details: detailsNew});
+        }
     }
 
     render() {
@@ -157,6 +164,7 @@ class InstitutionDescription extends React.Component {
     constructor(props) {
         super(props);
     }
+
 
     renderComp(role, pageMode, details, isAdmin, togglePageMode, deleteInstitution) {
         if (role != "") {
@@ -203,11 +211,10 @@ class InstitutionDescription extends React.Component {
     renderButtons(institutionId, pageMode, togglePageMode, cancelChanges) {
         if (pageMode == 'edit' && institutionId == 0) {
             return (
-                <button id="create-institution"
-                        className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                        onClick={togglePageMode}>
-                    <i className="fa fa-plus-square"></i> Create Institution
-                </button>
+
+                <input id="create-institution" className="btn btn-outline-lightgreen btn-sm btn-block"
+            type="button" name="create-institution" value="Create Institution" onClick={togglePageMode}
+            disabled={this.props.details.name==""&&this.props.details.description==""}/>
             );
         }
     }

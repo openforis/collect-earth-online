@@ -559,7 +559,7 @@ function ProjectStats(props) {
                             </tr>
                             <tr>
                                 <td>Total Plots</td>
-                                <td>{project.details.numPlots || 0}</td>
+                                <td>{project.details?project.details.numPlots : 0}</td>
                                 <td>Date Created</td>
                                 <td>{project.dateCreated}</td>
                             </tr>
@@ -1075,8 +1075,6 @@ function ProjectManagement(props) {
     var project = props.project;
     var buttons = "";
     if (project.details != null) {
-        console.log("availability test");
-        console.log(project.details.availability);
         buttons = <React.Fragment>
             <input type="button" id="project-dashboard" className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="project-dashboard" value="Project Dashboard"
