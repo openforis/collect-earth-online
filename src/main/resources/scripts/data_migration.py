@@ -84,7 +84,6 @@ def insert_institutions():
             
 def insert_imagery():
     conn = None
-    imagery_id=-1
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
@@ -93,9 +92,11 @@ def insert_imagery():
         imagery_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'imagery-list.json'))), "r").read()
         imageryArr = demjson.decode(imagery_list_json)
         for imagery in imageryArr:
-            cur.execute("select * from add_institution_imagery_migration(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
-            imagery_id = cur.fetchone()[0]
-            conn.commit()
+            if imagery['institution'] > 1: 
+                cur.execute("select * from add_institution_imagery_migration(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", 
+                    (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],
+                    imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
+                conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)    
@@ -111,7 +112,8 @@ def insert_project_widgets(project_id,dash_id,conn):
         widget = demjson.decode(dash_json)
         if widget['projectID'] is not None and int(project_id)==int(widget['projectID']) and len(str(widget['widgets']))>2:
             for awidget in widget['widgets']:
-                cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", (widget['projectID'],widget['dashboardID'],json.dumps(awidget)))
+                cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", 
+                    (widget['projectID'],widget['dashboardID'],json.dumps(awidget)))
                 conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -135,7 +137,7 @@ def insert_projects():
         print(len(projectArr))
         for project in projectArr:
             try:
-                if project['id']>0:
+                if project['id']>630:
                     print("inserting project with project id"+str(project['id']))
                     if project['numPlots'] is None: project['numPlots']=0
                     if project['plotSpacing'] is None: project['plotSpacing']=0
@@ -157,8 +159,9 @@ def insert_projects():
                     conn.commit()   
                     for dash in dashArr:
                         dash_id=dash['dashboard']
-                        if int(dash['projectID']) == int(project_id):
+                        if dash_id.isnumeric() and int(dash['projectID']) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
+                            break
 
                     insert_plots_samples_by_file(project_id, conn)
                     merge_files(project, project_id, conn)
