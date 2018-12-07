@@ -1075,9 +1075,11 @@ function ProjectManagement(props) {
     var project = props.project;
     var buttons = "";
     if (project.details != null) {
+        console.log("availability test");
+        console.log(project.details.availability);
         buttons = <React.Fragment>
-            <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
-                   name="configure-geo-dash" value="Project Dashboard"
+            <input type="button" id="project-dashboard" className="btn btn-outline-lightgreen btn-sm btn-block"
+                   name="project-dashboard" value="Project Dashboard"
                    onClick={props.gotoProjectDashboard}
                    style={{display:'block'}}/>
             <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
