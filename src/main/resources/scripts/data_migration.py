@@ -285,6 +285,7 @@ def merge_files(project, project_id, conn):
     dirname = os.path.dirname(os.path.realpath(__file__))
     ### Plots
     try:
+        need_to_merge = 0
         fileprefix = "project-" +  str(project_id)
         tableprefix = 'project_' +  str(project_id)
          
@@ -307,7 +308,7 @@ def merge_files(project, project_id, conn):
 
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-plots.zip")))
         if project['plotDistribution'] == 'shp' and os.path.isfile(filename):
-            
+            need_to_merge = 2
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
@@ -334,7 +335,7 @@ def merge_files(project, project_id, conn):
 
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-samples.zip")))
         if project['sampleDistribution'] == 'shp' and os.path.isfile(filename):
-            
+            need_to_merge = 3
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
@@ -342,15 +343,16 @@ def merge_files(project, project_id, conn):
 
             samples_table = 'project_' +  str(project_id) + '_samples_shp'
 
-        # add table names to project
-        cur.execute("SELECT * FROM update_project_tables(%s,%s,%s)" , [project_id, plots_table, samples_table])
-        conn.commit()
-        # clean up project tables
-        cur.execute("SELECT * FROM cleanup_project_tables(%s,%s)" , [project_id, project['plotSize']])
-        conn.commit()
-        # merge files into plots
-        cur.execute("SELECT * FROM merge_plot_and_file(%s)" , [project_id])
-        conn.commit()
+        if need_to_merge > 0:
+            # add table names to project
+            cur.execute("SELECT * FROM update_project_tables(%s,%s,%s)" , [project_id, plots_table, samples_table])
+            conn.commit()
+            # clean up project tables
+            cur.execute("SELECT * FROM cleanup_project_tables(%s,%s)" , [project_id, project['plotSize']])
+            conn.commit()
+            # merge files into plots
+            cur.execute("SELECT * FROM merge_plot_and_file(%s)" , [project_id])
+            conn.commit()
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("merge file error: "+ str(error))
