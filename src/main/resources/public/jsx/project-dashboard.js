@@ -201,6 +201,7 @@ class ProjectDashboard extends React.Component {
             }
 
             if (this.state.imageryList && this.state.imageryList.length > 0) {
+                console.log("imagery"+this.state.imageryList[0].title);
                 var detailsNew = this.state.details;
                 detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
