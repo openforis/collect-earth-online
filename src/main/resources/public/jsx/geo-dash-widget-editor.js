@@ -40,6 +40,7 @@ class BasicLayout extends React.PureComponent{
             widgetMax:"",
             widgetCloudScore:"",
             imageCollectionDual: "",
+            selectedDataTypeDual: "-1",
             imageParamsDual: "",
             startDateDual:"",
             endDateDual:"",
@@ -337,6 +338,7 @@ class BasicLayout extends React.PureComponent{
     onCancelNewWidget = event =>{
         this.setState({
             selectedWidgetType: "-1",
+            selectedDataTypeDual: "-1",
             isEditing: false,
             selectedDataType: "-1",
             WidgetTitle: "",
@@ -515,6 +517,7 @@ class BasicLayout extends React.PureComponent{
                 holdRef.setState({
                     widgets: holdRef.state.widgets.concat(myWidget),
                     selectedWidgetType: "-1",
+                    selectedDataTypeDual: "-1",
                     isEditing: false,
                     selectedDataType: "-1",
                     WidgetTitle: "",
