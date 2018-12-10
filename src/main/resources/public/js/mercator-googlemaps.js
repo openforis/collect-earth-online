@@ -290,8 +290,8 @@ mercator1.getLayerByTitle = function (mapConfig, layerTitle) {
 // Example call:
 // var mapConfig2 = mercator.updateLayerWmsParams(mapConfig,
 //                                                "DigitalGlobeWMSImagery",
-//                                                {COVERAGE_CQL_FILTER: "(acquisition_date>='" + imageryYear + "-01-01')"
-//                                                                 + "AND(acquisition_date<='" + imageryYear + "-12-31')",
+//                                                {COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
+//                                                                 + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
 //                                                 FEATUREPROFILE: stackingProfile});
 mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);

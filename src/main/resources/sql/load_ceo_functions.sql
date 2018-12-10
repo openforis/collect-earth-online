@@ -1782,20 +1782,50 @@ CREATE OR REPLACE FUNCTION merge_plot_and_file(_project_id integer)
 	SELECT count(*)::int FROM update_samples
 $$ LANGUAGE SQL;
 
--- Add missing standard columns to older files
-CREATE OR REPLACE FUNCTION add_missing_column(_table_name text, _column_name text)
+-- merge csv files for older data where there is only plot data
+CREATE OR REPLACE FUNCTION merge_plots_only(_project_number integer)
 	RETURNS void AS $$
-	DECLARE 
-		i integer;
-    BEGIN
-		IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
-        -- FIXME might be case sensitive
-		EXECUTE 'SELECT * FROM information_schema.columns 
-						WHERE table_name = '''|| _table_name ||''' AND column_name = ''plotId''';
-		GET DIAGNOSTICS i = ROW_COUNT;
-		IF i = 0 
-		THEN
-			EXECUTE 'ALTER TABLE '|| _table_name || ' ADD COLUMN ' || _column_name ||' text';
-		END IF;
-    END
+	WITH tablenames AS (
+		SELECT plots_ext_table, samples_ext_table
+		FROM projects 
+		WHERE id = _project_number
+	),
+	plots_file_data AS (
+		SELECT ext_id AS pl_ext_id, center, row_number() over(order by ST_X(center), ST_Y(center)) as row_id 
+		FROM select_partial_table_by_name((SELECT plots_ext_table FROM tablenames))
+	),
+	numbered_plots AS (
+		SELECT  project_id, pl.id AS pl_plot_id, row_number() over(order by ST_X(center), ST_Y(center)) as pl_row_id
+		FROM projects p
+		INNER JOIN plots pl
+			ON pl.project_id = p.id
+		WHERE project_id = _project_number
+	),
+	row_with_file AS (
+		SELECT pl_row_id, pl_ext_id, pl_plot_id
+		FROM numbered_plots np
+		LEFT JOIN plots_file_data pfd
+			ON np.pl_row_id = pfd.row_id
+	) 											   
+	UPDATE plots
+	SET ext_id = rwf.pl_ext_id
+	FROM (select * from row_with_file) rwf
+	WHERE plots.id = pl_plot_id
+																   
+$$ LANGUAGE SQL;
+
+-- Renames any column
+CREATE OR REPLACE FUNCTION rename_col(_table_name text, _from text, _to text)
+ RETURNS void AS $$
+	BEGIN
+	EXECUTE 'ALTER TABLE ' || _table_name || ' RENAME COLUMN ' || _from || ' to ' || _to;
+	END
+$$ LANGUAGE PLPGSQL;
+
+-- Add empty plotId
+CREATE OR REPLACE FUNCTION add_plotId_col(_table_name text)
+ RETURNS void AS $$
+	BEGIN
+	EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN plotId text';
+	END
 $$ LANGUAGE PLPGSQL;

@@ -293,9 +293,12 @@ public class PostgresProjects implements Projects {
                 if (rs.next()) {     
                     singlePlot = buildPlotJson(rs);
                     singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt(), projectId));
+
+                    return  singlePlot.toString();
+                } else {
+                    return "done";
                 }
             }
-            return  singlePlot.toString();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -404,7 +407,7 @@ public class PostgresProjects implements Projects {
                                     var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();
 
                                     plotHeaders.forEach(head ->
-                                        plotSummary.addProperty("plot_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
+                                        plotSummary.addProperty("pl_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
                                     );
                                 }
 
@@ -412,7 +415,7 @@ public class PostgresProjects implements Projects {
                             } 
                         }
                         var combinedHeaders = plotHeaders.stream()
-                            .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head)
+                            .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head)
                             .toArray(String[]::new);
 
                         return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, combinedHeaders);
@@ -479,14 +482,14 @@ public class PostgresProjects implements Projects {
                                 if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
                                     var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();                              
                                     plotHeaders.forEach(head ->
-                                        plotSummary.addProperty("plot_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
+                                        plotSummary.addProperty("pl_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
                                     );
                                 }
                                 
                                 if (valueOrBlank(rsDump.getString("ext_sample_data")) != ""){
                                     var ext_sample_data = parseJson(rsDump.getString("ext_sample_data")).getAsJsonObject();
-                                    sampleHeaders.forEach(head ->
-                                        plotSummary.addProperty("sample_" + head, getOrEmptyString(ext_sample_data, head).getAsString())
+                                    sampleHeaders.forEach(head -> 
+                                        plotSummary.addProperty("smpl_" + head, getOrEmptyString(ext_sample_data, head).getAsString())
                                     );
                                 }
                                 sampleSummaries.add(plotSummary);
@@ -497,9 +500,9 @@ public class PostgresProjects implements Projects {
                             imageryHeaders.stream(),
                             Stream.concat(
                                     plotHeaders.stream()
-                                    .map(head -> !head.toString().contains("plot_") ? "plot_" + head : head),
+                                    .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head),
                                     sampleHeaders.stream()
-                                    .map(head -> !head.toString().contains("sample_") ? "sample_" + head : head)
+                                    .map(head -> !head.toString().contains("smpl_") ? "smpl_" + head : head)
                                 )
                         ).toArray(String[]::new);
                         return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, combinedHeaders);
