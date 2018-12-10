@@ -192,13 +192,7 @@ class ProjectDashboard extends React.Component {
 
     updateUnmanagedComponents(projectId) {
         if (this.state.details != null) {
-            // Enable the input fields that are connected to the radio buttons if their values are not null
-            if (this.state.details.plotDistribution == "gridded") {
-                utils.enable_element("plot-spacing");
-            }
-            if (this.state.details.sampleDistribution == "gridded") {
-                utils.enable_element("sample-resolution");
-            }
+
 
             if (this.state.imageryList && this.state.imageryList.length > 0) {
                 var detailsNew = this.state.details;

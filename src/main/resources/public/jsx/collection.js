@@ -344,8 +344,8 @@ class Collection extends React.Component {
         mercator.updateLayerWmsParams(this.state.mapConfig,
             "DigitalGlobeWMSImagery",
             {
-                COVERAGE_CQL_FILTER: "(acquisition_date>='" + imageryYear + "-01-01')"
-                    + "AND(acquisition_date<='" + imageryYear + "-12-31')",
+                COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
+                    + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
                 FEATUREPROFILE: stackingProfile
             });
     }

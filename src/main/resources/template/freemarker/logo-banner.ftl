@@ -11,8 +11,8 @@
     </div>
     <div class="row mb-4">
         <div class="col-sm-3 text-center my-auto">
-            <a href="http://adpc.net" target="_blank">
-                <img class="img-fluid" id="adpc" src="${root}/img/adpc.jpg">
+            <a href="http://openforis.org" target="_blank">
+                <img class="img-fluid" id="openforis" src="${root}/img/openforis-logo.png">
             </a>
         </div>
         <div class="col-sm-3 text-center my-auto">
