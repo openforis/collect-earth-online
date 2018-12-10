@@ -23,11 +23,11 @@ def insert_projects():
 
         for project in projectArr:
             try:
-                if project['id']>0:
+                if project['id']==460:
                     print("project with project id"+str(project['id']))
                     merge_files(project, project['id'], conn)
-            except(Exception, psycopg2.DatabaseError) as error:
-                print("project for loop: "+ str(error))
+                except(Exception, psycopg2.DatabaseError) as error:
+                    print("project for loop: "+ str(error))
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print("project outer: "+ str(error))
@@ -115,14 +115,17 @@ def merge_files(project, project_id, conn):
                 conn.commit()
 
                 #rename cols
-                colList = csvColRenameList(csv_headers)
-                if colList[0][0].upper() != colList[0][1].upper():
-                    cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[0][0],colList[0][1]])
-                    conn.commit()
+                try:
+                    colList = csvColRenameList(csv_headers)
+                    if colList[0][0].upper() != colList[0][1].upper():
+                        cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[0][0],colList[0][1]])
+                        conn.commit()
 
-                if colList[1][0].upper() != colList[1][1].upper():
-                    cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[1][0], colList[1][1]])
-                    conn.commit()
+                    if colList[1][0].upper() != colList[1][1].upper():
+                        cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[1][0], colList[1][1]])
+                        conn.commit()
+                except:
+                    pass
 
                 # if column plotid does exist, it is not the same as the newer plotId field
                 try:
@@ -155,15 +158,17 @@ def merge_files(project, project_id, conn):
                 conn.commit()
 
                 #rename cols
-                colList = csvColRenameList(csv_headers)
-                if colList[0][0].upper() != colList[0][1].upper():
-                    cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[0][0],colList[0][1]])
-                    conn.commit()
+                try:
+                    colList = csvColRenameList(csv_headers)
+                    if colList[0][0].upper() != colList[0][1].upper():
+                        cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[0][0],colList[0][1]])
+                        conn.commit()
 
-                if colList[1][0].upper() != colList[1][1].upper():
-                    cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[1][0], colList[1][1]])
-                    conn.commit()
-
+                    if colList[1][0].upper() != colList[1][1].upper():
+                        cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [plots_table, colList[1][0], colList[1][1]])
+                        conn.commit()
+                except:
+                    pass
             else:
                 print (csv_headers)
         ### Samples
@@ -186,19 +191,27 @@ def merge_files(project, project_id, conn):
                 cur.execute("SELECT * FROM add_index_col(%s)" , [samples_table])
 
                 #rename cols
-                colList = csvColRenameList(csv_headers)
-                if colList[0][0].upper() != colList[0][1].upper():
-                    cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [samples_table, colList[0][0],colList[0][1]])
-                    conn.commit()
+                try:
+                    colList = csvColRenameList(csv_headers)
+                    if colList[0][0].upper() != colList[0][1].upper():
+                        cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [samples_table, colList[0][0],colList[0][1]])
+                        conn.commit()
 
-                if colList[1][0].upper() != colList[1][1].upper():
-                    cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [samples_table, colList[1][0], colList[1][1]])
-                    conn.commit()
+                    if colList[1][0].upper() != colList[1][1].upper():
+                        cur.execute("SELECT * FROM rename_col(%s,%s,%s)" , [samples_table, colList[1][0], colList[1][1]])
+                        conn.commit()
+                except:
+                    pass
 
 
         # add table names to project
         cur.execute("SELECT * FROM update_project_tables(%s,%s,%s)" , [project_id, plots_table, samples_table])
         conn.commit()
+
+        if need_to_update >= 2:
+            # clean up project tables
+            cur.execute("SELECT * FROM cleanup_project_tables(%s,%s)" , [project_id, project['plotSize']])
+            conn.commit()
 
         if need_to_update == 3:
             # merge files into plots
@@ -208,15 +221,6 @@ def merge_files(project, project_id, conn):
             # merge files into plots
             cur.execute("SELECT * FROM merge_plots_only(%s)" , [project_id])
             conn.commit()
-
-        if need_to_update >= 2:
-            # clean up project tables
-            cur.execute("SELECT * FROM cleanup_project_tables(%s,%s)" , [project_id, project['plotSize']])
-            conn.commit()
-                
-
-
-        
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("merge file error: "+ str(error))
