@@ -192,16 +192,9 @@ class ProjectDashboard extends React.Component {
 
     updateUnmanagedComponents(projectId) {
         if (this.state.details != null) {
-            // Enable the input fields that are connected to the radio buttons if their values are not null
-            if (this.state.details.plotDistribution == "gridded") {
-                utils.enable_element("plot-spacing");
-            }
-            if (this.state.details.sampleDistribution == "gridded") {
-                utils.enable_element("sample-resolution");
-            }
+
 
             if (this.state.imageryList && this.state.imageryList.length > 0) {
-                console.log("imagery"+this.state.imageryList[0].title);
                 var detailsNew = this.state.details;
                 detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
