@@ -23,11 +23,11 @@ def insert_projects():
 
         for project in projectArr:
             try:
-                if project['id']==460:
+                if project['id']>0:
                     print("project with project id"+str(project['id']))
                     merge_files(project, project['id'], conn)
-                except(Exception, psycopg2.DatabaseError) as error:
-                    print("project for loop: "+ str(error))
+            except(Exception, psycopg2.DatabaseError) as error:
+                print("project for loop: "+ str(error))
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print("project outer: "+ str(error))
