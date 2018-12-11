@@ -137,9 +137,11 @@ public class ProjectUtils {
                     var labelStream = Arrays.stream(labels);
                     var distribution = plotSummary.get("distribution").getAsJsonObject();
                     return Stream.concat(
-                            fieldStream.map(field -> plotSummary.has(field) && plotSummary.get(field).isJsonNull()
-                                    ? ""
-                                    : plotSummary.get(field).getAsString()),
+                            fieldStream.map(field -> plotSummary.has(field) ?
+                                    plotSummary.get(field).isJsonNull()
+                                        ? ""
+                                        : plotSummary.get(field).getAsString()
+                                    : ""),
                             labelStream.map(label -> distribution.has(label)
                                     ? distribution.getAsJsonObject().get(label).isJsonPrimitive() 
                                         ? distribution.get(label).getAsString()
@@ -361,7 +363,7 @@ public class ProjectUtils {
     }
 
     public static JsonElement getOrZero(JsonObject obj, String field) {
-        return obj.get(field).isJsonNull() || obj.get(field) == null ? new JsonPrimitive(0) : obj.get(field);
+        return !obj.has(field) || obj.get(field).isJsonNull() || obj.get(field) == null ? new JsonPrimitive(0) : obj.get(field);
     }
 
     public static JsonElement getOrEmptyString(JsonObject obj, String field) {
