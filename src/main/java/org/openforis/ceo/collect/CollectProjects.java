@@ -254,6 +254,14 @@ public class CollectProjects implements Projects {
         }
     }
 
+    public String getNextUnassignedPlot(Request req, Response res) {
+        return "";//FIXME
+    }
+
+    public String getPrevUnassignedPlot(Request req, Response res) {
+        return "";//FIXME
+    }
+
     // Call Collect's REST API to QUERY the database.
     //
     // Read in the project and plot data for a project with

@@ -328,6 +328,10 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    public String getNextUnassignedPlot(Request req, Response res) {
+        return "";//FIXME
+    }
+
     private static String valueOrBlank(String input) {
 
         return input == null || input.equals("null") ? "" : input;
@@ -350,13 +354,17 @@ public class PostgresProjects implements Projects {
         return plotHeaders;
     }
 
+    public String getPrevUnassignedPlot(Request req, Response res) {
+        return "";//FIXME
+    }
+
     private static ArrayList<String> getSampleHeaders(Connection conn, Integer projectId) {
-        var sampleHeaders  = new ArrayList<String>();
-        try (var pstmt = conn.prepareStatement("SELECT * FROM get_sample_headers(?)")){
+        var sampleHeaders = new ArrayList<String>();
+        try (var pstmt = conn.prepareStatement("SELECT * FROM get_sample_headers(?)")) {
             pstmt.setInt(1, projectId);
-            try (var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    if (!List.of("GID", "GEOM", "LAT", "LON", "SAMPLE_GEOM").contains(rs.getString("column_names").toUpperCase())){
+                    if (!List.of("GID", "GEOM", "LAT", "LON", "SAMPLE_GEOM").contains(rs.getString("column_names").toUpperCase())) {
                         sampleHeaders.add(rs.getString("column_names"));
                     }
                 }

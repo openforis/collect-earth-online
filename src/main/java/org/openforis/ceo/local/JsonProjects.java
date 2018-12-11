@@ -42,11 +42,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 import javax.servlet.MultipartConfigElement;
@@ -281,6 +277,43 @@ public class JsonProjects implements Projects {
         }
     }
 
+    public String getNextUnassignedPlot(Request req, Response res) {
+        var projectId = req.params(":projid");
+        var currPlotId = req.params(":id");
+        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        var unanalyzedPlots = filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
+        var matchingPlotId = toStream(unanalyzedPlots)
+                .map(pl -> pl.has("plotId") ? pl.get("plotId").getAsInt() : pl.get("id").getAsInt())
+                .sorted()
+                .filter(plotId -> plotId > Integer.parseInt(currPlotId))
+                .findFirst();
+        if (matchingPlotId.isPresent()) {
+            var nextPlotId = matchingPlotId.get();
+            var nextPlot = findInJsonArray(unanalyzedPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == nextPlotId : plot.get("id").getAsInt() == nextPlotId);
+            return nextPlot.get().toString();
+        } else {
+            return "done";
+        }
+    }
+
+    public String getPrevUnassignedPlot(Request req, Response res) {
+        var projectId = req.params(":projid");
+        var currPlotId = req.params(":id");
+        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        var unanalyzedPlots = filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
+        var matchingPlotId = toStream(unanalyzedPlots)
+                .map(pl -> pl.has("plotId") ? pl.get("plotId").getAsInt() : pl.get("id").getAsInt())
+                .sorted()
+                .filter(plotId -> plotId < Integer.parseInt(currPlotId))
+                .reduce((first, second) -> second);
+        if (matchingPlotId.isPresent()) {
+            var prevPlotId = matchingPlotId.get();
+            var prevPlot = findInJsonArray(unanalyzedPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == prevPlotId : plot.get("id").getAsInt() == prevPlotId);
+            return prevPlot.get().toString();
+        } else {
+            return "done";
+        }
+    }
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         var projectId = req.params(":id");
