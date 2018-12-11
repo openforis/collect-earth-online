@@ -318,6 +318,7 @@ public class JsonProjects implements Projects {
         } else {
             return "done";
         }
+    }
 
     private static List<String> getCsvHeaders(String filename) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {

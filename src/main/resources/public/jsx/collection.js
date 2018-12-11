@@ -183,26 +183,26 @@ class Collection extends React.Component {
     showProjectMap() {
         let mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
         mercator.addVectorLayer(mapConfig,
-            "currentAOI",
-            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-            ceoMapStyles.yellowPolygon);
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+                                ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({mapConfig: mapConfig});
     }
 
     showProjectPlots() {
         mercator.addPlotLayer(this.state.mapConfig,
-            this.state.plotList,
-            feature => {
-                this.setState({
-                    navButtonsShown: 2,
-                    prevPlotButtonDisabled: false,
-                    newPlotButtonDisabled: false,
-                    flagPlotButtonDisabled: false,
-                    saveValuesButtonDisabled: true
-                });
-                this.getPlotData(feature.get("features")[0].get("plotId"));
-            });
+                              this.state.plotList,
+                              feature => {
+                                  this.setState({
+                                      navButtonsShown: 2,
+                                      prevPlotButtonDisabled: false,
+                                      newPlotButtonDisabled: false,
+                                      flagPlotButtonDisabled: false,
+                                      saveValuesButtonDisabled: true
+                                  });
+                                  this.getPlotData(feature.get("features")[0].get("plotId"));
+                              });
         this.setState({projectPlotsShown: true});
     }
 
@@ -332,23 +332,23 @@ class Collection extends React.Component {
 
     updateDGWMSLayer(imageryYear, stackingProfile) {
         mercator.updateLayerWmsParams(this.state.mapConfig,
-            "DigitalGlobeWMSImagery",
-            {
-                COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
-                    + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
-                FEATUREPROFILE: stackingProfile
-            });
+                                      "DigitalGlobeWMSImagery",
+                                      {
+                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
+                                              + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
+                                          FEATUREPROFILE: stackingProfile
+                                      });
     }
 
     updatePlanetLayer(imageryMonth, imageryYear) {
         mercator.updateLayerSource(this.state.mapConfig,
-            "PlanetGlobalMosaic",
-            sourceConfig => {
-                sourceConfig.month = imageryMonth;
-                sourceConfig.year = imageryYear;
-                return sourceConfig;
-            },
-            this);
+                                   "PlanetGlobalMosaic",
+                                   sourceConfig => {
+                                       sourceConfig.month = imageryMonth;
+                                       sourceConfig.year = imageryYear;
+                                       return sourceConfig;
+                                   },
+                                   this);
     }
 
     getPlotData(plotId) {
@@ -426,7 +426,6 @@ class Collection extends React.Component {
                             userImages: {},
                             collectionStart: Date.now(),
                             prevPlotButtonDisabled: false,
-                            flagPlotButtonDisabled: false,
                             saveValuesButtonDisabled: true
                         });
                     }
@@ -458,6 +457,7 @@ class Collection extends React.Component {
                         userSamples: {},
                         userImages: {},
                         collectionStart: Date.now(),
+                        newPlotButtonDisabled: false,
                         saveValuesButtonDisabled: true
                     });
                     this.showProjectPlot(newPlot);
@@ -472,38 +472,38 @@ class Collection extends React.Component {
         mercator.removeLayerByTitle(this.state.mapConfig, "currentPlot");
         mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
         mercator.addVectorLayer(this.state.mapConfig,
-            "currentPlot",
-            mercator.geometryToVectorSource(
-                plot.geom
-                    ? mercator.parseGeoJson(plot.geom, true)
-                    : mercator.getPlotPolygon(plot.center,
-                    this.state.currentProject.plotSize,
-                    this.state.currentProject.plotShape)
-            ),
-            ceoMapStyles.yellowPolygon);
+                                "currentPlot",
+                                mercator.geometryToVectorSource(
+                                    plot.geom
+                                        ? mercator.parseGeoJson(plot.geom, true)
+                                        : mercator.getPlotPolygon(plot.center,
+                                                                  this.state.currentProject.plotSize,
+                                                                  this.state.currentProject.plotShape)
+                                ),
+                                ceoMapStyles.yellowPolygon);
         mercator.addVectorLayer(this.state.mapConfig,
-            "currentSamples",
-            mercator.samplesToVectorSource(plot.samples),
-            plot.samples[0].geom
-                ? ceoMapStyles.blackPolygon
-                : ceoMapStyles.blackCircle);
+                                "currentSamples",
+                                mercator.samplesToVectorSource(plot.samples),
+                                plot.samples[0].geom
+                                    ? ceoMapStyles.blackPolygon
+                                    : ceoMapStyles.blackCircle);
         mercator.enableSelection(this.state.mapConfig, "currentSamples");
         mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
     }
 
     showGeoDash(plot) {
         const plotRadius = this.state.currentProject.plotSize
-            ? this.state.currentProject.plotSize / 2.0
-            : mercator.getViewRadius(this.state.mapConfig);
+                           ? this.state.currentProject.plotSize / 2.0
+                           : mercator.getViewRadius(this.state.mapConfig);
         window.open(this.props.documentRoot + "/geo-dash?editable=false&"
-            + encodeURIComponent("title=" + this.state.currentProject.name
-                + "&pid=" + this.props.projectId
-                + "&plotid=" + plot.id
-                + "&plotshape=" + (plot.geom ? "polygon" : this.state.currentProject.plotShape)
-                + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
-                + "]&daterange=&bcenter=" + plot.center
-                + "&bradius=" + plotRadius),
-            "_geo-dash");
+                    + encodeURIComponent("title=" + this.state.currentProject.name
+                                         + "&pid=" + this.props.projectId
+                                         + "&plotid=" + plot.id
+                                         + "&plotshape=" + (plot.geom ? "polygon" : this.state.currentProject.plotShape)
+                                         + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
+                                         + "]&daterange=&bcenter=" + plot.center
+                                         + "&bradius=" + plotRadius),
+                    "_geo-dash");
     }
 
     goToFirstPlot() {
@@ -605,17 +605,17 @@ class Collection extends React.Component {
         selectedAnswers[questionText] = answerText;
         this.setState({selectedAnswers: selectedAnswers});
     }
- 
+
     getImageryAttributes () {
         if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
             return {imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG};
         } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
             return {imageryMonthPlanet: this.state.imageryMonthPlanet, imageryYearPlanet: this.state.imageryYearPlanet};
         } else {
-            return {}
+            return {};
         }
     }
-    
+
     setCurrentValue(questionText, answerId, answerText, answerColor) {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
@@ -897,8 +897,9 @@ function DigitalGlobeMenus(props) {
 class PlanetMenus extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {value:"2018"}
+        this.state = {value: "2018"};
     }
+
     render() {
         if (this.props.baseMapSource == "PlanetGlobalMosaic") {
             return (
@@ -948,7 +949,7 @@ function SurveyQuestionTree(props) {
     const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
     return (
         <fieldset className={"mb-1 justify-content-center text-center"
-        + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
+                  + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
             <button id={props.surveyNode.question + "_" + props.surveyNode.id}
                     className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                     onClick={() => props.hideShowAnswers(props.surveyNode.id)}
@@ -956,7 +957,7 @@ function SurveyQuestionTree(props) {
                 {props.surveyNode.question}
             </button>
             <ul className={"samplevalue justify-content-center"
-            + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
+                + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
                 {
                     props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
                                                                              question={props.surveyNode.question}
@@ -997,8 +998,8 @@ function SurveyAnswer(props) {
                     id={props.answer + "_" + props.id}
                     name={props.answer + "_" + props.id}
                     style={{boxShadow: (props.selectedAnswers[props.question] == props.answer)
-                            ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                            : "initial"}}
+                        ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                        : "initial"}}
                     onClick={() => {
                         if (props.setCurrentValue(props.question, props.id, props.answer, props.color)) {
                             props.hideQuestions(props.childNodes);
