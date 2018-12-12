@@ -60,6 +60,20 @@ class BasicLayout extends React.PureComponent{
         fetch(theURL + "/id/" + pid,)
             .then(response => response.json())
             .then(function(response){ref.setState({ dashboardID: response.dashboardID});  return response})
+            .then(function(response){
+                let theWidgets = response.widgets;
+                if(Array.isArray(theWidgets))
+                {
+                    return response;
+                }
+                else if(Array.isArray(eval(theWidgets))){
+                    response.widgets = eval(theWidgets);
+                }
+                else{
+                    response.widgets = [];
+                }
+                return response;
+            })
             .then(data => data.widgets.map(function(widget){
                 if(widget.layout) {
                     if (widget.layout.y == null) {
