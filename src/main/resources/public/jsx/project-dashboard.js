@@ -7,27 +7,40 @@ class ProjectDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            details: null,
-            stats: null,
-            imageryList: null,
+            details: {},
+            stats: {},
+            imageryList: [],
             mapConfig: null,
-            plotList: null,
+            plotList: [],
             lonMin: "",
             latMin: "",
             lonMax: "",
             latMax: "",
+            dateCreated: null,
+            datePublished: null,
+            dateClosed: null,
+            dateArchived: null,
+            isMapShown: false
         };
     };
 
     componentDidMount() {
-        if (this.state.details == null) {
-            this.getProjectById(this.props.projectId);
+        this.getProjectById(this.props.projectId);
+        this.getProjectStats(this.props.projectId);
+        this.getImageryList(this.props.institutionId);
+        this.getPlotList(this.props.projectId, 100);//100 is the number of plots you want to see on the map
+    }
+
+    componentDidUpdate(){
+        if (this.state.imageryList.length > 0 && this.state.details.id && !this.state.isMapShown) {
+            let detailsNew = this.state.details;
+            detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
+            this.setState({details: detailsNew,
+                           isMapShown: true});
+            this.showProjectMap();
         }
-        if (this.state.stats == null) {
-            this.getProjectStats(this.props.projectId);
-        }
-        if (this.state.imageryList == null) {
-            this.getImageryList(this.props.institutionId);
+        if (this.state.isMapShown && this.state.plotList.length > 0) {
+            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.details.plotShape);
         }
     }
 
@@ -46,43 +59,40 @@ class ProjectDashboard extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.props.documentRoot + "/home";
                 } else {
-                    var detailsNew = data;
-                    var sv = detailsNew.sampleValues;
-                    var newSV = [];
-                    var tempSQ = {id: -1, question: "", answers: [], parent_question: -1, parent_answer: -1};
-                    if (sv.length > 0) {
-                        sv.map((sq) => {
-                                if (sq.name) {
-                                    tempSQ.id = sq.id;
-                                    tempSQ.question = sq.name;
-                                    sq.values.map((sa) => {
-                                        if (sa.name) {
-                                            if (sa.id > 0) {
-                                                tempSQ.answers.push({id: sa.id, answer: sa.name, color: sa.color});
-                                            }
-                                        }
-                                        else {
-                                            tempSQ.answers.push(sa);
-                                        }
-
-                                    });
-                                    if (tempSQ.id > 0) {
-                                        newSV.push(tempSQ);
-                                    }
-                                }
-                                else {
-                                    newSV.push(sq);
-                                }
-                            }
-                        );
-                    }
-                    detailsNew.sampleValues = newSV;
-                    this.setState({details: detailsNew});
-                    this.updateUnmanagedComponents(this.props.projectId);
-
+                    const surveyQuestions = this.convertSampleValuesToSurveyQuestions(data.sampleValues);
+                    data.sampleValues = surveyQuestions;
+                    this.setState({details: data});
                 }
             });
     }
+
+    convertSampleValuesToSurveyQuestions(sampleValues) {
+        return sampleValues.map(sampleValue => {
+            if (sampleValue.name && sampleValue.values) {
+                const surveyQuestionAnswers = sampleValue.values.map(value => {
+                    if (value.name) {
+                        return {
+                            id: value.id,
+                            answer: value.name,
+                            color: value.color
+                        };
+                    } else {
+                        return value;
+                    }
+                });
+                return {
+                    id: sampleValue.id,
+                    question: sampleValue.name,
+                    answers: surveyQuestionAnswers,
+                    parent_question: -1,
+                    parent_answer: -1
+                };
+            } else {
+                return sampleValue;
+            }
+        });
+    }
+
 
     getProjectStats(projectId) {
         fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
@@ -126,84 +136,21 @@ class ProjectDashboard extends React.Component {
             })
             .then(data => {
                 this.setState({plotList: data});
-                this.showPlotCenters(projectId, maxPlots);
             });
     }
 
-    showPlotCenters(projectId, maxPlots) {
-        if (this.state.plotList == null) {
-            // Load the current project plots
-            this.getPlotList(projectId, maxPlots);
-        } else {
-            // Draw the plot shapes on the map
-            mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
-            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.details.plotShape);
-        }
-    }
-
-    showProjectMap(projectId) {
+    showProjectMap() {
         // Initialize the basemap
-        if (this.state.mapConfig == null) {
-            this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
-        }
-
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
-        if (this.state.details.id == 0) {
-            // Enable dragbox interaction if we are creating a new project
-            var displayDragBoxBounds = function (dragBox) {
-                var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-                // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
-                document.getElementById("lon-min").value = extent[0];
-                document.getElementById("lat-min").value = extent[1];
-                document.getElementById("lon-max").value = extent[2];
-                document.getElementById("lat-max").value = extent[3];
-            };
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-            mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
-            mercator.disableDragBoxDraw(this.state.mapConfig);
-            mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
-        } else {
-            // Extract bounding box coordinates from the project boundary and show on the map
-            var boundaryExtent = mercator.parseGeoJson(this.state.details.boundary, false).getExtent();
-            this.setState({lonMin: boundaryExtent[0]});
-            this.setState({latMin: boundaryExtent[1]});
-            this.setState({lonMax: boundaryExtent[2]});
-            this.setState({latMax: boundaryExtent[3]});
-
-            // Display a bounding box with the project's AOI on the map and zoom to it
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-            mercator.addVectorLayer(this.state.mapConfig,
-                "currentAOI",
-                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
-                ceoMapStyles.yellowPolygon);
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-
-            // Force reloading of the plotList
-            this.setState({plotList: null});
-
-            // Show the plot centers on the map (but constrain to <= 100 points)
-            this.showPlotCenters(projectId, 100);
-        }
-    }
-
-    updateUnmanagedComponents(projectId) {
-        if (this.state.details != null) {
-
-
-            if (this.state.imageryList && this.state.imageryList.length > 0) {
-                var detailsNew = this.state.details;
-                detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
-                // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-                this.setState({details: detailsNew},
-                    this.showProjectMap(projectId)
-                );
-                // Draw a map with the project AOI and a sampling of its plots
-            }
-        }
+        let mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
+        mercator.setVisibleLayer(mapConfig, this.state.details.baseMapSource);
+        // Display a bounding box with the project's AOI on the map and zoom to it
+        mercator.addVectorLayer(mapConfig,
+            "currentAOI",
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
+            ceoMapStyles.yellowPolygon);
+        mercator.zoomMapToLayer(mapConfig, "currentAOI");
+        // Show the plot centers on the map (but constrain to <= 100 points)
+        this.setState({mapConfig: mapConfig});
     }
 
     render() {
@@ -229,55 +176,47 @@ class ProjectDashboard extends React.Component {
 }
 
 function ProjectStats(props) {
-    var project = props.project;
-    if (project.stats != null) {
-        return (
-            <div id="project-stats" className="header">
-                <div className="col">
-
-                    <h2 className="header px-0">Project Stats</h2>
-                    <table className="table table-sm">
-                        <tbody>
-                        <tr>
-                            <td>Members</td>
-                            <td>{project.stats.members}</td>
-                            <td>Contributors</td>
-                            <td>{project.stats.contributors}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Plots</td>
-                            <td>{project.details.numPlots || 0}</td>
-                            <td>Date Created</td>
-                            <td>{project.dateCreated}</td>
-                        </tr>
-                        <tr>
-                            <td>Flagged Plots</td>
-                            <td>{project.stats.flaggedPlots}</td>
-                            <td>Date Published</td>
-                            <td>{project.datePublished}</td>
-                        </tr>
-                        <tr>
-                            <td>Analyzed Plots</td>
-                            <td>{project.stats.analyzedPlots}</td>
-                            <td>Date Closed</td>
-                            <td>{project.dateClosed}</td>
-                        </tr>
-                        <tr>
-                            <td>Unanalyzed Plots</td>
-                            <td>{project.stats.unanalyzedPlots}</td>
-                            <td>Date Archived</td>
-                            <td>{project.dateArchived}</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
+    return (
+        <div id="project-stats" className="header">
+            <div className="col">
+                <h2 className="header px-0">Project Stats</h2>
+                <table className="table table-sm">
+                    <tbody>
+                    <tr>
+                        <td>Members</td>
+                        <td>{props.project.stats.members}</td>
+                        <td>Contributors</td>
+                        <td>{props.project.stats.contributors}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Plots</td>
+                        <td>{props.project.details.numPlots}</td>
+                        <td>Date Created</td>
+                        <td>{props.project.dateCreated}</td>
+                    </tr>
+                    <tr>
+                        <td>Flagged Plots</td>
+                        <td>{props.project.stats.flaggedPlots}</td>
+                        <td>Date Published</td>
+                        <td>{props.project.datePublished}</td>
+                    </tr>
+                    <tr>
+                        <td>Analyzed Plots</td>
+                        <td>{props.project.stats.analyzedPlots}</td>
+                        <td>Date Closed</td>
+                        <td>{props.project.dateClosed}</td>
+                    </tr>
+                    <tr>
+                        <td>Unanalyzed Plots</td>
+                        <td>{props.project.stats.unanalyzedPlots}</td>
+                        <td>Date Archived</td>
+                        <td>{props.project.dateArchived}</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-
-        );
-    }
-    else {
-        return (<span></span>);
-    }
+        </div>
+    );
 }
 
 function ProjectAOI(props) {

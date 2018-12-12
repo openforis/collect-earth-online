@@ -21,7 +21,8 @@ class Collection extends React.Component {
             imageryMonthNamePlanet: "March",
             projectPlotsShown: false,
             navButtonsShown: 1,
-            prevPlotButtonDisabled: false,
+            gotoFirstPlotButtonDisabled:true,
+            prevPlotButtonDisabled: true,
             newPlotButtonDisabled: false,
             flagPlotButtonDisabled: false,
             saveValuesButtonDisabled: true,
@@ -39,6 +40,7 @@ class Collection extends React.Component {
         this.setImageryYearPlanet = this.setImageryYearPlanet.bind(this);
         this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
         this.getPlotData = this.getPlotData.bind(this);
+        this.goToFirstPlot = this.goToFirstPlot.bind(this);
         this.prevPlot = this.prevPlot.bind(this);
         this.nextPlot = this.nextPlot.bind(this);
         this.flagPlot = this.flagPlot.bind(this);
@@ -47,23 +49,18 @@ class Collection extends React.Component {
         this.showQuestions = this.showQuestions.bind(this);
         this.hideQuestions = this.hideQuestions.bind(this);
         this.highlightAnswer = this.highlightAnswer.bind(this);
-        this.getImageryAttributes  = this.getImageryAttributes.bind(this);
+        this.getImageryAttributes = this.getImageryAttributes.bind(this);
         this.setCurrentValue = this.setCurrentValue.bind(this);
         this.redirectToHomePage = this.redirectToHomePage.bind(this);
-        this.findPrevPlot = this.findPrevPlot.bind(this)
-        this.findNextPlot=this.findNextPlot.bind(this);
     }
 
     componentDidMount() {
-        utils.show_element("spinner");
-
         this.getProjectById();
         this.getProjectStats();
         this.getProjectPlots();
     }
 
     componentDidUpdate() {
-
         if (this.state.currentProject.institution && this.state.imageryList.length == 0) {
             this.getImageryList(this.state.currentProject.institution);
         }
@@ -73,13 +70,8 @@ class Collection extends React.Component {
         if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.projectPlotsShown == false) {
             this.showProjectPlots();
         }
-        if(this.state.projectPlotsShown == true){
-            console.log(this.state.plotList);
-           utils.enable_element("go-to-first-plot-button");
-           utils.hide_element("spinner");
-        }
-        else{
-            utils.disable_element("go-to-first-plot-button");
+        if (this.state.projectPlotsShown == true && this.state.gotoFirstPlotButtonDisabled == true) {
+            this.setState({gotoFirstPlotButtonDisabled: false});
         }
         if (this.state.mapConfig && this.state.currentImagery == null) {
             this.updateMapImagery(this.state.currentProject.baseMapSource);
@@ -191,29 +183,27 @@ class Collection extends React.Component {
     showProjectMap() {
         let mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
         mercator.addVectorLayer(mapConfig,
-            "currentAOI",
-            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-            ceoMapStyles.yellowPolygon);
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+                                ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({mapConfig: mapConfig});
     }
 
     showProjectPlots() {
-
         mercator.addPlotLayer(this.state.mapConfig,
-            this.state.plotList,
-            feature => {
-                this.setState({
-                    navButtonsShown: 2,
-                    prevPlotButtonDisabled: false,
-                    newPlotButtonDisabled: false,
-                    flagPlotButtonDisabled: false,
-                    saveValuesButtonDisabled: true
-                });
-                this.getPlotData(feature.get("features")[0].get("plotId"));
-            });
+                              this.state.plotList,
+                              feature => {
+                                  this.setState({
+                                      navButtonsShown: 2,
+                                      prevPlotButtonDisabled: false,
+                                      newPlotButtonDisabled: false,
+                                      flagPlotButtonDisabled: false,
+                                      saveValuesButtonDisabled: true
+                                  });
+                                  this.getPlotData(feature.get("features")[0].get("plotId"));
+                              });
         this.setState({projectPlotsShown: true});
-
     }
 
     setBaseMapSource(event) {
@@ -265,44 +255,44 @@ class Collection extends React.Component {
         const slider = event.target;
         let newImageryMonthPlanet = "";
 
-        let newImageryMonth=slider.value;
+        let newImageryMonth = slider.value;
 
-        if(parseInt(newImageryMonth)==1){
-            newImageryMonthPlanet="January";
+        if (parseInt(newImageryMonth) == 1) {
+            newImageryMonthPlanet = "January";
 
         }
-        if(parseInt(newImageryMonth)==2){
-            newImageryMonthPlanet="February";
+        if (parseInt(newImageryMonth) == 2) {
+            newImageryMonthPlanet = "February";
         }
-        else if(parseInt(newImageryMonth)==3){
-            newImageryMonthPlanet="March";
+        else if (parseInt(newImageryMonth) == 3) {
+            newImageryMonthPlanet = "March";
         }
-        else if(parseInt(newImageryMonth)==4){
-            newImageryMonthPlanet="April";
+        else if (parseInt(newImageryMonth) == 4) {
+            newImageryMonthPlanet = "April";
         }
-        else if(parseInt(newImageryMonth)==5){
-            newImageryMonthPlanet="May";
+        else if (parseInt(newImageryMonth) == 5) {
+            newImageryMonthPlanet = "May";
         }
-        else if(parseInt(newImageryMonth)==6){
-            newImageryMonthPlanet="June";
+        else if (parseInt(newImageryMonth) == 6) {
+            newImageryMonthPlanet = "June";
         }
-        else if(parseInt(newImageryMonth)==7){
-            newImageryMonthPlanet="July";
+        else if (parseInt(newImageryMonth) == 7) {
+            newImageryMonthPlanet = "July";
         }
-        else if(parseInt(newImageryMonth)==8){
-            newImageryMonthPlanet="August";
+        else if (parseInt(newImageryMonth) == 8) {
+            newImageryMonthPlanet = "August";
         }
-        else if(parseInt(newImageryMonth)==9){
-            newImageryMonthPlanet="September";
+        else if (parseInt(newImageryMonth) == 9) {
+            newImageryMonthPlanet = "September";
         }
-        else if(parseInt(newImageryMonth)==10){
-            newImageryMonthPlanet="October";
+        else if (parseInt(newImageryMonth) == 10) {
+            newImageryMonthPlanet = "October";
         }
-        else if(parseInt(newImageryMonth)==11){
-            newImageryMonthPlanet="November";
+        else if (parseInt(newImageryMonth) == 11) {
+            newImageryMonthPlanet = "November";
         }
-        else if(parseInt(newImageryMonth)==12){
-            newImageryMonthPlanet="December";
+        else if (parseInt(newImageryMonth) == 12) {
+            newImageryMonthPlanet = "December";
         }
 
 
@@ -310,11 +300,11 @@ class Collection extends React.Component {
         const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
         this.setState({
             imageryMonthPlanet: newImageryMonth,
-            imageryMonthNamePlanet:newImageryMonthPlanet,
+            imageryMonthNamePlanet: newImageryMonthPlanet,
             imageryAttribution: newImageryAttribution
         });
-        if(parseInt(slider.value)<10){
-            newImageryMonth="0"+slider.value;
+        if (parseInt(slider.value) < 10) {
+            newImageryMonth = "0" + slider.value;
         }
         this.updatePlanetLayer(newImageryMonth, this.state.imageryYearPlanet);
     }
@@ -342,28 +332,27 @@ class Collection extends React.Component {
 
     updateDGWMSLayer(imageryYear, stackingProfile) {
         mercator.updateLayerWmsParams(this.state.mapConfig,
-            "DigitalGlobeWMSImagery",
-            {
-                COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
-                    + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
-                FEATUREPROFILE: stackingProfile
-            });
+                                      "DigitalGlobeWMSImagery",
+                                      {
+                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
+                                              + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
+                                          FEATUREPROFILE: stackingProfile
+                                      });
     }
 
     updatePlanetLayer(imageryMonth, imageryYear) {
         mercator.updateLayerSource(this.state.mapConfig,
-            "PlanetGlobalMosaic",
-            sourceConfig => {
-                sourceConfig.month = imageryMonth;
-                sourceConfig.year = imageryYear;
-                return sourceConfig;
-            },
-            this);
+                                   "PlanetGlobalMosaic",
+                                   sourceConfig => {
+                                       sourceConfig.month = imageryMonth;
+                                       sourceConfig.year = imageryYear;
+                                       return sourceConfig;
+                                   },
+                                   this);
     }
 
     getPlotData(plotId) {
-        const url =  this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId+ "/" + plotId;
-        fetch(url)
+        fetch(this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
             .then(response => {
                 if (response.ok) {
                     return response.text();
@@ -375,23 +364,7 @@ class Collection extends React.Component {
             })
             .then(data => {
                 if (data == "done") {
-                    this.setState({
-                        currentPlot: null,
-                        userSamples: {},
-                        userImages: {}
-                    });
-                    const msg = (plotId == "random")
-                        ? "All plots have been analyzed for this project."
-                        : "This plot has already been analyzed.";
-                    alert(msg);
-                } else if (data == "not found") {
-                    this.setState({
-                        currentPlot: null,
-                        userSamples: {},
-                        userImages: {}
-                    });
-                    alert("No plot with ID " + plotId + " found.");
-                } else if (data == "error") {
+                    alert("This plot has already been analyzed.");
                     this.setState({
                         currentPlot: null,
                         userSamples: {},
@@ -403,9 +376,90 @@ class Collection extends React.Component {
                         currentPlot: newPlot,
                         userSamples: {},
                         userImages: {},
-                        collectionStart: Date.now()
+                        collectionStart: Date.now(),
+                        navButtonsShown: 2,
+                        prevPlotButtonDisabled: false,
+                        newPlotButtonDisabled: false,
+                        flagPlotButtonDisabled: false,
+                        saveValuesButtonDisabled: true
                     });
+                    this.showProjectPlot(newPlot);
+                    this.showGeoDash(newPlot);
+                }
+            });
+    }
 
+    getNextPlotData(plotId) {
+        fetch(this.props.documentRoot + "/get-next-unanalyzed-plot/" + this.props.projectId + "/" + plotId)
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                if (data == "done") {
+                    if (plotId == -1) {
+                        alert("All plots have been analyzed for this project.");
+                        window.open(this.props.documentRoot + "/home");
+                    } else {
+                        this.setState({newPlotButtonDisabled: true});
+                        alert("You have reached the end of the plot list.");
+                    }
+                } else {
+                    const newPlot = JSON.parse(data);
+                    if (plotId == -1) {
+                        this.setState({
+                            currentPlot: newPlot,
+                            userSamples: {},
+                            userImages: {},
+                            collectionStart: Date.now(),
+                            navButtonsShown: 2
+                        });
+                    } else {
+                        this.setState({
+                            currentPlot: newPlot,
+                            userSamples: {},
+                            userImages: {},
+                            collectionStart: Date.now(),
+                            prevPlotButtonDisabled: false,
+                            saveValuesButtonDisabled: true
+                        });
+                    }
+                    this.showProjectPlot(newPlot);
+                    this.showGeoDash(newPlot);
+                }
+            });
+    }
+
+    getPrevPlotData(plotId) {
+        fetch(this.props.documentRoot + "/get-prev-unanalyzed-plot/" + this.props.projectId + "/" + plotId)
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                if (data == "done") {
+                    this.setState({prevPlotButtonDisabled: true});
+                    alert("All previous plots have been analyzed.");
+                } else {
+                    const newPlot = JSON.parse(data);
+                    this.setState({
+                        currentPlot: newPlot,
+                        userSamples: {},
+                        userImages: {},
+                        collectionStart: Date.now(),
+                        newPlotButtonDisabled: false,
+                        saveValuesButtonDisabled: true
+                    });
                     this.showProjectPlot(newPlot);
                     this.showGeoDash(newPlot);
                 }
@@ -418,134 +472,50 @@ class Collection extends React.Component {
         mercator.removeLayerByTitle(this.state.mapConfig, "currentPlot");
         mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
         mercator.addVectorLayer(this.state.mapConfig,
-            "currentPlot",
-            mercator.geometryToVectorSource(
-                plot.geom
-                    ? mercator.parseGeoJson(plot.geom, true)
-                    : mercator.getPlotPolygon(plot.center,
-                    this.state.currentProject.plotSize,
-                    this.state.currentProject.plotShape)
-            ),
-            ceoMapStyles.yellowPolygon);
+                                "currentPlot",
+                                mercator.geometryToVectorSource(
+                                    plot.geom
+                                        ? mercator.parseGeoJson(plot.geom, true)
+                                        : mercator.getPlotPolygon(plot.center,
+                                                                  this.state.currentProject.plotSize,
+                                                                  this.state.currentProject.plotShape)
+                                ),
+                                ceoMapStyles.yellowPolygon);
         mercator.addVectorLayer(this.state.mapConfig,
-            "currentSamples",
-            mercator.samplesToVectorSource(plot.samples),
-            plot.samples[0].geom
-                ? ceoMapStyles.blackPolygon
-                : ceoMapStyles.blackCircle);
+                                "currentSamples",
+                                mercator.samplesToVectorSource(plot.samples),
+                                plot.samples[0].geom
+                                    ? ceoMapStyles.blackPolygon
+                                    : ceoMapStyles.blackCircle);
         mercator.enableSelection(this.state.mapConfig, "currentSamples");
         mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
     }
 
     showGeoDash(plot) {
         const plotRadius = this.state.currentProject.plotSize
-            ? this.state.currentProject.plotSize / 2.0
-            : mercator.getViewRadius(this.state.mapConfig);
+                           ? this.state.currentProject.plotSize / 2.0
+                           : mercator.getViewRadius(this.state.mapConfig);
         window.open(this.props.documentRoot + "/geo-dash?editable=false&"
-            + encodeURIComponent("title=" + this.state.currentProject.name
-                + "&pid=" + this.props.projectId
-                + "&plotid=" + plot.id
-                + "&plotshape=" + (plot.geom ? "polygon" : this.state.currentProject.plotShape)
-                + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
-                + "]&daterange=&bcenter=" + plot.center
-                + "&bradius=" + plotRadius),
-            "_geo-dash");
+                    + encodeURIComponent("title=" + this.state.currentProject.name
+                                         + "&pid=" + this.props.projectId
+                                         + "&plotid=" + plot.id
+                                         + "&plotshape=" + (plot.geom ? "polygon" : this.state.currentProject.plotShape)
+                                         + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
+                                         + "]&daterange=&bcenter=" + plot.center
+                                         + "&bradius=" + plotRadius),
+                    "_geo-dash");
+    }
+
+    goToFirstPlot() {
+        this.getNextPlotData(-1);
     }
 
     prevPlot() {
-        this.setState({
-            navButtonsShown: 2,
-            prevPlotButtonDisabled: false,
-            newPlotButtonDisabled: false,
-            flagPlotButtonDisabled: false,
-            saveValuesButtonDisabled: true
-        });
-        let sortedPlotList = this.state.plotList;
-        let plotListIds = [];
-        sortedPlotList.map(pl => {
-            if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(pl.plotId ? parseInt(pl.plotId) : pl.id);
-        });
-        plotListIds.sort(function (a, b) {
-            return a - b
-        });
-        if (this.state.currentPlot) {
-            //to go to previous plot
-            let newPlotId = this.findPrevPlot(plotListIds, this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
-            if (newPlotId == 1) {
-                this.setState({prevPlotButtonDisabled: true});
-                let newPlot = sortedPlotList.filter(pl => (pl.plotId ? parseInt(pl.plotId) : pl.id) == plotListIds[0])[0];
-                this.getPlotData(newPlot.id);
-            }
-            else if (newPlotId > 1) {
-                this.setState({prevPlotButtonDisabled: false});
-                let newPlot = sortedPlotList.filter(s => (s.plotId ? parseInt(s.plotId) : s.id) == newPlotId)[0];
-                this.getPlotData(newPlot.id);
-            }
-            else {
-                this.setState({prevPlotButtonDisabled: true});
-                alert("No previous plots available!");
-            }
-        }
-    }
-
-    findPrevPlot(plotListIds, plotId) {
-        return plotListIds.indexOf(plotId) - 1 == 0 ? 1 : plotListIds[plotListIds.indexOf(plotId) - 1];
-    }
-
-    findNextPlot(plotListIds, plotId) {
-        let nextPlotId = plotListIds.filter(i => (i > plotId))[0];
-        return plotListIds.indexOf(nextPlotId) == plotListIds.length - 1 ? 1 : nextPlotId;
+        this.getPrevPlotData(this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
     }
 
     nextPlot() {
-        this.setState({
-            navButtonsShown: 2,
-            prevPlotButtonDisabled: false,
-            newPlotButtonDisabled: false,
-            flagPlotButtonDisabled: false,
-            saveValuesButtonDisabled: true
-        });
-        let sortedPlotList = this.state.plotList;
-        let plotListIds = [];
-        sortedPlotList.map(pl => {
-            if (pl.analyses == 0 && pl.flagged == false) plotListIds.push(pl.plotId ? parseInt(pl.plotId) : pl.id);
-        });
-        plotListIds.sort(function (a, b) {
-            return a - b
-        });
-        if (this.state.currentPlot) {
-            //to go to next plot
-            let newPlotId = this.findNextPlot(plotListIds, this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
-            if (newPlotId == 1) {
-                this.setState({newPlotButtonDisabled: true});
-                let newPlot = sortedPlotList.filter(pl => (pl.plotId ? parseInt(pl.plotId) : pl.id) == plotListIds[plotListIds.length - 1])[0];
-                this.getPlotData(newPlot.id);
-            }
-            else if (newPlotId > 1) {
-                this.setState({newPlotButtonDisabled: false});
-                let newPlot = sortedPlotList.filter(s => (s.plotId ? parseInt(s.plotId) : s.id) == newPlotId)[0];
-                this.getPlotData(newPlot.id);
-            }
-        }
-        else {
-            //to go to the first plot
-            let newPlot = sortedPlotList.filter(pl => (pl.plotId ? parseInt(pl.plotId) : pl.id) == plotListIds[0])[0];
-            if (newPlot) {
-                this.getPlotData(newPlot.id);
-                this.setState({prevPlotButtonDisabled: true});
-            }
-            else {
-                this.setState({
-                    navButtonsShown: 2,
-                    prevPlotButtonDisabled: true,
-                    newPlotButtonDisabled: true,
-                    flagPlotButtonDisabled: true,
-                    saveValuesButtonDisabled: true
-                });
-                alert("All plots have been analyzed for this project.");
-                utils.disable_element("go-to-first-plot-button");
-            }
-        }
+        this.getNextPlotData(this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
     }
 
     flagPlot() {
@@ -635,17 +605,17 @@ class Collection extends React.Component {
         selectedAnswers[questionText] = answerText;
         this.setState({selectedAnswers: selectedAnswers});
     }
- 
+
     getImageryAttributes () {
         if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
             return {imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG};
         } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
             return {imageryMonthPlanet: this.state.imageryMonthPlanet, imageryYearPlanet: this.state.imageryYearPlanet};
         } else {
-            return {}
+            return {};
         }
     }
-    
+
     setCurrentValue(questionText, answerId, answerText, answerColor) {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         if (selectedFeatures && selectedFeatures.getLength() > 0) {
@@ -718,13 +688,15 @@ class Collection extends React.Component {
 
         return (
             <React.Fragment>
-                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
+                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} projectPlotsShown={this.state.projectPlotsShown}/>
                 <SideBar plotId={this.state.currentPlot?(this.state.currentPlot.plotId?this.state.currentPlot.plotId:this.state.currentPlot.id):""}
                          currentProject={this.state.currentProject}
                          navButtonsShown={this.state.navButtonsShown}
+                         gotoFirstPlotButtonDisabled={this.state.gotoFirstPlotButtonDisabled}
                          prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                          newPlotButtonDisabled={this.state.newPlotButtonDisabled}
                          flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
+                         goToFirstPlot={this.goToFirstPlot}
                          prevPlot={this.prevPlot}
                          nextPlot={this.nextPlot}
                          flagPlot={this.flagPlot}
@@ -758,15 +730,14 @@ class Collection extends React.Component {
 
 function ImageAnalysisPane(props) {
     return (
-
-        <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
-            <div id="imagery-info" className="row">
-                <p className="col small">{props.imageryAttribution}</p>
+        <React.Fragment>
+            <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
+                <div id="imagery-info" className="row">
+                    <p className="col small">{props.imageryAttribution}</p>
+                </div>
             </div>
-            <div id="spinner" style={{top:"45%"}}></div>
-
-        </div>
-
+            <div id="spinner" style={{top: "45%", left: "38%", visibility: props.projectPlotsShown ? "hidden" : "visible"}}></div>
+        </React.Fragment>
     );
 }
 
@@ -776,12 +747,14 @@ function SideBar(props) {
             <ProjectName projectName={props.currentProject.name}/>
             <PlotNavigation plotId={props.plotId}
                             navButtonsShown={props.navButtonsShown}
+                            goToFirstPlot={props.goToFirstPlot}
                             prevPlot={props.prevPlot}
                             nextPlot={props.nextPlot}
                             flagPlot={props.flagPlot}
                             prevPlotButtonDisabled={props.prevPlotButtonDisabled}
                             newPlotButtonDisabled={props.newPlotButtonDisabled}
-                            flagPlotButtonDisabled={props.flagPlotButtonDisabled}/>
+                            flagPlotButtonDisabled={props.flagPlotButtonDisabled}
+                            gotoFirstPlotButtonDisabled={props.gotoFirstPlotButtonDisabled}/>
             <ImageryOptions baseMapSource={props.currentProject.baseMapSource}
                             setBaseMapSource={props.setBaseMapSource}
                             imageryList={props.imageryList}
@@ -832,7 +805,9 @@ function PlotNavigation(props) {
             <div className={props.navButtonsShown == 1 ? "row" : "row d-none"} id="go-to-first-plot">
                 <div className="col">
                     <input id="go-to-first-plot-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-                           type="button" name="new-plot" value="Go to first plot" onClick={props.nextPlot}/>
+                           type="button" name="new-plot" value="Go to first plot" onClick={props.goToFirstPlot}
+                           style={{opacity: props.gotoFirstPlotButtonDisabled ? "0.5" : "1.0"}}
+                           disabled={props.gotoFirstPlotButtonDisabled}/>
                 </div>
             </div>
             <div className={props.navButtonsShown == 2 ? "row" : "row d-none"} id="plot-nav" style={{display:"inline-flex"}}>
@@ -922,8 +897,9 @@ function DigitalGlobeMenus(props) {
 class PlanetMenus extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {value:"2018"}
+        this.state = {value: "2018"};
     }
+
     render() {
         if (this.props.baseMapSource == "PlanetGlobalMosaic") {
             return (
@@ -973,7 +949,7 @@ function SurveyQuestionTree(props) {
     const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
     return (
         <fieldset className={"mb-1 justify-content-center text-center"
-        + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
+                  + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
             <button id={props.surveyNode.question + "_" + props.surveyNode.id}
                     className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                     onClick={() => props.hideShowAnswers(props.surveyNode.id)}
@@ -981,7 +957,7 @@ function SurveyQuestionTree(props) {
                 {props.surveyNode.question}
             </button>
             <ul className={"samplevalue justify-content-center"
-            + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
+                + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
                 {
                     props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
                                                                              question={props.surveyNode.question}
@@ -1022,8 +998,8 @@ function SurveyAnswer(props) {
                     id={props.answer + "_" + props.id}
                     name={props.answer + "_" + props.id}
                     style={{boxShadow: (props.selectedAnswers[props.question] == props.answer)
-                            ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                            : "initial"}}
+                        ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                        : "initial"}}
                     onClick={() => {
                         if (props.setCurrentValue(props.question, props.id, props.answer, props.color)) {
                             props.hideQuestions(props.childNodes);

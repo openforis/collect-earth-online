@@ -13,6 +13,8 @@ public interface Projects {
     String getProjectStats(Request req, Response res);
     String getUnassignedPlot(Request req, Response res);
     String getUnassignedPlotById(Request req, Response res);
+    String getNextUnassignedPlot(Request req, Response res);
+    String getPrevUnassignedPlot(Request req, Response res);
     HttpServletResponse dumpProjectAggregateData(Request req, Response res);
     HttpServletResponse dumpProjectRawData(Request req, Response res);
     String publishProject(Request req, Response res);

@@ -43,11 +43,13 @@ import java.time.LocalDateTime;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntSupplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
@@ -123,7 +125,6 @@ public class JsonProjects implements Projects {
         }
     }
 
-    
     private static JsonObject singleProjectJson(String projectId){
         var projects = readJsonFile("project-list.json").getAsJsonArray();
         var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
@@ -281,6 +282,194 @@ public class JsonProjects implements Projects {
         }
     }
 
+    public String getNextUnassignedPlot(Request req, Response res) {
+        var projectId = req.params(":projid");
+        var currPlotId = req.params(":id");
+        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        var unanalyzedPlots = filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
+        var matchingPlotId = toStream(unanalyzedPlots)
+                .map(pl -> pl.has("plotId") ? pl.get("plotId").getAsInt() : pl.get("id").getAsInt())
+                .sorted()
+                .filter(plotId -> plotId > Integer.parseInt(currPlotId))
+                .findFirst();
+        if (matchingPlotId.isPresent()) {
+            var nextPlotId = matchingPlotId.get();
+            var nextPlot = findInJsonArray(unanalyzedPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == nextPlotId : plot.get("id").getAsInt() == nextPlotId);
+            return nextPlot.get().toString();
+        } else {
+            return "done";
+        }
+    }
+
+    public String getPrevUnassignedPlot(Request req, Response res) {
+        var projectId = req.params(":projid");
+        var currPlotId = req.params(":id");
+        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        var unanalyzedPlots = filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
+        var matchingPlotId = toStream(unanalyzedPlots)
+                .map(pl -> pl.has("plotId") ? pl.get("plotId").getAsInt() : pl.get("id").getAsInt())
+                .sorted()
+                .filter(plotId -> plotId < Integer.parseInt(currPlotId))
+                .reduce((first, second) -> second);
+        if (matchingPlotId.isPresent()) {
+            var prevPlotId = matchingPlotId.get();
+            var prevPlot = findInJsonArray(unanalyzedPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == prevPlotId : plot.get("id").getAsInt() == prevPlotId);
+            return prevPlot.get().toString();
+        } else {
+            return "done";
+        }
+    }
+
+    private static List<String> getCsvHeaders(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            return Arrays.stream(lines.findFirst().get().split(",")).filter(field -> !List.of("GID", "GEOM", "PLOT_GEOM", "LAT", "LON").contains(field.toUpperCase())
+            ).collect(Collectors.toList());
+        } catch (Exception e) {
+            System.out.println("Error Reading CSV");
+        }
+        return new ArrayList<String>();
+    }
+
+    private static HashMap<String, HashMap<String, String>> loadCsvPlotAllColumnsOld(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            var plotPoints = new HashMap<String, HashMap<String, String>>();
+            var linesArr = lines.toArray(String[]::new);
+            var fieldNames =  Arrays.stream(linesArr[0].split(",")).toArray(String[]::new);
+            for (int r = 1; r != linesArr.length ; r++) {
+                var plotField = new HashMap<String, String>();
+                var fieldData = Arrays.stream(linesArr[r].split(",")).toArray(String[]::new);
+                for (int i = 0; i != fieldNames.length ; i++) {
+                    plotField.put(fieldNames[i], fieldData[i]);
+                }
+                plotPoints.put(Integer.toString(r), plotField);
+            }
+            return plotPoints;
+        } catch (Exception e) {
+            System.out.println("Error Reading CSV");
+        }
+        return new HashMap<String, HashMap<String, String>>();
+    }
+
+    // Assumes plotId field is in third possition
+    private static HashMap<String, HashMap<String, String>> loadCsvPlotAllColumnsNew(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            var plotPoints = new HashMap<String, HashMap<String, String>>();
+            var linesArr = lines.toArray(String[]::new);
+            var fieldNames =  Arrays.stream(linesArr[0].split(",")).toArray(String[]::new);
+            for (int r = 1; r != linesArr.length ; r++) {
+                var plotField = new HashMap<String, String>();
+                var fieldData = Arrays.stream(linesArr[r].split(",")).toArray(String[]::new);
+                for (int i = 0; i != fieldNames.length ; i++) {
+                    plotField.put(fieldNames[i], fieldData[i]);
+                }
+                plotPoints.put(fieldData[2], plotField);
+            }
+            return plotPoints;
+        } catch (Exception e) {
+            System.out.println("Error Reading CSV");
+        }
+        return new HashMap<String, HashMap<String, String>>();
+    }
+
+        // Assumes sampleId field is in third possition
+    private static HashMap<String, HashMap<String, String>> loadCsvPlotAllSamplesNew(String filename) {
+        try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
+            var plotPoints = new HashMap<String, HashMap<String, String>>();
+            var linesArr = lines.toArray(String[]::new);
+            var fieldNames =  Arrays.stream(linesArr[0].split(",")).toArray(String[]::new);
+            for (int r = 1; r != linesArr.length ; r++) {
+                var plotField = new HashMap<String, String>();
+                var fieldData = Arrays.stream(linesArr[r].split(",")).toArray(String[]::new);
+                for (int i = 0; i != fieldNames.length ; i++) {
+                    plotField.put(fieldNames[i], fieldData[i]);
+                }
+                plotPoints.put(fieldData[3], plotField);
+            }
+            return plotPoints;
+        } catch (Exception e) {
+            System.out.println("Error Reading CSV");
+        }
+        return new HashMap<String, HashMap<String, String>>();
+    }
+
+    private static List<String> getGeoJsonHeaders(int projectId, String plotOrSample) {
+        var jsonKeys = new ArrayList<String>();
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-" + plotOrSample
+                                       + "/project-" + projectId + "-" + plotOrSample + ".json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                var properties = toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .findFirst().get();
+                // // properties.get("properties").getAsJsonObject();
+                // properties.get("properties").getAsJsonObject().keySet().forEach(key -> {
+                //     jsonKeys.add(key);
+                // });
+                jsonKeys.addAll(properties.get("properties").getAsJsonObject().keySet());
+            }
+        } catch (Exception e) {
+            System.out.println("Error Reading SHP");
+        }
+        return jsonKeys;
+    }
+
+    private static HashMap<String, HashMap<String, String>>  getGeoJsonPlotData(int projectId) {
+        var plotGeoms = new HashMap<String, HashMap<String, String>>();
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
+                                       + "/project-" + projectId + "-plots.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var plotId = properties.get("PLOTID").getAsString();
+                            var propertyMap = new HashMap<String, String>();
+                            properties.keySet().forEach(key -> {
+                                propertyMap.put(key, getOrEmptyString(properties, key).getAsString());
+                            });
+                            plotGeoms.put(plotId, propertyMap);
+                        });
+            } 
+        } catch (Exception e) {
+            System.out.println("Error Reading SHP");
+        }
+        return plotGeoms;
+    }
+
+
+    private static HashMap<String, HashMap<String, String>>  getGeoJsonSampleData(int projectId) {
+        var plotGeoms = new HashMap<String, HashMap<String, String>>();
+        try {
+            var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
+                                       + "/project-" + projectId + "-samples.json").getAsJsonObject();
+            if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
+                toStream(geoJson.get("features").getAsJsonArray())
+                    .filter(feature -> {
+                            var geometry = feature.get("geometry").getAsJsonObject();
+                            return geometry.get("type").getAsString().equals("Polygon");
+                        })
+                    .forEach(feature -> {
+                            var properties = feature.get("properties").getAsJsonObject();
+                            var sampleId = properties.get("SAMPLEID").getAsString();
+                            var propertyMap = new HashMap<String, String>();
+                            properties.keySet().forEach(key -> {
+                                propertyMap.put(key, getOrEmptyString(properties, key).getAsString());
+                            });
+                            plotGeoms.put(sampleId, propertyMap);
+                        });
+            } 
+        } catch (Exception e) {
+            System.out.println("Error Reading SHP");
+        }
+        return plotGeoms;
+    }
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         var projectId = req.params(":id");
@@ -292,6 +481,21 @@ public class JsonProjects implements Projects {
             var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
             var projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
 
+            List<String> plotHeaders =  new ArrayList<String>();
+            var plotData = new  HashMap<String, HashMap<String, String>>();
+            if (project.has("csv") && project.get("plotDistribution").getAsString().equals("csv")){
+                plotData = loadCsvPlotAllColumnsOld(project.get("csv").getAsString());
+                plotHeaders = getCsvHeaders(project.get("csv").getAsString());
+            } else if (project.has("plots-csv") && project.get("plotDistribution").getAsString().equals("csv")) {
+                plotData = loadCsvPlotAllColumnsNew(project.get("plots-csv").getAsString());
+                plotHeaders = getCsvHeaders(project.get("plots-csv").getAsString());
+            } else if (project.has("plots-shp") && project.get("plotDistribution").getAsString().equals("shp")) {
+                plotData = getGeoJsonPlotData(project.get("id").getAsInt());
+                plotHeaders = getGeoJsonHeaders(project.get("id").getAsInt(), "plots");
+            }
+            final var finalPlotHeaders = plotHeaders;
+            final var finalPlotData = plotData;
+
             var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             var plotSummaries = mapJsonArray(plots,
                     plot -> {
@@ -302,19 +506,35 @@ public class JsonProjects implements Projects {
                         plotSummary.addProperty("plot_id", plot.get("id").getAsInt());
                         plotSummary.addProperty("center_lon", coords.get(0).getAsDouble());
                         plotSummary.addProperty("center_lat", coords.get(1).getAsDouble());
-                        plotSummary.addProperty("size_m", project.get("plotSize").getAsDouble());
-                        plotSummary.addProperty("shape", project.get("plotShape").getAsString());
+                        plotSummary.addProperty("size_m", getOrZero(project, "plotSize").getAsDouble());
+                        plotSummary.addProperty("shape", getOrEmptyString(project, "plotShape").getAsString());
                         plotSummary.addProperty("flagged", plot.get("flagged").getAsBoolean());
-                        plotSummary.addProperty("analyses", plot.get("analyses").getAsInt());
+                        plotSummary.addProperty("analyses", getOrZero(project, "analyses").getAsInt());
                         plotSummary.addProperty("sample_points", samples.size());
                         plotSummary.add("user_id", plot.get("user"));
                         plotSummary.add("collection_time", plot.get("collectionTime"));
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
+
+                        if (finalPlotHeaders.size() > 0 && finalPlotData.containsKey(plot.has("plotId") 
+                                ? plot.get("plotId").getAsString() 
+                                : plot.get("id").getAsString()))
+                        {
+                            finalPlotHeaders.forEach(head ->
+                                plotSummary.addProperty("pl_" + head, finalPlotData.get(plot.has("plotId") 
+                                    ? plot.get("plotId").getAsString() 
+                                    : plot.get("id").getAsString())
+                                .get(head) )
+                            );
+                        }
                         return plotSummary;
                     });
 
-            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, new String[0]);
+            var combinedHeaders = plotHeaders.stream()
+                    .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head)
+                    .toArray(String[]::new);
+
+            return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName,combinedHeaders);
 
         } else {
             res.raw().setStatus(SC_NO_CONTENT);
@@ -330,6 +550,35 @@ public class JsonProjects implements Projects {
         if (matchingProject.isPresent()) {
             var project = matchingProject.get();
             var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
+            
+            var imageryHeaders = new ArrayList<String>();
+
+            List<String> plotHeaders =  new ArrayList<String>();
+            var plotData = new  HashMap<String, HashMap<String, String>>();
+            if (project.has("csv") && project.get("plotDistribution").getAsString().equals("csv")){
+                plotData = loadCsvPlotAllColumnsOld(project.get("csv").getAsString());
+                plotHeaders = getCsvHeaders(project.get("csv").getAsString());
+            } else if (project.has("plots-csv") && project.get("plotDistribution").getAsString().equals("csv")) {
+                plotData = loadCsvPlotAllColumnsNew(project.get("plots-csv").getAsString());
+                plotHeaders = getCsvHeaders(project.get("plots-csv").getAsString());
+            } else if (project.has("plots-shp") && project.get("plotDistribution").getAsString().equals("shp")) {
+                plotData = getGeoJsonPlotData(project.get("id").getAsInt());
+                plotHeaders = getGeoJsonHeaders(project.get("id").getAsInt(), "plots");
+            }
+            final var finalPlotHeaders = plotHeaders;
+            final var finalPlotData = plotData;
+            
+            List<String> sampleHeaders = new ArrayList<String>();
+            var sampleData = new  HashMap<String, HashMap<String, String>>();
+            if (project.has("samples-csv") && project.get("sampleDistribution").getAsString().equals("csv")) {
+                sampleData = loadCsvPlotAllSamplesNew(project.get("samples-csv").getAsString());
+                sampleHeaders = getCsvHeaders(project.get("samples-csv").getAsString());
+            } else if (project.has("samples-csv") && project.get("sampleDistribution").getAsString().equals("shp")) {
+                sampleData = getGeoJsonSampleData(project.get("id").getAsInt());
+                sampleHeaders = getGeoJsonHeaders(project.get("id").getAsInt(), "samples");
+            }
+            final var finalSampleHeaders = sampleHeaders;
+            final var finalSampleData = sampleData;
 
             var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
             var sampleSummaries = flatMapJsonArray(plots,
@@ -338,7 +587,8 @@ public class JsonProjects implements Projects {
                         var flagged = plot.get("flagged").getAsBoolean();
                         var analyses = plot.get("analyses").getAsInt();
                         var userId = plot.get("user");
-                        var collectionTime = plot.get("collectionTime");
+                        var collectionTime = getOrEmptyString(plot, "collectionTime").getAsString();
+                        var confidence = getOrZero(plot, "confidence").getAsInt();
                         var samples = plot.get("samples").getAsJsonArray();
                         return toStream(samples).map(sample -> {
                             var center = parseJson(sample.get("point").getAsString())
@@ -352,14 +602,72 @@ public class JsonProjects implements Projects {
                             sampleSummary.addProperty("flagged", flagged);
                             sampleSummary.addProperty("analyses", analyses);
                             sampleSummary.add("user_id", userId);
-                            sampleSummary.add("collection_time", collectionTime);
+                            sampleSummary.addProperty("collection_time", collectionTime);
+                            sampleSummary.addProperty("confidence", confidence);
                             sampleSummary.add("value", sample.get("value"));
+
+                            // Add imagery data to output
+                            // if (getOrEmptyString(sample, "userImages").getAsString() != "") {
+                            //     var imageData = sample.get("userImages").getAsJsonObject();
+
+                            //     sampleSummary.addProperty("imagery_title", imageData.get("id").getAsString());
+                            //     if (!imageryHeaders.contains("imagery_title")) imageryHeaders.add("imagery_title");
+                                
+                            //     if (getOrEmptyString(imageData, "imagery_attributes").getAsString().length() > 2) {
+                            //         var attributes = parseJson(imageData.get("imagery_attributes").getAsString()).getAsJsonObject();
+                            //         attributes.keySet().forEach(key -> {
+                            //             sampleSummary.addProperty(key, attributes.get(key).getAsString());
+                            //             if (!imageryHeaders.contains(key)) imageryHeaders.add(key);
+                            //         });
+                            //     }
+                            // }
+
+                            if (finalPlotHeaders.size() > 0 && finalPlotData.containsKey(
+                                    plot.has("plotId") 
+                                    ? plot.get("plotId").getAsString() 
+                                    : plot.get("id").getAsString())
+                                ){
+                                finalPlotHeaders.forEach(head ->
+                                    sampleSummary.addProperty("pl_" + head, finalPlotData.get(
+                                        plot.has("plotId") 
+                                        ? plot.get("plotId").getAsString() 
+                                        : plot.get("id").getAsString())
+                                    .get(head) )
+                                );
+                            }
+
+                            if (finalSampleHeaders.size() > 0 && finalSampleData.containsKey(
+                                    sample.has("sampleId") 
+                                    ? sample.get("sampleId").getAsString() 
+                                    : "")
+                                ){
+                                finalSampleHeaders.forEach(head ->
+                                    sampleSummary.addProperty("smpl_" + head, finalSampleData.get(
+                                        sample.has("sampleId") 
+                                        ? sample.get("sampleId").getAsString() 
+                                        : sample.get("id").getAsString())
+                                    .get(head) )
+                                );
+                            }
+
                             return sampleSummary;
                         });
                     });
 
             var projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
-            return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, new String[0]);
+
+            var combinedHeaders = 
+                        Stream.concat(
+                            imageryHeaders.stream(),
+                            Stream.concat(
+                                    plotHeaders.stream()
+                                    .map(head -> !head.toString().contains("pl_") ? "pl_" + head : head),
+                                    sampleHeaders.stream()
+                                    .map(head -> !head.toString().contains("smpl_") ? "smpl_" + head : head)
+                                )
+                        ).toArray(String[]::new);
+
+            return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, combinedHeaders);
                     
         } else {
             res.raw().setStatus(SC_NO_CONTENT);
@@ -414,11 +722,14 @@ public class JsonProjects implements Projects {
     }
 
     public synchronized String addUserSamples(Request req, Response res) {
-        var jsonInputs = parseJson(req.body()).getAsJsonObject();
-        var projectId = jsonInputs.get("projectId").getAsString();
-        var plotId = jsonInputs.get("plotId").getAsString();
-        var userName = jsonInputs.get("userId").getAsString();
-        var userSamples = jsonInputs.get("userSamples").getAsJsonObject();
+        var jsonInputs =            parseJson(req.body()).getAsJsonObject();
+        var projectId =             jsonInputs.get("projectId").getAsString();
+        var plotId =                jsonInputs.get("plotId").getAsString();
+        var userName =              jsonInputs.get("userId").getAsString();
+        var confidence =            jsonInputs.get("confidence").getAsInt();
+        var collectionStart =       jsonInputs.get("collectionStart").getAsString();
+        var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
+        var userImages =            jsonInputs.get("userImages").getAsJsonObject();
 
         mapJsonFile("plot-data-" + projectId + ".json",
                 plot -> {
@@ -431,10 +742,13 @@ public class JsonProjects implements Projects {
                                 sample -> {
                                     var sampleId = sample.get("id").getAsString();
                                     sample.add("value", userSamples.get(sampleId));
+                                    sample.add("userImages", userImages.get(sampleId));
                                     return sample;
                                 });
                         plot.add("samples", updatedSamples);
                         plot.addProperty("collectionTime", LocalDateTime.now().toString());
+                        plot.addProperty("confidence", confidence == -1 ? null : Integer.toString(confidence));
+                        // plot.addProperty("collectionStart", collectionStart);
                         return plot;
                     } else {
                         return plot;
