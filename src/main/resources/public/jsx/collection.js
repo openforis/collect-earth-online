@@ -26,6 +26,8 @@ class Collection extends React.Component {
             newPlotButtonDisabled: false,
             flagPlotButtonDisabled: false,
             saveValuesButtonDisabled: true,
+            prevQuestionButtonDisabled: false,
+            nextQuestionButtonDisabled: false,
             surveyAnswersVisible: {},
             surveyQuestionsVisible: {},
             currentPlot: null,
@@ -52,6 +54,8 @@ class Collection extends React.Component {
         this.getImageryAttributes = this.getImageryAttributes.bind(this);
         this.setCurrentValue = this.setCurrentValue.bind(this);
         this.redirectToHomePage = this.redirectToHomePage.bind(this);
+        this.prevSurveyQuestionTree=this.prevSurveyQuestionTree.bind(this);
+        this.nextSurveyQuestionTree=this.nextSurveyQuestionTree.bind(this);
     }
 
     componentDidMount() {
@@ -78,7 +82,9 @@ class Collection extends React.Component {
         }
         if (this.state.currentProject.sampleValues.length > 0 && Object.keys(this.state.surveyQuestionsVisible).length == 0) {
             const topLevelNodes = this.state.currentProject.sampleValues.filter(surveyNode => surveyNode.parent_question == -1);
-            this.showQuestions(topLevelNodes);
+            const firstNode = topLevelNodes.sort((a, b) => a - b)[0];
+            this.hideQuestions(topLevelNodes);
+            this.showQuestions([firstNode]);
         }
     }
 
@@ -684,8 +690,35 @@ class Collection extends React.Component {
         window.location = this.props.documentRoot + "/home";
     }
 
-    render() {
+    prevSurveyQuestionTree(surveyNodeId, surveyQuestions) {
+        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
+        let prevSurveyNode = surveyQuestions.sort((a, b) => b.id - a.id).find(node => node.id < surveyNodeId && node.parent_question == -1);
+        if (prevSurveyNode) {
+            surveyQuestionsVisible[surveyNodeId] = false;
+            surveyQuestionsVisible[prevSurveyNode.id] = true;
+            this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
+                           nextQuestionButtonDisabled: false});
+        } else {
+            this.setState({prevQuestionButtonDisabled: true});
+            alert("There are no previous questions.");
+        }
+    }
 
+    nextSurveyQuestionTree(surveyNodeId, surveyQuestions) {
+        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
+        let nextSurveyNode = surveyQuestions.sort((a, b) => a.id - b.id).find(node => node.id > surveyNodeId && node.parent_question == -1);
+        if (nextSurveyNode) {
+            surveyQuestionsVisible[surveyNodeId] = false;
+            surveyQuestionsVisible[nextSurveyNode.id] = true;
+            this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
+                           prevQuestionButtonDisabled: false});
+        } else {
+            this.setState({nextQuestionButtonDisabled: true});
+            alert("There are no more questions.");
+        }
+    }
+
+    render() {
         return (
             <React.Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} projectPlotsShown={this.state.projectPlotsShown}/>
@@ -721,7 +754,11 @@ class Collection extends React.Component {
                          hideQuestions={this.hideQuestions}
                          highlightAnswer={this.highlightAnswer}
                          setCurrentValue={this.setCurrentValue}
-                         selectedAnswers={this.state.selectedAnswers}/>
+                         selectedAnswers={this.state.selectedAnswers}
+                         prevSurveyQuestionTree={this.prevSurveyQuestionTree}
+                         nextSurveyQuestionTree={this.nextSurveyQuestionTree}
+                         prevQuestionButtonDisabled={this.state.prevQuestionButtonDisabled}
+                         nextQuestionButtonDisabled={this.state.nextQuestionButtonDisabled}/>
                 <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
         );
@@ -775,7 +812,11 @@ function SideBar(props) {
                              hideQuestions={props.hideQuestions}
                              highlightAnswer={props.highlightAnswer}
                              setCurrentValue={props.setCurrentValue}
-                             selectedAnswers={props.selectedAnswers}/>
+                             selectedAnswers={props.selectedAnswers}
+                             prevSurveyQuestionTree={props.prevSurveyQuestionTree}
+                             nextSurveyQuestionTree={props.nextSurveyQuestionTree}
+                             prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
+                             nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
                     <SaveValuesButton saveValues={props.saveValues}
@@ -939,7 +980,11 @@ function SurveyQuestions(props) {
                                                                            hideQuestions={props.hideQuestions}
                                                                            highlightAnswer={props.highlightAnswer}
                                                                            setCurrentValue={props.setCurrentValue}
-                                                                           selectedAnswers={props.selectedAnswers}/>)
+                                                                           selectedAnswers={props.selectedAnswers}
+                                                                           prevSurveyQuestionTree={props.prevSurveyQuestionTree}
+                                                                           nextSurveyQuestionTree={props.nextSurveyQuestionTree}
+                                                                           prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
+                                                                           nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>)
             }
         </fieldset>
     );
@@ -947,9 +992,20 @@ function SurveyQuestions(props) {
 
 function SurveyQuestionTree(props) {
     const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
+    const navButtons = props.surveyNode.parent_question == -1 ?
+        <React.Fragment>
+            <button id="prev-survey-question" className="btn btn-outline-lightgreen"  style={{margin:"10px"}}
+                    onClick={() => props.prevSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
+                    disabled={props.prevQuestionButtonDisabled}>Prev</button>
+            <button id="next-survey-question" className="btn btn-outline-lightgreen"
+                    onClick={() => props.nextSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
+                    disabled={props.nextQuestionButtonDisabled}>Next</button>
+        </React.Fragment>
+        : "";
     return (
         <fieldset className={"mb-1 justify-content-center text-center"
                   + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
+            { navButtons }
             <button id={props.surveyNode.question + "_" + props.surveyNode.id}
                     className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                     onClick={() => props.hideShowAnswers(props.surveyNode.id)}
@@ -983,7 +1039,11 @@ function SurveyQuestionTree(props) {
                                                                         hideQuestions={props.hideQuestions}
                                                                         highlightAnswer={props.highlightAnswer}
                                                                         setCurrentValue={props.setCurrentValue}
-                                                                        selectedAnswers={props.selectedAnswers}/>)
+                                                                        selectedAnswers={props.selectedAnswers}
+                                                                        prevSurveyQuestionTree={props.prevSurveyQuestionTree}
+                                                                        nextSurveyQuestionTree={props.nextSurveyQuestionTree}
+                                                                        prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
+                                                                        nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>)
             }
         </fieldset>
     );
