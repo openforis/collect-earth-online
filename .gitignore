@@ -10,6 +10,7 @@ collect-earth-online.iml
 /src/main/resources/public/downloads/*.csv
 /src/main/resources/public/js/*.bundle.js
 /src/main/resources/public/js/*.bundle.js.map
+/src/main/resources/template/freemarker/googleanalytics.ftl
 /target/
 .idea/
 .DS_Store

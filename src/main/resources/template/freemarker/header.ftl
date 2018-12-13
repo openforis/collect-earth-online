@@ -25,7 +25,6 @@
         <link rel="stylesheet" type="text/css" href="${root}/css/datepicker.css">
         <script type="text/javascript" src="${root}/js/jquery-3.1.1.min.js"></script>
         <script type="text/javascript" src="${root}/js/jquery-ui.min.js"></script>
-        <script type="text/javascript" src="${root}/js/jquery.flip.min.js"></script>
 
         <!-- Bootstrap -->
         <link rel="stylesheet" type="text/css" href="${root}/css/bootstrap.min.css">
@@ -87,5 +86,6 @@
             <script type="text/javascript" src="/collect/earthFiles/openforis/of-ui-forms-validation.js"></script>
             <script type="text/javascript" src="/collect/earthFiles/js/of_collect_forms.js"></script>
         </#if>
+        <#include "googleanalytics.ftl" ignore_missing=true>
     </head>
     <body style="padding-top:60px;">

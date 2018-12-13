@@ -55,6 +55,14 @@ sudo ln -s $PWD/build/libs/collect-earth-online-<version>.war $TOMCAT_HOME/webap
 sudo $TOMCAT_HOME/bin/startup.sh
 #+end_src
 
+*** Adding Analytics
+If you would like to add google analytics to your site you can follow these directions
+1. Visit https://analytics.google.com and create your analytics account for the site.
+2. Copy the .js Tracking Info code
+3. Create file /src/main/resources/template/freemarker/googleanalytics.ftl
+4. Paste .js Tracking Info code in googleanalytics.ftl
+5. restart application
+
 ** Building OpenForis Collect
 
 In order to easily exchange information with OpenForis' other software
