@@ -6,7 +6,7 @@
 CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 	RETURNS TABLE (
 		ext_id		integer,
-		plotId		text,
+		plotId		integer,
 		center		geometry,
 		geom		geometry
 	) AS $$
@@ -19,9 +19,9 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
 		GET DIAGNOSTICS i = ROW_COUNT;
 		IF i = 0 
 		THEN
-			RETURN QUERY EXECUTE 'SELECT gid, plotid::text, ST_SetSRID(ST_MakePoint(lon, lat),4326), ST_Centroid(null) as geom FROM '|| _table_name;
+			RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_SetSRID(ST_MakePoint(lon, lat),4326), ST_Centroid(null) as geom FROM '|| _table_name;
 		ELSE
-			RETURN QUERY EXECUTE 'SELECT gid, plotid::text, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM '|| _table_name;	
+			RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM '|| _table_name;	
 		END IF;
     END
 $$ LANGUAGE PLPGSQL;
@@ -45,8 +45,8 @@ $$ LANGUAGE PLPGSQL;
 CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
 	RETURNS TABLE (
 		ext_id		integer,
-		plotId		text,
-		sampleId	text,
+		plotId		integer,
+		sampleId	integer,
 		center		geometry,
 		geom		geometry
 	) AS $$
@@ -59,9 +59,9 @@ CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
 		GET DIAGNOSTICS i = ROW_COUNT;
 		IF i = 0 
 		THEN
-			RETURN QUERY EXECUTE 'SELECT gid, plotid::text, sampleId::text, ST_SetSRID(ST_MakePoint(lon, lat),4326), ST_Centroid(null) as geom FROM '|| _table_name;
+			RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_SetSRID(ST_MakePoint(lon, lat),4326), ST_Centroid(null) as geom FROM '|| _table_name;
 		ELSE
-			RETURN QUERY EXECUTE 'SELECT gid, plotid::text, sampleId::text, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM '|| _table_name;	
+			RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM '|| _table_name;	
 		END IF;
     END
 $$ LANGUAGE PLPGSQL;
@@ -850,7 +850,7 @@ $$ LANGUAGE PLPGSQL;
 CREATE OR REPLACE FUNCTION add_file_plots(_project_id integer)
  RETURNS TABLE (
 		id		integer,
-		plotid	text,
+		plotid	integer,
 		lon  	float,
 		lat		float
 	) AS $$
@@ -867,7 +867,7 @@ CREATE OR REPLACE FUNCTION add_file_plots(_project_id integer)
 		FROM plot_tbl
 		RETURNING id, ext_id, center
 	)
-	SELECT id, plotid::text, ST_X(plotrows.center), ST_Y(plotrows.center)
+	SELECT id, plotid, ST_X(plotrows.center), ST_Y(plotrows.center)
 	FROM plotrows 
 	INNER JOIN plot_tbl 
 		ON plotrows.ext_id = plot_tbl.ext_id
@@ -1254,7 +1254,7 @@ CREATE TYPE plots_return  AS (
 	  confidence        integer,
 	  collection_time   timestamp,
       ext_id            integer,
-	  plotId			text,
+	  plotId			integer,
       geom              text,
 	  analysis_duration	numeric
     );
@@ -1322,7 +1322,7 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
 		plotsum.confidence,
 		plotsum.collection_time,
 		fd.ext_id,
-		fd.plotId,
+		(case when fd.plotId is null then plots.id else fd.plotId end) as plotId,
 		ST_AsGeoJSON(fd.geom) as geom,
 		plotsum.analysis_duration
 	FROM plots
@@ -1356,7 +1356,31 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 
 $$ LANGUAGE SQL;
 
+-- -- Returns unanalyzed plots
+CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer) 
+    RETURNS setOf plots_return AS $$
 
+    SELECT * from select_all_project_plots(_project_id) as spp
+    WHERE spp.plotId > _plot_id
+    AND flagged = 0
+    AND assigned = 0
+    ORDER BY plotId ASC
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
+-- Returns unanalyzed plots
+CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plot_id integer) 
+    RETURNS setOf plots_return AS $$
+
+    SELECT * from select_all_project_plots(_project_id) as spp
+    WHERE spp.plotId < _plot_id
+    AND flagged = 0
+    AND assigned = 0
+    ORDER BY plotId DESC
+    LIMIT 1
+
+$$ LANGUAGE SQL;
 -- Returns unanalyzed plots
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS setOf plots_return AS $$
@@ -1401,7 +1425,8 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
       id            		integer,
       point         		text,
 	  ext_id        		integer,
-	  sampleId				text,
+	  plotId				integer,
+	  sampleId				integer,
 	  geom	        		text,
       value         		jsonb,
       imagery_id    		integer,
@@ -1413,9 +1438,9 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
 		WHERE id = _project_id
 	),
 	file_data AS (
-		SELECT * FROM select_partial_table_by_name((SELECT samples_ext_table FROM tablename)) 
+		SELECT * FROM select_partial_sample_table_by_name((SELECT samples_ext_table FROM tablename)) 
 	)
-    SELECT samples.id, ST_AsGeoJSON(point) as point, fd.ext_id, fd.plotId, ST_AsGeoJSON(fd.geom) as geom,
+    SELECT samples.id, ST_AsGeoJSON(point) as point, fd.ext_id,fd.sampleId, fd.sampleId, ST_AsGeoJSON(fd.geom) as geom,
         (CASE WHEN sample_values.value IS NULL THEN '{}' ELSE sample_values.value END),
         sample_values.imagery_id, sample_values.imagery_attributes
     FROM samples
@@ -1472,17 +1497,17 @@ $$ LANGUAGE SQL;
 
 
 -- Add user samples for migration (with add_user_plots)
-CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_id integer, _sample_id integer, _value jsonb) 
+CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_id integer, _sample_id integer, _value jsonb, _imagery_id integer, _imagery_attributes jsonb) 
     RETURNS integer AS $$
 
-	INSERT INTO sample_values(user_plot_id, sample_id, value)
-	VALUES ( _user_plot_id, _sample_id, _value)
+	INSERT INTO sample_values(user_plot_id, sample_id, value, imagery_id, imagery_attributes)
+	VALUES ( _user_plot_id, _sample_id, _value, _imagery_id, _imagery_attributes)
 	RETURNING id
 
 $$ LANGUAGE SQL;
 
 -- Add user plots for migration (with add_sample_values)
-CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_id integer, _username text, _flagged boolean) 
+CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_id integer, _username text, _flagged boolean, _collection_start timestamp, _collection_time timestamp) 
     RETURNS integer AS $$
 
 	with user_id as (
@@ -1492,8 +1517,8 @@ CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_id integer, _username 
 		SELECT id FROM users WHERE email = 'guest'
 	)
 	
-	INSERT INTO user_plots(plot_id, flagged, user_id)
-	(SELECT _plot_id, _flagged, (CASE WHEN user_id.id is NULL then guest_id.id ELSE user_id.id END)
+	INSERT INTO user_plots(plot_id, flagged, collection_start, collection_time, user_id)
+	(SELECT _plot_id, _flagged, _collection_start, _collection_time, (CASE WHEN user_id.id is NULL then guest_id.id ELSE user_id.id END)
 	FROM user_id, guest_id)
 	RETURNING id
 
@@ -1572,6 +1597,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
 			ON p.id = pa.project_id
 		LEFT JOIN plots_file_data pfd
 			ON pl_ext_id = pfd.ext_id
+		ORDER BY m_plot_id
 			
 $$ LANGUAGE SQL;
     
@@ -1631,6 +1657,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
 		ON p.ext_id = pfd.ext_id
 	LEFT JOIN samples_file_data sfd
 		ON samples.ext_id = sfd.ext_id
+	ORDER BY p.id, samples.id
 
 $$ LANGUAGE SQL;
 
@@ -1679,7 +1706,7 @@ $$ LANGUAGE PLPGSQL;
 CREATE OR REPLACE FUNCTION add_plots_by_json(_project_id integer, _file_name text)
 	RETURNS integer AS $$
 
-	with jvalue as (
+	WITH jvalue as (
 		select * 
 		from (
             select json_array_elements(valuestr::json) as values
@@ -1691,36 +1718,45 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_id integer, _file_name tex
         FROM
         jvalue s
         CROSS JOIN LATERAL
-        json_to_record(s.values::json) as t(center text, flagged bool, "user" text, samples json, collection_time timestamp)
+        json_to_record(s.values::json) 
+			as t(center text, flagged bool, "user" text, samples json,  "collectionTime" text, "collectionStart" text)
 	),
 	plot_index as (
 		SELECT create_project_plot(
                 _project_id, ST_SetSRID(ST_GeomFromGeoJSON(center), 4326)
             ) as plot_id, 
-			flagged,  "user" as useremail, samples
+			flagged,  "user" as useremail, samples, 
+			(CASE WHEN "collectionTime" ~ '^\d+$' THEN "collectionTime" ELSE NULL END) as ctime, 
+			(CASE WHEN "collectionStart" ~ '^\d+$' THEN "collectionStart" ELSE NULL END) as cstart
 		FROM plotrows as p
 		
 	),
 	plot_users as (
-		SELECT (CASE WHEN useremail is null or useremail = 'null' then null else add_user_plots_migration(plot_id, useremail, flagged) end) as user_plot_id, 
+		SELECT (CASE WHEN useremail is NULL or useremail = 'null' THEN NULL 
+				ELSE add_user_plots_migration(plot_id, useremail, flagged, 
+											  to_timestamp(ctime::bigint / 1000.0)::timestamp, 
+											  to_timestamp(ctime::bigint / 1000.0)::timestamp) 
+				END) as user_plot_id, 
 			plot_id, useremail, samples
 		FROM plot_index as p
 	),
 	sample_index as (
-		select *,
+		SELECT *,
 			ST_SetSRID(ST_GeomFromGeoJSON(ss.point), 4326) as point,
 			create_project_plot_sample(plot_id,ST_SetSRID(ST_GeomFromGeoJSON(ss.point), 4326)) as sample_id,
-			ss.value as sample_value
-		from plot_users as p
+			ss.value as sample_value,
+			ii.id as imagery_id,
+			ii.attributes as imagery_attributes
+		FROM plot_users as p
 		CROSS JOIN LATERAL 
-		json_array_elements(samples::json) as samples
+		json_array_elements(samples::json) as samples										  
 		CROSS JOIN LATERAL
-		json_to_record(value::json) as ss(id int, point text, value text)
-	
+		json_to_record(value::json) as ss(id int, point text, value text, "userImage" text)
+		CROSS JOIN LATERAL 
+		json_to_record(ss."userImage"::json) as ii(id int, attributes text)
 	)	
-	select COUNT((CASE WHEN user_plot_id IS NOT NULL THEN add_sample_values_migration(user_plot_id, sample_id, sample_value::jsonb) ELSE 1 END))::int from sample_index
+	SELECT COUNT((CASE WHEN user_plot_id IS NOT NULL THEN add_sample_values_migration(user_plot_id, sample_id, sample_value::jsonb, imagery_id, imagery_attributes::jsonb) ELSE 1 END))::int from sample_index
 
-	
 $$ LANGUAGE SQL;
 
 -- Merge tables to plots.  For migration
@@ -1818,7 +1854,9 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION rename_col(_table_name text, _from text, _to text)
  RETURNS void AS $$
 	BEGIN
-	EXECUTE 'ALTER TABLE ' || _table_name || ' RENAME COLUMN ' || _from || ' to ' || _to;
+	IF UPPER(_from) <> UPPER(_to) THEN
+		EXECUTE 'ALTER TABLE ' || _table_name || ' RENAME COLUMN ' || _from || ' to ' || _to;
+	END IF;
 	END
 $$ LANGUAGE PLPGSQL;
 
@@ -1826,6 +1864,6 @@ $$ LANGUAGE PLPGSQL;
 CREATE OR REPLACE FUNCTION add_plotId_col(_table_name text)
  RETURNS void AS $$
 	BEGIN
-	EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN plotId text';
+	EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN plotId integer';
 	END
 $$ LANGUAGE PLPGSQL;
