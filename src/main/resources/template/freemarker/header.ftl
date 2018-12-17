@@ -44,7 +44,6 @@
         <link rel="stylesheet" type="text/css" href="${root}/css/ol3-popup.css" />
         <script type="text/javascript" src="${root}/js/openlayers-3.13.0.js"></script>
         <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
-
         <!-- Fonts -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css"> -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-oswald.css"> -->
