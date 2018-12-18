@@ -501,14 +501,13 @@ class Collection extends React.Component {
         const plotRadius = this.state.currentProject.plotSize
                            ? this.state.currentProject.plotSize / 2.0
                            : mercator.getViewRadius(this.state.mapConfig);
-        window.open(this.props.documentRoot + "/geo-dash?editable=false&"
-                    + encodeURIComponent("title=" + this.state.currentProject.name
-                                         + "&pid=" + this.props.projectId
+        window.open(this.props.documentRoot + "/geo-dash?"
+                    + "&pid=" + this.props.projectId
                                          + "&plotid=" + plot.id
-                                         + "&plotshape=" + (plot.geom ? "polygon" : this.state.currentProject.plotShape)
-                                         + "&aoi=[" + mercator.getViewExtent(this.state.mapConfig)
-                                         + "]&daterange=&bcenter=" + plot.center
-                                         + "&bradius=" + plotRadius),
+                                         + "&plotshape=" + encodeURIComponent((plot.geom ? "polygon" : this.state.currentProject.plotShape))
+                                         + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(this.state.mapConfig) + "]")
+                                         + "&daterange=&bcenter=" + plot.center
+                                         + "&bradius=" + plotRadius,
                     "_geo-dash");
     }
 
