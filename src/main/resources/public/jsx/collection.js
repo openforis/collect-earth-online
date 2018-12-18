@@ -576,7 +576,8 @@ class Collection extends React.Component {
                 if (response.ok) {
                     let statistics = this.state.stats;
                     statistics.analyzedPlots = statistics.analyzedPlots + 1;
-                    this.setState({stats: statistics});
+                    this.setState({stats: statistics, selectedAnswers: {}});
+                    //reset state
                     this.nextPlot();
                 } else {
                     console.log(response);

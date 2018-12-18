@@ -278,6 +278,8 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
 mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
+    console.log(mercator.getFullExtent());
+    console.log(zoomLevel);
     var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
@@ -420,6 +422,11 @@ mercator.updateLayerWmsParams = function (mapConfig, layerTitle, newParams) {
 
 // [Side Effects] Zooms the map view to contain the passed in extent.
 mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
+    if(extent) {
+        if (extent[0] <= -13630599.62775418 && extent[1] <= -291567.89923496445 && extent[2] >= 20060974.510472793 && extent[3] >= 10122013.145404479) {
+           extent = [-13630599.62775418, -291567.89923496445, 20060974.510472793, 10122013.145404479];
+        }
+    }
     mapConfig.view.fit(extent,
                        mapConfig.map.getSize(),
                        {maxZoom: maxZoom || 19});
@@ -430,6 +437,8 @@ mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
 // title == layerTitle.
 mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
+    console.log("zooming to layer");
+    console.log(layer.getSource().getExtent());
     if (layer) {
         mercator.zoomMapToExtent(mapConfig, layer.getSource().getExtent(), maxZoom);
     }
