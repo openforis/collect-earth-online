@@ -1,0 +1,5 @@
+Archive:  C:\Users\washmall\Dropbox\collect-earth-online\target\classes\shp\project-657-samples.zip
+  inflating: C:\Users\washmall\Dropbox\collect-earth-online\target\classes\shp\project-657-samples/Bangladesh_square_24oct18.dbf  
+  inflating: C:\Users\washmall\Dropbox\collect-earth-online\target\classes\shp\project-657-samples/Bangladesh_square_24oct18.prj  
+  inflating: C:\Users\washmall\Dropbox\collect-earth-online\target\classes\shp\project-657-samples/Bangladesh_square_24oct18.shp  
+  inflating: C:\Users\washmall\Dropbox\collect-earth-online\target\classes\shp\project-657-samples/Bangladesh_square_24oct18.shx  

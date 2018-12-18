@@ -278,8 +278,6 @@ mercator.verifyMapInputs = function (divName, centerCoords, zoomLevel, layerConf
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
 mercator.createMap = function (divName, centerCoords, zoomLevel, layerConfigs) {
-    console.log(mercator.getFullExtent());
-    console.log(zoomLevel);
     var errorMsg = mercator.verifyMapInputs(divName, centerCoords, zoomLevel, layerConfigs);
     if (errorMsg) {
         console.error(errorMsg);
@@ -437,8 +435,6 @@ mercator.zoomMapToExtent = function (mapConfig, extent, maxZoom) {
 // title == layerTitle.
 mercator.zoomMapToLayer = function (mapConfig, layerTitle, maxZoom) {
     var layer = mercator.getLayerByTitle(mapConfig, layerTitle);
-    console.log("zooming to layer");
-    console.log(layer.getSource().getExtent());
     if (layer) {
         mercator.zoomMapToExtent(mapConfig, layer.getSource().getExtent(), maxZoom);
     }
@@ -769,9 +765,9 @@ mercator.getAllFeatures = function (mapConfig, layerTitle) {
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
     if (sample.get("shape") == "point") {
-        sample.setStyle(mercator.getCircleStyle(5, color, "#000000", 2));
+        color ? sample.setStyle(mercator.getCircleStyle(5, null, color, 2)) : sample.setStyle(mercator.getCircleStyle(5, color, "#000000", 2));
     } else {
-        sample.setStyle(mercator.getPolygonStyle(color, "#000000", 3));
+        color ? sample.setStyle(mercator.getPolygonStyle(null, color, 3)) : sample.setStyle(mercator.getPolygonStyle(color, "#000000", 3));
     }
     return sample;
 };
