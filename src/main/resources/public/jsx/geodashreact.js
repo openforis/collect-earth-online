@@ -456,6 +456,9 @@ class MapWidget extends React.Component {
             //still have to make the same postObject, but set a different callback to recall for second layer
             // might be best to rewrite the other at the same time.
             //hmmmm, maybe i can handle all of this logic in the callback instead by setting a different variable
+
+            // work on image asset here there will be a variable imageAsset in the dualImageCollection in which case we should call the gateway /image with imageParams
+
             let firstImage = widget.dualImageCollection[0];
             let secondImage = widget.dualImageCollection[1];
             collectionName = firstImage.collectionType;
@@ -468,6 +471,7 @@ class MapWidget extends React.Component {
             shortWidget.filterType = firstImage.filterType;
             shortWidget.properties = [];
             shortWidget.properties.push(collectionName);
+            shortWidget.ImageAsset = firstImage.imageAsset;
             url = MapWidget.getGatewayUrl(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null? firstImage.min: "";
@@ -495,7 +499,7 @@ class MapWidget extends React.Component {
             shortWidget2.filterType = secondImage.filterType;
             shortWidget2.properties = [];
             shortWidget2.properties.push(dualImageObject.collectionName);
-
+            shortWidget2.ImageAsset = secondImage.imageAsset;
             dualImageObject.url = MapWidget.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
 
             shortWidget2.visParams = secondImage.visParams;
@@ -512,7 +516,15 @@ class MapWidget extends React.Component {
 
 
             dualImageObject.visParams = MapWidget.getImageParams(shortWidget2);
-
+// work on image asset here there will be a variable imageAsset in the dualImageCollection in which case we should call the gateway /image with imageParams
+            if(firstImage.imageAsset){
+                postObject.imageName = firstImage.imageAsset;
+                postObject.visParams = firstImage.visParams;
+            }
+            if(secondImage.imageAsset){
+                dualImageObject.imageName = secondImage.imageAsset;
+                dualImageObject.visParams = secondImage.visParams;
+            }
 
         }
         else {

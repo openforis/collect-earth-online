@@ -446,6 +446,18 @@ class BasicLayout extends React.PureComponent{
                 }
                 this.addCustomImagery(this.buildImageryObject(img2));
             }
+            if(this.state.selectedDataType == "imageAsset")
+            {
+                //add image asset parameters
+                img1.visParams = JSON.parse(this.state.imageParams);
+                img1.imageAsset = this.state.imageCollection;
+            }
+            if(this.state.selectedDataTypeDual == "imageAsset")
+            {
+                //add dual image asset parameters
+                img2.visParams = JSON.parse(this.state.imageParamsDual);
+                img2.imageAsset = this.state.imageCollectionDual;
+            }
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
         }
@@ -669,7 +681,7 @@ class BasicLayout extends React.PureComponent{
     };
     onDataTypeSelectChangedDual = event => {
         this.setState({
-            selectedDataTypeDual: event.target.value
+            selectedDataTypeDual: event.target.value.trim()
         });
     };
     checkDatesDual() {
@@ -896,6 +908,7 @@ class BasicLayout extends React.PureComponent{
                         <option label="LANDSAT 7" value="LANDSAT7">LANDSAT 7</option>
                         <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
                         <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
+                        <option label="Image Asset" value="imageAsset">Image Asset</option>
                         <option label="Custom widget" value="Custom">Custom widget</option>
                     </select>
                 </React.Fragment>
@@ -916,6 +929,7 @@ class BasicLayout extends React.PureComponent{
                         <option label="LANDSAT 7" value="LANDSAT7">LANDSAT 7</option>
                         <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
                         <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
+                        <option label="Image Asset" value="imageAsset">Image Asset</option>
                         <option label="Custom widget" value="Custom">Custom widget</option>
                     </select>
 
@@ -1066,6 +1080,41 @@ class BasicLayout extends React.PureComponent{
 
                 </React.Fragment>
             }
+            else if((this.state.selectedDataType == "imageAsset" && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 1)
+            {
+                return <React.Fragment>
+                <div className="form-group">
+                    <label htmlFor="widgetTitle">Title</label>
+                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                           className="form-control" onChange={this.onWidgetTitleChange}/>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="imageCollection">GEE Image Asset</label>
+                    <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
+                           className="form-control" onChange={this.onImageCollectionChange}/>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="imageParams">Image Parameters (json format)</label>
+                    <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
+                </div>
+                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType == "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+            </React.Fragment>
+            }
+            else if((this.state.selectedDataTypeDual == "imageAsset" && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 2)
+            {
+                return <React.Fragment>
+                    <div className="form-group">
+                        <label htmlFor="imageCollection">GEE Image Asset</label>
+                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollectionDual}
+                               className="form-control" onChange={this.onImageCollectionChangeDual}/>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="imageParams">Image Parameters (json format)</label>
+                        <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
+                    </div>
+                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                </React.Fragment>
+            }
             else if((this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection") && this.state.selectedDataType == "Custom"  && this.state.wizardStep == 1)
             {
                 return <React.Fragment>
@@ -1204,6 +1253,7 @@ class BasicLayout extends React.PureComponent{
                 </React.Fragment>
             }
             else {
+                console.log("nothing doing!");
                 return <React.Fragment>
                     <div className="form-group">
                         <label htmlFor="widgetTitle">Title</label>
