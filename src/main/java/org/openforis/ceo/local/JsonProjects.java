@@ -577,8 +577,8 @@ public class JsonProjects implements Projects {
                         plotSummary.addProperty("analyses", getOrZero(project, "analyses").getAsInt());
                         plotSummary.addProperty("sample_points", samples.size());
                         plotSummary.add("user_id", plot.get("user"));
-                        plotSummary.addProperty("collection_time", simple.format(new Date(collectionTime)));
-                        plotSummary.addProperty("analysis_duration", finalAnalysisDuration);
+                        plotSummary.addProperty("collection_time", collectionTime > 0 ? simple.format(new Date(collectionTime)) : "");
+                        plotSummary.addProperty("analysis_duration", finalAnalysisDuration > 0 : finalAnalysisDuration : 0);
                         plotSummary.addProperty("confidence", confidence);
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
@@ -668,7 +668,7 @@ public class JsonProjects implements Projects {
                             sampleSummary.add("user_id", userId);
                             sampleSummary.add("value", sample.get("value"));
                             
-                            sampleSummary.addProperty("collection_time", simple.format(new Date(collectionTime)));
+                            sampleSummary.addProperty("collection_time", collectionTime > 0 ? simple.format(new Date(collectionTime)) : "");
                             sampleSummary.addProperty("analysis_duration", finalAnalysisDuration);
                             sampleSummary.addProperty("confidence", confidence);
                             

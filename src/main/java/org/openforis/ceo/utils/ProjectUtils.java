@@ -121,17 +121,24 @@ public class ProjectUtils {
         return response;
     }
 
+    private static String csvQuotes(String input) {
+        return input.contains(",") ? "\"" + input + "\"" : input;
+    }
+
     public static HttpServletResponse outputAggregateCsv(Response res, JsonArray sampleValueGroups, JsonArray plotSummaries, String projectName, String[] externalHeaders){
         var sampleValueKeys = getSampleKeys(sampleValueGroups);
         // fileds are straight forward json values
-        var fields = Stream.concat(
+        final String[] fields = Stream.concat(
                         Arrays.stream(new String[]{"plot_id", "center_lon", "center_lat", "size_m", "shape", "flagged", "analyses", "sample_points", "user_id"}), 
                         Arrays.stream(externalHeaders))
                         .toArray(String[]::new);
         // labels require interpretation of the next json object
-        var labels = getValueDistributionLabels(sampleValueGroups, sampleValueKeys);
+        final String[] labels = getValueDistributionLabels(sampleValueGroups, sampleValueKeys);
 
-        var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase).collect(Collectors.joining(","));
+        final String csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels))
+                                    .map(field -> csvQuotes(field).toUpperCase())
+                                    .collect(Collectors.joining(","));
+        
         var csvContent = toStream(plotSummaries)
                 .map(plotSummary -> {
                     var fieldStream = Arrays.stream(fields);
@@ -141,12 +148,12 @@ public class ProjectUtils {
                             fieldStream.map(field -> plotSummary.has(field) ?
                                     plotSummary.get(field).isJsonNull()
                                         ? ""
-                                        : plotSummary.get(field).getAsString()
+                                        : csvQuotes(plotSummary.get(field).getAsString())
                                     : ""),
                             labelStream.map(label -> distribution.has(label)
                                     ? distribution.getAsJsonObject().get(label).isJsonPrimitive() 
-                                        ? distribution.get(label).getAsString()
-                                        : distribution.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString()
+                                        ? csvQuotes(distribution.get(label).getAsString())
+                                        : csvQuotes(distribution.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString())
                                     : "0.0")
                             ).collect(Collectors.joining(","));
                     }).collect(Collectors.joining("\n"));
@@ -159,23 +166,24 @@ public class ProjectUtils {
     }
 
     public static HttpServletResponse outputRawCsv(Response res, JsonArray sampleValueGroups, JsonArray sampleSummaries, String projectName, String[] externalHeaders) {
-        var sampleValueKeys = getSampleKeys(sampleValueGroups);
-        var sampleValueGroupNames = toStream(sampleValueGroups)
+        final var sampleValueKeys = getSampleKeys(sampleValueGroups);
+        final var sampleValueGroupNames = toStream(sampleValueGroups)
         .collect(Collectors.toMap(sampleValueGroup -> sampleValueGroup.get("id").getAsInt(),
                 sampleValueGroup -> sampleValueGroup.get(sampleValueKeys[0]).getAsString(),
                 (a, b) -> b));
 
         // fileds are straight forward json values
-        var fields = Stream.concat(
+        final String[] fields = Stream.concat(
                         Arrays.stream(new String[]{"plot_id", "sample_id", "lon", "lat", "flagged", "analyses", "user_id"}), 
                         Arrays.stream(externalHeaders))
                         .toArray(String[]::new);
         // labels require interpretation of the next json object
-        var labels = sampleValueGroupNames.entrySet().stream()
+        final String[] labels = sampleValueGroupNames.entrySet().stream()
                         .sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue)
                         .toArray(String[]::new);
 
-        var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels)).map(String::toUpperCase)
+        final var csvHeader = Stream.concat(Arrays.stream(fields), Arrays.stream(labels))
+                        .map(field -> csvQuotes(field).toUpperCase())
                         .collect(Collectors.joining(","));
 
         var csvContent = toStream(sampleSummaries)
@@ -191,15 +199,15 @@ public class ProjectUtils {
                                 // original format is single integer index
                                 } else if (value.isJsonPrimitive()) {
                                     var sampleValueTranslations = getSampleValueTranslations(sampleValueGroups);
-                                    return sampleValueTranslations
+                                    return csvQuotes(sampleValueTranslations
                                             .getOrDefault(value.getAsInt(), "LULC:NoValue")
-                                            .split(":")[1];
+                                            .split(":")[1]);
                                 } else if (value.getAsJsonObject().has(label)) {
                                     if (value.getAsJsonObject().get(label).isJsonPrimitive()){
-                                        return value.getAsJsonObject().get(label).getAsString();
+                                        return csvQuotes(value.getAsJsonObject().get(label).getAsString());
                                     }
                                     // newest format nests the answer in another json object
-                                    return value.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString();
+                                    return csvQuotes(value.getAsJsonObject().get(label).getAsJsonObject().get("answer").getAsString());
                                 } else {
                                     return "";
                                 }
