@@ -527,7 +527,15 @@ public class JsonProjects implements Projects {
             return new ArrayList<String>();
         }
     }
-
+    
+    // Some older data contains a useless string fromat for collection time. 
+    private Long collectTimeIgnoreString (JsonObject plot){
+        try {
+            return getOrZero(plot, "collectionTime").getAsLong();
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         final var projectId = req.params(":id");
@@ -550,7 +558,7 @@ public class JsonProjects implements Projects {
                         final var samples = plot.get("samples").getAsJsonArray();
                         final var center = parseJson(plot.get("center").getAsString()).getAsJsonObject();
                         final var coords = center.get("coordinates").getAsJsonArray();
-                        final var collectionTime = getOrZero(plot, "collectionTime").getAsLong();
+                        final var collectionTime = collectTimeIgnoreString(plot);
                         final var collectionStart = getOrZero(plot, "collectionStart").getAsLong();
                         final var confidence = getOrZero(plot, "confidence").getAsInt();
                         var analysisDuration = 0.0;
@@ -578,7 +586,7 @@ public class JsonProjects implements Projects {
                         plotSummary.addProperty("sample_points", samples.size());
                         plotSummary.add("user_id", plot.get("user"));
                         plotSummary.addProperty("collection_time", collectionTime > 0 ? simple.format(new Date(collectionTime)) : "");
-                        plotSummary.addProperty("analysis_duration", finalAnalysisDuration > 0 : finalAnalysisDuration : 0);
+                        plotSummary.addProperty("analysis_duration", finalAnalysisDuration > 0 ? finalAnalysisDuration : 0);
                         plotSummary.addProperty("confidence", confidence);
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
@@ -636,7 +644,7 @@ public class JsonProjects implements Projects {
                         final var flagged = plot.get("flagged").getAsBoolean();
                         final var analyses = plot.get("analyses").getAsInt();
                         final var userId = plot.get("user");
-                        final var collectionTime = getOrZero(plot, "collectionTime").getAsLong();
+                        final var collectionTime = collectTimeIgnoreString(plot);
                         final var collectionStart = getOrZero(plot, "collectionStart").getAsLong();
                         final var confidence = getOrZero(plot, "confidence").getAsInt();
                         var analysisDuration = 0.0;
