@@ -364,7 +364,11 @@ public class ProjectUtils {
     }
 
     public static JsonElement getOrZero(JsonObject obj, String field) {
-        return !obj.has(field) || obj.get(field).isJsonNull() || obj.get(field) == null ? new JsonPrimitive(0) : obj.get(field);
+        try {
+            return obj.get(field).isJsonNull() || obj.get(field) == null ? new JsonPrimitive(0) : obj.get(field);
+        } catch(Exception e) {
+            return new JsonPrimitive(0);
+        }
     }
 
     public static JsonElement getOrEmptyString(JsonObject obj, String field) {
