@@ -4,7 +4,6 @@ import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
-import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
@@ -720,7 +719,7 @@ public class PostgresProjects implements Projects {
                     })
                     .collect(Collectors.joining(","));
             
-            return String.join(",", fields);
+            return fields;
         } catch (Exception e) {
             throw new RuntimeException("Error reading csv file", e);
         }

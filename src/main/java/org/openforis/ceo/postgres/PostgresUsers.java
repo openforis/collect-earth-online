@@ -322,6 +322,9 @@ public class PostgresUsers implements Users {
         }
         return "";
     }
+
+    public String updateProjectUserStats(Request req, Response res) { return "";}
+
     // FIXME this appears to be unused.  Not tested
     public Map<Integer, String> getInstitutionRoles(int userId) {
         var inst = new HashMap<Integer,String>();

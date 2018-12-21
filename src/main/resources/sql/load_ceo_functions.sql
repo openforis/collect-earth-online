@@ -214,11 +214,11 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
 	),
 	proj_agg as (
 		SELECT
-			format('{%s}', string_agg(format('"%s":"%s"', proj_id, plot_cnt), ',')) as count_json,
+			format('{%s}', string_agg(format('"%s":%s', proj_id, plot_cnt), ',')) as count_json,
 			format('{%s}', string_agg((CASE WHEN sec_avg IS NULL THEN
-					format('"%s":"%s"',proj_id, 0)  			 
+					format('"%s":%s',proj_id, 0)  			 
 				ELSE
-					format('"%s":"%s"', proj_id, sec_avg)
+					format('"%s":%s', proj_id, sec_avg)
 				END) , ',')) as avg_json
 		FROM proj_groups
 	)

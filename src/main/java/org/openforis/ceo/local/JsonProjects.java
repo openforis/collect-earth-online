@@ -18,21 +18,22 @@ import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.partToString;
 import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
 import static org.openforis.ceo.utils.PartUtils.writeFilePart;
-import static org.openforis.ceo.utils.ProjectUtils.padBounds;
-import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
-import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
-import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
+import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
+import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
 import static org.openforis.ceo.utils.ProjectUtils.getValueDistribution;
+import static org.openforis.ceo.utils.ProjectUtils.collectTimeIgnoreString;
 import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPoint;
 import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPolygon;
-import static org.openforis.ceo.utils.ProjectUtils.getSampleValueTranslations;
-import static org.openforis.ceo.utils.ProjectUtils.deleteShapeFileDirectories;
+import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
+import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
+import static org.openforis.ceo.utils.ProjectUtils.padBounds;
+import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 
 
@@ -527,15 +528,6 @@ public class JsonProjects implements Projects {
             return new ArrayList<String>();
         }
     }
-    
-    // Some older data contains a useless string fromat for collection time. 
-    private Long collectTimeIgnoreString (JsonObject plot){
-        try {
-            return getOrZero(plot, "collectionTime").getAsLong();
-        } catch (Exception e) {
-            return 0L;
-        }
-    }
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         final var projectId = req.params(":id");
@@ -793,6 +785,16 @@ public class JsonProjects implements Projects {
         return "";
     }
 
+    private static JsonObject addToKey(JsonObject existing, String userName, Integer increment) {
+        if (existing.has(userName)) {
+            existing.addProperty(userName, existing.get(userName).getAsInt() + increment);
+            return existing;
+        } else {
+            existing.addProperty(userName, increment);
+            return existing;
+        }
+    }
+
     public synchronized String addUserSamples(Request req, Response res) {
         var jsonInputs =            parseJson(req.body()).getAsJsonObject();
         var projectId =             jsonInputs.get("projectId").getAsString();
@@ -803,6 +805,7 @@ public class JsonProjects implements Projects {
         var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
         var userImages =            jsonInputs.get("userImages").getAsJsonObject();
 
+        final var collectionTime = System.currentTimeMillis();
         mapJsonFile("plot-data-" + projectId + ".json",
                 plot -> {
                     if (plot.get("id").getAsString().equals(plotId)) {
@@ -818,12 +821,40 @@ public class JsonProjects implements Projects {
                                     return sample;
                                 });
                         plot.add("samples", updatedSamples);
-                        plot.addProperty("collectionTime", System.currentTimeMillis());
+                        plot.addProperty("collectionTime", collectionTime);
                         plot.addProperty("confidence", confidence == -1 ? null : Integer.toString(confidence));
                         plot.addProperty("collectionStart", collectionStart);
                         return plot;
                     } else {
                         return plot;
+                    }
+                });
+        // add new stats to project summary for speed in retreiving
+        mapJsonFile("project-list.json",
+                project -> {
+                    if (project.get("id").getAsString().equals(projectId)) {
+                        project.add("userMilliSeconds", 
+                                    addToKey(project.has("userMilliSeconds")
+                                            ? project.get("userMilliSeconds").getAsJsonObject()
+                                            : new JsonObject(),
+                                    userName, (int) (collectionTime - collectionStart))                        
+                                );
+                        project.add("userPlots", 
+                                    addToKey(project.has("userPlots")
+                                            ? project.get("userPlots").getAsJsonObject()
+                                            : new JsonObject(),
+                                    userName, 1)                        
+                                );
+                        // for backwords compatability
+                        project.add("timedUserPlots", 
+                                    addToKey(project.has("timedUserPlots")
+                                            ? project.get("timedUserPlots").getAsJsonObject()
+                                            : new JsonObject(),
+                                    userName, 1)                      
+                                );
+                        return project;
+                    } else {
+                        return project;
                     }
                 });
 

@@ -1,5 +1,6 @@
 package org.openforis.ceo.local;
 
+import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
@@ -10,10 +11,15 @@ import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
+import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
+import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
+import static org.openforis.ceo.utils.ProjectUtils.collectTimeIgnoreString;
+
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -122,6 +128,7 @@ public class JsonUsers implements Users {
         return req;
     }
 
+    // FIXME back port postgres checks that allow user to change only one part
     public synchronized Request updateAccount(Request req, Response res) {
         var userId = (String) req.session().attribute("userid");
         var inputEmail = req.queryParams("email");
@@ -294,7 +301,138 @@ public class JsonUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        return "";
+        final var userName =     req.params(":userid");
+        final var projects = readJsonFile("project-list.json").getAsJsonArray();
+               
+        // Pull out usefull data
+        final var projectData = toStream(projects)
+            .filter(project -> Paths.get(expandResourcePath("/json"), "plot-data-" + project.get("id").getAsString() + ".json").toFile().exists() 
+                                && project.has("userPlots") 
+                                && project.get("userPlots").getAsJsonObject().has(userName))
+            .map(project -> {
+                var projectDataObject = new JsonObject(); 
+                projectDataObject.addProperty("plotCount", project.get("userPlots").getAsJsonObject().get(userName).getAsInt());    
+                
+                projectDataObject.addProperty("analysisAverage", Math.round(project.get("userMilliSeconds").getAsJsonObject().get(userName).getAsInt() / 
+                1.0 / project.get("timedUserPlots").getAsJsonObject().get(userName).getAsInt() / 100.0) / 10.0);
+
+                projectDataObject.addProperty("totalMilliSecond",project.get("userMilliSeconds").getAsJsonObject().get(userName).getAsInt());   
+                projectDataObject.addProperty("timedUserPlots",project.get("timedUserPlots").getAsJsonObject().get(userName).getAsInt());   
+
+                var projectObject = new JsonObject();
+                projectObject.add(project.get("id").getAsString(), projectDataObject);
+                return projectObject;
+                }
+            )    
+            .collect(intoJsonArray);
+
+        final int totalPlots = toStream(projectData)
+            .map(project -> getOrZero(project.get(project.keySet().iterator().next().toString()).getAsJsonObject(), "plotCount").getAsInt())
+            .mapToInt(Integer::intValue).sum();
+
+        final int totalTimedPlots = toStream(projectData)
+            .map(project -> getOrZero(project.get(project.keySet().iterator().next().toString()).getAsJsonObject(), "timedUserPlots").getAsInt())
+            .mapToInt(Integer::intValue).sum();
+
+        final int totalMilliseconds = toStream(projectData)
+            .map(project -> getOrZero(project.get(project.keySet().iterator().next().toString()).getAsJsonObject(), "totalMilliSecond").getAsInt())
+            .mapToInt(Integer::intValue).sum();
+                
+        final var plotsByProject = toStream(projectData)
+                .map(project -> {
+                    return "\"" + project.keySet().iterator().next().toString() + "\" : " +
+                            project.get(project.keySet().iterator().next().toString()).getAsJsonObject().get("plotCount").getAsString();
+
+                }).collect(Collectors.joining(","));
+        
+        final var secondsByProject = toStream(projectData)
+                .map(project -> {
+                    return "\"" + project.keySet().iterator().next().toString() + "\" : " +
+                            project.get(project.keySet().iterator().next().toString()).getAsJsonObject().get("analysisAverage").getAsString();
+
+                }).collect(Collectors.joining(","));
+
+        var userStats = new JsonObject();
+        userStats.addProperty("totalProjects", projectData.size());
+        userStats.addProperty("totalPlots", totalPlots);
+        userStats.addProperty("averageTime", Math.round(totalMilliseconds / 100.0 / totalTimedPlots) / 10.0);
+        userStats.add("plotsByProject", parseJson("{" + plotsByProject + "}").getAsJsonObject());
+        userStats.add("timeByProject", parseJson("{" + secondsByProject + "}").getAsJsonObject());
+        return userStats.toString();
+    
+    }
+
+    private JsonObject mapToObject(Map<String, Integer> usermap) {
+        return parseJson("{" + 
+            usermap.entrySet().stream()
+                .map(user -> {
+                    return "\"" + user.getKey() + "\" : " + Integer.toString(user.getValue());
+                }).collect(Collectors.joining(",")) + "}"
+        ).getAsJsonObject();
+    }
+
+    public String updateProjectUserStats(Request req, Response res) {
+
+        mapJsonFile("project-list.json",
+                project -> {
+                    if (Paths.get(expandResourcePath("/json"), "plot-data-" + project.get("id").getAsString() + ".json").toFile().exists()) {
+                        System.out.println(project.get("id").getAsString());
+                        var plots = readJsonFile("plot-data-" + project.get("id").getAsString() + ".json").getAsJsonArray();
+                        // System.out.println(plots.toString());
+                        var plotsData = toStream(plots)
+                            .filter(plot -> getOrEmptyString(plot, "user").getAsString().length() > 0)
+                            .map(plot -> {
+                                var plotObject = new JsonObject();
+
+                                plotObject.addProperty("milliSecs", collectTimeIgnoreString(plot) - getOrZero(plot, "collectionStart").getAsLong());
+                                plotObject.addProperty("plots", 1);
+                                plotObject.addProperty("timedPlots", getOrZero(plot, "collectionStart").getAsLong() > 0 ? 1 : 0);
+                                
+                                var userObject = new JsonObject();
+                                userObject.add(plot.get("user").getAsString(), plotObject);
+                                return userObject;
+                                }
+                            )
+                            .collect(intoJsonArray);
+                        final var milliTotalByUser = toStream(plotsData)
+                            .collect(
+                                Collectors.toMap(
+                                    plot -> plot.keySet().iterator().next().toString(),
+                                    plot -> plot.get(plot.keySet().iterator().next().toString()).getAsJsonObject().get("milliSecs").getAsInt(),
+                                    (a, b) -> a + b
+                                )
+                            );
+
+                        final var plotsTotalByUser = toStream(plotsData)
+                            .collect(
+                                Collectors.toMap(
+                                    plot -> plot.keySet().iterator().next().toString(),
+                                    plot -> plot.get(plot.keySet().iterator().next().toString()).getAsJsonObject().get("plots").getAsInt(),
+                                    (a, b) -> a + b
+                                )
+                            );
+                            
+                        final var timedPlotsTotalByUser = toStream(plotsData)
+                            .collect(
+                                Collectors.toMap(
+                                    plot -> plot.keySet().iterator().next().toString(),
+                                    plot -> plot.get(plot.keySet().iterator().next().toString()).getAsJsonObject().get("timedPlots").getAsInt(),
+                                    (a, b) -> a + b
+                                )
+                            );
+
+                        project.add("userMilliSeconds", mapToObject(milliTotalByUser));
+                        project.add("userPlots", mapToObject(plotsTotalByUser));
+                        project.add("timedUserPlots", mapToObject(timedPlotsTotalByUser));
+
+                        return project;
+                    } else {
+                        return project;
+                    }
+                }
+            );
+
+            return "";
     }
     
     public Map<Integer, String> getInstitutionRoles(int userId) {
