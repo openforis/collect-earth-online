@@ -376,15 +376,15 @@ public class JsonUsers implements Users {
         mapJsonFile("project-list.json",
                 project -> {
                     if (Paths.get(expandResourcePath("/json"), "plot-data-" + project.get("id").getAsString() + ".json").toFile().exists()) {
-                        System.out.println(project.get("id").getAsString());
                         var plots = readJsonFile("plot-data-" + project.get("id").getAsString() + ".json").getAsJsonArray();
-                        // System.out.println(plots.toString());
                         var plotsData = toStream(plots)
                             .filter(plot -> getOrEmptyString(plot, "user").getAsString().length() > 0)
                             .map(plot -> {
                                 var plotObject = new JsonObject();
 
-                                plotObject.addProperty("milliSecs", collectTimeIgnoreString(plot) - getOrZero(plot, "collectionStart").getAsLong());
+                                plotObject.addProperty("milliSecs", collectTimeIgnoreString(plot) > getOrZero(plot, "collectionStart").getAsLong()
+                                                                    ? collectTimeIgnoreString(plot) - getOrZero(plot, "collectionStart").getAsLong() 
+                                                                    : 0L);
                                 plotObject.addProperty("plots", 1);
                                 plotObject.addProperty("timedPlots", getOrZero(plot, "collectionStart").getAsLong() > 0 ? 1 : 0);
                                 
