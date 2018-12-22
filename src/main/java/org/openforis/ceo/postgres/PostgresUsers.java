@@ -312,8 +312,7 @@ public class PostgresUsers implements Users {
                     userJson.addProperty("totalProjects", rs.getInt("total_projects"));
                     userJson.addProperty("totalPlots", rs.getInt("total_plots"));
                     userJson.addProperty("averageTime", rs.getInt("average_time"));
-                    userJson.add("plotsByProject", parseJson(rs.getString("plots_by_project")).getAsJsonObject());
-                    userJson.add("timeByProject", parseJson(rs.getString("time_by_project")).getAsJsonObject());
+                    userJson.add("perProject", parseJson(rs.getString("per_project")).getAsJsonArray());
                 }
                 return userJson.toString();
             }

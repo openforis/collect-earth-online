@@ -178,12 +178,12 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
 	 total_projects		integer,
 	 total_plots		integer,
 	 average_time		numeric,
-	 plots_by_project	text,
-	 time_by_project	text
+	 per_project		text
  	) AS $$
 	WITH users_plots as (
-		SELECT p.id as proj_id, pl.id as plot_id, 
-			EXTRACT(EPOCH FROM (collection_time - collection_start)) as seconds
+		SELECT p.id as proj_id, pl.id as plot_id, p.*,
+			(CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
+				ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) as seconds
 		FROM user_plots up
 		INNER JOIN plots pl
 			ON up.plot_id = pl.id
@@ -206,20 +206,19 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
 		WHERE seconds IS NOT null
 	),
 	proj_groups as (
-		SELECT proj_id,
+		SELECT proj_id, "name", description, availability,
 			count(plot_id)::int as plot_cnt,
 			round(avg(seconds)::numeric, 1) as sec_avg
 		FROM users_plots
-		GROUP BY proj_id
+		GROUP BY proj_id, "name", description, availability
+		ORDER BY proj_id DESC
 	),
 	proj_agg as (
 		SELECT
-			format('{%s}', string_agg(format('"%s":%s', proj_id, plot_cnt), ',')) as count_json,
-			format('{%s}', string_agg((CASE WHEN sec_avg IS NULL THEN
-					format('"%s":%s',proj_id, 0)  			 
-				ELSE
-					format('"%s":%s', proj_id, sec_avg)
-				END) , ',')) as avg_json
+			format('[%s]', 
+				   string_agg(
+					   format('{"id":%s, "name":"%s", "description":"%s", "availability":"%s", "plotCount":%s, "analysisAverage":%s}'
+							  , proj_id, "name", description, availability, plot_cnt, sec_avg), ',')) as per_project			
 		FROM proj_groups
 	)
 	SELECT * FROM user_totals, average_totals, proj_agg
