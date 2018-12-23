@@ -84,7 +84,7 @@ public class Server implements SparkApplication {
         get("/geo-dash",                              Views.geodash(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
         get("/test-layout-editor",                    Views.testWidgetLayout(freemarker));
-        get("/create-project/:id",                    Views.createProject(freemarker));
+        get("/create-project",                        Views.createProject(freemarker));
         get("/review-project/:id",                    Views.reviewProject(freemarker));
         get("/project-dashboard/:id",                 Views.projectDashboard(freemarker));
         get("/login",                                 Views.login(freemarker));

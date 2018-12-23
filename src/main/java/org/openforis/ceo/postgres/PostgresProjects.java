@@ -868,8 +868,8 @@ public class PostgresProjects implements Projects {
         var sampleDistribution = getOrEmptyString(newProject, "sampleDistribution").getAsString();
         var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
         var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
-        var plotsFile =          newProject.has("plots_file") ? newProject.get("plots_file").getAsString() : "";
-        var samplesFile =        newProject.has("samples_file") ? newProject.get("samples_file").getAsString() : "";
+        var plotsFile =          getOrEmptyString(newProject, "plots_file").getAsString();
+        var samplesFile =        getOrEmptyString(newProject,"samples_file").getAsString();
         try (var conn = connect()) {
             // load files into the database (loadPlot, loadSamples) and update projects
             try (var pstmt = 

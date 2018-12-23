@@ -109,17 +109,17 @@ class UserStats extends React.Component {
     }
 }
 
-function ProjectRow({ project }) {
+function ProjectRow({ project: {id, name, plotCount, analysisAverage} }) {
     return (
         <tr>
-            <td>{`#${project.id} - ${project.name}`}</td>
+            <td>{`#${id} - ${name}`}</td>
             <td className="text-center">
-                <span className="badge badge-pill bg-lightgreen">{project.plotCount || ""} plots </span>
+                <span className="badge badge-pill bg-lightgreen">{plotCount || ""} plots </span>
             </td>
             <td className="text-center">
-                {project.analysisAverage ? 
+                {analysisAverage ? 
                     (
-                    <span className="badge badge-pill bg-lightgreen">{project.analysisAverage} sec/plot </span>
+                    <span className="badge badge-pill bg-lightgreen">{analysisAverage} sec/plot </span>
                     )
                     : ("Untimed")
                 }

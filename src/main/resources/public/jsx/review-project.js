@@ -7,9 +7,6 @@ class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            userId: this.props.userId,
-            projectId: this.props.projectId,
-            institutionId: this.props.institutionId,
             details: null,
             stats: null,
             imageryList: null,
@@ -21,8 +18,6 @@ class Project extends React.Component {
             latMax: "",
             newSurveyQuestionName: "",
             newValueEntry: {},
-            projectList: null,
-            templateId: "0",
             // FIXME: Add these attributes to the JSON database
             dateCreated: null,
             datePublished: null,
@@ -41,7 +36,6 @@ class Project extends React.Component {
         this.downloadSampleData = this.downloadSampleData.bind(this);
         this.closeProject = this.closeProject.bind(this);
         this.changeAvailability = this.changeAvailability.bind(this);
-        this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.getParentSurveyQuestions = this.getParentSurveyQuestions.bind(this);
         this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
         this.getParentSurveyQuestionAnswers=this.getParentSurveyQuestionAnswers.bind(this);
@@ -51,51 +45,9 @@ class Project extends React.Component {
     };
 
     componentDidMount() {
-        if (this.state.stats == null) {
-            this.getProjectStats(this.props.projectId);
-        }
-        if (this.state.imageryList == null) {
-            this.getImageryList(this.props.institutionId);
-        }
-        if (this.state.details == null) {
-            this.getProjectById(this.props.projectId);
-        }
-        else {
-            if (this.state.details.id == 0) {
-                this.state.details.privacyLevel = "private";
-                this.state.details.projectDistribution = "random";
-                if (document.getElementById("sample-distribution-random") != null) {
-                    document.getElementById("sample-distribution-random").disabled = false;
-                    document.getElementById("sample-distribution-gridded").disabled = false;
-                    document.getElementById("sample-distribution-csv").disabled = true;
-                    document.getElementById("sample-distribution-shp").disabled = true;
-                }
-                this.state.details.plotShape = "circle";
-                this.state.details.sampleDistribution = "random";
-                this.getProjectList(this.props.userId, this.props.projectId);
-            }
-            else if (this.state.details.id != 0) {
-                if (document.getElementById("num-plots") != null) {
-                    if (document.getElementById("plot-distribution-gridded").checked)
-                        document.getElementById("plot-design-text").innerHTML = "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.";
-                    if (document.getElementById("plot-distribution-random").checked) {
-                        document.getElementById("plot-design-text").innerHTML = "Plot centers will be randomly distributed within the AOI.";
-                    }
-                    if (document.getElementById("plot-distribution-csv").checked)
-                        document.getElementById("plot-design-text").innerHTML = "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.";
-                    if (document.getElementById("plot-distribution-shp").checked)
-                        document.getElementById("plot-design-text").innerHTML = "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.";
-                    if (document.getElementById("sample-distribution-gridded").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.";
-                    if (document.getElementById("sample-distribution-random").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Sample points will be randomly distributed within the plot boundary.";
-                    if (document.getElementById("sample-distribution-csv").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.";
-                    if (document.getElementById("sample-distribution-shp").checked)
-                        document.getElementById("sample-design-text").innerHTML = "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.";
-                }
-            }
-        }
+        this.getProjectStats();
+        this.getImageryList();
+        this.getProjectById();
     }
 
     publishProject() {
@@ -199,16 +151,6 @@ class Project extends React.Component {
         window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.details.id, "_blank");
     }
 
-    setBaseMapSource() {
-        var e = document.getElementById("base-map-source");
-        var bms = e.options[e.selectedIndex].value;
-        var detailsNew = this.state.details;
-        detailsNew.baseMapSource = bms;
-
-        this.setState({details: detailsNew});
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
-    }
-
     getParentSurveyQuestions(sampleSurvey) {
         return sampleSurvey.filter(
             function (surveyQuestion) {
@@ -216,6 +158,7 @@ class Project extends React.Component {
             }
         );
     }
+
     getParentSurveyQuestionAnswers(sampleSurvey) {
         var ans = [];
         sampleSurvey.map((sq) => {
@@ -238,13 +181,10 @@ class Project extends React.Component {
                 if (sq.id == question_id) {
                     ans = sq.answers;
                 }
-
-
             }
         );
         return ans;
     }
-
 
     getChildSurveyQuestions(sampleSurvey, parentSurveyQuestion) {
         return sampleSurvey.filter(
@@ -254,29 +194,6 @@ class Project extends React.Component {
         );
     }
 
-    // topoSort(sampleSurvey) {
-    //     var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
-    //     console.log(parentSurveyQuestions);
-    //     var parentChildGroups = this.getParentChildGroups(parentSurveyQuestions,sampleSurvey);
-    //     return parentChildGroups;
-    // }
-    // getParentChildGroups(parentSurveyQuestions,sampleSurvey){
-    //     var parentChildGroups = parentSurveyQuestions.map(
-    //         function (parentSurveyQuestion) {
-    //             var childSurveyQuestions = sampleSurvey.filter(
-    //                 function (sampleValue) {
-    //                     return sampleValue.parent_question == parentSurveyQuestion.id && sampleValue.parent_question!=-1;
-    //                 }
-    //             );
-    //             console.log("from topo");
-    //             console.log((parentSurveyQuestions).concat(childSurveyQuestions));
-    //             return (parentSurveyQuestions).concat(childSurveyQuestions);
-    //         },
-    //         this
-    //     );
-    //     return [].concat.apply([], parentChildGroups);
-    //
-    // }
     topoSort(sampleSurvey) {
         var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
         var parentChildGroups = parentSurveyQuestions.map(
@@ -301,7 +218,8 @@ class Project extends React.Component {
         );
     }
 
-    getProjectById(projectId) {
+    getProjectById() {
+        const { projectId } = this.props
         fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
             .then(response => {
                 if (response.ok) {
@@ -348,53 +266,31 @@ class Project extends React.Component {
                     }
                     detailsNew.sampleValues=newSV;
                     this.setState({details: detailsNew});
-                    this.updateUnmanagedComponents(this.state.projectId);
+                    this.updateUnmanagedComponents(projectId);
 
                 }
             });
     }
 
-    getProjectList(userId, projectId) {
-        fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
+    getProjectStats() {
+        const { projectId } = this.props
+        fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
             .then(response => {
                 if (response.ok) {
                     return response.json()
                 } else {
                     console.log(response);
-                    alert("Error retrieving the project list. See console for details.");
+                    alert("Error retrieving project stats. See console for details.");
                 }
             })
             .then(data => {
-                this.setState({projectList: data});
-                var projList = this.state.projectList;
-                projList.unshift(JSON.parse(JSON.stringify(this.state.details)));
-                this.setState({projectList: projList});
-                this.setState({userId: userId});
-                this.setState({projectId: "" + projectId});
-                this.updateUnmanagedComponents(this.state.projectId);
-
+                this.setState({stats: data});
             });
     }
 
-    getProjectStats(projectId) {
-        if(projectId>0) {
-            fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json()
-                    } else {
-                        console.log(response);
-                        alert("Error retrieving project stats. See console for details.");
-                    }
-                })
-                .then(data => {
-                    this.setState({stats: data});
-                });
-        }
-    }
-
-    getImageryList(institutionId) {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
+    getImageryList() {
+        // FIXME use the project data to find the institutionId
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
             .then(response => {
                 if (response.ok) {
                     return response.json()
@@ -408,7 +304,7 @@ class Project extends React.Component {
             });
     }
 
-    getPlotList(projectId, maxPlots) {
+    showPlotCenters(projectId, maxPlots) {
         fetch(this.props.documentRoot + "/get-project-plots/" + projectId + "/" + maxPlots)
             .then(response => {
                 if (response.ok) {
@@ -420,21 +316,9 @@ class Project extends React.Component {
             })
             .then(data => {
                 this.setState({plotList: data});
-                this.showPlotCenters(projectId, maxPlots);
-            });
-    }
-
-    showPlotCenters(projectId, maxPlots) {
-        if (this.state.plotList == null) {
-            // Load the current project plots
-            this.getPlotList(projectId, maxPlots);
-        } else {
-            // Draw the plot shapes on the map
-            mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
-            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.details.plotShape);
-        }
+                mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.details.plotShape);
+            })
+            .catch(e => this.setState({plotList: null}));
     }
 
     showProjectMap(projectId) {
@@ -444,44 +328,27 @@ class Project extends React.Component {
         }
 
         mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
-        if (this.state.details.id == 0) {
-            // Enable dragbox interaction if we are creating a new project
-            var displayDragBoxBounds = function (dragBox) {
-                var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-                // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
-                document.getElementById("lon-min").value = extent[0];
-                document.getElementById("lat-min").value = extent[1];
-                document.getElementById("lon-max").value = extent[2];
-                document.getElementById("lat-max").value = extent[3];
-            };
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-            mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
-            mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
-            mercator.disableDragBoxDraw(this.state.mapConfig);
-            mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
-        } else {
-            // Extract bounding box coordinates from the project boundary and show on the map
-            var boundaryExtent = mercator.parseGeoJson(this.state.details.boundary, false).getExtent();
-            this.setState({lonMin: boundaryExtent[0]});
-            this.setState({latMin: boundaryExtent[1]});
-            this.setState({lonMax: boundaryExtent[2]});
-            this.setState({latMax: boundaryExtent[3]});
+        
+        // Extract bounding box coordinates from the project boundary and show on the map
+        var boundaryExtent = mercator.parseGeoJson(this.state.details.boundary, false).getExtent();
+        this.setState({lonMin: boundaryExtent[0]});
+        this.setState({latMin: boundaryExtent[1]});
+        this.setState({lonMax: boundaryExtent[2]});
+        this.setState({latMax: boundaryExtent[3]});
 
-            // Display a bounding box with the project's AOI on the map and zoom to it
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-            mercator.addVectorLayer(this.state.mapConfig,
-                "currentAOI",
-                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
-                ceoMapStyles.yellowPolygon);
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+        // Display a bounding box with the project's AOI on the map and zoom to it
+        mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+        mercator.addVectorLayer(this.state.mapConfig,
+            "currentAOI",
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
+            ceoMapStyles.yellowPolygon);
+        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
 
-            // Force reloading of the plotList
-            this.setState({plotList: null});
-
-            // Show the plot centers on the map (but constrain to <= 100 points)
-            this.showPlotCenters(projectId, 100);
-        }
+        // Update plots
+        mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
+        mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
+        mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
+        this.showPlotCenters(projectId, 100);
     }
 
     updateUnmanagedComponents(projectId) {
@@ -498,9 +365,8 @@ class Project extends React.Component {
                 var detailsNew = this.state.details;
                 detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-                this.setState({details: detailsNew},
-                    this.showProjectMap(projectId)
-                );
+                this.setState({details: detailsNew});
+                this.showProjectMap(projectId)
                 // Draw a map with the project AOI and a sampling of its plots
             }
         }
@@ -512,21 +378,14 @@ class Project extends React.Component {
     }
 
     render() {
-        var header;
-        if (this.props.projectId == "0") {
-            header = <h1>Create Project</h1>
-        }
-        else {
-            header = <h1>Review Project</h1>
-        }
         return (
             <div id="project-design" className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
                 <div className="bg-darkgreen mb-3 no-container-margin">
-                    {header}
+                    <h1>Review Project</h1>
                 </div>
-                <ProjectStats project={this.state} project_stats_visibility={this.props.project_stats_visibility}/>
+                <ProjectStats project={this.state} project_stats_visibility={true}/>
                 <ProjectDesignForm projectId={this.props.projectId} project={this.state}
-                                   project_template_visibility={this.props.project_template_visibility}
+                                   project_template_visibility={false}
                                    setBaseMapSource={this.setBaseMapSource}
                                    topoSort={this.topoSort} getParentSurveyQuestions={this.getParentSurveyQuestions} getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}/>
                 <ProjectManagement project={this.state} projectId={this.props.projectId}
@@ -596,9 +455,7 @@ function ProjectStats(props) {
 
 function ProjectDesignForm(props) {
     return (
-        <form id="project-design-form" className="px-2 pb-2" method="post"
-              action={props.documentRoot + "/create-project"}
-              encType="multipart/form-data">
+        <form id="project-design-form" className="px-2 pb-2">
             <ProjectInfo project={props.project}/>
             <ProjectVisibility project={props.project}/>
             <ProjectAOI projectId={props.projectId} project={props.project}/>
@@ -688,45 +545,37 @@ function ProjectVisibility(props) {
     return (<span></span>);
 }
 
-function ProjectAOI(props) {
-    var project = props.project;
-    var msg = "";
-    if (props.projectId == "0") {
-        msg = <div className="row">
-            <div className="col small text-center mb-2">Hold CTRL and click-and-drag a bounding box on the map</div>
-        </div>;
-    }
+function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
     return (
         <div className="row">
             <div className="col">
                 <h2 className="header px-0">Project AOI</h2>
                 <div id="project-aoi">
                     <div id="project-map"></div>
-                    {msg}
                     <div className="form-group mx-4">
                         <div className="row">
                             <div className="col-md-6 offset-md-3">
                                 <input className="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
-                                       defaultValue={project.latMax} placeholder="North" autoComplete="off" min="-90.0"
+                                       defaultValue={latMax} placeholder="North" autoComplete="off" min="-90.0"
                                        max="90.0" step="any"/>
                             </div>
                         </div>
                         <div className="row">
                             <div className="col-md-6">
                                 <input className="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
-                                       defaultValue={project.lonMin} placeholder="West" autoComplete="off" min="-180.0"
+                                       defaultValue={lonMin} placeholder="West" autoComplete="off" min="-180.0"
                                        max="180.0" step="any"/>
                             </div>
                             <div className="col-md-6">
                                 <input className="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
-                                       defaultValue={project.lonMax} placeholder="East" autoComplete="off" min="-180.0"
+                                       defaultValue={lonMax} placeholder="East" autoComplete="off" min="-180.0"
                                        max="180.0" step="any"/>
                             </div>
                         </div>
                         <div className="row">
                             <div className="col-md-6 offset-md-3">
                                 <input className="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
-                                       defaultValue={project.latMin} placeholder="South" autoComplete="off" min="-90.0"
+                                       defaultValue={latMin} placeholder="South" autoComplete="off" min="-90.0"
                                        max="90.0" step="any"/>
                             </div>
                         </div>
@@ -752,7 +601,8 @@ function ProjectImagery(props) {
                             <h3 htmlFor="base-map-source">Basemap Source</h3>
                             <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                                     size="1"
-                                    value={project.details?project.details.baseMapSource:""} onChange={props.setBaseMapSource}>
+                                    defaultValue={project.details?project.details.baseMapSource:""} 
+                                    onChange={props.setBaseMapSource}>
                                 {
                                     project.imageryList.map((imagery,uid) =>
                                         <option key={uid} value={imagery.title}>{imagery.title}</option>
@@ -1114,9 +964,8 @@ function ProjectManagement(props) {
 
 export function renderReviewProjectPage(args) {
     ReactDOM.render(
-        <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId} institutionId={args.institutionId}
-                 project_stats_visibility={args.project_stats_visibility}
-                 project_template_visibility={args.project_template_visibility}/>,
+        // FIXME get institution from project data.
+        <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId} institutionId={args.institutionId}/>,
         document.getElementById("project")
     );
 }

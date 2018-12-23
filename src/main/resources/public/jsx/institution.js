@@ -250,7 +250,7 @@ class Institution extends React.Component {
         } else if (this.state.details.id == -1) {
             alert("Projects cannot be created without first selecting an institution.");
         } else {
-            window.location = this.props.documentRoot + "/create-project/0?institution=" + this.state.details.id;
+            window.location = this.props.documentRoot + "/create-project?institution=" + this.state.details.id;
         }
     }
 
