@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { Fragment }  from 'react';
 import ReactDOM from 'react-dom';
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
+
+import FormLayout from "./components/FormLayout"
+import SectionBlock from "./components/SectionBlock"
 
 class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            details: null,
+            projectDetails: null,
             stats: null,
             imageryList: null,
             mapConfig: null,
@@ -55,7 +58,7 @@ class Project extends React.Component {
             utils.show_element("spinner");
             var ref = this;
             $.ajax({
-                url: this.props.documentRoot + "/publish-project/" + this.state.details.id,
+                url: this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id,
                 type: "POST",
                 async: true,
                 crossDomain: true,
@@ -65,9 +68,9 @@ class Project extends React.Component {
                 console.log(response);
                 alert("Error publishing project. See console for details.");
             }).done(function (data) {
-                var detailsNew = ref.state.details;
+                var detailsNew = ref.state.projectDetails;
                 detailsNew.availability = "published";
-                ref.setState({details: detailsNew});
+                ref.setState({projectDetails: detailsNew});
                 utils.hide_element("spinner");
             });
         }
@@ -78,7 +81,7 @@ class Project extends React.Component {
             utils.show_element("spinner");
             var ref = this;
             $.ajax({
-                url: this.props.documentRoot + "/close-project/" + this.state.details.id,
+                url: this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
                 type: "POST",
                 async: true,
                 crossDomain: true,
@@ -88,9 +91,9 @@ class Project extends React.Component {
                 console.log(response);
                 alert("Error closing project. See console for details.");
             }).done(function (data) {
-                var detailsNew = ref.state.details;
+                var detailsNew = ref.state.projectDetails;
                 detailsNew.availability = "closed";
-                ref.setState({details: detailsNew});
+                ref.setState({projectDetails: detailsNew});
                 utils.hide_element("spinner");
             });
         }
@@ -101,7 +104,7 @@ class Project extends React.Component {
             utils.show_element("spinner");
             var ref = this;
             $.ajax({
-                url: this.props.documentRoot + "/archive-project/" + this.state.details.id,
+                url: this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
                 type: "POST",
                 async: true,
                 crossDomain: true,
@@ -111,44 +114,44 @@ class Project extends React.Component {
                 console.log(response);
                 alert("Error archiving project. See console for details.");
             }).done(function (data) {
-                var detailsNew = ref.state.details;
+                var detailsNew = ref.state.projectDetails;
                 detailsNew.availability = "archived";
-                ref.setState({details: detailsNew});
+                ref.setState({projectDetails: detailsNew});
                 utils.hide_element("spinner");
-                alert("Project " + ref.state.details.id + " has been archived.");
+                alert("Project " + ref.state.projectDetails.id + " has been archived.");
                 window.location = ref.props.documentRoot + "/home";
             });
         }
     }
 
     changeAvailability() {
-        if (this.state.details.availability == "nonexistent") {
+        if (this.state.projectDetails.availability == "nonexistent") {
             this.createProject();
-        } else if (this.state.details.availability == "unpublished") {
+        } else if (this.state.projectDetails.availability == "unpublished") {
             this.publishProject();
-        } else if (this.state.details.availability == "published") {
+        } else if (this.state.projectDetails.availability == "published") {
             this.closeProject();
-        } else if (this.state.details.availability == "closed") {
+        } else if (this.state.projectDetails.availability == "closed") {
             this.archiveProject();
         }
     }
 
     configureGeoDash() {
 
-        if (this.state.plotList != null && this.state.details != null) {
+        if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(this.props.documentRoot + "/widget-layout-editor?editable=true&"
-                + encodeURIComponent("institutionId=" + this.state.details.institution
-                    + "&pid=" + this.state.details.id),
+                + encodeURIComponent("institutionId=" + this.state.projectDetails.institution
+                    + "&pid=" + this.state.projectDetails.id),
                 "_geo-dash");
         }
     }
 
     downloadPlotData() {
-        window.open(this.props.documentRoot + "/dump-project-aggregate-data/" + this.state.details.id, "_blank");
+        window.open(this.props.documentRoot + "/dump-project-aggregate-data/" + this.state.projectDetails.id, "_blank");
     }
 
     downloadSampleData() {
-        window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.details.id, "_blank");
+        window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.projectDetails.id, "_blank");
     }
 
     getParentSurveyQuestions(sampleSurvey) {
@@ -211,7 +214,7 @@ class Project extends React.Component {
     }
 
     getSurveyQuestionByName(surveyQuestionName) {
-        return this.state.details.sampleValues.find(
+        return this.state.projectDetails.sampleValues.find(
             function (surveyQuestion) {
                 return surveyQuestion.question == surveyQuestionName;
             }
@@ -265,7 +268,7 @@ class Project extends React.Component {
                         );
                     }
                     detailsNew.sampleValues=newSV;
-                    this.setState({details: detailsNew});
+                    this.setState({projectDetails: detailsNew});
                     this.updateUnmanagedComponents(projectId);
 
                 }
@@ -316,7 +319,7 @@ class Project extends React.Component {
             })
             .then(data => {
                 this.setState({plotList: data});
-                mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.details.plotShape);
+                mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
             })
             .catch(e => this.setState({plotList: null}));
     }
@@ -327,10 +330,10 @@ class Project extends React.Component {
             this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
         }
 
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.details.baseMapSource);
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
         
         // Extract bounding box coordinates from the project boundary and show on the map
-        var boundaryExtent = mercator.parseGeoJson(this.state.details.boundary, false).getExtent();
+        var boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
         this.setState({lonMin: boundaryExtent[0]});
         this.setState({latMin: boundaryExtent[1]});
         this.setState({lonMax: boundaryExtent[2]});
@@ -340,11 +343,11 @@ class Project extends React.Component {
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
         mercator.addVectorLayer(this.state.mapConfig,
             "currentAOI",
-            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
             ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
 
-        // Update plots
+        // Show plots
         mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
@@ -352,503 +355,360 @@ class Project extends React.Component {
     }
 
     updateUnmanagedComponents(projectId) {
-        if (this.state.details != null) {
-            // Enable the input fields that are connected to the radio buttons if their values are not null
-            if (this.state.details.plotDistribution == "gridded") {
-                utils.enable_element("plot-spacing");
-            }
-            if (this.state.details.sampleDistribution == "gridded") {
-                utils.enable_element("sample-resolution");
-            }
-
+        if (this.state.projectDetails != null) {
             if (this.state.imageryList && this.state.imageryList.length > 0) {
-                var detailsNew = this.state.details;
-                detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
+                var detailsNew = this.state.projectDetails;
+                detailsNew.baseMapSource = this.state.projectDetails.baseMapSource || this.state.imageryList[0].title;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-                this.setState({details: detailsNew});
+                this.setState({projectDetails: detailsNew});
                 this.showProjectMap(projectId)
                 // Draw a map with the project AOI and a sampling of its plots
             }
         }
     }
     gotoProjectDashboard(){
-        if (this.state.plotList != null && this.state.details != null) {
-            window.open(this.props.documentRoot + "/project-dashboard/"+this.state.details.id);
+        if (this.state.plotList != null && this.state.projectDetails != null) {
+            window.open(this.props.documentRoot + "/project-dashboard/"+this.state.projectDetails.id);
         }
     }
 
     render() {
         return (
-            <div id="project-design" className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
-                <div className="bg-darkgreen mb-3 no-container-margin">
-                    <h1>Review Project</h1>
-                </div>
-                <ProjectStats project={this.state} project_stats_visibility={true}/>
-                <ProjectDesignForm projectId={this.props.projectId} project={this.state}
-                                   project_template_visibility={false}
-                                   setBaseMapSource={this.setBaseMapSource}
-                                   topoSort={this.topoSort} getParentSurveyQuestions={this.getParentSurveyQuestions} getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}/>
-                <ProjectManagement project={this.state} projectId={this.props.projectId}
-                                   configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
-                                   downloadSampleData={this.downloadSampleData}
-                                   changeAvailability={this.changeAvailability} gotoProjectDashboard={this.gotoProjectDashboard}/>
-            </div>
+            <FormLayout id="project-design"  title="Review Project">
+                {this.state.projectDetails && parseInt(this.state.projectDetails.id) > 0
+                ?
+                    <Fragment>
+                        {this.state.stats && 
+                            <ProjectStats project={this.state}/>
+                        }
+                        <ProjectDesignReview 
+                            projectId={this.props.projectId} 
+                            project={this.state}
+                            project_template_visibility={false}
+                            setBaseMapSource={this.setBaseMapSource}
+                            topoSort={this.topoSort} 
+                            getParentSurveyQuestions={this.getParentSurveyQuestions} 
+                            getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}
+                        />
+                        <ProjectManagement 
+                            project={this.state} 
+                            projectId={this.props.projectId}
+                            configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
+                            downloadSampleData={this.downloadSampleData}
+                            changeAvailability={this.changeAvailability} 
+                            gotoProjectDashboard={this.gotoProjectDashboard}
+                        />
+                    </Fragment>
+                :
+                    <ProjectNotFount projectId={this.props.projectId} />
+                }
+            </FormLayout>
         );
     }
 }
 
-function ProjectStats(props) {
-    var project = props.project;
-    if (project.stats != null) {
-        return (<div className="row mb-3">
-                <div id="project-stats" className={"col " + props.project_stats_visibility}>
-                    <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
-                            href="#project-stats-collapse" role="button" aria-expanded="false"
-                            aria-controls="project-stats-collapse">
-                        Project Stats
-                    </button>
-                    <div className="collapse col-xl-12" id="project-stats-collapse">
-                        <table className="table table-sm">
-                            <tbody>
-                            <tr>
-                                <td>Members</td>
-                                <td>{project.stats.members}</td>
-                                <td>Contributors</td>
-                                <td>{project.stats.contributors}</td>
-                            </tr>
-                            <tr>
-                                <td>Total Plots</td>
-                                <td>{project.details?project.details.numPlots : 0}</td>
-                                <td>Date Created</td>
-                                <td>{project.dateCreated}</td>
-                            </tr>
-                            <tr>
-                                <td>Flagged Plots</td>
-                                <td>{project.stats.flaggedPlots}</td>
-                                <td>Date Published</td>
-                                <td>{project.datePublished}</td>
-                            </tr>
-                            <tr>
-                                <td>Analyzed Plots</td>
-                                <td>{project.stats.analyzedPlots}</td>
-                                <td>Date Closed</td>
-                                <td>{project.dateClosed}</td>
-                            </tr>
-                            <tr>
-                                <td>Unanalyzed Plots</td>
-                                <td>{project.stats.unanalyzedPlots}</td>
-                                <td>Date Archived</td>
-                                <td>{project.dateArchived}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        );
-    }
-    else {
-        return (<span></span>);
-    }
+function ProjectNotFount({ projectId }){
+    return (
+        <SectionBlock title="Project Information">
+            <h3>Project {projectId} not found.</h3>
+        </SectionBlock>
+    )
 }
 
-function ProjectDesignForm(props) {
+function ProjectStats({ project }) {
+    return (
+        <div className="row mb-3">
+            <div id="project-stats" className={"col "}>
+                <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
+                        href="#project-stats-collapse" role="button" aria-expanded="false"
+                        aria-controls="project-stats-collapse">
+                    Project Stats
+                </button>
+                <div className="collapse col-xl-12" id="project-stats-collapse">
+                    <table className="table table-sm">
+                        <tbody>
+                        <tr>
+                            <td>Members</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.members}</span></td>
+                            <td>Contributors</td>
+                            <td>{project.stats.contributors}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Plots</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.projectDetails ? project.projectDetails.numPlots : 0}</span></td>
+                            <td>Date Created</td>
+                            <td>{project.dateCreated}</td>
+                        </tr>
+                        <tr>
+                            <td>Flagged Plots</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.flaggedPlots}</span></td>
+                            <td>Date Published</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.datePublished}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Analyzed Plots</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.analyzedPlots}</span></td>
+                            <td>Date Closed</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.dateClosed}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Unanalyzed Plots</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.unanalyzedPlots}</span></td>
+                            <td>Date Archived</td>
+                            <td><span className="badge badge-pill bg-lightgreen">{project.dateArchived}</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    );
+}
+
+function ProjectDesignReview(props) {
     return (
         <form id="project-design-form" className="px-2 pb-2">
-            <ProjectInfo project={props.project}/>
+            <ProjectInfoReview project={props.project}/>
             <ProjectVisibility project={props.project}/>
             <ProjectAOI projectId={props.projectId} project={props.project}/>
-            <ProjectImagery project={props.project} setBaseMapSource={props.setBaseMapSource}/>
-            <PlotDesign project={props.project}/>
-            <SampleDesign project={props.project}/>
-            <SurveyDesign project={props.project} projectId={props.projectId}
-                          topoSort={props.topoSort}
-                          getParentSurveyQuestions={props.getParentSurveyQuestions} getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}/>
+            {props.project.imageryList &&
+                <ProjectImageryReview project={props.project} setBaseMapSource={props.setBaseMapSource}/>
+            }
+            <PlotReview project={props.project}/>
+            <SampleReview project={props.project}/>
+            <SurveyReview 
+                project={props.project} projectId={props.projectId}
+                topoSort={props.topoSort}
+                getParentSurveyQuestions={props.getParentSurveyQuestions} 
+                getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}
+            />
 
         </form>
     );
 }
 
-function ProjectInfo(props) {
-    var project = props.project;
-    if (project.details != null) {
-        return (
-            <div className="row">
-                <div className="col">
-                    <h2 className="header px-0">Project Info</h2>
-                    <div id="project-info">
-                        <div className="form-group">
-                            <h3 htmlFor="project-name">Name</h3>
-                            <input className="form-control form-control-sm" type="text" id="project-name" name="name"
-                                   autoComplete="off" defaultValue={project.details.name}
-                                   />
-                        </div>
-                        <div className="form-group">
-                            <h3 htmlFor="project-description">Description</h3>
-                            <textarea className="form-control form-control-sm" id="project-description"
-                                      name="description"
-                                      defaultValue={project.details.description}></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-    else {
-        return (<span></span>);
-    }
+function ProjectInfoReview({ project }) {
+    return (
+        <SectionBlock id="project-info" title="Project Info">
+            <h3>Name</h3>
+            <p className="ml-2">{project.projectDetails.name}</p>
+            <h3>Description</h3>
+            <p className="ml-2">{project.projectDetails.description}</p>
+        </SectionBlock>
+    );
 }
 
+// FIXME potential to let the user change the visibility
 function ProjectVisibility(props) {
-    if (props.project.details != null) {
-        return (
-            <div className="row">
-                <div className="col">
-                    <h2 className="header px-0">Project Visibility</h2>
-                    <h3>Privacy Level</h3>
-                    <div id="project-visibility" className="mb-3">
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
-                                   value="public" defaultChecked={props.project.details.privacyLevel === 'public'}
-                                   />
-                            <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
-                                   value="private"
-                                   defaultChecked={props.project.details.privacyLevel === 'private'}/>
-                            <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
-                                Admins</i></label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="privacy-institution"
-                                   name="privacy-level"
-                                   value="institution"
-                                   defaultChecked={props.project.details.privacyLevel === 'institution'}/>
-                            <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
-                                Members</i></label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input className="form-check-input" type="radio" id="privacy-invitation"
-                                   name="privacy-level"
-                                   value="invitation" disabled
-                                   defaultChecked={props.project.details.privacyLevel === 'invitation'}/>
-                            <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
-                                Soon</i></label>
-                        </div>
-                    </div>
+    return (
+        <SectionBlock title="Project Visibility">
+            <h3>Privacy Level</h3>
+            <div id="project-visibility" className="mb-3">
+                <div className="form-check form-check-inline">
+                    <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
+                            value="public" defaultChecked={props.project.projectDetails.privacyLevel === 'public'}
+                            disabled
+                            />
+                    <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
+                            value="private"
+                            defaultChecked={props.project.projectDetails.privacyLevel === 'private'}
+                            disabled
+                            />
+                    <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
+                        Admins</i></label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input className="form-check-input" type="radio" id="privacy-institution"
+                            name="privacy-level"
+                            value="institution"
+                            defaultChecked={props.project.projectDetails.privacyLevel === 'institution'}
+                            disabled
+                            />
+                    <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
+                        Members</i></label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input className="form-check-input" type="radio" id="privacy-invitation"
+                            name="privacy-level"
+                            value="invitation"
+                            defaultChecked={props.project.projectDetails.privacyLevel === 'invitation'}
+                            disabled
+                            />
+                    <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
+                        Soon</i></label>
                 </div>
             </div>
-        );
-    }
-    return (<span></span>);
+        </SectionBlock>
+    );
 }
 
 function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
     return (
-        <div className="row">
-            <div className="col">
-                <h2 className="header px-0">Project AOI</h2>
-                <div id="project-aoi">
-                    <div id="project-map"></div>
-                    <div className="form-group mx-4">
-                        <div className="row">
-                            <div className="col-md-6 offset-md-3">
-                                <input className="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
-                                       defaultValue={latMax} placeholder="North" autoComplete="off" min="-90.0"
-                                       max="90.0" step="any"/>
-                            </div>
+        <SectionBlock title="Project AOI">
+            <div id="project-aoi">
+                <div id="project-map"></div>
+                <div className="form-group mx-4">
+                    <div className="row">
+                        <div className="col-md-6 offset-md-3">
+                            <input 
+                                className="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
+                                defaultValue={latMax} placeholder="North" autoComplete="off" min="-90.0"
+                                max="90.0" step="any"
+                                disabled
+                            />
                         </div>
-                        <div className="row">
-                            <div className="col-md-6">
-                                <input className="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
-                                       defaultValue={lonMin} placeholder="West" autoComplete="off" min="-180.0"
-                                       max="180.0" step="any"/>
-                            </div>
-                            <div className="col-md-6">
-                                <input className="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
-                                       defaultValue={lonMax} placeholder="East" autoComplete="off" min="-180.0"
-                                       max="180.0" step="any"/>
-                            </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-md-6">
+                            <input 
+                                className="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
+                                defaultValue={lonMin} placeholder="West" autoComplete="off" min="-180.0"
+                                max="180.0" step="any"
+                                disabled
+                            />
                         </div>
-                        <div className="row">
-                            <div className="col-md-6 offset-md-3">
-                                <input className="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
-                                       defaultValue={latMin} placeholder="South" autoComplete="off" min="-90.0"
-                                       max="90.0" step="any"/>
-                            </div>
+                        <div className="col-md-6">
+                            <input 
+                                className="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
+                                defaultValue={lonMax} placeholder="East" autoComplete="off" min="-180.0"
+                                max="180.0" step="any"
+                                disabled
+                            />
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-md-6 offset-md-3">
+                            <input 
+                                className="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
+                                defaultValue={latMin} placeholder="South" autoComplete="off" min="-90.0"
+                                max="90.0" step="any"
+                                disabled
+                            />
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </SectionBlock>
     );
 }
 
-function ProjectImagery(props) {
-    var project = props.project;
-    if (project.imageryList != null) {
-        if(project.details && project.details.baseMapSource==null){
-            project.details.baseMapSource="";
-        }
-        return (
-            <div className="row mb-3">
-                <div className="col">
-                    <h2 className="header px-0">Project Imagery</h2>
-                    <div id="project-imagery">
-                        <div className="form-group mb-1">
-                            <h3 htmlFor="base-map-source">Basemap Source</h3>
-                            <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                                    size="1"
-                                    defaultValue={project.details?project.details.baseMapSource:""} 
-                                    onChange={props.setBaseMapSource}>
-                                {
-                                    project.imageryList.map((imagery,uid) =>
-                                        <option key={uid} value={imagery.title}>{imagery.title}</option>
-                                    )
-                                }
-                            </select>
-                        </div>
+function ProjectImageryReview({ project, setBaseMapSource}) {
+    return (
+        <SectionBlock id="project-imagery-review" title="Project Imagery">
+            <h3>Basemap Source</h3>
+            <p className="ml-2">{project.projectDetails.baseMapSource}</p>
+        </SectionBlock>
+    );
+}
+
+function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, plotSpacing, plotShape, plotSize }} }) {
+    return (
+        <SectionBlock title="Plot Review">
+            <div id="plot-design">
+                <div className="row">
+                    <div id="plot-design-col1" className="col">
+                        <table id="plot-review-table" className="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td className="w-80">Spatial Distribution</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{plotDistribution} distribution</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="w-80">Number of plots</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
+                                </td>
+                            </tr>
+                            {plotDistribution === 'gridded' &&
+                                <tr>
+                                    <td className="w-80">Plot spacing</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
+                                    </td>
+                                </tr>
+                            }
+                            {plotDistribution != 'shp' &&
+                                <Fragment>
+                                    <tr>
+                                        <td className="w-80">Plot shape</td>
+                                        <td className="w-20 text-center">
+                                            <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="w-80">Plot size</td>
+                                        <td className="w-20 text-center">
+                                            <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
+                                        </td>
+                                    </tr>
+                                </Fragment>
+                            }
+                        </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        );
-    }
-    else {
-        return (<span></span>);
-    }
+        </SectionBlock>
+    );
 }
 
-class PlotDesign extends React.Component {
-    constructor(props) {
-        super(props);
-    };
+function SampleReview({ project: { projectDetails: { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution }} }){
 
-    encodeImageFileAsURL(event) {
-        var file = event.target.files[0];
-        let reader = new FileReader();
-        reader.onloadend = function () {
-            let base64Data = reader.result;
-            console.log('RESULT', base64Data);
-        };
-        reader.readAsDataURL(file);
-    }
-
-    render() {
-        var project = this.props.project;
-        var plotshape = "";
-        var txt = "";
-        if (project.details != null) {
-            if (project.details.plotShape == 'circle') {
-                txt = 'Diameter (m)';
-            } else txt = 'Width (m)';
-            plotshape = <React.Fragment>
-                <p htmlFor="plot-size">{txt}</p>
-                <input className="form-control form-control-sm" type="number" id="plot-size"
-                       name="plot-size" autoComplete="off" min="0.0" step="any"
-                       defaultValue={project.details.plotSize}/>
-            </React.Fragment>
-            return (
-                <div className="row mb-3">
-                    <div className="col">
-                        <h2 className="header px-0">Plot Design</h2>
-                        <div id="plot-design">
-                            <div className="row">
-                                <div id="plot-design-col1" className="col">
-                                    <h3>Spatial Distribution</h3>
-                                    <div className="form-check form-check-inline">
-                                        <input className="form-check-input" type="radio" id="plot-distribution-random"
-                                               name="plot-distribution" value="random"
-                                               defaultChecked={this.props.project.details.plotDistribution === 'random'}/>
-                                        <label className="form-check-label small"
-                                               htmlFor="plot-distribution-random">Random</label>
-                                    </div>
-                                    <div className="form-check form-check-inline">
-                                        <input className="form-check-input" type="radio" id="plot-distribution-gridded"
-                                               name="plot-distribution" defaultValue="gridded"
-                                               defaultChecked={this.props.project.details.plotDistribution === 'gridded'}/>
-                                        <label className="form-check-label small"
-                                               htmlFor="plot-distribution-gridded">Gridded</label>
-                                    </div>
-                                    <div className="form-check form-check-inline">
-                                        <input className="form-check-input" type="radio" id="plot-distribution-csv"
-                                               name="plot-distribution" defaultValue="csv"
-                                               defaultChecked={this.props.project.details.plotDistribution === 'csv'}/>
-                                        <label
-                                            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                            id="custom-csv-upload">
-                                            <small>Upload CSV</small>
-                                            <input type="file" accept="text/csv" id="plot-distribution-csv-file"
-                                                   style={{display: "none"}} disabled/>
-                                        </label>
-                                    </div>
-                                    <div className="form-check form-check-inline">
-                                        <input className="form-check-input" type="radio" id="plot-distribution-shp"
-                                               name="plot-distribution" defaultValue="shp"
-                                               defaultChecked={this.props.project.details.plotDistribution === 'shp'}/>
-                                        <label
-                                            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                            id="custom-shp-upload">
-                                            <small>Upload SHP</small>
-                                            <input type="file" accept="application/zip" id="plot-distribution-shp-file"
-                                                   style={{display: "none"}} disabled/>
-                                        </label>
-                                    </div>
-                                    <p id="plot-design-text">Plot centers will be randomly distributed within the AOI.</p>
-
-                                    <div className="form-group mb-1">
-                                        <p htmlFor="num-plots">Number of plots</p>
-                                        <input className="form-control form-control-sm" type="number" id="num-plots"
-                                               name="num-plots" autoComplete="off" min="0" step="1"
-                                               defaultValue={project.details == null ? "" : project.details.numPlots}/>
-                                    </div>
-                                    <div className="form-group mb-1">
-                                        <p htmlFor="plot-spacing">Plot spacing (m)</p>
-                                        <input className="form-control form-control-sm" type="number" id="plot-spacing"
-                                               name="plot-spacing" autoComplete="off" min="0.0" step="any"
-                                               defaultValue={project.details == null ? "" : project.details.plotSpacing}
-                                               disabled/>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr/>
-                            <div className="row">
-                                <div id="plot-design-col2" className="col">
-                                    <h3>Plot Shape</h3>
-                                    <div className="form-check form-check-inline">
-                                        <input className="form-check-input" type="radio" id="plot-shape-circle"
-                                               name="plot-shape" defaultValue="circle"
-                                               defaultChecked={this.props.project.details.plotShape === 'circle'}/>
-                                        <label className="form-check-label small"
-                                               htmlFor="plot-shape-circle">Circle</label>
-                                    </div>
-                                    <div className="form-check form-check-inline">
-                                        <input className="form-check-input" type="radio" id="plot-shape-square"
-                                               name="plot-shape" defaultValue="square"
-                                               defaultChecked={this.props.project.details.plotShape === 'square'}/>
-                                        <label className="form-check-label small"
-                                               htmlFor="plot-shape-square">Square</label>
-                                    </div>
-                                    {plotshape}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    return (
+        <SectionBlock title="Sample Design">
+                <div id="sample-design">
+                    <table id="plot-review-table" className="table table-sm">
+                    <tbody>
+                        <tr>
+                            <td className="w-80">Spatial Distribution</td>
+                            <td className="w-20 text-center">
+                                <span className="badge badge-pill bg-lightgreen">{sampleDistribution} distribution</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="w-80">Samples Per Plot</td>
+                            <td className="w-20 text-center">
+                                <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
+                            </td>
+                        </tr>
+                        {sampleDistribution === 'gridded' &&
+                            <tr>
+                                <td className="w-80">Sample Resolution</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                </td>
+                            </tr>
+                        }
+                        
+                    </tbody>
+                    </table>
                 </div>
-            );
-        }
-        else {
-            return (<span></span>);
-        }
-    }
+        </SectionBlock>
+    );
 }
 
-class SampleDesign extends React.Component{
-    constructor(props) {
-        super(props);
-    };
-    encodeImageFileAsURL(event) {
-        var file = event.target.files[0];
-        let reader = new FileReader();
-        reader.onloadend = function () {
-            let base64Data = reader.result;
-            console.log('RESULT', base64Data);
-        };
-        reader.readAsDataURL(file);
-    }
-    render()
-    {
-        var project = this.props.project;
-        if (project.details != null) {
-            return (
-                <div className="row mb-3">
-                    <div className="col">
-                        <div id="sample-design">
-                            <h2 className="header px-0">Sample Design</h2>
-                            <h3>Spatial Distribution</h3>
-                            <div className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" id="sample-distribution-random"
-                                       name="sample-distribution" defaultValue="random"
-                                       defaultChecked={this.props.project.details.sampleDistribution === 'random'}/>
-                                <label className="form-check-label small"
-                                       htmlFor="sample-distribution-random">Random</label>
-                            </div>
-                            <div className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" id="sample-distribution-gridded"
-                                       name="sample-distribution" defaultValue="gridded"
-                                       defaultChecked={this.props.project.details.sampleDistribution === 'gridded'}/>
-                                <label className="form-check-label small"
-                                       htmlFor="sample-distribution-gridded">Gridded</label>
-                            </div>
-                            <div className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" id="sample-distribution-csv"
-                                       name="sample-distribution" defaultValue="csv"
-                                       defaultChecked={this.props.project.details.sampleDistribution === 'csv'}/>
-                                <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                       id="sample-custom-csv-upload">
-                                    <small>Upload CSV</small>
-                                    <input type="file" accept="text/csv" id="sample-distribution-csv-file"
-                                           style={{display: "none"}} disabled/>
-                                </label>
-                            </div>
-                            <div className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" id="sample-distribution-shp"
-                                       name="sample-distribution" defaultValue="shp"
-                                       defaultChecked={this.props.project.details.sampleDistribution === 'shp'}/>
-                                <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                       id="sample-custom-shp-upload">
-                                    <small>Upload SHP</small>
-                                    <input type="file" accept="application/zip" id="sample-distribution-shp-file"
-                                           style={{display: "none"}} disabled/>
-                                </label>
-                            </div>
-                            <p id="sample-design-text">Sample points will be randomly distributed within the plot boundary.</p>
-                            <div className="form-group mb-1">
-                                <p htmlFor="samples-per-plot">Samples per plot</p>
-                                <input className="form-control form-control-sm" type="number" id="samples-per-plot"
-                                       name="samples-per-plot" autoComplete="off" min="0" step="1"
-                                       defaultValue={project.details.samplesPerPlot}/>
-                            </div>
-                            <div className="form-group mb-1">
-                                <p htmlFor="sample-resolution">Sample resolution (m)</p>
-                                <input className="form-control form-control-sm" type="number" id="sample-resolution"
-                                       name="sample-resolution" autoComplete="off" min="0.0" step="any"
-                                       defaultValue={project.details.sampleResolution} disabled/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-        else return (<span></span>);
-    }
-}
-
-function SurveyDesign(props){
-    if (props.project.details != null) {
-        return (
-            <div className="row mb-3">
-                <div className="col">
-                    <div id="survey-design">
-                        <h2 className="header px-0">Survey Design</h2>
-                        <SurveyQuestionTree project={props.project} projectId={props.projectId}
-                                            topoSort={props.topoSort}
-                                            getParentSurveyQuestions={props.getParentSurveyQuestions}/>
-                    </div>
-                </div>
+function SurveyReview(props){
+    return (
+        <SectionBlock title="Survey Design">
+            <div id="survey-design">
+                <SurveyQuestionTree project={props.project} projectId={props.projectId}
+                                    topoSort={props.topoSort}
+                                    getParentSurveyQuestions={props.getParentSurveyQuestions}/>
             </div>
-        );
-    }
-    else{
-        return(<span></span>);
-    }
+        </SectionBlock>
+    );
 }
 class SurveyQuestionTree extends React.Component {
     constructor(props) {
         super(props);
     };
-    getCurrent = (node) => this.props.project.details.sampleValues.filter(cNode => cNode.parent_question == node).map((cNode,uid) => (
+    getCurrent = (node) => this.props.project.projectDetails.sampleValues.filter(cNode => cNode.parent_question == node).map((cNode,uid) => (
         <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
             <li>
                 <SurveyQuestion prop={this.props} surveyQuestion={cNode}/>
@@ -859,7 +719,7 @@ class SurveyQuestionTree extends React.Component {
     ))
     render() {
         var project = this.props.project;
-        if (project.details != null) {
+        if (project.projectDetails != null) {
             return (
                 <div>
                     {this.getCurrent(-1)}
@@ -878,7 +738,7 @@ function SurveyQuestion(properties) {
     if (properties.surveyQuestion.answers == null) {
         console.log("answers null");
     }
-    if (project.details != null) {
+    if (project.projectDetails != null) {
         return (
             <div className="sample-value-info">
                 <h3 className="header px-0">
@@ -924,7 +784,7 @@ function SurveyQuestion(properties) {
 function ProjectManagement(props) {
     var project = props.project;
     var buttons = "";
-    if (project.details != null) {
+    if (project.projectDetails != null) {
         buttons = <React.Fragment>
             <input type="button" id="project-dashboard" className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="project-dashboard" value="Project Dashboard"
@@ -933,21 +793,21 @@ function ProjectManagement(props) {
             <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="configure-geo-dash" value="Configure Geo-Dash"
                    onClick={props.configureGeoDash}
-                   style={{display: project.details.availability == 'unpublished' || project.details.availability == 'published' ? 'block' : 'none'}}/>
+                   style={{display: project.projectDetails.availability == 'unpublished' || project.projectDetails.availability == 'published' ? 'block' : 'none'}}/>
             <input type="button" id="download-plot-data"
                    className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="download-plot-data" value="Download Plot Data"
                    onClick={props.downloadPlotData}
-                   style={{display: project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none'}}/>
+                   style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}/>
             <input type="button" id="download-sample-data"
                    className="btn btn-outline-lightgreen btn-sm btn-block"
                    name="download-sample-data" value="Download Sample Data"
                    onClick={props.downloadSampleData}
-                   style={{display: project.details.availability == 'published' || project.details.availability == 'closed' ? 'block' : 'none'}}/>
+                   style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}/>
             <input type="button" id="change-availability"
                    className="btn btn-outline-danger btn-sm btn-block"
                    name="change-availability"
-                   value={project.stateTransitions[project.details.availability] + "Project"}
+                   value={project.stateTransitions[project.projectDetails.availability] + "Project"}
                    onClick={props.changeAvailability}/>
         </React.Fragment>
     }

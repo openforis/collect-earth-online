@@ -1,8 +1,11 @@
 import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-// FIXME use props instead of directly modifying DOM elements
+
 import { utils } from "../js/utils.js";
+import FormLayout from "./components/FormLayout"
+import SectionBlock from "./components/SectionBlock"
+
 
 class Project extends React.Component {
     constructor(props) {
@@ -495,15 +498,6 @@ class Project extends React.Component {
 
     updateUnmanagedComponents(projectId) {
         if (this.state.templateDetails != null) {
-            // Enable the input fields that are connected to the radio buttons if their values are not null
-            
-            if (this.state.templateDetails.plotDistribution == "gridded") {
-                utils.enable_element("plot-spacing");
-            }
-            if (this.state.templateDetails.sampleDistribution == "gridded") {
-                utils.enable_element("sample-resolution");
-            }
-
             if (this.state.imageryList.length > 0) {
                 var detailsNew = this.state.templateDetails;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
@@ -553,30 +547,34 @@ class Project extends React.Component {
 
     render() {
         return (
-            <div id="project-design" className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
-                <div className="bg-darkgreen mb-3 no-container-margin">
-                    <h1>Create Project</h1>
-                </div>
-                <ProjectDesignForm project={this.state}
-                                   project_template_visibility={true}
-                                   setProjectTemplate={this.setProjectTemplate} setPrivacyLevel={this.setPrivacyLevel}
-                                   setSampleDistribution={this.setSampleDistribution}
-                                   addSurveyQuestionRow={this.addSurveyQuestionRow}
-                                   setBaseMapSource={this.setBaseMapSource}
-                                   setPlotDistribution={this.setPlotDistribution} 
-                                   setPlotShape={this.setPlotShape}
-                                   setTemplatePlots={this.setTemplatePlots}
-                                   addSurveyQuestion={this.addSurveyQuestion}
-                                   topoSort={this.topoSort} getParentSurveyQuestions={this.getParentSurveyQuestions} getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}
-                                   removeSurveyQuestion={this.removeSurveyQuestion}
-                                   removeSurveyQuestionRow={this.removeSurveyQuestionRow}
-                                   handleInputColor={this.handleInputColor} handleInputName={this.handleInputName}
-                                   handleChange={this.handleChange} handleInputParent={this.handleInputParent}/>
-                <ProjectManagement project={this.state}
-                                   configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
-                                   downloadSampleData={this.downloadSampleData}
-                                   createProject={this.createProject}/>
-            </div>
+            <FormLayout id="project-design" title="Create Project">
+                {this.state.templateDetails && 
+                    <Fragment>
+                        <ProjectDesignForm 
+                            project={this.state}
+                            setProjectTemplate={this.setProjectTemplate} 
+                            setPrivacyLevel={this.setPrivacyLevel}
+                            setSampleDistribution={this.setSampleDistribution}
+                            addSurveyQuestionRow={this.addSurveyQuestionRow}
+                            setBaseMapSource={this.setBaseMapSource}
+                            setPlotDistribution={this.setPlotDistribution} 
+                            setPlotShape={this.setPlotShape}
+                            setTemplatePlots={this.setTemplatePlots}
+                            addSurveyQuestion={this.addSurveyQuestion}
+                            topoSort={this.topoSort} 
+                            getParentSurveyQuestions={this.getParentSurveyQuestions} 
+                            getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}
+                            removeSurveyQuestion={this.removeSurveyQuestion}
+                            removeSurveyQuestionRow={this.removeSurveyQuestionRow}
+                            handleInputColor={this.handleInputColor} 
+                            handleInputName={this.handleInputName}
+                            handleChange={this.handleChange} 
+                            handleInputParent={this.handleInputParent}
+                        />
+                        <ProjectManagement project={this.state} createProject={this.createProject} />
+                    </Fragment>
+                }
+            </FormLayout>
         );
     }
 }
@@ -586,59 +584,45 @@ function ProjectDesignForm(props) {
         <form id="project-design-form" className="px-2 pb-2" method="post"
               action={props.documentRoot + "/create-project"}
               encType="multipart/form-data">
-            {props.project.templateDetails && 
-                <Fragment>
-                    {props.project.projectList && 
-                        <ProjectTemplateVisibility 
-                            project={props.project} 
-                            setProjectTemplate={props.setProjectTemplate} 
-                        />
-                    }
-                    <ProjectInfo project={props.project} handleChange={props.handleChange}/>
-                    <ProjectVisibility project={props.project} setPrivacyLevel={props.setPrivacyLevel}/>
-                    <ProjectAOI project={props.project}/>
-                    {props.project.imageryList && 
-                        <ProjectImagery project={props.project} setBaseMapSource={props.setBaseMapSource}/>
-                    }
-                    <PlotDesign 
+        
+                {props.project.projectList && 
+                    <ProjectTemplateVisibility 
                         project={props.project} 
-                        useTemplatePlots={props.useTemplatePlots}
-                        setPlotDistribution={props.setPlotDistribution}
-                        setPlotShape={props.setPlotShape}
-                        setTemplatePlots={props.setTemplatePlots}
+                        setProjectTemplate={props.setProjectTemplate} 
                     />
-                    {!props.project.useTemplatePlots && 
-                        <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
-                    }
-                    <SurveyDesign 
-                        project={props.project}
-                        addSurveyQuestionRow={props.addSurveyQuestionRow}
-                        addSurveyQuestion ={props.addSurveyQuestion} 
-                        topoSort={props.topoSort}
-                        getParentSurveyQuestions={props.getParentSurveyQuestions} 
-                        getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}
-                        removeSurveyQuestion={props.removeSurveyQuestion}
-                        removeSurveyQuestionRow={props.removeSurveyQuestionRow}
-                        handleInputColor={props.handleInputColor}
-                        handleInputName={props.handleInputName}
-                        handleInputParent={props.handleInputParent}
-                    />
-                </Fragment>
-            }
+                }
+                <ProjectInfo project={props.project} handleChange={props.handleChange}/>
+                <ProjectVisibility project={props.project} setPrivacyLevel={props.setPrivacyLevel}/>
+                <ProjectAOI project={props.project}/>
+                {props.project.imageryList && 
+                    <ProjectImagery project={props.project} setBaseMapSource={props.setBaseMapSource}/>
+                }
+                <PlotDesign 
+                    project={props.project} 
+                    useTemplatePlots={props.useTemplatePlots}
+                    setPlotDistribution={props.setPlotDistribution}
+                    setPlotShape={props.setPlotShape}
+                    setTemplatePlots={props.setTemplatePlots}
+                />
+                {!props.project.useTemplatePlots && 
+                    <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
+                }
+                <SurveyDesign 
+                    project={props.project}
+                    addSurveyQuestionRow={props.addSurveyQuestionRow}
+                    addSurveyQuestion ={props.addSurveyQuestion} 
+                    topoSort={props.topoSort}
+                    getParentSurveyQuestions={props.getParentSurveyQuestions} 
+                    getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}
+                    removeSurveyQuestion={props.removeSurveyQuestion}
+                    removeSurveyQuestionRow={props.removeSurveyQuestionRow}
+                    handleInputColor={props.handleInputColor}
+                    handleInputName={props.handleInputName}
+                    handleInputParent={props.handleInputParent}
+                />
 
         </form>
     );
-}
-
-function SectionBlock({ title, children }) {
-    return (
-        <div className={"row mb-3"}>
-            <div className="col">
-                <h2 className="header px-0">{title}</h2>
-                {children}
-            </div>
-        </div>
-    )
 }
 
 function ProjectTemplateVisibility({ project, setProjectTemplate }) {
@@ -1025,7 +1009,16 @@ class SampleDesign extends React.Component{
                                     />
                         </label>
                     </div>
-                    <p id="sample-design-text">Sample points will be randomly distributed within the plot boundary.</p>
+                    <p id="sample-design-text">
+                    {sampleDistribution === 'random' && 
+                        'Sample points will be randomly distributed within the plot boundary.'}
+                    {sampleDistribution === 'gridded' && 
+                        'Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.'}
+                    {sampleDistribution === 'csv' && 
+                        'Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.'}
+                    {sampleDistribution === 'shp' && 
+                        'Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.'}
+                    </p>
                     <div className="form-group mb-1">
                         <p htmlFor="samples-per-plot">Samples per plot</p>
                         <input className="form-control form-control-sm" type="number" id="samples-per-plot"
