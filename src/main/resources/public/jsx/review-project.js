@@ -1,10 +1,10 @@
 import React, { Fragment }  from 'react';
 import ReactDOM from 'react-dom';
-import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { utils } from "../js/utils.js";
 
 import FormLayout from "./components/FormLayout"
 import SectionBlock from "./components/SectionBlock"
+import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -468,7 +468,7 @@ function ProjectStats({ project }) {
 
 function ProjectDesignReview(props) {
     return (
-        <form id="project-design-form" className="px-2 pb-2">
+        <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfoReview project={props.project}/>
             <ProjectVisibility project={props.project}/>
             <ProjectAOI projectId={props.projectId} project={props.project}/>
@@ -484,7 +484,7 @@ function ProjectDesignReview(props) {
                 getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}
             />
 
-        </form>
+        </div>
     );
 }
 

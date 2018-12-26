@@ -1,11 +1,10 @@
 import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
-import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
-import { utils } from "../js/utils.js";
 import FormLayout from "./components/FormLayout"
 import SectionBlock from "./components/SectionBlock"
-
+import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -62,7 +61,6 @@ class Project extends React.Component {
             var formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("sample-values", JSON.stringify(this.state.templateDetails.sampleValues));
-            console.log(formData);
             var ref = this;
             $.ajax({
                 url: this.props.documentRoot + "/create-project",
@@ -719,28 +717,36 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
                     <div className="form-group mx-4">
                         <div className="row">
                             <div className="col-md-6 offset-md-3">
-                                <input className="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
+                                <input 
+                                    className="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
                                     defaultValue={latMax} placeholder="North" autoComplete="off" min="-90.0"
-                                    max="90.0" step="any"/>
+                                    max="90.0" step="any"
+                                />
                             </div>
                         </div>
                         <div className="row">
                             <div className="col-md-6">
-                                <input className="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
+                                <input 
+                                    className="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
                                     defaultValue={lonMin} placeholder="West" autoComplete="off" min="-180.0"
-                                    max="180.0" step="any"/>
+                                    max="180.0" step="any"
+                                />
                             </div>
                             <div className="col-md-6">
-                                <input className="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
+                                <input 
+                                    className="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
                                     defaultValue={lonMax} placeholder="East" autoComplete="off" min="-180.0"
-                                    max="180.0" step="any"/>
+                                    max="180.0" step="any"
+                                />
                             </div>
                         </div>
                         <div className="row">
                             <div className="col-md-6 offset-md-3">
-                                <input className="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
+                                <input 
+                                    className="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
                                     defaultValue={latMin} placeholder="South" autoComplete="off" min="-90.0"
-                                    max="90.0" step="any"/>
+                                    max="90.0" step="any"
+                                />
                             </div>
                         </div>
                     </div>
@@ -757,13 +763,13 @@ function ProjectImagery({ project, setBaseMapSource }) {
                 <div className="form-group">
                     <h3 htmlFor="base-map-source">Basemap Source</h3>
                     <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                            size="1"
-                            value={project.templateDetails && project.templateDetails.baseMapSource != null 
-                                    ? project.templateDetails.baseMapSource 
-                                    : ""} 
-                            onChange={setBaseMapSource}>
+                        size="1"
+                        value={project.templateDetails && project.templateDetails.baseMapSource != null
+                            ? project.templateDetails.baseMapSource
+                            : ""}
+                        onChange={setBaseMapSource}>
                         {
-                            project.imageryList.map((imagery,uid) =>
+                            project.imageryList.map((imagery, uid) =>
                                 <option key={uid} value={imagery.title}>{imagery.title}</option>
                             )
                         }
@@ -775,163 +781,248 @@ function ProjectImagery({ project, setBaseMapSource }) {
 }
 
 class PlotDesign extends React.Component {
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
+  }
+
+  encodeImageFileAsURL(event) {
+    var file = event.target.files[0];
+    let reader = new FileReader();
+    reader.onloadend = function() {
+      let base64Data = reader.result;
+      console.log("RESULT", base64Data);
     };
+    reader.readAsDataURL(file);
+  }
 
-    encodeImageFileAsURL(event) {
-        var file = event.target.files[0];
-        let reader = new FileReader();
-        reader.onloadend = function () {
-            let base64Data = reader.result;
-            console.log('RESULT', base64Data);
-        };
-        reader.readAsDataURL(file);
-    }
+  render() {
+    var {
+      project: {
+        useTemplatePlots,
+        templateDetails,
+        templateDetails: { plotDistribution, plotShape }
+      }
+    } = this.props;
+    return (
+      <SectionBlock title="Plot Design">
+        <div id="plot-design">
+          <div className="row">
+            <div id="plot-design-col1" className="col">
+              <h3>Template Plots</h3>
+              <div className="form-check form-check-inline">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="use-template-plots"
+                  name="use-template-plots"
+                  defaultValue={useTemplatePlots}
+                  onChange={() =>
+                    this.props.setTemplatePlots(!useTemplatePlots)
+                  }
+                  checked={useTemplatePlots}
+                />
+                <label
+                  className="form-check-label small"
+                  htmlFor="use-template-plots"
+                >
+                  Use Template Plots and Samples
+                </label>
+              </div>
 
-    render() {
-        var { project: { useTemplatePlots, templateDetails, templateDetails : { plotDistribution, plotShape }}} = this.props;
-        return (
-            <SectionBlock title="Plot Design">
-                <div id="plot-design">
-                    <div className="row">
-                        <div id="plot-design-col1" className="col">
-                            <h3>Template Plots</h3>
-                            <div className="form-check form-check-inline">
-                                <input className="form-check-input" type="checkbox" id="use-template-plots"
-                                        name="use-template-plots" defaultValue={useTemplatePlots}
-                                        onChange={() => this.props.setTemplatePlots(!useTemplatePlots)}
-                                        checked={useTemplatePlots}/>
-                                <label className="form-check-label small"
-                                        htmlFor="use-template-plots">Use Template Plots and Samples</label>
-                            </div>
+              {!useTemplatePlots && (
+                <Fragment>
+                  <h3>Spatial Distribution</h3>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="plot-distribution-random"
+                      name="plot-distribution"
+                      defaultValue="random"
+                      onChange={() => this.props.setPlotDistribution("random")}
+                      checked={plotDistribution === "random"}
+                    />
+                    <label
+                      className="form-check-label small"
+                      htmlFor="plot-distribution-random"
+                    >
+                      Random
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="plot-distribution-gridded"
+                      name="plot-distribution"
+                      defaultValue="gridded"
+                      onChange={() => this.props.setPlotDistribution("gridded")}
+                      checked={plotDistribution === "gridded"}
+                    />
+                    <label
+                      className="form-check-label small"
+                      htmlFor="plot-distribution-gridded"
+                    >
+                      Gridded
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="plot-distribution-csv"
+                      name="plot-distribution"
+                      defaultValue="csv"
+                      onChange={() => this.props.setPlotDistribution("csv")}
+                      checked={plotDistribution === "csv"}
+                    />
+                    <label
+                      className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                      id="custom-csv-upload"
+                    >
+                      <small>Upload CSV</small>
+                      <input
+                        type="file"
+                        accept="text/csv"
+                        id="plot-distribution-csv-file"
+                        defaultValue=""
+                        name="plot-distribution-csv-file"
+                        onChange={this.encodeImageFileAsURL}
+                        style={{ display: "none" }}
+                        disabled={plotDistribution != "csv"}
+                      />
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="plot-distribution-shp"
+                      name="plot-distribution"
+                      defaultValue="shp"
+                      onChange={() => this.props.setPlotDistribution("shp")}
+                      checked={plotDistribution === "shp"}
+                    />
+                    <label
+                      className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                      id="custom-shp-upload"
+                    >
+                      <small>Upload SHP</small>
+                      <input
+                        type="file"
+                        accept="application/zip"
+                        id="plot-distribution-shp-file"
+                        defaultValue=""
+                        name="plot-distribution-shp-file"
+                        onChange={this.encodeImageFileAsURL}
+                        style={{ display: "none" }}
+                        disabled={plotDistribution != "shp"}
+                      />
+                    </label>
+                  </div>
+                  <p id="plot-design-text">
+                    {plotDistribution === "random" &&
+                      "Plot centers will be randomly distributed within the AOI."}
+                    {plotDistribution === "gridded" &&
+                      "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below."}
+                    {plotDistribution === "csv" &&
+                      "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID."}
+                    {plotDistribution === "shp" &&
+                      "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field."}
+                  </p>
 
-                            {!useTemplatePlots &&
-                            <Fragment>
-                                <h3>Spatial Distribution</h3>
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" id="plot-distribution-random"
-                                            name="plot-distribution" defaultValue="random"
-                                            onChange={() => this.props.setPlotDistribution('random')}
-                                            checked={plotDistribution === 'random'}/>
-                                    <label className="form-check-label small"
-                                            htmlFor="plot-distribution-random">Random</label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" id="plot-distribution-gridded"
-                                            name="plot-distribution" defaultValue="gridded"
-                                            onChange={() => this.props.setPlotDistribution('gridded')}
-                                            checked={plotDistribution === 'gridded'}/>
-                                    <label className="form-check-label small"
-                                            htmlFor="plot-distribution-gridded">Gridded</label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" id="plot-distribution-csv"
-                                            name="plot-distribution" defaultValue="csv"
-                                            onChange={() => this.props.setPlotDistribution('csv')}
-                                            checked={plotDistribution === 'csv'}/>
-                                    <label
-                                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                        id="custom-csv-upload">
-                                        <small>Upload CSV</small>
-                                        <input 
-                                            type="file" accept="text/csv" id="plot-distribution-csv-file"
-                                            defaultValue=""
-                                            name="plot-distribution-csv-file"
-                                            onChange={this.encodeImageFileAsURL}
-                                            style={{display: "none"}} 
-                                            disabled={plotDistribution != 'csv'}
-                                        />
-                                    </label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" id="plot-distribution-shp"
-                                            name="plot-distribution" defaultValue="shp"
-                                            onChange={() => this.props.setPlotDistribution('shp')}
-                                            checked={plotDistribution === 'shp'}/>
-                                    <label
-                                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                        id="custom-shp-upload">
-                                        <small>Upload SHP</small>
-                                        <input 
-                                            type="file" accept="application/zip" id="plot-distribution-shp-file"
-                                            defaultValue=""
-                                            name="plot-distribution-shp-file"
-                                            onChange={this.encodeImageFileAsURL}
-                                            style={{display: "none"}} 
-                                            disabled = {plotDistribution != 'shp'}/>
-                                    </label>
-                                </div>
-                                <p id="plot-design-text">
-                                    {plotDistribution === 'random' && 
-                                        'Plot centers will be randomly distributed within the AOI.'}
-                                    {plotDistribution === 'gridded' && 
-                                        'Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.'}
-                                    {plotDistribution === 'csv' && 
-                                        'Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID.'}
-                                    {plotDistribution === 'shp' && 
-                                        'Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.'}
-                                </p>
-
-                                <div className="form-group mb-1">
-                                    <p htmlFor="num-plots">Number of plots</p>
-                                    <input className="form-control form-control-sm" type="number" id="num-plots"
-                                            name="num-plots" autoComplete="off" min="0" step="1"
-                                            defaultValue={templateDetails.numPlots || ""}
-                                            disabled={plotDistribution != 'random'}
-                                        />
-                                </div>
-                                <div className="form-group mb-1">
-                                    <p htmlFor="plot-spacing">Plot spacing (m)</p>
-                                    <input className="form-control form-control-sm" type="number" id="plot-spacing"
-                                            name="plot-spacing" autoComplete="off" min="0.0" step="any"
-                                            defaultValue={templateDetails.plotSpacing || ""}
-                                            disabled={plotDistribution != 'gridded'}
-                                            />
-                                </div>
-                                <hr/>
-                                <h3>Plot Shape</h3>
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" id="plot-shape-circle"
-                                            name="plot-shape" defaultValue="circle"
-                                            onChange={() => this.props.setPlotShape('circle')}
-                                            checked={plotShape === 'circle'}
-                                            disabled ={plotDistribution === 'shp'}
-                                            />
-                                    <label className="form-check-label small"
-                                            htmlFor="plot-shape-circle">Circle</label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" id="plot-shape-square"
-                                            name="plot-shape" defaultValue="square"
-                                            onChange={() => this.props.setPlotShape('square')}
-                                            checked={plotShape === 'square'}
-                                            disabled ={plotDistribution === 'shp'}
-                                            />
-                                    <label className="form-check-label small"
-                                            htmlFor="plot-shape-square">Square</label>
-                                </div>
-                                <p htmlFor="plot-size">
-                                    {plotShape == 'circle' ? 'Diameter (m)' : 'Width (m)'}
-                                </p>
-                                <input className="form-control form-control-sm" type="number" id="plot-size"
-                                    name="plot-size" autoComplete="off" min="0.0" step="any"
-                                    defaultValue={templateDetails.plotSize}
-                                    disabled ={plotDistribution === 'shp'}
-                                    />
-                            </Fragment>
-                        }
-                        </div>
-                    </div>
-                </div>
-            </SectionBlock>
-        );
-    }
-
+                  <div className="form-group mb-1">
+                    <p htmlFor="num-plots">Number of plots</p>
+                    <input
+                      className="form-control form-control-sm"
+                      type="number"
+                      id="num-plots"
+                      name="num-plots"
+                      autoComplete="off"
+                      min="0"
+                      step="1"
+                      defaultValue={templateDetails.numPlots || ""}
+                      disabled={plotDistribution != "random"}
+                    />
+                  </div>
+                  <div className="form-group mb-1">
+                    <p htmlFor="plot-spacing">Plot spacing (m)</p>
+                    <input
+                      className="form-control form-control-sm"
+                      type="number"
+                      id="plot-spacing"
+                      name="plot-spacing"
+                      autoComplete="off"
+                      min="0.0"
+                      step="any"
+                      defaultValue={templateDetails.plotSpacing || ""}
+                      disabled={plotDistribution != "gridded"}
+                    />
+                  </div>
+                  <hr />
+                  <h3>Plot Shape</h3>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="plot-shape-circle"
+                      name="plot-shape"
+                      defaultValue="circle"
+                      onChange={() => this.props.setPlotShape("circle")}
+                      checked={plotShape === "circle"}
+                      disabled={plotDistribution === "shp"}
+                    />
+                    <label
+                      className="form-check-label small"
+                      htmlFor="plot-shape-circle"
+                    >
+                      Circle
+                    </label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="plot-shape-square"
+                      name="plot-shape"
+                      defaultValue="square"
+                      onChange={() => this.props.setPlotShape("square")}
+                      checked={plotShape === "square"}
+                      disabled={plotDistribution === "shp"}
+                    />
+                    <label
+                      className="form-check-label small"
+                      htmlFor="plot-shape-square"
+                    >
+                      Square
+                    </label>
+                  </div>
+                  <p htmlFor="plot-size">
+                    {plotShape == "circle" ? "Diameter (m)" : "Width (m)"}
+                  </p>
+                  <input
+                    className="form-control form-control-sm"
+                    type="number"
+                    id="plot-size"
+                    name="plot-size"
+                    autoComplete="off"
+                    min="0.0"
+                    step="any"
+                    defaultValue={templateDetails.plotSize}
+                    disabled={plotDistribution === "shp"}
+                  />
+                </Fragment>
+              )}
+            </div>
+          </div>
+        </div>
+      </SectionBlock>
+    );
+  }
 }
 
 
-class SampleDesign extends React.Component{
+class SampleDesign extends React.Component {
     constructor(props) {
         super(props);
     };
@@ -944,94 +1035,107 @@ class SampleDesign extends React.Component{
         };
         reader.readAsDataURL(file);
     }
-    render()
-    {
-        const { project: { templateDetails : { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution }}} = this.props;
+    render() {
+        const { project: { templateDetails: { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution } } } = this.props;
         return (
             <SectionBlock title="Sample Design">
                 <div id="sample-design">
                     <h3>Spatial Distribution</h3>
                     <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="sample-distribution-random"
-                                name="sample-distribution" defaultValue="random"
-                                onChange={() => this.props.setSampleDistribution('random')}
-                                checked={sampleDistribution === 'random'}
-                                disabled={plotDistribution === 'shp'}
-                                />
+                        <input
+                            className="form-check-input" type="radio" id="sample-distribution-random"
+                            name="sample-distribution" defaultValue="random"
+                            onChange={() => this.props.setSampleDistribution('random')}
+                            checked={sampleDistribution === 'random'}
+                            disabled={plotDistribution === 'shp'}
+                        />
                         <label className="form-check-label small"
-                                htmlFor="sample-distribution-random">Random</label>
+                            htmlFor="sample-distribution-random">
+                            Random
+                        </label>
                     </div>
                     <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="sample-distribution-gridded"
-                                name="sample-distribution" defaultValue="gridded"
-                                onChange={() => this.props.setSampleDistribution('gridded')}
-                                checked={sampleDistribution === 'gridded'}
-                                disabled={plotDistribution === 'shp'}
-                                />
+                        <input
+                            className="form-check-input" type="radio" id="sample-distribution-gridded"
+                            name="sample-distribution" defaultValue="gridded"
+                            onChange={() => this.props.setSampleDistribution('gridded')}
+                            checked={sampleDistribution === 'gridded'}
+                            disabled={plotDistribution === 'shp'}
+                        />
                         <label className="form-check-label small"
-                                htmlFor="sample-distribution-gridded">Gridded</label>
+                            htmlFor="sample-distribution-gridded">
+                            Gridded
+                        </label>
                     </div>
                     <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="sample-distribution-csv"
-                                name="sample-distribution" defaultValue="csv"
-                                onChange={() => this.props.setSampleDistribution('csv')}
-                                checked={sampleDistribution === 'csv'}
-                                disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
-                                />
+                        <input
+                            className="form-check-input" type="radio" id="sample-distribution-csv"
+                            name="sample-distribution" defaultValue="csv"
+                            onChange={() => this.props.setSampleDistribution('csv')}
+                            checked={sampleDistribution === 'csv'}
+                            disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
+                        />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                id="sample-custom-csv-upload">
+                            id="sample-custom-csv-upload">
                             <small>Upload CSV</small>
-                            <input type="file" accept="text/csv" id="sample-distribution-csv-file"
-                                    name="sample-distribution-csv-file"
-                                    defaultValue=""
-                                    onChange={this.encodeImageFileAsURL}
-                                    style={{display: "none"}} 
-                                    disabled={sampleDistribution != 'csv'}
+                            <input 
+                                type="file" accept="text/csv" id="sample-distribution-csv-file"
+                                name="sample-distribution-csv-file"
+                                defaultValue=""
+                                onChange={this.encodeImageFileAsURL}
+                                style={{ display: "none" }}
+                                disabled={sampleDistribution != 'csv'}
                             />
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" id="sample-distribution-shp"
-                                name="sample-distribution" defaultValue="shp"
-                                onChange={() => this.props.setSampleDistribution('shp')}
-                                checked={sampleDistribution === 'shp'}
-                                disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
-                                />
+                        <input
+                            className="form-check-input" type="radio" id="sample-distribution-shp"
+                            name="sample-distribution" defaultValue="shp"
+                            onChange={() => this.props.setSampleDistribution('shp')}
+                            checked={sampleDistribution === 'shp'}
+                            disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
+                        />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                id="sample-custom-shp-upload">
+                            id="sample-custom-shp-upload">
                             <small>Upload SHP</small>
-                            <input type="file" accept="application/zip" id="sample-distribution-shp-file"
-                                    name="sample-distribution-shp-file"
-                                    defaultValue=""
-                                    onChange={this.encodeImageFileAsURL}
-                                    style={{display: "none"}} 
-                                    disabled = {sampleDistribution != 'shp'}
-                                    />
+                            <input
+                                type="file" accept="application/zip" id="sample-distribution-shp-file"
+                                name="sample-distribution-shp-file"
+                                defaultValue=""
+                                onChange={this.encodeImageFileAsURL}
+                                style={{ display: "none" }}
+                                disabled={sampleDistribution != 'shp'}
+                            />
                         </label>
                     </div>
                     <p id="sample-design-text">
-                    {sampleDistribution === 'random' && 
-                        'Sample points will be randomly distributed within the plot boundary.'}
-                    {sampleDistribution === 'gridded' && 
-                        'Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.'}
-                    {sampleDistribution === 'csv' && 
-                        'Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.'}
-                    {sampleDistribution === 'shp' && 
-                        'Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.'}
+                        {sampleDistribution === 'random' &&
+                            'Sample points will be randomly distributed within the plot boundary.'}
+                        {sampleDistribution === 'gridded' &&
+                            'Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.'}
+                        {sampleDistribution === 'csv' &&
+                            'Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.'}
+                        {sampleDistribution === 'shp' &&
+                            'Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.'}
                     </p>
                     <div className="form-group mb-1">
                         <p htmlFor="samples-per-plot">Samples per plot</p>
-                        <input className="form-control form-control-sm" type="number" id="samples-per-plot"
-                                name="samples-per-plot" autoComplete="off" min="0" step="1"
-                                defaultValue={samplesPerPlot || ""}
-                                disabled={sampleDistribution != 'random'}/>
+                        <input
+                            className="form-control form-control-sm" type="number" id="samples-per-plot"
+                            name="samples-per-plot" autoComplete="off" min="0" step="1"
+                            defaultValue={samplesPerPlot || ""}
+                            disabled={sampleDistribution != 'random'}
+                        />
                     </div>
                     <div className="form-group mb-1">
                         <p htmlFor="sample-resolution">Sample resolution (m)</p>
-                        <input className="form-control form-control-sm" type="number" id="sample-resolution"
-                                name="sample-resolution" autoComplete="off" min="0.0" step="any"
-                                defaultValue={sampleResolution || ""} 
-                                disabled={sampleDistribution != 'gridded'}/>
+                        <input
+                            className="form-control form-control-sm" type="number" id="sample-resolution"
+                            name="sample-resolution" autoComplete="off" min="0.0" step="any"
+                            defaultValue={sampleResolution || ""}
+                            disabled={sampleDistribution != 'gridded'}
+                        />
                     </div>
                 </div>
             </SectionBlock>
@@ -1069,13 +1173,14 @@ function SurveyDesign(props){
                                 <label htmlFor="value-parent">Parent Question:</label>
                             </td>
                             <td>
-                                <select id="value-parent" className="form-control form-control-sm" size="1"
-                                        onChange={(e) => props.handleInputParent(e)}>
+                                <select
+                                    id="value-parent" className="form-control form-control-sm" size="1"
+                                    onChange={(e) => props.handleInputParent(e)}>
                                     <option value="">None</option>
                                     {
                                         (props.project.templateDetails.sampleValues).map((parentSurveyQuestion, uid) =>
                                             <option key={uid}
-                                                    value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}
+                                                value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}
                                             </option>
                                         )
                                     }
@@ -1139,8 +1244,8 @@ class SurveyQuestionTree extends React.Component {
     }
 }
 
-function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion}) {
-    if(surveyQuestion.answers==null){
+function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion }) {
+    if (surveyQuestion.answers == null) {
         console.log("answers null");
     }
     return (
@@ -1154,22 +1259,22 @@ function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion}
             </h3>
             <table className="table table-sm">
                 <thead>
-                <tr>
-                    <th scope="col"></th>
-                    <th scope="col">Answer</th>
-                    <th scope="col">Color</th>
-                    <th scope="col">&nbsp;</th>
-                </tr>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Answer</th>
+                        <th scope="col">Color</th>
+                        <th scope="col">&nbsp;</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {
+                    {
 
-                    (surveyQuestion.answers).map((surveyAnswer, uid) => {
+                        (surveyQuestion.answers).map((surveyAnswer, uid) => {
 
                             return <tr key={uid}>
                                 <td>
-                                    {surveyAnswer && 
-                                        <RemoveSurveyQuestionRowButton 
+                                    {surveyAnswer &&
+                                        <RemoveSurveyQuestionRowButton
                                             removeSurveyQuestionRow={parentProps.removeSurveyQuestionRow}
                                             surveyQuestion={surveyQuestion}
                                             surveyAnswer={surveyAnswer}
@@ -1182,24 +1287,24 @@ function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion}
                                 </td>
                                 <td>
                                     <div className="circle"
-                                            style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}></div>
+                                        style={{ backgroundColor: surveyAnswer.color, border: "solid 1px" }}></div>
                                 </td>
                                 <td>
                                     &nbsp;
                                 </td>
                             </tr>
                         }
-                    )
-                }
-                <SurveyQuestionTable 
-                    project={project}
-                    surveyQuestion={surveyQuestion}
-                    getParentSurveyQuestions={parentProps.getParentSurveyQuestions}
-                    addSurveyQuestionRow={parentProps.addSurveyQuestionRow}
-                    handleInputName={parentProps.handleInputName}
-                    handleInputColor={parentProps.handleInputColor}
-                    handleInputParent={parentProps.handleInputParent}
-                />
+                        )
+                    }
+                    <SurveyQuestionTable
+                        project={project}
+                        surveyQuestion={surveyQuestion}
+                        getParentSurveyQuestions={parentProps.getParentSurveyQuestions}
+                        addSurveyQuestionRow={parentProps.addSurveyQuestionRow}
+                        handleInputName={parentProps.handleInputName}
+                        handleInputColor={parentProps.handleInputColor}
+                        handleInputParent={parentProps.handleInputParent}
+                    />
                 </tbody>
             </table>
         </div>
