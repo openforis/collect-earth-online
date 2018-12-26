@@ -351,7 +351,7 @@ class Project extends React.Component {
         mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
-        this.showPlotCenters(projectId, 100);
+        this.showPlotCenters(projectId, 300);
     }
 
     updateUnmanagedComponents(projectId) {

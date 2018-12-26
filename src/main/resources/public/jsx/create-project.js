@@ -492,13 +492,13 @@ class Project extends React.Component {
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
 
             // Get the new plotlist
-            this.showPlotCenters(projectId, 100);
+            this.showPlotCenters(projectId, 300);
         }
     }
 
     updateUnmanagedComponents(projectId) {
         if (this.state.templateDetails != null) {
-            if (this.state.imageryList.length > 0) {
+            if (this.state.imageryList && this.state.imageryList.length > 0) {
                 var detailsNew = this.state.templateDetails;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
                 detailsNew.baseMapSource = this.state.templateDetails.baseMapSource || this.state.imageryList[0].title;
@@ -836,7 +836,7 @@ class PlotDesign extends React.Component {
                                         <small>Upload CSV</small>
                                         <input 
                                             type="file" accept="text/csv" id="plot-distribution-csv-file"
-                                            defaultVale=""
+                                            defaultValue=""
                                             name="plot-distribution-csv-file"
                                             onChange={this.encodeImageFileAsURL}
                                             style={{display: "none"}} 
@@ -855,7 +855,7 @@ class PlotDesign extends React.Component {
                                         <small>Upload SHP</small>
                                         <input 
                                             type="file" accept="application/zip" id="plot-distribution-shp-file"
-                                            defaultVale=""
+                                            defaultValue=""
                                             name="plot-distribution-shp-file"
                                             onChange={this.encodeImageFileAsURL}
                                             style={{display: "none"}} 
@@ -983,7 +983,7 @@ class SampleDesign extends React.Component{
                             <small>Upload CSV</small>
                             <input type="file" accept="text/csv" id="sample-distribution-csv-file"
                                     name="sample-distribution-csv-file"
-                                    defaultVale=""
+                                    defaultValue=""
                                     onChange={this.encodeImageFileAsURL}
                                     style={{display: "none"}} 
                                     disabled={sampleDistribution != 'csv'}
@@ -1002,7 +1002,7 @@ class SampleDesign extends React.Component{
                             <small>Upload SHP</small>
                             <input type="file" accept="application/zip" id="sample-distribution-shp-file"
                                     name="sample-distribution-shp-file"
-                                    defaultVale=""
+                                    defaultValue=""
                                     onChange={this.encodeImageFileAsURL}
                                     style={{display: "none"}} 
                                     disabled = {sampleDistribution != 'shp'}
