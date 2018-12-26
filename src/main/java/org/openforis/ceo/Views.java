@@ -147,6 +147,8 @@ public class Views {
                                       Map.of("institution_id", getInstitutionId));
     }
 
+    // FIXME I do not beleive institution is needed unless we want to do some sort of validations with the imagery
+    // We could/should be loading the imagery list based on the project institution.
     public static Route reviewProject(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
         Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");

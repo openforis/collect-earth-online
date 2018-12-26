@@ -673,18 +673,18 @@ function ProjectVisibility({ project : { templateDetails : { privacyLevel } } })
     return (
         <SectionBlock title= "Project Visibility">
             <h3>Privacy Level</h3>
-            <div id="project-visibility" className="mb-3">
+            <div id="project-visibility" className="mb-3" style={{'font-size': '.9rem'}}>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
                             value="public" checked={privacyLevel === 'public'}
                             onChange={() => props.setPrivacyLevel('public')}/>
-                    <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
+                    <label className="form-check-label" htmlFor="privacy-public">Public: <i>All Users</i></label>
                 </div>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
                             value="private" onChange={() => props.setPrivacyLevel('private')}
                             checked={privacyLevel === 'private'}/>
-                    <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
+                    <label className="form-check-label" htmlFor="privacy-private">Private: <i>Group
                         Admins</i></label>
                 </div>
                 <div className="form-check form-check-inline">
@@ -692,7 +692,7 @@ function ProjectVisibility({ project : { templateDetails : { privacyLevel } } })
                             name="privacy-level"
                             value="institution" onChange={() => props.setPrivacyLevel('institution')}
                             checked={privacyLevel === 'institution'}/>
-                    <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
+                    <label className="form-check-label" htmlFor="privacy-institution">Institution: <i>Group
                         Members</i></label>
                 </div>
                 <div className="form-check form-check-inline">
@@ -700,7 +700,7 @@ function ProjectVisibility({ project : { templateDetails : { privacyLevel } } })
                             name="privacy-level"
                             value="invitation" onChange={() => props.setPrivacyLevel('invitation')} disabled
                             checked={privacyLevel === 'invitation'}/>
-                    <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
+                    <label className="form-check-label" htmlFor="privacy-invitation">Invitation: <i>Coming
                         Soon</i></label>
                 </div>
             </div>
@@ -809,7 +809,7 @@ class PlotDesign extends React.Component {
           <div className="row">
             <div id="plot-design-col1" className="col">
               <h3>Template Plots</h3>
-              <div className="form-check form-check-inline">
+              <div className="form-check form-check-inline mb-3">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -822,7 +822,7 @@ class PlotDesign extends React.Component {
                   checked={useTemplatePlots}
                 />
                 <label
-                  className="form-check-label small"
+                  className="form-check-label medium"
                   htmlFor="use-template-plots"
                 >
                   Use Template Plots and Samples
@@ -843,7 +843,7 @@ class PlotDesign extends React.Component {
                       checked={plotDistribution === "random"}
                     />
                     <label
-                      className="form-check-label small"
+                      className="form-check-label medium"
                       htmlFor="plot-distribution-random"
                     >
                       Random
@@ -860,7 +860,7 @@ class PlotDesign extends React.Component {
                       checked={plotDistribution === "gridded"}
                     />
                     <label
-                      className="form-check-label small"
+                      className="form-check-label medium"
                       htmlFor="plot-distribution-gridded"
                     >
                       Gridded
@@ -880,7 +880,7 @@ class PlotDesign extends React.Component {
                       className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                       id="custom-csv-upload"
                     >
-                      <small>Upload CSV</small>
+                      <medium>Upload CSV</medium>
                       <input
                         type="file"
                         accept="text/csv"
@@ -907,7 +907,7 @@ class PlotDesign extends React.Component {
                       className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                       id="custom-shp-upload"
                     >
-                      <small>Upload SHP</small>
+                      <medium>Upload SHP</medium>
                       <input
                         type="file"
                         accept="application/zip"
@@ -920,7 +920,7 @@ class PlotDesign extends React.Component {
                       />
                     </label>
                   </div>
-                  <p id="plot-design-text">
+                  <p id="plot-design-text" className="font-italic ml-2">-
                     {plotDistribution === "random" &&
                       "Plot centers will be randomly distributed within the AOI."}
                     {plotDistribution === "gridded" &&
@@ -973,7 +973,7 @@ class PlotDesign extends React.Component {
                       disabled={plotDistribution === "shp"}
                     />
                     <label
-                      className="form-check-label small"
+                      className="form-check-label medium"
                       htmlFor="plot-shape-circle"
                     >
                       Circle
@@ -991,7 +991,7 @@ class PlotDesign extends React.Component {
                       disabled={plotDistribution === "shp"}
                     />
                     <label
-                      className="form-check-label small"
+                      className="form-check-label medium"
                       htmlFor="plot-shape-square"
                     >
                       Square
@@ -1049,7 +1049,7 @@ class SampleDesign extends React.Component {
                             checked={sampleDistribution === 'random'}
                             disabled={plotDistribution === 'shp'}
                         />
-                        <label className="form-check-label small"
+                        <label className="form-check-label medium"
                             htmlFor="sample-distribution-random">
                             Random
                         </label>
@@ -1062,7 +1062,7 @@ class SampleDesign extends React.Component {
                             checked={sampleDistribution === 'gridded'}
                             disabled={plotDistribution === 'shp'}
                         />
-                        <label className="form-check-label small"
+                        <label className="form-check-label medium"
                             htmlFor="sample-distribution-gridded">
                             Gridded
                         </label>
@@ -1077,7 +1077,7 @@ class SampleDesign extends React.Component {
                         />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                             id="sample-custom-csv-upload">
-                            <small>Upload CSV</small>
+                            <medium>Upload CSV</medium>
                             <input 
                                 type="file" accept="text/csv" id="sample-distribution-csv-file"
                                 name="sample-distribution-csv-file"
@@ -1098,7 +1098,7 @@ class SampleDesign extends React.Component {
                         />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                             id="sample-custom-shp-upload">
-                            <small>Upload SHP</small>
+                            <medium>Upload SHP</medium>
                             <input
                                 type="file" accept="application/zip" id="sample-distribution-shp-file"
                                 name="sample-distribution-shp-file"
@@ -1109,7 +1109,7 @@ class SampleDesign extends React.Component {
                             />
                         </label>
                     </div>
-                    <p id="sample-design-text">
+                    <p id="sample-design-text" className="font-italic ml-2">-
                         {sampleDistribution === 'random' &&
                             'Sample points will be randomly distributed within the plot boundary.'}
                         {sampleDistribution === 'gridded' &&

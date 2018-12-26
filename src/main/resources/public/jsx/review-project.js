@@ -48,6 +48,8 @@ class Project extends React.Component {
     };
 
     componentDidMount() {
+        // FIXME use promises to load map only once after correct data is loaded
+        // FIXME Use promises to load imagery after project data is loaded so we can use the projects institutionId
         this.getProjectStats();
         this.getImageryList();
         this.getProjectById();
