@@ -10,7 +10,7 @@ class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            templateDetails: null,
+            projectDetails: null,
             templateId: "0",
             useTemplatePlots: false,
             imageryList: null,
@@ -60,7 +60,7 @@ class Project extends React.Component {
             utils.show_element("spinner");
             var formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
-            formData.append("sample-values", JSON.stringify(this.state.templateDetails.sampleValues));
+            formData.append("sample-values", JSON.stringify(this.state.projectDetails.sampleValues));
             var ref = this;
             $.ajax({
                 url: this.props.documentRoot + "/create-project",
@@ -75,9 +75,9 @@ class Project extends React.Component {
                 alert("Error creating project. See console for details.");
             }).done(function (data) {
                 if (parseInt(data)) {
-                    var detailsNew = ref.state.templateDetails;
+                    var detailsNew = ref.state.projectDetails;
                     detailsNew.availability = "unpublished";
-                    ref.setState({templateDetails: detailsNew});
+                    ref.setState({projectDetails: detailsNew});
                     utils.hide_element("spinner");
                     var newProjectId = data;
                     window.location = ref.props.documentRoot + "/review-project/" + newProjectId;
@@ -135,7 +135,7 @@ class Project extends React.Component {
         }
 
         templateProject.sampleValues=newSV;
-        this.setState({templateDetails: JSON.parse(JSON.stringify(templateProject))},
+        this.setState({projectDetails: JSON.parse(JSON.stringify(templateProject))},
             function () {
                 this.updateUnmanagedComponents(this.state.templateId);
             }
@@ -144,21 +144,21 @@ class Project extends React.Component {
     }
 
     setPrivacyLevel(privacyLevel) {
-        if (this.state.templateDetails != null) {
-            var detailsNew = this.state.templateDetails;
+        if (this.state.projectDetails != null) {
+            var detailsNew = this.state.projectDetails;
             detailsNew.privacyLevel = privacyLevel;
-            this.setState({templateDetails: detailsNew});
+            this.setState({projectDetails: detailsNew});
         }
     }
 
     setBaseMapSource() {
         var e = document.getElementById("base-map-source");
         var bms = e.options[e.selectedIndex].value;
-        var detailsNew = this.state.templateDetails;
+        var detailsNew = this.state.projectDetails;
         detailsNew.baseMapSource = bms;
 
-        this.setState({templateDetails: detailsNew});
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.templateDetails.baseMapSource);
+        this.setState({projectDetails: detailsNew});
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
     }
 
     setTemplatePlots(useTemplatePlots) {
@@ -166,26 +166,26 @@ class Project extends React.Component {
     }
 
     setPlotDistribution(plotDistribution) {
-        if (this.state.templateDetails != null) {
-            var detailsNew = this.state.templateDetails;
+        if (this.state.projectDetails != null) {
+            var detailsNew = this.state.projectDetails;
             detailsNew.plotDistribution = plotDistribution;
-            this.setState({templateDetails: detailsNew});
+            this.setState({projectDetails: detailsNew});
         }
     }
 
     setPlotShape(plotShape) {
-        if (this.state.templateDetails != null) {
-            var detailsNew = this.state.templateDetails;
+        if (this.state.projectDetails != null) {
+            var detailsNew = this.state.projectDetails;
             detailsNew.plotShape = plotShape;
-            this.setState({templateDetails: detailsNew});
+            this.setState({projectDetails: detailsNew});
         }
     }
 
     setSampleDistribution(sampleDistribution) {
-        if (this.state.templateDetails != null) {
-            var detailsNew = this.state.templateDetails;
+        if (this.state.projectDetails != null) {
+            var detailsNew = this.state.projectDetails;
             detailsNew.sampleDistribution = sampleDistribution;
-            this.setState({templateDetails: detailsNew});
+            this.setState({projectDetails: detailsNew});
         }
     }
 
@@ -250,7 +250,7 @@ class Project extends React.Component {
     }
 
     addSurveyQuestion(){
-        if (this.state.templateDetails != null) {
+        if (this.state.projectDetails != null) {
             var questionText = document.getElementById("surveyQuestionText").value;
             var parent_value = document.getElementById("value-parent");
 
@@ -262,7 +262,7 @@ class Project extends React.Component {
             if (questionText != "") {
                 var newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[questionText] = {id:-1,answer: "", color: "#000000"};
-                var detailsNew = this.state.templateDetails;
+                var detailsNew = this.state.projectDetails;
                 var _id = detailsNew.sampleValues.length + 1;
                 var question_id = -1,answer_id=-1;
                 detailsNew.sampleValues.map((sq) => {
@@ -279,7 +279,7 @@ class Project extends React.Component {
                 );
 
                 detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id});
-                this.setState({newValueEntry: newValueEntryNew, templateDetails: detailsNew, newSurveyQuestionName: ""});
+                this.setState({newValueEntry: newValueEntryNew, projectDetails: detailsNew, newSurveyQuestionName: ""});
                 document.getElementById("surveyQuestionText").value = "";
                 parent_value.options[0].selected = true;
             } else {
@@ -289,21 +289,21 @@ class Project extends React.Component {
     }
 
     removeSurveyQuestion(surveyQuestionName) {
-        if (this.state.templateDetails != null) {
-            var detailsNew = this.state.templateDetails;
+        if (this.state.projectDetails != null) {
+            var detailsNew = this.state.projectDetails;
             detailsNew.sampleValues = detailsNew.sampleValues.filter(
                 function (surveyQuestion) {
                     return surveyQuestion.question != surveyQuestionName;
                 }
             );
             this.setState({
-                templateDetails: detailsNew
+                projectDetails: detailsNew
             });
         }
     }
 
     getSurveyQuestionByName(surveyQuestionName) {
-        return this.state.templateDetails.sampleValues.find(
+        return this.state.projectDetails.sampleValues.find(
             function (surveyQuestion) {
                 return surveyQuestion.question == surveyQuestionName;
             }
@@ -387,7 +387,7 @@ class Project extends React.Component {
                         );
                     }
                     detailsNew.sampleValues=newSV;
-                    this.setState({templateDetails: detailsNew});
+                    this.setState({projectDetails: detailsNew});
                     this.updateUnmanagedComponents("0");
                 }
             });
@@ -408,7 +408,7 @@ class Project extends React.Component {
 
                 this.setState({projectList: data});
                 let projList = this.state.projectList;
-                projList.unshift(JSON.parse(JSON.stringify(this.state.templateDetails)));
+                projList.unshift(JSON.parse(JSON.stringify(this.state.projectDetails)));
                 this.setState({projectList: projList});
                 this.updateUnmanagedComponents("0");
             });
@@ -453,13 +453,13 @@ class Project extends React.Component {
             this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
         }
 
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.templateDetails.baseMapSource);
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
         mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
 
-        if (this.state.templateDetails.id == 0) {
+        if (this.state.projectDetails.id == 0) {
             // Enable dragbox interaction if we are creating a new project
             var displayDragBoxBounds = function (dragBox) {
                 var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
@@ -474,7 +474,7 @@ class Project extends React.Component {
             mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
         } else {
             // Extract bounding box coordinates from the project boundary and show on the map
-            var boundaryExtent = mercator.parseGeoJson(this.state.templateDetails.boundary, false).getExtent();
+            var boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
             // FIXME like above, these values are stored in the state but never used.
             this.setState({lonMin: boundaryExtent[0]});
             this.setState({latMin: boundaryExtent[1]});
@@ -485,7 +485,7 @@ class Project extends React.Component {
             mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
             mercator.addVectorLayer(this.state.mapConfig,
                 "currentAOI",
-                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.templateDetails.boundary, true)),
+                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
                 ceoMapStyles.yellowPolygon);
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
 
@@ -495,12 +495,12 @@ class Project extends React.Component {
     }
 
     updateUnmanagedComponents(projectId) {
-        if (this.state.templateDetails != null) {
+        if (this.state.projectDetails != null) {
             if (this.state.imageryList && this.state.imageryList.length > 0) {
-                var detailsNew = this.state.templateDetails;
+                var detailsNew = this.state.projectDetails;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-                detailsNew.baseMapSource = this.state.templateDetails.baseMapSource || this.state.imageryList[0].title;
-                this.setState({templateDetails: detailsNew});
+                detailsNew.baseMapSource = this.state.projectDetails.baseMapSource || this.state.imageryList[0].title;
+                this.setState({projectDetails: detailsNew});
                 this.showProjectMap(projectId);
                 // Draw a map with the project AOI and a sampling of its plots
             }
@@ -526,12 +526,12 @@ class Project extends React.Component {
     }
 
     handleInputParent(event) {
-        var detailsNew = this.state.templateDetails;
-        this.setState({templateDetails: detailsNew});
+        var detailsNew = this.state.projectDetails;
+        this.setState({projectDetails: detailsNew});
     }
 
     handleChange(event) {
-        var detailsNew = this.state.templateDetails;
+        var detailsNew = this.state.projectDetails;
 
         if (event.target.id == "project-name") {
             detailsNew.name = event.target.value;
@@ -539,14 +539,14 @@ class Project extends React.Component {
         else if (event.target.id = "project-description") {
             detailsNew.description = event.target.value;
         }
-        this.setState({templateDetails: detailsNew});
+        this.setState({projectDetails: detailsNew});
 
     }
 
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
-                {this.state.templateDetails && 
+                {this.state.projectDetails && 
                     <Fragment>
                         <ProjectDesignForm 
                             project={this.state}
@@ -648,32 +648,32 @@ function ProjectTemplateVisibility({ project, setProjectTemplate }) {
 
 
 function ProjectInfo(props) {
-    const { project: { templateDetails } } = props;
+    const { project: { projectDetails } } = props;
     return (
         <SectionBlock title="Project Info">
             <div id="project-info">
                 <div className="form-group">
                     <h3 htmlFor="project-name">Name</h3>
                     <input className="form-control form-control-sm" type="text" id="project-name" name="name"
-                        autoComplete="off" defaultValue={templateDetails.name}
+                        autoComplete="off" defaultValue={projectDetails.name}
                         onChange={props.handleChange}/>
                 </div>
                 <div className="form-group">
                     <h3 htmlFor="project-description">Description</h3>
                     <textarea className="form-control form-control-sm" id="project-description"
                             name="description"
-                            value={templateDetails.description} onChange={props.handleChange}></textarea>
+                            value={projectDetails.description} onChange={props.handleChange}></textarea>
                 </div>
             </div>
         </SectionBlock>
     );
 }
 
-function ProjectVisibility({ project : { templateDetails : { privacyLevel } } }) {
+function ProjectVisibility({ project : { projectDetails : { privacyLevel } } }) {
     return (
         <SectionBlock title= "Project Visibility">
             <h3>Privacy Level</h3>
-            <div id="project-visibility" className="mb-3" style={{'font-size': '.9rem'}}>
+            <div id="project-visibility" className="mb-3" style={{'fontSize': '.9rem'}}>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
                             value="public" checked={privacyLevel === 'public'}
@@ -764,8 +764,8 @@ function ProjectImagery({ project, setBaseMapSource }) {
                     <h3 htmlFor="base-map-source">Basemap Source</h3>
                     <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
                         size="1"
-                        value={project.templateDetails && project.templateDetails.baseMapSource != null
-                            ? project.templateDetails.baseMapSource
+                        value={project.projectDetails && project.projectDetails.baseMapSource != null
+                            ? project.projectDetails.baseMapSource
                             : ""}
                         onChange={setBaseMapSource}>
                         {
@@ -799,8 +799,8 @@ class PlotDesign extends React.Component {
     var {
       project: {
         useTemplatePlots,
-        templateDetails,
-        templateDetails: { plotDistribution, plotShape }
+        projectDetails,
+        projectDetails: { plotDistribution, plotShape }
       }
     } = this.props;
     return (
@@ -809,7 +809,7 @@ class PlotDesign extends React.Component {
           <div className="row">
             <div id="plot-design-col1" className="col">
               <h3>Template Plots</h3>
-              <div className="form-check form-check-inline mb-3">
+              <div className="form-check form-check-inline">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -822,7 +822,7 @@ class PlotDesign extends React.Component {
                   checked={useTemplatePlots}
                 />
                 <label
-                  className="form-check-label medium"
+                  className="form-check-label"
                   htmlFor="use-template-plots"
                 >
                   Use Template Plots and Samples
@@ -831,7 +831,8 @@ class PlotDesign extends React.Component {
 
               {!useTemplatePlots && (
                 <Fragment>
-                  <h3>Spatial Distribution</h3>
+                  <hr />
+                  <h3 className="mb-3">Spatial Distribution</h3>
                   <div className="form-check form-check-inline">
                     <input
                       className="form-check-input"
@@ -843,7 +844,7 @@ class PlotDesign extends React.Component {
                       checked={plotDistribution === "random"}
                     />
                     <label
-                      className="form-check-label medium"
+                      className="form-check-label"
                       htmlFor="plot-distribution-random"
                     >
                       Random
@@ -860,7 +861,7 @@ class PlotDesign extends React.Component {
                       checked={plotDistribution === "gridded"}
                     />
                     <label
-                      className="form-check-label medium"
+                      className="form-check-label"
                       htmlFor="plot-distribution-gridded"
                     >
                       Gridded
@@ -880,7 +881,7 @@ class PlotDesign extends React.Component {
                       className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                       id="custom-csv-upload"
                     >
-                      <medium>Upload CSV</medium>
+                      Upload CSV
                       <input
                         type="file"
                         accept="text/csv"
@@ -907,7 +908,7 @@ class PlotDesign extends React.Component {
                       className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                       id="custom-shp-upload"
                     >
-                      <medium>Upload SHP</medium>
+                      Upload SHP
                       <input
                         type="file"
                         accept="application/zip"
@@ -920,7 +921,7 @@ class PlotDesign extends React.Component {
                       />
                     </label>
                   </div>
-                  <p id="plot-design-text" className="font-italic ml-2">-
+                  <p id="plot-design-text" className="font-italic ml-2 small">-
                     {plotDistribution === "random" &&
                       "Plot centers will be randomly distributed within the AOI."}
                     {plotDistribution === "gridded" &&
@@ -931,8 +932,8 @@ class PlotDesign extends React.Component {
                       "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field."}
                   </p>
 
-                  <div className="form-group mb-1">
-                    <p htmlFor="num-plots">Number of plots</p>
+                  <div className="form-group mb-3">
+                    <label htmlFor="num-plots">Number of plots</label>
                     <input
                       className="form-control form-control-sm"
                       type="number"
@@ -941,12 +942,12 @@ class PlotDesign extends React.Component {
                       autoComplete="off"
                       min="0"
                       step="1"
-                      defaultValue={templateDetails.numPlots || ""}
+                      defaultValue={projectDetails.numPlots || ""}
                       disabled={plotDistribution != "random"}
                     />
                   </div>
                   <div className="form-group mb-1">
-                    <p htmlFor="plot-spacing">Plot spacing (m)</p>
+                    <label htmlFor="plot-spacing">Plot spacing (m)</label>
                     <input
                       className="form-control form-control-sm"
                       type="number"
@@ -955,7 +956,7 @@ class PlotDesign extends React.Component {
                       autoComplete="off"
                       min="0.0"
                       step="any"
-                      defaultValue={templateDetails.plotSpacing || ""}
+                      defaultValue={projectDetails.plotSpacing || ""}
                       disabled={plotDistribution != "gridded"}
                     />
                   </div>
@@ -973,7 +974,7 @@ class PlotDesign extends React.Component {
                       disabled={plotDistribution === "shp"}
                     />
                     <label
-                      className="form-check-label medium"
+                      className="form-check-label"
                       htmlFor="plot-shape-circle"
                     >
                       Circle
@@ -991,15 +992,16 @@ class PlotDesign extends React.Component {
                       disabled={plotDistribution === "shp"}
                     />
                     <label
-                      className="form-check-label medium"
+                      className="form-check-label"
                       htmlFor="plot-shape-square"
                     >
                       Square
                     </label>
                   </div>
-                  <p htmlFor="plot-size">
+                  <br/>
+                  <label htmlFor="plot-size" className="mt-3">
                     {plotShape == "circle" ? "Diameter (m)" : "Width (m)"}
-                  </p>
+                  </label>
                   <input
                     className="form-control form-control-sm"
                     type="number"
@@ -1008,7 +1010,7 @@ class PlotDesign extends React.Component {
                     autoComplete="off"
                     min="0.0"
                     step="any"
-                    defaultValue={templateDetails.plotSize}
+                    defaultValue={projectDetails.plotSize}
                     disabled={plotDistribution === "shp"}
                   />
                 </Fragment>
@@ -1036,50 +1038,62 @@ class SampleDesign extends React.Component {
         reader.readAsDataURL(file);
     }
     render() {
-        const { project: { templateDetails: { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution } } } = this.props;
+        const { project: { projectDetails: { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution } } } = this.props;
         return (
             <SectionBlock title="Sample Design">
                 <div id="sample-design">
                     <h3>Spatial Distribution</h3>
                     <div className="form-check form-check-inline">
                         <input
-                            className="form-check-input" type="radio" id="sample-distribution-random"
-                            name="sample-distribution" defaultValue="random"
+                            className="form-check-input" 
+                            type="radio" 
+                            id="sample-distribution-random"
+                            name="sample-distribution" 
+                            defaultValue="random"
                             onChange={() => this.props.setSampleDistribution('random')}
                             checked={sampleDistribution === 'random'}
                             disabled={plotDistribution === 'shp'}
                         />
-                        <label className="form-check-label medium"
+                        <label className="form-check-label"
                             htmlFor="sample-distribution-random">
                             Random
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
-                            className="form-check-input" type="radio" id="sample-distribution-gridded"
-                            name="sample-distribution" defaultValue="gridded"
+                            className="form-check-input" 
+                            type="radio" 
+                            id="sample-distribution-gridded"
+                            name="sample-distribution" 
+                            defaultValue="gridded"
                             onChange={() => this.props.setSampleDistribution('gridded')}
                             checked={sampleDistribution === 'gridded'}
                             disabled={plotDistribution === 'shp'}
                         />
-                        <label className="form-check-label medium"
+                        <label className="form-check-label"
                             htmlFor="sample-distribution-gridded">
                             Gridded
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
-                            className="form-check-input" type="radio" id="sample-distribution-csv"
-                            name="sample-distribution" defaultValue="csv"
+                            className="form-check-input" 
+                            type="radio" 
+                            id="sample-distribution-csv"
+                            name="sample-distribution" 
+                            defaultValue="csv"
                             onChange={() => this.props.setSampleDistribution('csv')}
                             checked={sampleDistribution === 'csv'}
                             disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
                         />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                            id="sample-custom-csv-upload">
-                            <medium>Upload CSV</medium>
+                            id="sample-custom-csv-upload"
+                            htmlFor="sample-distribution-csv">
+                            Upload CSV
                             <input 
-                                type="file" accept="text/csv" id="sample-distribution-csv-file"
+                                type="file" 
+                                accept="text/csv" 
+                                id="sample-distribution-csv-file"
                                 name="sample-distribution-csv-file"
                                 defaultValue=""
                                 onChange={this.encodeImageFileAsURL}
@@ -1090,17 +1104,23 @@ class SampleDesign extends React.Component {
                     </div>
                     <div className="form-check form-check-inline">
                         <input
-                            className="form-check-input" type="radio" id="sample-distribution-shp"
-                            name="sample-distribution" defaultValue="shp"
+                            className="form-check-input" 
+                            type="radio" 
+                            id="sample-distribution-shp"
+                            name="sample-distribution" 
+                            defaultValue="shp"
                             onChange={() => this.props.setSampleDistribution('shp')}
                             checked={sampleDistribution === 'shp'}
                             disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
                         />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                            id="sample-custom-shp-upload">
-                            <medium>Upload SHP</medium>
+                            id="sample-custom-shp-upload"
+                            htmlFor="sample-distribution-shp">
+                            Upload SHP
                             <input
-                                type="file" accept="application/zip" id="sample-distribution-shp-file"
+                                type="file" 
+                                accept="application/zip" 
+                                id="sample-distribution-shp-file"
                                 name="sample-distribution-shp-file"
                                 defaultValue=""
                                 onChange={this.encodeImageFileAsURL}
@@ -1109,7 +1129,7 @@ class SampleDesign extends React.Component {
                             />
                         </label>
                     </div>
-                    <p id="sample-design-text" className="font-italic ml-2">-
+                    <p id="sample-design-text" className="font-italic ml-2 small">-
                         {sampleDistribution === 'random' &&
                             'Sample points will be randomly distributed within the plot boundary.'}
                         {sampleDistribution === 'gridded' &&
@@ -1119,20 +1139,30 @@ class SampleDesign extends React.Component {
                         {sampleDistribution === 'shp' &&
                             'Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.'}
                     </p>
-                    <div className="form-group mb-1">
-                        <p htmlFor="samples-per-plot">Samples per plot</p>
+                    <div className="form-group mb-3">
+                        <label htmlFor="samples-per-plot">Samples per plot</label>
                         <input
-                            className="form-control form-control-sm" type="number" id="samples-per-plot"
-                            name="samples-per-plot" autoComplete="off" min="0" step="1"
+                            className="form-control form-control-sm" 
+                            type="number" 
+                            id="samples-per-plot"
+                            name="samples-per-plot" 
+                            autoComplete="off" 
+                            min="0" 
+                            step="1"
                             defaultValue={samplesPerPlot || ""}
                             disabled={sampleDistribution != 'random'}
                         />
                     </div>
                     <div className="form-group mb-1">
-                        <p htmlFor="sample-resolution">Sample resolution (m)</p>
+                        <label htmlFor="sample-resolution">Sample resolution (m)</label>
                         <input
-                            className="form-control form-control-sm" type="number" id="sample-resolution"
-                            name="sample-resolution" autoComplete="off" min="0.0" step="any"
+                            className="form-control form-control-sm" 
+                            type="number" 
+                            id="sample-resolution"
+                            name="sample-resolution" 
+                            autoComplete="off" 
+                            min="0.0" 
+                            step="any"
                             defaultValue={sampleResolution || ""}
                             disabled={sampleDistribution != 'gridded'}
                         />
@@ -1145,9 +1175,9 @@ class SampleDesign extends React.Component {
 
 function SurveyDesign(props){
     var answer_select = "";
-    var answers = props.getParentSurveyQuestionAnswers(props.project.templateDetails.sampleValues);
+    var answers = props.getParentSurveyQuestionAnswers(props.project.projectDetails.sampleValues);
     if (answers.length > 0) {
-        answer_select = props.getParentSurveyQuestionAnswers(props.project.templateDetails.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
+        answer_select = props.getParentSurveyQuestionAnswers(props.project.projectDetails.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
             <option key={uid}
                     value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
         )
@@ -1178,7 +1208,7 @@ function SurveyDesign(props){
                                     onChange={(e) => props.handleInputParent(e)}>
                                     <option value="">None</option>
                                     {
-                                        (props.project.templateDetails.sampleValues).map((parentSurveyQuestion, uid) =>
+                                        (props.project.projectDetails.sampleValues).map((parentSurveyQuestion, uid) =>
                                             <option key={uid}
                                                 value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}
                                             </option>
@@ -1224,7 +1254,7 @@ class SurveyQuestionTree extends React.Component {
         super(props);
     };
     getCurrent = (node) => 
-        this.props.project.templateDetails.sampleValues.filter(cNode => 
+        this.props.project.projectDetails.sampleValues.filter(cNode => 
             cNode.parent_question == node).map((cNode,uid) => (
                 <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
                     <li>
@@ -1238,7 +1268,7 @@ class SurveyQuestionTree extends React.Component {
         const { project } = this.props;
         return (
             <Fragment>
-                {project.templateDetails && this.getCurrent(-1)}
+                {project.projectDetails && this.getCurrent(-1)}
             </Fragment>
         );
     }

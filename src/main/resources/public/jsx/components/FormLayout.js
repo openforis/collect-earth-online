@@ -3,7 +3,7 @@ import React from 'react';
 
 function FormLayout({ title, children }) {
     return (
-        <div class="row justify-content-center">
+        <div className="row justify-content-center">
             <div className="col-xl-6 col-lg-8 border bg-lightgray mb-5">
                 <div className="bg-darkgreen mb-3 no-container-margin">
                     <h1>{title}</h1>
