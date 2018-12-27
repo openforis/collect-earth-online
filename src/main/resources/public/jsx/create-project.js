@@ -673,7 +673,7 @@ function ProjectVisibility({ project : { projectDetails : { privacyLevel } } }) 
     return (
         <SectionBlock title= "Project Visibility">
             <h3>Privacy Level</h3>
-            <div id="project-visibility" className="mb-3" style={{'fontSize': '.9rem'}}>
+            <div id="project-visibility" className="mb-3 small">
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
                             value="public" checked={privacyLevel === 'public'}
