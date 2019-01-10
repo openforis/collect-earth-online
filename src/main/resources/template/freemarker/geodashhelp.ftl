@@ -220,6 +220,9 @@
                         </ol>
                     </li>
                     <li>
+                        Image Asset (see Image Asset example below and skip step 5)
+                    </li>
+                    <li>
                         Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
                         <ol style="list-style-type: lower-roman">
                             <li>
@@ -260,6 +263,9 @@
                                 Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
                             </li>
                         </ol>
+                    </li>
+                    <li>
+                        Image Asset (see Image Asset example below and skip step 8)
                     </li>
                     <li>
                         Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
