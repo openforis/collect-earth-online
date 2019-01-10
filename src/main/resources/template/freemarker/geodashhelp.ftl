@@ -220,7 +220,7 @@
                         </ol>
                     </li>
                     <li>
-                        Image Asset (see Image Asset example below and skip step 5)
+                        Image Asset (see Image Asset example below and skip the next step as you will not need to select a date range)
                     </li>
                     <li>
                         Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
@@ -265,7 +265,7 @@
                         </ol>
                     </li>
                     <li>
-                        Image Asset (see Image Asset example below and skip step 8)
+                        Image Asset (see Image Asset example below and skip the next step as you will not need to select a date range)
                     </li>
                     <li>
                         Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
