@@ -681,7 +681,8 @@ class BasicLayout extends React.PureComponent{
     };
     onDataTypeSelectChangedDual = event => {
         this.setState({
-            selectedDataTypeDual: event.target.value.trim()
+            selectedDataTypeDual: event.target.value.trim(),
+            FormReady: true
         });
     };
     checkDatesDual() {
