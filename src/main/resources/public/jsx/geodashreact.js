@@ -943,8 +943,15 @@ class GraphWidget extends React.Component {
     };
 }
 class StatsWidget extends React.Component {
+    constructor(props){
+        super(props);
+        this.state = {totalPop:'', area:'', elevation:''};
+    }
     render() {
         const widget = this.props.widget;
+        const stats = this.state.totalPop;
+        const area = this.state.area;
+        const elevation = this.state.elevation;
             return <div id={"widgetstats_" + widget.id} className="minmapwidget" style={{padding: "20px"}}>
                         <div>
                             <div className="form-group">
@@ -958,7 +965,7 @@ class StatsWidget extends React.Component {
                                     <label htmlFor={"totalPop_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Total population</label>
                                     <h3 id={"totalPop_" + widget.id} style={{
                                         color: "#606060",
-                                        fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}></h3>
+                                        fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}>{stats}</h3>
                                 </div>
                             </div>
                             <div className="form-group">
@@ -972,7 +979,7 @@ class StatsWidget extends React.Component {
                                     <label htmlFor={"totalArea_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Area</label>
                                 <h3 id={"totalArea_" + widget.id} style={{
                                     color: "#606060",
-                                    fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}></h3>
+                                    fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}>{area}</h3>
                                 </div>
                             </div>
                             <div className="form-group">
@@ -984,7 +991,7 @@ class StatsWidget extends React.Component {
                                             borderRadius: "25px", backgroundColor: "#31bab0"}}/>
                                     </div>
                                     <label htmlFor={"elevationRange_" + widget.id} style={{color: "#787878", padding: "10px 20px"}}>Elevation</label>
-                                    <h3 id={"elevationRange_" + widget.id} style={{color: "#606060", fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}></h3>
+                                    <h3 id={"elevationRange_" + widget.id} style={{color: "#606060", fontSize: "16px", fontWeight: "bold", paddingTop: "12px"}}>{elevation}</h3>
                                 </div>
                             </div>
                         </div>
@@ -1010,10 +1017,7 @@ class StatsWidget extends React.Component {
                 if (data.errMsg) {
                     console.warn(e.message + _textStatus + _jqXHR);
                 } else {
-                    document.getElementById("totalPop_" + widget.id).innerHTML = ref.numberWithCommas(data.pop);
-                    document.getElementById("totalArea_" + widget.id).innerHTML = ref.calculateArea(JSON.parse(projPairAOI)) + " ha";
-                    document.getElementById("elevationRange_" + widget.id).innerHTML = ref.numberWithCommas(data.minElev) + " - " + ref.numberWithCommas(data.maxElev) + " m";
-
+                    ref.setState({ totalPop: ref.numberWithCommas(data.pop), area: ref.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: ref.numberWithCommas(data.minElev) + " - " + ref.numberWithCommas(data.maxElev) + " m"});
                 }
             })
     };
