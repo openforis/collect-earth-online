@@ -217,7 +217,7 @@ class Project extends React.Component {
         );
         var sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
         var newSV=[];
-        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"",component_type:""};
         var dNew = this.state.newValueEntry;
 
         if(sv.length>0){
@@ -498,7 +498,7 @@ class Project extends React.Component {
                     }
                 );
 
-                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id});
+                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id,data_type:"",component_type:""});
                 this.setState({newValueEntry: newValueEntryNew, details: detailsNew, newSurveyQuestionName: ""});
                 console.log("JSON object");
                 console.log(this.state.details.sampleValues);
@@ -580,7 +580,7 @@ class Project extends React.Component {
                     var detailsNew=data;
                     var sv=detailsNew.sampleValues;
                     var newSV=[];
-                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"",component_type:""};
                     if(sv.length>0){
                         sv.map((sq)=>{
                                 if(sq.name){
@@ -1299,6 +1299,37 @@ function SurveyDesign(props){
                                             value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}</option>
                                 )
                             }
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label htmlFor="value-datatype">Answer Type:</label>
+                    </td>
+                    <td>
+                        <select id="value-datatype" className="form-control form-control-sm" size="1"
+                                onChange={(e) => props.handleInputParent(e)}>
+                            <option value="text">Text</option>
+                            <option value="integer">Integer</option>
+                            <option value="float">Float</option>
+                            <option value="boolean">Boolean</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label htmlFor="value-componenttype">Component Type:</label>
+                    </td>
+                    <td>
+                        <select id="value-componenttype" className="form-control form-control-sm" size="1"
+                                onChange={(e) => props.handleInputParent(e)}>
+                            <option value="button">Button</option>
+                            <option value="checkbox">Checkbox</option>
+                            <option value="radiobutton">Radiobutton</option>
+                            <option value="dropdown">Dropdown</option>
+                            <option value="pointdigitizer">Point Digitizer</option>
+                            <option value="linestringdigitizer">Line String Digitizer</option>
+                            <option value="polygondigitizer">Polygon Digitizer</option>
                         </select>
                     </td>
                 </tr>
