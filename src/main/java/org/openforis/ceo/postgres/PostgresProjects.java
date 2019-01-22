@@ -280,6 +280,7 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    // FIXME unused route/function
     public  String getUnassignedPlot(Request req, Response res) {
         var projectId =         Integer.parseInt(req.params(":id"));
         var currentPlotId =     Integer.parseInt(req.queryParamOrDefault("currentPlotId", "0"));
@@ -307,8 +308,9 @@ public class PostgresProjects implements Projects {
     }
 
     public  String getUnassignedPlotById(Request req, Response res) {
-        var projectId =     Integer.parseInt(req.params(":projid"));
-        var plotId =        Integer.parseInt(req.params(":id"));
+        final var projectId =     Integer.parseInt(req.params(":projid"));
+        final var plotId =        Integer.parseInt(req.params(":id"));
+        final var userId =        Integer.parseInt(req.queryParams("userId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_unassigned_plots_by_plot_id(?,?)")) {
@@ -330,8 +332,9 @@ public class PostgresProjects implements Projects {
     }
 
     public String getNextUnassignedPlot(Request req, Response res) {
-        var projectId =     Integer.parseInt(req.params(":projid"));
-        var plotId =        Integer.parseInt(req.params(":id"));
+        final var projectId =     Integer.parseInt(req.params(":projid"));
+        final var plotId =        Integer.parseInt(req.params(":id"));
+        final var userId =        Integer.parseInt(req.queryParams("userId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_next_unassigned_plot(?,?)")) {
@@ -353,8 +356,9 @@ public class PostgresProjects implements Projects {
     }
 
     public String getPrevUnassignedPlot(Request req, Response res) {
-        var projectId =     Integer.parseInt(req.params(":projid"));
-        var plotId =        Integer.parseInt(req.params(":id"));
+        final var projectId =     Integer.parseInt(req.params(":projid"));
+        final var plotId =        Integer.parseInt(req.params(":id"));
+        final var userId =        Integer.parseInt(req.queryParams("userId"));
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_prev_unassigned_plot(?,?)")) {

@@ -107,6 +107,7 @@ public class Server implements SparkApplication {
         get("/get-project-plots/:id/:max",            projects::getProjectPlots);
         get("/get-project-plot/:project-id/:plot-id", projects::getProjectPlot);
         get("/get-project-stats/:id",                 projects::getProjectStats);
+        // FIXME get-unanalyzed-plot currently unused
         get("/get-unanalyzed-plot/:projid/:id",       projects::getUnassignedPlot);
         get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getUnassignedPlotById);
         get("/get-next-unanalyzed-plot/:projid/:id",  projects::getNextUnassignedPlot);

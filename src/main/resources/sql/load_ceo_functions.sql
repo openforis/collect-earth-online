@@ -1355,7 +1355,7 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 
 $$ LANGUAGE SQL;
 
--- -- Returns unanalyzed plots
+-- Returns unanalyzed plots
 CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS setOf plots_return AS $$
 
@@ -1380,6 +1380,34 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plo
     LIMIT 1
 
 $$ LANGUAGE SQL;
+
+-- Returns unanalyzed plots
+CREATE OR REPLACE FUNCTION select_next_user_plot(_project_id integer, _plot_id integer) 
+    RETURNS setOf plots_return AS $$
+
+    SELECT * from select_all_project_plots(_project_id) as spp
+    WHERE spp.plotId > _plot_id
+    AND flagged = 0
+    AND assigned = 0
+    ORDER BY plotId ASC
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
+-- Returns unanalyzed plots
+CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_id integer, _plot_id integer) 
+    RETURNS setOf plots_return AS $$
+
+    SELECT * from select_all_project_plots(_project_id) as spp
+    WHERE spp.plotId < _plot_id
+    AND flagged = 0
+    AND assigned = 0
+    ORDER BY plotId DESC
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
+-- FIXME unused
 -- Returns unanalyzed plots
 CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS setOf plots_return AS $$
