@@ -435,6 +435,14 @@ public class ProjectUtils {
         deleteShapeFileDirectory("project-" + projectId + "-plots");
         deleteShapeFileDirectory("project-" + projectId + "-samples");
     }
-
+        
+    // Some older data contains a useless string fromat for collection time. 
+    public static Long collectTimeIgnoreString (JsonObject plot){
+        try {
+            return getOrZero(plot, "collectionTime").getAsLong();
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
     
 }

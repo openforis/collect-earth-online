@@ -269,6 +269,8 @@ public class OfUsers implements Users {
 
     public String getUserStats(Request req, Response res) { return "";}
 
+    public String updateProjectUserStats(Request req, Response res) { return "";}
+
     public String getAllUsers(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
         try {

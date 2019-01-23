@@ -1,20 +1,134 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 function Account(props) {
     return (
-        <React.Fragment>
+        <Fragment>
             <div className="bg-darkgreen mb-3 no-container-margin">
-                <h1>Your account</h1>
+                <h1>Your account!</h1>
             </div>
-            <UserStats/>
-            <AccountForm documentRoot={props.documentRoot} userId={props.userId}
-                         accountId={props.accountId} userName={props.userName}/>
-        </React.Fragment>
+            <UserStats 
+                documentRoot={props.documentRoot}
+                userName={props.userName}
+            />
+            <AccountForm 
+                documentRoot={props.documentRoot} 
+                userId={props.userId}
+                accountId={props.accountId} 
+                userName={props.userName}
+            />
+        </Fragment>
     );
 }
 
-function UserStats() {
+class UserStats extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            stats: {},
+        };
+        this.getUserStats = this.getUserStats.bind(this);
+
+    }
+    componentDidMount() {
+        this.getUserStats();
+    }
+
+    getUserStats() {
+        fetch(this.props.documentRoot + "/get-user-stats/" + this.props.userName)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    console.log(response);
+                    alert("Error retrieving the user stat info. See console for details.");
+                    return new Promise(resolve => resolve(null));
+                }
+            })
+            .then(stats => {
+                if (stats == null) {
+                    alert("No user found with ID " + this.props.userName + ".");
+                    window.location = this.props.documentRoot + "/home";
+                } else {
+                    this.setState({stats: stats});
+                }
+            });
+    }
+    render () {
+        let { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
+        return (
+            <div id="user-stats" className="col mb-3">
+                <h2 className="header px-0">User Stats</h2>
+                <table id="user-stats-table" className="table table-sm">
+                <tbody>
+                    <tr>
+                        <td className="w-80">Projects Worked So Far</td>
+                        <td className="w-20 text-center">
+                            <span className="badge badge-pill bg-lightgreen">{totalProjects} projects</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Plots Completed Total</td> 
+                        <td className="text-center">
+                            <span className="badge badge-pill bg-lightgreen">{totalPlots} plots</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Average Analysis Duration</td>
+                        <td className="text-center">
+                            <span className="badge badge-pill bg-lightgreen">{averageTime} secs/plot</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Plots Completed Per Project</td>
+                        <td className="text-center">
+                            <span className="badge badge-pill bg-lightgreen">{Number(((totalPlots / totalProjects)).toFixed(1)) || 0} plots</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Individual Project Stats:</strong>
+                            <table id="project-stats-table" className="nested-table bg-light ml-1">
+                                <tbody>
+                                {perProject && perProject.map(project => {
+                                    return (
+                                    <ProjectRow 
+                                        project = {project}
+                                    />)
+                                })}
+
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+                    
+            </div>
+        )
+    }
+}
+
+function ProjectRow({ project }) {
+    return (
+        <tr>
+            <td>{`#${project.id} - ${project.name}`}</td>
+            <td className="text-center">
+                <span className="badge badge-pill bg-lightgreen">{project.plotCount || ""} plots </span>
+            </td>
+            <td className="text-center">
+                {project.analysisAverage ? 
+                    (
+                    <span className="badge badge-pill bg-lightgreen">{project.analysisAverage} sec/plot </span>
+                    )
+                    : ("Untimed")
+                }
+            </td>
+        </tr>
+    )
+}
+
+function ExpandedUserStats() {
     return (
         <div id="user-stats" className="col" style={{display:"None"}}>
             <h2 className="header px-0">Here is your progress</h2>
