@@ -284,9 +284,9 @@ public class JsonProjects implements Projects {
     }
 
     public String getNextPlot(Request req, Response res) {
-        final var projectId = req.params(":projid");
-        final var currPlotId = req.params(":id");
-        final var userName =    req.queryParamOrDefault("userName", "");
+        final var projectId =       req.params(":projid");
+        final var currPlotId =      req.params(":id");
+        final var userName =        req.queryParamOrDefault("userName", "");
 
         final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
 
@@ -311,9 +311,9 @@ public class JsonProjects implements Projects {
     }
 
     public String getPrevPlot(Request req, Response res) {
-        final var projectId = req.params(":projid");
-        final var currPlotId = req.params(":id");
-        final var userName =    req.queryParamOrDefault("userName", "");
+        final var projectId =       req.params(":projid");
+        final var currPlotId =      req.params(":id");
+        final var userName =        req.queryParamOrDefault("userName", "");
 
         final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
         
