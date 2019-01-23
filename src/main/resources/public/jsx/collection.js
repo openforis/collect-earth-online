@@ -352,7 +352,7 @@ class Collection extends React.Component {
     }
 
     getPlotData(plotId) {
-        fetch(this.props.documentRoot + "/get-unanalyzed-plot-by-id/" + this.props.projectId + "/" + plotId)
+        fetch(this.props.documentRoot + "/get-plot-by-id/" + this.props.projectId + "/" + plotId)
             .then(response => {
                 if (response.ok) {
                     return response.text();
@@ -390,7 +390,7 @@ class Collection extends React.Component {
     }
 
     getNextPlotData(plotId) {
-        fetch(this.props.documentRoot + "/get-next-unanalyzed-plot/" + this.props.projectId + "/" + plotId)
+        fetch(this.props.documentRoot + "/get-next-plot/" + this.props.projectId + "/" + plotId)
             .then(response => {
                 if (response.ok) {
                     return response.text();
@@ -436,7 +436,7 @@ class Collection extends React.Component {
     }
 
     getPrevPlotData(plotId) {
-        fetch(this.props.documentRoot + "/get-prev-unanalyzed-plot/" + this.props.projectId + "/" + plotId)
+        fetch(this.props.documentRoot + "/get-prev-plot/" + this.props.projectId + "/" + plotId)
             .then(response => {
                 if (response.ok) {
                     return response.text();

@@ -1,10 +1,10 @@
 -- Create tables
 CREATE TABLE users (
-  id        serial primary key,
-  email     text not null,
-  password  text not null,
+  id            serial primary key,
+  email         text not null UNIQUE,
+  password      text not null,
   administrator boolean default false,
-  reset_key text default null
+  reset_key     text default null
 );
 
 CREATE TABLE institutions (
@@ -34,7 +34,8 @@ CREATE TABLE projects (
   sample_distribution       text,
   samples_per_plot          integer,
   sample_resolution         float,
-  sample_survey             jsonb,
+  survey_questions          jsonb,
+  survey_rules              jsonb,
   plots_ext_table           text,
   samples_ext_table         text,
   created_date              date,
