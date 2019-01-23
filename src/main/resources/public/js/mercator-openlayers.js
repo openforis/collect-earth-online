@@ -125,6 +125,10 @@ mercator.createSource = function (sourceConfig) {
         {
             theJson.imageName = sourceConfig.geeParams.ImageAsset;
         }
+        else if(sourceConfig.geeParams.ImageCollectionAsset)
+        {
+            theJson.imageName = sourceConfig.geeParams.ImageCollectionAsset;
+        }
         const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
         let geeLayer = new ol.source.XYZ({
             url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
