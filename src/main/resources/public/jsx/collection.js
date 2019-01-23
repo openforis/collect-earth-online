@@ -23,7 +23,7 @@ class Collection extends React.Component {
             navButtonsShown: 1,
             gotoFirstPlotButtonDisabled:true,
             prevPlotButtonDisabled: true,
-            newPlotButtonDisabled: false,
+            nextPlotButtonDisabled: false,
             flagPlotButtonDisabled: false,
             saveValuesButtonDisabled: true,
             surveyAnswersVisible: {},
@@ -202,7 +202,7 @@ class Collection extends React.Component {
                                   this.setState({
                                       navButtonsShown: 2,
                                       prevPlotButtonDisabled: false,
-                                      newPlotButtonDisabled: false,
+                                      nextPlotButtonDisabled: false,
                                       flagPlotButtonDisabled: false,
                                       saveValuesButtonDisabled: true
                                   });
@@ -381,7 +381,7 @@ class Collection extends React.Component {
                         collectionStart: Date.now(),
                         navButtonsShown: 2,
                         prevPlotButtonDisabled: false,
-                        newPlotButtonDisabled: false,
+                        nextPlotButtonDisabled: false,
                         flagPlotButtonDisabled: false,
                         saveValuesButtonDisabled: true
                     });
@@ -409,7 +409,7 @@ class Collection extends React.Component {
                         alert("All plots have been analyzed for this project.");
                         window.open(this.props.documentRoot + "/home");
                     } else {
-                        this.setState({newPlotButtonDisabled: true});
+                        this.setState({nextPlotButtonDisabled: true});
                         alert("You have reached the end of the plot list.");
                     }
                 } else {
@@ -464,7 +464,7 @@ class Collection extends React.Component {
                         userSamples: newPlot.samples ? this.samplesToValues(newPlot.samples) : {},
                         userImages: newPlot.samples ? this.samplesToImages(newPlot.samples) : {},
                         collectionStart: Date.now(),
-                        newPlotButtonDisabled: false,
+                        nextPlotButtonDisabled: false,
                         saveValuesButtonDisabled: true
                     });
                     this.showProjectPlot(newPlot);
@@ -554,7 +554,11 @@ class Collection extends React.Component {
     }
     
     updateNewPlotId(value) {
-        this.setState({newPlotInput: value})
+        this.setState({
+            newPlotInput: value,
+            prevPlotButtonDisabled: false,
+            nextPlotButtonDisabled: false
+        })
     }
 
     setReviewPlots() {
@@ -739,7 +743,7 @@ class Collection extends React.Component {
                          navButtonsShown={this.state.navButtonsShown}
                          gotoFirstPlotButtonDisabled={this.state.gotoFirstPlotButtonDisabled}
                          prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
-                         newPlotButtonDisabled={this.state.newPlotButtonDisabled}
+                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                          flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
                          reviewPlots={this.state.reviewPlots}
                          newPlotInput={this.state.newPlotInput}
@@ -807,7 +811,7 @@ function SideBar(props) {
                             setReviewPlots={props.setReviewPlots}
                             updateNewPlotId={props.updateNewPlotId}
                             prevPlotButtonDisabled={props.prevPlotButtonDisabled}
-                            newPlotButtonDisabled={props.newPlotButtonDisabled}
+                            nextPlotButtonDisabled={props.nextPlotButtonDisabled}
                             flagPlotButtonDisabled={props.flagPlotButtonDisabled}
                             gotoFirstPlotButtonDisabled={props.gotoFirstPlotButtonDisabled}/>
             <ImageryOptions baseMapSource={props.currentProject.baseMapSource}
@@ -917,8 +921,8 @@ function PlotNavigation(props) {
                             name="new-plot" 
                             value="Next" 
                             onClick={props.nextPlot}
-                            style={{opacity: props.newPlotButtonDisabled ? "0.5" : "1.0"}}
-                            disabled={props.newPlotButtonDisabled}
+                            style={{opacity: props.nextPlotButtonDisabled ? "0.5" : "1.0"}}
+                            disabled={props.nextPlotButtonDisabled}
                         />
                     </div>
                     <div className="px-1">
