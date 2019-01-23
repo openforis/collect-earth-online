@@ -318,11 +318,17 @@ public class JsonUsers implements Users {
                 
                 projectObject.addProperty("plotCount", project.get("userPlots").getAsJsonObject().get(userName).getAsInt());    
                 
-                projectObject.addProperty("analysisAverage", Math.round(project.get("userMilliSeconds").getAsJsonObject().get(userName).getAsInt() / 
-                1.0 / project.get("timedUserPlots").getAsJsonObject().get(userName).getAsInt() / 100.0) / 10.0);
+                final var getMiliSec = project.get("userMilliSeconds").getAsJsonObject().get(userName).getAsInt();
+                final var curMiliSec = getMiliSec > 0 && getMiliSec < 1000000
+                                       ? getMiliSec
+                                       : 0;
+                final var timedPlots = project.get("timedUserPlots").getAsJsonObject().get(userName).getAsInt();
+                projectObject.addProperty("analysisAverage", timedPlots > 0 
+                            ? Math.round(curMiliSec / 1.0 / timedPlots / 100.0) / 10.0
+                            : 0);
 
-                projectObject.addProperty("totalMilliSecond",project.get("userMilliSeconds").getAsJsonObject().get(userName).getAsInt());   
-                projectObject.addProperty("timedUserPlots",project.get("timedUserPlots").getAsJsonObject().get(userName).getAsInt());   
+                projectObject.addProperty("totalMilliSecond", timedPlots > 0 ? curMiliSec : 0);   
+                projectObject.addProperty("timedUserPlots", timedPlots);   
 
 
                 return projectObject;

@@ -1616,6 +1616,12 @@ div#institution:before {
     width: 50%;
 }
 
+#project #project-design #project-imagery-review {
+    float: left;
+    width: 50%;
+    font-size: 1rem;
+}
+
 #project #project-design #project-imagery select {
     height: 1.6rem;
     width: 90%;

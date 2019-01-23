@@ -42,11 +42,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.time.LocalDate;
+import java.io.File;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 import java.text.DateFormat; 
 import java.text.SimpleDateFormat; 
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -1055,6 +1057,150 @@ public class JsonProjects implements Projects {
         return reprojectBounds(paddedBounds[0], paddedBounds[1], paddedBounds[2], paddedBounds[3], 3857, 4326);
     }
 
+    public static void copyFile(String fileDirectory,String inputFileName, String outputFileName) {
+        try {
+            // Write the file to outputDirectory and return the filename
+            var dest = new File(fileDirectory, outputFileName);
+            var origin = new File(fileDirectory, inputFileName);
+            // make directory for SHP json files
+            dest.mkdirs();
+            Files.copy(origin.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static JsonObject newProjectObject(JsonObject newProjectData, Request req, Integer newProjectId) {
+        if (getOrZero(newProjectData, "useTemplatePlots").getAsBoolean() 
+                && getOrZero(newProjectData, "projectTemplate").getAsInt() > 0) {
+                    var templateID = newProjectData.get("projectTemplate").getAsString();
+                    var templateProject = singleProjectJson(templateID);
+                    // Strip plots and samples of user data
+                    var plots = readJsonFile("plot-data-" + templateID + ".json").getAsJsonArray();
+                    var newPlots = toStream(plots)
+                            .map(plot -> {
+                                var newSamples = toStream(plot.get("samples").getAsJsonArray())
+                                    .map(sample -> {
+                                        sample.remove("value");
+                                        sample.remove("userImage");
+                                        return sample;
+                                    })
+                                    .collect(intoJsonArray);
+        
+                                plot.remove("collectionTime");
+                                plot.remove("confidence");
+                                plot.remove("collectionStart");
+                                plot.add("user", null);
+                                plot.addProperty("flagged", false);
+                                plot.addProperty("analyses", 0);
+                                plot.add("samples", newSamples);
+                                return plot;
+                            })
+                            .collect(intoJsonArray);
+                    // write new plot data to file
+                    writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
+        
+                    // Update numPlots and samplesPerPlot to match the numbers that were generated
+                    newProjectData.remove("lonMin");
+                    newProjectData.remove("latMin");
+                    newProjectData.remove("lonMax");
+                    newProjectData.remove("latMax");
+                    newProjectData.add("plotDistribution", templateProject.get("plotDistribution"));
+                    newProjectData.add("numPlots",templateProject.get("numPlots"));
+                    newProjectData.add("plotSpacing", templateProject.get("plotSpacing"));
+                    newProjectData.add("plotShape", templateProject.get("plotShape"));
+                    newProjectData.add("plotSize", templateProject.get("plotSize"));
+                    newProjectData.add("sampleDistribution", templateProject.get("sampleDistribution"));
+                    newProjectData.add("samplesPerPlot", getOrZero(templateProject, "samplesPerPlot"));
+                    newProjectData.add("sampleResolution", templateProject.get("sampleResolution"));
+                    newProjectData.add("boundary", templateProject.get("boundary"));
+                    newProjectData.addProperty("numPlots", newPlots.size());
+                    newProjectData.addProperty("samplesPerPlot", newPlots.get(0).getAsJsonObject().getAsJsonArray("samples").size());
+        
+                    newProjectData.add("plots-csv", templateProject.has("csv") 
+                                                    ? templateProject.get("csv") 
+                                                    : templateProject.get("plots-csv"));
+                    newProjectData.add("samples-csv", templateProject.get("samples-csv"));
+                    newProjectData.add("plots-shp", templateProject.get("plots-shp"));
+                    newProjectData.add("samples-shp", templateProject.get("samples-shp"));
+        
+                    // Copy uploaded files
+                    if (newProjectData.get("plotDistribution").getAsString().equals("csv")) {
+                        final var csvFile = templateProject.has("csv") 
+                                ? templateProject.get("csv").getAsString()
+                                : templateProject.get("plots-csv").getAsString();
+                        copyFile(expandResourcePath("/csv"),
+                                csvFile,
+                                "project-" + newProjectId + "-plots.csv");
+                    } else if (newProjectData.get("plotDistribution").getAsString().equals("shp")) {
+                        // Only the json file is used once uploaded
+                        copyFile(expandResourcePath("/shp"),
+                                "project-" + templateID + "-plots/project-" + templateID + "-plots.json",
+                                "project-" + newProjectId + "-plots/project-" + newProjectId + "-plots.json");
+                    }
+        
+                    if (newProjectData.get("sampleDistribution").getAsString().equals("csv")) {
+                        copyFile(expandResourcePath("/csv"),
+                                templateProject.get("samples-csv").getAsString(),
+                                "project-" + newProjectId + "-samples.csv");
+                    } else if (newProjectData.get("sampleDistribution").getAsString().equals("shp")) {
+                        copyFile(expandResourcePath("/shp"),
+                                "project-" + templateID + "-samples/project-" + templateID + "-samples.json",
+                                "project-" + newProjectId + "-samples/project-" + newProjectId + "-samples.json");
+                    }
+        
+                    return newProjectData;
+        } else {
+            // Upload the plot-distribution-csv-file if one was provided
+            if (newProjectData.get("plotDistribution").getAsString().equals("csv")) {
+                var csvFileName = writeFilePart(req,
+                        "plot-distribution-csv-file",
+                        expandResourcePath("/csv"),
+                        "project-" + newProjectId + "-plots");
+                newProjectData.addProperty("plots-csv", csvFileName);
+            } else {
+                newProjectData.add("plots-csv", null);
+            }
+
+            // Upload the sample-distribution-csv-file if one was provided
+            if (newProjectData.get("sampleDistribution").getAsString().equals("csv")) {
+                var csvFileName = writeFilePart(req,
+                        "sample-distribution-csv-file",
+                        expandResourcePath("/csv"),
+                        "project-" + newProjectId + "-samples");
+                newProjectData.addProperty("samples-csv", csvFileName);
+            } else {
+                newProjectData.add("samples-csv", null);
+            }
+
+            // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
+            if (newProjectData.get("plotDistribution").getAsString().equals("shp")) {
+                var shpFileName = writeFilePart(req,
+                                                "plot-distribution-shp-file",
+                                                expandResourcePath("/shp"),
+                                                "project-" + newProjectId + "-plots");
+                newProjectData.addProperty("plots-shp", shpFileName);
+            } else {
+                newProjectData.add("plots-shp", null);
+            }
+
+            // Upload the sample-distribution-shp-file if one was provided (this should be a ZIP file)
+            if (newProjectData.get("sampleDistribution").getAsString().equals("shp")) {
+                var shpFileName = writeFilePart(req,
+                                                "sample-distribution-shp-file",
+                                                expandResourcePath("/shp"),
+                                                "project-" + newProjectId + "-samples");
+                newProjectData.addProperty("samples-shp", shpFileName);
+            } else {
+                newProjectData.add("samples-shp", null);
+            }
+
+            // Create the requested plot set and write it to plot-data-<newProject>.json
+            return createProjectPlots(newProjectData);
+        
+        }
+    }
+
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         var projectId =          newProject.get("id").getAsInt();
@@ -1240,11 +1386,15 @@ public class JsonProjects implements Projects {
                     new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                            "samples-per-plot", "sample-resolution", "sample-values"});
-
-            // Manually add the name and description fields since they may be invalid JSON
+                            "samples-per-plot", "sample-resolution", "sample-values", "project-template", 
+                            "use-template-plots"});
+                            
+            // Manually add the name and description fields since they may be invalid JSON or missing from UI
             newProject.addProperty("name", partToString(req.raw().getPart("name")));
             newProject.addProperty("description", partToString(req.raw().getPart("description")));
+            newProject.addProperty("archived", false);
+            newProject.addProperty("availability", "unpublished");
+            newProject.addProperty("created_date", LocalDate.now().toString());
 
             // Read in the existing project list
             var projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -1253,61 +1403,8 @@ public class JsonProjects implements Projects {
             var newProjectId = getNextId(projects);
             newProject.addProperty("id", newProjectId);
 
-            // Upload the plot-distribution-csv-file if one was provided
-            if (newProject.get("plotDistribution").getAsString().equals("csv")) {
-                var csvFileName = writeFilePart(req,
-                        "plot-distribution-csv-file",
-                        expandResourcePath("/csv"),
-                        "project-" + newProjectId + "-plots");
-                newProject.addProperty("plots-csv", csvFileName);
-            } else {
-                newProject.add("plots-csv", null);
-            }
-
-            // Upload the sample-distribution-csv-file if one was provided
-            if (newProject.get("sampleDistribution").getAsString().equals("csv")) {
-                var csvFileName = writeFilePart(req,
-                        "sample-distribution-csv-file",
-                        expandResourcePath("/csv"),
-                        "project-" + newProjectId + "-samples");
-                newProject.addProperty("samples-csv", csvFileName);
-            } else {
-                newProject.add("samples-csv", null);
-            }
-
-            // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
-            if (newProject.get("plotDistribution").getAsString().equals("shp")) {
-                var shpFileName = writeFilePart(req,
-                                                "plot-distribution-shp-file",
-                                                expandResourcePath("/shp"),
-                                                "project-" + newProjectId + "-plots");
-                newProject.addProperty("plots-shp", shpFileName);
-            } else {
-                newProject.add("plots-shp", null);
-            }
-
-            // Upload the sample-distribution-shp-file if one was provided (this should be a ZIP file)
-            if (newProject.get("sampleDistribution").getAsString().equals("shp")) {
-                var shpFileName = writeFilePart(req,
-                                                "sample-distribution-shp-file",
-                                                expandResourcePath("/shp"),
-                                                "project-" + newProjectId + "-samples");
-                newProject.addProperty("samples-shp", shpFileName);
-            } else {
-                newProject.add("samples-shp", null);
-            }
-
-            // Add some missing fields that don't come from the web UI
-            newProject.addProperty("archived", false);
-            newProject.addProperty("availability", "unpublished");
-
-            newProject.addProperty("created_date", LocalDate.now().toString());
-
-            // Create the requested plot set and write it to plot-data-<newProjectId>.json
-            var newProjectUpdated = createProjectPlots(newProject);
-
             // Write the new entry to project-list.json
-            projects.add(newProjectUpdated);
+            projects.add(newProjectObject(newProject, req, newProjectId));
             writeJsonFile("project-list.json", projects);
 
             // Indicate that the project was created successfully
