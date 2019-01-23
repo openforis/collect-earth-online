@@ -73,6 +73,7 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("sampleResolution",rs.getDouble("sample_resolution"));
             newProject.addProperty("classification_times","");
             newProject.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
+            newProject.add("surveyRules", parseJson(rs.getString("survey_rules")).getAsJsonArray());
 
             newProject.addProperty("editable", false);
         } catch (SQLException e) {
@@ -280,24 +281,46 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    public  String getUnassignedPlot(Request req, Response res) {
-        var projectId =         Integer.parseInt(req.params(":id"));
-        var currentPlotId =     Integer.parseInt(req.queryParamOrDefault("currentPlotId", "0"));
-         
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_unassigned_plot(?,?)")) {
+    // public ResultSet queryPlotById(Connection conn, Integer projectId, Integer plotId, String userName) {
+    //     if (userName.length() > 0) {
 
-            var singlePlot = new JsonObject();
-            pstmt.setInt(1,projectId);
-            pstmt.setInt(2,currentPlotId);
-            try(var rs = pstmt.executeQuery()){
-                if (rs.next()) {     
-                    singlePlot = buildPlotJson(rs);
-                    singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt(), projectId));
+    //     } else {
 
-                    return  singlePlot.toString();
-                } else {
-                    return "done";
+    //     }
+    // }
+
+    private String queryPlot(PreparedStatement pstmt, Integer projectId) {
+        var plotData = new JsonObject();
+        try (var rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                plotData = buildPlotJson(rs);
+                plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+        return plotData.size() > 0 ? plotData.toString() : "done";
+    }
+
+    public String getPlotById(Request req, Response res) {
+        final var projectId = Integer.parseInt(req.params(":projid"));
+        final var plotId = Integer.parseInt(req.params(":id"));
+        final var userName = req.queryParamOrDefault("userName", "");
+
+        try (var conn = connect()) {
+            if (userName.length() > 0) {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_user_plot_by_id(?,?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setInt(2, plotId);
+                    pstmt.setString(3, userName);
+                    return queryPlot(pstmt, projectId);
+                }
+            } else {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_unassigned_plot_by_id(?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setInt(2, plotId);
+                    return queryPlot(pstmt, projectId);
                 }
             }
         } catch (SQLException e) {
@@ -306,69 +329,52 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    public  String getUnassignedPlotById(Request req, Response res) {
-        var projectId =     Integer.parseInt(req.params(":projid"));
-        var plotId =        Integer.parseInt(req.params(":id"));
+    public String getNextPlot(Request req, Response res) {
+        final var projectId =     Integer.parseInt(req.params(":projid"));
+        final var plotId =        Integer.parseInt(req.params(":id"));
+        final var userName =    req.queryParamOrDefault("userName", "");
 
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_unassigned_plots_by_plot_id(?,?)")) {
-            
-            var singlePlot = new JsonObject();
-            pstmt.setInt(1,projectId);
-            pstmt.setInt(2,plotId);
-            try(var rs = pstmt.executeQuery()){
-                if (rs.next()) {
-                    singlePlot = buildPlotJson(rs);
-                    singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt(), projectId));
+        try (var conn = connect()) {
+            if (userName.length() > 0) {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot(?,?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setInt(2, plotId);
+                    pstmt.setString(3, userName);
+                    return queryPlot(pstmt, projectId);
+                }
+            } else {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_unassigned_plot(?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setInt(2, plotId);
+                    return queryPlot(pstmt, projectId);
                 }
             }
-            return  singlePlot.toString();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
         }
     }
 
-    public String getNextUnassignedPlot(Request req, Response res) {
-        var projectId =     Integer.parseInt(req.params(":projid"));
-        var plotId =        Integer.parseInt(req.params(":id"));
+    public String getPrevPlot(Request req, Response res) {
+        final var projectId =     Integer.parseInt(req.params(":projid"));
+        final var plotId =        Integer.parseInt(req.params(":id"));
+        final var userName =    req.queryParamOrDefault("userName", "");
 
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_next_unassigned_plot(?,?)")) {
-            
-            var singlePlot = new JsonObject();
-            pstmt.setInt(1,projectId);
-            pstmt.setInt(2,plotId);
-            try(var rs = pstmt.executeQuery()){
-                if (rs.next()) {
-                    singlePlot = buildPlotJson(rs);
-                    singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt(), projectId));
+        try (var conn = connect()) {
+            if (userName.length() > 0) {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot(?,?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setInt(2, plotId);
+                    pstmt.setString(3, userName);
+                    return queryPlot(pstmt, projectId);
+                }
+            } else {
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_unassigned_plot(?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setInt(2, plotId);
+                    return queryPlot(pstmt, projectId);
                 }
             }
-            return  singlePlot.toString();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String getPrevUnassignedPlot(Request req, Response res) {
-        var projectId =     Integer.parseInt(req.params(":projid"));
-        var plotId =        Integer.parseInt(req.params(":id"));
-
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_prev_unassigned_plot(?,?)")) {
-            
-            var singlePlot = new JsonObject();
-            pstmt.setInt(1,projectId);
-            pstmt.setInt(2,plotId);
-            try(var rs = pstmt.executeQuery()){
-                if (rs.next()) {
-                    singlePlot = buildPlotJson(rs);
-                    singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt(), projectId));
-                }
-            }
-            return  singlePlot.toString();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
@@ -998,7 +1004,7 @@ public class PostgresProjects implements Projects {
                                                new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
                                                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                                                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                                                            "samples-per-plot", "sample-resolution", "sample-values",
+                                                            "samples-per-plot", "sample-resolution", "sample-values", "survey-rules",
                                                             "classification_times", "project-template", "use-template-plots"});
 
             // Manually add the name and description fields since they may be invalid JSON
@@ -1012,7 +1018,7 @@ public class PostgresProjects implements Projects {
             final var latMax =             getOrZero(newProject,"latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::jsonb)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::JSONB)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 
@@ -1032,7 +1038,8 @@ public class PostgresProjects implements Projects {
                 pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
                 pstmt.setDouble(15, getOrZero(newProject, "sampleResolution").getAsDouble());
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
-                pstmt.setString(17,  null);  //classification times
+                pstmt.setString(17, newProject.get("surveyRules").getAsJsonArray().toString());
+                pstmt.setString(18,  null);  //classification times
 
 
                 try(var rs = pstmt.executeQuery()){

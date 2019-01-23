@@ -221,25 +221,7 @@ public class CollectProjects implements Projects {
     // plots exist in the database, return the string "done".
     //
     // ==> "{flagged:false,analyses:0,...}" | "done"
-    public String getUnassignedPlot(Request req, Response res) {
-        var projectId = getIntParam(req, "id");
-        var username = getLoggedUsername(req);
-        var params = Map.of("username", (Object) username);
-        var recordKeysEl = getFromCollect(format("survey/%d/sampling_point_data/unanalyzed/random", projectId), params);
-        if (recordKeysEl.isJsonNull()) {
-            return "done";
-        } else {
-            var recordKeysArray = recordKeysEl.getAsJsonArray();
-            var plotId = recordKeysArray.get(0).getAsString();
-            var measurement = recordKeysArray.get(1).getAsInt();
-            var recordId = getOrCreateCollectRecordId(username, projectId, plotId, measurement);
-            var plotSamplingPointItem = getCollectPlotSamplingPointItem(projectId, plotId);
-            var sampleItems = getCollectSamplingPointItems(projectId, plotId, false);
-            return convertToCeoRecord(username, projectId, plotSamplingPointItem, sampleItems, recordId).toString();
-        }
-    }
-
-    public String getUnassignedPlotById(Request req, Response res) {
+    public String getPlotById(Request req, Response res) {
         var projectId = getIntParam(req, "projid");
         var plotId = getParam(req, "id");
         var username = getLoggedUsername(req);
@@ -254,11 +236,11 @@ public class CollectProjects implements Projects {
         }
     }
 
-    public String getNextUnassignedPlot(Request req, Response res) {
+    public String getNextPlot(Request req, Response res) {
         return "";//FIXME
     }
 
-    public String getPrevUnassignedPlot(Request req, Response res) {
+    public String getPrevPlot(Request req, Response res) {
         return "";//FIXME
     }
 

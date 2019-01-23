@@ -256,73 +256,81 @@ public class JsonProjects implements Projects {
         return stats.toString();
     }
 
-    public String getUnassignedPlot(Request req, Response res) {
-        var projectId = req.params(":projid");
-        var plotId = req.params(":id");
-        var currentPlotId = req.queryParams("currentPlotId");
-        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
-        var unanalyzedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == false
-                && plot.get("analyses").getAsInt() == 0
-                && !plot.get("id").getAsString().equals(currentPlotId));
-        var x = filterJsonArray(unanalyzedPlots, plot -> Integer.parseInt(plot.get("id").getAsString()) == Integer.parseInt(plotId));
-        var numPlots = x.size();
-        if (numPlots > 0) {
-            return x.get(0).toString();
-        } else {
-            return "done";
-        }
-    }
+    public String getPlotById(Request req, Response res) {
+        final var projectId =       req.params(":projid");
+        final var currPlotId =      req.params(":id");
+        final var userName =        req.queryParamOrDefault("userName", "");
 
-    public String getUnassignedPlotById(Request req, Response res) {
-        var projectId = req.params(":projid");
-        var plotId = req.params(":id");
-        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
 
-        var matchingPlot = findInJsonArray(plots, plot -> plot.get("id").getAsString().equals(plotId));
-        if (matchingPlot.isPresent()) {
-            var plot = matchingPlot.get();
-            if (plot.get("flagged").getAsBoolean() == false && plot.get("analyses").getAsInt() == 0) {
-                return plot.toString();
-            } else {
-                return "done";
-            }
-        } else {
-            return "not found";
-        }
-    }
+        // Search through user plots or unanalyzed plots
+        final var searchPlots = userName.length() > 0 
+            ? filterJsonArray(plots, pl -> getOrEmptyString(pl, "user").getAsString().equals(userName))
+            :  filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
 
-    public String getNextUnassignedPlot(Request req, Response res) {
-        var projectId = req.params(":projid");
-        var currPlotId = req.params(":id");
-        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
-        var unanalyzedPlots = filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
-        var matchingPlotId = toStream(unanalyzedPlots)
+        final var matchingPlotId = toStream(searchPlots)
                 .map(pl -> pl.has("plotId") ? pl.get("plotId").getAsInt() : pl.get("id").getAsInt())
                 .sorted()
-                .filter(plotId -> plotId > Integer.parseInt(currPlotId))
+                .filter(plotId -> plotId == Integer.parseInt(currPlotId))
                 .findFirst();
+
         if (matchingPlotId.isPresent()) {
             var nextPlotId = matchingPlotId.get();
-            var nextPlot = findInJsonArray(unanalyzedPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == nextPlotId : plot.get("id").getAsInt() == nextPlotId);
+            var nextPlot = findInJsonArray(searchPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == nextPlotId : plot.get("id").getAsInt() == nextPlotId);
             return nextPlot.get().toString();
         } else {
             return "done";
         }
     }
 
-    public String getPrevUnassignedPlot(Request req, Response res) {
-        var projectId = req.params(":projid");
-        var currPlotId = req.params(":id");
-        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
-        var unanalyzedPlots = filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
-        var matchingPlotId = toStream(unanalyzedPlots)
+    public String getNextPlot(Request req, Response res) {
+        final var projectId =       req.params(":projid");
+        final var currPlotId =      req.params(":id");
+        final var userName =        req.queryParamOrDefault("userName", "");
+
+        final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+
+        // Search through user plots or unanalyzed plots
+        final var searchPlots = userName.length() > 0 
+            ? filterJsonArray(plots, pl -> getOrEmptyString(pl, "user").getAsString().equals(userName))
+            :  filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
+
+        final var matchingPlotId = toStream(searchPlots)
+                .map(pl -> pl.has("plotId") ? pl.get("plotId").getAsInt() : pl.get("id").getAsInt())
+                .sorted()
+                .filter(plotId -> plotId > Integer.parseInt(currPlotId))
+                .findFirst();
+
+        if (matchingPlotId.isPresent()) {
+            var nextPlotId = matchingPlotId.get();
+            var nextPlot = findInJsonArray(searchPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == nextPlotId : plot.get("id").getAsInt() == nextPlotId);
+            return nextPlot.get().toString();
+        } else {
+            return "done";
+        }
+    }
+
+    public String getPrevPlot(Request req, Response res) {
+        final var projectId =       req.params(":projid");
+        final var currPlotId =      req.params(":id");
+        final var userName =        req.queryParamOrDefault("userName", "");
+
+        final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        
+        // Search through user plots or unanalyzed plots
+        final var searchPlots = userName.length() > 0 
+            ? filterJsonArray(plots, pl -> getOrEmptyString(pl, "user").getAsString().equals(userName))
+            :  filterJsonArray(plots, pl -> pl.get("analyses").getAsInt() == 0 && pl.get("flagged").getAsBoolean() == false);
+
+        final var matchingPlotId = toStream(searchPlots)
                 .map(pl -> pl.has("plotId") ? pl.get("plotId").getAsInt() : pl.get("id").getAsInt())
                 .sorted()
                 .filter(plotId -> plotId < Integer.parseInt(currPlotId))
                 .reduce((first, second) -> second);
+
         if (matchingPlotId.isPresent()) {
             var prevPlotId = matchingPlotId.get();
-            var prevPlot = findInJsonArray(unanalyzedPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == prevPlotId : plot.get("id").getAsInt() == prevPlotId);
+            var prevPlot = findInJsonArray(searchPlots, plot -> plot.has("plotId") ? plot.get("plotId").getAsInt() == prevPlotId : plot.get("id").getAsInt() == prevPlotId);
             return prevPlot.get().toString();
         } else {
             return "done";
@@ -1386,8 +1394,8 @@ public class JsonProjects implements Projects {
                     new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
                             "lat-max", "base-map-source", "plot-distribution", "num-plots",
                             "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                            "samples-per-plot", "sample-resolution", "sample-values", "project-template", 
-                            "use-template-plots"});
+                            "samples-per-plot", "sample-resolution", "sample-values", "survey-rules",
+                            "project-template", "use-template-plots"});
                             
             // Manually add the name and description fields since they may be invalid JSON or missing from UI
             newProject.addProperty("name", partToString(req.raw().getPart("name")));

@@ -648,7 +648,8 @@ CREATE TYPE project_return AS (
       sample_distribution       text,
       samples_per_plot          integer,
       sample_resolution         float,
-      sample_survey             jsonb,
+      survey_questions          jsonb,
+      survey_rules              jsonb,
       classification_times      jsonb,
       editable                  boolean
     );
@@ -671,17 +672,18 @@ CREATE OR REPLACE FUNCTION create_project_migration(
         _sample_distribution        text,
         _samples_per_plot           integer,
         _sample_resolution          float,
-        _sample_survey              jsonb,
+        _survey_questions           jsonb,
+        _survey_rules           jsonb,
         _classification_times       jsonb
 	) RETURNS integer AS $$
 
     INSERT INTO projects (id, institution_id, availability, name, description, privacy_level, boundary, 
                             base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
-                            sample_distribution, samples_per_plot,sample_resolution, sample_survey, 
+                            sample_distribution, samples_per_plot,sample_resolution, survey_questions, survey_rules
                             classification_times)
     VALUES (_id, _institution_id, _availability, _name, _description, _privacy_level, _boundary,
             _base_map_source, _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, 
-            _sample_distribution, _samples_per_plot, _sample_resolution, _sample_survey, 
+            _sample_distribution, _samples_per_plot, _sample_resolution, _survey_questions, _survey_rules
             _classification_times)
     RETURNING id
 
@@ -703,17 +705,18 @@ CREATE OR REPLACE FUNCTION create_project(
         _sample_distribution        text,
         _samples_per_plot           integer,
         _sample_resolution          float,
-        _sample_survey              jsonb,
+        _survey_questions           jsonb,
+        _survey_rules               jsonb,
         _classification_times       jsonb
 	) RETURNS integer AS $$
 
     INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, 
                             base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
-                            sample_distribution, samples_per_plot,sample_resolution, sample_survey, 
+                            sample_distribution, samples_per_plot,sample_resolution, survey_questions, survey_rules
                             classification_times, created_date)
     VALUES (_institution_id, _availability, _name, _description, _privacy_level, _boundary,
             _base_map_source, _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, 
-            _sample_distribution, _samples_per_plot, _sample_resolution, _sample_survey, 
+            _sample_distribution, _samples_per_plot, _sample_resolution, _survey_questions, _survey_rules
             _classification_times, Now())
     RETURNING id
 
@@ -991,10 +994,12 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _ne
   		plot_size = n.plot_size,
   		sample_distribution = n.sample_distribution,
   		samples_per_plot = n.samples_per_plot,
-  		sample_resolution = n.sample_resolution
+  		sample_resolution = n.sample_resolution,
+  		survey_questions = n.survey_questions,
+  		survey_rules = n.survey_rules
 	FROM (SELECT boundary, base_map_source, plot_distribution, num_plots,
   		plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
-  		sample_resolution, sample_survey
+  		sample_resolution, survey_questions, survey_rules
 		 FROM projects WHERE id = _old_project_id) n
 	WHERE 
 		id = _new_project_id
@@ -1019,7 +1024,7 @@ CREATE OR REPLACE FUNCTION select_project(_id integer)
 
     SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
         plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-        sample_survey, classification_times, false as editable
+        survey_questions, survey_rules, classification_times, false as editable
     FROM projects
     WHERE id = _id
 
@@ -1031,7 +1036,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 
     SELECT id,institution_id, availability, name, description,privacy_level,  ST_AsGeoJSON(boundary) as boundary, base_map_source,
         plot_distribution, num_plots, plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot, sample_resolution,
-        sample_survey, classification_times, false AS editable
+        survey_questions, survey_rules, classification_times, false AS editable
     FROM projects
     WHERE privacy_level  =  'public'
       AND availability  =  'published'
@@ -1061,14 +1066,14 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
     )
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,
+        p.samples_per_plot,p.sample_resolution,p.survey_questions, p.survey_rules,
         p.classification_times,true AS editable
     FROM project_roles as p
     WHERE role = 'admin'
     UNION
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,
+        p.samples_per_plot,p.sample_resolution,p.survey_questions, p.survey_rules,
         p.classification_times,false AS editable
     FROM project_roles as p
     WHERE role = 'member'
@@ -1077,7 +1082,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
     UNION
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,
-        p.samples_per_plot,p.sample_resolution,p.sample_survey,
+        p.samples_per_plot,p.sample_resolution,p.survey_questions, p.survey_rules,
         p.classification_times,false AS editable
     FROM project_roles as p
     WHERE (role NOT IN ('admin','member') OR role IS NULL)
@@ -1355,7 +1360,7 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 
 $$ LANGUAGE SQL;
 
--- -- Returns unanalyzed plots
+-- Returns next unanalyzed plot
 CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS setOf plots_return AS $$
 
@@ -1368,7 +1373,20 @@ CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plo
 
 $$ LANGUAGE SQL;
 
--- Returns unanalyzed plots
+-- Returns next user analyzed plot
+CREATE OR REPLACE FUNCTION select_next_user_plot(_project_id integer, _plot_id integer, _username text) 
+    RETURNS setOf plots_return AS $$
+
+    SELECT * 
+	FROM select_all_project_plots(_project_id) as spp
+    WHERE spp.plotId > _plot_id
+    AND spp.username = _username
+    ORDER BY plotId ASC
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
+-- Returns prev unanalyzed plot
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS setOf plots_return AS $$
 
@@ -1380,27 +1398,37 @@ CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plo
     LIMIT 1
 
 $$ LANGUAGE SQL;
--- Returns unanalyzed plots
-CREATE OR REPLACE FUNCTION select_unassigned_plot(_project_id integer, _plot_id integer) 
+
+-- Returns prev user analyzed plot
+CREATE OR REPLACE FUNCTION select_prev_user_plot(_project_id integer, _plot_id integer, _username text) 
     RETURNS setOf plots_return AS $$
 
     SELECT * from select_all_project_plots(_project_id) as spp
-    WHERE spp.id <> _plot_id
-    AND flagged = 0
-    AND assigned = 0
-    ORDER BY random()
+    WHERE spp.plotId < _plot_id
+    AND spp.username = _username
+    ORDER BY plotId DESC
     LIMIT 1
 
 $$ LANGUAGE SQL;
 
 -- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_unassigned_plots_by_plot_id(_project_id integer,_plot_id integer) 
+CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_id integer,_plot_id integer) 
     RETURNS setOf plots_return AS $$
 
     SELECT * from select_all_project_plots(_project_id) as spp
     WHERE spp.id = _plot_id
     AND flagged = 0
     AND assigned = 0
+
+$$ LANGUAGE SQL;
+
+-- Returns user analyzed plots by plot id
+CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_id integer,_plot_id integer, _username text) 
+    RETURNS setOf plots_return AS $$
+
+    SELECT * from select_all_project_plots(_project_id) as spp
+    WHERE spp.id = _plot_id
+    AND spp.username = _username
 
 $$ LANGUAGE SQL;
 
