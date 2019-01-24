@@ -1,12 +1,7 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
-import static spark.Spark.before;
-import static spark.Spark.exception;
-import static spark.Spark.get;
-import static spark.Spark.port;
-import static spark.Spark.post;
-import static spark.Spark.staticFileLocation;
+import static spark.Spark.*;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -181,7 +176,7 @@ public class Server implements SparkApplication {
 
         // Start the Jetty webserver on port 8080
         port(8080);
-
+        secure("/home/openforis/github/collect-earth-online/deploy/keystore.jks", "collect", null, null);
         if (args[0].equals("JSON")) {
             // Set up the routing table to use the JSON backend
             declareRoutes("JSON",
