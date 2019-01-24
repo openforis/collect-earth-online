@@ -1,7 +1,6 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { utils } from "../js/utils.js";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -21,29 +20,24 @@ class Collection extends React.Component {
             imageryMonthNamePlanet: "March",
             projectPlotsShown: false,
             navButtonsShown: 1,
-            gotoFirstPlotButtonDisabled:true,
             prevPlotButtonDisabled: true,
             nextPlotButtonDisabled: false,
             flagPlotButtonDisabled: false,
             saveValuesButtonDisabled: true,
-            prevQuestionButtonDisabled: false,
-            nextQuestionButtonDisabled: false,
-            surveyAnswersVisible: {},
-            surveyQuestionsVisible: {},
             currentPlot: null,
             userSamples: {},
             userImages: {},
             selectedAnswers: {},
             collectionStart: 0,
             newPlotInput: 0,
-            reviewPlots: false
+            reviewPlots: false,
+            selectedQuestion: ""
         };
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.setImageryYearDG = this.setImageryYearDG.bind(this);
         this.setStackingProfileDG = this.setStackingProfileDG.bind(this);
         this.setImageryYearPlanet = this.setImageryYearPlanet.bind(this);
         this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
-        this.getPlotData = this.getPlotData.bind(this);
         this.goToFirstPlot = this.goToFirstPlot.bind(this);
         this.prevPlot = this.prevPlot.bind(this);
         this.nextPlot = this.nextPlot.bind(this);
@@ -52,24 +46,18 @@ class Collection extends React.Component {
         this.setReviewPlots = this.setReviewPlots.bind(this);
         this.flagPlot = this.flagPlot.bind(this);
         this.saveValues = this.saveValues.bind(this);
-        this.hideShowAnswers = this.hideShowAnswers.bind(this);
-        this.showQuestions = this.showQuestions.bind(this);
-        this.hideQuestions = this.hideQuestions.bind(this);
         this.highlightAnswer = this.highlightAnswer.bind(this);
-        this.getImageryAttributes = this.getImageryAttributes.bind(this);
         this.setCurrentValue = this.setCurrentValue.bind(this);
         this.redirectToHomePage = this.redirectToHomePage.bind(this);
-        this.prevSurveyQuestionTree=this.prevSurveyQuestionTree.bind(this);
-        this.nextSurveyQuestionTree=this.nextSurveyQuestionTree.bind(this);
     }
 
     componentDidMount() {
         this.getProjectById();
-        this.getProjectStats();
         this.getProjectPlots();
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevState) {
+        // Wait to get imagery list until project is loaded
         if (this.state.currentProject.institution && this.state.imageryList.length == 0) {
             this.getImageryList(this.state.currentProject.institution);
         }
@@ -79,17 +67,20 @@ class Collection extends React.Component {
         if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.projectPlotsShown == false) {
             this.showProjectPlots();
         }
-        if (this.state.projectPlotsShown == true && this.state.gotoFirstPlotButtonDisabled == true) {
-            this.setState({gotoFirstPlotButtonDisabled: false});
-        }
         if (this.state.mapConfig && this.state.currentImagery == null) {
             this.updateMapImagery(this.state.currentProject.baseMapSource);
         }
-        if (this.state.currentProject.sampleValues.length > 0 && Object.keys(this.state.surveyQuestionsVisible).length == 0) {
-            const topLevelNodes = this.state.currentProject.sampleValues.filter(surveyNode => surveyNode.parent_question == -1);
-            const firstNode = topLevelNodes.sort((a, b) => a - b)[0];
-            this.hideQuestions(topLevelNodes);
-            this.showQuestions([firstNode]);
+        if (this.state.currentPlot && (this.state.currentPlot !== prevState.currentPlot)) {
+            console.log(this.state.currentPlot);
+            console.log(prevState.currentPlot);
+            this.showProjectPlot(this.state.currentPlot);
+            this.showGeoDash(this.state.currentPlot);
+        }
+
+
+        if (this.state.selectedQuestion && this.state.sampleValues && 
+            (this.state.selectedQuestion !== prevState.selectedQuestion || this.state.sampleValues !== prevState.sampleValues)) {
+            this.highlightSamplesByQuestion();
         }
     }
 
@@ -113,49 +104,6 @@ class Collection extends React.Component {
                     project.sampleValues = surveyQuestions;
                     this.setState({currentProject: project});
                 }
-            });
-    }
-
-    convertSampleValuesToSurveyQuestions(sampleValues) {
-        return sampleValues.map(sampleValue => {
-            if (sampleValue.name && sampleValue.values) {
-                const surveyQuestionAnswers = sampleValue.values.map(value => {
-                    if (value.name) {
-                        return {
-                            id: value.id,
-                            answer: value.name,
-                            color: value.color
-                        };
-                    } else {
-                        return value;
-                    }
-                });
-                return {
-                    id: sampleValue.id,
-                    question: sampleValue.name,
-                    answers: surveyQuestionAnswers,
-                    parent_question: -1,
-                    parent_answer: -1
-                };
-            } else {
-                return sampleValue;
-            }
-        });
-    }
-
-    getProjectStats() {
-        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error getting project stats. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(data => {
-                this.setState({stats: data});
             });
     }
 
@@ -192,6 +140,7 @@ class Collection extends React.Component {
     }
 
     showProjectMap() {
+        console.log('project map')
         let mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
@@ -202,6 +151,7 @@ class Collection extends React.Component {
     }
 
     showProjectPlots() {
+        console.log('project plots 2')
         mercator.addPlotLayer(this.state.mapConfig,
                               this.state.plotList,
                               feature => {
@@ -321,6 +271,7 @@ class Collection extends React.Component {
     }
 
     updateMapImagery(newBaseMapSource) {
+        console.log('update map imagery')
         mercator.setVisibleLayer(this.state.mapConfig, newBaseMapSource);
         const newImagery = this.getImageryByTitle(newBaseMapSource);
         let newImageryAttribution = newImagery.attribution;
@@ -342,6 +293,7 @@ class Collection extends React.Component {
     }
 
     updateDGWMSLayer(imageryYear, stackingProfile) {
+        console.log('dqwms')
         mercator.updateLayerWmsParams(this.state.mapConfig,
                                       "DigitalGlobeWMSImagery",
                                       {
@@ -352,6 +304,7 @@ class Collection extends React.Component {
     }
 
     updatePlanetLayer(imageryMonth, imageryYear) {
+        console.log('planet')
         mercator.updateLayerSource(this.state.mapConfig,
                                    "PlanetGlobalMosaic",
                                    sourceConfig => {
@@ -384,6 +337,8 @@ class Collection extends React.Component {
                         newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
                         userSamples: newPlot.samples ? this.samplesToValues(newPlot.samples) : {},
                         userImages: newPlot.samples ? this.samplesToImages(newPlot.samples) : {},
+                        // FIXME update with existing plot
+                        selectedAnswers: {},
                         collectionStart: Date.now(),
                         navButtonsShown: 2,
                         prevPlotButtonDisabled: false,
@@ -391,8 +346,6 @@ class Collection extends React.Component {
                         flagPlotButtonDisabled: false,
                         saveValuesButtonDisabled: true
                     });
-                    this.showProjectPlot(newPlot);
-                    this.showGeoDash(newPlot);
                 }
             });
     }
@@ -435,13 +388,13 @@ class Collection extends React.Component {
                             newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
                             userSamples: newPlot.samples ? this.samplesToValues(newPlot.samples) : {},
                             userImages: newPlot.samples ? this.samplesToImages(newPlot.samples) : {},
+                            // FIXME update with existing plot
+                            selectedAnswers: {},
                             collectionStart: Date.now(),
                             prevPlotButtonDisabled: false,
                             saveValuesButtonDisabled: true
                         });
                     }
-                    this.showProjectPlot(newPlot);
-                    this.showGeoDash(newPlot);
                 }
             });
     }
@@ -469,19 +422,18 @@ class Collection extends React.Component {
                         newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
                         userSamples: newPlot.samples ? this.samplesToValues(newPlot.samples) : {},
                         userImages: newPlot.samples ? this.samplesToImages(newPlot.samples) : {},
+                        // FIXME update with existing plot
+                        selectedAnswers: {},
                         collectionStart: Date.now(),
                         nextPlotButtonDisabled: false,
                         saveValuesButtonDisabled: true
                     });
-                    this.showProjectPlot(newPlot);
-                    this.showGeoDash(newPlot);
                 }
             });
     }
 
     samplesToValues(samples) {
         return samples.reduce((obj, s) => {
-            console.log(s)
             var newObj = obj
             newObj[s.id] = s.value
             return newObj;
@@ -491,7 +443,6 @@ class Collection extends React.Component {
 
     samplesToImages(samples) {
         return samples.reduce((obj, s) => {
-            console.log(s)
             var newObj = obj
             newObj[s.id] = s.userImage
             return newObj;
@@ -499,7 +450,35 @@ class Collection extends React.Component {
         , {})  
     }
 
+    convertSampleValuesToSurveyQuestions(sampleValues) {
+        return sampleValues.map(sampleValue => {
+            if (sampleValue.name && sampleValue.values) {
+                const surveyQuestionAnswers = sampleValue.values.map(value => {
+                    if (value.name) {
+                        return {
+                            id: value.id,
+                            answer: value.name,
+                            color: value.color
+                        };
+                    } else {
+                        return value;
+                    }
+                });
+                return {
+                    id: sampleValue.id,
+                    question: sampleValue.name,
+                    answers: surveyQuestionAnswers,
+                    parent_question: -1,
+                    parent_answer: -1
+                };
+            } else {
+                return sampleValue;
+            }
+        });
+    }
+
     showProjectPlot(plot) {
+        console.log("project plot")
         mercator.disableSelection(this.state.mapConfig);
         mercator.removeLayerByTitle(this.state.mapConfig, "currentPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "currentPlot");
@@ -525,6 +504,7 @@ class Collection extends React.Component {
     }
 
     showGeoDash(plot) {
+        console.log("geodash")
         const plotRadius = this.state.currentProject.plotSize
                            ? this.state.currentProject.plotSize / 2.0
                            : mercator.getViewRadius(this.state.mapConfig);
@@ -632,28 +612,6 @@ class Collection extends React.Component {
             });
     }
 
-    hideShowAnswers(surveyNodeId) {
-        let surveyAnswersVisible = this.state.surveyAnswersVisible;
-        if (surveyAnswersVisible[surveyNodeId]) {
-            surveyAnswersVisible[surveyNodeId] = false;
-        } else {
-            surveyAnswersVisible[surveyNodeId] = true;
-        }
-        this.setState({surveyAnswersVisible: surveyAnswersVisible});
-    }
-
-    showQuestions(surveyNodes) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = true);
-        this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
-    }
-
-    hideQuestions(surveyNodes) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = false);
-        this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
-    }
-
     highlightAnswer(questionText, answerText) {
         let selectedAnswers = this.state.selectedAnswers;
         selectedAnswers[questionText] = answerText;
@@ -690,7 +648,6 @@ class Collection extends React.Component {
             }, this); // necessary to pass outer scope into function
             this.setState({userSamples: userSamples,
                            userImages: userImages});
-            this.highlightSamplesByQuestion(userSamples, questionText);
             this.allowSaveIfSurveyComplete(userSamples);
             return true;
         } else {
@@ -699,19 +656,19 @@ class Collection extends React.Component {
         }
     }
 
-    highlightSamplesByQuestion(userSamples, questionText) {
+    highlightSamplesByQuestion() {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
         allFeatures.forEach(feature => {
             const sampleId = feature.get("sampleId");
-            const answerColor = (userSamples[sampleId] && userSamples[sampleId][questionText])
-                ? userSamples[sampleId][questionText]["color"]
+            const answerColor = (this.state.userSamples[sampleId] && this.state.userSamples[sampleId][this.state.selectedQuestion])
+                ? this.state.userSamples[sampleId][this.state.selectedQuestion]["color"]
                 : null;
             mercator.highlightSampleGeometry(feature, answerColor);
         });
     }
 
-    allowSaveIfSurveyComplete(userSamples) {
-        const assignedSamples = Object.keys(userSamples);
+    allowSaveIfSurveyComplete() {
+        const assignedSamples = Object.keys(this.state.userSamples);
         const totalSamples = this.state.currentPlot.samples;
         if (assignedSamples.length == totalSamples.length
             && assignedSamples.every(sampleId => this.surveyQuestionTreeComplete(userSamples[sampleId], -1))) {
@@ -736,163 +693,128 @@ class Collection extends React.Component {
     }
 
     redirectToHomePage() {
-        window.location = this.props.documentRoot + "/home";
-    }
-
-    prevSurveyQuestionTree(surveyNodeId, surveyQuestions) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        let prevSurveyNode = surveyQuestions.sort((a, b) => b.id - a.id).find(node => node.id < surveyNodeId && node.parent_question == -1);
-        if (prevSurveyNode) {
-            surveyQuestionsVisible[surveyNodeId] = false;
-            surveyQuestionsVisible[prevSurveyNode.id] = true;
-            this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
-                           nextQuestionButtonDisabled: false});
-        } else {
-            this.setState({prevQuestionButtonDisabled: true});
-            alert("There are no previous questions.");
-        }
-    }
-
-    nextSurveyQuestionTree(surveyNodeId, surveyQuestions) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        let nextSurveyNode = surveyQuestions.sort((a, b) => a.id - b.id).find(node => node.id > surveyNodeId && node.parent_question == -1);
-        if (nextSurveyNode) {
-            surveyQuestionsVisible[surveyNodeId] = false;
-            surveyQuestionsVisible[nextSurveyNode.id] = true;
-            this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
-                           prevQuestionButtonDisabled: false});
-        } else {
-            this.setState({nextQuestionButtonDisabled: true});
-            alert("There are no more questions.");
-        }
+        // window.location = this.props.documentRoot + "/home";
     }
 
     render() {
         return (
-            <React.Fragment>
+            <Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} projectPlotsShown={this.state.projectPlotsShown}/>
-                <SideBar plotId={this.state.currentPlot && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id)}
-                         currentProject={this.state.currentProject}
-                         navButtonsShown={this.state.navButtonsShown}
-                         gotoFirstPlotButtonDisabled={this.state.gotoFirstPlotButtonDisabled}
-                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
-                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                         flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
-                         reviewPlots={this.state.reviewPlots}
-                         newPlotInput={this.state.newPlotInput}
-                         goToFirstPlot={this.goToFirstPlot}
-                         prevPlot={this.prevPlot}
-                         nextPlot={this.nextPlot}
-                         flagPlot={this.flagPlot}
-                         goToPlot={this.goToPlot}
-                         setReviewPlots={this.setReviewPlots}
-                         updateNewPlotId={this.updateNewPlotId}
-                         imageryList={this.state.imageryList}
-                         setBaseMapSource={this.setBaseMapSource}
-                         imageryYearDG={this.state.imageryYearDG}
-                         stackingProfileDG={this.state.stackingProfileDG}
-                         setImageryYearDG={this.setImageryYearDG}
-                         setStackingProfileDG={this.setStackingProfileDG}
-                         imageryYearPlanet={this.state.imageryYearPlanet}
-                         imageryMonthPlanet={this.state.imageryMonthPlanet}
-                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
-                         setImageryYearPlanet={this.setImageryYearPlanet}
-                         setImageryMonthPlanet={this.setImageryMonthPlanet}
-                         stats={this.state.stats}
-                         saveValues={this.saveValues}
-                         saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
-                         surveyAnswersVisible={this.state.surveyAnswersVisible}
-                         surveyQuestionsVisible={this.state.surveyQuestionsVisible}
-                         hideShowAnswers={this.hideShowAnswers}
-                         showQuestions={this.showQuestions}
-                         hideQuestions={this.hideQuestions}
-                         highlightAnswer={this.highlightAnswer}
-                         setCurrentValue={this.setCurrentValue}
-                         selectedAnswers={this.state.selectedAnswers}
-                         prevSurveyQuestionTree={this.prevSurveyQuestionTree}
-                         nextSurveyQuestionTree={this.nextSurveyQuestionTree}
-                         prevQuestionButtonDisabled={this.state.prevQuestionButtonDisabled}
-                         nextQuestionButtonDisabled={this.state.nextQuestionButtonDisabled}/>
+                <SideBar 
+                    projectId={this.props.projectId}
+                    documentRoot={this.props.documentRoot}
+                    saveValues={this.saveValues}
+                    saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
+                    projectName={this.state.currentProject.name}
+                >
+                    {this.state.projectPlotsShown && 
+                        <Fragment>
+                            <PlotNavigation 
+                                plotId={this.state.currentPlot && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id)}
+                                reviewPlots={this.state.reviewPlots}
+                                newPlotInput={this.state.newPlotInput}
+                                navButtonsShown={this.state.navButtonsShown}
+                                goToFirstPlot={this.goToFirstPlot}
+                                prevPlot={this.prevPlot}
+                                nextPlot={this.nextPlot}
+                                flagPlot={this.flagPlot}
+                                goToPlot={this.goToPlot}
+                                setReviewPlots={this.setReviewPlots}
+                                updateNewPlotId={this.updateNewPlotId}
+                                prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
+                                nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
+                                flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
+                                gotoFirstPlotButtonDisabled={this.state.gotoFirstPlotButtonDisabled}
+                            />
+                            <ImageryOptions 
+                                baseMapSource={this.state.currentProject.baseMapSource}
+                                setBaseMapSource={this.setBaseMapSource}
+                                imageryList={this.state.imageryList}
+                                imageryYearDG={this.imageryYearDG}
+                                stackingProfileDG={this.stackingProfileDG}
+                                setImageryYearDG={this.setImageryYearDG}
+                                setStackingProfileDG={this.setStackingProfileDG}
+                                imageryYearPlanet={this.imageryYearPlanet}
+                                imageryMonthPlanet={this.imageryMonthPlanet}
+                                imageryMonthNamePlanet={this.imageryMonthNamePlanet}
+                                setImageryYearPlanet={this.setImageryYearPlanet}
+                                setImageryMonthPlanet={this.setImageryMonthPlanet}
+                            />
+                            <SurveyQuestions 
+                                surveyQuestions={this.state.currentProject.sampleValues}
+                                surveyAnswersVisible={this.state.surveyAnswersVisible}
+                                surveyQuestionsVisible={this.state.surveyQuestionsVisible}
+                                hideShowAnswers={this.hideShowAnswers}
+                                showQuestions={this.showQuestions}
+                                hideQuestions={this.hideQuestions}
+                                highlightAnswer={this.highlightAnswer}
+                                setCurrentValue={this.setCurrentValue}
+                                selectedAnswers={this.state.selectedAnswers}
+                                prevSurveyQuestionTree={this.prevSurveyQuestionTree}
+                                nextSurveyQuestionTree={this.nextSurveyQuestionTree}
+                                prevQuestionButtonDisabled={this.state.prevQuestionButtonDisabled}
+                                nextQuestionButtonDisabled={this.state.nextQuestionButtonDisabled}
+                            />
+                        </Fragment>
+                    }
+                </SideBar>
                 <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
-            </React.Fragment>
+            </Fragment>
         );
     }
 }
 
 function ImageAnalysisPane(props) {
     return (
-        <React.Fragment>
+        <Fragment>
             <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
                 <div id="imagery-info" className="row">
                     <p className="col small">{props.imageryAttribution}</p>
                 </div>
             </div>
-            <div id="spinner" style={{top: "45%", left: "38%", visibility: props.projectPlotsShown ? "hidden" : "visible"}}></div>
-        </React.Fragment>
+            {!props.projectPlotsShown && 
+                <div id="spinner" style={{top: "45%", left: "38%"}}></div>
+            }
+        </Fragment>
     );
 }
 
 function SideBar(props) {
     return (
         <div id="sidebar" className="col-xl-3" style={{overflow: "scroll"}}>
-            <ProjectName projectName={props.currentProject.name}/>
-            <PlotNavigation plotId={props.plotId}
-                            reviewPlots={props.reviewPlots}
-                            newPlotInput={props.newPlotInput}
-                            navButtonsShown={props.navButtonsShown}
-                            goToFirstPlot={props.goToFirstPlot}
-                            prevPlot={props.prevPlot}
-                            nextPlot={props.nextPlot}
-                            flagPlot={props.flagPlot}
-                            goToPlot={props.goToPlot}
-                            setReviewPlots={props.setReviewPlots}
-                            updateNewPlotId={props.updateNewPlotId}
-                            prevPlotButtonDisabled={props.prevPlotButtonDisabled}
-                            nextPlotButtonDisabled={props.nextPlotButtonDisabled}
-                            flagPlotButtonDisabled={props.flagPlotButtonDisabled}
-                            gotoFirstPlotButtonDisabled={props.gotoFirstPlotButtonDisabled}/>
-            <ImageryOptions baseMapSource={props.currentProject.baseMapSource}
-                            setBaseMapSource={props.setBaseMapSource}
-                            imageryList={props.imageryList}
-                            imageryYearDG={props.imageryYearDG}
-                            stackingProfileDG={props.stackingProfileDG}
-                            setImageryYearDG={props.setImageryYearDG}
-                            setStackingProfileDG={props.setStackingProfileDG}
-                            imageryYearPlanet={props.imageryYearPlanet}
-                            imageryMonthPlanet={props.imageryMonthPlanet}
-                            imageryMonthNamePlanet={props.imageryMonthNamePlanet}
-                            setImageryYearPlanet={props.setImageryYearPlanet}
-                            setImageryMonthPlanet={props.setImageryMonthPlanet}/>
-            <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
-                             surveyAnswersVisible={props.surveyAnswersVisible}
-                             surveyQuestionsVisible={props.surveyQuestionsVisible}
-                             hideShowAnswers={props.hideShowAnswers}
-                             showQuestions={props.showQuestions}
-                             hideQuestions={props.hideQuestions}
-                             highlightAnswer={props.highlightAnswer}
-                             setCurrentValue={props.setCurrentValue}
-                             selectedAnswers={props.selectedAnswers}
-                             prevSurveyQuestionTree={props.prevSurveyQuestionTree}
-                             nextSurveyQuestionTree={props.nextSurveyQuestionTree}
-                             prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
-                             nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>
+            <h2 className="header">{props.projectName || ""}</h2>
+            
+            {props.children}
+            
             <div className="row">
                 <div className="col-sm-12 btn-block">
-                    <SaveValuesButton saveValues={props.saveValues}
-                                      saveValuesButtonDisabled={props.saveValuesButtonDisabled}/>
-                    <ProjectStats projectName={props.currentProject.name}
-                                  numPlots={props.currentProject.numPlots}
-                                  stats={props.stats}/>
-                    <QuitButton/>
+                    <input 
+                        id="save-values-button" 
+                        className="btn btn-outline-lightgreen btn-sm btn-block"
+                        type="button" 
+                        name="save-values" 
+                        value="Save" 
+                        onClick={props.saveValues}
+                        style={{opacity: props.saveValuesButtonDisabled ? "0.5" : "1.0"}}
+                        disabled={props.saveValuesButtonDisabled}
+                    />
+                    <ProjectStats 
+                        documentRoot={props.documentRoot}
+                        projectId={props.projectId}
+                    />
+                    <button 
+                        id="collection-quit-button" 
+                        className="btn btn-outline-danger btn-block btn-sm"
+                        type="button" 
+                        name="collection-quit" 
+                        data-toggle="modal" 
+                        data-target="#confirmation-quit"
+                    >
+                        Quit
+                    </button>
                 </div>
             </div>
         </div>
-    );
-}
-
-function ProjectName(props) {
-    return (
-        <h2 className="header">{props.projectName || ""}</h2>
     );
 }
 
@@ -986,7 +908,7 @@ function PlotNavigation(props) {
                         className="form-check-input"
                         checked={props.reviewPlots}
                         id="reviewCheck"
-                        onClick={props.setReviewPlots}
+                        onChange={props.setReviewPlots}
                         type="checkbox"
                     />
                     <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
@@ -1000,9 +922,13 @@ function ImageryOptions(props) {
     return (
         <fieldset className="mb-3 justify-content-center text-center">
             <h3 className="mb-2">Imagery Options</h3>
-            <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                    size="1" value={props.baseMapSource || ""}
-                    onChange={props.setBaseMapSource}>
+            <select 
+                className="form-control form-control-sm" 
+                id="base-map-source" 
+                name="base-map-source"
+                size="1" value={props.baseMapSource || ""}
+                onChange={props.setBaseMapSource}
+            >
                 {
                     props.imageryList.map(
                         (imagery, uid) =>
@@ -1010,79 +936,137 @@ function ImageryOptions(props) {
                     )
                 }
             </select>
-            <DigitalGlobeMenus baseMapSource={props.baseMapSource}
-                               imageryYearDG={props.imageryYearDG}
-                               stackingProfileDG={props.stackingProfileDG}
-                               setImageryYearDG={props.setImageryYearDG}
-                               setStackingProfileDG={props.setStackingProfileDG}/>
-            <PlanetMenus baseMapSource={props.baseMapSource}
-                         imageryYearPlanet={props.imageryYearPlanet}
-                         imageryMonthPlanet={props.imageryMonthPlanet}
-                         imageryMonthNamePlanet={props.imageryMonthNamePlanet}
-                         setImageryYearPlanet={props.setImageryYearPlanet}
-                         setImageryMonthPlanet={props.setImageryMonthPlanet}/>
+            {props.baseMapSource === "DigitalGlobeWMSImagery" &&
+                <DigitalGlobeMenus 
+                    imageryYearDG={props.imageryYearDG}
+                    stackingProfileDG={props.stackingProfileDG}
+                    setImageryYearDG={props.setImageryYearDG}
+                    setStackingProfileDG={props.setStackingProfileDG}
+                />
+            }
+            {props.baseMapSource === "PlanetGlobalMosaic" && 
+                <PlanetMenus 
+                    imageryYearPlanet={props.imageryYearPlanet}
+                    imageryMonthPlanet={props.imageryMonthPlanet}
+                    imageryMonthNamePlanet={props.imageryMonthNamePlanet}
+                    setImageryYearPlanet={props.setImageryYearPlanet}
+                    setImageryMonthPlanet={props.setImageryMonthPlanet}
+                />
+            }
         </fieldset>
     );
 }
 
-function range(start, stop, step) {
-    return Array.from({length: (stop - start) / step}, (_, i) => start + (i * step));
-}
-
 function DigitalGlobeMenus(props) {
-    if (props.baseMapSource == "DigitalGlobeWMSImagery") {
-        return (
-            <React.Fragment>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input type="range" min="2000" max="2018" value={props.imageryYearDG} className="slider" id="myRange"
-                           onChange={props.setImageryYearDG}/>
-                    <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
-                </div>
-                <select className="form-control form-control-sm"
-                        id="dg-stacking-profile"
-                        name="dg-stacking-profile"
-                        size="1"
-                        value={props.stackingProfileDG}
-                        onChange={props.setStackingProfileDG}>
-                    {
-                        ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
-                            .map(profile => <option key={profile} value={profile}>{profile}</option>)
-                    }
-                </select>
-            </React.Fragment>
-        );
-    } else {
-        return "";
-    }
+    return (
+        <Fragment>
+            <div className="slidecontainer form-control form-control-sm">
+                <input type="range" min="2000" max="2018" value={props.imageryYearDG} className="slider" id="myRange"
+                        onChange={props.setImageryYearDG}/>
+                <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
+            </div>
+            <select className="form-control form-control-sm"
+                    id="dg-stacking-profile"
+                    name="dg-stacking-profile"
+                    size="1"
+                    value={props.stackingProfileDG}
+                    onChange={props.setStackingProfileDG}>
+                {
+                    ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
+                        .map(profile => <option key={profile} value={profile}>{profile}</option>)
+                }
+            </select>
+        </Fragment>
+    );
 }
 
-class PlanetMenus extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {value: "2018"};
-    }
-
-    render() {
-        if (this.props.baseMapSource == "PlanetGlobalMosaic") {
-            return (
-                <React.Fragment>
-                    <div className="slidecontainer form-control form-control-sm">
-                        <input type="range" min="2016" max="2018" value={this.props.imageryYearPlanet} className="slider" id="myRange"
-                               onChange={this.props.setImageryYearPlanet}/>
-                        <p>Year: <span id="demo">{this.props.imageryYearPlanet}</span></p>
-                    </div>
-                    <div className="slidecontainer form-control form-control-sm">
-                        <input type="range" min="1" max="12" value={this.props.imageryMonthPlanet} className="slider" id="myRangemonth"
-                               onChange={this.props.setImageryMonthPlanet}/>
-                        <p>Month: <span id="demo">{this.props.imageryMonthNamePlanet}</span></p>
-                    </div>
-                </React.Fragment>
-            );
-        } else {
-            return "";
-        }
-    }
+function PlanetMenus(props) {
+    return (
+        <Fragment>
+            <div className="slidecontainer form-control form-control-sm">
+                <input type="range" min="2016" max="2018" value={props.imageryYearPlanet} className="slider" id="myRange"
+                        onChange={props.setImageryYearPlanet}/>
+                <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
+            </div>
+            <div className="slidecontainer form-control form-control-sm">
+                <input type="range" min="1" max="12" value={props.imageryMonthPlanet} className="slider" id="myRangemonth"
+                        onChange={props.setImageryMonthPlanet}/>
+                <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
+            </div>
+        </Fragment>
+    );
 }
+
+
+// hideShowAnswers(surveyNodeId) {
+//     let surveyAnswersVisible = this.state.surveyAnswersVisible;
+//     if (surveyAnswersVisible[surveyNodeId]) {
+//         surveyAnswersVisible[surveyNodeId] = false;
+//     } else {
+//         surveyAnswersVisible[surveyNodeId] = true;
+//     }
+//     this.setState({surveyAnswersVisible: surveyAnswersVisible});
+// }
+
+// showQuestions(surveyNodes) {
+//     let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
+//     surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = true);
+//     this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
+// }
+
+// hideQuestions(surveyNodes) {
+//     let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
+//     surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = false);
+//     this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
+// }
+
+
+// prevSurveyQuestionTree(surveyNodeId, surveyQuestions) {
+//     let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
+//     let prevSurveyNode = surveyQuestions.sort((a, b) => b.id - a.id).find(node => node.id < surveyNodeId && node.parent_question == -1);
+//     if (prevSurveyNode) {
+//         surveyQuestionsVisible[surveyNodeId] = false;
+//         surveyQuestionsVisible[prevSurveyNode.id] = true;
+//         this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
+//                        nextQuestionButtonDisabled: false});
+//     } else {
+//         this.setState({prevQuestionButtonDisabled: true});
+//         alert("There are no previous questions.");
+//     }
+// }
+
+// nextSurveyQuestionTree(surveyNodeId, surveyQuestions) {
+//     let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
+//     let nextSurveyNode = surveyQuestions.sort((a, b) => a.id - b.id).find(node => node.id > surveyNodeId && node.parent_question == -1);
+//     if (nextSurveyNode) {
+//         surveyQuestionsVisible[surveyNodeId] = false;
+//         surveyQuestionsVisible[nextSurveyNode.id] = true;
+//         this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
+//                        prevQuestionButtonDisabled: false});
+//     } else {
+//         this.setState({nextQuestionButtonDisabled: true});
+//         alert("There are no more questions.");
+//     }
+// }
+
+
+// prevQuestionButtonDisabled: false,
+// nextQuestionButtonDisabled: false,
+// surveyAnswersVisible: {},
+// surveyQuestionsVisible: {},
+
+// this.hideShowAnswers = this.hideShowAnswers.bind(this);
+// this.showQuestions = this.showQuestions.bind(this);
+// this.hideQuestions = this.hideQuestions.bind(this);
+// this.prevSurveyQuestionTree=this.prevSurveyQuestionTree.bind(this);
+// this.nextSurveyQuestionTree=this.nextSurveyQuestionTree.bind(this);
+
+// if (this.state.currentProject.sampleValues.length > 0 && Object.keys(this.state.surveyQuestionsVisible).length == 0) {
+//     const topLevelNodes = this.state.currentProject.sampleValues.filter(surveyNode => surveyNode.parent_question == -1);
+//     const firstNode = topLevelNodes.sort((a, b) => a - b)[0];
+//     this.hideQuestions(topLevelNodes);
+//     this.showQuestions([firstNode]);
+// }
 
 function SurveyQuestions(props) {
     const topLevelNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == -1);
@@ -1114,14 +1098,14 @@ function SurveyQuestions(props) {
 function SurveyQuestionTree(props) {
     const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
     const navButtons = props.surveyNode.parent_question == -1 ?
-        <React.Fragment>
+        <Fragment>
             <button id="prev-survey-question" className="btn btn-outline-lightgreen"  style={{margin:"10px"}}
                     onClick={() => props.prevSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
                     disabled={props.prevQuestionButtonDisabled}>Prev</button>
             <button id="next-survey-question" className="btn btn-outline-lightgreen"
                     onClick={() => props.nextSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
                     disabled={props.nextQuestionButtonDisabled}>Next</button>
-        </React.Fragment>
+        </Fragment>
         : "";
     return (
         <fieldset className={"mb-1 justify-content-center text-center"
@@ -1202,26 +1186,45 @@ function SurveyAnswer(props) {
     );
 }
 
-function SaveValuesButton(props) {
-    return (
-        <input id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-               type="button" name="save-values" value="Save" onClick={props.saveValues}
-               style={{opacity: props.saveValuesButtonDisabled ? "0.5" : "1.0"}}
-               disabled={props.saveValuesButtonDisabled}/>
-    );
-}
-
 class ProjectStats extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            stats: {}
+        }
+    }
+
+    componentDidMount() {
+        this.getProjectStats();
+    }
+
     asPercentage(part, total) {
         return (part && total)
             ? (100.0 * part / total).toFixed(2)
             : "0.00";
     }
 
-    render() {
+    getProjectStats() {
+        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    console.log(response);
+                    alert("Error getting project stats. See console for details.");
+                    return new Promise(resolve => resolve(null));
+                }
+            })
+            .then(data => {
+                this.setState({stats: data});
+            });
+    }
 
+    render() {
+        const { stats } = this.state
+        const numPlots = stats.flaggedPlots + stats.analyzedPlots + stats.unanalyzedPlots
         return (
-            <React.Fragment>
+            <Fragment>
                 <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
                         href="#project-stats-collapse" role="button" aria-expanded="false"
                         aria-controls="project-stats-collapse">
@@ -1234,36 +1237,30 @@ class ProjectStats extends React.Component {
                                 <table className="table table-sm">
                                     <tbody>
                                         <tr>
-                                            <td className="small">Project</td>
-                                            <td className="small">
-                                                {this.props.projectName || ""}
-                                            </td>
-                                        </tr>
-                                        <tr>
                                             <td className="small">Plots Analyzed</td>
                                             <td className="small">
-                                                {this.props.stats.analyzedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.analyzedPlots, this.props.numPlots)}%)
+                                                {stats.analyzedPlots || ""}
+                                                ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
                                             </td>
                                         </tr>
                                         <tr>
                                             <td className="small">Plots Flagged</td>
                                             <td className="small">
-                                                {this.props.stats.flaggedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                                {stats.flaggedPlots || ""}
+                                                ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
                                             </td>
                                         </tr>
                                         <tr>
                                             <td className="small">Plots Completed</td>
                                             <td className="small">
-                                                {this.props.stats.analyzedPlots + this.props.stats.flaggedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.analyzedPlots + this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                                {stats.analyzedPlots + stats.flaggedPlots || ""}
+                                                ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
                                             </td>
                                         </tr>
                                         <tr>
                                             <td className="small">Plots Total</td>
                                             <td className="small">
-                                                {this.props.numPlots || ""}
+                                                {numPlots || ""}
                                             </td>
                                         </tr>
                                     </tbody>
@@ -1272,18 +1269,9 @@ class ProjectStats extends React.Component {
                         </fieldset>
                     </div>
                 </div>
-            </React.Fragment>
+            </Fragment>
         );
     }
-}
-
-function QuitButton() {
-    return (
-        <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
-                type="button" name="collection-quit" data-toggle="modal" data-target="#confirmation-quit">
-            Quit
-        </button>
-    );
 }
 
 function QuitMenu(props) {
@@ -1304,7 +1292,7 @@ function QuitMenu(props) {
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
                         <button type="button" className="btn bg-lightgreen btn-sm" id="quit-button"
-                                onClick={props.redirectToHomePage}>OK</button>
+                                onClick={() => window.location = this.props.documentRoot + "/home"}>OK</button>
                     </div>
                 </div>
             </div>
