@@ -38,7 +38,7 @@ public class JsonUtils {
     }
 
     public static JsonElement parseJson(String jsonString) {
-        return (new JsonParser()).parse(jsonString);
+        return (new JsonParser()).parse(jsonString == null || jsonString.equals("null") ? "[]" : jsonString);
     }
     
     public static String toJson(Object obj) {
