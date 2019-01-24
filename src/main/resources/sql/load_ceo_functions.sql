@@ -673,17 +673,17 @@ CREATE OR REPLACE FUNCTION create_project_migration(
         _samples_per_plot           integer,
         _sample_resolution          float,
         _survey_questions           jsonb,
-        _survey_rules           jsonb,
+        _survey_rules           	jsonb,
         _classification_times       jsonb
 	) RETURNS integer AS $$
 
     INSERT INTO projects (id, institution_id, availability, name, description, privacy_level, boundary, 
                             base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
-                            sample_distribution, samples_per_plot,sample_resolution, survey_questions, survey_rules
+                            sample_distribution, samples_per_plot,sample_resolution, survey_questions, survey_rules,
                             classification_times)
     VALUES (_id, _institution_id, _availability, _name, _description, _privacy_level, _boundary,
             _base_map_source, _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, 
-            _sample_distribution, _samples_per_plot, _sample_resolution, _survey_questions, _survey_rules
+            _sample_distribution, _samples_per_plot, _sample_resolution, _survey_questions, _survey_rules,
             _classification_times)
     RETURNING id
 
@@ -712,11 +712,11 @@ CREATE OR REPLACE FUNCTION create_project(
 
     INSERT INTO projects (institution_id, availability, name, description, privacy_level, boundary, 
                             base_map_source, plot_distribution, num_plots, plot_spacing, plot_shape, plot_size,
-                            sample_distribution, samples_per_plot,sample_resolution, survey_questions, survey_rules
+                            sample_distribution, samples_per_plot,sample_resolution, survey_questions, survey_rules,
                             classification_times, created_date)
     VALUES (_institution_id, _availability, _name, _description, _privacy_level, _boundary,
             _base_map_source, _plot_distribution, _num_plots, _plot_spacing, _plot_shape, _plot_size, 
-            _sample_distribution, _samples_per_plot, _sample_resolution, _survey_questions, _survey_rules
+            _sample_distribution, _samples_per_plot, _sample_resolution, _survey_questions, _survey_rules,
             _classification_times, Now())
     RETURNING id
 
@@ -994,12 +994,10 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _ne
   		plot_size = n.plot_size,
   		sample_distribution = n.sample_distribution,
   		samples_per_plot = n.samples_per_plot,
-  		sample_resolution = n.sample_resolution,
-  		survey_questions = n.survey_questions,
-  		survey_rules = n.survey_rules
+  		sample_resolution = n.sample_resolution
 	FROM (SELECT boundary, base_map_source, plot_distribution, num_plots,
   		plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
-  		sample_resolution, survey_questions, survey_rules
+  		sample_resolution
 		 FROM projects WHERE id = _old_project_id) n
 	WHERE 
 		id = _new_project_id

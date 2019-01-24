@@ -72,7 +72,7 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("samplesPerPlot",rs.getInt("samples_per_plot"));
             newProject.addProperty("sampleResolution",rs.getDouble("sample_resolution"));
             newProject.addProperty("classification_times","");
-            newProject.add("sampleValues", parseJson(rs.getString("sample_survey")).getAsJsonArray());
+            newProject.add("sampleValues", parseJson(rs.getString("survey_questions")).getAsJsonArray());
             newProject.add("surveyRules", parseJson(rs.getString("survey_rules")).getAsJsonArray());
 
             newProject.addProperty("editable", false);

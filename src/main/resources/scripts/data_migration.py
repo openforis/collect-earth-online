@@ -141,15 +141,17 @@ def insert_projects():
                     if project['plotSize'] is None: project['plotSize']=0
                     if project['samplesPerPlot'] is None: project['samplesPerPlot']=0
                     if project['sampleResolution'] is None: project['sampleResolution']=0
+                    if not ('surveyRules' in project): project['surveyRules']=None
 
                     cur.execute("select * from create_project_migration(%s,%s,%s::text,%s::text,%s::text,%s::text,"
                     + "ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,"
-                    + "%s,%s,%s::jsonb,%s::jsonb)", 
+                    + "%s,%s,%s::jsonb,%s::jsonb,%s::jsonb)", 
                     (project['id'],project['institution'],project['availability'], 
                     project['name'],project['description'],project['privacyLevel'],project['boundary'],
                     project['baseMapSource'],project['plotDistribution'],project['numPlots'],
                     project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],
                     project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),
+                    json.dumps(project['surveyRules']),
                     None))
                     
                     project_id = cur.fetchone()[0]
