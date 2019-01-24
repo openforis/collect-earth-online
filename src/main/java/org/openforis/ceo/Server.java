@@ -1,7 +1,13 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
-import static spark.Spark.*;
+import static spark.Spark.before;
+import static spark.Spark.exception;
+import static spark.Spark.get;
+import static spark.Spark.port;
+import static spark.Spark.post;
+import static spark.Spark.staticFileLocation;
+import static spark.Spark.secure;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;

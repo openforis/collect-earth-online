@@ -252,26 +252,26 @@ class BasicLayout extends React.PureComponent{
 
         if(widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            url = "https://geegateway.servirglobal.net:8888/" + fts[widget.filterType];
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/image";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
         }
         else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/ImageCollectionAsset";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
         }
         else if(widget.properties && "ImageCollectionCustom" == widget.properties[0]){
-            url = "https://geegateway.servirglobal.net:8888/meanImageByMosaicCollections";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
         }
         else if(collectionName.trim().length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
 
         }
         else{
-            url = "https://geegateway.servirglobal.net:8888/ImageCollectionbyIndex";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
         }
         return url;
     };

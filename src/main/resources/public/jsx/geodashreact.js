@@ -327,26 +327,26 @@ class MapWidget extends React.Component {
         let url = "";
         if(widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            url = "https://geegateway.servirglobal.net:8888/" + fts[widget.filterType];
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/image";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
         }
         else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/ImageCollectionAsset";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
         }
         else if("ImageCollectionCustom" === widget.properties[0]){
-            url = "https://geegateway.servirglobal.net:8888/meanImageByMosaicCollections";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
         }
         else if(collectionName.trim().length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
 
         }
         else{
-            url = "https://geegateway.servirglobal.net:8888/ImageCollectionbyIndex";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
         }
         return url;
     };
@@ -846,7 +846,7 @@ class GraphWidget extends React.Component {
         let collectionName = widget.properties[1];
         let indexName = widget.properties[4];
         let date = new Date();
-        let url = collectionName.trim().length > 0 ? "https://geegateway.servirglobal.net:8888/timeSeriesIndex":  "https://geegateway.servirglobal.net:8888/timeSeriesIndex2";
+        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex":  window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex2";
         const ref = this;
         fetch(url, {
             method: "POST",
@@ -1021,7 +1021,7 @@ class StatsWidget extends React.Component {
         const ref = this;
         const widget = this.props.widget;
         const projPairAOI = this.props.projPairAOI;
-        fetch("https://geegateway.servirglobal.net:8888/getStats", {
+        fetch(window.location.protocol + "//" + window.location.hostname + ":8888/getStats", {
             method: "POST",
             headers: {
                 "Accept": "application/json",
