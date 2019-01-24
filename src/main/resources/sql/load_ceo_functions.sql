@@ -994,12 +994,10 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _ne
   		plot_size = n.plot_size,
   		sample_distribution = n.sample_distribution,
   		samples_per_plot = n.samples_per_plot,
-  		sample_resolution = n.sample_resolution,
-  		survey_questions = n.survey_questions,
-  		survey_rules = n.survey_rules
+  		sample_resolution = n.sample_resolution
 	FROM (SELECT boundary, base_map_source, plot_distribution, num_plots,
   		plot_spacing, plot_shape, plot_size, sample_distribution, samples_per_plot,
-  		sample_resolution, survey_questions, survey_rules
+  		sample_resolution
 		 FROM projects WHERE id = _old_project_id) n
 	WHERE 
 		id = _new_project_id
