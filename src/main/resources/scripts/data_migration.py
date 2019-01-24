@@ -5,6 +5,7 @@ import os
 import csv
 import re
 import subprocess
+import sys
 from config import config
 params = config()
 paramsElevated = config(section='postgresql-elevated')
@@ -161,11 +162,13 @@ def insert_projects():
                         if dash_id.isnumeric() and int(dash['projectID']) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
                             break
-                    ## insert data the entire json file at a time, much faster but requires permissions
-                    insert_plots_samples_by_file(project_id, conn)
-                    
-                    ## insert data by row with loops
-                    # insert_plots(project_id, conn)
+
+                    if len(sys.argv) > 1 and sys.argv[1] == 'loop':
+                        ## insert data by row with loops
+                        insert_plots(project_id, conn)
+                    else:
+                        ## insert data the entire json file at a time, much faster but requires permissions
+                        insert_plots_samples_by_file(project_id, conn)
                     
                     ## merge in external files
                     merge_files(project, project_id, conn)
@@ -240,8 +243,8 @@ def insert_user_plots(plot_id,plot,flagged,conn):
     rows = cur_user.fetchall()
     if len(rows)>0:
         try:
-            cur_up.execute("select * from add_user_plots_migration(%s,%s::text,to_timestamp(%s/1000.0)::timestamp,to_timestamp(%s/1000.0)::timestamp,%s)",
-                (plot_id,plot['user'],plot['collectionStart'],plot['collectionTime'],flagged))
+            cur_up.execute("select * from add_user_plots_migration(%s,%s::text,%s,to_timestamp(%s/1000.0)::timestamp,to_timestamp(%s/1000.0)::timestamp)",
+                (plot_id,plot['user'],flagged,plot['collectionStart'],plot['collectionTime']))
             user_plot_id = cur_up.fetchone()[0]
             conn.commit()
         except (Exception, psycopg2.DatabaseError) as error:
