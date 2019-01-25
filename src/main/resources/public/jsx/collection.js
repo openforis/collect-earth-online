@@ -664,11 +664,13 @@ class Collection extends React.Component {
     }
 
     render() {
+        const plotId = this.state.currentPlot && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
         return (
             <Fragment>
                 <ImageAttributionBar imageryAttribution={this.state.imageryAttribution}/>
                 <SideBar 
                     projectId={this.props.projectId}
+                    plotId={plotId}
                     documentRoot={this.props.documentRoot}
                     saveValues={this.saveValues}
                     saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
@@ -677,7 +679,7 @@ class Collection extends React.Component {
                     {this.state.plotList.length > 0
                         ?
                             <PlotNavigation 
-                                plotId={this.state.currentPlot && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id)}
+                                plotId={plotId}
                                 navButtonsShown={this.state.currentPlot != null}
                                 newPlotInput={this.state.newPlotInput}
                                 nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
@@ -765,6 +767,7 @@ function SideBar(props) {
                     <ProjectStatsGroup 
                         documentRoot={props.documentRoot}
                         projectId={props.projectId}
+                        plotId={props.plotId}
                     />
                     <button 
                         id="collection-quit-button" 
@@ -1147,6 +1150,12 @@ class ProjectStatsGroup extends React.Component {
             showStats: false
         }
         this.updateShown = this.updateShown.bind(this);
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.plotId !== this.props.plotId) {
+            this.setState({ showStats: false })
+        }
     }
 
     updateShown() {
