@@ -657,14 +657,10 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
         });
         event.deselected.forEach(function (feature) {
             var savedStyle = featureStyles[feature.G.sampleId];
-            // console.log(feature)
-            // console.log('saved', savedStyle && savedStyle.f.f.a)
-            // console.log('get', feature.getStyle() && feature.getStyle().f.f.a)
             if (savedStyle != null && feature.getStyle() == null) {
                 feature.setStyle(savedStyle);
             }
         });
-        console.log(featureStyles)
     };
     select.on("select", action);
     return select;
