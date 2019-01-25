@@ -652,15 +652,19 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
     select.set("title", interactionTitle);
     var action = function (event) {
         event.selected.forEach(function (feature) {
-            featureStyles[feature] = feature.getStyle();
+            featureStyles[feature.G.sampleId] = feature.getStyle();
             feature.setStyle(null);
         });
         event.deselected.forEach(function (feature) {
-            var savedStyle = featureStyles[feature];
-            if (savedStyle != null) {
+            var savedStyle = featureStyles[feature.G.sampleId];
+            // console.log(feature)
+            // console.log('saved', savedStyle && savedStyle.f.f.a)
+            // console.log('get', feature.getStyle() && feature.getStyle().f.f.a)
+            if (savedStyle != null && feature.getStyle() == null) {
                 feature.setStyle(savedStyle);
             }
         });
+        console.log(featureStyles)
     };
     select.on("select", action);
     return select;
@@ -681,7 +685,7 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
         var extent = dragBox.getGeometry().getExtent();
         var saveStyle = function (feature) {
             selectedFeatures.push(feature);
-            featureStyles[feature] = feature.getStyle();
+            featureStyles[feature.G.sampleId] = feature.getStyle();
             feature.setStyle(null);
             return false;
         };
