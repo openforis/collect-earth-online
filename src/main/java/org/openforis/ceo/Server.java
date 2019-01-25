@@ -6,8 +6,8 @@ import static spark.Spark.exception;
 import static spark.Spark.get;
 import static spark.Spark.port;
 import static spark.Spark.post;
-import static spark.Spark.staticFileLocation;
 import static spark.Spark.secure;
+import static spark.Spark.staticFileLocation;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -60,10 +60,8 @@ public class Server implements SparkApplication {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
-        // FIXME: Get deploy/clientkeystore signed by a certificate authority.
-        // https://docs.oracle.com/cd/E19509-01/820-3503/ggfen/index.html
-        // https://spark.apache.org/docs/latest/security.html
-        // secure("deploy/clientkeystore", "ceocert", null, null);
+        // Enable HTTPS site-wide
+        secure("deploy/keystore.jks", "collect", null, null);
 
         // Serve static files from src/main/resources/public/
         staticFileLocation("/public");
@@ -109,11 +107,11 @@ public class Server implements SparkApplication {
         get("/get-project-plot/:project-id/:plot-id", projects::getProjectPlot);
         get("/get-project-stats/:id",                 projects::getProjectStats);
         
-        // FIXME remove api routes for legacy
+        // FIXME: remove api routes for legacy
         get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getPlotById);
         get("/get-next-unanalyzed-plot/:projid/:id",  projects::getNextPlot);
         get("/get-prev-unanalyzed-plot/:projid/:id",  projects::getPrevPlot);        
-        // Update to these api calls
+        // FIXME: Update to these api calls
         get("/get-plot-by-id/:projid/:id",            projects::getPlotById);
         get("/get-next-plot/:projid/:id",             projects::getNextPlot);
         get("/get-prev-plot/:projid/:id",             projects::getPrevPlot);
@@ -182,7 +180,7 @@ public class Server implements SparkApplication {
 
         // Start the Jetty webserver on port 8080
         port(8080);
-        secure("/home/openforis/github/collect-earth-online/deploy/keystore.jks", "collect", null, null);
+
         if (args[0].equals("JSON")) {
             // Set up the routing table to use the JSON backend
             declareRoutes("JSON",
