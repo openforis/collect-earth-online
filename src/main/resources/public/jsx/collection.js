@@ -56,6 +56,7 @@ class Collection extends React.Component {
         this.redirectToHomePage = this.redirectToHomePage.bind(this);
         this.prevSurveyQuestionTree=this.prevSurveyQuestionTree.bind(this);
         this.nextSurveyQuestionTree=this.nextSurveyQuestionTree.bind(this);
+        this.callMethodsOnChange=this.callMethodsOnChange.bind(this);
     }
 
     componentDidMount() {
@@ -130,7 +131,9 @@ class Collection extends React.Component {
                     question: sampleValue.name,
                     answers: surveyQuestionAnswers,
                     parent_question: -1,
-                    parent_answer: -1
+                    parent_answer: -1,
+                    data_type:"Text",
+                    component_type:"Button"
                 };
             } else {
                 return sampleValue;
@@ -718,6 +721,16 @@ class Collection extends React.Component {
         }
     }
 
+    callMethodsOnChange(e,question,childNodes){
+        if (this.setCurrentValue(question, e.target.value, e.target.options[e.target.selectedIndex].text, e.target.options[e.target.selectedIndex].id)) {
+           // this.hideQuestions(childNodes);
+            const childNodes = childNodes.filter(surveyNode => surveyNode.parent_answer == e.target.value);
+           // this.showQuestions(childNodes);
+
+        }
+
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -758,7 +771,8 @@ class Collection extends React.Component {
                          prevSurveyQuestionTree={this.prevSurveyQuestionTree}
                          nextSurveyQuestionTree={this.nextSurveyQuestionTree}
                          prevQuestionButtonDisabled={this.state.prevQuestionButtonDisabled}
-                         nextQuestionButtonDisabled={this.state.nextQuestionButtonDisabled}/>
+                         nextQuestionButtonDisabled={this.state.nextQuestionButtonDisabled}
+                         callMethodsOnChange={this.callMethodsOnChange}/>
                 <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
         );
@@ -816,7 +830,8 @@ function SideBar(props) {
                              prevSurveyQuestionTree={props.prevSurveyQuestionTree}
                              nextSurveyQuestionTree={props.nextSurveyQuestionTree}
                              prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
-                             nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>
+                             nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}
+                             callMethodsOnChange={props.callMethodsOnChange}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
                     <SaveValuesButton saveValues={props.saveValues}
@@ -984,7 +999,8 @@ function SurveyQuestions(props) {
                                                                            prevSurveyQuestionTree={props.prevSurveyQuestionTree}
                                                                            nextSurveyQuestionTree={props.nextSurveyQuestionTree}
                                                                            prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
-                                                                           nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>)
+                                                                           nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}
+                                                                           callMethodsOnChange={props.callMethodsOnChange}/>)
             }
         </fieldset>
     );
@@ -1015,17 +1031,18 @@ function SurveyQuestionTree(props) {
             <ul className={"samplevalue justify-content-center"
                 + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
                 {
-                    props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
-                                                                             question={props.surveyNode.question}
-                                                                             id={ans.id}
-                                                                             answer={ans.answer}
-                                                                             color={ans.color}
-                                                                             childNodes={childNodes}
-                                                                             showQuestions={props.showQuestions}
-                                                                             hideQuestions={props.hideQuestions}
-                                                                             highlightAnswer={props.highlightAnswer}
-                                                                             setCurrentValue={props.setCurrentValue}
-                                                                             selectedAnswers={props.selectedAnswers}/>)
+                    <SurveyAnswer
+                                  question={props.surveyNode.question}
+                                  componentType={props.surveyNode.component_type}
+                                  dataType={props.surveyNode.data_type}
+                                 answers={props.surveyNode.answers}
+                                  childNodes={childNodes}
+                                  showQuestions={props.showQuestions}
+                                  hideQuestions={props.hideQuestions}
+                                  highlightAnswer={props.highlightAnswer}
+                                  setCurrentValue={props.setCurrentValue}
+                                  selectedAnswers={props.selectedAnswers}
+                                  callMethodsOnChange={props.callMethodsOnChange}/>
                 }
             </ul>
             {
@@ -1043,42 +1060,229 @@ function SurveyQuestionTree(props) {
                                                                         prevSurveyQuestionTree={props.prevSurveyQuestionTree}
                                                                         nextSurveyQuestionTree={props.nextSurveyQuestionTree}
                                                                         prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
-                                                                        nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>)
+                                                                        nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}
+                                                                        callMethodsOnChange={props.callMethodsOnChange}/>)
             }
         </fieldset>
     );
 }
+function AnswerButton(props){
 
-function SurveyAnswer(props) {
-    const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == props.id);
-    return (
-        <li className="mb-1">
+    let li=props.answers.map((ans,uid)=> {
+        const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
+       return <li key={uid} className="mb-1">
             <button type="button"
                     className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                    id={props.answer + "_" + props.id}
-                    name={props.answer + "_" + props.id}
-                    style={{boxShadow: (props.selectedAnswers[props.question] == props.answer)
-                        ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                        : "initial"}}
+                    id={ans.answer + "_" + ans.id}
+                    name={ans.answer + "_" + ans.id}
+                    style={{
+                        boxShadow: (props.selectedAnswers[props.question] == ans.answer)
+                            ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                            : "initial"
+                    }}
                     onClick={() => {
-                        if (props.setCurrentValue(props.question, props.id, props.answer, props.color)) {
+                        if (props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)) {
                             props.hideQuestions(props.childNodes);
                             props.showQuestions(childNodes);
-                            props.highlightAnswer(props.question, props.answer);
+                            props.highlightAnswer(props.question, ans.answer);
                         }
                     }}>
                 <div className="circle"
                      style={{
-                         backgroundColor: props.color,
+                         backgroundColor: ans.color,
                          border: "1px solid",
                          float: "left",
                          marginTop: "4px"
                      }}>
                 </div>
-                <span className="small">{props.answer}</span>
+                <span className="small">{ans.answer}</span>
             </button>
         </li>
-    );
+    });
+    return (<React.Fragment>{li}</React.Fragment>);
+}
+
+function AnswerRadioButton(props) {
+    let li = props.answers.map((ans,uid) => {
+        const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
+        return <div key={uid} className="mb-1" style={{display: "inline-grid",paddingRight:"30px"}}>
+                <div className="circle"
+                     style={{
+                         backgroundColor: ans.color,
+                         border: "1px solid",
+                         float: "left",
+                         marginTop: "4px"
+                     }}>
+                </div>
+                <span className="small">{ans.answer}</span>
+                <input type="radio" name="radiogroup"
+                       className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                       id={ans.answer + "_" + ans.id}
+                       style={{
+                           boxShadow: (props.selectedAnswers[props.question] == ans.answer)
+                               ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                               : "initial"
+                       }}
+                       onChange={() => {
+                           if (props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)) {
+                               props.hideQuestions(props.childNodes);
+                               props.showQuestions(childNodes);
+
+                           }
+                       }}/>
+
+
+            </div>
+    });
+    return (<li className="mb-1" style={{display: "inline",paddingRight:"30px"}}>{li}</li>);
+}
+
+function AnswerInputNumber(props) {
+    let li = props.answers.map((ans,uid) => {
+        const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
+        return <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
+            <div className="circle"
+                 style={{
+                     backgroundColor: ans.color,
+                     border: "1px solid",
+                     float: "left",
+                     marginTop: "4px",
+                     marginRight: "5px"
+                 }}>
+            </div>
+            <input type="number"
+                   className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                   placeholder={ans.answer}
+                   id={ans.answer + "_" + ans.id}
+                   name={ans.answer + "_" + ans.id}
+                   style={{
+                       boxShadow: (props.selectedAnswers[props.question] == ans.answer)
+                           ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                           : "initial"
+                   }}
+                   onChange={() => {
+                       if (props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)) {
+                           props.hideQuestions(props.childNodes);
+                           props.showQuestions(childNodes);
+
+                       }
+                   }}/>
+        </li>
+    });
+    return (<React.Fragment>{li}</React.Fragment>);
+}
+
+function AnswerInputText(props) {
+    let li = props.answers.map((ans,uid) => {
+        const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
+        return <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
+            <div className="circle"
+                 style={{
+                     backgroundColor: ans.color,
+                     border: "1px solid",
+                     float: "left",
+                     marginTop: "4px",
+                     marginRight: "5px"
+                 }}>
+            </div>
+            <input type="text"
+                   className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                   placeholder={ans.answer}
+                   id={ans.answer + "_" + ans.id}
+                   name={ans.answer + "_" + ans.id}
+                   style={{
+                       boxShadow: (props.selectedAnswers[props.question] == ans.answer)
+                           ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                           : "initial"
+                   }}
+                   onChange={() => {
+                       if (props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)) {
+                           props.hideQuestions(props.childNodes);
+                           props.showQuestions(childNodes);
+
+                       }
+                   }}/>
+        </li>
+    });
+    return (<React.Fragment>{li}</React.Fragment>);
+}
+function AnswerDropDown(props) {
+    let options = props.answers.map((ans,uid) => {
+        return <option key={uid} value={ans.id} id={ans.color} style={{background:ans.color, color:(ans.color=="black" || ans.color=="#000000")?"white":"black"}}>{ans.answer}</option>
+    });
+    return (<React.Fragment> <option value="none">-Select-</option>{options}</React.Fragment>);
+}
+
+function SurveyAnswer(props) {
+  if (props.componentType&&props.componentType.toLowerCase() == "radiobutton") {
+        return (<AnswerRadioButton answers={props.answers} childNodes={props.childNodes}   question={props.question}
+                              componentType={props.componentType}
+                              dataType={props.dataType}
+                              answers={props.answers}
+                              showQuestions={props.showQuestions}
+                              hideQuestions={props.hideQuestions}
+                              highlightAnswer={props.highlightAnswer}
+                              setCurrentValue={props.setCurrentValue}
+                              selectedAnswers={props.selectedAnswers}
+                              />);
+    }
+    else if (props.componentType&&props.componentType.toLowerCase() == "input" && props.dataType.toLowerCase() == "number") {
+        return (<AnswerInputNumber answers={props.answers} childNodes={props.childNodes}   question={props.question}
+                                   componentType={props.componentType}
+                                   dataType={props.dataType}
+                                   answers={props.answers}
+                                   showQuestions={props.showQuestions}
+                                   hideQuestions={props.hideQuestions}
+                                   highlightAnswer={props.highlightAnswer}
+                                   setCurrentValue={props.setCurrentValue}
+                                   selectedAnswers={props.selectedAnswers}
+                                   />);
+    }
+    else if (props.componentType&&props.componentType.toLowerCase() == "input" && props.dataType.toLowerCase() == "text") {
+        return (<AnswerInputText answers={props.answers} childNodes={props.childNodes}   question={props.question}
+                                   componentType={props.componentType}
+                                   dataType={props.dataType}
+                                   answers={props.answers}
+                                   showQuestions={props.showQuestions}
+                                   hideQuestions={props.hideQuestions}
+                                   highlightAnswer={props.highlightAnswer}
+                                   setCurrentValue={props.setCurrentValue}
+                                   selectedAnswers={props.selectedAnswers}
+                                   />);
+
+    }
+    else if (props.componentType&&props.componentType.toLowerCase() == "dropdown") {
+        return (<li className="mb-1">
+                <select id="dropd" className="btn-outline-darkgray btn-sm btn-block" onChange={(e) => {
+                    props.callMethodsOnChange(e,props.question,props.childNodes)
+                }}>
+                    <AnswerDropDown answers={props.answers} childNodes={props.childNodes} question={props.question}
+                                    componentType={props.componentType}
+                                    dataType={props.dataType}
+                                    answers={props.answers}
+                                    showQuestions={props.showQuestions}
+                                    hideQuestions={props.hideQuestions}
+                                    highlightAnswer={props.highlightAnswer}
+                                    setCurrentValue={props.setCurrentValue}
+                                    selectedAnswers={props.selectedAnswers}
+                                    />
+                </select>
+            </li>
+        );
+    }
+    else
+    {
+        return (<AnswerButton answers={props.answers} childNodes={props.childNodes}   question={props.question}
+                              componentType={props.componentType}
+                              dataType={props.dataType}
+                              answers={props.answers}
+                              showQuestions={props.showQuestions}
+                              hideQuestions={props.hideQuestions}
+                              highlightAnswer={props.highlightAnswer}
+                              setCurrentValue={props.setCurrentValue}
+                              selectedAnswers={props.selectedAnswers}
+                          />);
+    }
 }
 
 function SaveValuesButton(props) {
