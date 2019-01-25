@@ -1,6 +1,7 @@
 package org.openforis.ceo;
 
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static spark.Spark.after;
 import static spark.Spark.before;
 import static spark.Spark.exception;
 import static spark.Spark.get;
@@ -70,6 +71,9 @@ public class Server implements SparkApplication {
         if (databaseType.equals("COLLECT")) {
             before("/*", new CeoAuthFilter());
         }
+
+        // GZIP all responses to improve download speeds
+        after((request, response) -> { response.header("Content-Encoding", "gzip"); });
 
         // Routing Table: HTML pages (with no side effects)
         get("/",                                      Views.home(freemarker));
