@@ -1,17 +1,23 @@
 import demjson
 import json
 import psycopg2
+import shutil
 import os
+import glob
 import csv
 import re
 import subprocess
 import sys
 from config import config
+
 params = config()
 paramsElevated = config(section='postgresql-elevated')
+
 jsonpath = r'../../../../target/classes/json'
 csvpath = r'../../../../target/classes/csv'
+csvScriptPath = r'../csv'
 shppath = r'../../../../target/classes/shp'
+shpScriptPath = r'../shp'
 
 def insert_users():
     conn = None
@@ -549,6 +555,16 @@ def update_sequence():
 
 
 if __name__ == '__main__':
+    csvScripts = os.listdir(csvScriptPath)
+    for f in csvScripts:
+        if f.endswith(".sh"):
+            shutil.copy(csvScriptPath+"/"+f, csvpath)
+
+    shpScripts = os.listdir(shpScriptPath)
+    for f in shpScripts:
+        if f.endswith(".sh"):
+            shutil.copy(shpScriptPath+"/"+f, shppath)
+
     print("inserting users")
     insert_users()
     print("inserting roles")
