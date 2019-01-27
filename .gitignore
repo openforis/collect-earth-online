@@ -26,3 +26,6 @@ out.txt
 
 # Google Analytics
 /src/main/resources/template/freemarker/googleanalytics.ftl
+
+# Locally compiled python
+*.pyc
