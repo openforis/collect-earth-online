@@ -194,7 +194,7 @@ class SurveyQuestionTree extends React.Component  {
                 }
                 {
                     childNodes.map((surveyNode, uid) =>
-                        <Fragment>
+                        <Fragment key={uid}>
                             {this.props.surveyQuestions.filter(sq => sq.id === surveyNode.id)[0].visible > 0 &&
                             <SurveyQuestionTree 
                                 key={uid}

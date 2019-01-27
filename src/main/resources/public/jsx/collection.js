@@ -93,14 +93,10 @@ class Collection extends React.Component {
 
         // Selective sample updates when not a new plot
         if (this.state.currentPlot && this.state.currentPlot === prevState.currentPlot) {
-            // Only selected answers updates
-            if (this.state.selectedQuestionText === prevState.selectedQuestionText
-                && this.state.userSamples !== prevState.userSamples) {
-                    this.highlightSamplesByQuestion();
-                }
             // Changing questions shows different set of samples
-            else if (this.state.selectedQuestionText !== prevState.selectedQuestionText 
-                        || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack) {
+            if (this.state.selectedQuestionText !== prevState.selectedQuestionText 
+                        || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
+                        || this.state.userSamples !== prevState.userSamples) {
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
             }
@@ -648,7 +644,7 @@ class Collection extends React.Component {
                         selectedQuestionText: questionText
                     });
             return true;
-        } else if(!selectedFeatures) {
+        } else if(selectedFeatures && selectedFeatures.getLength() == 0 ) {
             alert("No samples selected. Please click some first.");
             return false;
         } else {
@@ -662,6 +658,7 @@ class Collection extends React.Component {
     }
 
     highlightSamplesByQuestion() {
+        console.log("hi")
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         allFeatures.filter(feature => {
             const sampleId = feature.get("sampleId");
