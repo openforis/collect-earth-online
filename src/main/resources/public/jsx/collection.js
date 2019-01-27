@@ -658,7 +658,6 @@ class Collection extends React.Component {
     }
 
     highlightSamplesByQuestion() {
-        console.log("hi")
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         allFeatures.filter(feature => {
             const sampleId = feature.get("sampleId");
