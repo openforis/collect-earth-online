@@ -507,12 +507,14 @@ var ceoMapStyles = {icon:          mercator.getIconStyle("favicon.ico"),
                     yellowCircle:  mercator.getCircleStyle(5, null, "yellow", 2),
                     greenCircle:   mercator.getCircleStyle(5, null, "green", 2),
                     blackCircle:   mercator.getCircleStyle(5, null, "#000000", 2),
+                    whiteCircle:   mercator.getCircleStyle(5, null, "white", 2),
                     redSquare:     mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
                     yellowSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
                     greenSquare:   mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
                     cluster:       mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
                     yellowPolygon: mercator.getPolygonStyle(null, "yellow", 3),
-                    blackPolygon:  mercator.getPolygonStyle(null, "#000000", 3)};
+                    blackPolygon:  mercator.getPolygonStyle(null, "#000000", 3),
+                    whitePolygon:  mercator.getPolygonStyle(null, "#ffffff", 3)};
 
 /*****************************************************************************
 ***
@@ -769,9 +771,9 @@ mercator.getAllFeatures = function (mapConfig, layerTitle) {
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
     if (sample.get("shape") == "point") {
-        color ? sample.setStyle(mercator.getCircleStyle(5, null, color, 2)) : sample.setStyle(mercator.getCircleStyle(5, color, "#000000", 2));
+        sample.setStyle(mercator.getCircleStyle(5, null, color, 2));
     } else {
-        color ? sample.setStyle(mercator.getPolygonStyle(null, color, 3)) : sample.setStyle(mercator.getPolygonStyle(color, "#000000", 3));
+        sample.setStyle(mercator.getPolygonStyle(null, color, 3));
     }
     return sample;
 };

@@ -4,8 +4,8 @@ export class SurveyQuestions extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            topLevelNodes: {},
-            currentNode: 0
+            topLevelNodes: [],
+            currentNodeIndex: 0
         }
         this.prevSurveyQuestionTree=this.prevSurveyQuestionTree.bind(this);
         this.nextSurveyQuestionTree=this.nextSurveyQuestionTree.bind(this);
@@ -20,25 +20,54 @@ export class SurveyQuestions extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.currentNode !== prevState.currentNode) {
-            this.props.setSelectedQuestion(this.state.topLevelNodes[this.state.currentNode].question);
+        if (this.state.currentNodeIndex !== prevState.currentNodeIndex) {
+            this.props.setSelectedQuestionText(this.state.topLevelNodes[this.state.currentNodeIndex].question);
         }
     }
 
     prevSurveyQuestionTree() {
-        if (this.state.currentNode > 0) {
-            this.setState({currentNode: this.state.currentNode - 1});
+        if (this.state.currentNodeIndex > 0) {
+            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1});
         } else {
             alert("There are no previous questions.");
         }
     }
 
     nextSurveyQuestionTree() {
-        if (this.state.currentNode < this.state.topLevelNodes.length - 1) {
-            this.setState({currentNode: this.state.currentNode + 1});
+        if (this.state.currentNodeIndex < this.state.topLevelNodes.length - 1) {
+            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1});
         } else {
             alert("There are no more questions.");
         }
+    }
+
+    setSurveyQuestionTree(index) {
+        this.setState({currentNodeIndex: index});
+    }
+
+    checkAllSelected(currentQuestionId){
+        
+        const { surveyQuestions } = this.props;
+        const { visible, answered } = surveyQuestions.filter((sv => sv.id === currentQuestionId))[0];
+        const child_questions = surveyQuestions.filter((sv => sv.parent_question === currentQuestionId));
+
+        if (child_questions.length === 0) {
+            return visible > 0 && visible === answered;
+        }
+        else {
+
+            return  child_questions.reduce((prev, cur) => {
+                return prev && this.checkAllSelected(cur.id);
+            }, true);
+        }   
+    }
+
+    getTopColor(node) {
+        return this.checkAllSelected(node.id)
+        ? "0px 0px 15px 4px green inset"
+        : node.answered > 0
+            ? "0px 0px 15px 4px yellow inset"
+            : "0px 0px 15px 4px red inset";
     }
 
     render() {
@@ -48,35 +77,53 @@ export class SurveyQuestions extends React.Component {
                 <h3>Survey Questions</h3>
                 {this.props.surveyQuestions
                 ?
-                    <Fragment>
-                        <button 
-                            id="prev-survey-question" 
-                            className="btn btn-outline-lightgreen m-2"
-                            onClick={this.prevSurveyQuestionTree}
-                            disabled={this.state.currentNode === 0}
-                            style={{opacity: this.state.currentNode === 0 ? "0.25" : "1.0"}}
-                        >
-                            Prev
-                        </button>
-                        <button 
-                            id="next-survey-question" 
-                            className="btn btn-outline-lightgreen"
-                            onClick={this.nextSurveyQuestionTree}
-                            disabled={this.state.currentNode === this.state.topLevelNodes.length - 1}
-                            style={{opacity: this.state.currentNode === this.state.topLevelNodes.length - 1 ? "0.25" : "1.0"}}
-                        >
-                            Next
-                        </button>
+                    <div className="SurveyQuestions__questions">
+                        <div className="SurveyQuestions__top-questions">
+                            <button 
+                                id="prev-survey-question" 
+                                className="btn btn-outline-lightgreen m-2"
+                                onClick={this.prevSurveyQuestionTree}
+                                disabled={this.state.currentNodeIndex === 0}
+                                style={{opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0"}}
+                            >
+                                {`<`}
+                            </button>
+                            {this.state.topLevelNodes.map((node, i) => 
+                                <button 
+                                    id="top-select" 
+                                    key={i}
+                                    className="btn btn-outline-lightgreen m-2"
+                                    onClick={() => this.setSurveyQuestionTree(i)}
+                                    style={{boxShadow: `${(i === this.state.currentNodeIndex)
+                                        ? "0px 0px 2px 2px black inset,"
+                                        : ""}
+                                        ${this.getTopColor(node)}
+                                    `}}
+                                >
+                                {`O`}
+                                </button>
+                            )}
+                            <button 
+                                id="next-survey-question" 
+                                className="btn btn-outline-lightgreen"
+                                onClick={this.nextSurveyQuestionTree}
+                                disabled={this.state.currentNodeIndex === this.state.topLevelNodes.length - 1}
+                                style={{opacity: this.state.currentNodeIndex === this.state.topLevelNodes.length - 1 ? "0.25" : "1.0"}}
+                            >
+                                {`>`}
+                            </button>
+                        </div>
                         {this.state.topLevelNodes.length > 0 &&
                             <SurveyQuestionTree
-                                surveyNode={this.state.topLevelNodes[this.state.currentNode]}
+                                surveyNode={this.state.topLevelNodes[this.state.currentNodeIndex]}
                                 surveyQuestions={this.props.surveyQuestions}
                                 setCurrentValue={this.props.setCurrentValue}
-                                selectedQuestion={this.props.selectedQuestion}
-                                setSelectedQuestion={this.props.setSelectedQuestion}
+                                selectedQuestionText={this.props.selectedQuestionText}
+                                setSelectedQuestionText={this.props.setSelectedQuestionText}
+                                higharcyLabel=""
                             />
                         }
-                    </Fragment>
+                    </div>
                 :
                     <h3>This project is missing survey questions!</h3>
                 }
@@ -95,11 +142,16 @@ class SurveyQuestionTree extends React.Component  {
     }  
 
     toggleShowAnswers() {
-        this.setState({ showAnswers: !this.state.showAnswers })
+        this.setState({ showAnswers: !this.state.showAnswers });
     }
 
     render() {
         const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == this.props.surveyNode.id);
+        const shadowColor = this.props.surveyNode.answered === 0 
+                            ? "0px 0px 15px 4px red inset"
+                            : this.props.surveyNode.answered === this.props.surveyNode.visible
+                                ? "0px 0px 15px 4px green inset"
+                                : "0px 0px 15px 4px yellow inset";
         return (
             <fieldset className={"mb-1 justify-content-center text-center"}>
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2">
@@ -113,12 +165,14 @@ class SurveyQuestionTree extends React.Component  {
                     <button
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm col-10"
-                        style={{boxShadow: (this.props.surveyNode.question === this.props.selectedQuestion)
-                                    ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                                    : "initial"}}
-                        onClick={() => this.props.setSelectedQuestion(this.props.surveyNode.question)}
+                        style={{boxShadow: `${(this.props.surveyNode.question === this.props.selectedQuestionText)
+                                    ? "0px 0px 2px 2px black inset,"
+                                    : ""}
+                                    ${shadowColor}
+                                `}}
+                        onClick={() => this.props.setSelectedQuestionText(this.props.surveyNode.question)}
                     >
-                    {this.props.surveyNode.question}
+                    {this.props.higharcyLabel + this.props.surveyNode.question}
                     </button>
                 </div>
 
@@ -139,15 +193,20 @@ class SurveyQuestionTree extends React.Component  {
                     </ul>
                 }
                 {
-                    childNodes.map((surveyNode, uid) => 
-                        <SurveyQuestionTree 
-                            key={uid}
-                            surveyNode={surveyNode}
-                            surveyQuestions={this.props.surveyQuestions}
-                            setCurrentValue={this.props.setCurrentValue}
-                            selectedQuestion={this.props.selectedQuestion}
-                            setSelectedQuestion={this.props.setSelectedQuestion}
-                        />
+                    childNodes.map((surveyNode, uid) =>
+                        <Fragment>
+                            {this.props.surveyQuestions.filter(sq => sq.id === surveyNode.id)[0].visible > 0 &&
+                            <SurveyQuestionTree 
+                                key={uid}
+                                surveyNode={surveyNode}
+                                surveyQuestions={this.props.surveyQuestions}
+                                setCurrentValue={this.props.setCurrentValue}
+                                selectedQuestionText={this.props.selectedQuestionText}
+                                setSelectedQuestionText={this.props.setSelectedQuestionText}
+                                higharcyLabel={this.props.higharcyLabel + "- "}
+                            />
+                            }
+                        </Fragment>
                     )
                 }
             </fieldset>
