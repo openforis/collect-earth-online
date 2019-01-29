@@ -180,7 +180,6 @@ class SurveyQuestionTree extends React.Component  {
                     <ul className={"samplevalue justify-content-center"}>
                         {
                             <SurveyAnswers
-                                key={uid}
                                 componentType={this.props.surveyNode.component_type}
                                 dataType={this.props.surveyNode.data_type}
                                 question={this.props.surveyNode.question}
@@ -322,11 +321,11 @@ function AnswerInputText(props) {
                 placeholder={ans.answer}
                 id={ans.answer + "_" + ans.id}
                 name={ans.answer + "_" + ans.id}
-                style={{
-                    boxShadow: (props.selectedAnswers[props.question] == ans.answer)
-                        ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                        : "initial"
-                }}
+                // style={{
+                //     boxShadow: (props.selectedAnswers[props.question] == ans.answer)
+                //         ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
+                //         : "initial"
+                // }}
                 onChange={() => props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)}
             />
         </li>
@@ -334,22 +333,22 @@ function AnswerInputText(props) {
     return (<React.Fragment>{li}</React.Fragment>);
 }
 
-class AnswerDropDown extends Component {
+class AnswerDropDown extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showDropdown: true
+            showDropdown: false
         }
         this.toggleDropDown = this.toggleDropDown.bind(this);
     }  
     
-    toggleShowDropdown () {
-        this.setState({showDropdown: !showDropdown});
+    toggleDropDown () {
+        this.setState({showDropdown: !this.state.showDropdown});
     }
     
 
     render () {
-        let options = props.answers.map((ans,uid) => {
+        let options = this.props.answers.map((ans,uid) => {
             return (
                 <React.Fragment  key={uid}>
                     <div>
@@ -365,7 +364,7 @@ class AnswerDropDown extends Component {
                         />
                         <a id={ans.color} 
                             href="#home" 
-                            onClick={() => props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)} 
+                            onClick={() => this.props.setCurrentValue(this.props.question, ans.id, ans.answer, ans.color)} 
                             style={{
                                 color: "black", 
                                 padding: "12px 16px", 
@@ -418,28 +417,25 @@ class AnswerDropDown extends Component {
 function SurveyAnswers(props) {
   if (props.componentType&&props.componentType.toLowerCase() == "radiobutton") {
         return (<AnswerRadioButton 
-                    answer={props.answer} 
+                    answers={props.answers} 
                     question={props.question}
                     dataType={props.dataType}
-                    answer={props.answer}
                     setCurrentValue={props.setCurrentValue}
                 />);
     }
     else if (props.componentType&&props.componentType.toLowerCase() == "input" && props.dataType.toLowerCase() == "number") {
         return (<AnswerInputNumber 
-                    answer={props.answer} 
+                    answers={props.answers} 
                     question={props.question}
                     dataType={props.dataType}
-                    answer={props.answer}
                     setCurrentValue={props.setCurrentValue}
                 />);
     }
     else if (props.componentType&&props.componentType.toLowerCase() == "input" && props.dataType.toLowerCase() == "text") {
         return (<AnswerInputText 
-                    answer={props.answer} 
+                    answers={props.answers} 
                     question={props.question}
                     dataType={props.dataType}
-                    answer={props.answer}
                     setCurrentValue={props.setCurrentValue}
                 />);
     }
@@ -458,7 +454,7 @@ function SurveyAnswers(props) {
                                     {/*/}
                 {/*</select>*/}
         return (<AnswerDropDown 
-                    answer={props.answer} 
+                    answers={props.answers} 
                     toggleDropDown={props.toggleDropDown} 
                     question={props.question} 
                     childNodes={props.childNodes}  
@@ -468,10 +464,9 @@ function SurveyAnswers(props) {
     else
     {
         return (<AnswerButton 
-                    answer={props.answer} 
+                    answers={props.answers} 
                     question={props.question}
                     dataType={props.dataType}
-                    answer={props.answer}
                     setCurrentValue={props.setCurrentValue}
                 />);
     }
