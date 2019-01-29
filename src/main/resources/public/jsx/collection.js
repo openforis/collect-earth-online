@@ -790,13 +790,19 @@ class Collection extends React.Component {
                         :
                             <h3>Loading imagery data...</h3>
                     }
-                    {this.state.currentPlot && 
+                    {this.state.currentPlot 
+                    ? 
                         <SurveyQuestions 
                             selectedQuestionText={this.state.selectedQuestionText}
                             surveyQuestions={this.state.currentProject.sampleValues}
                             setCurrentValue={this.setCurrentValue}
                             setSelectedQuestionText={this.setSelectedQuestionText}
                         />
+                    :
+                        <fieldset className="mb-3 justify-content-center text-center">
+                            <h3>Survey Questions</h3>
+                            <p>Please go to a plot to see survey questions</p>
+                        </fieldset>
                     }
                 </SideBar>
                 <QuitMenu documentRoot={this.props.documentRoot}/>
