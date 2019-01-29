@@ -730,6 +730,13 @@ class Collection extends React.Component {
         }
 
     }
+     toggleDropDown() {
+        if(document.getElementById("myDropdown").style.display=="block")
+            document.getElementById("myDropdown").style.display="none";
+        else
+            document.getElementById("myDropdown").style.display="block";
+
+    }
 
     render() {
         return (
@@ -772,7 +779,8 @@ class Collection extends React.Component {
                          nextSurveyQuestionTree={this.nextSurveyQuestionTree}
                          prevQuestionButtonDisabled={this.state.prevQuestionButtonDisabled}
                          nextQuestionButtonDisabled={this.state.nextQuestionButtonDisabled}
-                         callMethodsOnChange={this.callMethodsOnChange}/>
+                         callMethodsOnChange={this.callMethodsOnChange}
+                         toggleDropDown={this.toggleDropDown}/>
                 <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
             </React.Fragment>
         );
@@ -831,7 +839,8 @@ function SideBar(props) {
                              nextSurveyQuestionTree={props.nextSurveyQuestionTree}
                              prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
                              nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}
-                             callMethodsOnChange={props.callMethodsOnChange}/>
+                             callMethodsOnChange={props.callMethodsOnChange}
+                             toggleDropDown={props.toggleDropDown}/>
             <div className="row">
                 <div className="col-sm-12 btn-block">
                     <SaveValuesButton saveValues={props.saveValues}
@@ -1000,7 +1009,8 @@ function SurveyQuestions(props) {
                                                                            nextSurveyQuestionTree={props.nextSurveyQuestionTree}
                                                                            prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
                                                                            nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}
-                                                                           callMethodsOnChange={props.callMethodsOnChange}/>)
+                                                                           callMethodsOnChange={props.callMethodsOnChange}
+                                                                           toggleDropDown={props.toggleDropDown}/>)
             }
         </fieldset>
     );
@@ -1010,18 +1020,20 @@ function SurveyQuestionTree(props) {
     const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
     const navButtons = props.surveyNode.parent_question == -1 ?
         <React.Fragment>
-            <button id="prev-survey-question" className="btn btn-outline-lightgreen"  style={{margin:"10px"}}
+            <button id="prev-survey-question" className="btn btn-outline-lightgreen" style={{margin: "10px"}}
                     onClick={() => props.prevSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
-                    disabled={props.prevQuestionButtonDisabled}>Prev</button>
+                    disabled={props.prevQuestionButtonDisabled}>Prev
+            </button>
             <button id="next-survey-question" className="btn btn-outline-lightgreen"
                     onClick={() => props.nextSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
-                    disabled={props.nextQuestionButtonDisabled}>Next</button>
+                    disabled={props.nextQuestionButtonDisabled}>Next
+            </button>
         </React.Fragment>
         : "";
     return (
         <fieldset className={"mb-1 justify-content-center text-center"
-                  + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
-            { navButtons }
+        + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
+            {navButtons}
             <button id={props.surveyNode.question + "_" + props.surveyNode.id}
                     className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                     onClick={() => props.hideShowAnswers(props.surveyNode.id)}
@@ -1029,20 +1041,21 @@ function SurveyQuestionTree(props) {
                 {props.surveyNode.question}
             </button>
             <ul className={"samplevalue justify-content-center"
-                + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
+            + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
                 {
                     <SurveyAnswer
-                                  question={props.surveyNode.question}
-                                  componentType={props.surveyNode.component_type}
-                                  dataType={props.surveyNode.data_type}
-                                 answers={props.surveyNode.answers}
-                                  childNodes={childNodes}
-                                  showQuestions={props.showQuestions}
-                                  hideQuestions={props.hideQuestions}
-                                  highlightAnswer={props.highlightAnswer}
-                                  setCurrentValue={props.setCurrentValue}
-                                  selectedAnswers={props.selectedAnswers}
-                                  callMethodsOnChange={props.callMethodsOnChange}/>
+                        question={props.surveyNode.question}
+                        componentType={props.surveyNode.component_type}
+                        dataType={props.surveyNode.data_type}
+                        answers={props.surveyNode.answers}
+                        childNodes={childNodes}
+                        showQuestions={props.showQuestions}
+                        hideQuestions={props.hideQuestions}
+                        highlightAnswer={props.highlightAnswer}
+                        setCurrentValue={props.setCurrentValue}
+                        selectedAnswers={props.selectedAnswers}
+                        callMethodsOnChange={props.callMethodsOnChange}
+                        toggleDropDown={props.toggleDropDown}/>
                 }
             </ul>
             {
@@ -1061,11 +1074,13 @@ function SurveyQuestionTree(props) {
                                                                         nextSurveyQuestionTree={props.nextSurveyQuestionTree}
                                                                         prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
                                                                         nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}
-                                                                        callMethodsOnChange={props.callMethodsOnChange}/>)
+                                                                        callMethodsOnChange={props.callMethodsOnChange}
+                                                                        toggleDropDown={props.toggleDropDown}/>)
             }
         </fieldset>
     );
 }
+
 function AnswerButton(props){
 
     let li=props.answers.map((ans,uid)=> {
@@ -1103,42 +1118,44 @@ function AnswerButton(props){
 }
 
 function AnswerRadioButton(props) {
-    let li = props.answers.map((ans,uid) => {
+    let li = props.answers.map((ans, uid) => {
         const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
-        return <div key={uid} className="mb-1" style={{display: "inline-grid",paddingRight:"30px"}}>
-                <div className="circle"
-                     style={{
-                         backgroundColor: ans.color,
-                         border: "1px solid",
-                         float: "left",
-                         marginTop: "4px"
-                     }}>
-                </div>
-                <span className="small">{ans.answer}</span>
-                <input type="radio" name="radiogroup"
-                       className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                       id={ans.answer + "_" + ans.id}
-                       style={{
-                           boxShadow: (props.selectedAnswers[props.question] == ans.answer)
-                               ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                               : "initial"
-                       }}
-                       onChange={() => {
-                           if (props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)) {
-                               props.hideQuestions(props.childNodes);
-                               props.showQuestions(childNodes);
-
-                           }
-                       }}/>
-
-
+        return <li key={uid} className="mb-1 form-control">
+            <div className="circle"
+                 style={{
+                     backgroundColor: ans.color,
+                     border: "1px solid",
+                     float: "left",
+                     marginTop: "4px",
+                     margin: "5px"
+                 }}>
             </div>
+            <span className="small" style={{float: "left", paddingLeft: "10px"}}>{ans.answer}</span>
+            <input type="radio" name="radiogroup"
+                   className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                   id={ans.answer + "_" + ans.id}
+                   style={{
+                       display: "inline",
+                       width: "1rem",
+                       height: "1rem",
+                       margin: "5px"
+                   }}
+                   onChange={() => {
+                       if (props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)) {
+                           props.hideQuestions(props.childNodes);
+                           props.showQuestions(childNodes);
+
+                       }
+                   }}/>
+
+
+        </li>
     });
-    return (<li className="mb-1" style={{display: "inline",paddingRight:"30px"}}>{li}</li>);
+    return (<React.Fragment>{li}</React.Fragment>);
 }
 
 function AnswerInputNumber(props) {
-    let li = props.answers.map((ans,uid) => {
+    let li = props.answers.map((ans, uid) => {
         const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
         return <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
             <div className="circle"
@@ -1173,7 +1190,7 @@ function AnswerInputNumber(props) {
 }
 
 function AnswerInputText(props) {
-    let li = props.answers.map((ans,uid) => {
+    let li = props.answers.map((ans, uid) => {
         const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
         return <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
             <div className="circle"
@@ -1206,11 +1223,33 @@ function AnswerInputText(props) {
     });
     return (<React.Fragment>{li}</React.Fragment>);
 }
+
+// function AnswerDropDown(props) {
+//     let options = props.answers.map((ans,uid) => {
+//         return <option key={uid} value={ans.id} id={ans.color} style={{background:ans.color, color:(ans.color=="black" || ans.color=="#000000")?"white":"black"}}>{ans.answer}</option>
+//     });
+//     return (<React.Fragment> <option value="none">-Select-</option>{options}</React.Fragment>);
+// }
+
 function AnswerDropDown(props) {
     let options = props.answers.map((ans,uid) => {
-        return <option key={uid} value={ans.id} id={ans.color} style={{background:ans.color, color:(ans.color=="black" || ans.color=="#000000")?"white":"black"}}>{ans.answer}</option>
+        const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == ans.id);
+        return <React.Fragment  key={uid}><div><span className="dot" style={{  height: "15px",width: "15px", backgroundColor: ans.color, borderRadius: "50%", display: "inline-block"}}></span>
+            <a id={ans.color} href="#home" onClick={() => {
+            if (props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)) {
+            props.hideQuestions(props.childNodes);
+            props.showQuestions(childNodes);
+        }}} style={{color: "black", padding: "12px 16px", textDecoration: "none", display: "inline-block"}}>{ans.answer}</a></div>
+        </React.Fragment>
     });
-    return (<React.Fragment> <option value="none">-Select-</option>{options}</React.Fragment>);
+    return (
+        <div className="dropdown" style={{ position: "relative",display: "inline-block"}}>
+        <button onClick={props.toggleDropDown} className="dropbtn" style={{backgroundColor: "#31BAB0",color: "white",padding: "16px",fontSize: "16px", border: "none", cursor: "pointer"}}>-Select-</button>
+        <div id="myDropdown" className="dropdown-content" style={{ display: "none", position: "absolute", backgroundColor: "#f1f1f1", minWidth: "160px", overflow: "auto", boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)"}}>
+            {options}
+        </div>
+    </div>
+    );
 }
 
 function SurveyAnswer(props) {
@@ -1253,20 +1292,25 @@ function SurveyAnswer(props) {
     }
     else if (props.componentType&&props.componentType.toLowerCase() == "dropdown") {
         return (<li className="mb-1">
-                <select id="dropd" className="btn-outline-darkgray btn-sm btn-block" onChange={(e) => {
-                    props.callMethodsOnChange(e,props.question,props.childNodes)
-                }}>
-                    <AnswerDropDown answers={props.answers} childNodes={props.childNodes} question={props.question}
-                                    componentType={props.componentType}
-                                    dataType={props.dataType}
-                                    answers={props.answers}
-                                    showQuestions={props.showQuestions}
-                                    hideQuestions={props.hideQuestions}
-                                    highlightAnswer={props.highlightAnswer}
-                                    setCurrentValue={props.setCurrentValue}
-                                    selectedAnswers={props.selectedAnswers}
-                                    />
-                </select>
+                {/*<select id="dropd" className="btn-outline-darkgray btn-sm btn-block" onChange={(e) => {*/}
+                    {/*props.callMethodsOnChange(e,props.question,props.childNodes)*/}
+                {/*}}>*/}
+                    {/*<AnswerDropDown answers={props.answers} childNodes={props.childNodes} question={props.question}*/}
+                                    {/*componentType={props.componentType}*/}
+                                    {/*dataType={props.dataType}*/}
+                                    {/*answers={props.answers}*/}
+                                    {/*showQuestions={props.showQuestions}*/}
+                                    {/*hideQuestions={props.hideQuestions}*/}
+                                    {/*highlightAnswer={props.highlightAnswer}*/}
+                                    {/*setCurrentValue={props.setCurrentValue}*/}
+                                    {/*selectedAnswers={props.selectedAnswers}*/}
+                                    {/*/>*/}
+                {/*</select>*/}
+            <AnswerDropDown answers={props.answers} toggleDropDown={props.toggleDropDown} question={props.question} childNodes={props.childNodes}  showQuestions={props.showQuestions}
+                             hideQuestions={props.hideQuestions}
+                             highlightAnswer={props.highlightAnswer}
+                             setCurrentValue={props.setCurrentValue}
+                             selectedAnswers={props.selectedAnswers}/>
             </li>
         );
     }
@@ -1316,39 +1360,39 @@ class ProjectStats extends React.Component {
                             <div className="collapse" id="project-stats-collapse">
                                 <table className="table table-sm">
                                     <tbody>
-                                        <tr>
-                                            <td className="small">Project</td>
-                                            <td className="small">
-                                                {this.props.projectName || ""}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Analyzed</td>
-                                            <td className="small">
-                                                {this.props.stats.analyzedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.analyzedPlots, this.props.numPlots)}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Flagged</td>
-                                            <td className="small">
-                                                {this.props.stats.flaggedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.flaggedPlots, this.props.numPlots)}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Completed</td>
-                                            <td className="small">
-                                                {this.props.stats.analyzedPlots + this.props.stats.flaggedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.analyzedPlots + this.props.stats.flaggedPlots, this.props.numPlots)}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Total</td>
-                                            <td className="small">
-                                                {this.props.numPlots || ""}
-                                            </td>
-                                        </tr>
+                                    <tr>
+                                        <td className="small">Project</td>
+                                        <td className="small">
+                                            {this.props.projectName || ""}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Analyzed</td>
+                                        <td className="small">
+                                            {this.props.stats.analyzedPlots || ""}
+                                            ({this.asPercentage(this.props.stats.analyzedPlots, this.props.numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Flagged</td>
+                                        <td className="small">
+                                            {this.props.stats.flaggedPlots || ""}
+                                            ({this.asPercentage(this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Completed</td>
+                                        <td className="small">
+                                            {this.props.stats.analyzedPlots + this.props.stats.flaggedPlots || ""}
+                                            ({this.asPercentage(this.props.stats.analyzedPlots + this.props.stats.flaggedPlots, this.props.numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Total</td>
+                                        <td className="small">
+                                            {this.props.numPlots || ""}
+                                        </td>
+                                    </tr>
                                     </tbody>
                                 </table>
                             </div>
