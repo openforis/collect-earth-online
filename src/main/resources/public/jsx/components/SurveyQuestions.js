@@ -282,6 +282,12 @@ class AnswerInput extends React.Component{
         this.updateInputValue = this.updateInputValue.bind(this);
     }
 
+    componentDidUpdate (prevProps) {
+        if (this.props.question !== prevProps.question) {
+            this.setState({newInput: ""})
+        }
+    }
+
     updateInputValue(value) {
         this.setState({newInput: value});
     }
@@ -331,12 +337,17 @@ class AnswerDropDown extends React.Component {
         }
         this.toggleDropDown = this.toggleDropDown.bind(this);
     }  
+
+    componentDidUpdate (prevProps) {
+        if (this.props.question !== prevProps.question) {
+            this.setState({showDropdown: false})
+        }
+    }
     
     toggleDropDown () {
         this.setState({showDropdown: !this.state.showDropdown});
     }
     
-
     render () {
         let options = this.props.answers.map((ans,uid) => {
             return (
@@ -422,7 +433,6 @@ function SurveyAnswers(props) {
     else if (props.componentType&&props.componentType.toLowerCase() == "dropdown") {
         return (<AnswerDropDown 
                     answers={props.answers} 
-                    toggleDropDown={props.toggleDropDown} 
                     question={props.question} 
                     childNodes={props.childNodes}  
                     setCurrentValue={props.setCurrentValue}

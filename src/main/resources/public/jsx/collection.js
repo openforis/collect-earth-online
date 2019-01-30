@@ -659,7 +659,7 @@ class Collection extends React.Component {
                              .filter(sv => sv.question === this.state.selectedQuestionText)[0].answers;
             const sampleAnswers = svAnswers
                              .filter(ans => ans.answer === this.state.userSamples[sampleId][this.state.selectedQuestionText].answer);
-            mercator.highlightSampleGeometry(feature, sampleAnswers.length > 0 ? sampleAnswers.color || "" : "");
+            mercator.highlightSampleGeometry(feature, sampleAnswers.length > 0 ? sampleAnswers[0].color || "" : "");
         });
     }
 
