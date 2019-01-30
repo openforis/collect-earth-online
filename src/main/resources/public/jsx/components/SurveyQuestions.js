@@ -100,7 +100,7 @@ export class SurveyQuestions extends React.Component {
                                         ${this.getTopColor(node)}
                                     `}}
                                 >
-                                {`O`}
+                                {i+1}
                                 </button>
                             )}
                             <button 
