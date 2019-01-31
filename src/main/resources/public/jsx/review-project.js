@@ -1,8 +1,7 @@
 import React, { Fragment }  from 'react';
 import ReactDOM from 'react-dom';
 
-import FormLayout from "./components/FormLayout"
-import SectionBlock from "./components/SectionBlock"
+import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
@@ -11,8 +10,7 @@ class Project extends React.Component {
         super(props);
         this.state = {
             projectDetails: null,
-            stats: null,
-            imageryList: null,
+            imageryList: [],
             mapConfig: null,
             plotList: null,
             lonMin: "",
@@ -21,11 +19,6 @@ class Project extends React.Component {
             latMax: "",
             newSurveyQuestionName: "",
             newValueEntry: {},
-            // FIXME: Add these attributes to the JSON database
-            dateCreated: null,
-            datePublished: null,
-            dateClosed: null,
-            dateArchived: null,
             stateTransitions: {
                 nonexistent: "Create",
                 unpublished: "Publish",
@@ -48,11 +41,25 @@ class Project extends React.Component {
     };
 
     componentDidMount() {
-        // FIXME use promises to load map only once after correct data is loaded
-        // FIXME Use promises to load imagery after project data is loaded so we can use the projects institutionId
-        this.getProjectStats();
-        this.getImageryList();
         this.getProjectById();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.projectDetails
+                && this.state.projectDetails !== prevState.projectDetails) {
+            this.getImageryList();
+        }
+
+        if (this.state.projectDetails && this.state.imageryList.length > 0 
+                && prevState.imageryList.length === 0) {
+            this.initProjectMap();
+        }
+
+        if (this.state.mapConfig 
+                && this.state.mapConfig !== prevState.mapConfig) {
+            this.showProjectMap();
+        }
+
     }
 
     publishProject() {
@@ -271,31 +278,13 @@ class Project extends React.Component {
                     }
                     detailsNew.sampleValues=newSV;
                     this.setState({projectDetails: detailsNew});
-                    this.updateUnmanagedComponents(projectId);
-
                 }
-            });
-    }
-
-    getProjectStats() {
-        const { projectId } = this.props
-        fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json()
-                } else {
-                    console.log(response);
-                    alert("Error retrieving project stats. See console for details.");
-                }
-            })
-            .then(data => {
-                this.setState({stats: data});
             });
     }
 
     getImageryList() {
         // FIXME use the project data to find the institutionId
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.projectDetails.institution)
             .then(response => {
                 if (response.ok) {
                     return response.json()
@@ -309,8 +298,8 @@ class Project extends React.Component {
             });
     }
 
-    showPlotCenters(projectId, maxPlots) {
-        fetch(this.props.documentRoot + "/get-project-plots/" + projectId + "/" + maxPlots)
+    showPlotCenters() {
+        fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/300")
             .then(response => {
                 if (response.ok) {
                     return response.json()
@@ -326,13 +315,12 @@ class Project extends React.Component {
             .catch(e => this.setState({plotList: null}));
     }
 
-    showProjectMap(projectId) {
-        // Initialize the basemap
-        if (this.state.mapConfig == null) {
-            this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
-        }
+    initProjectMap() {
+        this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
+    }
 
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+    showProjectMap() {
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource || this.state.imageryList[0].title);
         
         // Extract bounding box coordinates from the project boundary and show on the map
         var boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
@@ -353,21 +341,9 @@ class Project extends React.Component {
         mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
-        this.showPlotCenters(projectId, 300);
+        this.showPlotCenters();
     }
 
-    updateUnmanagedComponents(projectId) {
-        if (this.state.projectDetails != null) {
-            if (this.state.imageryList && this.state.imageryList.length > 0) {
-                var detailsNew = this.state.projectDetails;
-                detailsNew.baseMapSource = this.state.projectDetails.baseMapSource || this.state.imageryList[0].title;
-                // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-                this.setState({projectDetails: detailsNew});
-                this.showProjectMap(projectId)
-                // Draw a map with the project AOI and a sampling of its plots
-            }
-        }
-    }
     gotoProjectDashboard(){
         if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(this.props.documentRoot + "/project-dashboard/"+this.state.projectDetails.id);
@@ -380,9 +356,11 @@ class Project extends React.Component {
                 {this.state.projectDetails && parseInt(this.state.projectDetails.id) > 0
                 ?
                     <Fragment>
-                        {this.state.stats && 
-                            <ProjectStats project={this.state}/>
-                        }
+                        <ProjectStatsGroup 
+                            documentRoot={this.props.documentRoot}
+                            projectId={this.props.projectId}
+                            availability={this.state.projectDetails && this.state.projectDetails.availability}
+                        />
                         <ProjectDesignReview 
                             projectId={this.props.projectId} 
                             project={this.state}
@@ -417,55 +395,176 @@ function ProjectNotFount({ projectId }){
     )
 }
 
-function ProjectStats({ project }) {
-    return (
-        <div className="row mb-3">
-            <div id="project-stats" className={"col "}>
-                <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
-                        href="#project-stats-collapse" role="button" aria-expanded="false"
-                        aria-controls="project-stats-collapse">
+class ProjectStatsGroup extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            showStats: false
+        }
+        this.updateShown = this.updateShown.bind(this);
+    }
+
+    updateShown() {
+        this.setState({showStats: !this.state.showStats});
+    }
+
+    render() {
+        return (
+            <div className="ProjectStatsGroup">
+                <button 
+                    className="btn btn-outline-lightgreen btn-sm btn-block my-2" 
+                    onClick={this.updateShown}
+                >
                     Project Stats
                 </button>
-                <div className="collapse col-xl-12" id="project-stats-collapse">
-                    <table className="table table-sm">
-                        <tbody>
-                        <tr>
-                            <td>Members</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.members}</span></td>
-                            <td>Contributors</td>
-                            <td>{project.stats.contributors}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Plots</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.projectDetails ? project.projectDetails.numPlots : 0}</span></td>
-                            <td>Date Created</td>
-                            <td>{project.dateCreated}</td>
-                        </tr>
-                        <tr>
-                            <td>Flagged Plots</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.flaggedPlots}</span></td>
-                            <td>Date Published</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.datePublished}</span></td>
-                        </tr>
-                        <tr>
-                            <td>Analyzed Plots</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.analyzedPlots}</span></td>
-                            <td>Date Closed</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.dateClosed}</span></td>
-                        </tr>
-                        <tr>
-                            <td>Unanalyzed Plots</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.stats.unanalyzedPlots}</span></td>
-                            <td>Date Archived</td>
-                            <td><span className="badge badge-pill bg-lightgreen">{project.dateArchived}</span></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                {this.state.showStats && <ProjectStats {...this.props} /> }
+            </div>
+        );
+    }
+}
+
+
+class ProjectStats extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            stats: {}
+        }
+    }
+
+    componentDidMount() {
+        console.log("did mount")
+        this.getProjectStats();
+    }
+
+    asPercentage(part, total) {
+        return (part && total)
+            ? (100.0 * part / total).toFixed(2)
+            : "0.00";
+    }
+
+    getProjectStats() {
+        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    console.log(response);
+                    alert("Error getting project stats. See console for details.");
+                    return new Promise(resolve => resolve(null));
+                }
+            })
+            .then(data => {
+                this.setState({stats: data});
+            });
+    }
+
+    render() {
+        const { 
+                stats : {   
+                    analyzedPlots,
+                    archivedDate,
+                    closedDate,
+                    contributors,
+                    createdDate, 
+                    flaggedPlots, 
+                    members, 
+                    publishedDate, 
+                    unanalyzedPlots,
+                    userStats 
+                } 
+            } = this.state;
+        const { availability } = this.props;
+        const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
+        return (
+            <div className="row mb-3">
+                <div id="project-stats" className="container mx-2">
+                    <div className="ProjectStats__dates-table  mb-4">
+                        <strong>Project Dates:</strong>
+                        <div className="container row pl-4">
+                            <div className="pr-5">
+                                Date Created
+                                <span className="badge badge-pill bg-lightgreen ml-3">{createdDate || "unknown"}</span>
+                            </div>
+
+                            <div className="pr-5">
+                                Date Published
+                                <span className="badge badge-pill bg-lightgreen ml-3">
+                                    {publishedDate ||  (availability === "unpublished"
+                                                            ? "Un-published"
+                                                            : "Unknown" )}
+                                </span>
+                            </div>
+
+                            <div className="pr-5">
+                                Date Closed
+                                <span className="badge badge-pill bg-lightgreen ml-3">
+                                    {closedDate || (["archived", "closed"].includes(availability)
+                                                        ? "Unknown"
+                                                        : "Open")}
+                                </span>
+                            </div>
+
+                            <div>
+                                Date Archived
+                                <span className="badge badge-pill bg-lightgreen ml-3">
+                                    {archivedDate || (availability === 'archived'
+                                                            ? "Unknown"
+                                                            : "Open")}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="ProjectStats__plots-table mb-2">
+                        <strong>Project Stats:</strong>
+                        <div className="row pl-2">
+                            <div className="col-4">
+                                <StatsCell title="Members">{members}</StatsCell>
+                                <StatsCell title="Flagged Plots">{flaggedPlots}</StatsCell>
+                            </div>
+                            <div className="col-4">
+                                <StatsCell title="Contributors">{contributors}</StatsCell>
+                                <StatsCell title="Analyzed Plots">{analyzedPlots}</StatsCell>
+                            </div>
+                            <div className="col-4">
+                                <StatsCell title="Total Plots">{numPlots}</StatsCell>
+                                <StatsCell title="Unanalyzed Plots">{unanalyzedPlots}</StatsCell>
+                            </div>
+                        </div>
+                    </div>
+
+                    {userStats &&
+                        <div className="ProjectStats__user-table">
+                            <strong>Plots Completed:</strong>
+                            <StatsRow 
+                                    title="Total"
+                                    plots={numPlots}
+                                    analysisTime={userStats.reduce((p, c) => {return p + c.timedPlots}, 0) > 0
+                                                    ? (userStats.reduce((p, c) => {return p + c.milliSecs}, 0) 
+                                                        / userStats.reduce((p, c) => {return p + c.timedPlots}, 0)
+                                                        / 1000.0).toFixed(2)
+                                                    : 0
+                                                  }
+                            />
+                            {userStats.map((user, uid) => {
+                                return (
+                                <StatsRow
+                                    key={uid}
+                                    title={user.user}
+                                    plots={user.plots}
+                                    analysisTime={user.timedPlots > 0
+                                                    ? (user.milliSecs / user.timedPlots / 1000.0).toFixed(2)
+                                                    : 0
+                                                  }
+                                />)
+                            })}
+                        </div>
+                    }
                 </div>
             </div>
-        </div>
-
-    );
+        );
+    }
 }
 
 function ProjectDesignReview(props) {
@@ -496,7 +595,7 @@ function ProjectInfoReview({ project }) {
             <h3>Name</h3>
             <p className="ml-2">{project.projectDetails.name}</p>
             <h3>Description</h3>
-            <p className="ml-2">{project.projectDetails.description}</p>
+            <p className={project.projectDetails.description ? "ml-2" : "ml-2"}>{project.projectDetails.description || "none"}</p>
         </SectionBlock>
     );
 }
