@@ -133,7 +133,6 @@ class Collection extends React.Component {
             .then(project => {
                 if (project == null || project.id == 0) {
                     alert("No project found with ID " + this.props.projectId + ".");
-                    window.location = this.props.documentRoot + "/home";
                 } else {
                     const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues || {});
                     project.sampleValues = surveyQuestions;
@@ -362,7 +361,6 @@ class Collection extends React.Component {
                 if (data == "done") {
                     if (plotId == -1) {
                         alert("All plots have been analyzed for this project.");
-                        window.location = this.props.documentRoot + "/home";
                     } else {
                         this.setState({nextPlotButtonDisabled: true});
                         alert("You have reached the end of the plot list.");
