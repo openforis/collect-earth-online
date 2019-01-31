@@ -819,7 +819,7 @@ class SurveyQuestionTree extends React.Component {
         </ul>
     ))
     render() {
-        var project = this.props.project;
+        const { project } = this.props;
         if (project.projectDetails != null) {
             return (
                 <div>
@@ -834,7 +834,7 @@ class SurveyQuestionTree extends React.Component {
 }
 
 function SurveyQuestion(properties) {
-    var props = properties.prop;
+    const props = properties.prop;
     var project = props.project;
     if (properties.surveyQuestion.answers == null) {
         console.log("answers null");

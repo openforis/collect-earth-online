@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
-import {SurveyQuestions } from "./components/SurveyQuestions"
+import SurveyQuestions from "./components/SurveyQuestions"
 
 class Collection extends React.Component {
     constructor(props) {

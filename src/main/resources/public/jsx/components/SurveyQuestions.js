@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 
-export class SurveyQuestions extends React.Component {
+export default class SurveyQuestions extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -243,8 +243,8 @@ function AnswerButton(props){
 }
 
 function AnswerRadioButton(props) {
-    let listItem = props.answers.map((ans, uid) => {
-        return <li key={uid} className="mb-1 form-control">
+    return props.answers.map((ans, uid) => {
+         <li key={uid} className="mb-1 form-control">
             <div className="circle"
                  style={{
                      backgroundColor: ans.color,
@@ -269,7 +269,6 @@ function AnswerRadioButton(props) {
             />
         </li>
     });
-    return (<React.Fragment>{listItem}</React.Fragment>);
 }
 
 class AnswerInput extends React.Component{
@@ -293,37 +292,36 @@ class AnswerInput extends React.Component{
     
     render() {
         const { props } = this;
+        // fix me, should not need map
         return props.answers.map((ans, uid) => {
-            return (
-                <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
-                    <div className="circle"
-                        style={{
-                            backgroundColor: ans.color,
-                            border: "1px solid",
-                            float: "left",
-                            marginTop: "4px",
-                            marginRight: "5px"
-                        }}>
-                    </div>
-                    <input 
-                        type={this.props.dataType}
-                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                        placeholder={ans.answer}
-                        id={ans.answer + "_" + ans.id}
-                        name={ans.answer + "_" + ans.id}
-                        value={this.state.newInput}
-                        onChange={e => this.updateInputValue(e.target.value)}
-                    />
-                    <input
-                        id="save-input"
-                        className="text-center btn btn-outline-lightgreen btn-sm"
-                        type="button"
-                        name="save-input"
-                        value="Save"
-                        onClick={() => props.setCurrentValue(props.question, ans.id, this.state.newInput, ans.color)}
-                    />
-                </li>
-            );
+            <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
+                <div className="circle"
+                    style={{
+                        backgroundColor: ans.color,
+                        border: "1px solid",
+                        float: "left",
+                        marginTop: "4px",
+                        marginRight: "5px"
+                    }}>
+                </div>
+                <input 
+                    type={this.props.dataType}
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                    placeholder={ans.answer}
+                    id={ans.answer + "_" + ans.id}
+                    name={ans.answer + "_" + ans.id}
+                    value={this.state.newInput}
+                    onChange={e => this.updateInputValue(e.target.value)}
+                />
+                <input
+                    id="save-input"
+                    className="text-center btn btn-outline-lightgreen btn-sm"
+                    type="button"
+                    name="save-input"
+                    value="Save"
+                    onClick={() => props.setCurrentValue(props.question, ans.id, this.state.newInput, ans.color)}
+                />
+            </li>
         });
     }
 }
@@ -348,33 +346,32 @@ class AnswerDropDown extends React.Component {
     }
     
     render () {
-        let options = this.props.answers.map((ans,uid) => {
-            return (
-                <div key={uid}>
-                    <span 
-                        className="dot" 
-                        style={{  
-                            height: "15px",
-                            width: "15px", 
-                            backgroundColor: ans.color, 
-                            borderRadius: "50%", 
-                            display: "inline-block"
-                        }} 
-                    />
-                    <a id={ans.color} 
-                        href="#home" 
-                        onClick={() => this.props.setCurrentValue(this.props.question, ans.id, ans.answer, ans.color)} 
-                        style={{
-                            color: "black", 
-                            padding: "12px 16px", 
-                            textDecoration: "none", 
-                            display: "inline-block"
-                        }}
-                    >
-                        {ans.answer}
-                    </a>
-                </div>
-        )});
+        const options = this.props.answers.map((ans,uid) => {
+            <div key={uid}>
+                <span 
+                    className="dot" 
+                    style={{  
+                        height: "15px",
+                        width: "15px", 
+                        backgroundColor: ans.color, 
+                        borderRadius: "50%", 
+                        display: "inline-block"
+                    }} 
+                />
+                <a id={ans.color} 
+                    href="#home" 
+                    onClick={() => this.props.setCurrentValue(this.props.question, ans.id, ans.answer, ans.color)} 
+                    style={{
+                        color: "black", 
+                        padding: "12px 16px", 
+                        textDecoration: "none", 
+                        display: "inline-block"
+                    }}
+                >
+                    {ans.answer}
+                </a>
+            </div>
+        });
         return (
             <li className="mb-1"> 
                 <div className="dropdown" style={{ position: "relative",display: "inline-block"}}>
@@ -413,31 +410,28 @@ class AnswerDropDown extends React.Component {
 }
 
 function SurveyAnswers(props) {
-  if (props.componentType&&props.componentType.toLowerCase() == "radiobutton") {
+  if (props.componentType && props.componentType.toLowerCase() == "radiobutton") {
         return (<AnswerRadioButton 
                     answers={props.answers} 
                     question={props.question}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);
-    }
-    else if (props.componentType&&props.componentType.toLowerCase() == "input") {
+    } else if (props.componentType && props.componentType.toLowerCase() == "input") {
         return (<AnswerInput
                     answers={props.answers} 
                     question={props.question}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);
-    }
-    else if (props.componentType&&props.componentType.toLowerCase() == "dropdown") {
+    } else if (props.componentType && props.componentType.toLowerCase() == "dropdown") {
         return (<AnswerDropDown 
                     answers={props.answers} 
                     question={props.question} 
                     childNodes={props.childNodes}  
                     setCurrentValue={props.setCurrentValue}
                 />);
-    }
-    else {
+    } else {
         return (<AnswerButton 
                     answers={props.answers} 
                     question={props.question}
