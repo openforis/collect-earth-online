@@ -714,8 +714,8 @@ class Collection extends React.Component {
 
     updateQuestionStatus() {
         // Warning shallow copy
-        var currentProject = this.state.currentProject;
-        var currentSampleValues = currentProject.sampleValues;
+        let currentProject = this.state.currentProject;
+        let currentSampleValues = currentProject.sampleValues;
 
         currentProject.sampleValues = currentSampleValues.map(value => {
                 value["visible"] = this.getVisibleSamples(value.id).length;

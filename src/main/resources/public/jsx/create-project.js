@@ -58,10 +58,10 @@ class Project extends React.Component {
     createProject() {
         if (confirm("Do you REALLY want to create this project?")) {
             utils.show_element("spinner");
-            var formData = new FormData(document.getElementById("project-design-form"));
+            let formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("sample-values", JSON.stringify(this.state.projectDetails.sampleValues));
-            var ref = this;
+            let ref = this;
             $.ajax({
                 url: this.props.documentRoot + "/create-project",
                 type: "POST",
@@ -75,11 +75,11 @@ class Project extends React.Component {
                 alert("Error creating project. See console for details.");
             }).done(function (data) {
                 if (parseInt(data)) {
-                    var detailsNew = ref.state.projectDetails;
+                    let detailsNew = ref.state.projectDetails;
                     detailsNew.availability = "unpublished";
                     ref.setState({projectDetails: detailsNew});
                     utils.hide_element("spinner");
-                    var newProjectId = data;
+                    let newProjectId = data;
                     window.location = ref.props.documentRoot + "/review-project/" + newProjectId;
                 } else {
                     utils.hide_element("spinner");
@@ -97,10 +97,10 @@ class Project extends React.Component {
             },
             this
         );
-        var sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
-        var newSV=[];
-        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
-        var dNew = this.state.newValueEntry;
+        let sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
+        let newSV=[];
+        let tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
+        let dNew = this.state.newValueEntry;
 
         if(sv.length>0){
 
@@ -145,16 +145,16 @@ class Project extends React.Component {
 
     setPrivacyLevel(privacyLevel) {
         if (this.state.projectDetails != null) {
-            var detailsNew = this.state.projectDetails;
+            let detailsNew = this.state.projectDetails;
             detailsNew.privacyLevel = privacyLevel;
             this.setState({projectDetails: detailsNew});
         }
     }
 
     setBaseMapSource() {
-        var e = document.getElementById("base-map-source");
-        var bms = e.options[e.selectedIndex].value;
-        var detailsNew = this.state.projectDetails;
+        let e = document.getElementById("base-map-source");
+        let bms = e.options[e.selectedIndex].value;
+        let detailsNew = this.state.projectDetails;
         detailsNew.baseMapSource = bms;
 
         this.setState({projectDetails: detailsNew});
@@ -167,7 +167,7 @@ class Project extends React.Component {
 
     setPlotDistribution(plotDistribution) {
         if (this.state.projectDetails != null) {
-            var detailsNew = this.state.projectDetails;
+            let detailsNew = this.state.projectDetails;
             detailsNew.plotDistribution = plotDistribution;
             this.setState({projectDetails: detailsNew});
         }
@@ -175,7 +175,7 @@ class Project extends React.Component {
 
     setPlotShape(plotShape) {
         if (this.state.projectDetails != null) {
-            var detailsNew = this.state.projectDetails;
+            let detailsNew = this.state.projectDetails;
             detailsNew.plotShape = plotShape;
             this.setState({projectDetails: detailsNew});
         }
@@ -183,7 +183,7 @@ class Project extends React.Component {
 
     setSampleDistribution(sampleDistribution) {
         if (this.state.projectDetails != null) {
-            var detailsNew = this.state.projectDetails;
+            let detailsNew = this.state.projectDetails;
             detailsNew.sampleDistribution = sampleDistribution;
             this.setState({projectDetails: detailsNew});
         }
@@ -197,12 +197,12 @@ class Project extends React.Component {
         );
     }
     getParentSurveyQuestionAnswers(sampleSurvey) {
-        var ans = [];
+        let ans = [];
         sampleSurvey.map((sq) => {
-                var parent_value = document.getElementById("value-parent");
+                let parent_value = document.getElementById("value-parent");
 
                 if(parent_value!=null) {
-                    var parent = parent_value.options[parent_value.selectedIndex].value;
+                    let parent = parent_value.options[parent_value.selectedIndex].value;
                     if (sq.id == parent) {
                         ans = sq.answers;
                     }
@@ -213,7 +213,7 @@ class Project extends React.Component {
     }
 
     getParentSurveyAnswers(sampleSurvey,question_id) {
-        var ans = [];
+        let ans = [];
         sampleSurvey.map((sq) => {
                 if (sq.id == question_id) {
                     ans = sq.answers;
@@ -234,10 +234,10 @@ class Project extends React.Component {
     }
 
     topoSort(sampleSurvey) {
-        var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
-        var parentChildGroups = parentSurveyQuestions.map(
+        let parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
+        let parentChildGroups = parentSurveyQuestions.map(
             function (parentSurveyQuestion) {
-                var childSurveyQuestions = sampleSurvey.filter(
+                let childSurveyQuestions = sampleSurvey.filter(
                     function (sampleValue) {
                         return sampleValue.parent_question == parentSurveyQuestion.id;
                     }
@@ -251,24 +251,24 @@ class Project extends React.Component {
 
     addSurveyQuestion(){
         if (this.state.projectDetails != null) {
-            var questionText = document.getElementById("surveyQuestionText").value;
-            var parent_value = document.getElementById("value-parent");
+            let questionText = document.getElementById("surveyQuestionText").value;
+            let parent_value = document.getElementById("value-parent");
 
-            var parent = parent_value.options[parent_value.selectedIndex].value;
+            let parent = parent_value.options[parent_value.selectedIndex].value;
 
-            var answer_value = document.getElementById("value-answer");
+            let answer_value = document.getElementById("value-answer");
 
-            var answer = answer_value.options[answer_value.selectedIndex].value;
+            let answer = answer_value.options[answer_value.selectedIndex].value;
 
-            var componenttype_value = document.getElementById("value-componenttype");
-            var componenttype = componenttype_value.options[componenttype_value.selectedIndex].value;
+            let componenttype_value = document.getElementById("value-componenttype");
+            let componenttype = componenttype_value.options[componenttype_value.selectedIndex].value;
 
             if (questionText != "") {
-                var newValueEntryNew = this.state.newValueEntry;
+                let newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[questionText] = {id:-1,answer: "", color: "#1527F6"};
-                var detailsNew = this.state.projectDetails;
-                var _id = detailsNew.sampleValues.length + 1;
-                var question_id = -1,answer_id=-1;
+                let detailsNew = this.state.projectDetails;
+                let _id = detailsNew.sampleValues.length + 1;
+                let question_id = -1,answer_id=-1;
                 detailsNew.sampleValues.map((sq) => {
                         if (sq.id == parent) {
                             question_id = sq.id;
@@ -295,7 +295,7 @@ class Project extends React.Component {
 
     removeSurveyQuestion(surveyQuestionName) {
         if (this.state.projectDetails != null) {
-            var detailsNew = this.state.projectDetails;
+            let detailsNew = this.state.projectDetails;
             detailsNew.sampleValues = detailsNew.sampleValues.filter(
                 function (surveyQuestion) {
                     return surveyQuestion.question != surveyQuestionName;
@@ -316,7 +316,7 @@ class Project extends React.Component {
     }
 
     removeSurveyQuestionRow(surveyQuestionText, _surveyAnswer) {
-        var surveyQuestion = this.getSurveyQuestionByName(surveyQuestionText);
+        let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionText);
         surveyQuestion.answers = surveyQuestion.answers.filter(
             function (surveyAnswer) {
                 return surveyAnswer.answer != _surveyAnswer;
@@ -326,9 +326,9 @@ class Project extends React.Component {
     }
 
     addSurveyQuestionRow(surveyQuestionName) {
-        var entry = this.state.newValueEntry[surveyQuestionName];
+        let entry = this.state.newValueEntry[surveyQuestionName];
         if (entry.answer != "") {
-            var surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
+            let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
             console.log(surveyQuestion);
             if (surveyQuestion.component_type.toLowerCase() == "input" && surveyQuestion.answers.length < 1) {
                 surveyQuestion.answers.push({
@@ -360,7 +360,7 @@ class Project extends React.Component {
         } else {
             alert("A survey answer must possess both an answer and a color.");
         }
-        var dNew = this.state.newValueEntry;
+        let dNew = this.state.newValueEntry;
         dNew[surveyQuestionName] = entry;
         this.setState({newValueEntry: dNew});
     }
@@ -381,10 +381,10 @@ class Project extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
-                    var detailsNew=data;
-                    var sv=detailsNew.sampleValues;
-                    var newSV=[];
-                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
+                    let detailsNew=data;
+                    let sv=detailsNew.sampleValues;
+                    let newSV=[];
+                    let tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
                     if(sv.length>0){
                         sv.map((sq)=>{
                                 if(sq.name){
@@ -486,8 +486,8 @@ class Project extends React.Component {
 
         if (this.state.projectDetails.id == 0) {
             // Enable dragbox interaction if we are creating a new project
-            var displayDragBoxBounds = function (dragBox) {
-                var extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+            let displayDragBoxBounds = function (dragBox) {
+                let extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
                 // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
                 document.getElementById("lon-min").value = extent[0];
                 document.getElementById("lat-min").value = extent[1];
@@ -499,7 +499,7 @@ class Project extends React.Component {
             mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
         } else {
             // Extract bounding box coordinates from the project boundary and show on the map
-            var boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
+            let boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
             // FIXME like above, these values are stored in the state but never used.
             this.setState({lonMin: boundaryExtent[0]});
             this.setState({latMin: boundaryExtent[1]});
@@ -522,7 +522,7 @@ class Project extends React.Component {
     updateUnmanagedComponents(projectId) {
         if (this.state.projectDetails != null) {
             if (this.state.imageryList && this.state.imageryList.length > 0) {
-                var detailsNew = this.state.projectDetails;
+                let detailsNew = this.state.projectDetails;
                 // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
                 detailsNew.baseMapSource = this.state.projectDetails.baseMapSource || this.state.imageryList[0].title;
                 this.setState({projectDetails: detailsNew});
@@ -533,7 +533,7 @@ class Project extends React.Component {
     }
 
     handleInputName(surveyQuestion, event) {
-        var newValueEntryNew = this.state.newValueEntry;
+        let newValueEntryNew = this.state.newValueEntry;
         if (newValueEntryNew[surveyQuestion]) {
             newValueEntryNew[surveyQuestion].answer = event.target.value;
             this.setState({newValueEntry:newValueEntryNew});
@@ -543,7 +543,7 @@ class Project extends React.Component {
     }
 
     handleInputColor(surveyQuestion, event) {
-        var newValueEntryNew = this.state.newValueEntry;
+        let newValueEntryNew = this.state.newValueEntry;
         newValueEntryNew[surveyQuestion].color = event.target.value;
 
         this.setState({newValueEntry: newValueEntryNew});
@@ -551,12 +551,12 @@ class Project extends React.Component {
     }
 
     handleInputParent(event) {
-        var detailsNew = this.state.projectDetails;
+        let detailsNew = this.state.projectDetails;
         this.setState({projectDetails: detailsNew});
     }
 
     handleChange(event) {
-        var detailsNew = this.state.projectDetails;
+        let detailsNew = this.state.projectDetails;
 
         if (event.target.id == "project-name") {
             detailsNew.name = event.target.value;
@@ -811,7 +811,7 @@ class PlotDesign extends React.Component {
   }
 
   encodeImageFileAsURL(event) {
-    var file = event.target.files[0];
+    let file = event.target.files[0];
     let reader = new FileReader();
     reader.onloadend = function() {
       let base64Data = reader.result;
@@ -821,7 +821,7 @@ class PlotDesign extends React.Component {
   }
 
   render() {
-    var {
+    let {
       project: {
         useTemplatePlots,
         projectDetails,
@@ -1199,8 +1199,8 @@ class SampleDesign extends React.Component {
 }
 
 function SurveyDesign(props){
-    var answer_select = "";
-    var answers = props.getParentSurveyQuestionAnswers(props.project.projectDetails.sampleValues);
+    let answer_select = "";
+    let answers = props.getParentSurveyQuestionAnswers(props.project.projectDetails.sampleValues);
     if (answers.length > 0) {
         answer_select = props.getParentSurveyQuestionAnswers(props.project.projectDetails.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
             <option key={uid}
