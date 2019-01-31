@@ -455,16 +455,16 @@ function Project(props) {
     if (props.editable == true) {
         return (
             <div className="bg-lightgrey text-center p-1 row px-auto">
-                <div className="col-lg-8 pr-lg-1">
+                <div className="col-lg-10 pr-lg-1">
                     <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
                        href={props.documentRoot + "/collection/" + props.id}>
                         {props.name}
                     </a>
                 </div>
-                <div className="col-lg-4 pl-lg-0">
+                <div className="col-lg-2 pl-lg-0">
                     <a className="edit-project btn btn-sm btn-outline-yellow btn-block"
                        href={props.documentRoot + "/review-project/" + props.id}>
-                        <i className="fa fa-edit"></i> Review
+                        <i className="fa fa-edit"></i>
                     </a>
                 </div>
             </div>
