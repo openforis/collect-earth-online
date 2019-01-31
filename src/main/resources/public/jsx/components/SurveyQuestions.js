@@ -55,8 +55,7 @@ export class SurveyQuestions extends React.Component {
             return visible === answered;
         }
         else {
-
-            return  child_questions.reduce((prev, cur) => {
+            return visible === answered && child_questions.reduce((prev, cur) => {
                 return prev && this.checkAllSelected(cur.id);
             }, true);
         }   
