@@ -1,49 +1,41 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { utils } from "../js/utils.js";
 
+import {SurveyQuestions } from "./components/SurveyQuestions"
 class Collection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            currentProject: {sampleValues: []},
-            stats: {},
+            currentProject: {sampleValues: [], institution: ""},
             plotList: [],
             imageryList: [],
             mapConfig: null,
-            currentImagery: null,
+            currentImagery: {id: ""},
             imageryAttribution: "",
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
             imageryYearPlanet: "2018",
             imageryMonthPlanet: "03",
             imageryMonthNamePlanet: "March",
-            projectPlotsShown: false,
-            navButtonsShown: 1,
-            gotoFirstPlotButtonDisabled:true,
-            prevPlotButtonDisabled: true,
+
+            prevPlotButtonDisabled: false,
             nextPlotButtonDisabled: false,
-            flagPlotButtonDisabled: false,
-            saveValuesButtonDisabled: true,
-            prevQuestionButtonDisabled: false,
-            nextQuestionButtonDisabled: false,
-            surveyAnswersVisible: {},
-            surveyQuestionsVisible: {},
+            saveValuesButtonEnabled: false,
             currentPlot: null,
             userSamples: {},
             userImages: {},
-            selectedAnswers: {},
             collectionStart: 0,
             newPlotInput: 0,
-            reviewPlots: false
+            reviewPlots: false,
+            selectedQuestionText: "",
+            sampleOutlineBlack: true
         };
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.setImageryYearDG = this.setImageryYearDG.bind(this);
         this.setStackingProfileDG = this.setStackingProfileDG.bind(this);
         this.setImageryYearPlanet = this.setImageryYearPlanet.bind(this);
         this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
-        this.getPlotData = this.getPlotData.bind(this);
         this.goToFirstPlot = this.goToFirstPlot.bind(this);
         this.prevPlot = this.prevPlot.bind(this);
         this.nextPlot = this.nextPlot.bind(this);
@@ -52,44 +44,80 @@ class Collection extends React.Component {
         this.setReviewPlots = this.setReviewPlots.bind(this);
         this.flagPlot = this.flagPlot.bind(this);
         this.saveValues = this.saveValues.bind(this);
-        this.hideShowAnswers = this.hideShowAnswers.bind(this);
-        this.showQuestions = this.showQuestions.bind(this);
-        this.hideQuestions = this.hideQuestions.bind(this);
-        this.highlightAnswer = this.highlightAnswer.bind(this);
-        this.getImageryAttributes = this.getImageryAttributes.bind(this);
+        this.setSelectedQuestionText = this.setSelectedQuestionText.bind(this);
         this.setCurrentValue = this.setCurrentValue.bind(this);
-        this.redirectToHomePage = this.redirectToHomePage.bind(this);
-        this.prevSurveyQuestionTree=this.prevSurveyQuestionTree.bind(this);
-        this.nextSurveyQuestionTree=this.nextSurveyQuestionTree.bind(this);
+        this.toggleSampleBW = this.toggleSampleBW.bind(this);
     }
 
     componentDidMount() {
         this.getProjectById();
-        this.getProjectStats();
         this.getProjectPlots();
     }
 
-    componentDidUpdate() {
-        if (this.state.currentProject.institution && this.state.imageryList.length == 0) {
-            this.getImageryList(this.state.currentProject.institution);
+    componentDidUpdate(prevProps, prevState) {
+        //
+        // Initialize after apis return.  This could also be done with Promise.all
+        //
+
+        // Wait to get imagery list until project is loaded
+        if (this.state.currentProject.institution !== prevState.currentProject.institution) {
+            this.getImageryList();
         }
+        // Initialize map when imagery list is returned
         if (this.state.imageryList.length > 0 && this.state.mapConfig == null) {
-            this.showProjectMap();
+            this.initializeProjectMap();
         }
-        if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.projectPlotsShown == false) {
+        // Load all project plots initially
+        if (this.state.mapConfig && this.state.plotList.length > 0 
+            && (this.state.mapConfig !== prevState.mapConfig 
+                || prevState.plotList.length === 0)) 
+            {
             this.showProjectPlots();
         }
-        if (this.state.projectPlotsShown == true && this.state.gotoFirstPlotButtonDisabled == true) {
-            this.setState({gotoFirstPlotButtonDisabled: false});
+        // initiallize current imagery to project default
+        if (this.state.mapConfig && this.state.currentProject && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
+            this.setBaseMapState(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
         }
-        if (this.state.mapConfig && this.state.currentImagery == null) {
-            this.updateMapImagery(this.state.currentProject.baseMapSource);
+
+        //
+        // Update map when state changes
+        //
+
+        // Update all when plot changes
+        if (this.state.currentPlot && (this.state.currentPlot !== prevState.currentPlot)) {
+            this.showProjectPlot();
+            this.showGeoDash();
+            this.showPlotSamples();
+            this.highlightSamplesByQuestion();
         }
-        if (this.state.currentProject.sampleValues.length > 0 && Object.keys(this.state.surveyQuestionsVisible).length == 0) {
-            const topLevelNodes = this.state.currentProject.sampleValues.filter(surveyNode => surveyNode.parent_question == -1);
-            const firstNode = topLevelNodes.sort((a, b) => a - b)[0];
-            this.hideQuestions(topLevelNodes);
-            this.showQuestions([firstNode]);
+
+        // Selective sample updates when not a new plot
+        if (this.state.currentPlot && this.state.currentPlot === prevState.currentPlot) {
+            // Changing questions shows different set of samples
+            if (this.state.selectedQuestionText !== prevState.selectedQuestionText 
+                        || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
+                        || this.state.userSamples !== prevState.userSamples) {
+                this.showPlotSamples();
+                this.highlightSamplesByQuestion();
+            }
+        }
+
+        if (this.state.currentProject.sampleValues.length > 0 && this.state.userSamples !== prevState.userSamples) {
+            this.updateQuestionStatus();
+        }
+
+        //  Update map image stuff
+        if (this.state.mapConfig && this.state.currentImagery.id 
+            && (this.state.currentImagery.id !== prevState.currentImagery.id 
+                || this.state.mapConfig !== prevState.mapConfig)) 
+            {
+            this.updateMapImagery();
+        }
+        if (this.state.imageryYearDG !== prevState.imageryYearDG || this.state.stackingProfileDG !== prevState.stackingProfileDG) {
+            this.updateDGWMSLayer();
+        }
+        if (this.state.imageryMonthPlanet !== prevState.imageryMonthPlanet || this.state.imageryYearPlanet !== prevState.imageryYearPlanet) {
+            this.updatePlanetLayer();
         }
     }
 
@@ -109,11 +137,295 @@ class Collection extends React.Component {
                     alert("No project found with ID " + this.props.projectId + ".");
                     window.location = this.props.documentRoot + "/home";
                 } else {
-                    const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues);
+                    const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues || {});
                     project.sampleValues = surveyQuestions;
                     this.setState({currentProject: project});
                 }
             });
+    }
+
+    getProjectPlots() {
+        fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    console.log(response);
+                    alert("Error loading plot data. See console for details.");
+                    return new Promise(resolve => resolve(null));
+                }
+            })
+            .then(data => {
+                this.setState({plotList: data});
+            });
+    }
+
+    getImageryList() {
+        const { institution } = this.state.currentProject
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    console.log(response);
+                    alert("Error retrieving the imagery list. See console for details.");
+                    return new Promise(resolve => resolve(null));
+                }
+            })
+            .then(data => {
+                this.setState({imageryList: data});
+            });
+    }
+
+    initializeProjectMap() {
+        let mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
+        mercator.addVectorLayer(mapConfig,
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+                                ceoMapStyles.yellowPolygon);
+        mercator.zoomMapToLayer(mapConfig, "currentAOI");
+        this.setState({mapConfig: mapConfig});
+    }
+
+    showProjectPlots() {
+        mercator.addPlotLayer(this.state.mapConfig,
+                              this.state.plotList,
+                              feature => {
+                                  this.setState({
+                                      prevPlotButtonDisabled: false,
+                                  });
+                                  this.getPlotData(feature.get("features")[0].get("plotId"));
+                              });
+    }
+
+    setBaseMapSource(event) {
+        const dropdown = event.target;
+        const newBaseMapSource = dropdown.options[dropdown.selectedIndex].value;
+
+        this.setBaseMapState(newBaseMapSource);        
+    }
+
+    setBaseMapState(newBaseMapSource) {
+        const newImagery = this.getImageryById(newBaseMapSource);
+        
+        const newImageryAttribution = newImagery.title == "DigitalGlobeWMSImagery" 
+                        ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
+                        : newImagery.title == "PlanetGlobalMosaic" 
+                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
+                            :  newImagery.attribution;
+        this.setState({
+                        currentImagery: newImagery,
+                        imageryAttribution: newImageryAttribution
+                    });
+    }
+    
+    setImageryYearDG(event) {
+        const slider = event.target;
+        const newImageryYearDG = slider.value;
+        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
+        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
+        this.setState({
+            imageryYearDG: newImageryYearDG,
+            imageryAttribution: newImageryAttribution
+        });
+    }
+
+    setStackingProfileDG(event) {
+        const dropdown = event.target;
+        const newStackingProfileDG = dropdown.options[dropdown.selectedIndex].value;
+        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
+        const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
+        this.setState({
+            stackingProfileDG: newStackingProfileDG,
+            imageryAttribution: newImageryAttribution
+        });
+    }
+
+    setImageryYearPlanet(event) {
+        const slider = event.target;
+        const newImageryYearPlanet = slider.value;
+        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
+        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+        this.setState({
+            imageryYearPlanet: newImageryYearPlanet,
+            imageryAttribution: newImageryAttribution
+        });
+    }
+
+    setImageryMonthPlanet(event) {
+        const slider = event.target;
+        const newImageryMonth =  slider.value;
+        const monthData = { 1: "January", 
+                            2: "February", 
+                            3: "March", 
+                            4: "April", 
+                            5: "May", 
+                            6: "June", 
+                            7: "July", 
+                            8: "August", 
+                            9:  "September", 
+                            10: "October", 
+                            11: "November", 
+                            12: "December"
+                           };
+        const newImageryMonthPlanet = monthData[parseInt(newImageryMonth)];
+        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
+        const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
+        
+        this.setState({
+            imageryMonthPlanet: newImageryMonth,
+            imageryMonthNamePlanet: newImageryMonthPlanet,
+            imageryAttribution: newImageryAttribution
+        });
+    }
+
+    updateMapImagery() {
+        // FIXME, update mercator to take ID instead of name in cases of duplicate names
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
+
+        if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
+            this.updateDGWMSLayer();
+        } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
+            this.updatePlanetLayer();
+        }
+    }
+
+    getImageryByTitle(imageryTitle) {
+        return this.state.imageryList.find(imagery => imagery.title == imageryTitle);
+    }
+
+    getImageryById(imageryId) {
+        return this.state.imageryList.find(imagery => imagery.id == imageryId);
+    }
+
+    updateDGWMSLayer() {
+        const { imageryYearDG, stackingProfileDG } = this.state;
+        mercator.updateLayerWmsParams(this.state.mapConfig,
+                                      "DigitalGlobeWMSImagery",
+                                      {
+                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYearDG + "-01-01')"
+                                              + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
+                                          FEATUREPROFILE: stackingProfileDG
+                                      });
+    }
+
+    updatePlanetLayer() {
+        const { imageryMonthPlanet, imageryYearPlanet} = this.state
+        mercator.updateLayerSource(this.state.mapConfig,
+                                   "PlanetGlobalMosaic",
+                                   sourceConfig => {
+                                       sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
+                                       sourceConfig.year = imageryYearPlanet;
+                                       return sourceConfig;
+                                   },
+                                   this);
+    }
+
+    getPlotData(plotId) {
+        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
+        fetch(this.props.documentRoot + "/get-plot-by-id/" + this.props.projectId + "/" + plotId + userParam)
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                if (data == "done") {
+                    alert("This plot has already been analyzed.");
+                } else {
+                    const newPlot = JSON.parse(data);
+                    this.setState({
+                        currentPlot: newPlot,
+                        ...this.resetPlotValues(newPlot),
+                        prevPlotButtonDisabled: false,
+                        nextPlotButtonDisabled: false
+                    });
+                }
+            });
+    }
+
+    getNextPlotData(plotId) {
+        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
+        fetch(this.props.documentRoot + "/get-next-plot/" + this.props.projectId + "/" + plotId + userParam)
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                if (data == "done") {
+                    if (plotId == -1) {
+                        alert("All plots have been analyzed for this project.");
+                        window.location = this.props.documentRoot + "/home";
+                    } else {
+                        this.setState({nextPlotButtonDisabled: true});
+                        alert("You have reached the end of the plot list.");
+                    }
+                } else {
+                    const newPlot = JSON.parse(data);
+                    this.setState({
+                        currentPlot: newPlot,
+                        ...this.resetPlotValues(newPlot),
+                        prevPlotButtonDisabled: plotId == -1
+                    });
+                }
+            });
+    }
+
+    getPrevPlotData(plotId) {
+        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
+        fetch(this.props.documentRoot + "/get-prev-plot/" + this.props.projectId + "/" + plotId + userParam)
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error retrieving plot data. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                if (data == "done") {
+                    this.setState({prevPlotButtonDisabled: true});
+                    alert("All previous plots have been analyzed.");
+                } else {
+                    const newPlot = JSON.parse(data);
+                    this.setState({
+                        currentPlot: newPlot,
+                        ...this.resetPlotValues(newPlot),
+                        nextPlotButtonDisabled: false
+                    });
+                }
+            });
+    }
+
+    resetPlotValues(newPlot) {
+        return { 
+            newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
+            userSamples: newPlot.samples 
+                ? newPlot.samples.reduce((obj, s) => {
+                    obj[s.id] = s.value || {}
+                    return obj;
+                    }, {})  
+                : {},
+            userImages: newPlot.samples 
+                ? newPlot.samples.reduce((obj, s) => {
+                    obj[s.id] = s.userImage || {}
+                    return obj;
+                    }, {}) 
+                : {},
+            selectedQuestionText: this.state.currentProject.sampleValues.sort((a, b) => b.id - a.id).filter(surveyNode => surveyNode.parent_question == -1)[0].question || "",
+            collectionStart: Date.now(),
+            sampleOutlineBlack: true
+        };
     }
 
     convertSampleValuesToSurveyQuestions(sampleValues) {
@@ -143,398 +455,59 @@ class Collection extends React.Component {
         });
     }
 
-    getProjectStats() {
-        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error getting project stats. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(data => {
-                this.setState({stats: data});
-            });
-    }
+    showProjectPlot() {
+        const { currentPlot, mapConfig, currentProject } = this.state;
 
-    getProjectPlots() {
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error loading plot data. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(data => {
-                this.setState({plotList: data});
-            });
-    }
+        mercator.disableSelection(mapConfig);
+        mercator.removeLayerByTitle(mapConfig, "currentPlots");
+        mercator.removeLayerByTitle(mapConfig, "currentPlot");
+        mercator.removeLayerByTitle(mapConfig, "currentSamples");
 
-    getImageryList(institution) {
-        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the imagery list. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(data => {
-                this.setState({imageryList: data});
-            });
-    }
-
-    showProjectMap() {
-        let mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
         mercator.addVectorLayer(mapConfig,
-                                "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-                                ceoMapStyles.yellowPolygon);
-        mercator.zoomMapToLayer(mapConfig, "currentAOI");
-        this.setState({mapConfig: mapConfig});
-    }
-
-    showProjectPlots() {
-        mercator.addPlotLayer(this.state.mapConfig,
-                              this.state.plotList,
-                              feature => {
-                                  this.setState({
-                                      navButtonsShown: 2,
-                                      prevPlotButtonDisabled: false,
-                                      nextPlotButtonDisabled: false,
-                                      flagPlotButtonDisabled: false,
-                                      saveValuesButtonDisabled: true
-                                  });
-                                  this.getPlotData(feature.get("features")[0].get("plotId"));
-                              });
-        this.setState({projectPlotsShown: true});
-    }
-
-    setBaseMapSource(event) {
-        const dropdown = event.target;
-        const newBaseMapSource = dropdown.options[dropdown.selectedIndex].value;
-        let proj = this.state.currentProject;
-        proj.baseMapSource = newBaseMapSource;
-        this.setState({currentProject: proj});
-        this.updateMapImagery(newBaseMapSource);
-    }
-
-    setImageryYearDG(event) {
-        const slider = event.target;
-        const newImageryYearDG = slider.value;
-        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
-        this.setState({
-            imageryYearDG: newImageryYearDG,
-            imageryAttribution: newImageryAttribution
-        });
-        this.updateDGWMSLayer(newImageryYearDG, this.state.stackingProfileDG);
-    }
-
-    setStackingProfileDG(event) {
-        const dropdown = event.target;
-        const newStackingProfileDG = dropdown.options[dropdown.selectedIndex].value;
-        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
-        this.setState({
-            stackingProfileDG: newStackingProfileDG,
-            imageryAttribution: newImageryAttribution
-        });
-        this.updateDGWMSLayer(this.state.imageryYearDG, newStackingProfileDG);
-    }
-
-    setImageryYearPlanet(event) {
-        const slider = event.target;
-        const newImageryYearPlanet = slider.value;
-        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        const newImageryAttribution = currentImagery.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
-        this.setState({
-            imageryYearPlanet: newImageryYearPlanet,
-            imageryAttribution: newImageryAttribution
-        });
-        this.updatePlanetLayer(this.state.imageryMonthPlanet, newImageryYearPlanet);
-    }
-
-    setImageryMonthPlanet(event) {
-        const slider = event.target;
-        let newImageryMonthPlanet = "";
-
-        let newImageryMonth = slider.value;
-
-        if (parseInt(newImageryMonth) == 1) {
-            newImageryMonthPlanet = "January";
-
-        }
-        if (parseInt(newImageryMonth) == 2) {
-            newImageryMonthPlanet = "February";
-        }
-        else if (parseInt(newImageryMonth) == 3) {
-            newImageryMonthPlanet = "March";
-        }
-        else if (parseInt(newImageryMonth) == 4) {
-            newImageryMonthPlanet = "April";
-        }
-        else if (parseInt(newImageryMonth) == 5) {
-            newImageryMonthPlanet = "May";
-        }
-        else if (parseInt(newImageryMonth) == 6) {
-            newImageryMonthPlanet = "June";
-        }
-        else if (parseInt(newImageryMonth) == 7) {
-            newImageryMonthPlanet = "July";
-        }
-        else if (parseInt(newImageryMonth) == 8) {
-            newImageryMonthPlanet = "August";
-        }
-        else if (parseInt(newImageryMonth) == 9) {
-            newImageryMonthPlanet = "September";
-        }
-        else if (parseInt(newImageryMonth) == 10) {
-            newImageryMonthPlanet = "October";
-        }
-        else if (parseInt(newImageryMonth) == 11) {
-            newImageryMonthPlanet = "November";
-        }
-        else if (parseInt(newImageryMonth) == 12) {
-            newImageryMonthPlanet = "December";
-        }
-
-
-        const currentImagery = this.getImageryByTitle(this.state.currentProject.baseMapSource);
-        const newImageryAttribution = currentImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
-        this.setState({
-            imageryMonthPlanet: newImageryMonth,
-            imageryMonthNamePlanet: newImageryMonthPlanet,
-            imageryAttribution: newImageryAttribution
-        });
-        if (parseInt(slider.value) < 10) {
-            newImageryMonth = "0" + slider.value;
-        }
-        this.updatePlanetLayer(newImageryMonth, this.state.imageryYearPlanet);
-    }
-
-    updateMapImagery(newBaseMapSource) {
-        mercator.setVisibleLayer(this.state.mapConfig, newBaseMapSource);
-        const newImagery = this.getImageryByTitle(newBaseMapSource);
-        let newImageryAttribution = newImagery.attribution;
-        if (newBaseMapSource == "DigitalGlobeWMSImagery") {
-            newImageryAttribution += " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")";
-            this.updateDGWMSLayer(this.state.imageryYearDG, this.state.stackingProfileDG);
-        } else if (newBaseMapSource == "PlanetGlobalMosaic") {
-            newImageryAttribution += " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet;
-            this.updatePlanetLayer(this.state.imageryMonthPlanet, this.state.imageryYearPlanet);
-        }
-        this.setState({
-            currentImagery: newImagery,
-            imageryAttribution: newImageryAttribution
-        });
-    }
-
-    getImageryByTitle(imageryTitle) {
-        return this.state.imageryList.find(imagery => imagery.title == imageryTitle);
-    }
-
-    updateDGWMSLayer(imageryYear, stackingProfile) {
-        mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      "DigitalGlobeWMSImagery",
-                                      {
-                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYear + "-01-01')"
-                                              + "AND(acquisitionDate<='" + imageryYear + "-12-31')",
-                                          FEATUREPROFILE: stackingProfile
-                                      });
-    }
-
-    updatePlanetLayer(imageryMonth, imageryYear) {
-        mercator.updateLayerSource(this.state.mapConfig,
-                                   "PlanetGlobalMosaic",
-                                   sourceConfig => {
-                                       sourceConfig.month = imageryMonth;
-                                       sourceConfig.year = imageryYear;
-                                       return sourceConfig;
-                                   },
-                                   this);
-    }
-
-    getPlotData(plotId) {
-        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : ""
-        fetch(this.props.documentRoot + "/get-plot-by-id/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
-            })
-            .then(data => {
-                if (data == "done") {
-                    alert("This plot has already been analyzed.");
-                } else {
-                    const newPlot = JSON.parse(data);
-                    this.setState({
-                        currentPlot: newPlot,
-                        newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
-                        userSamples: newPlot.samples ? this.samplesToValues(newPlot.samples) : {},
-                        userImages: newPlot.samples ? this.samplesToImages(newPlot.samples) : {},
-                        collectionStart: Date.now(),
-                        navButtonsShown: 2,
-                        prevPlotButtonDisabled: false,
-                        nextPlotButtonDisabled: false,
-                        flagPlotButtonDisabled: false,
-                        saveValuesButtonDisabled: true
-                    });
-                    this.showProjectPlot(newPlot);
-                    this.showGeoDash(newPlot);
-                }
-            });
-    }
-
-    getNextPlotData(plotId) {
-        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : ""
-        fetch(this.props.documentRoot + "/get-next-plot/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
-            })
-            .then(data => {
-                if (data == "done") {
-                    if (plotId == -1) {
-                        alert("All plots have been analyzed for this project.");
-                        window.open(this.props.documentRoot + "/home");
-                    } else {
-                        this.setState({nextPlotButtonDisabled: true});
-                        alert("You have reached the end of the plot list.");
-                    }
-                } else {
-                    const newPlot = JSON.parse(data);
-                    if (plotId == -1) {
-                        this.setState({
-                            currentPlot: newPlot,
-                            newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
-                            userSamples: {},
-                            userImages: {},
-                            collectionStart: Date.now(),
-                            navButtonsShown: 2
-                        });
-                    } else {
-                        this.setState({
-                            currentPlot: newPlot,
-                            newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
-                            userSamples: newPlot.samples ? this.samplesToValues(newPlot.samples) : {},
-                            userImages: newPlot.samples ? this.samplesToImages(newPlot.samples) : {},
-                            collectionStart: Date.now(),
-                            prevPlotButtonDisabled: false,
-                            saveValuesButtonDisabled: true
-                        });
-                    }
-                    this.showProjectPlot(newPlot);
-                    this.showGeoDash(newPlot);
-                }
-            });
-    }
-
-    getPrevPlotData(plotId) {
-        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : ""
-        fetch(this.props.documentRoot + "/get-prev-plot/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
-            })
-            .then(data => {
-                if (data == "done") {
-                    this.setState({prevPlotButtonDisabled: true});
-                    alert("All previous plots have been analyzed.");
-                } else {
-                    const newPlot = JSON.parse(data);
-                    this.setState({
-                        currentPlot: newPlot,
-                        newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
-                        userSamples: newPlot.samples ? this.samplesToValues(newPlot.samples) : {},
-                        userImages: newPlot.samples ? this.samplesToImages(newPlot.samples) : {},
-                        collectionStart: Date.now(),
-                        nextPlotButtonDisabled: false,
-                        saveValuesButtonDisabled: true
-                    });
-                    this.showProjectPlot(newPlot);
-                    this.showGeoDash(newPlot);
-                }
-            });
-    }
-
-    samplesToValues(samples) {
-        return samples.reduce((obj, s) => {
-            console.log(s)
-            var newObj = obj
-            newObj[s.id] = s.value
-            return newObj;
-            }
-        , {})   
-    }
-
-    samplesToImages(samples) {
-        return samples.reduce((obj, s) => {
-            console.log(s)
-            var newObj = obj
-            newObj[s.id] = s.userImage
-            return newObj;
-            }
-        , {})  
-    }
-
-    showProjectPlot(plot) {
-        mercator.disableSelection(this.state.mapConfig);
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentPlots");
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentPlot");
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentSamples");
-        mercator.addVectorLayer(this.state.mapConfig,
                                 "currentPlot",
                                 mercator.geometryToVectorSource(
-                                    plot.geom
-                                        ? mercator.parseGeoJson(plot.geom, true)
-                                        : mercator.getPlotPolygon(plot.center,
-                                                                  this.state.currentProject.plotSize,
-                                                                  this.state.currentProject.plotShape)
+                                    currentPlot.geom
+                                        ? mercator.parseGeoJson(currentPlot.geom, true)
+                                        : mercator.getPlotPolygon(currentPlot.center,
+                                                                  currentProject.plotSize,
+                                                                  currentProject.plotShape)
                                 ),
                                 ceoMapStyles.yellowPolygon);
-        mercator.addVectorLayer(this.state.mapConfig,
-                                "currentSamples",
-                                mercator.samplesToVectorSource(plot.samples),
-                                plot.samples[0].geom
-                                    ? ceoMapStyles.blackPolygon
-                                    : ceoMapStyles.blackCircle);
-        mercator.enableSelection(this.state.mapConfig, "currentSamples");
-        mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot");
+
+        mercator.zoomMapToLayer(mapConfig, "currentPlot");
     }
 
-    showGeoDash(plot) {
-        const plotRadius = this.state.currentProject.plotSize
-                           ? this.state.currentProject.plotSize / 2.0
-                           : mercator.getViewRadius(this.state.mapConfig);
+    showPlotSamples() {
+        const { mapConfig, selectedQuestionText, currentProject : { sampleValues} } = this.state;
+        const shownPlots = this.getVisibleSamples(sampleValues.filter((sv => sv.question === selectedQuestionText))[0].id);
+
+        mercator.disableSelection(mapConfig);
+        mercator.removeLayerByTitle(mapConfig, "currentSamples");
+        mercator.addVectorLayer(mapConfig,
+            "currentSamples",
+            mercator.samplesToVectorSource(shownPlots),
+            this.state.sampleOutlineBlack 
+            ? shownPlots[0].geom
+                ? ceoMapStyles.blackPolygon
+                : ceoMapStyles.blackCircle
+            : shownPlots[0].geom
+                ? ceoMapStyles.whitePolygon
+                : ceoMapStyles.whiteCircle);
+        mercator.enableSelection(mapConfig, "currentSamples");
+    }
+
+    showGeoDash() {
+        const { currentPlot, mapConfig, currentProject } = this.state
+        const plotRadius = currentProject.plotSize
+                           ? currentProject.plotSize / 2.0
+                           : mercator.getViewRadius(mapConfig);
         window.open(this.props.documentRoot + "/geo-dash?"
                     + "&pid=" + this.props.projectId
-                                         + "&plotid=" + plot.id
-                                         + "&plotshape=" + encodeURIComponent((plot.geom ? "polygon" : this.state.currentProject.plotShape))
-                                         + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(this.state.mapConfig) + "]")
-                                         + "&daterange=&bcenter=" + plot.center
-                                         + "&bradius=" + plotRadius,
+                    + "&plotid=" + currentPlot.id
+                    + "&plotshape=" + encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))
+                    + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(mapConfig) + "]")
+                    + "&daterange=&bcenter=" + currentPlot.center
+                    + "&bradius=" + plotRadius,
                     "_geo-dash");
     }
 
@@ -552,22 +525,24 @@ class Collection extends React.Component {
 
     goToPlot() {
         if (!isNaN(this.state.newPlotInput)) {
-            this.getPlotData(this.state.newPlotInput)
+            this.getPlotData(this.state.newPlotInput);
         } else {
-            alert("Please enter a number to go to plot")
+            alert("Please enter a number to go to plot");
         }
     }
     
     updateNewPlotId(value) {
         this.setState({
-            newPlotInput: value,
-            prevPlotButtonDisabled: false,
-            nextPlotButtonDisabled: false
-        })
+            newPlotInput: value
+        });
     }
 
     setReviewPlots() {
-        this.setState({reviewPlots: !this.state.reviewPlots})
+        this.setState({
+            reviewPlots: !this.state.reviewPlots,
+            prevPlotButtonDisabled: false,
+            nextPlotButtonDisabled: false
+        });
     }
 
     flagPlot() {
@@ -587,11 +562,7 @@ class Collection extends React.Component {
                   })
                 .then(response => {
                     if (response.ok) {
-                        let statistics = this.state.stats;
-                        statistics.flaggedPlots = statistics.flaggedPlots + 1;
-                        this.setState({stats: statistics});
                         this.nextPlot();
-                        this.getProjectPlots();
                     } else {
                         console.log(response);
                         alert("Error flagging plot as bad. See console for details.");
@@ -620,44 +591,12 @@ class Collection extends React.Component {
               })
             .then(response => {
                 if (response.ok) {
-                    let statistics = this.state.stats;
-                    statistics.analyzedPlots = statistics.analyzedPlots + 1;
-                    this.setState({stats: statistics, selectedAnswers: {}});
-                    //reset state
                     this.nextPlot();
                 } else {
                     console.log(response);
                     alert("Error saving your assignments to the database. See console for details.");
                 }
             });
-    }
-
-    hideShowAnswers(surveyNodeId) {
-        let surveyAnswersVisible = this.state.surveyAnswersVisible;
-        if (surveyAnswersVisible[surveyNodeId]) {
-            surveyAnswersVisible[surveyNodeId] = false;
-        } else {
-            surveyAnswersVisible[surveyNodeId] = true;
-        }
-        this.setState({surveyAnswersVisible: surveyAnswersVisible});
-    }
-
-    showQuestions(surveyNodes) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = true);
-        this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
-    }
-
-    hideQuestions(surveyNodes) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        surveyNodes.forEach(surveyNode => surveyQuestionsVisible[surveyNode.id] = false);
-        this.setState({surveyQuestionsVisible: surveyQuestionsVisible});
-    }
-
-    highlightAnswer(questionText, answerText) {
-        let selectedAnswers = this.state.selectedAnswers;
-        selectedAnswers[questionText] = answerText;
-        this.setState({selectedAnswers: selectedAnswers});
     }
 
     getImageryAttributes () {
@@ -670,11 +609,22 @@ class Collection extends React.Component {
         }
     }
 
+    validateCurrentSelection (selectedFeatures, questionText) {
+        const visibleSamples = this.getVisibleSamples(this.state.currentProject.sampleValues
+                                .filter((sv => sv.question === questionText))[0].id);
+        return Object.values(selectedFeatures.a).reduce((prev, cur) => {
+            const sampleId = cur.get("sampleId")
+            return prev && visibleSamples.filter(vs => vs.id === sampleId).length > 0;
+        }, true);
+    }
+
     setCurrentValue(questionText, answerId, answerText, answerColor) {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        if (selectedFeatures && selectedFeatures.getLength() > 0) {
-            let userSamples = this.state.userSamples;
-            let userImages = this.state.userImages;
+        //
+        if (selectedFeatures && selectedFeatures.getLength() > 0 && this.validateCurrentSelection(selectedFeatures, questionText)) {
+            // JSON.parse is a fast way to do a deep copy
+            let userSamples = JSON.parse(JSON.stringify(this.state.userSamples));
+            let userImages = JSON.parse(JSON.stringify(this.state.userImages));
             selectedFeatures.forEach(feature => {
                 const sampleId = feature.get("sampleId");
                 if (!userSamples[sampleId]) {
@@ -684,215 +634,231 @@ class Collection extends React.Component {
                     userImages[sampleId] = {};
                 }
                 userSamples[sampleId][questionText] = {answer: answerText,
-                                                       color: answerColor};
+                                                       color: answerColor};    
                 userImages[sampleId] = {id: this.state.currentImagery.id,
                                         attributes: this.getImageryAttributes()};
             }, this); // necessary to pass outer scope into function
-            this.setState({userSamples: userSamples,
-                           userImages: userImages});
-            this.highlightSamplesByQuestion(userSamples, questionText);
-            this.allowSaveIfSurveyComplete(userSamples);
+            this.setState({
+                        userSamples: userSamples,
+                        userImages: userImages,
+                        selectedQuestionText: questionText
+                    });
             return true;
-        } else {
+        } else if(selectedFeatures && selectedFeatures.getLength() == 0 ) {
             alert("No samples selected. Please click some first.");
+            return false;
+        } else {
+            alert("Invalid Selection.  Try selecting question before answering");
             return false;
         }
     }
 
-    highlightSamplesByQuestion(userSamples, questionText) {
-        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
-        allFeatures.forEach(feature => {
+    setSelectedQuestionText(newselectedQuestionText) {
+        this.setState({selectedQuestionText: newselectedQuestionText});
+    }
+
+    highlightSamplesByQuestion() {
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
+        allFeatures.filter(feature => {
             const sampleId = feature.get("sampleId");
-            const answerColor = (userSamples[sampleId] && userSamples[sampleId][questionText])
-                ? userSamples[sampleId][questionText]["color"]
-                : null;
-            mercator.highlightSampleGeometry(feature, answerColor);
+            return this.state.userSamples[sampleId] && this.state.userSamples[sampleId][this.state.selectedQuestionText];
+        } ).forEach(feature => {
+            const sampleId = feature.get("sampleId");
+            const answers = this.state.currentProject.sampleValues
+                             .filter(sv => sv.question === this.state.selectedQuestionText)[0].answers || [];
+            const color = answers
+                             .filter(ans => ans.answer === this.state.userSamples[sampleId][this.state.selectedQuestionText].answer)[0].color || "";
+            mercator.highlightSampleGeometry(feature, color);
         });
     }
 
-    allowSaveIfSurveyComplete(userSamples) {
-        const assignedSamples = Object.keys(userSamples);
-        const totalSamples = this.state.currentPlot.samples;
-        if (assignedSamples.length == totalSamples.length
-            && assignedSamples.every(sampleId => this.surveyQuestionTreeComplete(userSamples[sampleId], -1))) {
-            this.setState({saveValuesButtonDisabled: false});
+    toggleSampleBW() {
+        this.setState({ sampleOutlineBlack: !this.state.sampleOutlineBlack });
+    }
+    
+    getVisibleSamples(currentQuestionId) {
+        const { currentProject : { sampleValues}, userSamples } = this.state;
+        const {parent_question, parent_answer} = sampleValues.filter((sv => sv.id === currentQuestionId))[0];
+        const parentQuestionText = parent_question === -1 ? "" : sampleValues.filter((sv => sv.id === parent_question))[0].question;
+        
+        if (parent_question === -1) {
+            return this.state.currentPlot.samples;
+        }
+        else {
+            const correctAnswerText = sampleValues
+                                    .filter(sv => sv.id === parent_question)[0].answers
+                                    .filter(ans => parent_answer === -1 || ans.id === parent_answer)[0].answer;
+
+            return this.getVisibleSamples(parent_question)
+                    .filter(sample => {
+                        const sampleAnswer = userSamples[sample.id][parentQuestionText] 
+                                             && userSamples[sample.id][parentQuestionText].answer;
+                        return (parent_answer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
+                    });
         }
     }
 
-    // FIXME: Make sure that each sample has answered all questions along its explored survey question tree
-    surveyQuestionTreeComplete(sampleAssignments, rootNodeId) {
-        return true;
-        // Actual (yet incomplete) code is below)
-        // const topLevelNodes = this.getChildNodes(-1);
-        // const rootNode = topLevelNodes[0];
-        // if (sampleAssignments[rootNode.question]) {
-        //     const childNodes = this.getChildNodes(rootNode.id);
-        //     return childNodes.every(childNode => this.surveyQuestionTreeComplete(sampleAssignments, childNode.id));
-        // }
-    }
+    getAnsweredSamples(currentQuestionId) {
+        const { currentProject : { sampleValues}, userSamples } = this.state;
+        const {parent_question, parent_answer, question} = sampleValues.filter((sv => sv.id === currentQuestionId))[0];
+        const parentQuestionText = parent_question === -1 ? "" : sampleValues.filter((sv => sv.id === parent_question))[0].question;
+        
+        if (parent_question === -1) {
+            return this.state.currentPlot.samples.filter(s => userSamples[s.id][question]);
+        }
+        else {
+            const correctAnswerText = sampleValues
+                                    .filter(sv => sv.id === parent_question)[0].answers
+                                    .filter(ans => parent_answer === -1 || ans.id === parent_answer)[0].answer;
 
-    getChildNodes(surveyNodeId) {
-        return this.state.currentProject.sampleValues.filter(surveyNode => surveyNode.parent_question == surveyNodeId);
-    }
-
-    redirectToHomePage() {
-        window.location = this.props.documentRoot + "/home";
-    }
-
-    prevSurveyQuestionTree(surveyNodeId, surveyQuestions) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        let prevSurveyNode = surveyQuestions.sort((a, b) => b.id - a.id).find(node => node.id < surveyNodeId && node.parent_question == -1);
-        if (prevSurveyNode) {
-            surveyQuestionsVisible[surveyNodeId] = false;
-            surveyQuestionsVisible[prevSurveyNode.id] = true;
-            this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
-                           nextQuestionButtonDisabled: false});
-        } else {
-            this.setState({prevQuestionButtonDisabled: true});
-            alert("There are no previous questions.");
+            return this.getVisibleSamples(parent_question)
+                    .filter(sample => {
+                        const sampleAnswer = userSamples[sample.id][parentQuestionText] 
+                                                && userSamples[sample.id][parentQuestionText].answer;
+                        return (parent_answer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
+                    })
+                    .filter(s => userSamples[s.id][question]);
         }
     }
 
-    nextSurveyQuestionTree(surveyNodeId, surveyQuestions) {
-        let surveyQuestionsVisible = this.state.surveyQuestionsVisible;
-        let nextSurveyNode = surveyQuestions.sort((a, b) => a.id - b.id).find(node => node.id > surveyNodeId && node.parent_question == -1);
-        if (nextSurveyNode) {
-            surveyQuestionsVisible[surveyNodeId] = false;
-            surveyQuestionsVisible[nextSurveyNode.id] = true;
-            this.setState({surveyQuestionsVisible: surveyQuestionsVisible,
-                           prevQuestionButtonDisabled: false});
-        } else {
-            this.setState({nextQuestionButtonDisabled: true});
-            alert("There are no more questions.");
-        }
+    updateQuestionStatus() {
+        // Warning shallow copy
+        var currentProject = this.state.currentProject;
+        var currentSampleValues = currentProject.sampleValues;
+
+        currentProject.sampleValues = currentSampleValues.map(value => {
+                value["visible"] = this.getVisibleSamples(value.id).length;
+                value["answered"] = this.getAnsweredSamples(value.id).length;
+                return value;
+            });
+        this.setState({currentProject: currentProject});
     }
 
     render() {
+        const plotId = this.state.currentPlot 
+                        && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
         return (
-            <React.Fragment>
-                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} projectPlotsShown={this.state.projectPlotsShown}/>
-                <SideBar plotId={this.state.currentPlot && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id)}
-                         currentProject={this.state.currentProject}
-                         navButtonsShown={this.state.navButtonsShown}
-                         gotoFirstPlotButtonDisabled={this.state.gotoFirstPlotButtonDisabled}
-                         prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
-                         nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                         flagPlotButtonDisabled={this.state.flagPlotButtonDisabled}
-                         reviewPlots={this.state.reviewPlots}
-                         newPlotInput={this.state.newPlotInput}
-                         goToFirstPlot={this.goToFirstPlot}
-                         prevPlot={this.prevPlot}
-                         nextPlot={this.nextPlot}
-                         flagPlot={this.flagPlot}
-                         goToPlot={this.goToPlot}
-                         setReviewPlots={this.setReviewPlots}
-                         updateNewPlotId={this.updateNewPlotId}
-                         imageryList={this.state.imageryList}
-                         setBaseMapSource={this.setBaseMapSource}
-                         imageryYearDG={this.state.imageryYearDG}
-                         stackingProfileDG={this.state.stackingProfileDG}
-                         setImageryYearDG={this.setImageryYearDG}
-                         setStackingProfileDG={this.setStackingProfileDG}
-                         imageryYearPlanet={this.state.imageryYearPlanet}
-                         imageryMonthPlanet={this.state.imageryMonthPlanet}
-                         imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
-                         setImageryYearPlanet={this.setImageryYearPlanet}
-                         setImageryMonthPlanet={this.setImageryMonthPlanet}
-                         stats={this.state.stats}
-                         saveValues={this.saveValues}
-                         saveValuesButtonDisabled={this.state.saveValuesButtonDisabled}
-                         surveyAnswersVisible={this.state.surveyAnswersVisible}
-                         surveyQuestionsVisible={this.state.surveyQuestionsVisible}
-                         hideShowAnswers={this.hideShowAnswers}
-                         showQuestions={this.showQuestions}
-                         hideQuestions={this.hideQuestions}
-                         highlightAnswer={this.highlightAnswer}
-                         setCurrentValue={this.setCurrentValue}
-                         selectedAnswers={this.state.selectedAnswers}
-                         prevSurveyQuestionTree={this.prevSurveyQuestionTree}
-                         nextSurveyQuestionTree={this.nextSurveyQuestionTree}
-                         prevQuestionButtonDisabled={this.state.prevQuestionButtonDisabled}
-                         nextQuestionButtonDisabled={this.state.nextQuestionButtonDisabled}/>
-                <QuitMenu redirectToHomePage={this.redirectToHomePage}/>
-            </React.Fragment>
+            <Fragment>
+                <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
+                <SideBar 
+                    projectId={this.props.projectId}
+                    plotId={plotId}
+                    documentRoot={this.props.documentRoot}
+                    saveValues={this.saveValues}
+                    surveyQuestions={this.state.currentProject.sampleValues}
+                    projectName={this.state.currentProject.name}
+                >
+                    {this.state.plotList.length > 0
+                        ?
+                            <PlotNavigation 
+                                plotId={plotId}
+                                navButtonsShown={this.state.currentPlot != null}
+                                newPlotInput={this.state.newPlotInput}
+                                nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
+                                prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
+                                sampleOutlineBlack={this.state.sampleOutlineBlack}
+                                reviewPlots={this.state.reviewPlots}
+                                flagPlot={this.flagPlot}
+                                goToFirstPlot={this.goToFirstPlot}
+                                goToPlot={this.goToPlot}
+                                nextPlot={this.nextPlot}
+                                prevPlot={this.prevPlot}
+                                setReviewPlots={this.setReviewPlots}
+                                updateNewPlotId={this.updateNewPlotId}
+                                toggleSampleBW={this.toggleSampleBW}
+                            />
+                        :
+                        <h3>Loading project data...</h3>
+                    }
+                    {this.state.imageryList.length > 0
+                        ?
+                            <ImageryOptions 
+                                baseMapSource={this.state.currentImagery.id}
+                                imageryTitle={this.state.currentImagery.title}
+                                imageryList={this.state.imageryList}
+                                setBaseMapSource={this.setBaseMapSource}
+                                imageryYearDG={this.imageryYearDG}
+                                stackingProfileDG={this.stackingProfileDG}
+                                setImageryYearDG={this.setImageryYearDG}
+                                setStackingProfileDG={this.setStackingProfileDG}
+                                imageryYearPlanet={this.imageryYearPlanet}
+                                imageryMonthPlanet={this.imageryMonthPlanet}
+                                imageryMonthNamePlanet={this.imageryMonthNamePlanet}
+                                setImageryYearPlanet={this.setImageryYearPlanet}
+                                setImageryMonthPlanet={this.setImageryMonthPlanet}
+                            />
+                        :
+                            <h3>Loading imagery data...</h3>
+                    }
+                    {this.state.currentPlot && 
+                        <SurveyQuestions 
+                            selectedQuestionText={this.state.selectedQuestionText}
+                            surveyQuestions={this.state.currentProject.sampleValues}
+                            setCurrentValue={this.setCurrentValue}
+                            setSelectedQuestionText={this.setSelectedQuestionText}
+                        />
+                    }
+                </SideBar>
+                <QuitMenu documentRoot={this.props.documentRoot}/>
+                {this.state.plotList.length === 0 && 
+                    <div id="spinner" style={{top: "45%", left: "38%"}}></div>
+                }
+            </Fragment>
         );
     }
 }
 
 function ImageAnalysisPane(props) {
     return (
-        <React.Fragment>
-            <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
-                <div id="imagery-info" className="row">
-                    <p className="col small">{props.imageryAttribution}</p>
-                </div>
-            </div>
-            <div id="spinner" style={{top: "45%", left: "38%", visibility: props.projectPlotsShown ? "hidden" : "visible"}}></div>
-        </React.Fragment>
-    );
-}
-
-function SideBar(props) {
-    return (
-        <div id="sidebar" className="col-xl-3" style={{overflow: "scroll"}}>
-            <ProjectName projectName={props.currentProject.name}/>
-            <PlotNavigation plotId={props.plotId}
-                            reviewPlots={props.reviewPlots}
-                            newPlotInput={props.newPlotInput}
-                            navButtonsShown={props.navButtonsShown}
-                            goToFirstPlot={props.goToFirstPlot}
-                            prevPlot={props.prevPlot}
-                            nextPlot={props.nextPlot}
-                            flagPlot={props.flagPlot}
-                            goToPlot={props.goToPlot}
-                            setReviewPlots={props.setReviewPlots}
-                            updateNewPlotId={props.updateNewPlotId}
-                            prevPlotButtonDisabled={props.prevPlotButtonDisabled}
-                            nextPlotButtonDisabled={props.nextPlotButtonDisabled}
-                            flagPlotButtonDisabled={props.flagPlotButtonDisabled}
-                            gotoFirstPlotButtonDisabled={props.gotoFirstPlotButtonDisabled}/>
-            <ImageryOptions baseMapSource={props.currentProject.baseMapSource}
-                            setBaseMapSource={props.setBaseMapSource}
-                            imageryList={props.imageryList}
-                            imageryYearDG={props.imageryYearDG}
-                            stackingProfileDG={props.stackingProfileDG}
-                            setImageryYearDG={props.setImageryYearDG}
-                            setStackingProfileDG={props.setStackingProfileDG}
-                            imageryYearPlanet={props.imageryYearPlanet}
-                            imageryMonthPlanet={props.imageryMonthPlanet}
-                            imageryMonthNamePlanet={props.imageryMonthNamePlanet}
-                            setImageryYearPlanet={props.setImageryYearPlanet}
-                            setImageryMonthPlanet={props.setImageryMonthPlanet}/>
-            <SurveyQuestions surveyQuestions={props.currentProject.sampleValues}
-                             surveyAnswersVisible={props.surveyAnswersVisible}
-                             surveyQuestionsVisible={props.surveyQuestionsVisible}
-                             hideShowAnswers={props.hideShowAnswers}
-                             showQuestions={props.showQuestions}
-                             hideQuestions={props.hideQuestions}
-                             highlightAnswer={props.highlightAnswer}
-                             setCurrentValue={props.setCurrentValue}
-                             selectedAnswers={props.selectedAnswers}
-                             prevSurveyQuestionTree={props.prevSurveyQuestionTree}
-                             nextSurveyQuestionTree={props.nextSurveyQuestionTree}
-                             prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
-                             nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>
-            <div className="row">
-                <div className="col-sm-12 btn-block">
-                    <SaveValuesButton saveValues={props.saveValues}
-                                      saveValuesButtonDisabled={props.saveValuesButtonDisabled}/>
-                    <ProjectStats projectName={props.currentProject.name}
-                                  numPlots={props.currentProject.numPlots}
-                                  stats={props.stats}/>
-                    <QuitButton/>
-                </div>
+        // Mercator hooks into image-analysis-pane
+        <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
+            <div id="imagery-info" className="row">
+                <p className="col small">{props.imageryAttribution}</p>
             </div>
         </div>
     );
 }
 
-function ProjectName(props) {
+function SideBar(props) {
+    const saveValuesButtonEnabled = props.surveyQuestions.reduce((prev, cur) => {
+            return prev && cur.visible === cur.answered;
+        }, true);
     return (
-        <h2 className="header">{props.projectName || ""}</h2>
+        <div id="sidebar" className="col-xl-3 border-left" style={{overflow: "scroll"}}>
+            <h2 className="header">{props.projectName || ""}</h2>
+            
+            {props.children}
+            
+            <div className="row">
+                <div className="col-sm-12 btn-block">
+                    <input 
+                        id="save-values-button" 
+                        className="btn btn-outline-lightgreen btn-sm btn-block"
+                        type="button" 
+                        name="save-values" 
+                        value="Save" 
+                        onClick={props.saveValues}
+                        style={{opacity: saveValuesButtonEnabled ? "1.0" : ".25"}}
+                        disabled={!saveValuesButtonEnabled}
+                    />
+                    <ProjectStatsGroup 
+                        documentRoot={props.documentRoot}
+                        projectId={props.projectId}
+                        plotId={props.plotId}
+                    />
+                    <button 
+                        id="collection-quit-button" 
+                        className="btn btn-outline-danger btn-block btn-sm mb-4"
+                        type="button" 
+                        name="collection-quit" 
+                        data-toggle="modal" 
+                        data-target="#confirmation-quit"
+                    >
+                        Quit
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -923,7 +889,8 @@ function PlotNavigation(props) {
                 </div>
             }
 
-            {props.navButtonsShown == 1 &&
+            {!props.navButtonsShown 
+            ?
                 <div className="row" id="go-to-first-plot">
                     <div className="col">
                         <input 
@@ -933,14 +900,10 @@ function PlotNavigation(props) {
                             name="new-plot" 
                             value="Go to first plot" 
                             onClick={props.goToFirstPlot}
-                            style={{opacity: props.gotoFirstPlotButtonDisabled ? "0.5" : "1.0"}}
-                            disabled={props.gotoFirstPlotButtonDisabled}
                         />
                     </div>
                 </div>
-            }
-
-            {props.navButtonsShown == 2 &&
+            :
                 <div className="row justify-content-center py-2" id="plot-nav">
                     <div className="px-1">
                         <input 
@@ -950,7 +913,7 @@ function PlotNavigation(props) {
                             name="new-plot" 
                             value="Prev" 
                             onClick={props.prevPlot}
-                            style={{opacity: props.prevPlotButtonDisabled ? "0.5" : "1.0"}}
+                            style={{opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
                             disabled={props.prevPlotButtonDisabled}
                         />
                     </div>
@@ -962,7 +925,7 @@ function PlotNavigation(props) {
                             name="new-plot" 
                             value="Next" 
                             onClick={props.nextPlot}
-                            style={{opacity: props.nextPlotButtonDisabled ? "0.5" : "1.0"}}
+                            style={{opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
                             disabled={props.nextPlotButtonDisabled}
                         />
                     </div>
@@ -974,22 +937,47 @@ function PlotNavigation(props) {
                             name="flag-plot" 
                             value="Flag" 
                             onClick={props.flagPlot}
-                            style={{opacity: props.flagPlotButtonDisabled ? "0.5" : "1.0"}}
-                            disabled={props.flagPlotButtonDisabled}
                         />
                     </div>
                 </div>
             }
-            <div className="row justify-content-center">
+
+            <div className="PlotNavigation__review-option row justify-content-center">
                 <div className="form-check">
                     <input 
                         className="form-check-input"
                         checked={props.reviewPlots}
                         id="reviewCheck"
-                        onClick={props.setReviewPlots}
+                        onChange={props.setReviewPlots}
                         type="checkbox"
                     />
                     <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
+                </div>
+            </div>
+
+            <div className="PlotNavigation__change-color row justify-content-center">
+                Unanswered Color
+                <div className="form-check form-check-inline">
+                    <input 
+                        className="form-check-input ml-2"
+                        checked={props.sampleOutlineBlack}
+                        id="radio1"
+                        onClick={props.toggleSampleBW}
+                        type="radio"
+                        name="color-radios"
+                    />
+                    <label htmlFor="radio1" className="form-check-label">Black</label>
+                </div>                
+                <div className="form-check form-check-inline">
+                    <input 
+                        className="form-check-input"
+                        checked={!props.sampleOutlineBlack}
+                        id="radio2"
+                        onClick={props.toggleSampleBW}
+                        type="radio"
+                        name="color-radios"
+                    />
+                    <label htmlFor="radio2" className="form-check-label">White</label>
                 </div>
             </div>
         </fieldset>
@@ -1000,292 +988,202 @@ function ImageryOptions(props) {
     return (
         <fieldset className="mb-3 justify-content-center text-center">
             <h3 className="mb-2">Imagery Options</h3>
-            <select className="form-control form-control-sm" id="base-map-source" name="base-map-source"
-                    size="1" value={props.baseMapSource || ""}
-                    onChange={props.setBaseMapSource}>
+            <select 
+                className="form-control form-control-sm" 
+                id="base-map-source" 
+                name="base-map-source"
+                size="1" 
+                value={props.baseMapSource || ""}
+                onChange={props.setBaseMapSource}
+            >
                 {
                     props.imageryList.map(
                         (imagery, uid) =>
-                            <option key={uid} value={imagery.title}>{imagery.title}</option>
+                            <option key={uid} value={imagery.id}>{imagery.title}</option>
                     )
                 }
             </select>
-            <DigitalGlobeMenus baseMapSource={props.baseMapSource}
-                               imageryYearDG={props.imageryYearDG}
-                               stackingProfileDG={props.stackingProfileDG}
-                               setImageryYearDG={props.setImageryYearDG}
-                               setStackingProfileDG={props.setStackingProfileDG}/>
-            <PlanetMenus baseMapSource={props.baseMapSource}
-                         imageryYearPlanet={props.imageryYearPlanet}
-                         imageryMonthPlanet={props.imageryMonthPlanet}
-                         imageryMonthNamePlanet={props.imageryMonthNamePlanet}
-                         setImageryYearPlanet={props.setImageryYearPlanet}
-                         setImageryMonthPlanet={props.setImageryMonthPlanet}/>
+            {props.imageryTitle === "DigitalGlobeWMSImagery" &&
+                <DigitalGlobeMenus 
+                    imageryYearDG={props.imageryYearDG}
+                    stackingProfileDG={props.stackingProfileDG}
+                    setImageryYearDG={props.setImageryYearDG}
+                    setStackingProfileDG={props.setStackingProfileDG}
+                />
+            }
+            {props.imageryTitle === "PlanetGlobalMosaic" && 
+                <PlanetMenus 
+                    imageryYearPlanet={props.imageryYearPlanet}
+                    imageryMonthPlanet={props.imageryMonthPlanet}
+                    imageryMonthNamePlanet={props.imageryMonthNamePlanet}
+                    setImageryYearPlanet={props.setImageryYearPlanet}
+                    setImageryMonthPlanet={props.setImageryMonthPlanet}
+                />
+            }
         </fieldset>
     );
-}
-
-function range(start, stop, step) {
-    return Array.from({length: (stop - start) / step}, (_, i) => start + (i * step));
 }
 
 function DigitalGlobeMenus(props) {
-    if (props.baseMapSource == "DigitalGlobeWMSImagery") {
-        return (
-            <React.Fragment>
-                <div className="slidecontainer form-control form-control-sm">
-                    <input type="range" min="2000" max="2018" value={props.imageryYearDG} className="slider" id="myRange"
-                           onChange={props.setImageryYearDG}/>
-                    <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
-                </div>
-                <select className="form-control form-control-sm"
-                        id="dg-stacking-profile"
-                        name="dg-stacking-profile"
-                        size="1"
-                        value={props.stackingProfileDG}
-                        onChange={props.setStackingProfileDG}>
-                    {
-                        ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
-                            .map(profile => <option key={profile} value={profile}>{profile}</option>)
-                    }
-                </select>
-            </React.Fragment>
-        );
-    } else {
-        return "";
-    }
+    return (
+        <div className="DG-Menu my-2">
+            <div className="slidecontainer form-control form-control-sm">
+                <input type="range" min="2000" max="2018" value={props.imageryYearDG} className="slider" id="myRange"
+                        onChange={props.setImageryYearDG}/>
+                <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
+            </div>
+            <select className="form-control form-control-sm"
+                    id="dg-stacking-profile"
+                    name="dg-stacking-profile"
+                    size="1"
+                    value={props.stackingProfileDG}
+                    onChange={props.setStackingProfileDG}>
+                {
+                    ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
+                        .map(profile => <option key={profile} value={profile}>{profile}</option>)
+                }
+            </select>
+        </div>
+    );
 }
 
-class PlanetMenus extends React.Component {
+function PlanetMenus(props) {
+    return (
+        <div className="PlanetsMenu my-2">
+            <div className="slidecontainer form-control form-control-sm">
+                <input type="range" min="2016" max="2018" value={props.imageryYearPlanet} className="slider" id="myRange"
+                        onChange={props.setImageryYearPlanet}/>
+                <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
+            </div>
+            <div className="slidecontainer form-control form-control-sm">
+                <input type="range" min="1" max="12" value={props.imageryMonthPlanet} className="slider" id="myRangemonth"
+                        onChange={props.setImageryMonthPlanet}/>
+                <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
+            </div>
+        </div>
+    );
+}
+
+class ProjectStatsGroup extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {value: "2018"};
+        this.state = {
+            showStats: false
+        }
+        this.updateShown = this.updateShown.bind(this);
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.plotId !== this.props.plotId) {
+            this.setState({ showStats: false });
+        }
+    }
+
+    updateShown() {
+        this.setState({showStats: !this.state.showStats});
     }
 
     render() {
-        if (this.props.baseMapSource == "PlanetGlobalMosaic") {
-            return (
-                <React.Fragment>
-                    <div className="slidecontainer form-control form-control-sm">
-                        <input type="range" min="2016" max="2018" value={this.props.imageryYearPlanet} className="slider" id="myRange"
-                               onChange={this.props.setImageryYearPlanet}/>
-                        <p>Year: <span id="demo">{this.props.imageryYearPlanet}</span></p>
-                    </div>
-                    <div className="slidecontainer form-control form-control-sm">
-                        <input type="range" min="1" max="12" value={this.props.imageryMonthPlanet} className="slider" id="myRangemonth"
-                               onChange={this.props.setImageryMonthPlanet}/>
-                        <p>Month: <span id="demo">{this.props.imageryMonthNamePlanet}</span></p>
-                    </div>
-                </React.Fragment>
-            );
-        } else {
-            return "";
-        }
+        return (
+            <div className="ProjectStatsGroup">
+                <button 
+                    className="btn btn-outline-lightgreen btn-sm btn-block my-2" 
+                    onClick={this.updateShown}
+                >
+                    Project Stats
+                </button>
+                {this.state.showStats && 
+                    <ProjectStats 
+                        documentRoot={this.props.documentRoot}
+                        projectId={this.props.projectId} 
+                    />
+                }
+            </div>
+
+        );
     }
 }
 
-function SurveyQuestions(props) {
-    const topLevelNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == -1);
-    return (
-        <fieldset className="mb-3 justify-content-center text-center">
-            <h3>Survey Questions</h3>
-            <i style={{fontSize: "small"}}>(Click on a question to expand)</i>
-            {
-                topLevelNodes.map((surveyNode, uid) => <SurveyQuestionTree key={uid}
-                                                                           surveyNode={surveyNode}
-                                                                           surveyQuestions={props.surveyQuestions}
-                                                                           surveyAnswersVisible={props.surveyAnswersVisible}
-                                                                           surveyQuestionsVisible={props.surveyQuestionsVisible}
-                                                                           hideShowAnswers={props.hideShowAnswers}
-                                                                           showQuestions={props.showQuestions}
-                                                                           hideQuestions={props.hideQuestions}
-                                                                           highlightAnswer={props.highlightAnswer}
-                                                                           setCurrentValue={props.setCurrentValue}
-                                                                           selectedAnswers={props.selectedAnswers}
-                                                                           prevSurveyQuestionTree={props.prevSurveyQuestionTree}
-                                                                           nextSurveyQuestionTree={props.nextSurveyQuestionTree}
-                                                                           prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
-                                                                           nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>)
-            }
-        </fieldset>
-    );
-}
-
-function SurveyQuestionTree(props) {
-    const childNodes = props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == props.surveyNode.id);
-    const navButtons = props.surveyNode.parent_question == -1 ?
-        <React.Fragment>
-            <button id="prev-survey-question" className="btn btn-outline-lightgreen"  style={{margin:"10px"}}
-                    onClick={() => props.prevSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
-                    disabled={props.prevQuestionButtonDisabled}>Prev</button>
-            <button id="next-survey-question" className="btn btn-outline-lightgreen"
-                    onClick={() => props.nextSurveyQuestionTree(props.surveyNode.id, props.surveyQuestions)}
-                    disabled={props.nextQuestionButtonDisabled}>Next</button>
-        </React.Fragment>
-        : "";
-    return (
-        <fieldset className={"mb-1 justify-content-center text-center"
-                  + (props.surveyQuestionsVisible[props.surveyNode.id] ? "" : " d-none")}>
-            { navButtons }
-            <button id={props.surveyNode.question + "_" + props.surveyNode.id}
-                    className="text-center btn btn-outline-lightgreen btn-sm btn-block"
-                    onClick={() => props.hideShowAnswers(props.surveyNode.id)}
-                    style={{marginBottom: "10px"}}>
-                {props.surveyNode.question}
-            </button>
-            <ul className={"samplevalue justify-content-center"
-                + (props.surveyAnswersVisible[props.surveyNode.id] ? "" : " d-none")}>
-                {
-                    props.surveyNode.answers.map((ans, uid) => <SurveyAnswer key={uid}
-                                                                             question={props.surveyNode.question}
-                                                                             id={ans.id}
-                                                                             answer={ans.answer}
-                                                                             color={ans.color}
-                                                                             childNodes={childNodes}
-                                                                             showQuestions={props.showQuestions}
-                                                                             hideQuestions={props.hideQuestions}
-                                                                             highlightAnswer={props.highlightAnswer}
-                                                                             setCurrentValue={props.setCurrentValue}
-                                                                             selectedAnswers={props.selectedAnswers}/>)
-                }
-            </ul>
-            {
-                childNodes.map((surveyNode, uid) => <SurveyQuestionTree key={uid}
-                                                                        surveyNode={surveyNode}
-                                                                        surveyQuestions={props.surveyQuestions}
-                                                                        surveyAnswersVisible={props.surveyAnswersVisible}
-                                                                        surveyQuestionsVisible={props.surveyQuestionsVisible}
-                                                                        hideShowAnswers={props.hideShowAnswers}
-                                                                        showQuestions={props.showQuestions}
-                                                                        hideQuestions={props.hideQuestions}
-                                                                        highlightAnswer={props.highlightAnswer}
-                                                                        setCurrentValue={props.setCurrentValue}
-                                                                        selectedAnswers={props.selectedAnswers}
-                                                                        prevSurveyQuestionTree={props.prevSurveyQuestionTree}
-                                                                        nextSurveyQuestionTree={props.nextSurveyQuestionTree}
-                                                                        prevQuestionButtonDisabled={props.prevQuestionButtonDisabled}
-                                                                        nextQuestionButtonDisabled={props.nextQuestionButtonDisabled}/>)
-            }
-        </fieldset>
-    );
-}
-
-function SurveyAnswer(props) {
-    const childNodes = props.childNodes.filter(surveyNode => surveyNode.parent_answer == props.id);
-    return (
-        <li className="mb-1">
-            <button type="button"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                    id={props.answer + "_" + props.id}
-                    name={props.answer + "_" + props.id}
-                    style={{boxShadow: (props.selectedAnswers[props.question] == props.answer)
-                        ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                        : "initial"}}
-                    onClick={() => {
-                        if (props.setCurrentValue(props.question, props.id, props.answer, props.color)) {
-                            props.hideQuestions(props.childNodes);
-                            props.showQuestions(childNodes);
-                            props.highlightAnswer(props.question, props.answer);
-                        }
-                    }}>
-                <div className="circle"
-                     style={{
-                         backgroundColor: props.color,
-                         border: "1px solid",
-                         float: "left",
-                         marginTop: "4px"
-                     }}>
-                </div>
-                <span className="small">{props.answer}</span>
-            </button>
-        </li>
-    );
-}
-
-function SaveValuesButton(props) {
-    return (
-        <input id="save-values-button" className="btn btn-outline-lightgreen btn-sm btn-block"
-               type="button" name="save-values" value="Save" onClick={props.saveValues}
-               style={{opacity: props.saveValuesButtonDisabled ? "0.5" : "1.0"}}
-               disabled={props.saveValuesButtonDisabled}/>
-    );
-}
-
 class ProjectStats extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            stats: {}
+        }
+    }
+
+    componentDidMount() {
+        this.getProjectStats();
+    }
+
     asPercentage(part, total) {
         return (part && total)
             ? (100.0 * part / total).toFixed(2)
             : "0.00";
     }
 
-    render() {
+    getProjectStats() {
+        fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    console.log(response);
+                    alert("Error getting project stats. See console for details.");
+                    return new Promise(resolve => resolve(null));
+                }
+            })
+            .then(data => {
+                this.setState({stats: data});
+            });
+    }
 
+    render() {
+        const { stats } = this.state
+        const numPlots = stats.flaggedPlots + stats.analyzedPlots + stats.unanalyzedPlots
         return (
-            <React.Fragment>
-                <button className="btn btn-outline-lightgreen btn-sm btn-block mb-1" data-toggle="collapse"
-                        href="#project-stats-collapse" role="button" aria-expanded="false"
-                        aria-controls="project-stats-collapse">
-                    Project Stats
-                </button>
-                <div className="row justify-content-center mb-1 text-center">
-                    <div className="col-lg-12">
-                        <fieldset id="projStats" className="text-center projNoStats">
-                            <div className="collapse" id="project-stats-collapse">
-                                <table className="table table-sm">
-                                    <tbody>
-                                        <tr>
-                                            <td className="small">Project</td>
-                                            <td className="small">
-                                                {this.props.projectName || ""}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Analyzed</td>
-                                            <td className="small">
-                                                {this.props.stats.analyzedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.analyzedPlots, this.props.numPlots)}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Flagged</td>
-                                            <td className="small">
-                                                {this.props.stats.flaggedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.flaggedPlots, this.props.numPlots)}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Completed</td>
-                                            <td className="small">
-                                                {this.props.stats.analyzedPlots + this.props.stats.flaggedPlots || ""}
-                                                ({this.asPercentage(this.props.stats.analyzedPlots + this.props.stats.flaggedPlots, this.props.numPlots)}%)
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="small">Plots Total</td>
-                                            <td className="small">
-                                                {this.props.numPlots || ""}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </fieldset>
-                    </div>
+            <div className="row justify-content-center mb-1 text-center">
+                <div className="col-lg-12">
+                    <fieldset id="projStats" className="text-center projNoStats">
+                            <table className="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td className="small">Plots Analyzed</td>
+                                        <td className="small">
+                                            {stats.analyzedPlots || ""}
+                                            ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Flagged</td>
+                                        <td className="small">
+                                            {stats.flaggedPlots || ""}
+                                            ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Completed</td>
+                                        <td className="small">
+                                            {stats.analyzedPlots + stats.flaggedPlots || ""}
+                                            ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small">Plots Total</td>
+                                        <td className="small">
+                                            {numPlots || ""}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                    </fieldset>
                 </div>
-            </React.Fragment>
+            </div>
         );
     }
 }
 
-function QuitButton() {
-    return (
-        <button id="collection-quit-button" className="btn btn-outline-danger btn-block btn-sm"
-                type="button" name="collection-quit" data-toggle="modal" data-target="#confirmation-quit">
-            Quit
-        </button>
-    );
-}
-
+// remains hidden, shows a styled menu when the quit button is clicked
 function QuitMenu(props) {
     return (
         <div className="modal fade" id="confirmation-quit" tabIndex="-1" role="dialog"
@@ -1303,8 +1201,14 @@ function QuitMenu(props) {
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
-                        <button type="button" className="btn bg-lightgreen btn-sm" id="quit-button"
-                                onClick={props.redirectToHomePage}>OK</button>
+                        <button 
+                            type="button" 
+                            className="btn bg-lightgreen btn-sm" 
+                            id="quit-button"
+                            onClick={() => window.location = props.documentRoot + "/home"}
+                        >
+                            OK
+                        </button>
                     </div>
                 </div>
             </div>
