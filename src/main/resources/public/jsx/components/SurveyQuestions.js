@@ -52,11 +52,10 @@ export class SurveyQuestions extends React.Component {
         const child_questions = surveyQuestions.filter((sv => sv.parent_question === currentQuestionId));
 
         if (child_questions.length === 0) {
-            return visible > 0 && visible === answered;
+            return visible === answered;
         }
         else {
-
-            return  child_questions.reduce((prev, cur) => {
+            return visible === answered && child_questions.reduce((prev, cur) => {
                 return prev && this.checkAllSelected(cur.id);
             }, true);
         }   
@@ -100,7 +99,7 @@ export class SurveyQuestions extends React.Component {
                                         ${this.getTopColor(node)}
                                     `}}
                                 >
-                                {`O`}
+                                {i+1}
                                 </button>
                             )}
                             <button 
@@ -273,64 +272,60 @@ function AnswerRadioButton(props) {
     return (<React.Fragment>{listItem}</React.Fragment>);
 }
 
-function AnswerInputNumber(props) {
-    let listItem = props.answers.map((ans, uid) => {
-        return <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
-            <div className="circle"
-                 style={{
-                     backgroundColor: ans.color,
-                     border: "1px solid",
-                     float: "left",
-                     marginTop: "4px",
-                     marginRight: "5px"
-                 }}>
-            </div>
-            <input 
-                type="number"
-                className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                placeholder={ans.answer}
-                id={ans.answer + "_" + ans.id}
-                name={ans.answer + "_" + ans.id}
-                // style={{
-                //     boxShadow: (props.selectedAnswers[props.question] == ans.answer)
-                //         ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                //         : "initial"
-                // }}
-                onChange={() =>props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)}
-            />
-        </li>
-    });
-    return (<React.Fragment>{listItem}</React.Fragment>);
-}
+class AnswerInput extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state = {
+            newInput: "",
+        };
+        this.updateInputValue = this.updateInputValue.bind(this);
+    }
 
-function AnswerInputText(props) {
-    let li = props.answers.map((ans, uid) => {
-        return <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
-            <div className="circle"
-                 style={{
-                     backgroundColor: ans.color,
-                     border: "1px solid",
-                     float: "left",
-                     marginTop: "4px",
-                     marginRight: "5px"
-                 }}>
-            </div>
-            <input 
-                type="text"
-                className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                placeholder={ans.answer}
-                id={ans.answer + "_" + ans.id}
-                name={ans.answer + "_" + ans.id}
-                // style={{
-                //     boxShadow: (props.selectedAnswers[props.question] == ans.answer)
-                //         ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                //         : "initial"
-                // }}
-                onChange={() => props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)}
-            />
-        </li>
-    });
-    return (<React.Fragment>{li}</React.Fragment>);
+    componentDidUpdate (prevProps) {
+        if (this.props.question !== prevProps.question) {
+            this.setState({newInput: ""})
+        }
+    }
+
+    updateInputValue(value) {
+        this.setState({newInput: value});
+    }
+    
+    render() {
+        const { props } = this;
+        return props.answers.map((ans, uid) => {
+            return (
+                <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
+                    <div className="circle"
+                        style={{
+                            backgroundColor: ans.color,
+                            border: "1px solid",
+                            float: "left",
+                            marginTop: "4px",
+                            marginRight: "5px"
+                        }}>
+                    </div>
+                    <input 
+                        type={this.props.dataType}
+                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                        placeholder={ans.answer}
+                        id={ans.answer + "_" + ans.id}
+                        name={ans.answer + "_" + ans.id}
+                        value={this.state.newInput}
+                        onChange={e => this.updateInputValue(e.target.value)}
+                    />
+                    <input
+                        id="save-input"
+                        className="text-center btn btn-outline-lightgreen btn-sm"
+                        type="button"
+                        name="save-input"
+                        value="Save"
+                        onClick={() => props.setCurrentValue(props.question, ans.id, this.state.newInput, ans.color)}
+                    />
+                </li>
+            );
+        });
+    }
 }
 
 class AnswerDropDown extends React.Component {
@@ -341,41 +336,44 @@ class AnswerDropDown extends React.Component {
         }
         this.toggleDropDown = this.toggleDropDown.bind(this);
     }  
+
+    componentDidUpdate (prevProps) {
+        if (this.props.question !== prevProps.question) {
+            this.setState({showDropdown: false})
+        }
+    }
     
     toggleDropDown () {
         this.setState({showDropdown: !this.state.showDropdown});
     }
     
-
     render () {
         let options = this.props.answers.map((ans,uid) => {
             return (
-                <React.Fragment  key={uid}>
-                    <div>
-                        <span 
-                            className="dot" 
-                            style={{  
-                                height: "15px",
-                                width: "15px", 
-                                backgroundColor: ans.color, 
-                                borderRadius: "50%", 
-                                display: "inline-block"
-                            }} 
-                        />
-                        <a id={ans.color} 
-                            href="#home" 
-                            onClick={() => this.props.setCurrentValue(this.props.question, ans.id, ans.answer, ans.color)} 
-                            style={{
-                                color: "black", 
-                                padding: "12px 16px", 
-                                textDecoration: "none", 
-                                display: "inline-block"
-                            }}
-                        >
-                            {ans.answer}
-                        </a>
-                    </div>
-                </React.Fragment>
+                <div key={uid}>
+                    <span 
+                        className="dot" 
+                        style={{  
+                            height: "15px",
+                            width: "15px", 
+                            backgroundColor: ans.color, 
+                            borderRadius: "50%", 
+                            display: "inline-block"
+                        }} 
+                    />
+                    <a id={ans.color} 
+                        href="#home" 
+                        onClick={() => this.props.setCurrentValue(this.props.question, ans.id, ans.answer, ans.color)} 
+                        style={{
+                            color: "black", 
+                            padding: "12px 16px", 
+                            textDecoration: "none", 
+                            display: "inline-block"
+                        }}
+                    >
+                        {ans.answer}
+                    </a>
+                </div>
         )});
         return (
             <li className="mb-1"> 
@@ -423,16 +421,8 @@ function SurveyAnswers(props) {
                     setCurrentValue={props.setCurrentValue}
                 />);
     }
-    else if (props.componentType&&props.componentType.toLowerCase() == "input" && props.dataType.toLowerCase() == "number") {
-        return (<AnswerInputNumber 
-                    answers={props.answers} 
-                    question={props.question}
-                    dataType={props.dataType}
-                    setCurrentValue={props.setCurrentValue}
-                />);
-    }
-    else if (props.componentType&&props.componentType.toLowerCase() == "input" && props.dataType.toLowerCase() == "text") {
-        return (<AnswerInputText 
+    else if (props.componentType&&props.componentType.toLowerCase() == "input") {
+        return (<AnswerInput
                     answers={props.answers} 
                     question={props.question}
                     dataType={props.dataType}
@@ -440,29 +430,14 @@ function SurveyAnswers(props) {
                 />);
     }
     else if (props.componentType&&props.componentType.toLowerCase() == "dropdown") {
-                {/*<select id="dropd" className="btn-outline-darkgray btn-sm btn-block" onChange={(e) => {*/}
-                {/*}}>*/}
-                    {/*<AnswerDropDown answer={props.answer} childNodes={props.childNodes} question={props.question}*/}
-                                    {/*componentType={props.componentType}*/}
-                                    {/*dataType={props.dataType}*/}
-                                    {/*answer={props.answer}*/}
-                                    {/*
-                                    {/*
-                                    {/*
-                                    {/*setCurrentValue={props.setCurrentValue}*/}
-                                    {/*
-                                    {/*/}
-                {/*</select>*/}
         return (<AnswerDropDown 
                     answers={props.answers} 
-                    toggleDropDown={props.toggleDropDown} 
                     question={props.question} 
                     childNodes={props.childNodes}  
                     setCurrentValue={props.setCurrentValue}
                 />);
     }
-    else
-    {
+    else {
         return (<AnswerButton 
                     answers={props.answers} 
                     question={props.question}

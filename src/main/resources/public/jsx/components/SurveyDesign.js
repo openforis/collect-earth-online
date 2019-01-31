@@ -107,6 +107,7 @@ export class SurveyDesign extends React.Component {
         );
     }
 }
+
 class SurveyQuestionTree extends React.Component {
     constructor(props) {
         super(props);
@@ -216,7 +217,7 @@ function RemoveSurveyQuestionRowButton(props) {
 
 function SurveyQuestionTable(props) {
     let project = props.project;
-    let answer = "", color = "#000000";
+    let answer = "", color = "#1527F6";
     if (project.newValueEntry[props.surveyQuestion.question]) {
         answer = project.newValueEntry[props.surveyQuestion.question].answer;
         color = project.newValueEntry[props.surveyQuestion.question].color;

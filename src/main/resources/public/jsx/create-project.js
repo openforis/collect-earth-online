@@ -122,13 +122,13 @@ class Project extends React.Component {
                         });
                         if(tempSQ.id>0){
                             newSV.push(tempSQ);
-                            dNew[tempSQ.question] ={id:-1,answer:"",color:"#000000"};
+                            dNew[tempSQ.question] ={id:-1,answer:"",color:"#1527F6"};
                             this.setState({newValueEntry: dNew});
                         }
                     }
                     else{
                         newSV.push(sq);
-                        dNew[sq.question] ={id:-1,answer:"",color:"#000000"};
+                        dNew[sq.question] ={id:-1,answer:"",color:"#1527F6"};
                         this.setState({newValueEntry: dNew});
                     }
                 }
@@ -266,7 +266,7 @@ class Project extends React.Component {
 
             if (questionText != "") {
                 let newValueEntryNew = this.state.newValueEntry;
-                newValueEntryNew[questionText] = {id:-1,answer: "", color: "#000000"};
+                newValueEntryNew[questionText] = {id:-1,answer: "", color: "#1527F6"};
                 let detailsNew = this.state.projectDetails;
                 let _id = detailsNew.sampleValues.length + 1;
                 let question_id = -1,answer_id=-1;
@@ -357,7 +357,7 @@ class Project extends React.Component {
             }
             entry.id=-1;
             entry.answer = "";
-            entry.color = "#000000";
+            entry.color = "#1527F6";
         } else {
             alert("A survey answer must possess both an answer and a color.");
         }
@@ -540,7 +540,7 @@ class Project extends React.Component {
             this.setState({newValueEntry:newValueEntryNew});
         }
         else
-            this.setState({newValueEntry:{id:-1,answer: "", color: "#000000"}});
+            this.setState({newValueEntry:{id:-1,answer: "", color: "#1527F6"}});
     }
 
     handleInputColor(surveyQuestion, event) {

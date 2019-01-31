@@ -771,9 +771,9 @@ mercator.getAllFeatures = function (mapConfig, layerTitle) {
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
     if (sample.get("shape") == "point") {
-        sample.setStyle(mercator.getCircleStyle(5, null, color, 2));
+        sample.setStyle(mercator.getCircleStyle(5, color, color, 2));
     } else {
-        sample.setStyle(mercator.getPolygonStyle(null, color, 3));
+        sample.setStyle(mercator.getPolygonStyle(null, color, 6));
     }
     return sample;
 };
