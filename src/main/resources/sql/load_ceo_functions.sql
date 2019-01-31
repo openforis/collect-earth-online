@@ -1148,7 +1148,8 @@ CREATE OR REPLACE FUNCTION select_project_users(_project_id integer)
 $$ LANGUAGE SQL;
 
 -- Returns project statistics
--- FIXME in the future a plot could have both an assigned piece and a flagged piece
+-- Overlapping queries, consider condensing. query time is not an issue
+DROP FUNCTION select_project_statistics(integer);
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer) 
     RETURNS TABLE(
         flagged_plots       integer,
@@ -1157,12 +1158,46 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         members             integer,
         contributors        integer,
 		created_date        date,
-  	    published_date        date,
-        closed_date          date,
-        archived_date        date
+  	    published_date      date,
+        closed_date         date,
+        archived_date       date,
+		user_stats			text
     ) AS $$
 
-    WITH members AS(
+    WITH project_plots as (
+		SELECT p.id, pl.id as plot_id,
+			(CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
+				ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) as seconds,
+			(CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) as timed,
+			u.email as email
+		FROM user_plots up
+		INNER JOIN plots pl
+			ON up.plot_id = pl.id
+		INNER JOIN projects p
+			ON pl.project_id = p.id
+		INNER JOIN users u
+			ON up.user_id = u.id
+		WHERE p.id = _project_id
+	),
+	user_groups as (
+		SELECT email,
+			SUM(seconds)::int as seconds,
+			count(plot_id) as plots,
+			SUM(timed):: int as timedPlots 
+			
+		FROM project_plots
+		GROUP BY email
+		ORDER BY email DESC
+	),
+	user_agg as (
+		SELECT
+			format('[%s]', 
+				   string_agg(
+					   format('{"user":"%s", "seconds":%s, "plots":%s, "timedPlots":%s}'
+							  , email, seconds, plots, timedPlots), ',')) as user_stats			
+		FROM user_groups
+	),
+	members AS(
         SELECT count(distinct user_id) as members
         FROM select_project_users(_project_id)
     ),
@@ -1186,7 +1221,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
           ON prj.id =  pl.project_id
         LEFT JOIN plotsum ps
           ON ps.plot_id = pl.id
-        WHERE prj.id = _project_id  
+        WHERE prj.id = _project_id
     ),
     users_count as (
         SELECT COUNT (DISTINCT user_id) as users
@@ -1202,8 +1237,9 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
            CAST(GREATEST(0,(plots-flagged-assigned)) as int) AS unassigned_plots,
            CAST(members AS int) AS members,
            CAST(users_count.users AS int) AS contributors,
-           created_date, published_date, closed_date, archived_date
-    FROM members, sums, users_count
+           created_date, published_date, closed_date, archived_date,
+		   user_stats
+    FROM members, sums, users_count, user_agg
 $$ LANGUAGE SQL;
 
 -- Publish project
@@ -1759,7 +1795,7 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_id integer, _file_name tex
 	plot_users as (
 		SELECT (CASE WHEN useremail is NULL or useremail = 'null' THEN NULL 
 				ELSE add_user_plots_migration(plot_id, useremail, flagged, 
-											  to_timestamp(ctime::bigint / 1000.0)::timestamp, 
+											  to_timestamp(cstart::bigint / 1000.0)::timestamp, 
 											  to_timestamp(ctime::bigint / 1000.0)::timestamp) 
 				END) as user_plot_id, 
 			plot_id, useremail, samples

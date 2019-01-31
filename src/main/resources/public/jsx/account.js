@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
-import FormLayout from "./components/FormLayout"
-import SectionBlock from "./components/SectionBlock"
+
+import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
 
 function Account(props) {
     return (
@@ -57,135 +57,42 @@ class UserStats extends React.Component {
         let { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
         return (
             <SectionBlock title="User Stats">
-                <table id="user-stats-table" className="table table-sm">
-                <tbody>
-                    <tr>
-                        <td className="w-80">Projects Worked So Far</td>
-                        <td className="w-20 text-center">
-                            <span className="badge badge-pill bg-lightgreen">{totalProjects} projects</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Plots Completed Total</td> 
-                        <td className="text-center">
-                            <span className="badge badge-pill bg-lightgreen">{totalPlots} plots</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Average Analysis Duration</td>
-                        <td className="text-center">
-                            <span className="badge badge-pill bg-lightgreen">{averageTime} secs/plot</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Plots Completed Per Project</td>
-                        <td className="text-center">
-                            <span className="badge badge-pill bg-lightgreen">{Number(((totalPlots / totalProjects)).toFixed(1)) || 0} plots</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>Individual Project Stats:</strong>
-                            <table id="project-stats-table" className="nested-table bg-light ml-1">
-                                <tbody>
-                                {perProject && perProject.map(project => {
-                                    return (
-                                    <ProjectRow 
-                                        project = {project}
-                                    />)
-                                })}
+            
+                <div id="user-stats-table" className="table table-sm">
 
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                <div className="ProjectStats__plots-table mb-2">
+                        <strong>Project Total Stats:</strong>
+                        <div className="row pl-2">
+                            <div className="col-6">
+                                <StatsCell title="Projects Worked">{totalProjects} projects</StatsCell>
+                                <StatsCell title="Plots Completed">{totalPlots} plots</StatsCell>
+                            </div>
+                            <div className="col-6">
+                                <StatsCell title="Average Analysis Duration">{averageTime} secs/plot</StatsCell>
+                                <StatsCell title="Average Plots per Project">{Number(((totalPlots / totalProjects)).toFixed(1)) || 0} plots</StatsCell>
+                            </div>
+                        </div>
+                    </div>
+
+                {perProject &&
+                    <div className="ProjectStats__user-table">
+                        <strong>User Stats:</strong>
+                        {perProject.map((project, uid) => {
+                            return (
+                            <StatsRow
+                                key={uid}
+                                title={`#${project.id} - ${project.name}`}
+                                plots={project.plotCount}
+                                analysisTime={project.analysisAverage}
+                                wide
+                            />);
+                        })}
+                    </div>
+                }
+            </div>
         </SectionBlock>
         )
     }
-}
-
-function ProjectRow({ project: {id, name, plotCount, analysisAverage} }) {
-    return (
-        <tr>
-            <td>{`#${id} - ${name}`}</td>
-            <td className="text-center">
-                <span className="badge badge-pill bg-lightgreen">{plotCount || ""} plots </span>
-            </td>
-            <td className="text-center">
-                {analysisAverage ? 
-                    (
-                    <span className="badge badge-pill bg-lightgreen">{analysisAverage} sec/plot </span>
-                    )
-                    : ("Untimed")
-                }
-            </td>
-        </tr>
-    )
-}
-
-function ExpandedUserStats() {
-    return (
-        <div id="user-stats" className="col" style={{display:"None"}}>
-            <h2 className="header px-0">Here is your progress</h2>
-            <h1><span className="badge bg-lightgreen">Level 1</span></h1>
-            <div className="progress w3-light-grey mb-1">
-                <div className="progress-bar progress-bar-striped bg-lightgreen"
-                     role="progressbar" style={{width: "33%"}}
-                     aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
-                <div id="myBar" className="w3-container w3-blue w3-center" style={{width: "33%"}}>33%</div>
-            </div>
-            <p>
-                You need to complete
-                <span className="badge bg-lightgreen">15</span>
-                more plots to reach
-                <span className="badge bg-lightgreen">Level 2</span>
-            </p>
-            <table id="user-stats-table" className="table table-sm">
-                <tbody>
-                    <tr>
-                        <td className="w-80">Projects Worked So Far</td>
-                        <td className="w-20 text-center"><span className="badge badge-pill bg-lightgreen">2</span></td>
-                    </tr>
-                    <tr>
-                        <td>Speed Score Total</td>
-                        <td className="text-center"><span className="badge badge-pill bg-lightgreen">205</span></td>
-                    </tr>
-                    <tr>
-                        <td>Plots Completed Per Project</td>
-                        <td className="text-center"><span className="badge badge-pill bg-lightgreen">8</span></td>
-                    </tr>
-                    <tr>
-                        <td>Accuracy Score Per Project</td>
-                        <td className="text-center"><span className="badge badge-pill bg-lightgreen">10</span></td>
-                    </tr>
-                    <tr>
-                        <td>Plots Completed Total</td>
-                        <td className="text-center"><span className="badge badge-pill bg-lightgreen">16</span></td>
-                    </tr>
-                    <tr>
-                        <td>Accuracy Score Total</td>
-                        <td className="text-center"><span className="badge badge-pill bg-lightgreen">10</span></td>
-                    </tr>
-                    <tr>
-                        <td>Speed Score Per Project</td>
-                        <td className="text-center"><span className="badge badge-pill bg-lightgreen">205</span></td>
-                    </tr>
-                </tbody>
-            </table>
-            <form style={{visibility: "visible"}}>
-                <fieldset>
-                    <strong>Congratulations!</strong>
-                    You are ranked
-                    <span className="badge bg-lightgreen">#3</span> overall and
-                    <span className="badge bg-lightgreen">#1</span> in your organization.
-                </fieldset>
-                <span>&nbsp;</span>
-            </form>
-            <hr className="d-block d-sm-none"/>
-        </div>
-    );
 }
 
 function AccountForm(props) {

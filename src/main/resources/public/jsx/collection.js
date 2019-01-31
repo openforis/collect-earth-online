@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
 import {SurveyQuestions } from "./components/SurveyQuestions"
+
 class Collection extends React.Component {
     constructor(props) {
         super(props);
@@ -18,7 +19,6 @@ class Collection extends React.Component {
             imageryYearPlanet: "2018",
             imageryMonthPlanet: "03",
             imageryMonthNamePlanet: "March",
-
             prevPlotButtonDisabled: false,
             nextPlotButtonDisabled: false,
             saveValuesButtonEnabled: false,
@@ -26,7 +26,6 @@ class Collection extends React.Component {
             userSamples: {},
             userImages: {},
             collectionStart: 0,
-            newPlotInput: 0,
             reviewPlots: false,
             selectedQuestionText: "",
             sampleOutlineBlack: true
@@ -40,7 +39,6 @@ class Collection extends React.Component {
         this.prevPlot = this.prevPlot.bind(this);
         this.nextPlot = this.nextPlot.bind(this);
         this.goToPlot = this.goToPlot.bind(this);
-        this.updateNewPlotId = this.updateNewPlotId.bind(this);
         this.setReviewPlots = this.setReviewPlots.bind(this);
         this.flagPlot = this.flagPlot.bind(this);
         this.saveValues = this.saveValues.bind(this);
@@ -135,7 +133,6 @@ class Collection extends React.Component {
             .then(project => {
                 if (project == null || project.id == 0) {
                     alert("No project found with ID " + this.props.projectId + ".");
-                    window.location = this.props.documentRoot + "/home";
                 } else {
                     const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues || {});
                     project.sampleValues = surveyQuestions;
@@ -364,7 +361,6 @@ class Collection extends React.Component {
                 if (data == "done") {
                     if (plotId == -1) {
                         alert("All plots have been analyzed for this project.");
-                        window.location = this.props.documentRoot + "/home";
                     } else {
                         this.setState({nextPlotButtonDisabled: true});
                         alert("You have reached the end of the plot list.");
@@ -523,18 +519,12 @@ class Collection extends React.Component {
         this.getNextPlotData(this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
     }
 
-    goToPlot() {
-        if (!isNaN(this.state.newPlotInput)) {
-            this.getPlotData(this.state.newPlotInput);
+    goToPlot(newPlot) {
+        if (!isNaN(newPlot)) {
+            this.getPlotData(newPlot);
         } else {
             alert("Please enter a number to go to plot");
         }
-    }
-    
-    updateNewPlotId(value) {
-        this.setState({
-            newPlotInput: value
-        });
     }
 
     setReviewPlots() {
@@ -664,11 +654,11 @@ class Collection extends React.Component {
             return this.state.userSamples[sampleId] && this.state.userSamples[sampleId][this.state.selectedQuestionText];
         } ).forEach(feature => {
             const sampleId = feature.get("sampleId");
-            const answers = this.state.currentProject.sampleValues
-                             .filter(sv => sv.question === this.state.selectedQuestionText)[0].answers || [];
-            const color = answers
-                             .filter(ans => ans.answer === this.state.userSamples[sampleId][this.state.selectedQuestionText].answer)[0].color || "";
-            mercator.highlightSampleGeometry(feature, color);
+            const svAnswers = this.state.currentProject.sampleValues
+                             .filter(sv => sv.question === this.state.selectedQuestionText)[0].answers;
+            const sampleAnswers = svAnswers
+                             .filter(ans => ans.answer === this.state.userSamples[sampleId][this.state.selectedQuestionText].answer);
+            mercator.highlightSampleGeometry(feature, sampleAnswers.length > 0 ? sampleAnswers[0].color || "" : "");
         });
     }
 
@@ -744,6 +734,7 @@ class Collection extends React.Component {
                     projectId={this.props.projectId}
                     plotId={plotId}
                     documentRoot={this.props.documentRoot}
+                    userName={this.props.userName}
                     saveValues={this.saveValues}
                     surveyQuestions={this.state.currentProject.sampleValues}
                     projectName={this.state.currentProject.name}
@@ -753,7 +744,6 @@ class Collection extends React.Component {
                             <PlotNavigation 
                                 plotId={plotId}
                                 navButtonsShown={this.state.currentPlot != null}
-                                newPlotInput={this.state.newPlotInput}
                                 nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                                 prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                                 sampleOutlineBlack={this.state.sampleOutlineBlack}
@@ -764,7 +754,6 @@ class Collection extends React.Component {
                                 nextPlot={this.nextPlot}
                                 prevPlot={this.prevPlot}
                                 setReviewPlots={this.setReviewPlots}
-                                updateNewPlotId={this.updateNewPlotId}
                                 toggleSampleBW={this.toggleSampleBW}
                             />
                         :
@@ -851,6 +840,7 @@ function SideBar(props) {
                         documentRoot={props.documentRoot}
                         projectId={props.projectId}
                         plotId={props.plotId}
+                        userName={props.userName}
                     />
                     <button 
                         id="collection-quit-button" 
@@ -868,126 +858,147 @@ function SideBar(props) {
     );
 }
 
-function PlotNavigation(props) {
-    return (
-        <fieldset className="mb-3 text-center">
-            <h3 className="mb-2">Plot Navigation</h3>
+class PlotNavigation extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state = {
+            newPlotInput: "",
+        };
+        this.updateNewPlotId = this.updateNewPlotId.bind(this);
+    }
 
-            {props.plotId &&
-                <div className="row py-2 justify-content-center">
-                    <h3 className="mt-2">Current Plot ID:</h3>
-                        <input
-                            type="text"
-                            id="plotId"
-                            autoComplete="off"
-                            className="col-4 px-0 mx-2"
-                            value={props.newPlotInput}
-                            onChange={e => props.updateNewPlotId(e.target.value)}
-                        />
-                        <input
-                            id="goto-plot-button"
-                            className="text-center btn btn-outline-lightgreen btn-sm"
-                            type="button"
-                            name="goto-plot"
-                            value="Go to plot"
-                            onClick={props.goToPlot}
-                        />               
-                </div>
-            }
+    componentDidUpdate(prevProps) {
+        if (this.props.plotId !== prevProps.plotId) {
+            this.setState({newPlotInput: this.props.plotId})
+        }
+    }
 
-            {!props.navButtonsShown 
-            ?
-                <div className="row" id="go-to-first-plot">
-                    <div className="col">
+    updateNewPlotId(value) {
+        this.setState({newPlotInput: value});
+    }
+    
+    render() {
+        const { props } = this;
+        return (
+            <fieldset className="mb-3 text-center">
+                <h3 className="mb-2">Plot Navigation</h3>
+
+                {props.plotId &&
+                    <div className="row py-2 justify-content-center">
+                        <h3 className="mt-2">Current Plot ID:</h3>
+                            <input
+                                type="text"
+                                id="plotId"
+                                autoComplete="off"
+                                className="col-4 px-0 mx-2"
+                                value={this.state.newPlotInput}
+                                onChange={e => this.updateNewPlotId(e.target.value)}
+                            />
+                            <input
+                                id="goto-plot-button"
+                                className="text-center btn btn-outline-lightgreen btn-sm"
+                                type="button"
+                                name="goto-plot"
+                                value="Go to plot"
+                                onClick={() => props.goToPlot(this.state.newPlotInput)}
+                            />               
+                    </div>
+                }
+
+                {!props.navButtonsShown 
+                ?
+                    <div className="row" id="go-to-first-plot">
+                        <div className="col">
+                            <input 
+                                id="go-to-first-plot-button" 
+                                className="btn btn-outline-lightgreen btn-sm btn-block"
+                                type="button" 
+                                name="new-plot" 
+                                value="Go to first plot" 
+                                onClick={props.goToFirstPlot}
+                            />
+                        </div>
+                    </div>
+                :
+                    <div className="row justify-content-center py-2" id="plot-nav">
+                        <div className="px-1">
+                            <input 
+                                id="prev-plot-button" 
+                                className="btn btn-outline-lightgreen"
+                                type="button" 
+                                name="new-plot" 
+                                value="Prev" 
+                                onClick={props.prevPlot}
+                                style={{opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
+                                disabled={props.prevPlotButtonDisabled}
+                            />
+                        </div>
+                        <div className="px-1">
+                            <input 
+                                id="new-plot-button" 
+                                className="btn btn-outline-lightgreen"
+                                type="button" 
+                                name="new-plot" 
+                                value="Next" 
+                                onClick={props.nextPlot}
+                                style={{opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
+                                disabled={props.nextPlotButtonDisabled}
+                            />
+                        </div>
+                        <div className="px-1">
+                            <input 
+                                id="flag-plot-button" 
+                                className="btn btn-outline-lightgreen"
+                                type="button" 
+                                name="flag-plot" 
+                                value="Flag" 
+                                onClick={props.flagPlot}
+                            />
+                        </div>
+                    </div>
+                }
+
+                <div className="PlotNavigation__review-option row justify-content-center">
+                    <div className="form-check">
                         <input 
-                            id="go-to-first-plot-button" 
-                            className="btn btn-outline-lightgreen btn-sm btn-block"
-                            type="button" 
-                            name="new-plot" 
-                            value="Go to first plot" 
-                            onClick={props.goToFirstPlot}
+                            className="form-check-input"
+                            checked={props.reviewPlots}
+                            id="reviewCheck"
+                            onChange={props.setReviewPlots}
+                            type="checkbox"
                         />
+                        <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
                     </div>
                 </div>
-            :
-                <div className="row justify-content-center py-2" id="plot-nav">
-                    <div className="px-1">
-                        <input 
-                            id="prev-plot-button" 
-                            className="btn btn-outline-lightgreen"
-                            type="button" 
-                            name="new-plot" 
-                            value="Prev" 
-                            onClick={props.prevPlot}
-                            style={{opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
-                            disabled={props.prevPlotButtonDisabled}
-                        />
-                    </div>
-                    <div className="px-1">
-                        <input 
-                            id="new-plot-button" 
-                            className="btn btn-outline-lightgreen"
-                            type="button" 
-                            name="new-plot" 
-                            value="Next" 
-                            onClick={props.nextPlot}
-                            style={{opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
-                            disabled={props.nextPlotButtonDisabled}
-                        />
-                    </div>
-                    <div className="px-1">
-                        <input 
-                            id="flag-plot-button" 
-                            className="btn btn-outline-lightgreen"
-                            type="button" 
-                            name="flag-plot" 
-                            value="Flag" 
-                            onClick={props.flagPlot}
-                        />
-                    </div>
-                </div>
-            }
 
-            <div className="PlotNavigation__review-option row justify-content-center">
-                <div className="form-check">
-                    <input 
-                        className="form-check-input"
-                        checked={props.reviewPlots}
-                        id="reviewCheck"
-                        onChange={props.setReviewPlots}
-                        type="checkbox"
-                    />
-                    <label htmlFor="reviewCheck" className="form-check-label">Review your analyzed plots</label>
+                <div className="PlotNavigation__change-color row justify-content-center">
+                    Unanswered Color
+                    <div className="form-check form-check-inline">
+                        <input 
+                            className="form-check-input ml-2"
+                            checked={props.sampleOutlineBlack}
+                            id="radio1"
+                            onClick={props.toggleSampleBW}
+                            type="radio"
+                            name="color-radios"
+                        />
+                        <label htmlFor="radio1" className="form-check-label">Black</label>
+                    </div>                
+                    <div className="form-check form-check-inline">
+                        <input 
+                            className="form-check-input"
+                            checked={!props.sampleOutlineBlack}
+                            id="radio2"
+                            onClick={props.toggleSampleBW}
+                            type="radio"
+                            name="color-radios"
+                        />
+                        <label htmlFor="radio2" className="form-check-label">White</label>
+                    </div>
                 </div>
-            </div>
-
-            <div className="PlotNavigation__change-color row justify-content-center">
-                Unanswered Color
-                <div className="form-check form-check-inline">
-                    <input 
-                        className="form-check-input ml-2"
-                        checked={props.sampleOutlineBlack}
-                        id="radio1"
-                        onClick={props.toggleSampleBW}
-                        type="radio"
-                        name="color-radios"
-                    />
-                    <label htmlFor="radio1" className="form-check-label">Black</label>
-                </div>                
-                <div className="form-check form-check-inline">
-                    <input 
-                        className="form-check-input"
-                        checked={!props.sampleOutlineBlack}
-                        id="radio2"
-                        onClick={props.toggleSampleBW}
-                        type="radio"
-                        name="color-radios"
-                    />
-                    <label htmlFor="radio2" className="form-check-label">White</label>
-                </div>
-            </div>
-        </fieldset>
-    );
+            </fieldset>
+        );
+    }
 }
 
 function ImageryOptions(props) {
@@ -1101,7 +1112,8 @@ class ProjectStatsGroup extends React.Component {
                 {this.state.showStats && 
                     <ProjectStats 
                         documentRoot={this.props.documentRoot}
-                        projectId={this.props.projectId} 
+                        projectId={this.props.projectId}
+                        userName={this.props.userName}
                     />
                 }
             </div>
@@ -1146,36 +1158,66 @@ class ProjectStats extends React.Component {
 
     render() {
         const { stats } = this.state
+        const userStats = stats.userStats && stats.userStats.filter(user => user.user === this.props.userName)[0]
         const numPlots = stats.flaggedPlots + stats.analyzedPlots + stats.unanalyzedPlots
         return (
-            <div className="row justify-content-center mb-1 text-center">
+            <div className="row mb-1">
                 <div className="col-lg-12">
-                    <fieldset id="projStats" className="text-center projNoStats">
+                    <fieldset id="projStats" className="projNoStats">
                             <table className="table table-sm">
                                 <tbody>
                                     <tr>
-                                        <td className="small">Plots Analyzed</td>
+                                        <td className="small pl-4">My Plots Completed</td>
                                         <td className="small">
-                                            {stats.analyzedPlots || ""}
-                                            ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                            {userStats && userStats.plots || "0"}
+                                            ({this.asPercentage(userStats && userStats.plots || 0, numPlots)}%)
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="small">Plots Flagged</td>
+                                        <td className="small pl-4">-- My Average Time</td>
                                         <td className="small">
-                                            {stats.flaggedPlots || ""}
-                                            ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                            {userStats && userStats.timedPlots ? `${(userStats.seconds / userStats.timedPlots / 1.0).toFixed(2)} secs` : "untimed"} 
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="small">Plots Completed</td>
+                                        <td className="small pl-4">Project Plots Completed</td>
                                         <td className="small">
                                             {stats.analyzedPlots + stats.flaggedPlots || ""}
                                             ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="small">Plots Total</td>
+                                        <td className="small pl-4">-- Analyzed</td>
+                                        <td className="small">
+                                            {stats.analyzedPlots || ""}
+                                            ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">-- Flagged</td>
+                                        <td className="small">
+                                            {stats.flaggedPlots || ""}
+                                            ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">-- Total contributors</td>
+                                        <td className="small">
+                                            {stats.userStats ? stats.userStats.length : 0}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">-- Users Average time</td>
+                                        <td className="small">
+                                            {stats.userStats && stats.userStats.reduce((p, c) => {return p + c.timedPlots}, 0) > 0
+                                                ? `${(stats.userStats.reduce((p, c) => {return p + c.seconds}, 0) 
+                                                    / stats.userStats.reduce((p, c) => {return p + c.timedPlots}, 0)
+                                                    / 1.0).toFixed(2)} secs`
+                                                : "untimed"}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">Project Plots Total</td>
                                         <td className="small">
                                             {numPlots || ""}
                                         </td>
