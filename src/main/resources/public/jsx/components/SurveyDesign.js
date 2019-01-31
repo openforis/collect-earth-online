@@ -5,16 +5,191 @@ export class SurveyDesign extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            topLevelNodes: [],
-            currentNodeIndex: 0
+            newValueEntry: this.props.project.newValueEntry,
+            projectDetails: this.props.project.projectDetails,
+        };
+        this.addSurveyQuestion = this.addSurveyQuestion.bind(this);
+        this.addSurveyQuestionRow = this.addSurveyQuestionRow.bind(this);
+        this.getParentSurveyAnswers = this.getParentSurveyAnswers.bind(this);
+        this.getParentSurveyQuestionAnswers = this.getParentSurveyQuestionAnswers.bind(this);
+        this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
+        this.handleInputColor = this.handleInputColor.bind(this);
+        this.handleInputName = this.handleInputName.bind(this);
+        this.handleInputParent = this.handleInputParent.bind(this);
+        this.removeSurveyQuestion = this.removeSurveyQuestion.bind(this);
+        this.removeSurveyQuestionRow = this.removeSurveyQuestionRow.bind(this);
+    };
+
+    addSurveyQuestionRow(surveyQuestionName) {
+        let entry = this.state.newValueEntry[surveyQuestionName];
+        if (entry.answer != "") {
+            let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
+            console.log(surveyQuestion);
+            if (surveyQuestion.component_type.toLowerCase() == "input" && surveyQuestion.answers.length < 1) {
+                surveyQuestion.answers.push({
+                    id: surveyQuestion.answers.length + 1,
+                    answer: entry.answer,
+                    color: entry.color
+                });
+            } else if((surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="boolean" && surveyQuestion.answers.length < 2){
+                surveyQuestion.answers.push({
+                    id: surveyQuestion.answers.length + 1,
+                    answer: entry.answer,
+                    color: entry.color
+                });
+            } else if((surveyQuestion.component_type.toLowerCase() == "button" || surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="text"){
+                surveyQuestion.answers.push({
+                    id: surveyQuestion.answers.length + 1,
+                    answer: entry.answer,
+                    color: entry.color
+                });
+            } else{
+                alert("You cannot add more answers for this type.")
+            }
+            entry.id=-1;
+            entry.answer = "";
+            entry.color = "#1527F6";
+        } else {
+            alert("A survey answer must possess both an answer and a color.");
         }
+        let dNew = this.state.newValueEntry;
+        dNew[surveyQuestionName] = entry;
+        this.setState({newValueEntry: dNew});
+    }
+
+    getParentSurveyQuestionAnswers(sampleSurvey) {
+        let ans = [];
+        sampleSurvey.map((sq) => {
+                let parent_value = document.getElementById("value-parent");
+
+                if(parent_value!=null) {
+                    let parent = parent_value.options[parent_value.selectedIndex].value;
+                    if (sq.id == parent) {
+                        ans = sq.answers;
+                    }
+                }
+            }
+        );
+        return ans;
+    }
+
+    getParentSurveyAnswers(sampleSurvey,question_id) {
+        let ans = [];
+        sampleSurvey.map((sq) => {
+                if (sq.id == question_id) {
+                    ans = sq.answers;
+                }
+
+
+            }
+        );
+        return ans;
+    }
+
+    addSurveyQuestion(){
+        if (this.state.projectDetails != null) {
+            let questionText = document.getElementById("surveyQuestionText").value;
+            let parent_value = document.getElementById("value-parent");
+
+            let parent = parent_value.options[parent_value.selectedIndex].value;
+
+            let answer_value = document.getElementById("value-answer");
+
+            let answer = answer_value.options[answer_value.selectedIndex].value;
+
+            let componenttype_value = document.getElementById("value-componenttype");
+            let componenttype = componenttype_value.options[componenttype_value.selectedIndex].value;
+
+            if (questionText != "") {
+                let newValueEntryNew = this.state.newValueEntry;
+                newValueEntryNew[questionText] = {id:-1,answer: "", color: "#1527F6"};
+                let detailsNew = this.state.projectDetails;
+                let _id = detailsNew.sampleValues.length + 1;
+                let question_id = -1,answer_id=-1;
+                detailsNew.sampleValues.map((sq) => {
+                        if (sq.id == parent) {
+                            question_id = sq.id;
+                            this.getParentSurveyAnswers(detailsNew.sampleValues,question_id).map((ans) => {
+                                    if (ans.id == answer) {
+                                        answer_id = ans.id;
+                                    }
+                                }
+                            );
+                        }
+                    }
+                );
+
+                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id,data_type:componenttype.split("-")[1],component_type:componenttype.split("-")[0]});
+
+                this.setState({newValueEntry: newValueEntryNew, projectDetails: detailsNew, newSurveyQuestionName: ""});
+                document.getElementById("surveyQuestionText").value = "";
+                parent_value.options[0].selected = true;
+            } else {
+                alert("Please enter a survey question first.");
+            }
+        }
+    }
+
+    removeSurveyQuestion(surveyQuestionName) {
+        if (this.state.projectDetails != null) {
+            let detailsNew = this.state.projectDetails;
+            detailsNew.sampleValues = detailsNew.sampleValues.filter(
+                function (surveyQuestion) {
+                    return surveyQuestion.question != surveyQuestionName;
+                }
+            );
+            this.setState({
+                projectDetails: detailsNew
+            });
+        }
+    }
+
+    getSurveyQuestionByName(surveyQuestionName) {
+        return this.state.projectDetails.sampleValues.find(
+            function (surveyQuestion) {
+                return surveyQuestion.question == surveyQuestionName;
+            }
+        );
+    }
+
+    removeSurveyQuestionRow(surveyQuestionText, _surveyAnswer) {
+        let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionText);
+        surveyQuestion.answers = surveyQuestion.answers.filter(
+            function (surveyAnswer) {
+                return surveyAnswer.answer != _surveyAnswer;
+            }
+        );
+        this.setState({});
+    }
+
+    handleInputName(surveyQuestion, event) {
+        let newValueEntryNew = this.state.newValueEntry;
+        if (newValueEntryNew[surveyQuestion]) {
+            newValueEntryNew[surveyQuestion].answer = event.target.value;
+            this.setState({newValueEntry:newValueEntryNew});
+        }
+        else
+            this.setState({newValueEntry:{id:-1,answer: "", color: "#1527F6"}});
+    }
+
+    handleInputColor(surveyQuestion, event) {
+        let newValueEntryNew = this.state.newValueEntry;
+        newValueEntryNew[surveyQuestion].color = event.target.value;
+
+        this.setState({newValueEntry: newValueEntryNew});
+
+    }
+
+    handleInputParent(event) {
+        let detailsNew = this.state.projectDetails;
+        this.setState({projectDetails: detailsNew});
     }
 
     render() {
         let answer_select = "";
-        let answers = this.props.getParentSurveyQuestionAnswers(this.props.project.projectDetails.sampleValues);
+        let answers = this.getParentSurveyQuestionAnswers(this.props.project.projectDetails.sampleValues);
         if (answers.length > 0) {
-            answer_select = this.props.getParentSurveyQuestionAnswers(this.props.project.projectDetails.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
+            answer_select = this.getParentSurveyQuestionAnswers(this.props.project.projectDetails.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
                 <option key={uid}
                         value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
             )
@@ -25,13 +200,13 @@ export class SurveyDesign extends React.Component {
                 <div id="survey-design">
                     <SurveyQuestionTree
                         project={this.props.project}
-                        addSurveyQuestionRow={this.props.addSurveyQuestionRow} topoSort={this.props.topoSort}
-                        getParentSurveyQuestions={this.props.getParentSurveyQuestions}
-                        removeSurveyQuestion={this.props.removeSurveyQuestion}
-                        removeSurveyQuestionRow={this.props.removeSurveyQuestionRow}
-                        handleInputColor={this.props.handleInputColor}
-                        handleInputName={this.props.handleInputName}
-                        handleInputParent={this.props.handleInputParent}
+                        addSurveyQuestionRow={this.addSurveyQuestionRow}
+                        topoSort={this.topoSort}
+                        removeSurveyQuestion={this.removeSurveyQuestion}
+                        removeSurveyQuestionRow={this.removeSurveyQuestionRow}
+                        handleInputColor={this.handleInputColor}
+                        handleInputName={this.handleInputName}
+                        handleInputParent={this.handleInputParent}
                     />
                     <table>
                         <tbody>
@@ -60,7 +235,7 @@ export class SurveyDesign extends React.Component {
                             </td>
                             <td>
                                 <select id="value-componenttype" className="form-control form-control-sm" size="1"
-                                        onChange={(e) => this.props.handleInputParent(e)}>
+                                        onChange={(e) => this.handleInputParent(e)}>
                                     <option value="button-text">Button-Text</option>
                                     <option value="input-number">Input-Number</option>
                                     <option value="input-text">Input-Text</option>
@@ -80,7 +255,7 @@ export class SurveyDesign extends React.Component {
                             </td>
                             <td>
                                 <select id="value-answer" className="form-control form-control-sm" size="1"
-                                        onChange={(e) => this.props.handleInputParent(e)}>
+                                        onChange={(e) => this.handleInputParent(e)}>
                                     <option value="">Any</option>
                                     {answer_select}
                                 </select>
@@ -97,7 +272,7 @@ export class SurveyDesign extends React.Component {
                         </tr>
                         <tr>
                             <td><input type="button" className="button" value="Add Survey Question"
-                                       onClick={this.props.addSurveyQuestion}/></td>
+                                       onClick={this.addSurveyQuestion}/></td>
                             <td></td>
                         </tr>
                         </tbody>
@@ -157,7 +332,6 @@ function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion 
                 </thead>
                 <tbody>
                 {
-
                     (surveyQuestion.answers).map((surveyAnswer, uid) => {
 
                             return <tr key={uid}>
@@ -176,7 +350,7 @@ function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion 
                                 </td>
                                 <td>
                                     <div className="circle"
-                                         style={{ backgroundColor: surveyAnswer.color, border: "solid 1px" }}></div>
+                                         style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}></div>
                                 </td>
                                 <td>
                                     &nbsp;
@@ -188,7 +362,6 @@ function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion 
                 <SurveyQuestionTable
                     project={project}
                     surveyQuestion={surveyQuestion}
-                    getParentSurveyQuestions={parentProps.getParentSurveyQuestions}
                     addSurveyQuestionRow={parentProps.addSurveyQuestionRow}
                     handleInputName={parentProps.handleInputName}
                     handleInputColor={parentProps.handleInputColor}
@@ -197,9 +370,7 @@ function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion 
                 </tbody>
             </table>
         </div>
-
     );
-
 }
 
 function RemoveSurveyQuestionButton(props) {

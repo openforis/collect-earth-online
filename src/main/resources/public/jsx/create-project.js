@@ -32,21 +32,9 @@ class Project extends React.Component {
         this.setSampleDistribution = this.setSampleDistribution.bind(this);
         this.setBaseMapSource = this.setBaseMapSource.bind(this);
         this.showProjectMap = this.showProjectMap.bind(this);
-        this.addSurveyQuestion = this.addSurveyQuestion.bind(this);
-        this.removeSurveyQuestion = this.removeSurveyQuestion.bind(this);
-        this.addSurveyQuestionRow = this.addSurveyQuestionRow.bind(this);
-        this.getParentSurveyQuestions = this.getParentSurveyQuestions.bind(this);
         this.setProjectTemplate = this.setProjectTemplate.bind(this);
-        this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
-        this.getParentSurveyQuestionAnswers=this.getParentSurveyQuestionAnswers.bind(this);
-        this.removeSurveyQuestionRow = this.removeSurveyQuestionRow.bind(this);
-        this.handleInputName = this.handleInputName.bind(this);
-        this.handleInputColor = this.handleInputColor.bind(this);
-        this.handleInputParent = this.handleInputParent.bind(this);
         this.handleChange = this.handleChange.bind(this);
-        this.topoSort = this.topoSort.bind(this);
         this.createProject = this.createProject.bind(this);
-        this.getParentSurveyAnswers=this.getParentSurveyAnswers.bind(this);
     };
 
     componentDidMount() {
@@ -190,181 +178,7 @@ class Project extends React.Component {
         }
     }
 
-    getParentSurveyQuestions(sampleSurvey) {
-        return sampleSurvey.filter(
-            function (surveyQuestion) {
-                return surveyQuestion.parent_question==-1;
-            }
-        );
-    }
-    getParentSurveyQuestionAnswers(sampleSurvey) {
-        let ans = [];
-        sampleSurvey.map((sq) => {
-                let parent_value = document.getElementById("value-parent");
 
-                if(parent_value!=null) {
-                    let parent = parent_value.options[parent_value.selectedIndex].value;
-                    if (sq.id == parent) {
-                        ans = sq.answers;
-                    }
-                }
-            }
-        );
-        return ans;
-    }
-
-    getParentSurveyAnswers(sampleSurvey,question_id) {
-        let ans = [];
-        sampleSurvey.map((sq) => {
-                if (sq.id == question_id) {
-                    ans = sq.answers;
-                }
-
-
-            }
-        );
-        return ans;
-    }
-
-    getChildSurveyQuestions(sampleSurvey, parentSurveyQuestion) {
-        return sampleSurvey.filter(
-            function (surveyQuestion) {
-                return surveyQuestion.parent_question == parentSurveyQuestion.id;
-            }
-        );
-    }
-
-    topoSort(sampleSurvey) {
-        let parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
-        let parentChildGroups = parentSurveyQuestions.map(
-            function (parentSurveyQuestion) {
-                let childSurveyQuestions = sampleSurvey.filter(
-                    function (sampleValue) {
-                        return sampleValue.parent_question == parentSurveyQuestion.id;
-                    }
-                );
-                return [parentSurveyQuestion].concat(childSurveyQuestions);
-            },
-            this
-        );
-        return [].concat.apply([], parentChildGroups);
-    }
-
-    addSurveyQuestion(){
-        if (this.state.projectDetails != null) {
-            let questionText = document.getElementById("surveyQuestionText").value;
-            let parent_value = document.getElementById("value-parent");
-
-            let parent = parent_value.options[parent_value.selectedIndex].value;
-
-            let answer_value = document.getElementById("value-answer");
-
-            let answer = answer_value.options[answer_value.selectedIndex].value;
-
-            let componenttype_value = document.getElementById("value-componenttype");
-            let componenttype = componenttype_value.options[componenttype_value.selectedIndex].value;
-
-            if (questionText != "") {
-                let newValueEntryNew = this.state.newValueEntry;
-                newValueEntryNew[questionText] = {id:-1,answer: "", color: "#1527F6"};
-                let detailsNew = this.state.projectDetails;
-                let _id = detailsNew.sampleValues.length + 1;
-                let question_id = -1,answer_id=-1;
-                detailsNew.sampleValues.map((sq) => {
-                        if (sq.id == parent) {
-                            question_id = sq.id;
-                            this.getParentSurveyAnswers(detailsNew.sampleValues,question_id).map((ans) => {
-                                    if (ans.id == answer) {
-                                        answer_id = ans.id;
-                                    }
-                                }
-                            );
-                        }
-                    }
-                );
-
-                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id,data_type:componenttype.split("-")[1],component_type:componenttype.split("-")[0]});
-                
-                this.setState({newValueEntry: newValueEntryNew, projectDetails: detailsNew, newSurveyQuestionName: ""});
-                document.getElementById("surveyQuestionText").value = "";
-                parent_value.options[0].selected = true;
-            } else {
-                alert("Please enter a survey question first.");
-            }
-        }
-    }
-
-    removeSurveyQuestion(surveyQuestionName) {
-        if (this.state.projectDetails != null) {
-            let detailsNew = this.state.projectDetails;
-            detailsNew.sampleValues = detailsNew.sampleValues.filter(
-                function (surveyQuestion) {
-                    return surveyQuestion.question != surveyQuestionName;
-                }
-            );
-            this.setState({
-                projectDetails: detailsNew
-            });
-        }
-    }
-
-    getSurveyQuestionByName(surveyQuestionName) {
-        return this.state.projectDetails.sampleValues.find(
-            function (surveyQuestion) {
-                return surveyQuestion.question == surveyQuestionName;
-            }
-        );
-    }
-
-    removeSurveyQuestionRow(surveyQuestionText, _surveyAnswer) {
-        let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionText);
-        surveyQuestion.answers = surveyQuestion.answers.filter(
-            function (surveyAnswer) {
-                return surveyAnswer.answer != _surveyAnswer;
-            }
-        );
-        this.setState({});
-    }
-
-    addSurveyQuestionRow(surveyQuestionName) {
-        let entry = this.state.newValueEntry[surveyQuestionName];
-        if (entry.answer != "") {
-            let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
-            console.log(surveyQuestion);
-            if (surveyQuestion.component_type.toLowerCase() == "input" && surveyQuestion.answers.length < 1) {
-                surveyQuestion.answers.push({
-                    id: surveyQuestion.answers.length + 1,
-                    answer: entry.answer,
-                    color: entry.color
-                });
-            }
-            else if((surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="boolean" && surveyQuestion.answers.length < 2){
-                surveyQuestion.answers.push({
-                    id: surveyQuestion.answers.length + 1,
-                    answer: entry.answer,
-                    color: entry.color
-                });
-            }
-            else if((surveyQuestion.component_type.toLowerCase() == "button" || surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="text"){
-                surveyQuestion.answers.push({
-                    id: surveyQuestion.answers.length + 1,
-                    answer: entry.answer,
-                    color: entry.color
-                });
-            }
-            else{
-             alert("You cannot add more answers for this type.")
-            }
-            entry.id=-1;
-            entry.answer = "";
-            entry.color = "#1527F6";
-        } else {
-            alert("A survey answer must possess both an answer and a color.");
-        }
-        let dNew = this.state.newValueEntry;
-        dNew[surveyQuestionName] = entry;
-        this.setState({newValueEntry: dNew});
-    }
 
     getProjectById() {
         const projectId = "0";
@@ -533,29 +347,6 @@ class Project extends React.Component {
         }
     }
 
-    handleInputName(surveyQuestion, event) {
-        let newValueEntryNew = this.state.newValueEntry;
-        if (newValueEntryNew[surveyQuestion]) {
-            newValueEntryNew[surveyQuestion].answer = event.target.value;
-            this.setState({newValueEntry:newValueEntryNew});
-        }
-        else
-            this.setState({newValueEntry:{id:-1,answer: "", color: "#1527F6"}});
-    }
-
-    handleInputColor(surveyQuestion, event) {
-        let newValueEntryNew = this.state.newValueEntry;
-        newValueEntryNew[surveyQuestion].color = event.target.value;
-
-        this.setState({newValueEntry: newValueEntryNew});
-
-    }
-
-    handleInputParent(event) {
-        let detailsNew = this.state.projectDetails;
-        this.setState({projectDetails: detailsNew});
-    }
-
     handleChange(event) {
         let detailsNew = this.state.projectDetails;
 
@@ -579,21 +370,11 @@ class Project extends React.Component {
                             setProjectTemplate={this.setProjectTemplate} 
                             setPrivacyLevel={this.setPrivacyLevel}
                             setSampleDistribution={this.setSampleDistribution}
-                            addSurveyQuestionRow={this.addSurveyQuestionRow}
                             setBaseMapSource={this.setBaseMapSource}
                             setPlotDistribution={this.setPlotDistribution} 
                             setPlotShape={this.setPlotShape}
                             setTemplatePlots={this.setTemplatePlots}
-                            addSurveyQuestion={this.addSurveyQuestion}
-                            topoSort={this.topoSort} 
-                            getParentSurveyQuestions={this.getParentSurveyQuestions} 
-                            getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}
-                            removeSurveyQuestion={this.removeSurveyQuestion}
-                            removeSurveyQuestionRow={this.removeSurveyQuestionRow}
-                            handleInputColor={this.handleInputColor} 
-                            handleInputName={this.handleInputName}
-                            handleChange={this.handleChange} 
-                            handleInputParent={this.handleInputParent}
+                            handleChange={this.handleChange}
                         />
                         <ProjectManagement project={this.state} createProject={this.createProject} />
                     </Fragment>
@@ -631,19 +412,7 @@ function ProjectDesignForm(props) {
                 {!props.project.useTemplatePlots && 
                     <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
                 }
-                <SurveyDesign 
-                    project={props.project}
-                    addSurveyQuestionRow={props.addSurveyQuestionRow}
-                    addSurveyQuestion ={props.addSurveyQuestion} 
-                    topoSort={props.topoSort}
-                    getParentSurveyQuestions={props.getParentSurveyQuestions} 
-                    getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}
-                    removeSurveyQuestion={props.removeSurveyQuestion}
-                    removeSurveyQuestionRow={props.removeSurveyQuestionRow}
-                    handleInputColor={props.handleInputColor}
-                    handleInputName={props.handleInputName}
-                    handleInputParent={props.handleInputParent}
-                />
+                <SurveyDesign project={props.project} />
 
         </form>
     );
