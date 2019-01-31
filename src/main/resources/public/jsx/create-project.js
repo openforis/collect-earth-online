@@ -124,7 +124,7 @@ class Project extends React.Component {
         }
 
         templateProject.sampleValues=newSV;
-        this.setState({projectDetails: JSON.parse(JSON.stringify(templateProject))},
+        this.setState({templateProject:templateProject,projectDetails: JSON.parse(JSON.stringify(templateProject))},
             function () {
                 this.updateUnmanagedComponents(this.state.templateId);
             }

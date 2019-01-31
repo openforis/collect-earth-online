@@ -6,7 +6,6 @@ export class SurveyDesign extends React.Component {
         super(props);
         this.state = {
             newValueEntry: this.props.project.newValueEntry,
-            projectDetails: this.props.project.projectDetails,
         };
         this.addSurveyQuestion = this.addSurveyQuestion.bind(this);
         this.addSurveyQuestionRow = this.addSurveyQuestionRow.bind(this);
@@ -31,22 +30,22 @@ export class SurveyDesign extends React.Component {
                     answer: entry.answer,
                     color: entry.color
                 });
-            } else if((surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="boolean" && surveyQuestion.answers.length < 2){
+            } else if ((surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") && surveyQuestion.data_type.toLowerCase() == "boolean" && surveyQuestion.answers.length < 2) {
                 surveyQuestion.answers.push({
                     id: surveyQuestion.answers.length + 1,
                     answer: entry.answer,
                     color: entry.color
                 });
-            } else if((surveyQuestion.component_type.toLowerCase() == "button" || surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="text"){
+            } else if ((surveyQuestion.component_type.toLowerCase() == "button" || surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") && surveyQuestion.data_type.toLowerCase() == "text") {
                 surveyQuestion.answers.push({
                     id: surveyQuestion.answers.length + 1,
                     answer: entry.answer,
                     color: entry.color
                 });
-            } else{
+            } else {
                 alert("You cannot add more answers for this type.")
             }
-            entry.id=-1;
+            entry.id = -1;
             entry.answer = "";
             entry.color = "#1527F6";
         } else {
@@ -87,7 +86,7 @@ export class SurveyDesign extends React.Component {
     }
 
     addSurveyQuestion(){
-        if (this.state.projectDetails != null) {
+        if (this.props.project.projectDetails != null) {
             let questionText = document.getElementById("surveyQuestionText").value;
             let parent_value = document.getElementById("value-parent");
 
@@ -103,7 +102,7 @@ export class SurveyDesign extends React.Component {
             if (questionText != "") {
                 let newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[questionText] = {id:-1,answer: "", color: "#1527F6"};
-                let detailsNew = this.state.projectDetails;
+                let detailsNew = this.props.project.projectDetails;
                 let _id = detailsNew.sampleValues.length + 1;
                 let question_id = -1,answer_id=-1;
                 detailsNew.sampleValues.map((sq) => {
@@ -131,8 +130,8 @@ export class SurveyDesign extends React.Component {
     }
 
     removeSurveyQuestion(surveyQuestionName) {
-        if (this.state.projectDetails != null) {
-            let detailsNew = this.state.projectDetails;
+        if (this.props.project.projectDetails != null) {
+            let detailsNew = this.props.project.projectDetails;
             detailsNew.sampleValues = detailsNew.sampleValues.filter(
                 function (surveyQuestion) {
                     return surveyQuestion.question != surveyQuestionName;
@@ -145,7 +144,7 @@ export class SurveyDesign extends React.Component {
     }
 
     getSurveyQuestionByName(surveyQuestionName) {
-        return this.state.projectDetails.sampleValues.find(
+        return this.props.project.projectDetails.sampleValues.find(
             function (surveyQuestion) {
                 return surveyQuestion.question == surveyQuestionName;
             }
@@ -181,7 +180,7 @@ export class SurveyDesign extends React.Component {
     }
 
     handleInputParent(event) {
-        let detailsNew = this.state.projectDetails;
+        let detailsNew = this.props.project.projectDetails;
         this.setState({projectDetails: detailsNew});
     }
 
@@ -201,7 +200,6 @@ export class SurveyDesign extends React.Component {
                     <SurveyQuestionTree
                         project={this.props.project}
                         addSurveyQuestionRow={this.addSurveyQuestionRow}
-                        topoSort={this.topoSort}
                         removeSurveyQuestion={this.removeSurveyQuestion}
                         removeSurveyQuestionRow={this.removeSurveyQuestionRow}
                         handleInputColor={this.handleInputColor}
