@@ -1,8 +1,7 @@
 import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 
-import FormLayout from "./components/FormLayout"
-import SectionBlock from "./components/SectionBlock"
+import { FormLayout, SectionBlock } from "./components/FormComponents"
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 import {SurveyDesign } from "./components/SurveyDesign"

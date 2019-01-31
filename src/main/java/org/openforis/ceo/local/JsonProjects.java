@@ -2,6 +2,7 @@ package org.openforis.ceo.local;
 
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.local.JsonImagery.getImageryTitle;
+import static org.openforis.ceo.local.JsonUsers.sumUserInfo;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -253,6 +254,14 @@ public class JsonProjects implements Projects {
         stats.add("publishedDate", project.get("published_date"));
         stats.add("archivedDate", project.get("archived_date"));
         stats.add("closedDate", project.get("closed_date"));
+        // postgres is in decimal seconds (timestamp) so add matching column
+        var statsSecs = toStream(project.get("userStats").getAsJsonArray())
+                        .map(stat -> {
+                            stat.addProperty("seconds", stat.get("milliSecs").getAsInt() / 1000.0);
+                            return stat;
+                        })
+                        .collect(intoJsonArray);
+        stats.add("userStats", statsSecs);
         return stats.toString();
     }
 
@@ -843,25 +852,20 @@ public class JsonProjects implements Projects {
         mapJsonFile("project-list.json",
                 project -> {
                     if (project.get("id").getAsString().equals(projectId)) {
-                        project.add("userMilliSeconds", 
-                                    addToKey(project.has("userMilliSeconds")
-                                            ? project.get("userMilliSeconds").getAsJsonObject()
-                                            : new JsonObject(),
-                                    userName, (int) (collectionTime - collectionStart))                        
-                                );
-                        project.add("userPlots", 
-                                    addToKey(project.has("userPlots")
-                                            ? project.get("userPlots").getAsJsonObject()
-                                            : new JsonObject(),
-                                    userName, 1)                        
-                                );
-                        // for backwords compatability
-                        project.add("timedUserPlots", 
-                                    addToKey(project.has("timedUserPlots")
-                                            ? project.get("timedUserPlots").getAsJsonObject()
-                                            : new JsonObject(),
-                                    userName, 1)                      
-                                );
+
+
+                        var newUserStats = new JsonObject();
+                        newUserStats.addProperty("milliSecs", (int) (collectionTime - collectionStart));
+                        newUserStats.addProperty("plots", 1);
+                        newUserStats.addProperty("timedPlots", 1);
+                        newUserStats.addProperty("user", userName);
+
+                        project.add("userStats", 
+                                    sumUserInfo(project.has("userStats") 
+                                                    ? project.get("userStats").getAsJsonArray()
+                                                    : new JsonArray()
+                                                , newUserStats)
+                                    );
                         return project;
                     } else {
                         return project;

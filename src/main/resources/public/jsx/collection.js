@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
 import {SurveyQuestions } from "./components/SurveyQuestions"
+
 class Collection extends React.Component {
     constructor(props) {
         super(props);
@@ -132,7 +133,6 @@ class Collection extends React.Component {
             .then(project => {
                 if (project == null || project.id == 0) {
                     alert("No project found with ID " + this.props.projectId + ".");
-                    window.location = this.props.documentRoot + "/home";
                 } else {
                     const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues || {});
                     project.sampleValues = surveyQuestions;
@@ -361,7 +361,6 @@ class Collection extends React.Component {
                 if (data == "done") {
                     if (plotId == -1) {
                         alert("All plots have been analyzed for this project.");
-                        window.location = this.props.documentRoot + "/home";
                     } else {
                         this.setState({nextPlotButtonDisabled: true});
                         alert("You have reached the end of the plot list.");
@@ -735,6 +734,7 @@ class Collection extends React.Component {
                     projectId={this.props.projectId}
                     plotId={plotId}
                     documentRoot={this.props.documentRoot}
+                    userName={this.props.userName}
                     saveValues={this.saveValues}
                     surveyQuestions={this.state.currentProject.sampleValues}
                     projectName={this.state.currentProject.name}
@@ -840,6 +840,7 @@ function SideBar(props) {
                         documentRoot={props.documentRoot}
                         projectId={props.projectId}
                         plotId={props.plotId}
+                        userName={props.userName}
                     />
                     <button 
                         id="collection-quit-button" 
@@ -1111,7 +1112,8 @@ class ProjectStatsGroup extends React.Component {
                 {this.state.showStats && 
                     <ProjectStats 
                         documentRoot={this.props.documentRoot}
-                        projectId={this.props.projectId} 
+                        projectId={this.props.projectId}
+                        userName={this.props.userName}
                     />
                 }
             </div>
@@ -1156,36 +1158,66 @@ class ProjectStats extends React.Component {
 
     render() {
         const { stats } = this.state
+        const userStats = stats.userStats && stats.userStats.filter(user => user.user === this.props.userName)[0]
         const numPlots = stats.flaggedPlots + stats.analyzedPlots + stats.unanalyzedPlots
         return (
-            <div className="row justify-content-center mb-1 text-center">
+            <div className="row mb-1">
                 <div className="col-lg-12">
-                    <fieldset id="projStats" className="text-center projNoStats">
+                    <fieldset id="projStats" className="projNoStats">
                             <table className="table table-sm">
                                 <tbody>
                                     <tr>
-                                        <td className="small">Plots Analyzed</td>
+                                        <td className="small pl-4">My Plots Completed</td>
                                         <td className="small">
-                                            {stats.analyzedPlots || ""}
-                                            ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                            {userStats && userStats.plots || "0"}
+                                            ({this.asPercentage(userStats && userStats.plots || 0, numPlots)}%)
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="small">Plots Flagged</td>
+                                        <td className="small pl-4">-- My Average Time</td>
                                         <td className="small">
-                                            {stats.flaggedPlots || ""}
-                                            ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                            {userStats && userStats.timedPlots ? `${(userStats.seconds / userStats.timedPlots / 1.0).toFixed(2)} secs` : "untimed"} 
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="small">Plots Completed</td>
+                                        <td className="small pl-4">Project Plots Completed</td>
                                         <td className="small">
                                             {stats.analyzedPlots + stats.flaggedPlots || ""}
                                             ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="small">Plots Total</td>
+                                        <td className="small pl-4">-- Analyzed</td>
+                                        <td className="small">
+                                            {stats.analyzedPlots || ""}
+                                            ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">-- Flagged</td>
+                                        <td className="small">
+                                            {stats.flaggedPlots || ""}
+                                            ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">-- Total contributors</td>
+                                        <td className="small">
+                                            {stats.userStats ? stats.userStats.length : 0}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">-- Users Average time</td>
+                                        <td className="small">
+                                            {stats.userStats && stats.userStats.reduce((p, c) => {return p + c.timedPlots}, 0) > 0
+                                                ? `${(stats.userStats.reduce((p, c) => {return p + c.seconds}, 0) 
+                                                    / stats.userStats.reduce((p, c) => {return p + c.timedPlots}, 0)
+                                                    / 1.0).toFixed(2)} secs`
+                                                : "untimed"}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="small pl-4">Project Plots Total</td>
                                         <td className="small">
                                             {numPlots || ""}
                                         </td>
