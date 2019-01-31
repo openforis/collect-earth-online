@@ -99,7 +99,7 @@ class Project extends React.Component {
         );
         var sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
         var newSV=[];
-        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+        var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
         var dNew = this.state.newValueEntry;
 
         if(sv.length>0){
@@ -259,6 +259,10 @@ class Project extends React.Component {
             var answer_value = document.getElementById("value-answer");
 
             var answer = answer_value.options[answer_value.selectedIndex].value;
+
+            var componenttype_value = document.getElementById("value-componenttype");
+            var componenttype = componenttype_value.options[componenttype_value.selectedIndex].value;
+
             if (questionText != "") {
                 var newValueEntryNew = this.state.newValueEntry;
                 newValueEntryNew[questionText] = {id:-1,answer: "", color: "#000000"};
@@ -278,7 +282,8 @@ class Project extends React.Component {
                     }
                 );
 
-                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id});
+                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id,data_type:componenttype.split("-")[1],component_type:componenttype.split("-")[0]});
+                
                 this.setState({newValueEntry: newValueEntryNew, projectDetails: detailsNew, newSurveyQuestionName: ""});
                 document.getElementById("surveyQuestionText").value = "";
                 parent_value.options[0].selected = true;
@@ -324,11 +329,31 @@ class Project extends React.Component {
         var entry = this.state.newValueEntry[surveyQuestionName];
         if (entry.answer != "") {
             var surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
-            surveyQuestion.answers.push({
-                id:surveyQuestion.answers.length+1,
-                answer: entry.answer,
-                color: entry.color
-            });
+            console.log(surveyQuestion);
+            if (surveyQuestion.component_type.toLowerCase() == "input" && surveyQuestion.answers.length < 1) {
+                surveyQuestion.answers.push({
+                    id: surveyQuestion.answers.length + 1,
+                    answer: entry.answer,
+                    color: entry.color
+                });
+            }
+            else if((surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="boolean" && surveyQuestion.answers.length < 2){
+                surveyQuestion.answers.push({
+                    id: surveyQuestion.answers.length + 1,
+                    answer: entry.answer,
+                    color: entry.color
+                });
+            }
+            else if((surveyQuestion.component_type.toLowerCase() == "button" || surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") &&surveyQuestion.data_type.toLowerCase()=="text"){
+                surveyQuestion.answers.push({
+                    id: surveyQuestion.answers.length + 1,
+                    answer: entry.answer,
+                    color: entry.color
+                });
+            }
+            else{
+             alert("You cannot add more answers for this type.")
+            }
             entry.id=-1;
             entry.answer = "";
             entry.color = "#000000";
@@ -359,7 +384,7 @@ class Project extends React.Component {
                     var detailsNew=data;
                     var sv=detailsNew.sampleValues;
                     var newSV=[];
-                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
+                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
                     if(sv.length>0){
                         sv.map((sq)=>{
                                 if(sq.name){
@@ -1214,6 +1239,26 @@ function SurveyDesign(props){
                                             </option>
                                         )
                                     }
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label htmlFor="value-componenttype">Component Type:</label>
+                            </td>
+                            <td>
+                                <select id="value-componenttype" className="form-control form-control-sm" size="1"
+                                        onChange={(e) => props.handleInputParent(e)}>
+                                    <option value="button-text">Button-Text</option>
+                                    <option value="input-number">Input-Number</option>
+                                    <option value="input-text">Input-Text</option>
+                                    <option value="radiobutton-boolean">Radiobutton-Boolean</option>
+                                    <option value="radiobutton-text">Radiobutton-Text</option>
+                                    <option value="dropdown-boolean">Dropdown-Boolean</option>
+                                    <option value="dropdown-text">Dropdown-Text</option>
+                                    {/*<option value="point-digitizer">Point-Digitizer</option>*/}
+                                    {/*<option value="linestring-digitizer">Line String-Digitizer</option>*/}
+                                    {/*<option value="polygon-digitizer">Polygon-Digitizer</option>*/}
                                 </select>
                             </td>
                         </tr>
