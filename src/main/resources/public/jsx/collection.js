@@ -1178,7 +1178,7 @@ class ProjectStats extends React.Component {
                                     <tr>
                                         <td className="small pl-4">-- My Average Time</td>
                                         <td className="small">
-                                            {userStats && userStats.timedPlots ? (userStats.milliSecs / userStats.timedPlots / 1000.0).toFixed(2) : 0} secs
+                                            {userStats && userStats.timedPlots ? `${(userStats.seconds / userStats.timedPlots / 1.0).toFixed(2)} secs` : "untimed"} 
                                         </td>
                                     </tr>
                                     <tr>
@@ -1212,10 +1212,10 @@ class ProjectStats extends React.Component {
                                         <td className="small pl-4">-- Users Average time</td>
                                         <td className="small">
                                             {stats.userStats && stats.userStats.reduce((p, c) => {return p + c.timedPlots}, 0) > 0
-                                                ? (stats.userStats.reduce((p, c) => {return p + c.milliSecs}, 0) 
+                                                ? `${(stats.userStats.reduce((p, c) => {return p + c.seconds}, 0) 
                                                     / stats.userStats.reduce((p, c) => {return p + c.timedPlots}, 0)
-                                                    / 1000.0).toFixed(2)
-                                                : 0} secs
+                                                    / 1.0).toFixed(2)} secs`
+                                                : "untimed"}
                                         </td>
                                     </tr>
                                     <tr>

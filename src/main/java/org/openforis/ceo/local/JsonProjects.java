@@ -254,7 +254,14 @@ public class JsonProjects implements Projects {
         stats.add("publishedDate", project.get("published_date"));
         stats.add("archivedDate", project.get("archived_date"));
         stats.add("closedDate", project.get("closed_date"));
-        stats.add("userStats", project.get("userStats"));
+        // postgres is in decimal seconds (timestamp) so add matching column
+        var statsSecs = toStream(project.get("userStats").getAsJsonArray())
+                        .map(stat -> {
+                            stat.addProperty("seconds", stat.get("milliSecs").getAsInt() / 1000.0);
+                            return stat;
+                        })
+                        .collect(intoJsonArray);
+        stats.add("userStats", statsSecs);
         return stats.toString();
     }
 

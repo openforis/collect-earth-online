@@ -272,6 +272,7 @@ public class PostgresProjects implements Projects {
                     stats.addProperty("publishedDate",rs.getString("published_date"));
                     stats.addProperty("closedDate",rs.getString("closed_date"));
                     stats.addProperty("archivedDate",rs.getString("archived_date"));
+                    stats.add("userStats",parseJson(rs.getString("user_stats")).getAsJsonArray());
                 }
             }
             return  stats.toString();
@@ -280,14 +281,6 @@ public class PostgresProjects implements Projects {
             return "";
         }
     }
-
-    // public ResultSet queryPlotById(Connection conn, Integer projectId, Integer plotId, String userName) {
-    //     if (userName.length() > 0) {
-
-    //     } else {
-
-    //     }
-    // }
 
     private String queryPlot(PreparedStatement pstmt, Integer projectId) {
         var plotData = new JsonObject();

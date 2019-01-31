@@ -510,7 +510,7 @@ class ProjectStats extends React.Component {
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {archivedDate || (availability === 'archived'
                                                             ? "Unknown"
-                                                            : "Open")}
+                                                            : "Un-archived")}
                                 </span>
                             </div>
                         </div>
@@ -533,17 +533,17 @@ class ProjectStats extends React.Component {
                             </div>
                         </div>
                     </div>
-
+                    
                     {userStats &&
                         <div className="ProjectStats__user-table">
                             <strong>Plots Completed:</strong>
                             <StatsRow 
                                     title="Total"
-                                    plots={numPlots}
+                                    plots={userStats.reduce((p, c) => {return p + c.plots}, 0)}
                                     analysisTime={userStats.reduce((p, c) => {return p + c.timedPlots}, 0) > 0
-                                                    ? (userStats.reduce((p, c) => {return p + c.milliSecs}, 0) 
+                                                    ? (userStats.reduce((p, c) => {return p + c.seconds}, 0) 
                                                         / userStats.reduce((p, c) => {return p + c.timedPlots}, 0)
-                                                        / 1000.0).toFixed(2)
+                                                        / 1.0).toFixed(2)
                                                     : 0
                                                   }
                             />
@@ -554,10 +554,10 @@ class ProjectStats extends React.Component {
                                     title={user.user}
                                     plots={user.plots}
                                     analysisTime={user.timedPlots > 0
-                                                    ? (user.milliSecs / user.timedPlots / 1000.0).toFixed(2)
+                                                    ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
                                                     : 0
                                                   }
-                                />)
+                                />);
                             })}
                         </div>
                     }
