@@ -676,6 +676,31 @@ class Collection extends React.Component {
         this.setState({selectedQuestionText: newselectedQuestionText});
     }
 
+    invertColor(hex) {
+        if (hex.indexOf('#') === 0) {
+            hex = hex.slice(1);
+        }
+        // convert 3-digit hex to 6-digits.
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        if (hex.length !== 6) {
+            throw new Error('Invalid HEX color.');
+        }
+        // invert color components
+        var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+            g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+            b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+        // pad each with zeros and return
+        return '#' + this.padZero(r) + this.padZero(g) + this.padZero(b);
+    }
+
+    padZero(str, len) {
+        len = len || 2;
+        var zeros = new Array(len).join('0');
+        return (zeros + str).slice(-len);
+    }
+
     highlightSamplesByQuestion() {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         allFeatures.filter(feature => {
@@ -683,11 +708,21 @@ class Collection extends React.Component {
             return this.state.userSamples[sampleId] && this.state.userSamples[sampleId][this.state.selectedQuestionText];
         } ).forEach(feature => {
             const sampleId = feature.get("sampleId");
-            const svAnswers = this.state.currentProject.sampleValues
-                             .filter(sv => sv.question === this.state.selectedQuestionText)[0].answers;
-            const sampleAnswers = svAnswers
-                             .filter(ans => ans.answer === this.state.userSamples[sampleId][this.state.selectedQuestionText].answer);
-            mercator.highlightSampleGeometry(feature, sampleAnswers.length > 0 ? sampleAnswers[0].color || "" : "");
+
+            const answeredQuestion = this.state.currentProject.sampleValues
+                             .filter(sv => sv.question === this.state.selectedQuestionText)[0];
+            const userAnswer = this.state.userSamples[sampleId][this.state.selectedQuestionText].answer;
+            const matchingAnswer = answeredQuestion.answers.filter(ans => ans.answer === userAnswer);
+            
+            const color = answeredQuestion.component_type === "input"
+                            ? userAnswer.length > 0 
+                                ? answeredQuestion.answers[0].color
+                                : this.invertColor(answeredQuestion.answers[0].color)
+                            : matchingAnswer.length > 0
+                                ? matchingAnswer[0].color
+                                : ""
+
+            mercator.highlightSampleGeometry(feature, color);
         });
     }
 

@@ -175,17 +175,17 @@ class SurveyQuestionTree extends React.Component  {
 
                 {this.state.showAnswers &&
                     <ul className={"samplevalue justify-content-center"}>
-                        {
-                            <SurveyAnswers
-                                componentType={this.props.surveyNode.component_type}
-                                dataType={this.props.surveyNode.data_type}
-                                question={this.props.surveyNode.question}
-                                answers={this.props.surveyNode.answers}
-                                setCurrentValue={this.props.setCurrentValue}
-                            />
-                        }
-                    </ul>
-                }
+                    {
+                        <SurveyAnswers
+                            componentType={this.props.surveyNode.component_type}
+                            dataType={this.props.surveyNode.data_type}
+                            question={this.props.surveyNode.question}
+                            answers={this.props.surveyNode.answers}
+                            setCurrentValue={this.props.setCurrentValue}
+                        />
+                    }
+                </ul>
+            }
                 {
                     childNodes.map((surveyNode, uid) =>
                         <Fragment key={uid}>
@@ -242,29 +242,24 @@ function AnswerButton(props){
 function AnswerRadioButton(props) {
     return props.answers.map((ans, uid) => {
         return (
-            <li key={uid} className="mb-1 form-control">
-                <div className="circle"
-                    style={{
-                        backgroundColor: ans.color,
-                        border: "1px solid",
-                        float: "left",
-                        marginTop: "4px",
-                        margin: "5px"
-                    }}>
-                </div>
-                <span className="small" style={{float: "left", paddingLeft: "10px"}}>{ans.answer}</span>
-                <input 
-                    type="radio" name="radiogroup"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+            <li key={uid} className="mb-1">
+                <button 
+                    type="button"
+                    className="btn-outline-darkgray btn-sm btn-block pl-1"
                     id={ans.answer + "_" + ans.id}
-                    style={{
-                        display: "inline",
-                        width: "1rem",
-                        height: "1rem",
-                        margin: "5px"
-                    }}
-                    onChange={() =>props.setCurrentValue(props.question, ans.id, ans.answer, ans.color)}
-                />
+                    name={ans.answer + "_" + ans.id}
+                    onClick={() => props.setCurrentValue(props.question, ans.id, ans.answer, ans.color) }
+                >
+                    <div className="circle"
+                        style={{
+                            border: "1px solid",
+                            float: "left",
+                            marginTop: "4px",
+                            boxShadow: "0px 0px 2px 0px " + ans.color + " inset"
+                        }}>
+                    </div>
+                    <span className="small">{ans.answer}</span>
+                </button>
             </li>
         );
     });
@@ -281,12 +276,12 @@ class AnswerInput extends React.Component{
 
     componentDidUpdate (prevProps) {
         if (this.props.question !== prevProps.question) {
-            this.setState({newInput: ""})
+            this.setState({ newInput: "" })
         }
     }
 
     updateInputValue(value) {
-        this.setState({newInput: value});
+        this.setState({ newInput: value });
     }
     
     render() {
@@ -295,32 +290,35 @@ class AnswerInput extends React.Component{
         return props.answers.map((ans, uid) => {
             return (
                 <li key={uid} className="mb-1" style={{display: "inline-flex"}}>
-                    <div className="circle"
-                        style={{
-                            backgroundColor: ans.color,
-                            border: "1px solid",
-                            float: "left",
-                            marginTop: "4px",
-                            marginRight: "5px"
-                        }}>
-                    </div>
-                    <input 
-                        type={this.props.dataType}
-                        className="btn btn-outline-darkgray btn-sm btn-block pl-1"
-                        placeholder={ans.answer}
-                        id={ans.answer + "_" + ans.id}
-                        name={ans.answer + "_" + ans.id}
-                        value={this.state.newInput}
-                        onChange={e => this.updateInputValue(e.target.value)}
-                    />
-                    <input
-                        id="save-input"
-                        className="text-center btn btn-outline-lightgreen btn-sm"
-                        type="button"
-                        name="save-input"
-                        value="Save"
-                        onClick={() => props.setCurrentValue(props.question, ans.id, this.state.newInput, ans.color)}
-                    />
+                        <div className="circle"
+                            style={{
+                                backgroundColor: ans.color,
+                                border: "1px solid",
+                                float: "left",
+                                marginTop: "4px",
+                                marginRight: "5px"
+                            }}>
+                        </div>
+                        <input 
+                            type={this.props.dataType}
+                            className="form-control pl-1"
+                            placeholder={ans.answer}
+                            id={ans.answer + "_" + ans.id}
+                            name={ans.answer + "_" + ans.id}
+                            value={this.state.newInput}
+                            onChange={e => this.updateInputValue(e.target.value)}
+                        />
+                        <input
+                            id="save-input"
+                            className="text-center btn btn-outline-lightgreen btn-sm"
+                            type="button"
+                            name="save-input"
+                            value="Save"
+                            onClick={() => {
+                                props.setCurrentValue(props.question, ans.id, this.state.newInput, ans.color)
+                                this.setState({ newInput: ""})
+                            }}
+                        />
                 </li>
             );
         });
