@@ -68,6 +68,10 @@ class MapPanel extends React.Component {
             .then(data => this.setState({imagery: data}));
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        console.log("update", this.props.projects)
+    }
+
     componentDidUpdate() {
         if (this.state.mapConfig == null && this.state.imagery.length > 0) {
             const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.state.imagery.slice(0,1));
@@ -75,6 +79,7 @@ class MapPanel extends React.Component {
             this.setState({mapConfig: mapConfig});
         }
         if (this.state.mapConfig && this.props.projects.length > 0 && this.state.projectMarkersShown == false) {
+            
             this.addProjectMarkersAndZoom(this.state.mapConfig,
                                           this.props.projects,
                                           this.props.documentRoot,
@@ -83,7 +88,9 @@ class MapPanel extends React.Component {
     }
 
     addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
-        const projectSource = mercator.projectsToVectorSource(projects);
+        console.log("zoom", projects)
+        console.log("filter", projects.filter(project => project.boundary))
+        const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.boundary));
         if (clusterDistance == null) {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
@@ -152,14 +159,12 @@ class SideBar extends React.Component {
         super(props);
         this.state = {
             filteredInstitutions: [],
-            filteredProjects:this.props.projects,
+            filteredProjects:[],
             institutions: [],
             radioValue: "institution",
             filterText: "",
             checked: false,
             expandInstWithProject:false,
-            projects:this.props.projects,
-
         };
         this.filterCall = this.filterCall.bind(this);
         this.filterText = this.filterText.bind(this);
@@ -174,6 +179,7 @@ class SideBar extends React.Component {
                 this.getSortedInstitutions(data,"");
                 this.setState({institutions: data});
             });
+        this.setState({filteredProjects: this.props.projects})
     }
     getSortedInstitutions(institutions,p) {
         let sortedInstitutions = [];
