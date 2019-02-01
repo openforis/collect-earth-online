@@ -60,6 +60,7 @@ class Project extends React.Component {
             var formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("sample-values", JSON.stringify(this.state.projectDetails.sampleValues));
+            formData.append("survey-rules", "[]");
             var ref = this;
             $.ajax({
                 url: this.props.documentRoot + "/create-project",

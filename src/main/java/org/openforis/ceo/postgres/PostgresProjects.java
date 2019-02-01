@@ -1013,7 +1013,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String createProject(Request req, Response res) {
-        var newProjectId = "";
+        var newProjectId = 0;
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
@@ -1063,13 +1063,13 @@ public class PostgresProjects implements Projects {
 
                 try(var rs = pstmt.executeQuery()){
                     if (rs.next()){
-                        newProjectId = Integer.toString(rs.getInt("create_project"));
+                        newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
                         if (getOrZero(newProject, "useTemplatePlots").getAsBoolean() 
                                 && getOrZero(newProject, "project-template").getAsInt() > 0) {
                             try(var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")){
                                 copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
-                                copyPstmt.setInt(2, Integer.parseInt(newProjectId));
+                                copyPstmt.setInt(2, newProjectId);
                                 copyPstmt.execute();
                             }
                         } else {
@@ -1106,12 +1106,12 @@ public class PostgresProjects implements Projects {
                             // Create the requested plot set and write it to plot-data-<newProjectId>.json
                             createProjectPlots(newProject);
 
-                            deleteFiles(Integer.parseInt(newProjectId));
-                            deleteShapeFileDirectories(Integer.parseInt(newProjectId));
+                            deleteFiles(newProjectId);
+                            deleteShapeFileDirectories(newProjectId);
                         }
                     }
                     // Indicate that the project was created successfully
-                    return newProjectId;
+                    return Integer.toString(newProjectId);
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -1121,11 +1121,11 @@ public class PostgresProjects implements Projects {
         }
         catch (Exception e) {
             // Indicate that an error occurred with project creation
-            deleteFiles(Integer.parseInt(newProjectId));
-            deleteShapeFileDirectories(Integer.parseInt(newProjectId));
+            deleteFiles(newProjectId);
+            deleteShapeFileDirectories(newProjectId);
             try (var conn = connect()) {
                 try (var pstmt = conn.prepareStatement("DELETE FROM projects WHERE id = ?")) {
-                    pstmt.setInt(1, Integer.parseInt(newProjectId));
+                    pstmt.setInt(1, newProjectId);
                     pstmt.execute();
                 } catch (SQLException sql) {
                 }
