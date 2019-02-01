@@ -175,17 +175,17 @@ class SurveyQuestionTree extends React.Component  {
 
                 {this.state.showAnswers &&
                     <ul className={"samplevalue justify-content-center"}>
-                    {
-                        <SurveyAnswers
-                            componentType={this.props.surveyNode.component_type}
-                            dataType={this.props.surveyNode.data_type}
-                            question={this.props.surveyNode.question}
-                            answers={this.props.surveyNode.answers}
-                            setCurrentValue={this.props.setCurrentValue}
-                        />
-                    }
-                </ul>
-            }
+                        {
+                            <SurveyAnswers
+                                componentType={this.props.surveyNode.component_type}
+                                dataType={this.props.surveyNode.data_type}
+                                question={this.props.surveyNode.question}
+                                answers={this.props.surveyNode.answers}
+                                setCurrentValue={this.props.setCurrentValue}
+                            />
+                        }
+                    </ul>
+                }
                 {
                     childNodes.map((surveyNode, uid) =>
                         <Fragment key={uid}>
