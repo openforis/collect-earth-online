@@ -6,6 +6,7 @@ export class SurveyDesign extends React.Component {
         super(props);
         this.state = {
             newValueEntry: this.props.project.newValueEntry,
+            surveyDesignMode:"simple"
         };
         this.addSurveyQuestion = this.addSurveyQuestion.bind(this);
         this.addSurveyQuestionRow = this.addSurveyQuestionRow.bind(this);
@@ -18,6 +19,9 @@ export class SurveyDesign extends React.Component {
         this.removeSurveyQuestion = this.removeSurveyQuestion.bind(this);
         this.removeSurveyQuestionRow = this.removeSurveyQuestionRow.bind(this);
     };
+    componentDidMount(){
+        document.getElementById("survey-design").click();
+    }
 
     addSurveyQuestionRow(surveyQuestionName) {
         let entry = this.state.newValueEntry[surveyQuestionName];
@@ -184,6 +188,10 @@ export class SurveyDesign extends React.Component {
         this.setState({projectDetails: detailsNew});
     }
 
+    changeMode(e) {
+        this.setState({surveyDesignMode: e.target.id});
+    }
+
     render() {
         let answer_select = "";
         let answers = this.getParentSurveyQuestionAnswers(this.props.project.projectDetails.sampleValues);
@@ -196,6 +204,10 @@ export class SurveyDesign extends React.Component {
 
         return (
             <SectionBlock title="Survey Design">
+                <div style={{overflow: "hidden", border: "1px solid #31BAB0",backgroundColor: "#f1f1f1",margin:"10px"}}>
+                    <input type="button" id="simple" onClick={(e)=>this.changeMode(e)} value="Simple" style={{backgroundColor: this.state.surveyDesignMode=="simple"?"#31BAB0":"transparent",float: "left", border: "none", outline: "none", cursor: "pointer", padding: "14px 16px", transition: "0.3s",fontSize: "17px"}}/>
+                    <input type="button" id="advanced" onClick={(e)=>this.changeMode(e)} value="Advanced" style={{backgroundColor: this.state.surveyDesignMode=="advanced"?"#31BAB0":"transparent",float: "left", border: "none", outline: "none", cursor: "pointer", padding: "14px 16px", transition: "0.3s",fontSize: "17px"}}/>
+                </div>
                 <div id="survey-design">
                     <SurveyQuestionTree
                         project={this.props.project}
@@ -227,7 +239,7 @@ export class SurveyDesign extends React.Component {
                                 </select>
                             </td>
                         </tr>
-                        <tr>
+                        <tr style={{display: this.state.surveyDesignMode=="simple"?"none":""}}>
                             <td>
                                 <label htmlFor="value-componenttype">Component Type:</label>
                             </td>
