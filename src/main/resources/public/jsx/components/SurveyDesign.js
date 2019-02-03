@@ -1,6 +1,6 @@
 import React, {Fragment} from "react";
 
-import { SectionBlock } from "./components/FormComponents"
+import { SectionBlock } from "./FormComponents"
 
 export class SurveyDesign extends React.Component {
     constructor(props) {
