@@ -592,9 +592,9 @@ function ProjectDesignReview(props) {
 function ProjectInfoReview({ project }) {
     return (
         <SectionBlock id="project-info" title="Project Info">
-            <h3>Name</h3>
+            <h3><strong>Name</strong></h3>
             <p className="ml-2">{project.projectDetails.name}</p>
-            <h3>Description</h3>
+            <h3><strong>Description</strong></h3>
             <p className={project.projectDetails.description ? "ml-2" : "ml-2"}>{project.projectDetails.description || "none"}</p>
         </SectionBlock>
     );
@@ -604,7 +604,7 @@ function ProjectInfoReview({ project }) {
 function ProjectVisibility(props) {
     return (
         <SectionBlock title="Project Visibility">
-            <h3>Privacy Level</h3>
+            <h3><strong>Privacy Level</strong></h3>
             <div id="project-visibility" className="mb-3">
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
@@ -700,7 +700,7 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
 function ProjectImageryReview({ project, setBaseMapSource}) {
     return (
         <SectionBlock id="project-imagery-review" title="Project Imagery">
-            <h3>Basemap Source</h3>
+            <h3><strong>Basemap Source</strong></h3>
             <p className="ml-2">{project.projectDetails.baseMapSource}</p>
         </SectionBlock>
     );
@@ -819,7 +819,7 @@ class SurveyQuestionTree extends React.Component {
         </ul>
     ))
     render() {
-        var project = this.props.project;
+        const { project } = this.props;
         if (project.projectDetails != null) {
             return (
                 <div>
@@ -834,7 +834,7 @@ class SurveyQuestionTree extends React.Component {
 }
 
 function SurveyQuestion(properties) {
-    var props = properties.prop;
+    const props = properties.prop;
     var project = props.project;
     if (properties.surveyQuestion.answers == null) {
         console.log("answers null");

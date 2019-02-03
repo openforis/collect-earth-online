@@ -68,6 +68,10 @@ class MapPanel extends React.Component {
             .then(data => this.setState({imagery: data}));
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        console.log("update", this.props.projects)
+    }
+
     componentDidUpdate() {
         if (this.state.mapConfig == null && this.state.imagery.length > 0) {
             const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.state.imagery.slice(0,1));
@@ -75,6 +79,7 @@ class MapPanel extends React.Component {
             this.setState({mapConfig: mapConfig});
         }
         if (this.state.mapConfig && this.props.projects.length > 0 && this.state.projectMarkersShown == false) {
+            
             this.addProjectMarkersAndZoom(this.state.mapConfig,
                                           this.props.projects,
                                           this.props.documentRoot,
@@ -83,7 +88,9 @@ class MapPanel extends React.Component {
     }
 
     addProjectMarkersAndZoom(mapConfig, projects, documentRoot, clusterDistance) {
-        const projectSource = mercator.projectsToVectorSource(projects);
+        console.log("zoom", projects)
+        console.log("filter", projects.filter(project => project.boundary))
+        const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.boundary));
         if (clusterDistance == null) {
             mercator.addVectorLayer(mapConfig,
                                     "projectMarkers",
@@ -152,14 +159,12 @@ class SideBar extends React.Component {
         super(props);
         this.state = {
             filteredInstitutions: [],
-            filteredProjects:this.props.projects,
+            filteredProjects:[],
             institutions: [],
             radioValue: "institution",
             filterText: "",
             checked: false,
             expandInstWithProject:false,
-            projects:this.props.projects,
-
         };
         this.filterCall = this.filterCall.bind(this);
         this.filterText = this.filterText.bind(this);
@@ -174,6 +179,7 @@ class SideBar extends React.Component {
                 this.getSortedInstitutions(data,"");
                 this.setState({institutions: data});
             });
+        this.setState({filteredProjects: this.props.projects})
     }
     getSortedInstitutions(institutions,p) {
         let sortedInstitutions = [];
@@ -455,16 +461,16 @@ function Project(props) {
     if (props.editable == true) {
         return (
             <div className="bg-lightgrey text-center p-1 row px-auto">
-                <div className="col-lg-8 pr-lg-1">
+                <div className="col-lg-10 pr-lg-1">
                     <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
                        href={props.documentRoot + "/collection/" + props.id}>
                         {props.name}
                     </a>
                 </div>
-                <div className="col-lg-4 pl-lg-0">
+                <div className="col-lg-2 pl-lg-0">
                     <a className="edit-project btn btn-sm btn-outline-yellow btn-block"
                        href={props.documentRoot + "/review-project/" + props.id}>
-                        <i className="fa fa-edit"></i> Review
+                        <i className="fa fa-edit"></i>
                     </a>
                 </div>
             </div>

@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
-import {SurveyQuestions } from "./components/SurveyQuestions"
+import { SurveyQuestions } from "./components/SurveyQuestions"
 
 class Collection extends React.Component {
     constructor(props) {
@@ -332,7 +332,9 @@ class Collection extends React.Component {
             })
             .then(data => {
                 if (data == "done") {
-                    alert("This plot has already been analyzed.");
+                    alert(this.state.reviewPlots 
+                        ? "This plot was analyzed by someone else"
+                        : "This plot has already been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
                     this.setState({
@@ -360,7 +362,9 @@ class Collection extends React.Component {
             .then(data => {
                 if (data == "done") {
                     if (plotId == -1) {
-                        alert("All plots have been analyzed for this project.");
+                        alert(this.state.reviewPlots 
+                                ? "You have not reviewd any plots" 
+                                : "All plots have been analyzed for this project.");
                     } else {
                         this.setState({nextPlotButtonDisabled: true});
                         alert("You have reached the end of the plot list.");
@@ -391,7 +395,9 @@ class Collection extends React.Component {
             .then(data => {
                 if (data == "done") {
                     this.setState({prevPlotButtonDisabled: true});
-                    alert("All previous plots have been analyzed.");
+                    alert(this.state.reviewPlots 
+                            ? "All previous plot are not analyzed by you"
+                            : "All previous plots have been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
                     this.setState({
@@ -608,25 +614,48 @@ class Collection extends React.Component {
         }, true);
     }
 
+    questionChildrenArray (currentQuestionText) {
+        const { sampleValues } = this.state.currentProject;
+        const { question, id } = sampleValues.filter((sv => sv.question === currentQuestionText))[0];
+        const child_questions = sampleValues.filter((sv => sv.parent_question === id));
+
+        if (child_questions.length === 0) {
+            return [question];
+        } else {
+            const cq = child_questions.reduce((prev, cur) => {
+                return [...prev, ...this.questionChildrenArray(cur.question)];
+            }, [])
+            return [question, ...cq]
+        }
+    }
+
     setCurrentValue(questionText, answerId, answerText, answerColor) {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         //
-        if (selectedFeatures && selectedFeatures.getLength() > 0 && this.validateCurrentSelection(selectedFeatures, questionText)) {
+        if (selectedFeatures && selectedFeatures.getLength() > 0 
+                && this.validateCurrentSelection(selectedFeatures, questionText)) {
             // JSON.parse is a fast way to do a deep copy
             let userSamples = JSON.parse(JSON.stringify(this.state.userSamples));
             let userImages = JSON.parse(JSON.stringify(this.state.userImages));
             selectedFeatures.forEach(feature => {
                 const sampleId = feature.get("sampleId");
+                // FIX me, I think the array is initilized on load so this isnt needed
+                // if we have a missing sampleId something else went wrong
                 if (!userSamples[sampleId]) {
                     userSamples[sampleId] = {};
                 }
                 if (!userImages[sampleId]) {
                     userImages[sampleId] = {};
                 }
+                this.questionChildrenArray(questionText)
+                    .filter(question => question !== questionText)
+                    .forEach(question => delete userSamples[sampleId][question])
+
                 userSamples[sampleId][questionText] = {answer: answerText,
                                                        color: answerColor};    
                 userImages[sampleId] = {id: this.state.currentImagery.id,
                                         attributes: this.getImageryAttributes()};
+                
             }, this); // necessary to pass outer scope into function
             this.setState({
                         userSamples: userSamples,
@@ -647,6 +676,31 @@ class Collection extends React.Component {
         this.setState({selectedQuestionText: newselectedQuestionText});
     }
 
+    invertColor(hex) {
+        if (hex.indexOf('#') === 0) {
+            hex = hex.slice(1);
+        }
+        // convert 3-digit hex to 6-digits.
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        if (hex.length !== 6) {
+            throw new Error('Invalid HEX color.');
+        }
+        // invert color components
+        var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+            g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+            b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+        // pad each with zeros and return
+        return '#' + this.padZero(r) + this.padZero(g) + this.padZero(b);
+    }
+
+    padZero(str, len) {
+        len = len || 2;
+        var zeros = new Array(len).join('0');
+        return (zeros + str).slice(-len);
+    }
+
     highlightSamplesByQuestion() {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         allFeatures.filter(feature => {
@@ -654,11 +708,21 @@ class Collection extends React.Component {
             return this.state.userSamples[sampleId] && this.state.userSamples[sampleId][this.state.selectedQuestionText];
         } ).forEach(feature => {
             const sampleId = feature.get("sampleId");
-            const svAnswers = this.state.currentProject.sampleValues
-                             .filter(sv => sv.question === this.state.selectedQuestionText)[0].answers;
-            const sampleAnswers = svAnswers
-                             .filter(ans => ans.answer === this.state.userSamples[sampleId][this.state.selectedQuestionText].answer);
-            mercator.highlightSampleGeometry(feature, sampleAnswers.length > 0 ? sampleAnswers[0].color || "" : "");
+
+            const answeredQuestion = this.state.currentProject.sampleValues
+                             .filter(sv => sv.question === this.state.selectedQuestionText)[0];
+            const userAnswer = this.state.userSamples[sampleId][this.state.selectedQuestionText].answer;
+            const matchingAnswer = answeredQuestion.answers.filter(ans => ans.answer === userAnswer);
+            
+            const color = answeredQuestion.component_type === "input"
+                            ? userAnswer.length > 0 
+                                ? answeredQuestion.answers[0].color
+                                : this.invertColor(answeredQuestion.answers[0].color)
+                            : matchingAnswer.length > 0
+                                ? matchingAnswer[0].color
+                                : ""
+
+            mercator.highlightSampleGeometry(feature, color);
         });
     }
 
@@ -978,7 +1042,7 @@ class PlotNavigation extends React.Component{
                             className="form-check-input ml-2"
                             checked={props.sampleOutlineBlack}
                             id="radio1"
-                            onClick={props.toggleSampleBW}
+                            onChange={props.toggleSampleBW}
                             type="radio"
                             name="color-radios"
                         />
@@ -989,7 +1053,7 @@ class PlotNavigation extends React.Component{
                             className="form-check-input"
                             checked={!props.sampleOutlineBlack}
                             id="radio2"
-                            onClick={props.toggleSampleBW}
+                            onChange={props.toggleSampleBW}
                             type="radio"
                             name="color-radios"
                         />

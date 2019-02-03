@@ -1513,6 +1513,20 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _project_id int
 
 $$ LANGUAGE SQL;
 
+-- Returns user plots table id if available
+CREATE OR REPLACE FUNCTION check_user_plots(_project_id integer, _plot_id integer, _user_id integer) 
+ RETURNS TABLE (user_plots_id integer) AS $$
+ 
+	SELECT up.id 
+	FROM plots p
+	INNER JOIN user_plots up
+		ON p.id = up.plot_id
+		AND p.project_id = _project_id
+		AND up.user_id = _user_id
+		AND up.plot_id = _plot_id
+	
+$$ LANGUAGE SQL;
+
 -- Add user sample value selections
 CREATE OR REPLACE FUNCTION add_user_samples( 
         _project_id         integer, 
@@ -1530,7 +1544,7 @@ CREATE OR REPLACE FUNCTION add_user_samples(
             VALUES (_user_id, _plot_id, _confidence, _collection_start, Now())
 		RETURNING id
 	),
-	sample_values AS (
+	new_sample_values AS (
 		SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
 	),
     image_values AS (
@@ -1546,7 +1560,7 @@ CREATE OR REPLACE FUNCTION add_user_samples(
 
 	(SELECT upt.id, sv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, sv.value
 		FROM user_plot_table AS upt, samples AS s
-			INNER JOIN sample_values as sv
+			INNER JOIN new_sample_values as sv
 				ON s.id = sv.sample_id
             INNER JOIN image_values as iv
 				ON s.id = iv.sample_id
@@ -1556,6 +1570,59 @@ CREATE OR REPLACE FUNCTION add_user_samples(
 
 $$ LANGUAGE SQL;
 
+-- Update user sample value selections
+CREATE OR REPLACE FUNCTION update_user_samples( 
+		_user_plots_id		integer,
+        _project_id         integer, 
+        _plot_id            integer,
+        _user_id            integer, 
+        _confidence         integer, 
+        _collection_start   timestamp,
+        _samples            jsonb, 
+        _images             jsonb
+        ) 
+    RETURNS integer AS $$
+
+	WITH user_plot_table AS(
+		UPDATE user_plots
+			SET confidence = _confidence, 
+				collection_start = _collection_start, 
+				collection_time =Now()
+		WHERE user_plots.id = _user_plots_id
+		RETURNING id
+	),
+	new_sample_values AS (
+		SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
+	),
+    image_values AS (
+		SELECT sample_id, id as imagery_id, attributes as imagery_attributes 
+		FROM (
+			SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_images)
+		) a
+  		CROSS JOIN LATERAL
+  		jsonb_to_record(a.value) as (id int, attributes text)
+	)
+
+	UPDATE sample_values
+		SET imagery_id = new_imagery_id, 
+			imagery_attributes = new_imagery_attributes, 
+			value = new_value
+	FROM
+	(SELECT sv.sample_id as new_sample_id, 
+	 		iv.imagery_id as new_imagery_id, 
+	 		iv.imagery_attributes::jsonb as new_imagery_attributes, 
+	 		sv.value as new_value
+		FROM user_plot_table AS upt, samples AS s
+			INNER JOIN new_sample_values as sv
+				ON s.id = sv.sample_id
+            INNER JOIN image_values as iv
+				ON s.id = iv.sample_id
+		WHERE s.plot_id = _plot_id) newsv
+	WHERE sample_values.sample_id = new_sample_id
+	
+	RETURNING sample_id
+
+$$ LANGUAGE SQL;
 
 -- Add user samples for migration (with add_user_plots)
 CREATE OR REPLACE FUNCTION add_sample_values_migration(_user_plot_id integer, _sample_id integer, _value jsonb, _imagery_id integer, _imagery_attributes jsonb) 

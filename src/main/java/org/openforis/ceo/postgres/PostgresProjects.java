@@ -629,34 +629,60 @@ public class PostgresProjects implements Projects {
     }
 
     public String addUserSamples(Request req, Response res) {
-        var jsonInputs =            parseJson(req.body()).getAsJsonObject();
-        var projectId =             jsonInputs.get("projectId").getAsString();
-        var plotId =                jsonInputs.get("plotId").getAsString();
-        var userName =              jsonInputs.get("userId").getAsString();
-        var confidence =            jsonInputs.get("confidence").getAsInt();
-        var collectionStart =       jsonInputs.get("collectionStart").getAsString();
-        var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
-        var userImages =            jsonInputs.get("userImages").getAsJsonObject();
+        final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
+        final var projectId =             jsonInputs.get("projectId").getAsString();
+        final var plotId =                jsonInputs.get("plotId").getAsString();
+        final var userName =              jsonInputs.get("userId").getAsString();
+        final var confidence =            jsonInputs.get("confidence").getAsInt();
+        final var collectionStart =       jsonInputs.get("collectionStart").getAsString();
+        final var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
+        final var userImages =            jsonInputs.get("userImages").getAsJsonObject();
 
-        
+        // check if valid user before adding (should be from UI, but its one less join and partial spam security)
         try (var conn = connect();
-            var userPstmt = conn.prepareStatement("SELECT * FROM get_user(?)")) {
+            final var userPstmt = conn.prepareStatement("SELECT * FROM get_user(?)")) {
             
             userPstmt.setString(1, userName);
             try(var userRs = userPstmt.executeQuery()){
                 if (userRs.next()){
-                    var userId = userRs.getInt("id");
-                    var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
-                    var pstmt = conn.prepareStatement(SQL) ;
-                    pstmt.setInt(1, Integer.parseInt(projectId));
-                    pstmt.setInt(2, Integer.parseInt(plotId));
-                    pstmt.setInt(3, userId);
-                    pstmt.setString(4, confidence == -1 ? null : Integer.toString(confidence));
-                    pstmt.setTimestamp(5, new Timestamp(Long.parseLong(collectionStart)));
-                    pstmt.setString(6, userSamples.toString());
-                    pstmt.setString(7, userImages.toString());
-                    pstmt.execute();
-                    return plotId;
+                    final var userId = userRs.getInt("id");
+                    // check if user has already saved
+                    try(var usPstmt = conn.prepareStatement("SELECT * FROM check_user_plots(?,?,?)")) {
+                        usPstmt.setInt(1, Integer.parseInt(projectId));
+                        usPstmt.setInt(2, Integer.parseInt(plotId));
+                        usPstmt.setInt(3, userId);
+                        try(var usRs = usPstmt.executeQuery()) {
+                            // update existing
+                            if (usRs.next()) {
+                                final var userPlotId = usRs.getInt("user_plots_id");
+                                final var SQL = "SELECT * FROM update_user_samples(?,?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
+                                final var pstmt = conn.prepareStatement(SQL) ;
+                                pstmt.setInt(1, userPlotId);
+                                pstmt.setInt(2, Integer.parseInt(projectId));
+                                pstmt.setInt(3, Integer.parseInt(plotId));
+                                pstmt.setInt(4, userId);
+                                pstmt.setString(5, confidence == -1 ? null : Integer.toString(confidence));
+                                pstmt.setTimestamp(6, new Timestamp(Long.parseLong(collectionStart)));
+                                pstmt.setString(7, userSamples.toString());
+                                pstmt.setString(8, userImages.toString());
+                                pstmt.execute();                                
+                                return plotId;
+                            // add new
+                            } else {
+                                final var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
+                                final var pstmt = conn.prepareStatement(SQL) ;
+                                pstmt.setInt(1, Integer.parseInt(projectId));
+                                pstmt.setInt(2, Integer.parseInt(plotId));
+                                pstmt.setInt(3, userId);
+                                pstmt.setString(4, confidence == -1 ? null : Integer.toString(confidence));
+                                pstmt.setTimestamp(5, new Timestamp(Long.parseLong(collectionStart)));
+                                pstmt.setString(6, userSamples.toString());
+                                pstmt.setString(7, userImages.toString());
+                                pstmt.execute();
+                                return plotId;
+                            }
+                        }
+                    }
                 }
                 return "";
             }
@@ -987,7 +1013,7 @@ public class PostgresProjects implements Projects {
     }
 
     public String createProject(Request req, Response res) {
-        var newProjectId = "";
+        var newProjectId = 0;
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
@@ -1037,13 +1063,13 @@ public class PostgresProjects implements Projects {
 
                 try(var rs = pstmt.executeQuery()){
                     if (rs.next()){
-                        newProjectId = Integer.toString(rs.getInt("create_project"));
+                        newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
                         if (getOrZero(newProject, "useTemplatePlots").getAsBoolean() 
                                 && getOrZero(newProject, "project-template").getAsInt() > 0) {
                             try(var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")){
                                 copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
-                                copyPstmt.setInt(2, Integer.parseInt(newProjectId));
+                                copyPstmt.setInt(2, newProjectId);
                                 copyPstmt.execute();
                             }
                         } else {
@@ -1080,12 +1106,12 @@ public class PostgresProjects implements Projects {
                             // Create the requested plot set and write it to plot-data-<newProjectId>.json
                             createProjectPlots(newProject);
 
-                            deleteFiles(Integer.parseInt(newProjectId));
-                            deleteShapeFileDirectories(Integer.parseInt(newProjectId));
+                            deleteFiles(newProjectId);
+                            deleteShapeFileDirectories(newProjectId);
                         }
                     }
                     // Indicate that the project was created successfully
-                    return newProjectId;
+                    return Integer.toString(newProjectId);
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -1095,11 +1121,11 @@ public class PostgresProjects implements Projects {
         }
         catch (Exception e) {
             // Indicate that an error occurred with project creation
-            deleteFiles(Integer.parseInt(newProjectId));
-            deleteShapeFileDirectories(Integer.parseInt(newProjectId));
+            deleteFiles(newProjectId);
+            deleteShapeFileDirectories(newProjectId);
             try (var conn = connect()) {
                 try (var pstmt = conn.prepareStatement("DELETE FROM projects WHERE id = ?")) {
-                    pstmt.setInt(1, Integer.parseInt(newProjectId));
+                    pstmt.setInt(1, newProjectId);
                     pstmt.execute();
                 } catch (SQLException sql) {
                 }
