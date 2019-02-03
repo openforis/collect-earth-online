@@ -146,7 +146,7 @@ class MapPanel extends React.Component {
                                 <i className={"fa fa-caret-left"} />
                             </div>
                             <div className={this.props.showSidePanel ? "d-none" : ""}>
-                            form-control                           <i className={"fa fa-caret-right"} />
+                                <i className={"fa fa-caret-right"} />
                             </div>
                         </div>
                     </div>
@@ -224,26 +224,21 @@ class SideBar extends React.Component {
     }
 
     render() {
-        const textFiltredInst = 
-            this.state.institutions
-                .filter(inst => this.state.filterInstitution
-                        ? this.state.useFirstLetter 
-                            ? inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())
-                            : inst.name.toLocaleLowerCase().includes(this.state.filterText.toLocaleLowerCase())
-                        : true
-                )
-
-        const textFiltredProj = 
+        const textFiltredProj =
             this.props.projects
                 .filter(proj => !this.state.filterInstitution 
                         ? this.state.useFirstLetter 
                             ? proj.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())
                             : proj.name.toLocaleLowerCase().includes(this.state.filterText.toLocaleLowerCase())
-                        : true
-                )
+                        : true)
 
         const filteredInstitutions = 
-            textFiltredInst
+            this.state.institutions
+                .filter(inst => this.state.filterInstitution
+                                    ? this.state.useFirstLetter 
+                                        ? inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())
+                                        : inst.name.toLocaleLowerCase().includes(this.state.filterText.toLocaleLowerCase())
+                                    : true)
                 .filter(inst => !this.state.filterInstitution 
                                     ? textFiltredProj.filter(proj => inst.id === proj.institution).length > 0
                                     : true)
