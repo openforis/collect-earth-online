@@ -19,9 +19,6 @@ export class SurveyDesign extends React.Component {
         this.removeSurveyQuestion = this.removeSurveyQuestion.bind(this);
         this.removeSurveyQuestionRow = this.removeSurveyQuestionRow.bind(this);
     };
-    componentDidMount(){
-        document.getElementById("survey-design").click();
-    }
 
     addSurveyQuestionRow(surveyQuestionName) {
         let entry = this.state.newValueEntry[surveyQuestionName];
