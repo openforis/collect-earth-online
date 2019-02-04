@@ -186,8 +186,8 @@ class Project extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {                   
-                    const newSampleValues = this.convertSampleValuesToSurveyQuestions(data.sampleValues)
-                    const detailsNew = {...data, sampleValues: newSampleValues}
+                    const newSampleValues = this.convertSampleValuesToSurveyQuestions(data.sampleValues);
+                    const detailsNew = {...data, sampleValues: newSampleValues};
                     this.setState({projectDetails: detailsNew});
                 }
             });
@@ -333,7 +333,6 @@ class ProjectStats extends React.Component {
     }
 
     componentDidMount() {
-        console.log("did mount")
         this.getProjectStats();
     }
 
@@ -380,7 +379,7 @@ class ProjectStats extends React.Component {
             <div className="row mb-3">
                 <div id="project-stats" className="container mx-2">
                     <div className="ProjectStats__dates-table  mb-4">
-                        <strong>Project Dates:</strong>
+                        <h3>Project Dates:</h3>
                         <div className="container row pl-4">
                             <div className="pr-5">
                                 Date Created
@@ -393,7 +392,7 @@ class ProjectStats extends React.Component {
                                     {publishedDate ||  (availability === "unpublished"
                                                             ? "Un-published"
                                                             : "Unknown" )}
-                                </span>
+                                </span>strongstrongstrong
                             </div>
 
                             <div className="pr-5">
@@ -417,7 +416,7 @@ class ProjectStats extends React.Component {
                     </div>
 
                     <div className="ProjectStats__plots-table mb-2">
-                        <strong>Project Stats:</strong>
+                        <h3>Project Stats:</h3>
                         <div className="row pl-2">
                             <div className="col-4">
                                 <StatsCell title="Members">{members}</StatsCell>
@@ -436,7 +435,7 @@ class ProjectStats extends React.Component {
                     
                     {userStats &&
                         <div className="ProjectStats__user-table">
-                            <strong>Plots Completed:</strong>
+                            <h3>Plots Completed:</h3>
                             <StatsRow 
                                     title="Total"
                                     plots={userStats.reduce((p, c) => {return p + c.plots}, 0)}

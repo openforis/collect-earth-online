@@ -1,284 +1,272 @@
 import React, {Fragment} from "react";
 
-import { SectionBlock } from "./components/FormComponents"
+import { SectionBlock } from "./FormComponents"
+
+const componentTypes = [
+    {componentType: "button", dataType: "text"},
+    {componentType: "input", dataType: "number"},
+    {componentType: "input", dataType: "text"},
+    {componentType: "radiobutton", dataType: "boolean"},
+    {componentType: "radiobutton", dataType: "text"},
+    {componentType: "dropdown", dataType: "boolean"},
+    {componentType: "dropdown", dataType: "text"},
+    // {component: "point", dataType: "dgitizer"},
+    // {component: "linestring", dataType: "dgitizer"},
+    // {component: "polygon", dataType: "dgitizer"},
+];
 
 export class SurveyDesign extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            newValueEntry: this.props.project.newValueEntry,
+            inSimpleMode: true,
         };
-        this.addSurveyQuestion = this.addSurveyQuestion.bind(this);
-        this.addSurveyQuestionRow = this.addSurveyQuestionRow.bind(this);
-        this.getParentSurveyAnswers = this.getParentSurveyAnswers.bind(this);
-        this.getParentSurveyQuestionAnswers = this.getParentSurveyQuestionAnswers.bind(this);
-        this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
-        this.handleInputColor = this.handleInputColor.bind(this);
-        this.handleInputName = this.handleInputName.bind(this);
-        this.handleInputParent = this.handleInputParent.bind(this);
-        this.removeSurveyQuestion = this.removeSurveyQuestion.bind(this);
-        this.removeSurveyQuestionRow = this.removeSurveyQuestionRow.bind(this);
     };
 
-    addSurveyQuestionRow(surveyQuestionName) {
-        let entry = this.state.newValueEntry[surveyQuestionName];
-        if (entry.answer != "") {
-            let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionName);
-            console.log(surveyQuestion);
-            if (surveyQuestion.component_type.toLowerCase() == "input" && surveyQuestion.answers.length < 1) {
-                surveyQuestion.answers.push({
-                    id: surveyQuestion.answers.length + 1,
-                    answer: entry.answer,
-                    color: entry.color
-                });
-            } else if ((surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") && surveyQuestion.data_type.toLowerCase() == "boolean" && surveyQuestion.answers.length < 2) {
-                surveyQuestion.answers.push({
-                    id: surveyQuestion.answers.length + 1,
-                    answer: entry.answer,
-                    color: entry.color
-                });
-            } else if ((surveyQuestion.component_type.toLowerCase() == "button" || surveyQuestion.component_type.toLowerCase() == "radiobutton" || surveyQuestion.component_type.toLowerCase() == "dropdown") && surveyQuestion.data_type.toLowerCase() == "text") {
-                surveyQuestion.answers.push({
-                    id: surveyQuestion.answers.length + 1,
-                    answer: entry.answer,
-                    color: entry.color
-                });
-            } else {
-                alert("You cannot add more answers for this type.")
-            }
-            entry.id = -1;
-            entry.answer = "";
-            entry.color = "#1527F6";
-        } else {
-            alert("A survey answer must possess both an answer and a color.");
-        }
-        let dNew = this.state.newValueEntry;
-        dNew[surveyQuestionName] = entry;
-        this.setState({newValueEntry: dNew});
-    }
-
-    getParentSurveyQuestionAnswers(sampleSurvey) {
-        let ans = [];
-        sampleSurvey.map((sq) => {
-                let parent_value = document.getElementById("value-parent");
-
-                if(parent_value!=null) {
-                    let parent = parent_value.options[parent_value.selectedIndex].value;
-                    if (sq.id == parent) {
-                        ans = sq.answers;
-                    }
-                }
-            }
-        );
-        return ans;
-    }
-
-    getParentSurveyAnswers(sampleSurvey,question_id) {
-        let ans = [];
-        sampleSurvey.map((sq) => {
-                if (sq.id == question_id) {
-                    ans = sq.answers;
-                }
-
-
-            }
-        );
-        return ans;
-    }
-
-    addSurveyQuestion(){
-        if (this.props.project.projectDetails != null) {
-            let questionText = document.getElementById("surveyQuestionText").value;
-            let parent_value = document.getElementById("value-parent");
-
-            let parent = parent_value.options[parent_value.selectedIndex].value;
-
-            let answer_value = document.getElementById("value-answer");
-
-            let answer = answer_value.options[answer_value.selectedIndex].value;
-
-            let componenttype_value = document.getElementById("value-componenttype");
-            let componenttype = componenttype_value.options[componenttype_value.selectedIndex].value;
-
-            if (questionText != "") {
-                let newValueEntryNew = this.state.newValueEntry;
-                newValueEntryNew[questionText] = {id:-1,answer: "", color: "#1527F6"};
-                let detailsNew = this.props.project.projectDetails;
-                let _id = detailsNew.sampleValues.length + 1;
-                let question_id = -1,answer_id=-1;
-                detailsNew.sampleValues.map((sq) => {
-                        if (sq.id == parent) {
-                            question_id = sq.id;
-                            this.getParentSurveyAnswers(detailsNew.sampleValues,question_id).map((ans) => {
-                                    if (ans.id == answer) {
-                                        answer_id = ans.id;
-                                    }
-                                }
-                            );
-                        }
-                    }
-                );
-
-                detailsNew.sampleValues.push({id: _id, question: questionText, answers: [], parent_question: question_id,parent_answer:answer_id,data_type:componenttype.split("-")[1],component_type:componenttype.split("-")[0]});
-
-                this.setState({newValueEntry: newValueEntryNew, projectDetails: detailsNew, newSurveyQuestionName: ""});
-                document.getElementById("surveyQuestionText").value = "";
-                parent_value.options[0].selected = true;
-            } else {
-                alert("Please enter a survey question first.");
-            }
+    componentDidUpdate = (prevProps, prevState) => {
+        if (this.state.inSimpleMode
+            && !prevState.inSimpleMode) {
+                
+            this.convertToSimple();
         }
     }
 
-    removeSurveyQuestion(surveyQuestionName) {
-        if (this.props.project.projectDetails != null) {
-            let detailsNew = this.props.project.projectDetails;
-            detailsNew.sampleValues = detailsNew.sampleValues.filter(
-                function (surveyQuestion) {
-                    return surveyQuestion.question != surveyQuestionName;
-                }
-            );
-            this.setState({
-                projectDetails: detailsNew
-            });
-        }
+    checkContainsAdvanced = () => this.props.surveyQuestions
+        .reduce((prev, cur) => {
+                return prev && cur.componentType !== "button"
+            }, false);
+    
+    
+    convertToSimple = () => {
+         const newSurveyQuestions = this.props.surveyQuestions.reduce((prev, question) => {
+            return [...prev, {...question, componentType: "button", dataType: "text"}]
+        }, []);
+
+        this.props.setSurveyQuestions(newSurveyQuestions);
     }
 
-    getSurveyQuestionByName(surveyQuestionName) {
-        return this.props.project.projectDetails.sampleValues.find(
-            function (surveyQuestion) {
-                return surveyQuestion.question == surveyQuestionName;
-            }
-        );
-    }
+    toggleSimpleMode = () => {
+        
+        const newMode = this.state.inSimpleMode
+            ? false
+            : !this.checkContainsAdvanced() 
+                    || confirm("This action will revert all questions to type button.  Would you like to procede?");
 
-    removeSurveyQuestionRow(surveyQuestionText, _surveyAnswer) {
-        let surveyQuestion = this.getSurveyQuestionByName(surveyQuestionText);
-        surveyQuestion.answers = surveyQuestion.answers.filter(
-            function (surveyAnswer) {
-                return surveyAnswer.answer != _surveyAnswer;
-            }
-        );
-        this.setState({});
-    }
-
-    handleInputName(surveyQuestion, event) {
-        let newValueEntryNew = this.state.newValueEntry;
-        if (newValueEntryNew[surveyQuestion]) {
-            newValueEntryNew[surveyQuestion].answer = event.target.value;
-            this.setState({newValueEntry:newValueEntryNew});
-        }
-        else
-            this.setState({newValueEntry:{id:-1,answer: "", color: "#1527F6"}});
-    }
-
-    handleInputColor(surveyQuestion, event) {
-        let newValueEntryNew = this.state.newValueEntry;
-        newValueEntryNew[surveyQuestion].color = event.target.value;
-
-        this.setState({newValueEntry: newValueEntryNew});
-
-    }
-
-    handleInputParent(event) {
-        let detailsNew = this.props.project.projectDetails;
-        this.setState({projectDetails: detailsNew});
+            this.setState({inSimpleMode: newMode});
     }
 
     render() {
-        let answer_select = "";
-        let answers = this.getParentSurveyQuestionAnswers(this.props.project.projectDetails.sampleValues);
-        if (answers.length > 0) {
-            answer_select = this.getParentSurveyQuestionAnswers(this.props.project.projectDetails.sampleValues).map((parentSurveyQuestionAnswer, uid) =>
-                <option key={uid}
-                        value={parentSurveyQuestionAnswer.id}>{parentSurveyQuestionAnswer.answer}</option>
-            )
-        }
-
         return (
             <SectionBlock title="Survey Design">
+                <ModeButtons inSimpleMode={this.state.inSimpleMode} toggleSimpleMode={this.toggleSimpleMode} />
                 <div id="survey-design">
                     <SurveyQuestionTree
-                        project={this.props.project}
-                        addSurveyQuestionRow={this.addSurveyQuestionRow}
-                        removeSurveyQuestion={this.removeSurveyQuestion}
-                        removeSurveyQuestionRow={this.removeSurveyQuestionRow}
-                        handleInputColor={this.handleInputColor}
-                        handleInputName={this.handleInputName}
-                        handleInputParent={this.handleInputParent}
+                        inSimpleMode={this.state.inSimpleMode}
+                        setSurveyQuestions={this.props.setSurveyQuestions}
+                        surveyQuestions={this.props.surveyQuestions}
                     />
-                    <table>
-                        <tbody>
-                        <tr>
-                            <td>
-                                <label htmlFor="value-parent">Parent Question:</label>
-                            </td>
-                            <td>
-                                <select
-                                    id="value-parent" className="form-control form-control-sm" size="1"
-                                    onChange={(e) => this.props.handleInputParent(e)}>
-                                    <option value="">None</option>
-                                    {
-                                        (this.props.project.projectDetails.sampleValues).map((parentSurveyQuestion, uid) =>
-                                            <option key={uid}
-                                                    value={parentSurveyQuestion.id}>{parentSurveyQuestion.question}
-                                            </option>
-                                        )
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label htmlFor="value-componenttype">Component Type:</label>
-                            </td>
-                            <td>
-                                <select id="value-componenttype" className="form-control form-control-sm" size="1"
-                                        onChange={(e) => this.handleInputParent(e)}>
-                                    <option value="button-text">Button-Text</option>
-                                    <option value="input-number">Input-Number</option>
-                                    <option value="input-text">Input-Text</option>
-                                    <option value="radiobutton-boolean">Radiobutton-Boolean</option>
-                                    <option value="radiobutton-text">Radiobutton-Text</option>
-                                    <option value="dropdown-boolean">Dropdown-Boolean</option>
-                                    <option value="dropdown-text">Dropdown-Text</option>
-                                    {/*<option value="point-digitizer">Point-Digitizer</option>*/}
-                                    {/*<option value="linestring-digitizer">Line String-Digitizer</option>*/}
-                                    {/*<option value="polygon-digitizer">Polygon-Digitizer</option>*/}
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label htmlFor="value-answer">Parent Answer:</label>
-                            </td>
-                            <td>
-                                <select id="value-answer" className="form-control form-control-sm" size="1"
-                                        onChange={(e) => this.handleInputParent(e)}>
-                                    <option value="">Any</option>
-                                    {answer_select}
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><label htmlFor="value-SQ">New Question:</label></td>
-                            <td>
-                                <div id="add-sample-value-group">
-                                    <input type="text" id="surveyQuestionText" autoComplete="off"
-                                           value={project.newSurveyQuestionName}/>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><input type="button" className="button" value="Add Survey Question"
-                                       onClick={this.addSurveyQuestion}/></td>
-                            <td></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <NewQuestionDesigner
+                        inSimpleMode={this.state.inSimpleMode}
+                        setSurveyQuestions={this.props.setSurveyQuestions}
+                        surveyQuestions={this.props.surveyQuestions}
+                    />
                 </div>
             </SectionBlock>
         );
+    }
+}
+
+function ModeButtons({inSimpleMode, toggleSimpleMode}) {
+    return (
+        <div style={{overflow: "hidden", border: "1px solid #31BAB0",backgroundColor: "#f1f1f1",margin:"10px"}}>
+            <input 
+                type="button" 
+                className="SimpleButton border" 
+                onClick={toggleSimpleMode} 
+                value="Simple" 
+                style={{
+                    backgroundColor: inSimpleMode ? "#31BAB0" : "transparent",
+                    float: "left", 
+                    border: "none", 
+                    outline: "none", 
+                    cursor: "pointer", 
+                    padding: "14px 16px", 
+                    transition: "0.3s",
+                    fontSize: "17px"
+                }}
+            />
+            <input 
+                type="button" 
+                className="AdvancedButton border" 
+                onClick={toggleSimpleMode} 
+                value="Advanced" 
+                style={{
+                    backgroundColor: !inSimpleMode ? "#31BAB0" : "transparent",
+                    float: "left",  
+                    outline: "none", 
+                    cursor: "pointer", 
+                    padding: "14px 16px", 
+                    transition: "0.3s",
+                    fontSize: "17px"
+                }}
+            />
+        </div>
+    );
+}
+
+class NewQuestionDesigner extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state ={
+            selectedAnswer: -1,
+            selectedParent: -1,
+            selectedType: 0,
+            newQuestionText: "",
+        };
+
+    };
+
+    componentDidUpdate = (prevProps) => {
+        if (this.props.surveyQuestions.length !== prevProps.surveyQuestions.length) {
+            if (!this.props.surveyQuestions.find(question => question.id === this.state.selectedParent)) {
+                this.setState({ selectedParent: "-1"});
+            }
+        }
+    }
+
+    addSurveyQuestion = () => {
+        if (this.state.newQuestionText != "") {
+            const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
+            const newQuestion = {
+                                id: this.props.surveyQuestions.length + 1,
+                                question: this.state.newQuestionText,
+                                answers: [],
+                                parent_question: this.state.selectedParent,
+                                parent_answer: this.state.selectedAnswer,
+                                dataType: dataType,
+                                componentType: componentType,
+                                }; 
+            this.props.setSurveyQuestions([...this.props.surveyQuestions, newQuestion]);
+        } else {
+            alert("Please enter a survey question first.");
+        }
+    }
+
+    render() {
+        return (
+            <table>
+                <tbody>
+                <tr>
+                    <td>
+                        <label htmlFor="value-parent">Parent Question:</label>
+                    </td>
+                    <td>
+                        {/* FIXME be more specific and set selected to state value.   */}
+                        <select
+                            id="value-parent" 
+                            className="form-control form-control-sm" 
+                            size="1"
+                            onChange={(e) => this.setState({selectedParent: parseInt(e.target.value)})}
+                            value={this.state.selectedParent}
+                        >
+                            <option key={-1} value={-1}>None</option>
+                            {this.props.surveyQuestions.length > 0
+                                ? this.props.surveyQuestions
+                                    .filter(question => question.componentType !== "input")
+                                    .map((question) =>
+                                            <option 
+                                                key={question.id}
+                                                value={question.id}
+                                            >
+                                                {question.question}
+                                            </option>)
+                                : "" 
+                            }
+                        </select>
+                    </td>
+                </tr>
+                {!this.props.inSimpleMode &&
+                    <tr>
+                        <td>
+                            <label htmlFor="value-componenttype">Component Type:</label>
+                        </td>
+                        <td>
+                            <select 
+                                id="value-componenttype" 
+                                className="form-control form-control-sm" 
+                                size="1"
+                                onChange={(e) => this.setState({selectedType: parseInt(e.target.value)})}
+                                value={this.state.selectedType}
+                            >
+                                {componentTypes.map((type, index) =>
+                                    <option 
+                                        key={index}
+                                        value={index}
+                                    >
+                                        {`${type.componentType}-${type.dataType}`}
+                                    </option>)
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                }
+
+                <tr>
+                    <td>
+                        <label htmlFor="value-answer">Parent Answer:</label>
+                    </td>
+                    <td>
+                        <select 
+                            id="value-answer" 
+                            className="form-control form-control-sm" 
+                            size="1"
+                            onChange={(e) => this.setState({selectedAnswer: parseInt(e.target.value)})}
+                            value={this.state.selectedAnswer}
+                        >
+                            <option key={-1} value={-1}>Any</option>
+                            {this.state.selectedParent > 0 
+                                && this.props.surveyQuestions
+                                    .find(question => question.id === this.state.selectedParent)
+                                ? this.props.surveyQuestions
+                                    .find(question => question.id === this.state.selectedParent)
+                                    .answers
+                                    .map(answer => 
+                                        <option key={answer.id} value={answer.id}>
+                                            {answer.answer}
+                                        </option>)
+                                    : "" 
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label htmlFor="value-SQ">New Question:</label></td>
+                    <td>
+                        <div id="add-sample-value-group">
+                            <input 
+                                type="text" 
+                                autoComplete="off"
+                                value={this.state.newQuestionText}
+                                onChange={(e) => this.setState({newQuestionText: e.target.value})}
+                            />
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input 
+                            type="button" 
+                            className="button" 
+                            value="Add Survey Question"
+                            onClick={this.addSurveyQuestion}
+                        />
+                    </td>
+                    <td></td>
+                </tr>
+                </tbody>
+            </table>
+        )
     }
 }
 
@@ -286,39 +274,115 @@ class SurveyQuestionTree extends React.Component {
     constructor(props) {
         super(props);
     };
-    getCurrent = (node) =>
-        this.props.project.projectDetails.sampleValues.filter(cNode =>
-            cNode.parent_question == node).map((cNode,uid) => (
+
+    getQuestionChildrenArray = (questionId) => {
+        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parent_question === questionId);
+        if (childQuestions.length === 0) {
+            return [questionId];
+        } else {
+            return childQuestions.reduce((prev, cur) => {
+                            return [...prev, ...this.getQuestionChildrenArray(cur.id)];
+                        }, [questionId])
+        }
+    }
+
+    removeQuestion = (removalId) => {
+        const questionsToRemove = this.getQuestionChildrenArray(removalId)
+
+        const newSurveyQuestions = 
+            this.props.surveyQuestions
+                .reduce((prev, cur) => {
+                    const validCur = !questionsToRemove.includes(cur.id) 
+                    return validCur ? [...prev, cur] : prev
+                },[])
+        
+        this.props.setSurveyQuestions(newSurveyQuestions)
+    }
+
+    removeAnswer = (questionId, removalId) => {
+        const surveyQuestion = this.props.surveyQuestions.find(q => q.id = questionId)
+        const updatedAnswers = 
+            surveyQuestion.answers
+                .reduce((prev, cur) => {
+                    return cur.id === removalId ? prev : [...prev, cur]
+                }, [])
+
+        const updatedQuestion = {...surveyQuestion, answers: updatedAnswers}
+
+        const newSurveyQuestions = 
+            this.props.surveyQuestions
+                .reduce((prev, cur) => {
+                    return [...prev, cur.id === updatedQuestion.id 
+                                                ? updatedQuestion 
+                                                : cur]
+                },[])
+
+        this.props.setSurveyQuestions(newSurveyQuestions)
+    }
+
+    
+
+    getCurrent = (nodeId) =>
+        this.props.surveyQuestions.filter(cNode =>
+            cNode.parent_question == nodeId).map((cNode,uid) => (
             <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
                 <li>
-                    <SurveyQuestion parentProps={this.props} surveyQuestion={cNode}/>
+                    <SurveyQuestion 
+                        setSurveyQuestions={this.props.setSurveyQuestions} 
+                        inSimpleMode={this.props.inSimpleMode}
+                        surveyQuestion={cNode}
+                        surveyQuestions={this.props.surveyQuestions}
+                        removeAnswer={this.removeAnswer}
+                        removeQuestion={this.removeQuestion}
+                    />
                     {this.getCurrent(cNode.id)}
                 </li>
 
             </ul>
         ))
+
     render() {
-        const { project } = this.props;
-        return (
-            <Fragment>
-                {project.projectDetails && this.getCurrent(-1)}
-            </Fragment>
-        );
+        return this.getCurrent(-1);
     }
 }
 
-function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion }) {
-    if (surveyQuestion.answers == null) {
-        console.log("answers null");
-    }
+function maxAnswers(componentType, dataType) {
+    return (componentType || "").toLowerCase() === "input"
+            ? 1
+            : (dataType || "").toLowerCase() === "boolean"
+                ? 2
+                : 1000
+}
+
+function SurveyQuestion({ surveyQuestion,
+                            surveyQuestions,
+                            setSurveyQuestions,
+                            inSimpleMode,
+                            removeAnswer, 
+                            removeQuestion }) {
     return (
         <div className="sample-value-info">
             <h3 className="header px-0">
-                <RemoveSurveyQuestionButton
-                    removeSurveyQuestion={parentProps.removeSurveyQuestion}
-                    surveyQuestion={surveyQuestion}
+                <input 
+                    type="button" 
+                    className="button" 
+                    value="-"
+                    onClick={() => removeQuestion(surveyQuestion.id)}
                 />
                 <label> Survey Question: {surveyQuestion.question}</label>
+                {surveyQuestion.parent_question > 0 &&
+                    <Fragment>
+                        <h3>Parent Question: {surveyQuestions.find(sq => sq.id = surveyQuestion.parent_question).question}</h3>
+                        <h3>Parent Answer: {surveyQuestion.parent_answer === -1 
+                            ? "Any" 
+                            : surveyQuestions
+                                .find(sq => sq.id === surveyQuestion.parent_question).answers
+                                .find(sa => sa.id === surveyQuestion.parent_answer)
+                                .answer}
+                        </h3>
+                    </Fragment>
+                }            
+                {!inSimpleMode && <h3>{` Question Type: ${surveyQuestion.componentType} - ${surveyQuestion.dataType}`}</h3>}
             </h3>
             <table className="table table-sm">
                 <thead>
@@ -330,82 +394,123 @@ function SurveyQuestion({ parentProps, parentProps: { project }, surveyQuestion 
                 </tr>
                 </thead>
                 <tbody>
-                {
-                    (surveyQuestion.answers).map((surveyAnswer, uid) => {
-
-                            return <tr key={uid}>
-                                <td>
-                                    {surveyAnswer &&
-                                    <RemoveSurveyQuestionRowButton
-                                        removeSurveyQuestionRow={parentProps.removeSurveyQuestionRow}
-                                        surveyQuestion={surveyQuestion}
-                                        surveyAnswer={surveyAnswer}
-                                    />
-                                    }
-                                </td>
-
-                                <td>
-                                    {surveyAnswer.answer}
-                                </td>
-                                <td>
-                                    <div className="circle"
-                                         style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}></div>
-                                </td>
-                                <td>
-                                    &nbsp;
-                                </td>
-                            </tr>
-                        }
-                    )
+                {(surveyQuestion.answers)
+                        .map((surveyAnswer, uid) => 
+                                <ExistingAnswer 
+                                    key={uid} 
+                                    answer={surveyAnswer.answer} 
+                                    color={surveyAnswer.color} 
+                                    removeAnswer={() => removeAnswer(surveyQuestion.id, surveyAnswer.id)}
+                                />
+                            )
                 }
-                <SurveyQuestionTable
-                    project={project}
-                    surveyQuestion={surveyQuestion}
-                    addSurveyQuestionRow={parentProps.addSurveyQuestionRow}
-                    handleInputName={parentProps.handleInputName}
-                    handleInputColor={parentProps.handleInputColor}
-                    handleInputParent={parentProps.handleInputParent}
-                />
+                {surveyQuestion.answers.length < maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType) &&
+                    <NewAnswerDesigner
+                        surveyQuestion={surveyQuestion}
+                        surveyQuestions={surveyQuestions}
+                        setSurveyQuestions={setSurveyQuestions}
+                    />
+                }
                 </tbody>
             </table>
         </div>
     );
 }
 
-function RemoveSurveyQuestionButton(props) {
-    return (<input id="remove-sample-value-group" type="button" className="button" value="-"
-                   onClick={() => props.removeSurveyQuestion(props.surveyQuestion.question)}/>
-    );
-}
 
-function RemoveSurveyQuestionRowButton(props) {
-    return (
-        <input type="button" className="button" value="-"
-               onClick={() => props.removeSurveyQuestionRow(props.surveyQuestion.question, props.surveyAnswer.answer)}/>
-    );
-}
+class NewAnswerDesigner extends React.Component {
+    constructor(props) {
+        super(props);
 
-function SurveyQuestionTable(props) {
-    let project = props.project;
-    let answer = "", color = "#1527F6";
-    if (project.newValueEntry[props.surveyQuestion.question]) {
-        answer = project.newValueEntry[props.surveyQuestion.question].answer;
-        color = project.newValueEntry[props.surveyQuestion.question].color;
+        this.state ={
+            selectedColor: "#1527F6",
+            newAnswerText: "",
+        };
+    };
+    
+    addSurveyAnswer = () => {
+        const { surveyQuestion } = this.props
+        if (this.state.newAnswerText.length > 0) {
+
+            const newAnswer = {
+                                id: surveyQuestion.answers.length + 1,
+                                answer: this.state.newAnswerText,
+                                color: this.state.selectedColor
+                                }
+            const updatedAnswers = [...surveyQuestion.answers, newAnswer]
+            const updatedQuestion = {...surveyQuestion, answers: updatedAnswers}
+            const newSurveyQuestions = this.props.surveyQuestions
+                                            .reduce((prev, cur) => {
+                                                return [...prev, cur.id === updatedQuestion.id 
+                                                                            ? updatedQuestion 
+                                                                            : cur]
+                                            },[])
+
+            this.props.setSurveyQuestions(newSurveyQuestions);
+        } else {
+            alert("A survey answer must possess both an answer and a color.")
+        }
     }
+
+    render() {
+        return (
+                <tr>
+                    <td>
+                        <input 
+                            type="button" 
+                            className="button" value="+"
+                            onClick={this.addSurveyAnswer}
+                        />
+                    </td>
+                    <td>
+                        <input 
+                            type="text" 
+                            className="value-name" 
+                            autoComplete="off"
+                            value={this.state.newAnswerText} 
+                            onChange={(e) => this.setState({newAnswerText: e.target.value})}
+                        />
+                    </td>
+                    <td>
+                        <input 
+                            type="color"
+                            className="value-color"
+                            value={this.state.selectedColor}
+                            onChange={(e) => this.setState({selectedColor: e.target.value})}
+                        />
+                    </td>
+                </tr>
+            );
+    }
+}
+
+function ExistingAnswer({ answer, color, removeAnswer }) {
     return (
         <tr>
             <td>
-                <input type="button" className="button" value="+"
-                       onClick={() => props.addSurveyQuestionRow(props.surveyQuestion.question)}/>
+                <input 
+                    id="remove-sample-value-group" 
+                    type="button" 
+                    className="button" 
+                    value="-"
+                    onClick={removeAnswer}
+                />
             </td>
             <td>
-                <input type="text" className="value-name" autoComplete="off"
-                       value={answer} onChange={(e) => props.handleInputName(props.surveyQuestion.question, e)}/>
+                {answer}
             </td>
             <td>
-                <input type="color" className="value-color"
-                       value={color} onChange={(e) => props.handleInputColor(props.surveyQuestion.question, e)}/>
+                <div className="circle"
+                    style={{backgroundColor: color, border: "solid 1px"}}>
+                </div>
+            </td>
+            <td>
+                &nbsp;
             </td>
         </tr>
     );
 }
+
+
+
+

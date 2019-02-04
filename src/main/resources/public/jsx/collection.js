@@ -333,7 +333,7 @@ class Collection extends React.Component {
             .then(data => {
                 if (data == "done") {
                     alert(this.state.reviewPlots 
-                        ? "This plot was analyzed by someone else"
+                        ? "This plot was analyzed by someone else."
                         : "This plot has already been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
@@ -396,7 +396,7 @@ class Collection extends React.Component {
                 if (data == "done") {
                     this.setState({prevPlotButtonDisabled: true});
                     alert(this.state.reviewPlots 
-                            ? "All previous plot are not analyzed by you"
+                            ? "All previous plot were not analyzed by you."
                             : "All previous plots have been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
@@ -424,7 +424,7 @@ class Collection extends React.Component {
                     return obj;
                     }, {}) 
                 : {},
-            selectedQuestionText: this.state.currentProject.sampleValues.sort((a, b) => b.id - a.id).filter(surveyNode => surveyNode.parent_question == -1)[0].question || "",
+            selectedQuestionText: this.state.currentProject.sampleValues.sort((a, b) => b.id - a.id).find(surveyNode => surveyNode.parent_question == -1).question || "",
             collectionStart: Date.now(),
             sampleOutlineBlack: true
         };
@@ -482,7 +482,7 @@ class Collection extends React.Component {
 
     showPlotSamples() {
         const { mapConfig, selectedQuestionText, currentProject : { sampleValues} } = this.state;
-        const shownPlots = this.getVisibleSamples(sampleValues.filter((sv => sv.question === selectedQuestionText))[0].id);
+        const shownPlots = this.getVisibleSamples(sampleValues.find((sv => sv.question === selectedQuestionText)).id);
 
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
@@ -530,7 +530,7 @@ class Collection extends React.Component {
         if (!isNaN(newPlot)) {
             this.getPlotData(newPlot);
         } else {
-            alert("Please enter a number to go to plot");
+            alert("Please enter a number to go to plot.");
         }
     }
 
@@ -596,7 +596,7 @@ class Collection extends React.Component {
             });
     }
 
-    getImageryAttributes () {
+    getImageryAttributes() {
         if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
             return {imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG};
         } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
@@ -606,27 +606,26 @@ class Collection extends React.Component {
         }
     }
 
-    validateCurrentSelection (selectedFeatures, questionText) {
+    validateCurrentSelection(selectedFeatures, questionText) {
         const visibleSamples = this.getVisibleSamples(this.state.currentProject.sampleValues
-                                .filter((sv => sv.question === questionText))[0].id);
+                                .find((sv => sv.question === questionText)).id);
         return selectedFeatures.getArray().reduce((prev, cur) => {
             const sampleId = cur.get("sampleId")
             return prev && visibleSamples.filter(vs => vs.id === sampleId).length > 0;
         }, true);
     }
 
-    questionChildrenArray (currentQuestionText) {
+    getQuestionChildrenArray(currentQuestionText) {
         const { sampleValues } = this.state.currentProject;
-        const { question, id } = sampleValues.filter((sv => sv.question === currentQuestionText))[0];
-        const child_questions = sampleValues.filter((sv => sv.parent_question === id));
+        const { question, id } = sampleValues.find(sv => sv.question === currentQuestionText);
+        const childQuestions = sampleValues.filter(sv => sv.parent_question === id);
 
-        if (child_questions.length === 0) {
+        if (childQuestions.length === 0) {
             return [question];
         } else {
-            const cq = child_questions.reduce((prev, cur) => {
-                return [...prev, ...this.questionChildrenArray(cur.question)];
-            }, [])
-            return [question, ...cq]
+            return childQuestions.reduce((prev, cur) => {
+                return [...prev, ...this.getQuestionChildrenArray(cur.question)];
+            }, [question])
         }
     }
 
@@ -640,7 +639,7 @@ class Collection extends React.Component {
                 const sampleId = feature.get("sampleId");
                 const newQuestion = { answer: answerText, color: answerColor};
 
-                const clearedSubQuestions = this.questionChildrenArray(questionText)
+                const clearedSubQuestions = this.getQuestionChildrenArray(questionText)
                                             .filter(question => question !== questionText)
                                             .reduce((prev, question) => {
                                                 const { [question]: value, ...rest} = prev
@@ -669,7 +668,7 @@ class Collection extends React.Component {
             alert("No samples selected. Please click some first.");
             return false;
         } else {
-            alert("Invalid Selection.  Try selecting question before answering");
+            alert("Invalid Selection.  Try selecting question before answering.");
             return false;
         }
     }
@@ -678,8 +677,8 @@ class Collection extends React.Component {
         this.setState({selectedQuestionText: newselectedQuestionText});
     }
 
-    invertColor(hexin) {
-        const dehashed = hex.indexOf('#') === 0 ? hex.slice(1) : hex;
+    invertColor(hex) {
+        const dehashed = hex.indexOf("#") === 0 ? hex.slice(1) : hex;
         const hexFormated = dehashed.length === 3 
                             ? dehashed[0] + dehashed[0] + dehashed[1] + dehashed[1] + dehashed[2] + dehashed[2] 
                             : dehashed;
@@ -689,11 +688,11 @@ class Collection extends React.Component {
         const g = (255 - parseInt(hexFormated.slice(2, 4), 16)).toString(16);
         const b = (255 - parseInt(hexFormated.slice(4, 6), 16)).toString(16);
         // pad each with zeros and return
-        return '#' + this.padZero(r) + this.padZero(g) + this.padZero(b);
+        return "#" + this.padZero(r) + this.padZero(g) + this.padZero(b);
     }
 
     padZero(str) {
-        const zeros = new Array(2).join('0');
+        const zeros = new Array(2).join("0");
         return (zeros + str).slice(-2);
     }
 
@@ -706,16 +705,16 @@ class Collection extends React.Component {
             const sampleId = feature.get("sampleId");
 
             const answeredQuestion = this.state.currentProject.sampleValues
-                             .filter(sv => sv.question === this.state.selectedQuestionText)[0];
+                             .find(sv => sv.question === this.state.selectedQuestionText);
             const userAnswer = this.state.userSamples[sampleId][this.state.selectedQuestionText].answer;
-            const matchingAnswer = answeredQuestion.answers.filter(ans => ans.answer === userAnswer);
+            const matchingAnswers = answeredQuestion.answers.filter(ans => ans.answer === userAnswer);
             
-            const color = answeredQuestion.component_type === "input"
+            const color = answeredQuestion.componentType === "input"
                             ? userAnswer.length > 0 
                                 ? answeredQuestion.answers[0].color
                                 : this.invertColor(answeredQuestion.answers[0].color)
-                            : matchingAnswer.length > 0
-                                ? matchingAnswer[0].color
+                            : matchingAnswers.length > 0
+                                ? matchingAnswers[0].color
                                 : ""
 
             mercator.highlightSampleGeometry(feature, color);
@@ -728,16 +727,18 @@ class Collection extends React.Component {
     
     getVisibleSamples(currentQuestionId) {
         const { currentProject : { sampleValues}, userSamples } = this.state;
-        const {parent_question, parent_answer} = sampleValues.filter((sv => sv.id === currentQuestionId))[0];
-        const parentQuestionText = parent_question === -1 ? "" : sampleValues.filter((sv => sv.id === parent_question))[0].question;
+        const {parent_question, parent_answer} = sampleValues.find((sv => sv.id === currentQuestionId));
+        const parentQuestionText = parent_question === -1 
+                ? "" 
+                : sampleValues.find((sv => sv.id === parent_question)).question;
         
         if (parent_question === -1) {
             return this.state.currentPlot.samples;
         }
         else {
             const correctAnswerText = sampleValues
-                                    .filter(sv => sv.id === parent_question)[0].answers
-                                    .filter(ans => parent_answer === -1 || ans.id === parent_answer)[0].answer;
+                                    .find(sv => sv.id === parent_question).answers
+                                    .find(ans => parent_answer === -1 || ans.id === parent_answer).answer;
 
             return this.getVisibleSamples(parent_question)
                     .filter(sample => {
@@ -750,16 +751,16 @@ class Collection extends React.Component {
 
     getAnsweredSamples(currentQuestionId) {
         const { currentProject : { sampleValues}, userSamples } = this.state;
-        const {parent_question, parent_answer, question} = sampleValues.filter((sv => sv.id === currentQuestionId))[0];
-        const parentQuestionText = parent_question === -1 ? "" : sampleValues.filter((sv => sv.id === parent_question))[0].question;
+        const {parent_question, parent_answer, question} = sampleValues.find((sv => sv.id === currentQuestionId));
+        const parentQuestionText = parent_question === -1 ? "" : sampleValues.find((sv => sv.id === parent_question)).question;
         
         if (parent_question === -1) {
             return this.state.currentPlot.samples.filter(s => userSamples[s.id][question]);
         }
         else {
             const correctAnswerText = sampleValues
-                                    .filter(sv => sv.id === parent_question)[0].answers
-                                    .filter(ans => parent_answer === -1 || ans.id === parent_answer)[0].answer;
+                                    .find(sv => sv.id === parent_question).answers
+                                    .find(ans => parent_answer === -1 || ans.id === parent_answer).answer;
 
             return this.getVisibleSamples(parent_question)
                     .filter(sample => {
@@ -1219,7 +1220,7 @@ class ProjectStats extends React.Component {
 
     render() {
         const { stats } = this.state
-        const userStats = stats.userStats && stats.userStats.filter(user => user.user === this.props.userName)[0]
+        const userStats = stats.userStats && stats.userStats.find(user => user.user === this.props.userName)
         const numPlots = stats.flaggedPlots + stats.analyzedPlots + stats.unanalyzedPlots
         return (
             <div className="row mb-1">
