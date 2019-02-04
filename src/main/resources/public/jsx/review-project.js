@@ -390,7 +390,7 @@ class ProjectStats extends React.Component {
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {publishedDate ||  (availability === "unpublished"
-                                                            ? "Un-published"
+                                                            ? "Unpublished"
                                                             : "Unknown" )}
                                 </span>
                             </div>
@@ -409,7 +409,7 @@ class ProjectStats extends React.Component {
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {archivedDate || (availability === 'archived'
                                                             ? "Unknown"
-                                                            : "Un-archived")}
+                                                            : "Unarchived")}
                                 </span>
                             </div>
                         </div>
