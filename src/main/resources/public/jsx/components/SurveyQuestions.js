@@ -51,12 +51,12 @@ export class SurveyQuestions extends React.Component {
     checkAllSelected(currentQuestionId){
         const { surveyQuestions } = this.props;
         const { visible, answered } = surveyQuestions.filter((sv => sv.id === currentQuestionId))[0];
-        const child_questions = surveyQuestions.filter((sv => sv.parent_question === currentQuestionId));
+        const childQuestions = surveyQuestions.filter((sv => sv.parent_question === currentQuestionId));
 
-        if (child_questions.length === 0) {
+        if (childQuestions.length === 0) {
             return visible === answered;
         } else {
-            return visible === answered && child_questions.reduce((prev, cur) => {
+            return visible === answered && childQuestions.reduce((prev, cur) => {
                 return prev && this.checkAllSelected(cur.id);
             }, true);
         }   
@@ -183,8 +183,8 @@ class SurveyQuestionTree extends React.Component  {
 
                 {this.state.showAnswers &&
                     <SurveyAnswers
-                        componentType={this.props.surveyNode.component_type}
-                        dataType={this.props.surveyNode.data_type}
+                        componentType={this.props.surveyNode.componentType}
+                        dataType={this.props.surveyNode.dataType}
                         question={this.props.surveyNode.question}
                         answers={this.props.surveyNode.answers}
                         setCurrentValue={this.props.setCurrentValue}
@@ -278,7 +278,7 @@ class AnswerInput extends React.Component{
         this.updateInputValue = this.updateInputValue.bind(this);
     }
 
-    componentDidUpdate (prevProps) {
+    componentDidUpdate(prevProps) {
         if (this.props.question !== prevProps.question) {
             this.setState({ newInput: "" })
         }

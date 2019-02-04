@@ -20,8 +20,6 @@ class Project extends React.Component {
             latMin: "",
             lonMax: "",
             latMax: "",
-            newSurveyQuestionName: "",
-            newValueEntry: {},
             projectList: null,
         };
         this.setPrivacyLevel = this.setPrivacyLevel.bind(this);
@@ -34,6 +32,8 @@ class Project extends React.Component {
         this.setProjectTemplate = this.setProjectTemplate.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.createProject = this.createProject.bind(this);
+
+        this.setSurveyQuestions = this.setSurveyQuestions.bind(this);
     };
 
     componentDidMount() {
@@ -77,6 +77,33 @@ class Project extends React.Component {
         }
     }
 
+    convertSampleValuesToSurveyQuestions(sampleValues) {
+        return sampleValues.map(sampleValue => {
+            if (sampleValue.name && sampleValue.values) {
+                const surveyQuestionAnswers = sampleValue.values.map(value => {
+                    if (value.name) {
+                        return {
+                            id: value.id,
+                            answer: value.name,
+                            color: value.color
+                        };
+                    } else {
+                        return value;
+                    }
+                });
+                return {
+                    id: sampleValue.id,
+                    question: sampleValue.name,
+                    answers: surveyQuestionAnswers,
+                    parent_question: -1,
+                    parent_answer: -1
+                };
+            } else {
+                return sampleValue;
+            }
+        });
+    }
+
     setProjectTemplate(event) {
         this.setState({templateId: event.target.value});
         const templateProject = this.state.projectList.find(
@@ -85,50 +112,11 @@ class Project extends React.Component {
             },
             this
         );
-        let sv=(JSON.parse(JSON.stringify(templateProject))).sampleValues;
-        let newSV=[];
-        let tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
-        let dNew = this.state.newValueEntry;
-
-        if(sv.length>0){
-
-            sv.map((sq)=>{
-                    if(sq.name){
-                        tempSQ.id=sq.id;
-                        tempSQ.question=sq.name;
-                        sq.values.map((sa)=>{
-                            if(sa.name){
-                                if(sa.id>0){
-                                    tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
-                                }
-                            }
-                            else {
-                                tempSQ.answers.push(sa);
-                            }
-
-                        });
-                        if(tempSQ.id>0){
-                            newSV.push(tempSQ);
-                            dNew[tempSQ.question] ={id:-1,answer:"",color:"#1527F6"};
-                            this.setState({newValueEntry: dNew});
-                        }
-                    }
-                    else{
-                        newSV.push(sq);
-                        dNew[sq.question] ={id:-1,answer:"",color:"#1527F6"};
-                        this.setState({newValueEntry: dNew});
-                    }
-                }
-            );
-        }
-
-        templateProject.sampleValues=newSV;
-        this.setState({templateProject:templateProject,projectDetails: JSON.parse(JSON.stringify(templateProject))},
-            function () {
-                this.updateUnmanagedComponents(this.state.templateId);
-            }
-        ); // clone project
-
+        
+        const newSampleValues = this.convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
+        const detailsNew = {...templateProject, sampleValues: newSampleValues};
+        this.setState({projectDetails: detailsNew});
+        this.updateUnmanagedComponents(this.state.templateId);
     }
 
     setPrivacyLevel(privacyLevel) {
@@ -177,8 +165,6 @@ class Project extends React.Component {
         }
     }
 
-
-
     getProjectById() {
         const projectId = "0";
         fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
@@ -195,38 +181,7 @@ class Project extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
-                    let detailsNew=data;
-                    let sv=detailsNew.sampleValues;
-                    let newSV=[];
-                    let tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1,data_type:"Text",component_type:"Button"};
-                    if(sv.length>0){
-                        sv.map((sq)=>{
-                                if(sq.name){
-                                    tempSQ.id=sq.id;
-                                    tempSQ.question=sq.name;
-                                    sq.values.map((sa)=>{
-                                        if(sa.name){
-                                            if(sa.id>0){
-                                                tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
-                                            }
-                                        }
-                                        else {
-                                            tempSQ.answers.push(sa);
-                                        }
-
-                                    });
-                                    if(tempSQ.id>0){
-                                        newSV.push(tempSQ);
-                                    }
-                                }
-                                else{
-                                    newSV.push(sq);
-                                }
-                            }
-                        );
-                    }
-                    detailsNew.sampleValues=newSV;
-                    this.setState({projectDetails: detailsNew});
+                    this.setState({projectDetails: data});
                     this.updateUnmanagedComponents("0");
                 }
             });
@@ -292,7 +247,7 @@ class Project extends React.Component {
             this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
         }
 
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+        mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource || this.state.imageryList[0].title);
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
         mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
         mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
@@ -336,12 +291,7 @@ class Project extends React.Component {
     updateUnmanagedComponents(projectId) {
         if (this.state.projectDetails != null) {
             if (this.state.imageryList && this.state.imageryList.length > 0) {
-                let detailsNew = this.state.projectDetails;
-                // If baseMapSource isn't provided by the project, just use the first entry in the imageryList
-                detailsNew.baseMapSource = this.state.projectDetails.baseMapSource || this.state.imageryList[0].title;
-                this.setState({projectDetails: detailsNew});
                 this.showProjectMap(projectId);
-                // Draw a map with the project AOI and a sampling of its plots
             }
         }
     }
@@ -359,6 +309,12 @@ class Project extends React.Component {
 
     }
 
+    setSurveyQuestions(newSurveyQuestions) {
+        const newProjectDetails = {...this.state.projectDetails, 
+                                    sampleValues: newSurveyQuestions}
+        this.setState({projectDetails: newProjectDetails})
+    }
+
     render() {
         return (
             <FormLayout id="project-design" title="Create Project">
@@ -374,6 +330,7 @@ class Project extends React.Component {
                             setPlotShape={this.setPlotShape}
                             setTemplatePlots={this.setTemplatePlots}
                             handleChange={this.handleChange}
+                            setSurveyQuestions={this.setSurveyQuestions}
                         />
                         <ProjectManagement project={this.state} createProject={this.createProject} />
                     </Fragment>
@@ -411,7 +368,10 @@ function ProjectDesignForm(props) {
                 {!props.project.useTemplatePlots && 
                     <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
                 }
-                <SurveyDesign project={props.project} />
+                <SurveyDesign 
+                    surveyQuestions={props.project.projectDetails.sampleValues} 
+                    setSurveyQuestions={props.setSurveyQuestions} 
+                />
 
         </form>
     );
