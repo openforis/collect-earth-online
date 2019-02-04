@@ -383,16 +383,16 @@ class ProjectStats extends React.Component {
                         <div className="container row pl-4">
                             <div className="pr-5">
                                 Date Created
-                                <span className="badge badge-pill bg-lightgreen ml-3">{createdDate || "unknown"}</span>
+                                <span className="badge badge-pill bg-lightgreen ml-3">{createdDate || "Unknown"}</span>
                             </div>
 
                             <div className="pr-5">
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {publishedDate ||  (availability === "unpublished"
-                                                            ? "Un-published"
+                                                            ? "Unpublished"
                                                             : "Unknown" )}
-                                </span>strongstrongstrong
+                                </span>
                             </div>
 
                             <div className="pr-5">
@@ -409,7 +409,7 @@ class ProjectStats extends React.Component {
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {archivedDate || (availability === 'archived'
                                                             ? "Unknown"
-                                                            : "Un-archived")}
+                                                            : "Unarchived")}
                                 </span>
                             </div>
                         </div>
@@ -803,7 +803,7 @@ function ProjectManagement(props) {
                         <input type="button" id="change-availability"
                             className="btn btn-outline-danger btn-sm btn-block"
                             name="change-availability"
-                            value={stateTransitions[project.projectDetails.availability] + "Project"}
+                            value={stateTransitions[project.projectDetails.availability] + " Project"}
                             onClick={props.changeAvailability}
                         />
                     </React.Fragment>
