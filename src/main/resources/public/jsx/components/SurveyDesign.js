@@ -304,7 +304,7 @@ class SurveyQuestionTree extends React.Component {
     }
 
     removeAnswer = (questionId, removalId) => {
-        const surveyQuestion = this.props.surveyQuestions.find(q => q.id = questionId)
+        const surveyQuestion = this.props.surveyQuestions.find(q => q.id === questionId)
         const updatedAnswers = 
             surveyQuestion.answers
                 .reduce((prev, cur) => {
@@ -376,7 +376,7 @@ function SurveyQuestion({ surveyQuestion,
                 <label> Survey Question: {surveyQuestion.question}</label>
                 {surveyQuestion.parent_question > 0 &&
                     <Fragment>
-                        <h3>Parent Question: {surveyQuestions.find(sq => sq.id = surveyQuestion.parent_question).question}</h3>
+                        <h3>Parent Question: {surveyQuestions.find(sq => sq.id === surveyQuestion.parent_question).question}</h3>
                         <h3>Parent Answer: {surveyQuestion.parent_answer === -1 
                             ? "Any" 
                             : surveyQuestions
