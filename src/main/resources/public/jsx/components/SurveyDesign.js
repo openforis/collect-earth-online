@@ -153,6 +153,10 @@ class NewQuestionDesigner extends React.Component {
         }
     }
 
+    changeMode(e) {
+        this.setState({surveyDesignMode: e.target.id});
+    }
+
     render() {
         return (
             <table>
