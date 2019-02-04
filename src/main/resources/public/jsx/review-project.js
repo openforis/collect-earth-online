@@ -18,12 +18,6 @@ class Project extends React.Component {
             lonMax: "",
             latMax: ""
         };
-        this.configureGeoDash = this.configureGeoDash.bind(this);
-        this.downloadPlotData = this.downloadPlotData.bind(this);
-        this.downloadSampleData = this.downloadSampleData.bind(this);
-        this.closeProject = this.closeProject.bind(this);
-        this.changeAvailability = this.changeAvailability.bind(this);
-        this.gotoProjectDashboard=this.gotoProjectDashboard.bind(this);
     };
     
     componentDidMount() {
@@ -54,69 +48,81 @@ class Project extends React.Component {
 
     }
 
-    publishProject() {
+    publishProject = () => {
         if (confirm("Do you REALLY want to publish this project?")) {
             utils.show_element("spinner");
-            fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id)
+            fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id, 
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+              })
             .then(response => {
                 utils.hide_element("spinner");
                 if (response.ok) {
-                    return response.text();
+                    this.setState({projectDetails: {...this.state.projectDetails, availability: "published"}})
                 } else {
                     console.log(response);
                     alert("Error publishing project. See console for details.");
                     return new Promise(resolve => resolve("error"));
                 }
             })
-            .then(data => {
-                this.setState({projectDetails: {...this.state.projectDetails, availability: "published"}});
-            });
         }
     }
 
-    closeProject() {
+    closeProject = () => {
         if (confirm("Do you REALLY want to close this project?")) {
             utils.show_element("spinner");
-            fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id)
+            fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id, 
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+            })
             .then(response => {
                 utils.hide_element("spinner");
                 if (response.ok) {
-                    return response.text();
+                    this.setState({projectDetails: {...this.state.projectDetails, availability: "closed"}});
                 } else {
                     console.log(response);
                     alert("Error closing project. See console for details.");
                     return new Promise(resolve => resolve("error"));
                 }
             })
-            .then(data => {
-                this.setState({projectDetails: {...this.state.projectDetails, availability: "closed"}});
-            });
         }
     }
 
-    archiveProject() {
+    archiveProject = () => {
         if (confirm("Do you REALLY want to archive this project?!")) {
             utils.show_element("spinner");
-            fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id)
+            fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id, 
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+            })
             .then(response => {
                 utils.hide_element("spinner");
                 if (response.ok) {
-                    return response.text();
+                    this.setState({projectDetails: {...this.state.projectDetails, availability: "archived"}});
+                    alert("Project " + this.state.projectDetails.id + " has been archived.");
+                    window.location = this.props.documentRoot + "/home";
                 } else {
                     console.log(response);
-                    alert("Error srchiving project. See console for details.");
+                    alert("Error archiving project. See console for details.");
                     return new Promise(resolve => resolve("error"));
                 }
             })
-            .then(data => {
-                this.setState({projectDetails: {...this.state.projectDetails, availability: "archived"}});
-                alert("Project " + ref.state.projectDetails.id + " has been archived.");
-                window.location = ref.props.documentRoot + "/home";
-            });
         }
     }
 
-    changeAvailability() {
+    changeAvailability = () => {
         if (this.state.projectDetails.availability == "unpublished") {
             this.publishProject();
         } else if (this.state.projectDetails.availability == "published") {
@@ -126,7 +132,7 @@ class Project extends React.Component {
         }
     }
 
-    configureGeoDash() {
+    configureGeoDash = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(this.props.documentRoot + "/widget-layout-editor?editable=true&"
                 + encodeURIComponent("institutionId=" + this.state.projectDetails.institution
@@ -135,11 +141,11 @@ class Project extends React.Component {
         }
     }
 
-    downloadPlotData() {
+    downloadPlotData = () => {
         window.open(this.props.documentRoot + "/dump-project-aggregate-data/" + this.state.projectDetails.id, "_blank");
     }
 
-    downloadSampleData() {
+    downloadSampleData = () => {
         window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.projectDetails.id, "_blank");
     }
 
@@ -170,7 +176,7 @@ class Project extends React.Component {
         });
     }
 
-    getProjectById() {
+    getProjectById = () => {
         const { projectId } = this.props
         fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
             .then(response => {
@@ -187,14 +193,12 @@ class Project extends React.Component {
                     window.location = this.state.documentRoot + "/home";
                 } else {                   
                     const newSampleValues = this.convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    const detailsNew = {...data, sampleValues: newSampleValues};
-                    this.setState({projectDetails: detailsNew});
+                    this.setState({projectDetails: {...data, sampleValues: newSampleValues}});
                 }
             });
     }
 
-    getImageryList() {
-        // FIXME use the project data to find the institutionId
+    getImageryList = () => {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.projectDetails.institution)
             .then(response => {
                 if (response.ok) {
@@ -209,7 +213,7 @@ class Project extends React.Component {
             });
     }
 
-    getProjectPlots() {
+    getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/300")
             .then(response => {
                 if (response.ok) {
@@ -225,15 +229,15 @@ class Project extends React.Component {
             .catch(e => this.setState({plotList: []}));
     }
 
-    initProjectMap() {
+    initProjectMap = () => {
         this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
     }
 
-    showProjectMap() {
+    showProjectMap = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource || this.state.imageryList[0].title);
         
         // // Extract bounding box coordinates from the project boundary and show on the map
-        var boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
+        const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
         this.setState({lonMin: boundaryExtent[0]});
         this.setState({latMin: boundaryExtent[1]});
         this.setState({lonMax: boundaryExtent[2]});
@@ -248,7 +252,7 @@ class Project extends React.Component {
         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
     }
 
-    gotoProjectDashboard(){
+    gotoProjectDashboard = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(this.props.documentRoot + "/project-dashboard/"+this.state.projectDetails.id);
         }
@@ -301,12 +305,9 @@ class ProjectStatsGroup extends React.Component {
         this.state = {
             showStats: false
         }
-        this.updateShown = this.updateShown.bind(this);
     }
 
-    updateShown() {
-        this.setState({showStats: !this.state.showStats});
-    }
+    updateShown =() => this.setState({showStats: !this.state.showStats});
 
     render() {
         return (
@@ -342,7 +343,7 @@ class ProjectStats extends React.Component {
             : "0.00";
     }
 
-    getProjectStats() {
+    getProjectStats = () => {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
             .then(response => {
                 if (response.ok) {
@@ -491,9 +492,9 @@ function ProjectDesignReview(props) {
 function ProjectInfoReview({ name, description }) {
     return (
         <SectionBlock id="project-info" title="Project Info">
-            <h3><strong>Name</strong></h3>
+            <h3 className="font-bold">Name</h3>
             <p className="ml-2">{name}</p>
-            <h3><strong>Description</strong></h3>
+            <h3 className="font-bold">Description</h3>
             <p className={description ? "ml-2" : "ml-2 font-italic"}>{description || "none"}</p>
         </SectionBlock>
     );
@@ -503,7 +504,7 @@ function ProjectInfoReview({ name, description }) {
 function ProjectVisibility(props) {
     return (
         <SectionBlock title="Project Visibility">
-            <h3><strong>Privacy Level</strong></h3>
+            <h3 className="font-bold">Privacy Level</h3>
             <div id="project-visibility" className="mb-3">
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
@@ -599,7 +600,7 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
 function ProjectImageryReview({ baseMapSource }) {
     return (
         <SectionBlock id="project-imagery-review" title="Project Imagery">
-            <h3><strong>Basemap Source</strong></h3>
+            <h3 className="font-bold">Basemap Sourc</h3>
             <p className="ml-2">{baseMapSource}</p>
         </SectionBlock>
     );
@@ -718,7 +719,7 @@ class SurveyQuestionTree extends React.Component {
     ))
 
     render() {
-        // FIXME, list of tables does not line up answers, user flex
+        // FIXME, list of tables does not line up answers, use flex
         return (
                 <ul style={{listStyleType:"none"}}>
                     {this.getCurrent(-1)}
@@ -730,21 +731,21 @@ class SurveyQuestionTree extends React.Component {
 function SurveyQuestion(props) {
     return (
         <div className="sample-value-info">
-            <h3 className="header px-0">
-                <label> <strong>Survey Question:</strong> {props.surveyQuestion.question}</label>
+            <h3 className="header px-0 font-bold">
+                Survey Question: {props.surveyQuestion.question}
             </h3>
             <table className="table table-sm">
                 <tbody>
                 {
-                    (props.surveyQuestion.answers).map((surveyAnswer, uid) => {
-                            return <tr key={uid}>
+                    props.surveyQuestion.answers.map((surveyAnswer, uid) => 
+                            <tr key={uid}>
                                 <td>
-                                    <strong>Answer: </strong>
+                                    <span className="font-bold">Answer: </span>
                                     {surveyAnswer.answer}
                                 </td>
                                 <td>
-                                    <div className='d-inline-flex'>
-                                        <strong>Color: </strong>
+                                    <div className="d-inline-flex">
+                                        <span className="font-bold">Color: </span>
                                         <div className="circle mt-1 ml-4"
                                                 style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}>
                                         </div>
@@ -754,7 +755,6 @@ function SurveyQuestion(props) {
                                     &nbsp;
                                 </td>
                             </tr>
-                        }
                     )
                 }
                 </tbody>

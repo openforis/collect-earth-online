@@ -31,26 +31,18 @@ export class SurveyDesign extends React.Component {
         }
     }
 
-    checkContainsAdvanced = () => this.props.surveyQuestions
-        .reduce((prev, cur) => {
-                return prev && cur.componentType !== "button"
-            }, false);
-    
-    
     convertToSimple = () => {
-         const newSurveyQuestions = this.props.surveyQuestions.reduce((prev, question) => {
-            return [...prev, {...question, componentType: "button", dataType: "text"}]
-        }, []);
+         const newSurveyQuestions = this.props.surveyQuestions
+            .map((question) => [{...question, componentType: "button", dataType: "text"}]);
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     }
 
     toggleSimpleMode = () => {
-        
         const newMode = this.state.inSimpleMode
             ? false
-            : !this.checkContainsAdvanced() 
-                    || confirm("This action will revert all questions to type button.  Would you like to procede?");
+            : !this.props.surveyQuestions.every(q => q.componentType !== "button")
+                    || confirm("This action will revert all questions to type button.  Would you like to proceed?");
 
             this.setState({inSimpleMode: newMode});
     }
@@ -127,19 +119,27 @@ class NewQuestionDesigner extends React.Component {
 
     };
 
-    componentDidUpdate = (prevProps) => {
+    componentDidUpdate = (prevProps, prevState) => {
         if (this.props.surveyQuestions.length !== prevProps.surveyQuestions.length) {
             if (!this.props.surveyQuestions.find(question => question.id === this.state.selectedParent)) {
-                this.setState({ selectedParent: "-1"});
+                this.setState({ selectedParent: -1});
             }
+        }
+
+        if (this.state.selectedParent !== prevState.selectedParent) {
+            this.setState({ selectedAnswer: -1});
         }
     }
 
     addSurveyQuestion = () => {
         if (this.state.newQuestionText != "") {
+            const { surveyQuestions } = this.props;
+            console.log(surveyQuestions)
+            console.log(surveyQuestions.reduce((p, c) => Math.max(p,c.id), 0))
+
             const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
             const newQuestion = {
-                                id: this.props.surveyQuestions.length + 1,
+                                id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
                                 question: this.state.newQuestionText,
                                 answers: [],
                                 parent_question: this.state.selectedParent,
@@ -147,14 +147,11 @@ class NewQuestionDesigner extends React.Component {
                                 dataType: dataType,
                                 componentType: componentType,
                                 }; 
-            this.props.setSurveyQuestions([...this.props.surveyQuestions, newQuestion]);
+            this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
+            this.setState({selectedAnswer: -1, newQuestionText: ""});
         } else {
             alert("Please enter a survey question first.");
         }
-    }
-
-    changeMode(e) {
-        this.setState({surveyDesignMode: e.target.id});
     }
 
     render() {
@@ -166,7 +163,6 @@ class NewQuestionDesigner extends React.Component {
                         <label htmlFor="value-parent">Parent Question:</label>
                     </td>
                     <td>
-                        {/* FIXME be more specific and set selected to state value.   */}
                         <select
                             id="value-parent" 
                             className="form-control form-control-sm" 
@@ -279,47 +275,34 @@ class SurveyQuestionTree extends React.Component {
         super(props);
     };
 
-    getQuestionChildrenArray = (questionId) => {
+    getChildQuestionIds = (questionId) => {
         const childQuestions = this.props.surveyQuestions.filter(sv => sv.parent_question === questionId);
         if (childQuestions.length === 0) {
             return [questionId];
         } else {
             return childQuestions.reduce((prev, cur) => {
-                            return [...prev, ...this.getQuestionChildrenArray(cur.id)];
+                            return [...prev, ...this.getChildQuestionIds(cur.id)];
                         }, [questionId])
         }
     }
 
     removeQuestion = (removalId) => {
-        const questionsToRemove = this.getQuestionChildrenArray(removalId)
+        const questionsToRemove = this.getChildQuestionIds(removalId)
 
-        const newSurveyQuestions = 
-            this.props.surveyQuestions
-                .reduce((prev, cur) => {
-                    const validCur = !questionsToRemove.includes(cur.id) 
-                    return validCur ? [...prev, cur] : prev
-                },[])
+        const newSurveyQuestions = this.props.surveyQuestions
+                .filter(sq => !questionsToRemove.includes(sq.id) && sq.id !== removalId)
         
         this.props.setSurveyQuestions(newSurveyQuestions)
     }
 
     removeAnswer = (questionId, removalId) => {
-        const surveyQuestion = this.props.surveyQuestions.find(q => q.id === questionId)
-        const updatedAnswers = 
-            surveyQuestion.answers
-                .reduce((prev, cur) => {
-                    return cur.id === removalId ? prev : [...prev, cur]
-                }, [])
+        const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId)
+        const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== removalId);
 
         const updatedQuestion = {...surveyQuestion, answers: updatedAnswers}
 
-        const newSurveyQuestions = 
-            this.props.surveyQuestions
-                .reduce((prev, cur) => {
-                    return [...prev, cur.id === updatedQuestion.id 
-                                                ? updatedQuestion 
-                                                : cur]
-                },[])
+        const newSurveyQuestions = this.props.surveyQuestions
+                                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq)
 
         this.props.setSurveyQuestions(newSurveyQuestions)
     }
@@ -328,7 +311,7 @@ class SurveyQuestionTree extends React.Component {
 
     getCurrent = (nodeId) =>
         this.props.surveyQuestions.filter(cNode =>
-            cNode.parent_question == nodeId).map((cNode,uid) => (
+            cNode.parent_question === nodeId).map((cNode,uid) => (
             <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
                 <li>
                     <SurveyQuestion 
@@ -350,13 +333,10 @@ class SurveyQuestionTree extends React.Component {
     }
 }
 
-function maxAnswers(componentType, dataType) {
-    return (componentType || "").toLowerCase() === "input"
-            ? 1
-            : (dataType || "").toLowerCase() === "boolean"
-                ? 2
-                : 1000
-}
+
+const maxAnswers = (componentType, dataType) => (componentType || "").toLowerCase() === "input"
+                                            ? 1 : (dataType || "").toLowerCase() === "boolean"
+                                                ? 2 : 1000
 
 function SurveyQuestion({ surveyQuestion,
                             surveyQuestions,
@@ -374,20 +354,20 @@ function SurveyQuestion({ surveyQuestion,
                     onClick={() => removeQuestion(surveyQuestion.id)}
                 />
                 <label> Survey Question: {surveyQuestion.question}</label>
-                {surveyQuestion.parent_question > 0 &&
-                    <Fragment>
-                        <h3>Parent Question: {surveyQuestions.find(sq => sq.id === surveyQuestion.parent_question).question}</h3>
-                        <h3>Parent Answer: {surveyQuestion.parent_answer === -1 
-                            ? "Any" 
-                            : surveyQuestions
-                                .find(sq => sq.id === surveyQuestion.parent_question).answers
-                                .find(sa => sa.id === surveyQuestion.parent_answer)
-                                .answer}
-                        </h3>
-                    </Fragment>
-                }            
-                {!inSimpleMode && <h3>{` Question Type: ${surveyQuestion.componentType} - ${surveyQuestion.dataType}`}</h3>}
             </h3>
+            {surveyQuestion.parent_question > 0 &&
+                <Fragment>
+                    <h3>Parent Question: {surveyQuestions.find(sq => sq.id === surveyQuestion.parent_question).question}</h3>
+                    <h3>Parent Answer: {surveyQuestion.parent_answer === -1 
+                        ? "Any" 
+                        : surveyQuestions
+                            .find(sq => sq.id === surveyQuestion.parent_question).answers
+                            .find(sa => sa.id === surveyQuestion.parent_answer)
+                            .answer}
+                    </h3>
+                </Fragment>
+            }            
+            {!inSimpleMode && <h3>{` Question Type: ${surveyQuestion.componentType} - ${surveyQuestion.dataType}`}</h3>}
             <table className="table table-sm">
                 <thead>
                 <tr>
@@ -435,22 +415,18 @@ class NewAnswerDesigner extends React.Component {
     addSurveyAnswer = () => {
         const { surveyQuestion } = this.props
         if (this.state.newAnswerText.length > 0) {
-
             const newAnswer = {
-                                id: surveyQuestion.answers.length + 1,
+                                id: surveyQuestion.answers.reduce((p,c) => Math.max(p,c.id), 0) + 1,
                                 answer: this.state.newAnswerText,
                                 color: this.state.selectedColor
-                                }
-            const updatedAnswers = [...surveyQuestion.answers, newAnswer]
-            const updatedQuestion = {...surveyQuestion, answers: updatedAnswers}
+                                };
+            const updatedAnswers = [...surveyQuestion.answers, newAnswer];
+            const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
             const newSurveyQuestions = this.props.surveyQuestions
-                                            .reduce((prev, cur) => {
-                                                return [...prev, cur.id === updatedQuestion.id 
-                                                                            ? updatedQuestion 
-                                                                            : cur]
-                                            },[])
+                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
             this.props.setSurveyQuestions(newSurveyQuestions);
+            this.setState({selectedColor: "#1527F6", newAnswerText: ""})
         } else {
             alert("A survey answer must possess both an answer and a color.")
         }

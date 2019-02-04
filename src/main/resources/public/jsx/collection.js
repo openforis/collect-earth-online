@@ -30,21 +30,6 @@ class Collection extends React.Component {
             selectedQuestionText: "",
             sampleOutlineBlack: true
         };
-        this.setBaseMapSource = this.setBaseMapSource.bind(this);
-        this.setImageryYearDG = this.setImageryYearDG.bind(this);
-        this.setStackingProfileDG = this.setStackingProfileDG.bind(this);
-        this.setImageryYearPlanet = this.setImageryYearPlanet.bind(this);
-        this.setImageryMonthPlanet = this.setImageryMonthPlanet.bind(this);
-        this.goToFirstPlot = this.goToFirstPlot.bind(this);
-        this.prevPlot = this.prevPlot.bind(this);
-        this.nextPlot = this.nextPlot.bind(this);
-        this.goToPlot = this.goToPlot.bind(this);
-        this.setReviewPlots = this.setReviewPlots.bind(this);
-        this.flagPlot = this.flagPlot.bind(this);
-        this.saveValues = this.saveValues.bind(this);
-        this.setSelectedQuestionText = this.setSelectedQuestionText.bind(this);
-        this.setCurrentValue = this.setCurrentValue.bind(this);
-        this.toggleSampleBW = this.toggleSampleBW.bind(this);
     }
 
     componentDidMount() {
@@ -74,7 +59,7 @@ class Collection extends React.Component {
         }
         // initiallize current imagery to project default
         if (this.state.mapConfig && this.state.currentProject && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
-            this.setBaseMapState(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
+            this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
         }
 
         //
@@ -119,7 +104,7 @@ class Collection extends React.Component {
         }
     }
 
-    getProjectById() {
+    getProjectById = () => {
         fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
             .then(response => {
                 if (response.ok) {
@@ -135,13 +120,12 @@ class Collection extends React.Component {
                     alert("No project found with ID " + this.props.projectId + ".");
                 } else {
                     const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues || {});
-                    const newProject = { ...project, sampleValues: surveyQuestions }
-                    this.setState({currentProject: newProject});
+                    this.setState({currentProject: { ...project, sampleValues: surveyQuestions }});
                 }
             });
     }
 
-    getProjectPlots() {
+    getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
             .then(response => {
                 if (response.ok) {
@@ -157,7 +141,7 @@ class Collection extends React.Component {
             });
     }
 
-    getImageryList() {
+    getImageryList = () => {
         const { institution } = this.state.currentProject
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
             .then(response => {
@@ -174,7 +158,7 @@ class Collection extends React.Component {
             });
     }
 
-    initializeProjectMap() {
+    initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
@@ -184,7 +168,7 @@ class Collection extends React.Component {
         this.setState({mapConfig: mapConfig});
     }
 
-    showProjectPlots() {
+    showProjectPlots = () => {
         mercator.addPlotLayer(this.state.mapConfig,
                               this.state.plotList,
                               feature => {
@@ -195,14 +179,7 @@ class Collection extends React.Component {
                               });
     }
 
-    setBaseMapSource(event) {
-        const dropdown = event.target;
-        const newBaseMapSource = dropdown.options[dropdown.selectedIndex].value;
-
-        this.setBaseMapState(newBaseMapSource);        
-    }
-
-    setBaseMapState(newBaseMapSource) {
+    setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
         
         const newImageryAttribution = newImagery.title == "DigitalGlobeWMSImagery" 
@@ -216,9 +193,7 @@ class Collection extends React.Component {
                     });
     }
     
-    setImageryYearDG(event) {
-        const slider = event.target;
-        const newImageryYearDG = slider.value;
+    setImageryYearDG = (evenewImageryYearDGnt) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
         const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({
@@ -227,9 +202,7 @@ class Collection extends React.Component {
         });
     }
 
-    setStackingProfileDG(event) {
-        const dropdown = event.target;
-        const newStackingProfileDG = dropdown.options[dropdown.selectedIndex].value;
+    setStackingProfileDG = (newStackingProfileDG) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
         const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
         this.setState({
@@ -238,9 +211,7 @@ class Collection extends React.Component {
         });
     }
 
-    setImageryYearPlanet(event) {
-        const slider = event.target;
-        const newImageryYearPlanet = slider.value;
+    setImageryYearPlanet = (newImageryYearPlanet) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
         const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
         this.setState({
@@ -249,9 +220,7 @@ class Collection extends React.Component {
         });
     }
 
-    setImageryMonthPlanet(event) {
-        const slider = event.target;
-        const newImageryMonth =  slider.value;
+    setImageryMonthPlanet = (newImageryMonth) => {
         const monthData = { 1: "January", 
                             2: "February", 
                             3: "March", 
@@ -396,7 +365,7 @@ class Collection extends React.Component {
                 if (data == "done") {
                     this.setState({prevPlotButtonDisabled: true});
                     alert(this.state.reviewPlots 
-                            ? "All previous plot were not analyzed by you."
+                            ? "No previous plots were analyzed by you."
                             : "All previous plots have been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
@@ -482,18 +451,17 @@ class Collection extends React.Component {
 
     showPlotSamples() {
         const { mapConfig, selectedQuestionText, currentProject : { sampleValues} } = this.state;
-        const shownPlots = this.getVisibleSamples(sampleValues.find((sv => sv.question === selectedQuestionText)).id);
-
+        const shownSamples = this.getVisibleSamples(sampleValues.find(sv => sv.question === selectedQuestionText).id);
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
             "currentSamples",
-            mercator.samplesToVectorSource(shownPlots),
+            mercator.samplesToVectorSource(shownSamples),
             this.state.sampleOutlineBlack 
-            ? shownPlots[0].geom
+            ? shownSamples[0].geom
                 ? ceoMapStyles.blackPolygon
                 : ceoMapStyles.blackCircle
-            : shownPlots[0].geom
+            : shownSamples[0].geom
                 ? ceoMapStyles.whitePolygon
                 : ceoMapStyles.whiteCircle);
         mercator.enableSelection(mapConfig, "currentSamples");
@@ -514,19 +482,17 @@ class Collection extends React.Component {
                     "_geo-dash");
     }
 
-    goToFirstPlot() {
-        this.getNextPlotData(-1);
-    }
+    goToFirstPlot = () => this.getNextPlotData(-1);
 
-    prevPlot() {
-        this.getPrevPlotData(this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
-    }
+    prevPlot = () =>  this.getPrevPlotData(this.state.currentPlot.plotId 
+                            ? parseInt(this.state.currentPlot.plotId) 
+                            : this.state.currentPlot.id);
 
-    nextPlot() {
-        this.getNextPlotData(this.state.currentPlot.plotId ? parseInt(this.state.currentPlot.plotId) : this.state.currentPlot.id);
-    }
+    nextPlot = () => this.getNextPlotData(this.state.currentPlot.plotId 
+                        ? parseInt(this.state.currentPlot.plotId) 
+                        : this.state.currentPlot.id);
 
-    goToPlot(newPlot) {
+    goToPlot = (newPlot) => {
         if (!isNaN(newPlot)) {
             this.getPlotData(newPlot);
         } else {
@@ -534,15 +500,11 @@ class Collection extends React.Component {
         }
     }
 
-    setReviewPlots() {
-        this.setState({
-            reviewPlots: !this.state.reviewPlots,
-            prevPlotButtonDisabled: false,
-            nextPlotButtonDisabled: false
-        });
-    }
-
-    flagPlot() {
+    setReviewPlots = () => this.setState({ reviewPlots: !this.state.reviewPlots, 
+                                            prevPlotButtonDisabled: false,
+                                            nextPlotButtonDisabled: false});
+    
+    flagPlotInDB = () => {
         if (this.state.currentPlot != null) {
             fetch(this.props.documentRoot + "/flag-plot",
                   {
@@ -568,7 +530,7 @@ class Collection extends React.Component {
         }
     }
 
-    saveValues() {
+    postValuesToDB = () => {
         fetch(this.props.documentRoot + "/add-user-samples",
               {
                   method: "post",
@@ -607,15 +569,16 @@ class Collection extends React.Component {
     }
 
     validateCurrentSelection(selectedFeatures, questionText) {
-        const visibleSamples = this.getVisibleSamples(this.state.currentProject.sampleValues
-                                .find((sv => sv.question === questionText)).id);
-        return selectedFeatures.getArray().reduce((prev, cur) => {
-            const sampleId = cur.get("sampleId")
-            return prev && visibleSamples.filter(vs => vs.id === sampleId).length > 0;
-        }, true);
+        const visibleSamples = this.getVisibleSamples(
+                                    this.state.currentProject.sampleValues
+                                    .find(sv => sv.question === questionText).id);
+
+        return selectedFeatures.getArray()
+            .map(sf => sf.get("sampleId"))
+            .every(sid => visibleSamples.some(vs => vs.id === sid));
     }
 
-    getQuestionChildrenArray(currentQuestionText) {
+    getChildQuestions(currentQuestionText) {
         const { sampleValues } = this.state.currentProject;
         const { question, id } = sampleValues.find(sv => sv.question === currentQuestionText);
         const childQuestions = sampleValues.filter(sv => sv.parent_question === id);
@@ -624,69 +587,74 @@ class Collection extends React.Component {
             return [question];
         } else {
             return childQuestions.reduce((prev, cur) => {
-                return [...prev, ...this.getQuestionChildrenArray(cur.question)];
+                return [...prev, ...this.getChildQuestions(cur.question)];
             }, [question])
         }
     }
 
-    setCurrentValue(questionText, answerId, answerText, answerColor) {
+    setCurrentValue = (questionText, answerId, answerText, answerColor) => {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        //
-        if (selectedFeatures && selectedFeatures.getLength() > 0 
-                && this.validateCurrentSelection(selectedFeatures, questionText)) {
-            
-            const newSamples = selectedFeatures.getArray().reduce((prev, feature) => {
-                const sampleId = feature.get("sampleId");
-                const newQuestion = { answer: answerText, color: answerColor};
+        
+        if (Object.keys(this.state.userSamples).length === 1 
+            || (selectedFeatures && selectedFeatures.getArray().length 
+                    && this.validateCurrentSelection(selectedFeatures, questionText))) {
+                
+            const sampleIds = Object.keys(this.state.userSamples).length === 1  
+                                ? [Object.keys(this.state.userSamples)[0]]
+                                : selectedFeatures.getArray().map(sf => sf.get("sampleId"))
 
-                const clearedSubQuestions = this.getQuestionChildrenArray(questionText)
-                                            .filter(question => question !== questionText)
+            const newSamples = sampleIds.reduce((prev, sampleId) => {
+                const newQuestion = { answer: answerText, color: answerColor};
+                const clearedSubQuestions = this.getChildQuestions(questionText)
                                             .reduce((prev, question) => {
                                                 const { [question]: value, ...rest} = prev
-                                                return {...rest}
+                                                return {...rest};
                                             }, {...this.state.userSamples[sampleId]});
-
+                                            
                 return {...prev, [sampleId]: {...clearedSubQuestions,
                                         [questionText]: newQuestion}};
-            }, {});
+            }, {}); 
             
-            const newUserImages = selectedFeatures.getArray().reduce((prev, feature) => {
-                const sampleId = feature.get("sampleId");
+            const newUserImages = sampleIds.reduce((prev, sampleId) => {
                 return {...prev, [sampleId]: 
                                     { id: this.state.currentImagery.id,
                                     attributes: this.getImageryAttributes() }
                         }
             }, {});
 
+            const questionId = this.state.currentProject.sampleValues.find(sv => sv.question === questionText).id;
+            const subQuestion = this.state.currentProject.sampleValues
+                    .find(sv => sv.parent_question === questionId && sv.parent_answer === answerId);
+
             this.setState({
                         userSamples: {...this.state.userSamples, ...newSamples},
                         userImages: {...this.state.userImages, ...newUserImages},
-                        selectedQuestionText: questionText
+                        selectedQuestionText: (subQuestion && this.state.userSamples.length === 1) 
+                                                    ? subQuestion.question 
+                                                    : questionText
                     });
             return true;
         } else if(selectedFeatures && selectedFeatures.getLength() == 0 ) {
             alert("No samples selected. Please click some first.");
             return false;
         } else {
-            alert("Invalid Selection.  Try selecting question before answering.");
+            alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         }
     }
 
-    setSelectedQuestionText(newselectedQuestionText) {
-        this.setState({selectedQuestionText: newselectedQuestionText});
-    }
+    setSelectedQuestionText = (newselectedQuestionText) => this.setState({selectedQuestionText: newselectedQuestionText});
 
     invertColor(hex) {
         const dehashed = hex.indexOf("#") === 0 ? hex.slice(1) : hex;
-        const hexFormated = dehashed.length === 3 
+        const hexFormatted = dehashed.length === 3 
                             ? dehashed[0] + dehashed[0] + dehashed[1] + dehashed[1] + dehashed[2] + dehashed[2] 
                             : dehashed;
 
         // invert color components
-        const r = (255 - parseInt(hexFormated.slice(0, 2), 16)).toString(16);
-        const g = (255 - parseInt(hexFormated.slice(2, 4), 16)).toString(16);
-        const b = (255 - parseInt(hexFormated.slice(4, 6), 16)).toString(16);
+        const r = (255 - parseInt(hexFormatted.slice(0, 2), 16)).toString(16);
+        const g = (255 - parseInt(hexFormatted.slice(2, 4), 16)).toString(16);
+        const b = (255 - parseInt(hexFormatted.slice(4, 6), 16)).toString(16);
         // pad each with zeros and return
         return "#" + this.padZero(r) + this.padZero(g) + this.padZero(b);
     }
@@ -707,30 +675,28 @@ class Collection extends React.Component {
             const answeredQuestion = this.state.currentProject.sampleValues
                              .find(sv => sv.question === this.state.selectedQuestionText);
             const userAnswer = this.state.userSamples[sampleId][this.state.selectedQuestionText].answer;
-            const matchingAnswers = answeredQuestion.answers.filter(ans => ans.answer === userAnswer);
+            const matchingAnswer = answeredQuestion.answers.find(ans => ans.answer === userAnswer);
             
             const color = answeredQuestion.componentType === "input"
                             ? userAnswer.length > 0 
                                 ? answeredQuestion.answers[0].color
                                 : this.invertColor(answeredQuestion.answers[0].color)
-                            : matchingAnswers.length > 0
-                                ? matchingAnswers[0].color
+                            : matchingAnswer
+                                ? matchingAnswer.color
                                 : ""
 
             mercator.highlightSampleGeometry(feature, color);
         });
     }
 
-    toggleSampleBW() {
-        this.setState({ sampleOutlineBlack: !this.state.sampleOutlineBlack });
-    }
+    toggleSampleBW = () => this.setState({ sampleOutlineBlack: !this.state.sampleOutlineBlack });
     
     getVisibleSamples(currentQuestionId) {
         const { currentProject : { sampleValues}, userSamples } = this.state;
-        const {parent_question, parent_answer} = sampleValues.find((sv => sv.id === currentQuestionId));
+        const {parent_question, parent_answer} = sampleValues.find(sv => sv.id === currentQuestionId);
         const parentQuestionText = parent_question === -1 
                 ? "" 
-                : sampleValues.find((sv => sv.id === parent_question)).question;
+                : sampleValues.find(sv => sv.id === parent_question).question;
         
         if (parent_question === -1) {
             return this.state.currentPlot.samples;
@@ -751,13 +717,12 @@ class Collection extends React.Component {
 
     getAnsweredSamples(currentQuestionId) {
         const { currentProject : { sampleValues}, userSamples } = this.state;
-        const {parent_question, parent_answer, question} = sampleValues.find((sv => sv.id === currentQuestionId));
-        const parentQuestionText = parent_question === -1 ? "" : sampleValues.find((sv => sv.id === parent_question)).question;
+        const { parent_question, parent_answer, question } = sampleValues.find(sv => sv.id === currentQuestionId);
+        const parentQuestionText = parent_question === -1 ? "" : sampleValues.find(sv => sv.id === parent_question).question;
         
         if (parent_question === -1) {
             return this.state.currentPlot.samples.filter(s => userSamples[s.id][question]);
-        }
-        else {
+        } else {
             const correctAnswerText = sampleValues
                                     .find(sv => sv.id === parent_question).answers
                                     .find(ans => parent_answer === -1 || ans.id === parent_answer).answer;
@@ -775,15 +740,13 @@ class Collection extends React.Component {
     updateQuestionStatus() {
         const { currentProject: { sampleValues }} = this.state;
 
-        const newSampleValues = sampleValues.map(value => {
-                return {...value,
-                            visible: this.getVisibleSamples(value.id).length,
-                            answered: this.getAnsweredSamples(value.id).length};
-            });
-        const newProject = {...this.state.currentProject,
-                            sampleValues: newSampleValues}
+        const newSampleValues = sampleValues.map(value => ({
+                                    ...value,
+                                    visible: this.getVisibleSamples(value.id).length,
+                                    answered: this.getAnsweredSamples(value.id).length
+                                }));
 
-        this.setState({currentProject: newProject});
+        this.setState({currentProject: {...this.state.currentProject, sampleValues: newSampleValues}});
     }
 
     render() {
@@ -797,7 +760,7 @@ class Collection extends React.Component {
                     plotId={plotId}
                     documentRoot={this.props.documentRoot}
                     userName={this.props.userName}
-                    saveValues={this.saveValues}
+                    postValuesToDB={this.postValuesToDB}
                     surveyQuestions={this.state.currentProject.sampleValues}
                     projectName={this.state.currentProject.name}
                 >
@@ -810,7 +773,7 @@ class Collection extends React.Component {
                                 prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
                                 sampleOutlineBlack={this.state.sampleOutlineBlack}
                                 reviewPlots={this.state.reviewPlots}
-                                flagPlot={this.flagPlot}
+                                flagPlotInDB={this.flagPlotInDB}
                                 goToFirstPlot={this.goToFirstPlot}
                                 goToPlot={this.goToPlot}
                                 nextPlot={this.nextPlot}
@@ -894,7 +857,7 @@ function SideBar(props) {
                         type="button" 
                         name="save-values" 
                         value="Save" 
-                        onClick={props.saveValues}
+                        onClick={props.postValuesToDB}
                         style={{opacity: saveValuesButtonEnabled ? "1.0" : ".25"}}
                         disabled={!saveValuesButtonEnabled}
                     />
@@ -926,7 +889,6 @@ class PlotNavigation extends React.Component{
         this.state = {
             newPlotInput: "",
         };
-        this.updateNewPlotId = this.updateNewPlotId.bind(this);
     }
 
     componentDidUpdate(prevProps) {
@@ -935,9 +897,7 @@ class PlotNavigation extends React.Component{
         }
     }
 
-    updateNewPlotId(value) {
-        this.setState({newPlotInput: value});
-    }
+    updateNewPlotId = (value) => this.setState({newPlotInput: value});
     
     render() {
         const { props } = this;
@@ -1014,7 +974,7 @@ class PlotNavigation extends React.Component{
                                 type="button" 
                                 name="flag-plot" 
                                 value="Flag" 
-                                onClick={props.flagPlot}
+                                onClick={props.flagPlotInDB}
                             />
                         </div>
                     </div>
@@ -1073,7 +1033,7 @@ function ImageryOptions(props) {
                 name="base-map-source"
                 size="1" 
                 value={props.baseMapSource || ""}
-                onChange={props.setBaseMapSource}
+                onChange={(e) => props.setBaseMapSource(e.target.value)}
             >
                 {
                     props.imageryList.map(
@@ -1107,8 +1067,15 @@ function DigitalGlobeMenus(props) {
     return (
         <div className="DG-Menu my-2">
             <div className="slidecontainer form-control form-control-sm">
-                <input type="range" min="2000" max="2018" value={props.imageryYearDG} className="slider" id="myRange"
-                        onChange={props.setImageryYearDG}/>
+                <input 
+                    type="range" 
+                    min="2000" 
+                    max="2018" 
+                    value={props.imageryYearDG} 
+                    className="slider" 
+                    id="myRange"
+                    onChange={(e) => props.setImageryYearDG(e.target.value)}
+                />
                 <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
             </div>
             <select className="form-control form-control-sm"
@@ -1116,7 +1083,7 @@ function DigitalGlobeMenus(props) {
                     name="dg-stacking-profile"
                     size="1"
                     value={props.stackingProfileDG}
-                    onChange={props.setStackingProfileDG}>
+                    onChange={(e) => props.setStackingProfileDG(e.target.value)}>
                 {
                     ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
                         .map(profile => <option key={profile} value={profile}>{profile}</option>)
@@ -1130,13 +1097,26 @@ function PlanetMenus(props) {
     return (
         <div className="PlanetsMenu my-2">
             <div className="slidecontainer form-control form-control-sm">
-                <input type="range" min="2016" max="2018" value={props.imageryYearPlanet} className="slider" id="myRange"
-                        onChange={props.setImageryYearPlanet}/>
+                <input 
+                    type="range" 
+                    min="2016" 
+                    max="2018" 
+                    value={props.imageryYearPlanet} 
+                    className="slider" id="myRange"
+                    onChange={(e) => props.setImageryYearPlanet(e.target.event)}
+                />
                 <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
             </div>
             <div className="slidecontainer form-control form-control-sm">
-                <input type="range" min="1" max="12" value={props.imageryMonthPlanet} className="slider" id="myRangemonth"
-                        onChange={props.setImageryMonthPlanet}/>
+                <input 
+                    type="range" 
+                    min="1" 
+                    max="12" 
+                    value={props.imageryMonthPlanet} 
+                    className="slider" 
+                    id="myRangemonth"
+                    onChange={(e) => props.setImageryMonthPlanet(e.target.event)}
+                />
                 <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
             </div>
         </div>
@@ -1149,7 +1129,6 @@ class ProjectStatsGroup extends React.Component {
         this.state = {
             showStats: false
         }
-        this.updateShown = this.updateShown.bind(this);
     }
 
     componentDidUpdate(prevProps) {
@@ -1158,9 +1137,7 @@ class ProjectStatsGroup extends React.Component {
         }
     }
 
-    updateShown() {
-        this.setState({showStats: !this.state.showStats});
-    }
+    updateShown = () => this.setState({showStats: !this.state.showStats});
 
     render() {
         return (
