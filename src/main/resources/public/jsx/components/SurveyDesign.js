@@ -134,9 +134,6 @@ class NewQuestionDesigner extends React.Component {
     addSurveyQuestion = () => {
         if (this.state.newQuestionText != "") {
             const { surveyQuestions } = this.props;
-            console.log(surveyQuestions)
-            console.log(surveyQuestions.reduce((p, c) => Math.max(p,c.id), 0))
-
             const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
             const newQuestion = {
                                 id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
