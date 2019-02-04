@@ -1,19 +1,31 @@
+# Developer Tool Config Files
+.meghanada/
+.tern-port
+.gradle/
 .classpath
 .project
-.tern-port
-collect-earth-online.iml
-.gradle/
-.meghanada/
 .settings/
+.idea/
+collect-earth-online.iml
+
+# Build Directories and Files
 /bin/
 /build/
-/src/main/resources/public/downloads/*.csv
-/src/main/resources/public/js/*.bundle.js
-/src/main/resources/public/js/*.bundle.js.map
-/src/main/resources/template/freemarker/googleanalytics.ftl
 /target/
-.idea/
-.DS_Store
 /node_modules/
 package-lock.json
+/src/main/resources/public/js/*.bundle.js
+/src/main/resources/public/js/*.bundle.js.map
 out.txt
+
+# MacOS X Backups
+.DS_Store
+
+# CSVs Uploaded by Users
+/src/main/resources/public/downloads/*.csv
+
+# Google Analytics
+/src/main/resources/template/freemarker/googleanalytics.ftl
+
+# Locally compiled python
+*.pyc

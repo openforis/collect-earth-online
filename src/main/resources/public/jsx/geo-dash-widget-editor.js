@@ -252,22 +252,26 @@ class BasicLayout extends React.PureComponent{
 
         if(widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            url = "https://geegateway.servirglobal.net:8888/" + fts[widget.filterType];
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/image";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+        }
+        else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+        {
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
         }
         else if(widget.properties && "ImageCollectionCustom" == widget.properties[0]){
-            url = "https://geegateway.servirglobal.net:8888/meanImageByMosaicCollections";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
         }
         else if(collectionName.trim().length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
 
         }
         else{
-            url = "https://geegateway.servirglobal.net:8888/ImageCollectionbyIndex";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
         }
         return url;
     };
@@ -276,6 +280,7 @@ class BasicLayout extends React.PureComponent{
         let title = img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
         let ImageAsset = img.ImageAsset ? img.ImageAsset : "";
+        let ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
         let iObject =  {
             institutionId: institutionID,
             imageryTitle: title,
@@ -287,7 +292,8 @@ class BasicLayout extends React.PureComponent{
                 endDate: img.endDate,
                 filterType: img.filterType,
                 visParams: img.visParams,
-                ImageAsset: ImageAsset
+                ImageAsset: ImageAsset,
+                ImageCollectionAsset: ImageCollectionAsset
             }
         };
         if(img.ImageAsset && img.ImageAsset.length > 0)
@@ -295,6 +301,12 @@ class BasicLayout extends React.PureComponent{
             title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
             iObject.imageryTitle = title;
             iObject.ImageAsset = img.ImageAsset;
+        }
+        if(img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0)
+        {
+            title = img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
+            iObject.imageryTitle = title;
+            iObject.ImageCollectionAsset = img.ImageCollectionAsset;
         }
         return iObject;
 
@@ -446,17 +458,68 @@ class BasicLayout extends React.PureComponent{
                 }
                 this.addCustomImagery(this.buildImageryObject(img2));
             }
+            //should add in the custom imagery here as well
             if(this.state.selectedDataType == "imageAsset")
             {
                 //add image asset parameters
                 img1.visParams = JSON.parse(this.state.imageParams);
                 img1.imageAsset = this.state.imageCollection;
+                this.addCustomImagery(this.buildImageryObject({
+                    ImageAsset: img1.ImageAsset,
+                    startDate: "",
+                    endDate: "",
+                    filterType: "",
+                    visParams: img1.visParams
+                }));
+
+            }
+            if(this.state.selectedDataType == "imageCollectionAsset")
+            {
+                //add image asset parameters
+                img1.visParams = JSON.parse(this.state.imageParams);
+                img1.ImageCollectionAsset = this.state.imageCollection;
+
+                this.addCustomImagery(this.buildImageryObject({
+                    ImageCollectionAsset: img1.ImageCollectionAsset,
+                    startDate: "",
+                    endDate: "",
+                    filterType: "",
+                    visParams: img1.visParams
+                }));
             }
             if(this.state.selectedDataTypeDual == "imageAsset")
             {
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
                 img2.imageAsset = this.state.imageCollectionDual;
+                let ref = this;
+                setTimeout(function() {
+                    ref.addCustomImagery(ref.buildImageryObject({
+                        ImageAsset: img2.ImageAsset,
+                        startDate: "",
+                        endDate: "",
+                        filterType: "",
+                        visParams: img2.visParams
+                    }));
+                }, 500);
+
+            }
+            if(this.state.selectedDataTypeDual == "imageCollectionAsset")
+            {
+                //add dual image asset parameters
+                img2.visParams = JSON.parse(this.state.imageParamsDual);
+                img2.ImageCollectionAsset = this.state.imageCollectionDual;
+                let ref = this;
+                setTimeout(function() {
+                    ref.addCustomImagery(ref.buildImageryObject({
+                        ImageCollectionAsset: img2.ImageCollectionAsset,
+                        startDate: "",
+                        endDate: "",
+                        filterType: "",
+                        visParams: img2.visParams
+                    }));
+                }, 500);
+
             }
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
@@ -483,6 +546,20 @@ class BasicLayout extends React.PureComponent{
             */
 
             //should add custom imagery here as well i assume
+        }
+        else if(this.state.selectedWidgetType == "imageCollectionAsset")
+        {
+            widget.properties = ["","","","",""];
+            widget.filterType = "";
+            widget.visParams = JSON.parse(this.state.imageParams);
+            widget.ImageCollectionAsset = this.state.imageCollection;
+            this.addCustomImagery(this.buildImageryObject({
+                ImageCollectionAsset: widget.ImageCollectionAsset,
+                startDate: "",
+                endDate: "",
+                filterType: "",
+                visParams: widget.visParams
+            }));
         }
         else {
             let wType = this.state.selectedWidgetType == "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType == "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType == "statistics" ? "getStats" : "custom";
@@ -794,6 +871,7 @@ class BasicLayout extends React.PureComponent{
                                             <option label="Statistics" value="statistics">Statistics</option>
                                             <option label="Dual Image Collection" value="DualImageCollection">Dual Image Collection</option>
                                             <option label="Image Asset" value="imageAsset">Image Asset</option>
+                                            <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
                                         </select>
                                     </div>
                                     {this.getBaseMapSelector()}
@@ -826,7 +904,7 @@ class BasicLayout extends React.PureComponent{
 
     }
     getBaseMapSelector(){
-        if(this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection" || this.state.selectedWidgetType == "imageAsset") {
+        if(this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection" || this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select name="widgetIndicesSelect" value={this.state.WidgetBaseMap} className="form-control"
@@ -864,7 +942,7 @@ class BasicLayout extends React.PureComponent{
                 </div>
             </React.Fragment>
         }
-        else if(this.state.selectedWidgetType == "imageAsset")
+        else if(this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset")
         {
             if(this.state.FormReady != true){
                 this.setState({
@@ -910,6 +988,7 @@ class BasicLayout extends React.PureComponent{
                         <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
                         <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
                         <option label="Image Asset" value="imageAsset">Image Asset</option>
+                        <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
                         <option label="Custom widget" value="Custom">Custom widget</option>
                     </select>
                 </React.Fragment>
@@ -931,6 +1010,7 @@ class BasicLayout extends React.PureComponent{
                         <option label="LANDSAT 8" value="LANDSAT8">LANDSAT 8</option>
                         <option label="Sentinel-2" value="Sentinel2">Sentinel-2</option>
                         <option label="Image Asset" value="imageAsset">Image Asset</option>
+                        <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
                         <option label="Custom widget" value="Custom">Custom widget</option>
                     </select>
 
@@ -954,7 +1034,7 @@ class BasicLayout extends React.PureComponent{
     }
     getDataForm()
     {
-        if(this.state.selectedWidgetType == "imageAsset")
+        if(this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset")
         {
             return <React.Fragment>
                 <div className="form-group">
@@ -1081,7 +1161,7 @@ class BasicLayout extends React.PureComponent{
 
                 </React.Fragment>
             }
-            else if((this.state.selectedDataType == "imageAsset" && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 1)
+            else if(((this.state.selectedDataType == "imageCollectionAsset" || this.state.selectedDataType == "imageAsset") && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 1)
             {
                 return <React.Fragment>
                 <div className="form-group">
@@ -1101,7 +1181,7 @@ class BasicLayout extends React.PureComponent{
                     <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType == "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
             </React.Fragment>
             }
-            else if((this.state.selectedDataTypeDual == "imageAsset" && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 2)
+            else if(((this.state.selectedDataType == "imageCollectionAsset" || this.state.selectedDataType == "imageAsset") && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 2)
             {
                 return <React.Fragment>
                     <div className="form-group">

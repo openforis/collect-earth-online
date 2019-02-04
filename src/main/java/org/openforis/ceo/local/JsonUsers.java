@@ -1,5 +1,6 @@
 package org.openforis.ceo.local;
 
+import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
@@ -10,10 +11,16 @@ import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.Mail.isEmail;
 import static org.openforis.ceo.utils.Mail.sendMail;
+import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
+import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
+import static org.openforis.ceo.utils.ProjectUtils.collectTimeIgnoreString;
+
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -122,6 +129,7 @@ public class JsonUsers implements Users {
         return req;
     }
 
+    // FIXME back port postgres checks that allow user to change only one part
     public synchronized Request updateAccount(Request req, Response res) {
         var userId = (String) req.session().attribute("userid");
         var inputEmail = req.queryParams("email");
@@ -294,7 +302,135 @@ public class JsonUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        return "";
+        final var userName =     req.params(":userid");
+        final var projects = readJsonFile("project-list.json").getAsJsonArray();
+               
+        // Pull out usefull data
+        final var projectData = toStream(projects)
+            .filter(project -> Paths.get(expandResourcePath("/json"), "plot-data-" + project.get("id").getAsString() + ".json").toFile().exists() 
+                                && project.has("userStats") 
+                                && toStream(project.get("userStats").getAsJsonArray())
+                                .filter(user -> user.get("user").getAsString().equals(userName))
+                                .collect(intoJsonArray)
+                                .size() > 0
+                    )
+            .map(project -> {
+                var projectObject = new JsonObject(); 
+                projectObject.addProperty("id", project.get("id").getAsInt());
+                projectObject.addProperty("name", project.get("name").getAsString());
+                projectObject.addProperty("description", project.get("name").getAsString());
+                projectObject.addProperty("availability", project.get("availability").getAsString());
+                projectObject.addProperty("numPlots", project.get("numPlots").getAsString());
+                
+                var userData = toStream(project.get("userStats").getAsJsonArray())
+                                .filter(user -> user.get("user").getAsString().equals(userName))
+                                .findFirst().get();
+
+                projectObject.addProperty("plotCount", userData.get("plots").getAsInt());    
+                
+                final var getMiliSec = userData.get("milliSecs").getAsInt();
+                final var curMiliSec = getMiliSec > 0 && getMiliSec < 10000000
+                                       ? getMiliSec
+                                       : 0;
+                final var timedPlots = userData.get("timedPlots").getAsInt();
+                projectObject.addProperty("analysisAverage", timedPlots > 0 
+                            ? Math.round(curMiliSec / 1.0 / timedPlots / 100.0) / 10.0
+                            : 0);
+
+                projectObject.addProperty("totalMilliSecond", timedPlots > 0 ? curMiliSec : 0);   
+                projectObject.addProperty("timedUserPlots", timedPlots);   
+
+
+                return projectObject;
+                }
+            )
+            .sorted((p1, p2)-> p2.get("id").getAsInt() - p1.get("id").getAsInt())
+            .collect(intoJsonArray);
+
+        final int totalPlots = toStream(projectData)
+            .map(project -> getOrZero(project, "plotCount").getAsInt())
+            .mapToInt(Integer::intValue).sum();
+
+        final int totalTimedPlots = toStream(projectData)
+            .map(project -> getOrZero(project, "timedUserPlots").getAsInt())
+            .mapToInt(Integer::intValue).sum();
+
+        final int totalMilliseconds = toStream(projectData)
+            .map(project -> getOrZero(project, "totalMilliSecond").getAsInt())
+            .mapToInt(Integer::intValue).sum();
+                
+        var userStats = new JsonObject();
+        userStats.addProperty("totalProjects", projectData.size());
+        userStats.addProperty("totalPlots", totalPlots);
+        userStats.addProperty("averageTime", Math.round(totalMilliseconds / 100.0 / totalTimedPlots) / 10.0);
+        userStats.add("perProject", projectData);
+        return userStats.toString();
+    
+    }
+
+    public static JsonArray sumUserInfo(JsonArray sumArr, JsonObject newData) {
+        if (toStream(sumArr)
+                .filter(user -> user.get("user").getAsString().equals(newData.get("user").getAsString()))
+                .collect(intoJsonArray)
+                .size() > 0) 
+        {
+            return toStream(sumArr)
+                .map(user -> {
+                    if (user.get("user").getAsString().equals(newData.get("user").getAsString())) {
+                        user.addProperty("milliSecs", user.get("milliSecs").getAsInt() + newData.get("milliSecs").getAsInt());
+                        user.addProperty("plots", user.get("plots").getAsInt() + newData.get("plots").getAsInt());
+                        user.addProperty("timedPlots", user.get("timedPlots").getAsInt() + newData.get("timedPlots").getAsInt());
+                        return user;
+                    } else {
+                        return user;
+                    }
+                }).collect(intoJsonArray);
+        } else {
+            sumArr.add(newData);
+            return sumArr;
+        }
+    }
+
+    public String updateProjectUserStats(Request req, Response res) {
+
+        mapJsonFile("project-list.json",
+                project -> {
+                    if (Paths.get(expandResourcePath("/json"), "plot-data-" + project.get("id").getAsString() + ".json").toFile().exists()) {
+                        var plots = readJsonFile("plot-data-" + project.get("id").getAsString() + ".json").getAsJsonArray();
+                        var dataByUsers = toStream(plots)
+                            .filter(plot -> getOrEmptyString(plot, "user").getAsString().length() > 0)
+                            .map(plot -> {
+                                var plotObject = new JsonObject();
+
+                                plotObject.addProperty("milliSecs", collectTimeIgnoreString(plot) > getOrZero(plot, "collectionStart").getAsLong()
+                                                                    ? collectTimeIgnoreString(plot) - getOrZero(plot, "collectionStart").getAsLong() 
+                                                                    : 0);
+                                plotObject.addProperty("plots", 1);
+                                plotObject.addProperty("timedPlots", getOrZero(plot, "collectionStart").getAsLong() > 0 ? 1 : 0);
+                                
+                                plotObject.addProperty("user", plot.get("user").getAsString());
+                                return plotObject;
+                                }
+                            )
+                            .collect(JsonArray::new,
+                                (responce, element) -> sumUserInfo(responce, element),
+                                (a, b) -> System.out.println(a)
+                            
+                            );
+
+                        project.add("userStats", dataByUsers);                    
+                        project.remove("userMilliSeconds");
+                        project.remove("userPlots");
+                        project.remove("timedUserPlots");
+
+                        return project;
+                    } else {
+                        return project;
+                    }
+                }
+            );
+
+            return "";
     }
     
     public Map<Integer, String> getInstitutionRoles(int userId) {

@@ -1,17 +1,24 @@
 import demjson
 import json
 import psycopg2
+import shutil
 import os
+import glob
 import csv
+import re
 import subprocess
+import sys
 from config import config
+
 params = config()
 paramsElevated = config(section='postgresql-elevated')
+
 jsonpath = r'../../../../target/classes/json'
 csvpath = r'../../../../target/classes/csv'
+csvScriptPath = r'../csv'
 shppath = r'../../../../target/classes/shp'
+shpScriptPath = r'../shp'
 
-#jsonpath = r'../json'
 def insert_users():
     conn = None
     user_id=-1
@@ -38,7 +45,6 @@ def insert_users():
 
 def insert_institutions():
     conn = None
-    institution_id=-1
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
@@ -72,8 +78,6 @@ def insert_institutions():
                     user_id=pending
                     role_id=3
                     cur1.execute("select * from add_institution_user(%s,%s,%s)", (institution['id'],user_id,role_id))
-            conn.commit()
-            institution_id = cur.fetchone()[0]
             conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -137,22 +141,24 @@ def insert_projects():
         print(len(projectArr))
         for project in projectArr:
             try:
-                if project['id']>0:
+                if project['id'] > 0:
                     print("inserting project with project id"+str(project['id']))
                     if project['numPlots'] is None: project['numPlots']=0
                     if project['plotSpacing'] is None: project['plotSpacing']=0
                     if project['plotSize'] is None: project['plotSize']=0
                     if project['samplesPerPlot'] is None: project['samplesPerPlot']=0
                     if project['sampleResolution'] is None: project['sampleResolution']=0
+                    if not ('surveyRules' in project): project['surveyRules']=None
 
                     cur.execute("select * from create_project_migration(%s,%s,%s::text,%s::text,%s::text,%s::text,"
                     + "ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),%s::text,%s::text,%s,%s,%s::text,%s,%s::text,"
-                    + "%s,%s,%s::jsonb,%s::jsonb)", 
+                    + "%s,%s,%s::jsonb,%s::jsonb,%s::jsonb)", 
                     (project['id'],project['institution'],project['availability'], 
                     project['name'],project['description'],project['privacyLevel'],project['boundary'],
                     project['baseMapSource'],project['plotDistribution'],project['numPlots'],
                     project['plotSpacing'],project['plotShape'],project['plotSize'],project['sampleDistribution'],
                     project['samplesPerPlot'],project['sampleResolution'],json.dumps(project['sampleValues']),
+                    json.dumps(project['surveyRules']),
                     None))
                     
                     project_id = cur.fetchone()[0]
@@ -163,10 +169,18 @@ def insert_projects():
                             insert_project_widgets(project_id,dash_id,conn)
                             break
 
-                    insert_plots_samples_by_file(project_id, conn)
+                    if len(sys.argv) > 1 and sys.argv[1] == 'loop':
+                        ## insert data by row with loops
+                        insert_plots(project_id, conn)
+                    else:
+                        ## insert data the entire json file at a time, much faster but requires permissions
+                        insert_plots_samples_by_file(project_id, conn)
+                    
+                    ## merge in external files
                     merge_files(project, project_id, conn)
                     conn.commit()
             except(Exception, psycopg2.DatabaseError) as error:
+                conn.commit()
                 print("project for loop: "+ str(error))
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -211,28 +225,32 @@ def insert_plots(project_id,conn):
                     plot['flagged']=0
                 else:
                     plot['flagged']=1
+                
+                if not ('collectionStart' in plot): plot['collectionStart']=None
+                if not ('collectionTime' in plot) or re.search('^\d+$', plot['collectionTime']) is None : plot['collectionTime']=None
 
                 cur_plot.execute("select * from create_project_plot(%s,ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))",
                 (project_id,plot['center']))
 
                 plot_id = cur_plot.fetchone()[0]
                 if plot['user'] is not None:
-                    user_plot_id=insert_user_plots(plot_id,plot['user'],boolean_Flagged,conn)
+                    user_plot_id=insert_user_plots(plot_id,plot,boolean_Flagged,conn)
                 insert_samples(plot_id,plot['samples'],user_plot_id,conn)
                 conn.commit()
             except (Exception, psycopg2.DatabaseError) as error:
                 print("plots error: "+ str(error))
     cur_plot.close()
 
-def insert_user_plots(plot_id,user,flagged,conn):
+def insert_user_plots(plot_id,plot,flagged,conn):
     user_plot_id=-1
     cur_up = conn.cursor()
     cur_user = conn.cursor()
-    cur_user.execute("select id from users where email=%s;",(user,))
+    cur_user.execute("select id from users where email=%s;",[plot['user']])
     rows = cur_user.fetchall()
     if len(rows)>0:
         try:
-            cur_up.execute("select * from add_user_plots_migration(%s,%s::text,%s)",(plot_id,user,flagged))
+            cur_up.execute("select * from add_user_plots_migration(%s,%s::text,%s,to_timestamp(%s/1000.0)::timestamp,to_timestamp(%s/1000.0)::timestamp)",
+                (plot_id,plot['user'],flagged,plot['collectionStart'],plot['collectionTime']))
             user_plot_id = cur_up.fetchone()[0]
             conn.commit()
         except (Exception, psycopg2.DatabaseError) as error:
@@ -250,16 +268,23 @@ def insert_samples(plot_id,samples,user_plot_id,conn):
 
             sample_id = cur_sample.fetchone()[0]
             if user_plot_id != -1 and 'value' in sample:
-                insert_sample_values(user_plot_id,sample_id,sample['value'],conn)
+                if not ('userImage' in sample):
+                    sample['image_id'] = None
+                    sample['image_attributes'] = None
+                else:
+                    sample['image_id'] = sample['userImage']['id']
+                    sample['image_attributes'] = sample['userImage']['attributes']
+                insert_sample_values(user_plot_id,sample_id,sample['value'],sample['image_id'],sample['image_attributes'],conn)
             conn.commit()
         except (Exception, psycopg2.DatabaseError) as error:
                 print("samples error: "+ str(error))
     cur_sample.close()
 
-def insert_sample_values(user_plot_id,sample_id,sample_value,conn):
+def insert_sample_values(user_plot_id,sample_id,sample_value,image_id,image_value,conn):
     cur_sv = conn.cursor()
     try:
-        cur_sv.execute("select * from add_sample_values_migration(%s,%s,%s::jsonb)",(user_plot_id,sample_id,json.dumps(sample_value)))
+        cur_sv.execute("select * from add_sample_values_migration(%s,%s,%s::jsonb,%s,%s::jsonb)",
+            (user_plot_id,sample_id,json.dumps(sample_value),image_id,json.dumps(image_value)))
     except (Exception, psycopg2.DatabaseError) as error:
                 print("sample values error: "+ str(error))
     conn.commit()
@@ -268,18 +293,22 @@ def insert_sample_values(user_plot_id,sample_id,sample_value,conn):
 # builds list of old name to become lon, lat
 def csvColRenameList(csvCols):
     renameCol = []
-    renameCol.append([csvCols[0], 'lon'])
-    renameCol.append([csvCols[1], 'lat'])
+    renameCol.append([csvCols[0].replace(" ", ""), 'lon'])
+    renameCol.append([csvCols[1].replace(" ", ""), 'lat'])
     return renameCol
 
 # files should have lat lon in the first 2 columns, returns string
 def csvHeaderToCol(csvCols):
     colsStr = ''
     for i, h in enumerate(csvCols):
-        if i <=1:
-            colsStr += h + ' float,'
-        else:
-            colsStr += h + ' text,'
+        h = h.replace(" ", "")
+        if len(h) > 0:
+            if i <=1:
+                colsStr += h + ' float,'
+            elif (i == 2 and h.upper() == "PLOTID") or (i == 3 and h.upper() == "SAMPLEID"):
+                colsStr += h + ' integer,'
+            else:
+                colsStr += h + ' text,'
     return colsStr[:-1]
 
 def checkRequiredCols(actualCols, reqCols):
@@ -474,19 +503,22 @@ def merge_files(project, project_id, conn):
         cur.execute("SELECT * FROM update_project_tables(%s,%s,%s)" , [project_id, plots_table, samples_table])
         conn.commit()
 
-        if need_to_update >= 2:
-            # clean up project tables
-            cur.execute("SELECT * FROM cleanup_project_tables(%s,%s)" , [project_id, project['plotSize']])
-            conn.commit()
+        try:
+            if need_to_update >= 2:
+                # clean up project tables
+                cur.execute("SELECT * FROM cleanup_project_tables(%s,%s)" , [project_id, project['plotSize']])
+                conn.commit()
 
-        if need_to_update == 3:
-            # merge files into plots and samples
-            cur.execute("SELECT * FROM merge_plot_and_file(%s)" , [project_id])
-            conn.commit()
-        else:
-            # merge files into plots
-            cur.execute("SELECT * FROM merge_plots_only(%s)" , [project_id])
-            conn.commit()
+            if need_to_update == 3:
+                # merge files into plots and samples
+                cur.execute("SELECT * FROM merge_plot_and_file(%s)" , [project_id])
+                conn.commit()
+            else:
+                # merge files into plots
+                cur.execute("SELECT * FROM merge_plots_only(%s)" , [project_id])
+                conn.commit()
+        finally:
+            pass
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("merge file error: "+ str(error))
@@ -523,6 +555,16 @@ def update_sequence():
 
 
 if __name__ == '__main__':
+    csvScripts = os.listdir(csvScriptPath)
+    for f in csvScripts:
+        if f.endswith(".sh"):
+            shutil.copy(csvScriptPath+"/"+f, csvpath)
+
+    shpScripts = os.listdir(shpScriptPath)
+    for f in shpScripts:
+        if f.endswith(".sh"):
+            shutil.copy(shpScriptPath+"/"+f, shppath)
+
     print("inserting users")
     insert_users()
     print("inserting roles")

@@ -11,10 +11,9 @@ public interface Projects {
     String getProjectPlots(Request req, Response res);
     String getProjectPlot(Request req, Response res);
     String getProjectStats(Request req, Response res);
-    String getUnassignedPlot(Request req, Response res);
-    String getUnassignedPlotById(Request req, Response res);
-    String getNextUnassignedPlot(Request req, Response res);
-    String getPrevUnassignedPlot(Request req, Response res);
+    String getPlotById(Request req, Response res);
+    String getNextPlot(Request req, Response res);
+    String getPrevPlot(Request req, Response res);
     HttpServletResponse dumpProjectAggregateData(Request req, Response res);
     HttpServletResponse dumpProjectRawData(Request req, Response res);
     String publishProject(Request req, Response res);

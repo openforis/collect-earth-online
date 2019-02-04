@@ -11,10 +11,18 @@
             border:1px solid #808080;
         }
         .previewImg.fullpreview{
-            width:100vw;
-            position:fixed;
-            top:60px;
-            left:0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            overflow: auto;
+            min-height: calc(98% - 60px);
+            max-width: 99%;
+            max-height: calc(98% - 60px);
+            width: auto;
+            height: auto;
         }
         .previewbreak{
             display:none;
@@ -24,17 +32,20 @@
             .previewImg{
                 width:100%;
             }
-            .previewImg.fullpreview{
-                width:100vw;
-                height:auto;
+            .previewImg.fullpreview {
+                min-height: unset;
+                max-width: unset;
+                max-height: unset;
+                width: 100vw;
+                height: auto;
             }
-            .previewbreak {
-                display: block;
-                clear: both;
-            }
+                .previewbreak {
+                    display: block;
+                    clear: both;
+                }
 
-        }
-    </style>
+            }
+</style>
     <script type="text/javascript" language="JavaScript">
         function toggleHelpImage(which)
         {
@@ -223,6 +234,23 @@
                         Image Asset (see Image Asset example below and skip the next step as you will not need to select a date range)
                     </li>
                     <li>
+                        Image Collection Asset
+                        <ol style="list-style-type: lower-roman">
+                            <li>
+                                Give widget a title
+                            </li>
+                            <li>
+                                Enter the GEE Image Asset - Example: users/ValeriaContessa/Indonesia_2000
+                            </li>
+                            <li>
+                                Enter Image Parameters for asset - Example: {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
+                            </li>
+                            <li>
+                                Skip selecting date since this is a preprocessed asset
+                            </li>
+                        </ol>
+                    </li>
+                    <li>
                         Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
                         <ol style="list-style-type: lower-roman">
                             <li>
@@ -266,6 +294,20 @@
                     </li>
                     <li>
                         Image Asset (see Image Asset example below and skip the next step as you will not need to select a date range)
+                    </li>
+                    <li>
+                        Image Collection Asset
+                        <ol style="list-style-type: lower-roman">
+                            <li>
+                                Enter the GEE Image Asset - Example: users/ValeriaContessa/Indonesia_2000
+                            </li>
+                            <li>
+                                Enter Image Parameters for asset - Example: {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
+                            </li>
+                            <li>
+                                Skip selecting date since this is a preprocessed asset
+                            </li>
+                        </ol>
                     </li>
                     <li>
                         Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
@@ -320,6 +362,37 @@
         </ol>
         <br style="clear:both;" />
 
+        <h2>To add a Image Collection Asset Widget:</h2>
+
+        <img src="${root}/img/image_collection_asset_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
+        <br class="previewbreak" />
+        <ol>
+            <li>
+                Click Add Widget
+            </li>
+            <li>
+                Select Image Collection Asset in the type drop down
+            </li>
+            <li>
+                Choose Basemap source from dropdown
+            </li>
+            <li>
+                Give widget a title
+            </li>
+            <li>
+                Enter the GEE Image Collection Asset - Example: users/ValeriaContessa/Indonesia_2000
+            </li>
+            <li>
+                Enter Image Parameters for asset - Example: {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
+            </li>
+            <li>
+                Click Create
+            </li>
+            <li>Reposition and resize to your liking</li>
+        </ol>
+        <br style="clear:both;" />
+
+        <h2>To move and resize widgets</h2>
         <img src="${root}/img/change_widget_layout.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
         <br class="previewbreak" />
         <ol>

@@ -210,7 +210,7 @@ class Widget extends React.Component {
     };
     getWidgetType(awidget)
     {
-        if((awidget.dualImageCollection && awidget.dualImageCollection != null) || (awidget.ImageAsset && awidget.ImageAsset.length > 0))
+        if((awidget.dualImageCollection && awidget.dualImageCollection != null) || (awidget.ImageAsset && awidget.ImageAsset.length > 0) || (awidget.ImageCollectionAsset && awidget.ImageCollectionAsset.length > 0))
         {
             return "mapwidget";
         }
@@ -242,7 +242,7 @@ class Widget extends React.Component {
     };
     getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
         let wtext = widget.properties[0];
-        if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0))
+        if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0))
         {
             return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
 
@@ -327,22 +327,26 @@ class MapWidget extends React.Component {
         let url = "";
         if(widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            url = "https://geegateway.servirglobal.net:8888/" + fts[widget.filterType];
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/image";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+        }
+        else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+        {
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
         }
         else if("ImageCollectionCustom" === widget.properties[0]){
-            url = "https://geegateway.servirglobal.net:8888/meanImageByMosaicCollections";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
         }
         else if(collectionName.trim().length > 0)
         {
-            url = "https://geegateway.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
 
         }
         else{
-            url = "https://geegateway.servirglobal.net:8888/ImageCollectionbyIndex";
+            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
         }
         return url;
     };
@@ -472,6 +476,7 @@ class MapWidget extends React.Component {
             shortWidget.properties = [];
             shortWidget.properties.push(collectionName);
             shortWidget.ImageAsset = firstImage.imageAsset;
+            shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
             url = MapWidget.getGatewayUrl(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null? firstImage.min: "";
@@ -500,6 +505,7 @@ class MapWidget extends React.Component {
             shortWidget2.properties = [];
             shortWidget2.properties.push(dualImageObject.collectionName);
             shortWidget2.ImageAsset = secondImage.imageAsset;
+            shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
             dualImageObject.url = MapWidget.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
 
             shortWidget2.visParams = secondImage.visParams;
@@ -526,6 +532,15 @@ class MapWidget extends React.Component {
                 dualImageObject.visParams = secondImage.visParams;
             }
 
+            if(firstImage.ImageCollectionAsset){
+                postObject.imageName = firstImage.ImageCollectionAsset;
+                postObject.visParams = firstImage.visParams;
+            }
+            if(secondImage.ImageCollectionAsset){
+                dualImageObject.imageName = secondImage.ImageCollectionAsset;
+                dualImageObject.visParams = secondImage.visParams;
+            }
+
         }
         else {
 
@@ -548,6 +563,10 @@ class MapWidget extends React.Component {
             if(widget.ImageAsset)
             {
                 postObject.imageName = widget.ImageAsset;
+            }
+            else if(widget.ImageCollectionAsset)
+            {
+                postObject.imageName = widget.ImageCollectionAsset;
             }
         }
 
@@ -827,7 +846,7 @@ class GraphWidget extends React.Component {
         let collectionName = widget.properties[1];
         let indexName = widget.properties[4];
         let date = new Date();
-        let url = collectionName.trim().length > 0 ? "https://geegateway.servirglobal.net:8888/timeSeriesIndex":  "https://geegateway.servirglobal.net:8888/timeSeriesIndex2";
+        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex":  window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex2";
         const ref = this;
         fetch(url, {
             method: "POST",
@@ -1002,7 +1021,7 @@ class StatsWidget extends React.Component {
         const ref = this;
         const widget = this.props.widget;
         const projPairAOI = this.props.projPairAOI;
-        fetch("https://geegateway.servirglobal.net:8888/getStats", {
+        fetch(window.location.protocol + "//" + window.location.hostname + ":8888/getStats", {
             method: "POST",
             headers: {
                 "Accept": "application/json",

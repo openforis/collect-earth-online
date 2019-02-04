@@ -28,6 +28,15 @@ public class JsonImagery implements Imagery {
         }
     }
 
+    public static String getImageryTitle(String id) {
+        var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+
+        var matchingImagery = filterJsonArray(imageryList,
+                                imagery -> imagery.get("id").getAsString().equals(id));
+        return matchingImagery.get(0).getAsJsonObject().get("title").getAsString();
+        
+    }
+
     public synchronized String addInstitutionImagery(Request req, Response res) {
         try {
             var jsonInputs            = parseJson(req.body()).getAsJsonObject();
