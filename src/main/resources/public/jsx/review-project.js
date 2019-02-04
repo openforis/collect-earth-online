@@ -1034,6 +1034,9 @@ function SurveyQuestion(properties) {
                 <h3 className="header px-0">
                     <label> Survey Question: {properties.surveyQuestion.question}</label>
                 </h3>
+
+                <p><i>Note: Question is of type {(properties.surveyQuestion.component_type!=undefined?properties.surveyQuestion.component_type:"button")+"-"+(properties.surveyQuestion.data_type!=undefined?properties.surveyQuestion.data_type:"text")}</i></p>
+
                 <table className="table table-sm">
                     <thead>
                     <tr>
