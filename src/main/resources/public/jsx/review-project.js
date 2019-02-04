@@ -12,34 +12,20 @@ class Project extends React.Component {
             projectDetails: null,
             imageryList: [],
             mapConfig: null,
-            plotList: null,
+            plotList: [],
             lonMin: "",
             latMin: "",
             lonMax: "",
-            latMax: "",
-            newSurveyQuestionName: "",
-            newValueEntry: {},
-            stateTransitions: {
-                nonexistent: "Create",
-                unpublished: "Publish",
-                published: "Close",
-                closed: "Archive",
-                archived: "Archive"
-            },
+            latMax: ""
         };
         this.configureGeoDash = this.configureGeoDash.bind(this);
         this.downloadPlotData = this.downloadPlotData.bind(this);
         this.downloadSampleData = this.downloadSampleData.bind(this);
         this.closeProject = this.closeProject.bind(this);
         this.changeAvailability = this.changeAvailability.bind(this);
-        this.getParentSurveyQuestions = this.getParentSurveyQuestions.bind(this);
-        this.getSurveyQuestionByName = this.getSurveyQuestionByName.bind(this);
-        this.getParentSurveyQuestionAnswers=this.getParentSurveyQuestionAnswers.bind(this);
-        this.topoSort = this.topoSort.bind(this);
-        this.getParentSurveyAnswers=this.getParentSurveyAnswers.bind(this);
         this.gotoProjectDashboard=this.gotoProjectDashboard.bind(this);
     };
-
+    
     componentDidMount() {
         this.getProjectById();
     }
@@ -48,6 +34,7 @@ class Project extends React.Component {
         if (this.state.projectDetails
                 && this.state.projectDetails !== prevState.projectDetails) {
             this.getImageryList();
+            this.getProjectPlots();
         }
 
         if (this.state.projectDetails && this.state.imageryList.length > 0 
@@ -60,27 +47,29 @@ class Project extends React.Component {
             this.showProjectMap();
         }
 
+        if (this.state.mapConfig && this.state.plotList.length > 0
+                && (!prevState.mapConfig || prevState.plotList.length === 0)){
+            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
+        }
+
     }
 
     publishProject() {
         if (confirm("Do you REALLY want to publish this project?")) {
             utils.show_element("spinner");
-            var ref = this;
-            $.ajax({
-                url: this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id,
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: "application/json",
-            }).fail(function (response) {
+            fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id)
+            .then(response => {
                 utils.hide_element("spinner");
-                console.log(response);
-                alert("Error publishing project. See console for details.");
-            }).done(function (data) {
-                var detailsNew = ref.state.projectDetails;
-                detailsNew.availability = "published";
-                ref.setState({projectDetails: detailsNew});
-                utils.hide_element("spinner");
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error publishing project. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                this.setState({projectDetails: {...this.state.projectDetails, availability: "published"}});
             });
         }
     }
@@ -88,22 +77,19 @@ class Project extends React.Component {
     closeProject() {
         if (confirm("Do you REALLY want to close this project?")) {
             utils.show_element("spinner");
-            var ref = this;
-            $.ajax({
-                url: this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: "application/json",
-            }).fail(function (response) {
+            fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id)
+            .then(response => {
                 utils.hide_element("spinner");
-                console.log(response);
-                alert("Error closing project. See console for details.");
-            }).done(function (data) {
-                var detailsNew = ref.state.projectDetails;
-                detailsNew.availability = "closed";
-                ref.setState({projectDetails: detailsNew});
-                utils.hide_element("spinner");
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error closing project. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                this.setState({projectDetails: {...this.state.projectDetails, availability: "closed"}});
             });
         }
     }
@@ -111,22 +97,19 @@ class Project extends React.Component {
     archiveProject() {
         if (confirm("Do you REALLY want to archive this project?!")) {
             utils.show_element("spinner");
-            var ref = this;
-            $.ajax({
-                url: this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: "application/json",
-            }).fail(function (response) {
+            fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id)
+            .then(response => {
                 utils.hide_element("spinner");
-                console.log(response);
-                alert("Error archiving project. See console for details.");
-            }).done(function (data) {
-                var detailsNew = ref.state.projectDetails;
-                detailsNew.availability = "archived";
-                ref.setState({projectDetails: detailsNew});
-                utils.hide_element("spinner");
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    console.log(response);
+                    alert("Error srchiving project. See console for details.");
+                    return new Promise(resolve => resolve("error"));
+                }
+            })
+            .then(data => {
+                this.setState({projectDetails: {...this.state.projectDetails, availability: "archived"}});
                 alert("Project " + ref.state.projectDetails.id + " has been archived.");
                 window.location = ref.props.documentRoot + "/home";
             });
@@ -134,9 +117,7 @@ class Project extends React.Component {
     }
 
     changeAvailability() {
-        if (this.state.projectDetails.availability == "nonexistent") {
-            this.createProject();
-        } else if (this.state.projectDetails.availability == "unpublished") {
+        if (this.state.projectDetails.availability == "unpublished") {
             this.publishProject();
         } else if (this.state.projectDetails.availability == "published") {
             this.closeProject();
@@ -146,7 +127,6 @@ class Project extends React.Component {
     }
 
     configureGeoDash() {
-
         if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(this.props.documentRoot + "/widget-layout-editor?editable=true&"
                 + encodeURIComponent("institutionId=" + this.state.projectDetails.institution
@@ -163,71 +143,31 @@ class Project extends React.Component {
         window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.projectDetails.id, "_blank");
     }
 
-    getParentSurveyQuestions(sampleSurvey) {
-        return sampleSurvey.filter(
-            function (surveyQuestion) {
-                return surveyQuestion.parent_question==-1;
-            }
-        );
-    }
-
-    getParentSurveyQuestionAnswers(sampleSurvey) {
-        var ans = [];
-        sampleSurvey.map((sq) => {
-                var parent_value = document.getElementById("value-parent");
-
-                if(parent_value!=null) {
-                    var parent = parent_value.options[parent_value.selectedIndex].value;
-                    if (sq.id == parent) {
-                        ans = sq.answers;
+    convertSampleValuesToSurveyQuestions(sampleValues) {
+        return sampleValues.map(sampleValue => {
+            if (sampleValue.name && sampleValue.values) {
+                const surveyQuestionAnswers = sampleValue.values.map(value => {
+                    if (value.name) {
+                        return {
+                            id: value.id,
+                            answer: value.name,
+                            color: value.color
+                        };
+                    } else {
+                        return value;
                     }
-                }
+                });
+                return {
+                    id: sampleValue.id,
+                    question: sampleValue.name,
+                    answers: surveyQuestionAnswers,
+                    parent_question: -1,
+                    parent_answer: -1
+                };
+            } else {
+                return sampleValue;
             }
-        );
-        return ans;
-    }
-
-    getParentSurveyAnswers(sampleSurvey,question_id) {
-        var ans = [];
-        sampleSurvey.map((sq) => {
-                if (sq.id == question_id) {
-                    ans = sq.answers;
-                }
-            }
-        );
-        return ans;
-    }
-
-    getChildSurveyQuestions(sampleSurvey, parentSurveyQuestion) {
-        return sampleSurvey.filter(
-            function (surveyQuestion) {
-                return surveyQuestion.parent_question == parentSurveyQuestion.id;
-            }
-        );
-    }
-
-    topoSort(sampleSurvey) {
-        var parentSurveyQuestions = this.getParentSurveyQuestions(sampleSurvey);
-        var parentChildGroups = parentSurveyQuestions.map(
-            function (parentSurveyQuestion) {
-                var childSurveyQuestions = sampleSurvey.filter(
-                    function (sampleValue) {
-                        return sampleValue.parent_question == parentSurveyQuestion.id;
-                    }
-                );
-                return [parentSurveyQuestion].concat(childSurveyQuestions);
-            },
-            this
-        );
-        return [].concat.apply([], parentChildGroups);
-    }
-
-    getSurveyQuestionByName(surveyQuestionName) {
-        return this.state.projectDetails.sampleValues.find(
-            function (surveyQuestion) {
-                return surveyQuestion.question == surveyQuestionName;
-            }
-        );
+        });
     }
 
     getProjectById() {
@@ -245,38 +185,9 @@ class Project extends React.Component {
                 if (data == "") {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
-                } else {
-                    var detailsNew=data;
-                    var sv=detailsNew.sampleValues;
-                    var newSV=[];
-                    var tempSQ={id:-1,question:"",answers:[],parent_question: -1,parent_answer: -1};
-                    if(sv.length>0){
-                        sv.map((sq)=>{
-                                if(sq.name){
-                                    tempSQ.id=sq.id;
-                                    tempSQ.question=sq.name;
-                                    sq.values.map((sa)=>{
-                                        if(sa.name){
-                                            if(sa.id>0){
-                                                tempSQ.answers.push({id:sa.id,answer:sa.name,color:sa.color});
-                                            }
-                                        }
-                                        else {
-                                            tempSQ.answers.push(sa);
-                                        }
-
-                                    });
-                                    if(tempSQ.id>0){
-                                        newSV.push(tempSQ);
-                                    }
-                                }
-                                else{
-                                    newSV.push(sq);
-                                }
-                            }
-                        );
-                    }
-                    detailsNew.sampleValues=newSV;
+                } else {                   
+                    const newSampleValues = this.convertSampleValuesToSurveyQuestions(data.sampleValues)
+                    const detailsNew = {...data, sampleValues: newSampleValues}
                     this.setState({projectDetails: detailsNew});
                 }
             });
@@ -298,7 +209,7 @@ class Project extends React.Component {
             });
     }
 
-    showPlotCenters() {
+    getProjectPlots() {
         fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/300")
             .then(response => {
                 if (response.ok) {
@@ -310,9 +221,8 @@ class Project extends React.Component {
             })
             .then(data => {
                 this.setState({plotList: data});
-                mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
             })
-            .catch(e => this.setState({plotList: null}));
+            .catch(e => this.setState({plotList: []}));
     }
 
     initProjectMap() {
@@ -322,7 +232,7 @@ class Project extends React.Component {
     showProjectMap() {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource || this.state.imageryList[0].title);
         
-        // Extract bounding box coordinates from the project boundary and show on the map
+        // // Extract bounding box coordinates from the project boundary and show on the map
         var boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
         this.setState({lonMin: boundaryExtent[0]});
         this.setState({latMin: boundaryExtent[1]});
@@ -336,12 +246,6 @@ class Project extends React.Component {
             mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
             ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-
-        // Show plots
-        mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
-        mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
-        mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
-        this.showPlotCenters();
     }
 
     gotoProjectDashboard(){
@@ -364,11 +268,7 @@ class Project extends React.Component {
                         <ProjectDesignReview 
                             projectId={this.props.projectId} 
                             project={this.state}
-                            project_template_visibility={false}
                             setBaseMapSource={this.setBaseMapSource}
-                            topoSort={this.topoSort} 
-                            getParentSurveyQuestions={this.getParentSurveyQuestions} 
-                            getParentSurveyQuestionAnswers={this.getParentSurveyQuestionAnswers}
                         />
                         <ProjectManagement 
                             project={this.state} 
@@ -570,32 +470,32 @@ class ProjectStats extends React.Component {
 function ProjectDesignReview(props) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
-            <ProjectInfoReview project={props.project}/>
+            <ProjectInfoReview 
+                name={props.project.projectDetails.name}
+                description={props.project.projectDetails.description}
+            />
             <ProjectVisibility project={props.project}/>
             <ProjectAOI projectId={props.projectId} project={props.project}/>
             {props.project.imageryList &&
-                <ProjectImageryReview project={props.project} setBaseMapSource={props.setBaseMapSource}/>
+                <ProjectImageryReview baseMapSource={props.project.projectDetails.baseMapSource}/>
             }
             <PlotReview project={props.project}/>
             <SampleReview project={props.project}/>
             <SurveyReview 
-                project={props.project} projectId={props.projectId}
-                topoSort={props.topoSort}
-                getParentSurveyQuestions={props.getParentSurveyQuestions} 
-                getParentSurveyQuestionAnswers={props.getParentSurveyQuestionAnswers}
+                surveyQuestions={props.project.projectDetails.sampleValues} 
+                projectId={props.projectId}
             />
-
         </div>
     );
 }
 
-function ProjectInfoReview({ project }) {
+function ProjectInfoReview({ name, description }) {
     return (
         <SectionBlock id="project-info" title="Project Info">
             <h3><strong>Name</strong></h3>
-            <p className="ml-2">{project.projectDetails.name}</p>
+            <p className="ml-2">{name}</p>
             <h3><strong>Description</strong></h3>
-            <p className={project.projectDetails.description ? "ml-2" : "ml-2"}>{project.projectDetails.description || "none"}</p>
+            <p className={description ? "ml-2" : "ml-2 font-italic"}>{description || "none"}</p>
         </SectionBlock>
     );
 }
@@ -697,11 +597,11 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
     );
 }
 
-function ProjectImageryReview({ project, setBaseMapSource}) {
+function ProjectImageryReview({ baseMapSource }) {
     return (
         <SectionBlock id="project-imagery-review" title="Project Imagery">
             <h3><strong>Basemap Source</strong></h3>
-            <p className="ml-2">{project.projectDetails.baseMapSource}</p>
+            <p className="ml-2">{baseMapSource}</p>
         </SectionBlock>
     );
 }
@@ -798,9 +698,7 @@ function SurveyReview(props){
     return (
         <SectionBlock title="Survey Design">
             <div id="survey-design">
-                <SurveyQuestionTree project={props.project} projectId={props.projectId}
-                                    topoSort={props.topoSort}
-                                    getParentSurveyQuestions={props.getParentSurveyQuestions}/>
+                <SurveyQuestionTree {...props}/>
             </div>
         </SectionBlock>
     );
@@ -809,114 +707,108 @@ class SurveyQuestionTree extends React.Component {
     constructor(props) {
         super(props);
     };
-    getCurrent = (node) => this.props.project.projectDetails.sampleValues.filter(cNode => cNode.parent_question == node).map((cNode,uid) => (
-        <ul  key={`node_${uid}`} style={{listStyleType:"none"}}>
-            <li>
-                <SurveyQuestion prop={this.props} surveyQuestion={cNode}/>
-                {this.getCurrent(cNode.id)}
-            </li>
 
-        </ul>
+    getCurrent = (node) => 
+        this.props.surveyQuestions
+            .filter(cNode => cNode.parent_question == node)
+            .map((cNode,uid) => (
+                <li key={`node_${uid}`}>
+                    <SurveyQuestion surveyQuestions={this.props.surveyQuestions} surveyQuestion={cNode}/>
+                    {this.getCurrent(cNode.id)}
+                </li>
     ))
+
     render() {
-        const { project } = this.props;
-        if (project.projectDetails != null) {
-            return (
-                <div>
+        // FIXME, list of tables does not line up answers, user flex
+        return (
+                <ul style={{listStyleType:"none"}}>
                     {this.getCurrent(-1)}
-                </div>
+                </ul>
             );
-        }
-        else {
-            return (<span></span>);
-        }
     }
 }
 
-function SurveyQuestion(properties) {
-    const props = properties.prop;
-    var project = props.project;
-    if (properties.surveyQuestion.answers == null) {
-        console.log("answers null");
-    }
-    if (project.projectDetails != null) {
-        return (
-            <div className="sample-value-info">
-                <h3 className="header px-0">
-                    <label> Survey Question: {properties.surveyQuestion.question}</label>
-                </h3>
-                <table className="table table-sm">
-                    <thead>
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Answer</th>
-                        <th scope="col">Color</th>
-                        <th scope="col">&nbsp;</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        (properties.surveyQuestion.answers).map((surveyAnswer, uid) => {
-                                return <tr key={uid}>
-                                    <td>
-                                        {surveyAnswer.answer}
-                                    </td>
-                                    <td>
-                                        <div className="circle"
-                                             style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}></div>
-                                    </td>
-                                    <td>
-                                        &nbsp;
-                                    </td>
-                                </tr>
-                            }
-                        )
-                    }
-                    </tbody>
-                </table>
-            </div>
-        );
-    }
-    else {
-        return (<span></span>);
-    }
+function SurveyQuestion(props) {
+    return (
+        <div className="sample-value-info">
+            <h3 className="header px-0">
+                <label> <strong>Survey Question:</strong> {props.surveyQuestion.question}</label>
+            </h3>
+            <table className="table table-sm">
+                <tbody>
+                {
+                    (props.surveyQuestion.answers).map((surveyAnswer, uid) => {
+                            return <tr key={uid}>
+                                <td>
+                                    <strong>Answer: </strong>
+                                    {surveyAnswer.answer}
+                                </td>
+                                <td>
+                                    <div className='d-inline-flex'>
+                                        <strong>Color: </strong>
+                                        <div className="circle mt-1 ml-4"
+                                                style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    &nbsp;
+                                </td>
+                            </tr>
+                        }
+                    )
+                }
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 function ProjectManagement(props) {
-    var project = props.project;
-    var buttons = "";
-    if (project.projectDetails != null) {
-        buttons = <React.Fragment>
-            <input type="button" id="project-dashboard" className="btn btn-outline-lightgreen btn-sm btn-block"
-                   name="project-dashboard" value="Project Dashboard"
-                   onClick={props.gotoProjectDashboard}
-                   style={{display:'block'}}/>
-            <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
-                   name="configure-geo-dash" value="Configure Geo-Dash"
-                   onClick={props.configureGeoDash}
-                   style={{display: project.projectDetails.availability == 'unpublished' || project.projectDetails.availability == 'published' ? 'block' : 'none'}}/>
-            <input type="button" id="download-plot-data"
-                   className="btn btn-outline-lightgreen btn-sm btn-block"
-                   name="download-plot-data" value="Download Plot Data"
-                   onClick={props.downloadPlotData}
-                   style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}/>
-            <input type="button" id="download-sample-data"
-                   className="btn btn-outline-lightgreen btn-sm btn-block"
-                   name="download-sample-data" value="Download Sample Data"
-                   onClick={props.downloadSampleData}
-                   style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}/>
-            <input type="button" id="change-availability"
-                   className="btn btn-outline-danger btn-sm btn-block"
-                   name="change-availability"
-                   value={project.stateTransitions[project.projectDetails.availability] + "Project"}
-                   onClick={props.changeAvailability}/>
-        </React.Fragment>
+    const { project } = props;
+    const stateTransitions = { 
+        nonexistent: "Create",
+        unpublished: "Publish",
+        published: "Close",
+        closed: "Archive",
+        archived: "Archive"
     }
     return (
         <div id="project-management" className="col mb-3">
             <h2 className="header px-0">Project Management</h2>
             <div className="row">
-                {buttons}
+                {project.projectDetails && 
+                    <React.Fragment>
+                        <input type="button" id="project-dashboard" className="btn btn-outline-lightgreen btn-sm btn-block"
+                            name="project-dashboard" value="Project Dashboard"
+                            onClick={props.gotoProjectDashboard}
+                            style={{display:'block'}}
+                        />
+                        <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
+                            name="configure-geo-dash" value="Configure Geo-Dash"
+                            onClick={props.configureGeoDash}
+                            style={{display: project.projectDetails.availability == 'unpublished' || project.projectDetails.availability == 'published' ? 'block' : 'none'}}
+                        />
+                        <input type="button" id="download-plot-data"
+                            className="btn btn-outline-lightgreen btn-sm btn-block"
+                            name="download-plot-data" value="Download Plot Data"
+                            onClick={props.downloadPlotData}
+                            style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}
+                        />
+                        <input type="button" id="download-sample-data"
+                            className="btn btn-outline-lightgreen btn-sm btn-block"
+                            name="download-sample-data" value="Download Sample Data"
+                            onClick={props.downloadSampleData}
+                            style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}
+                        />
+                        <input type="button" id="change-availability"
+                            className="btn btn-outline-danger btn-sm btn-block"
+                            name="change-availability"
+                            value={stateTransitions[project.projectDetails.availability] + "Project"}
+                            onClick={props.changeAvailability}
+                        />
+                    </React.Fragment>
+                }
                 <div id="spinner"></div>
             </div>
         </div>

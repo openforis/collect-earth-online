@@ -135,8 +135,8 @@ class Collection extends React.Component {
                     alert("No project found with ID " + this.props.projectId + ".");
                 } else {
                     const surveyQuestions = this.convertSampleValuesToSurveyQuestions(project.sampleValues || {});
-                    project.sampleValues = surveyQuestions;
-                    this.setState({currentProject: project});
+                    const newProject = { ...project, sampleValues: surveyQuestions }
+                    this.setState({currentProject: newProject});
                 }
             });
     }
@@ -175,7 +175,7 @@ class Collection extends React.Component {
     }
 
     initializeProjectMap() {
-        let mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
+        const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
         mercator.addVectorLayer(mapConfig,
                                 "currentAOI",
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
@@ -319,7 +319,7 @@ class Collection extends React.Component {
     }
 
     getPlotData(plotId) {
-        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
+        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
         fetch(this.props.documentRoot + "/get-plot-by-id/" + this.props.projectId + "/" + plotId + userParam)
             .then(response => {
                 if (response.ok) {
@@ -348,7 +348,7 @@ class Collection extends React.Component {
     }
 
     getNextPlotData(plotId) {
-        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
+        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
         fetch(this.props.documentRoot + "/get-next-plot/" + this.props.projectId + "/" + plotId + userParam)
             .then(response => {
                 if (response.ok) {
@@ -381,7 +381,7 @@ class Collection extends React.Component {
     }
 
     getPrevPlotData(plotId) {
-        let userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
+        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
         fetch(this.props.documentRoot + "/get-prev-plot/" + this.props.projectId + "/" + plotId + userParam)
             .then(response => {
                 if (response.ok) {
@@ -430,6 +430,7 @@ class Collection extends React.Component {
         };
     }
 
+    // FIXME, used in project review, move to common functions file
     convertSampleValuesToSurveyQuestions(sampleValues) {
         return sampleValues.map(sampleValue => {
             if (sampleValue.name && sampleValue.values) {
@@ -608,7 +609,7 @@ class Collection extends React.Component {
     validateCurrentSelection (selectedFeatures, questionText) {
         const visibleSamples = this.getVisibleSamples(this.state.currentProject.sampleValues
                                 .filter((sv => sv.question === questionText))[0].id);
-        return Object.values(selectedFeatures.a).reduce((prev, cur) => {
+        return selectedFeatures.getArray().reduce((prev, cur) => {
             const sampleId = cur.get("sampleId")
             return prev && visibleSamples.filter(vs => vs.id === sampleId).length > 0;
         }, true);
@@ -634,32 +635,33 @@ class Collection extends React.Component {
         //
         if (selectedFeatures && selectedFeatures.getLength() > 0 
                 && this.validateCurrentSelection(selectedFeatures, questionText)) {
-            // JSON.parse is a fast way to do a deep copy
-            let userSamples = JSON.parse(JSON.stringify(this.state.userSamples));
-            let userImages = JSON.parse(JSON.stringify(this.state.userImages));
-            selectedFeatures.forEach(feature => {
+            
+            const newSamples = selectedFeatures.getArray().reduce((prev, feature) => {
                 const sampleId = feature.get("sampleId");
-                // FIX me, I think the array is initilized on load so this isnt needed
-                // if we have a missing sampleId something else went wrong
-                if (!userSamples[sampleId]) {
-                    userSamples[sampleId] = {};
-                }
-                if (!userImages[sampleId]) {
-                    userImages[sampleId] = {};
-                }
-                this.questionChildrenArray(questionText)
-                    .filter(question => question !== questionText)
-                    .forEach(question => delete userSamples[sampleId][question])
+                const newQuestion = { answer: answerText, color: answerColor};
 
-                userSamples[sampleId][questionText] = {answer: answerText,
-                                                       color: answerColor};    
-                userImages[sampleId] = {id: this.state.currentImagery.id,
-                                        attributes: this.getImageryAttributes()};
-                
-            }, this); // necessary to pass outer scope into function
+                const clearedSubQuestions = this.questionChildrenArray(questionText)
+                                            .filter(question => question !== questionText)
+                                            .reduce((prev, question) => {
+                                                const { [question]: value, ...rest} = prev
+                                                return {...rest}
+                                            }, {...this.state.userSamples[sampleId]});
+
+                return {...prev, [sampleId]: {...clearedSubQuestions,
+                                        [questionText]: newQuestion}};
+            }, {});
+            
+            const newUserImages = selectedFeatures.getArray().reduce((prev, feature) => {
+                const sampleId = feature.get("sampleId");
+                return {...prev, [sampleId]: 
+                                    { id: this.state.currentImagery.id,
+                                    attributes: this.getImageryAttributes() }
+                        }
+            }, {});
+
             this.setState({
-                        userSamples: userSamples,
-                        userImages: userImages,
+                        userSamples: {...this.state.userSamples, ...newSamples},
+                        userImages: {...this.state.userImages, ...newUserImages},
                         selectedQuestionText: questionText
                     });
             return true;
@@ -676,29 +678,23 @@ class Collection extends React.Component {
         this.setState({selectedQuestionText: newselectedQuestionText});
     }
 
-    invertColor(hex) {
-        if (hex.indexOf('#') === 0) {
-            hex = hex.slice(1);
-        }
-        // convert 3-digit hex to 6-digits.
-        if (hex.length === 3) {
-            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-        }
-        if (hex.length !== 6) {
-            throw new Error('Invalid HEX color.');
-        }
+    invertColor(hexin) {
+        const dehashed = hex.indexOf('#') === 0 ? hex.slice(1) : hex;
+        const hexFormated = dehashed.length === 3 
+                            ? dehashed[0] + dehashed[0] + dehashed[1] + dehashed[1] + dehashed[2] + dehashed[2] 
+                            : dehashed;
+
         // invert color components
-        var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
-            g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
-            b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+        const r = (255 - parseInt(hexFormated.slice(0, 2), 16)).toString(16);
+        const g = (255 - parseInt(hexFormated.slice(2, 4), 16)).toString(16);
+        const b = (255 - parseInt(hexFormated.slice(4, 6), 16)).toString(16);
         // pad each with zeros and return
         return '#' + this.padZero(r) + this.padZero(g) + this.padZero(b);
     }
 
-    padZero(str, len) {
-        len = len || 2;
-        var zeros = new Array(len).join('0');
-        return (zeros + str).slice(-len);
+    padZero(str) {
+        const zeros = new Array(2).join('0');
+        return (zeros + str).slice(-2);
     }
 
     highlightSamplesByQuestion() {
@@ -776,16 +772,17 @@ class Collection extends React.Component {
     }
 
     updateQuestionStatus() {
-        // Warning shallow copy
-        var currentProject = this.state.currentProject;
-        var currentSampleValues = currentProject.sampleValues;
+        const { currentProject: { sampleValues }} = this.state;
 
-        currentProject.sampleValues = currentSampleValues.map(value => {
-                value["visible"] = this.getVisibleSamples(value.id).length;
-                value["answered"] = this.getAnsweredSamples(value.id).length;
-                return value;
+        const newSampleValues = sampleValues.map(value => {
+                return {...value,
+                            visible: this.getVisibleSamples(value.id).length,
+                            answered: this.getAnsweredSamples(value.id).length};
             });
-        this.setState({currentProject: currentProject});
+        const newProject = {...this.state.currentProject,
+                            sampleValues: newSampleValues}
+
+        this.setState({currentProject: newProject});
     }
 
     render() {

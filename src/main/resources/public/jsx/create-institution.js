@@ -15,13 +15,7 @@ class Institution extends React.Component {
                 description: "",
                 admins: []
             },
-            isAdmin: false,
-            userId: props.userId,
-            documentRoot: props.documentRoot,
-            institutionId: props.institutionId,
-            of_users_api_url: props.of_users_api_url,
-            role: props.role,
-            storage: props.storage,
+            isAdmin: false
         };
         this.togglePageMode=this.togglePageMode.bind(this);
         this.handleChange=this.handleChange.bind(this);
@@ -55,7 +49,7 @@ class Institution extends React.Component {
         formData.append("institution-logo", document.getElementById("institution-logo").files[0]);
         formData.append("institution-url", this.state.details.url);
         formData.append("institution-description", this.state.details.description);
-        let documentRoot = this.state.documentRoot;
+        let documentRoot = this.props.documentRoot;
         let institutionId = this.props.institutionId;
         var holdRef = this;
         $.ajax({
@@ -150,8 +144,8 @@ class Institution extends React.Component {
                 <InstitutionDescription userId={this.props.userId} institution={this.state.institution}
                                         documentRoot={this.props.documentRoot}
                                         of_users_api_url={this.props.of_users_api_url}
-                                        institutionId={this.props.institutionId} role={this.state.role}
-                                        storage={this.state.storage} pageMode={this.state.pageMode}
+                                        institutionId={this.props.institutionId} role={this.props.role}
+                                        storage={this.props.storage} pageMode={this.state.pageMode}
                                         details={this.state.details} togglePageMode={this.togglePageMode}
                                         handleChange={this.handleChange} cancelChanges={this.cancelChanges}
                                         deleteInstitution={this.deleteInstitution}/>
