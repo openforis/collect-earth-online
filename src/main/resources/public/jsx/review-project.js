@@ -733,7 +733,7 @@ function SurveyQuestion(props) {
     <h3 className="header px-0">
     <label> <strong>Survey Question:</strong> {props.surveyQuestion.question}</label>
     </h3>
-    <p><i>Note: Question is of type {(props.surveyQuestion.component_type != undefined ? props.surveyQuestion.component_type : "button") + "-" + (props.surveyQuestion.data_type != undefined ? props.surveyQuestion.data_type : "text")}</i></p>
+    <p><i>Note: Answer(s) type {(props.surveyQuestion.component_type != undefined ? props.surveyQuestion.component_type : "button") + "-" + (props.surveyQuestion.data_type != undefined ? props.surveyQuestion.data_type : "text")}</i></p>
     <table className="table table-sm">
     <tbody>
     {
