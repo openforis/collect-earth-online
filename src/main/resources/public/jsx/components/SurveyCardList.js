@@ -1,16 +1,17 @@
-import React, { Fragment }  from 'react';
+import React, { Fragment }  from "react";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
                             .filter(sq => sq.parent_question == -1)
-                            .sort((a, b) => a.id - b.id)
-    return topLevelNodes.map((sq, index) =>  
+                            .sort((a, b) => a.id - b.id);
+
+    return topLevelNodes.map((sq, index) =>
                     <SurveyCard 
                         key={index}
                         topLevelNodeIds={topLevelNodes.map(tln => tln.id)} 
                         cardNumber={index +1}
-                        inDesignMode={true || props.inDesignMode}
-                        inSimpleMode={false && props.inSimpleMode}
+                        inDesignMode={props.inDesignMode}
+                        inSimpleMode={props.inSimpleMode}
                         setSurveyQuestions={props.setSurveyQuestions} 
                         surveyQuestion={sq}
                         surveyQuestions={props.surveyQuestions}
@@ -29,12 +30,18 @@ class SurveyCard extends React.Component {
         }
     }  
 
-    moveCardUp = () => {
+    swapQuestionIds = (upOrDown) => {
+        const myId = this.props.surveyQuestion.id
+        const myIndex = this.props.topLevelNodeIds.indexOf(this.props.surveyQuestion.id)
+        const swapId = this.props.topLevelNodeIds[myIndex + upOrDown]
 
-    }
+        const newSurveyQuestions = this.props.surveyQuestions
+                                    .map(f =>  ({...f, 
+                                                    id: f.id === myId ? swapId 
+                                                        : f.id === swapId ? myId 
+                                                            : f.id}));
 
-    moveCardDown = () => {
-
+        this.props.setSurveyQuestions(newSurveyQuestions);
     }
 
     render() {
@@ -43,29 +50,35 @@ class SurveyCard extends React.Component {
             <div className="SurveyCard border rounded border-dark">
                 <div className="container">
                     <div className="SurveyCard__card-description row">
-                        <div className="col-10 d-flex">
+                        <div className="col-10 d-flex pl-1">
                             <button 
+                                type="button"
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                 onClick={() => this.setState({showQuestions: !this.state.showQuestions})}
                             >
-                                {this.state.showQuestions ? "-" : "+"}
+                                <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">{this.state.showQuestions ? "" : `-- ${surveyQuestion.question}`}</h3>
                         </div>
                         {inDesignMode && 
-                            <div className="col-2 d-flex">
-                                <button 
+                            <div className="col-2 d-flex pr-1 justify-content-end">
+                                <button
+                                    type="button"
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                    onClick={this.moveCardUp}
+                                    onClick={() => this.swapQuestionIds(-1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[0]}
+                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}
                                 >
                                     <i className={"fa fa-caret-up"} />
                                 </button>
-                                <button 
+                                <button
+                                    type="button"
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                    onClick={this.moveCardDown}
-                                    disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodes.length -1]}
+                                    onClick={() => this.swapQuestionIds(1)}
+                                    disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1]}
+                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1] 
+                                                                                ? "0.25" : "1.0"}}
                                 >
                                     <i className={"fa fa-caret-down"} />
                                 </button>
@@ -79,8 +92,8 @@ class SurveyCard extends React.Component {
                                 inDesignMode={this.props.inDesignMode}
                                 inSimpleMode={this.props.inSimpleMode}
                                 newAnswerComponent={this.props.newAnswerComponent}
-                                removeAnswer={this.removeAnswer}
-                                removeQuestion={this.removeQuestion}
+                                removeAnswer={this.props.removeAnswer}
+                                removeQuestion={this.props.removeQuestion}
                                 surveyQuestion={this.props.surveyQuestion}
                                 surveyQuestions={this.props.surveyQuestions}
                                 setSurveyQuestions={this.props.setSurveyQuestions} 
@@ -111,18 +124,26 @@ function SurveyQuestionTree({
         <Fragment>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
                 {[...Array(indentLevel)].map((e, i) => 
-                        <div className="pl-4">
+                        <div key={i} className="pl-4">
                             <i className={"fa fa-arrow-right"} />
                         </div>
                 )}
                 
-                <div className="Question__answers">
-                    <div className="container">
-                        <div className="SurveyQuestionTree__question-description pb-1">
+                <div className="Question__answers container mb-2">
+                        <div className="SurveyQuestionTree__question-description pb-1 d-flex">
+                        {inDesignMode &&
+                            <button 
+                                type="button" 
+                                className="btn btn-outline-danger py-0 px-2 mr-1" 
+                                onClick={() => removeQuestion(surveyQuestion.id)}
+                            >
+                                <span className="font-weight-bold">X</span>
+                            </button>
+                        }
                             <h3 className="font-weight-bold">{surveyQuestion.question}</h3>
                         </div>
                         <div className="SurveyQuestionTree__question-information pb-1">
-                            <ul>
+                            <ul className="mb-1">
                                 {surveyQuestion.componentType && 
                                     <li>
                                         <span className="font-weight-bold">Component Type:  </span> 
@@ -142,8 +163,8 @@ function SurveyQuestionTree({
                                         </li>
                                     </Fragment>
                                 }
-                                <li className="font-weight-bold">Answers:  </li>
                             </ul>
+                            <h3 className="font-weight-bold ml-3">Answers:  </h3>
                         </div>
                         <div className="SurveyQuestionTree__answers">
                             {surveyQuestion.answers.map((surveyAnswer, uid) => 
@@ -154,12 +175,9 @@ function SurveyQuestionTree({
                                     removeAnswer={inDesignMode ? () => removeAnswer(surveyQuestion.id, surveyAnswer.id) : null}
                                 />
                             )}
-                            {inDesignMode && surveyQuestion.answers.length < maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType) &&
-                                {newAnswerComponent}
-                            }
+                            {inDesignMode && newAnswerComponent(surveyQuestion)}
                         </div>
                     </div>
-                </div>
             </div>
             {childNodes.map((surveyQuestion, uid) =>
                     <SurveyQuestionTree 
@@ -179,7 +197,6 @@ function SurveyQuestionTree({
     );
 }
 
-
 function ExistingAnswer({ answer, color, removeAnswer }) {
     return (
         <div className="ExistingAnswer">
@@ -187,10 +204,11 @@ function ExistingAnswer({ answer, color, removeAnswer }) {
                 {removeAnswer &&
                     <button 
                         type="button" 
-                        className="button" 
-                        value="-"
+                        className="btn btn-outline-danger py-0 px-2 mr-1" 
                         onClick={removeAnswer}
-                    />
+                    >
+                        <span className="font-weight-bold">X</span>
+                    </button>
                 }
                 <div className="ExistingAnswer__circle">
                     <div className="circle mt-1 mr-3"

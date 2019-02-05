@@ -468,24 +468,21 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview(props) {
+function ProjectDesignReview({ project, projectId }) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfoReview 
-                name={props.project.projectDetails.name}
-                description={props.project.projectDetails.description}
+                name={project.projectDetails.name}
+                description={project.projectDetails.description}
             />
-            <ProjectVisibility project={props.project}/>
-            <ProjectAOI projectId={props.projectId} project={props.project}/>
-            {props.project.imageryList &&
-                <ProjectImageryReview baseMapSource={props.project.projectDetails.baseMapSource}/>
+            <ProjectVisibility project={project}/>
+            <ProjectAOI projectId={projectId} project={project}/>
+            {project.imageryList &&
+                <ProjectImageryReview baseMapSource={project.projectDetails.baseMapSource}/>
             }
-            <PlotReview project={props.project}/>
-            <SampleReview project={props.project}/>
-            <SurveyReview 
-                surveyQuestions={props.project.projectDetails.sampleValues} 
-                projectId={props.projectId}
-            />
+            <PlotReview project={project}/>
+            <SampleReview project={project}/>
+            <SurveyReview surveyQuestions={project.projectDetails.sampleValues} />
         </div>
     );
 }
@@ -695,11 +692,11 @@ function SampleReview({ project: { projectDetails: { sampleDistribution, samples
     );
 }
 
-function SurveyReview(props){
+function SurveyReview({ surveyQuestions }){
     return (
         <SectionBlock title="Survey Review">
             <div id="survey-design">
-                <SurveyCardList {...props}/>
+                <SurveyCardList surveyQuestions={surveyQuestions} />
             </div>
         </SectionBlock>
     );
