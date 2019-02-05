@@ -459,33 +459,5 @@ class NewAnswerDesigner extends React.Component {
     }
 }
 
-function ExistingAnswer({ answer, color, removeAnswer }) {
-    return (
-        <tr>
-            <td>
-                <input 
-                    id="remove-sample-value-group" 
-                    type="button" 
-                    className="button" 
-                    value="-"
-                    onClick={removeAnswer}
-                />
-            </td>
-            <td>
-                {answer}
-            </td>
-            <td>
-                <div className="circle"
-                    style={{backgroundColor: color, border: "solid 1px"}}>
-                </div>
-            </td>
-            <td>
-                &nbsp;
-            </td>
-        </tr>
-    );
-}
-
-
 
 
