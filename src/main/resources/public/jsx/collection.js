@@ -622,16 +622,10 @@ class Collection extends React.Component {
                         }
             }, {});
 
-            const questionId = this.state.currentProject.sampleValues.find(sv => sv.question === questionText).id;
-            const subQuestion = this.state.currentProject.sampleValues
-                    .find(sv => sv.parent_question === questionId && sv.parent_answer === answerId);
-
             this.setState({
                         userSamples: {...this.state.userSamples, ...newSamples},
                         userImages: {...this.state.userImages, ...newUserImages},
-                        selectedQuestionText: (subQuestion && this.state.userSamples.length === 1) 
-                                                    ? subQuestion.question 
-                                                    : questionText
+                        selectedQuestionText: questionText
                     });
             return true;
         } else if(selectedFeatures && selectedFeatures.getLength() == 0 ) {
