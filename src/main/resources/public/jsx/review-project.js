@@ -734,6 +734,12 @@ function SurveyQuestion(props) {
             <h3 className="header px-0 font-bold">
                 Survey Question: {props.surveyQuestion.question}
             </h3>
+            <p>
+                <i>Note: Answer(s) type is
+                {(props.surveyQuestion.componentType ? props.surveyQuestion.componentType : "button")
+                 + "-" +
+                 (props.surveyQuestion.dataType ? props.surveyQuestion.dataType : "text")}</i>
+            </p>
             <table className="table table-sm">
                 <tbody>
                 {
