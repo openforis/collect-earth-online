@@ -63,6 +63,28 @@ If you would like to add google analytics to your site you can follow these dire
 4. Paste .js Tracking Info code in googleanalytics.ftl
 5. restart application
 
+*** Enabling https
+We recommend that you enable https to that all features work properly and securely.  These directions are for the domain collect.earth
+you will have to replace that with your domain every place you see it in the instructions.
+1. Install certbot:
+#+begin_src sh
+    sudo pacman -S certbot
+#+end_src
+2. Create initial cert:
+#+begin_src sh
+    sudo certbot certonly --webroot -w /home/openforis/github/collect-earth-online/target/classes/public -d collect.earth
+#+end_src
+3. Package the cert into the JKS:
+#+begin_src sh
+    sudo openssl pkcs12 -export -in /etc/letsencrypt/live/collect.earth/cert.pem -inkey /etc/letsencrypt/live/collect.earth/privkey.pem -out ceo.p12 -name ceo -passout pass:collect
+	
+	sudo keytool -importkeystore -destkeystore keystore.jks -srckeystore ceo.p12 -srcstoretype PKCS12 -storepass collect -srcstorepass collect -alias ceo -noprompt
+	
+	sudo keytool --importcert -file /etc/letsencrypt/live/collect.earth/fullchain.pem -keystore /etc/ssl/certs/java/cacerts -v -alias ceo_chain -storepass changeit -noprompt
+#+end_src
+4. Edit the gee-gateway config.py CERT and KEY entries to point to the cert.pem and privatekey.pem just created
+5. Edit collect-earth-online/deploy/scripts/cert_renewal.sh replace "collect.earth" with "yourdomain.com"
+6. Edit collect-earth-online/deploy/scripts/packageKeysAndRestartApps.sh replace all "collect.earth" with "yourdomain.com"
 ** Building OpenForis Collect
 
 In order to easily exchange information with OpenForis' other software
