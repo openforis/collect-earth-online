@@ -33,7 +33,7 @@ export class SurveyDesign extends React.Component {
 
     convertToSimple = () => {
          const newSurveyQuestions = this.props.surveyQuestions
-            .map((question) => [{...question, componentType: "button", dataType: "text"}]);
+            .map((question) => ({...question, componentType: "button", dataType: "text"}));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     }
@@ -330,17 +330,15 @@ class SurveyQuestionTree extends React.Component {
     }
 }
 
-
-const maxAnswers = (componentType, dataType) => (componentType || "").toLowerCase() === "input"
-                                            ? 1 : (dataType || "").toLowerCase() === "boolean"
-                                                ? 2 : 1000
-
 function SurveyQuestion({ surveyQuestion,
                             surveyQuestions,
                             setSurveyQuestions,
                             inSimpleMode,
                             removeAnswer, 
                             removeQuestion }) {
+    const maxAnswers = (componentType, dataType) => (componentType || "").toLowerCase() === "input"
+            ? 1 : (dataType || "").toLowerCase() === "boolean"
+                ? 2 : 1000
     return (
         <div className="sample-value-info">
             <h3 className="header px-0">
