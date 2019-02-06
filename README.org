@@ -64,16 +64,16 @@ If you would like to add google analytics to your site you can follow these dire
 5. restart application
 
 *** Enabling https
-We recommend that you enable https to that all features work properly and securely.  These directions are for the domain collect.earth.
+We recommend that you enable https so that all features work properly and securely.  These directions are for the domain collect.earth.
 You will have to replace that with your domain every place you see it in the instructions.
-1. Install certbot by following the instructions located at https://certbot.eff.org/ for your System. Below is the example for Arch Linux:
+1. Install certbot by following the instructions located at https://certbot.eff.org/ for your system. Below is the example for Arch Linux:
 #+begin_src sh
     sudo pacman -S certbot openssl
 #+end_src
 2. Create initial cert:
 #+begin_src sh
     export CEO_DIR="/home/openforis/github/collect-earth-online" 
-	export CERT_DOMAIN="collect.earth"
+    export CERT_DOMAIN="collect.earth"
 	
     sudo certbot certonly --webroot -w $CEO_DIR/target/classes/public -d $CERT_DOMAIN
 #+end_src
@@ -218,19 +218,19 @@ sudo $TOMCAT_HOME/bin/startup.sh
 
 ** Building GEE-Gateway
 
-In order to use the Geo-Dash portion of CEO we need to install
-an application to communicate to Google Earth Engine called GEE-Gateway.
+In order to use the Geo-Dash portion of CEO, we need to install
+an application to communicate with Google Earth Engine called GEE-Gateway.
 To build and launch GEE-Gateway, download the source code from
-https://github.com/openforis/gee-gateway then follow these steps:
+https://github.com/openforis/gee-gateway and then follow these steps:
 
-## REQUIREMENTS
+*** REQUIREMENTS
 
 1. [Python 2.7](https://www.python.org/)
 2. [pip (package manager)](https://github.com/pypa/pip)
 3. [Earth Engine Python API](https://developers.google.com/earth-engine/python_install)
 4. [virtualenv](https://pypi.python.org/pypi/virtualenv) (Optional)
 
-## INSTALLATION
+*** INSTALLATION
 
 From project root directory
 
@@ -238,7 +238,7 @@ From project root directory
 pip install -r requirements.txt
 #+end_src
 
-OR using **virtualenv** (Optional)
+OR using /virtualenv/ (Optional)
 
 #+begin_src sh
 virtualenv env
@@ -246,35 +246,35 @@ source env/bin/activate
 pip install -r requirements.txt
 #+end_src
 
-## CONFIGURATION
+*** CONFIGURATION
 
-Edit the configuration file (`config.py` or `instance/config.py`)
+Edit the configuration file (*config.py* or *instance/config.py*)
 
-```python
+#begin_src python 
 DEBUG = False # {True|False}
 PORT = 8888 # flask server running port
 HOST = '0.0.0.0' # flask server running host
 CO_ORIGINS = '*' # origin or list of origins to allow requests from
 import logging
 LOGGING_LEVEL = logging.INFO # {NOTSET|DEBUG|INFO|WARNING|ERROR|CRITICAL}
-```
+#end_src 
 
-## EXECUTION
+*** EXECUTION
 
 From project root directory
 
-```bash
+#begin_src sh 
 python run.py
-```
+#end_src 
 
-OR using **virtualenv** (Optional)
+OR using /virtualenv/ (Optional)
 
-```bash
+#begin_src sh 
 source env/bin/activate
 python run.py
-```
+#end_src
 
-```bash
+#begin_src sh 
 usage: run.py [-h] [--gmaps_api_key GMAPS_API_KEY] [--ee_account EE_ACCOUNT]
               [--ee_key_path EE_KEY_PATH]
 
@@ -286,7 +286,7 @@ optional arguments:
                         Google Earth Engine account
   --ee_key_path EE_KEY_PATH
                         Google Earth Engine key path
-```
+#end_src
 
 ** Contact
 
