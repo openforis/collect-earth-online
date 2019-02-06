@@ -159,7 +159,7 @@ function SurveyQuestionTree({
                                             <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parent_answer === -1 
                                                 ? "Any" 
                                                 : parentQuestion.answers
-                                                    .find(ans => ans.id === surveyQuestion.parent_answer ).answer}
+                                                    .find(ans => ans.id === surveyQuestion.parent_answer).answer}
                                         </li>
                                     </Fragment>
                                 }
