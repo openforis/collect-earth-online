@@ -144,7 +144,7 @@ function SurveyQuestionTree({
                         </div>
                         <div className="SurveyQuestionTree__question-information pb-1">
                             <ul className="mb-1">
-                                {surveyQuestion.componentType && 
+                                {(surveyQuestion.componentType && !inSimpleMode) && 
                                     <li>
                                         <span className="font-weight-bold">Component Type:  </span> 
                                         {surveyQuestion.componentType + " - " + surveyQuestion.dataType}

@@ -364,7 +364,7 @@ class NewAnswerDesigner extends React.Component {
                 
                         <input 
                             type="color"
-                            className="value-color mr-3"
+                            className="value-color mx-2 mt-1"
                             value={this.state.selectedColor}
                             onChange={(e) => this.setState({selectedColor: e.target.value})}
                         />
