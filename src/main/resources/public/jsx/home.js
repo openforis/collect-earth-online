@@ -209,17 +209,16 @@ class SideBar extends React.Component {
         const filterTextLower = this.state.filterText.toLocaleLowerCase();
 
         const filteredProjects = this.props.projects
-                .filter(proj => !this.state.filterInstitution
+                .filter(proj => this.state.filterInstitution
                                     || this.state.useFirstLetter 
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                        : proj.name.toLocaleLowerCase().includes(filterTextLower))
+                                        : proj.name.toLocaleLowerCase().includes(filterTextLower));
 
         const filteredInstitutions = this.state.institutions
-                .filter(inst => this.state.filterInstitution
+                .filter(inst => !this.state.filterInstitution
                                     || this.state.useFirstLetter 
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : inst.name.toLocaleLowerCase().includes(filterTextLower))
-                                        
                 .filter(inst => !this.state.filterInstitution 
                                     ? filteredProjects.some(proj => inst.id === proj.institution)
                                     : true)
@@ -229,7 +228,7 @@ class SideBar extends React.Component {
                 .sort((a, b) => this.state.sortByNumber 
                                     ? this.props.projects.filter(proj => b.id === proj.institution).length 
                                         - this.props.projects.filter(proj => a.id === proj.institution).length 
-                                    : this.sortedName(a,b))
+                                    : this.sortedName(a,b));
 
 
         return this.props.showSidePanel 
