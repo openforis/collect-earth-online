@@ -699,7 +699,6 @@ function SurveyReview({ surveyQuestions }){
     );
 }
 
-
 function ProjectManagement(props) {
     const { project } = props;
     const stateTransitions = { 
