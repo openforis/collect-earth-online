@@ -1,8 +1,8 @@
 import React, { Fragment }  from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
-import SurveyCardList from "./components/SurveyCardList"
+import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
+import SurveyCardList from "./components/SurveyCardList";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
@@ -595,7 +595,7 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
 function ProjectImageryReview({ baseMapSource }) {
     return (
         <SectionBlock id="project-imagery-review" title="Project Imagery">
-            <h3 className="font-weight-bold">Basemap Sourc</h3>
+            <h3 className="font-weight-bold">Basemap Source</h3>
             <p className="ml-2">{baseMapSource}</p>
         </SectionBlock>
     );
