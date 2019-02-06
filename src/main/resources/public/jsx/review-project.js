@@ -2,6 +2,7 @@ import React, { Fragment }  from 'react';
 import ReactDOM from 'react-dom';
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
+import SurveyCardList from "./components/SurveyCardList"
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
@@ -467,24 +468,21 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview(props) {
+function ProjectDesignReview({ project, projectId }) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
             <ProjectInfoReview 
-                name={props.project.projectDetails.name}
-                description={props.project.projectDetails.description}
+                name={project.projectDetails.name}
+                description={project.projectDetails.description}
             />
-            <ProjectVisibility project={props.project}/>
-            <ProjectAOI projectId={props.projectId} project={props.project}/>
-            {props.project.imageryList &&
-                <ProjectImageryReview baseMapSource={props.project.projectDetails.baseMapSource}/>
+            <ProjectVisibility project={project}/>
+            <ProjectAOI projectId={projectId} project={project}/>
+            {project.imageryList &&
+                <ProjectImageryReview baseMapSource={project.projectDetails.baseMapSource}/>
             }
-            <PlotReview project={props.project}/>
-            <SampleReview project={props.project}/>
-            <SurveyReview 
-                surveyQuestions={props.project.projectDetails.sampleValues} 
-                projectId={props.projectId}
-            />
+            <PlotReview project={project}/>
+            <SampleReview project={project}/>
+            <SurveyReview surveyQuestions={project.projectDetails.sampleValues} />
         </div>
     );
 }
@@ -492,9 +490,9 @@ function ProjectDesignReview(props) {
 function ProjectInfoReview({ name, description }) {
     return (
         <SectionBlock id="project-info" title="Project Info">
-            <h3 className="font-bold">Name</h3>
+            <h3 className="font-weight-bold">Name</h3>
             <p className="ml-2">{name}</p>
-            <h3 className="font-bold">Description</h3>
+            <h3 className="font-weight-bold">Description</h3>
             <p className={description ? "ml-2" : "ml-2 font-italic"}>{description || "none"}</p>
         </SectionBlock>
     );
@@ -504,7 +502,7 @@ function ProjectInfoReview({ name, description }) {
 function ProjectVisibility(props) {
     return (
         <SectionBlock title="Project Visibility">
-            <h3 className="font-bold">Privacy Level</h3>
+            <h3 className="font-weight-bold">Privacy Level</h3>
             <div id="project-visibility" className="mb-3">
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
@@ -600,7 +598,7 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
 function ProjectImageryReview({ baseMapSource }) {
     return (
         <SectionBlock id="project-imagery-review" title="Project Imagery">
-            <h3 className="font-bold">Basemap Sourc</h3>
+            <h3 className="font-weight-bold">Basemap Sourc</h3>
             <p className="ml-2">{baseMapSource}</p>
         </SectionBlock>
     );
@@ -659,7 +657,7 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
     );
 }
 
-function SampleReview({ project: { projectDetails: { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution }} }){
+function SampleReview({ project: { projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }} }){
 
     return (
         <SectionBlock title="Sample Design">
@@ -694,80 +692,16 @@ function SampleReview({ project: { projectDetails: { plotDistribution, sampleDis
     );
 }
 
-function SurveyReview(props){
+function SurveyReview({ surveyQuestions }){
     return (
-        <SectionBlock title="Survey Design">
+        <SectionBlock title="Survey Review">
             <div id="survey-design">
-                <SurveyQuestionTree {...props}/>
+                <SurveyCardList surveyQuestions={surveyQuestions} />
             </div>
         </SectionBlock>
     );
 }
-class SurveyQuestionTree extends React.Component {
-    constructor(props) {
-        super(props);
-    };
 
-    getCurrent = (node) => 
-        this.props.surveyQuestions
-            .filter(cNode => cNode.parent_question == node)
-            .map((cNode,uid) => (
-                <li key={`node_${uid}`}>
-                    <SurveyQuestion surveyQuestions={this.props.surveyQuestions} surveyQuestion={cNode}/>
-                    {this.getCurrent(cNode.id)}
-                </li>
-    ))
-
-    render() {
-        // FIXME, list of tables does not line up answers, use flex
-        return (
-                <ul style={{listStyleType:"none"}}>
-                    {this.getCurrent(-1)}
-                </ul>
-            );
-    }
-}
-
-function SurveyQuestion(props) {
-    return (
-        <div className="sample-value-info">
-            <h3 className="header px-0 font-bold">
-                Survey Question: {props.surveyQuestion.question}
-            </h3>
-            <p>
-                <i>Note: Answer(s) type is
-                {(props.surveyQuestion.componentType ? props.surveyQuestion.componentType : "button")
-                 + "-" +
-                 (props.surveyQuestion.dataType ? props.surveyQuestion.dataType : "text")}</i>
-            </p>
-            <table className="table table-sm">
-                <tbody>
-                {
-                    props.surveyQuestion.answers.map((surveyAnswer, uid) => 
-                            <tr key={uid}>
-                                <td>
-                                    <span className="font-bold">Answer: </span>
-                                    {surveyAnswer.answer}
-                                </td>
-                                <td>
-                                    <div className="d-inline-flex">
-                                        <span className="font-bold">Color: </span>
-                                        <div className="circle mt-1 ml-4"
-                                                style={{backgroundColor: surveyAnswer.color, border: "solid 1px"}}>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    &nbsp;
-                                </td>
-                            </tr>
-                    )
-                }
-                </tbody>
-            </table>
-        </div>
-    );
-}
 
 function ProjectManagement(props) {
     const { project } = props;
