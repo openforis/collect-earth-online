@@ -51,7 +51,6 @@ class Institution extends React.Component {
         formData.append("institution-description", this.state.details.description);
         let documentRoot = this.props.documentRoot;
         let institutionId = this.props.institutionId;
-        var holdRef = this;
         $.ajax({
             url: documentRoot + "/update-institution/" + institutionId,
             type: "POST",
@@ -63,19 +62,9 @@ class Institution extends React.Component {
         }).fail(function () {
             alert("Error updating institution details. See console for details.");
         }).done(function (data) {
-            var parsedData = JSON.parse(data);
+            const parsedData = JSON.parse(data);
             console.log(parsedData);
-            if (holdRef.state.details.id == 0) {
-                window.location = documentRoot + "/review-institution/" + parsedData.id;
-            } else {
-                let detailsNew = holdRef.state.details;
-                detailsNew.id = parsedData.id;
-                if (parsedData.logo != "") {
-                    detailsNew.logo = parsedData.logo;
-                }
-                holdRef.setState({details: detailsNew});
-                holdRef.setState({isAdmin: true});
-            }
+            window.location = documentRoot + "/review-institution/" + parsedData.id;
         });}
 }
 

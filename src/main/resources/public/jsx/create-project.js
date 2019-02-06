@@ -106,25 +106,15 @@ class Project extends React.Component {
 
     setProjectTemplate(event) {
         this.setState({templateId: event.target.value});
-        const templateProject = this.state.projectList.find(
-            function (project) {
-                return project.id == event.target.value;
-            },
-            this
-        );
+        const templateProject = this.state.projectList.find(p => p.id == event.target.value);
         
         const newSampleValues = this.convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
-        const detailsNew = {...templateProject, sampleValues: newSampleValues};
-        this.setState({projectDetails: detailsNew});
+        this.setState({projectDetails: {...templateProject, sampleValues: newSampleValues}});
         this.updateUnmanagedComponents(this.state.templateId);
     }
 
     setPrivacyLevel(privacyLevel) {
-        if (this.state.projectDetails != null) {
-            let detailsNew = this.state.projectDetails;
-            detailsNew.privacyLevel = privacyLevel;
-            this.setState({projectDetails: detailsNew});
-        }
+        this.setState({projectDetails: {...this.state.projectDetails, privacyLevel: privacyLevel}});
     }
 
     setBaseMapSource() {

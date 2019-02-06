@@ -7,16 +7,13 @@ export class SurveyQuestions extends React.Component {
             topLevelNodeIds: [],
             currentNodeIndex: 0
         }
-        this.prevSurveyQuestionTree=this.prevSurveyQuestionTree.bind(this);
-        this.nextSurveyQuestionTree=this.nextSurveyQuestionTree.bind(this);
     }  
 
     componentDidMount() {
         const topLevelNodeIds = this.props.surveyQuestions
-                                .sort((a, b) => b.id - a.id)
-                                .filter(surveyNode => surveyNode.parent_question == -1)
-                                .map(surveyNode => surveyNode.id);
-
+                                .filter(sq => sq.parent_question == -1)
+                                .sort((a, b) => a.id - b.id)
+                                .map(sq => sq.id);
         this.setState({
             topLevelNodeIds: topLevelNodeIds
         });
@@ -28,52 +25,35 @@ export class SurveyQuestions extends React.Component {
         }
     }
 
-    prevSurveyQuestionTree() {
-        if (this.state.currentNodeIndex > 0) {
-            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1});
-        } else {
-            alert("There are no previous questions.");
-        }
-    }
+    prevSurveyQuestionTree = () => this.state.currentNodeIndex > 0
+                                        ? this.setState({currentNodeIndex: this.state.currentNodeIndex - 1})
+                                        : alert("There are no previous questions.");
 
-    nextSurveyQuestionTree() {
-        if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
-            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1});
-        } else {
-            alert("There are no more questions.");
-        }
-    }
+    nextSurveyQuestionTree = () => this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1
+                                        ? this.setState({currentNodeIndex: this.state.currentNodeIndex + 1})
+                                        : alert("There are no more questions.");
 
-    setSurveyQuestionTree(index) {
-        this.setState({currentNodeIndex: index});
-    }
+    setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
-    checkAllSelected(currentQuestionId){
+    checkAllSelected = (currentQuestionId) => {
         const { surveyQuestions } = this.props;
-        const { visible, answered } = surveyQuestions.filter((sv => sv.id === currentQuestionId))[0];
-        const childQuestions = surveyQuestions.filter((sv => sv.parent_question === currentQuestionId));
+        const { visible, answered } = surveyQuestions.find(sv => sv.id === currentQuestionId);
+        const childQuestions = surveyQuestions.filter(sv => sv.parent_question === currentQuestionId);
 
         if (childQuestions.length === 0) {
             return visible === answered;
         } else {
-            return visible === answered && childQuestions.reduce((prev, cur) => {
-                return prev && this.checkAllSelected(cur.id);
-            }, true);
+            return visible === answered && childQuestions.every(cq => this.checkAllSelected(cq.id));
         }   
     }
 
-    getTopColor(node) {
-        return this.checkAllSelected(node.id)
-                ? "0px 0px 15px 4px green inset"
-                : node.answered > 0
-                    ? "0px 0px 15px 4px yellow inset"
-                    : "0px 0px 15px 4px red inset";
-    }
-
-    getNodeById(id) {
-        return this.props.surveyQuestions
-                .filter(sq => sq.id === id)[0]
-    }
+    getTopColor = (node) => this.checkAllSelected(node.id)
+                                ? "0px 0px 15px 4px green inset"
+                                : node.answered > 0
+                                    ? "0px 0px 15px 4px yellow inset"
+                                    : "0px 0px 15px 4px red inset";
+    
+    getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
     render() {
     
@@ -143,12 +123,9 @@ class SurveyQuestionTree extends React.Component  {
         this.state = {
             showAnswers: true
         }
-        this.toggleShowAnswers = this.toggleShowAnswers.bind(this);
     }  
 
-    toggleShowAnswers() {
-        this.setState({ showAnswers: !this.state.showAnswers });
-    }
+    toggleShowAnswers = () => this.setState({ showAnswers: !this.state.showAnswers });
 
     render() {
         const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == this.props.surveyNode.id);
@@ -193,7 +170,7 @@ class SurveyQuestionTree extends React.Component  {
                 {
                     childNodes.map((surveyNode, uid) =>
                         <Fragment key={uid}>
-                            {this.props.surveyQuestions.filter(sq => sq.id === surveyNode.id)[0].visible > 0 &&
+                            {this.props.surveyQuestions.find(sq => sq.id === surveyNode.id).visible > 0 &&
                             <SurveyQuestionTree 
                                 key={uid}
                                 surveyNode={surveyNode}
@@ -275,7 +252,6 @@ class AnswerInput extends React.Component{
         this.state = {
             newInput: "",
         };
-        this.updateInputValue = this.updateInputValue.bind(this);
     }
 
     componentDidUpdate(prevProps) {
@@ -284,15 +260,12 @@ class AnswerInput extends React.Component{
         }
     }
 
-    updateInputValue(value) {
-        this.setState({ newInput: value });
-    }
+    updateInputValue = (value) => this.setState({ newInput: value });
     
     render() {
         const { props } = this;
         // fix me, should not need map
-        return props.answers.map((ans, uid) => {
-            return (
+        return props.answers.map((ans) => (
                 <div className="d-inline-flex">
                     <div className="pr-2 pt-2">
                         <div className="circle"
@@ -323,8 +296,7 @@ class AnswerInput extends React.Component{
                         }}
                     />
                 </div>
-            );
-        });
+        ));
     }
 }
 
@@ -334,7 +306,6 @@ class AnswerDropDown extends React.Component {
         this.state = {
             showDropdown: false
         }
-        this.toggleDropDown = this.toggleDropDown.bind(this);
     }  
 
     componentDidUpdate (prevProps) {
@@ -343,9 +314,7 @@ class AnswerDropDown extends React.Component {
         }
     }
     
-    toggleDropDown () {
-        this.setState({showDropdown: !this.state.showDropdown});
-    }
+    toggleDropDown = () => this.setState({showDropdown: !this.state.showDropdown});
     
     render () {
         const options = this.props.answers.map((ans,uid) => 
