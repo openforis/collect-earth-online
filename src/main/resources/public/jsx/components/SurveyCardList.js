@@ -9,7 +9,7 @@ export default function SurveyCardList(props) {
                     <SurveyCard 
                         key={index}
                         topLevelNodeIds={topLevelNodes.map(tln => tln.id)} 
-                        cardNumber={index +1}
+                        cardNumber={index + 1}
                         inDesignMode={props.inDesignMode}
                         inSimpleMode={props.inSimpleMode}
                         setSurveyQuestions={props.setSurveyQuestions} 
@@ -36,16 +36,16 @@ class SurveyCard extends React.Component {
         const swapId = this.props.topLevelNodeIds[myIndex + upOrDown]
 
         const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(f =>  ({...f, 
-                                                    id: f.id === myId ? swapId 
-                                                        : f.id === swapId ? myId 
-                                                            : f.id}));
+                                    .map(sq =>  ({...sq, 
+                                                    id: sq.id === myId ? swapId 
+                                                        : sq.id === swapId ? myId 
+                                                            : sq.id}));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     }
 
     render() {
-        const { cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds } = this.props
+        const { cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds } = this.props;
         return (
             <div className="SurveyCard border rounded border-dark">
                 <div className="container">
@@ -159,7 +159,7 @@ function SurveyQuestionTree({
                                             <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parent_answer === -1 
                                                 ? "Any" 
                                                 : parentQuestion.answers
-                                                    .find(ans => ans.id = surveyQuestion.parent_answer ).answer}
+                                                    .find(ans => ans.id === surveyQuestion.parent_answer).answer}
                                         </li>
                                     </Fragment>
                                 }

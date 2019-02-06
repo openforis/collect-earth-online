@@ -27,7 +27,7 @@ export class SurveyQuestions extends React.Component {
 
     prevSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex > 0) {
-            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1})
+            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1});
         } else {
             alert("There are no previous questions.");
         }
@@ -35,10 +35,11 @@ export class SurveyQuestions extends React.Component {
 
     nextSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
-            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1})
+            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1});
         } else {
-            alert("There are no more questions.");}
+            alert("There are no more questions.");
         }
+    }
 
     setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 

@@ -53,75 +53,37 @@ export class SurveyDesign extends React.Component {
         if (childQuestions.length === 0) {
             return [questionId];
         } else {
-            return childQuestions.reduce((prev, cur) => {
-                            return [...prev, ...this.getChildQuestionIds(cur.id)];
+            return childQuestions.reduce((acc, cur) => {
+                            return [...acc, ...this.getChildQuestionIds(cur.id)];
                         }, [questionId])
         }
     }
 
-    removeQuestion = (removalId) => {
-        const questionsToRemove = this.getChildQuestionIds(removalId)
+    removeQuestion = (questionId) => {
+        const questionsToRemove = this.getChildQuestionIds(questionId);
 
         const newSurveyQuestions = this.props.surveyQuestions
-                .filter(sq => !questionsToRemove.includes(sq.id) && sq.id !== removalId)
+                .filter(sq => !questionsToRemove.includes(sq.id));
         
-        this.props.setSurveyQuestions(newSurveyQuestions)
+        this.props.setSurveyQuestions(newSurveyQuestions);
     }
 
-    removeAnswer = (questionId, removalId) => {
-        const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId)
-        const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== removalId);
+    removeAnswer = (questionId, answerId) => {
+        const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
+        const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
 
-        const updatedQuestion = {...surveyQuestion, answers: updatedAnswers}
+        const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
 
         const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq)
+                                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
-        this.props.setSurveyQuestions(newSurveyQuestions)
-    }
-
-    maxAnswers(componentType, dataType) { 
-        return (componentType || "").toLowerCase() === "input" ? 1 
-                    : (dataType || "").toLowerCase() === "boolean" ? 2 
-                        : 1000
-    }
-
-    getChildQuestionIds = (questionId) => {
-        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parent_question === questionId);
-        if (childQuestions.length === 0) {
-            return [questionId];
-        } else {
-            return childQuestions.reduce((prev, cur) => {
-                            return [...prev, ...this.getChildQuestionIds(cur.id)];
-                        }, [questionId])
-        }
-    }
-
-    removeQuestion = (removalId) => {
-        const questionsToRemove = this.getChildQuestionIds(removalId)
-
-        const newSurveyQuestions = this.props.surveyQuestions
-                .filter(sq => !questionsToRemove.includes(sq.id) && sq.id !== removalId)
-        
-        this.props.setSurveyQuestions(newSurveyQuestions)
-    }
-
-    removeAnswer = (questionId, removalId) => {
-        const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId)
-        const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== removalId);
-
-        const updatedQuestion = {...surveyQuestion, answers: updatedAnswers}
-
-        const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq)
-
-        this.props.setSurveyQuestions(newSurveyQuestions)
+        this.props.setSurveyQuestions(newSurveyQuestions);
     }
 
     maxAnswers(componentType, dataType) { 
         return (componentType || "").toLowerCase() === "input"
                     ? 1 : (dataType || "").toLowerCase() === "boolean"
-                        ? 2 : 1000
+                        ? 2 : 1000;
     }
 
     render() {
@@ -136,14 +98,14 @@ export class SurveyDesign extends React.Component {
                         surveyQuestions={this.props.surveyQuestions}
                         removeAnswer={this.removeAnswer}
                         removeQuestion={this.removeQuestion}
-                        newAnswerComponent={(surveyQuestion) => {
-                            return surveyQuestion.answers.length < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType) 
+                        newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length 
+                                < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType) 
                                  && <NewAnswerDesigner
                                         setSurveyQuestions={this.props.setSurveyQuestions}
                                         surveyQuestions={this.props.surveyQuestions}
                                         surveyQuestion={surveyQuestion}
                                     />
-                        }}
+                        }
                     />
 
                     <NewQuestionDesigner
@@ -257,7 +219,7 @@ class NewQuestionDesigner extends React.Component {
                                 id="value-componenttype" 
                                 className="form-control form-control-sm" 
                                 size="1"
-                                onChange={(e) => this.setState({selectedType: parseInt(e.target.value)})}
+                                onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
                                 value={this.state.selectedType}
                             >
                                 {componentTypes.map((type, index) =>
@@ -281,7 +243,7 @@ class NewQuestionDesigner extends React.Component {
                             id="value-parent" 
                             className="form-control form-control-sm" 
                             size="1"
-                            onChange={(e) => this.setState({selectedParent: parseInt(e.target.value)})}
+                            onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
                             value={this.state.selectedParent}
                         >
                             <option key={-1} value={-1}>None</option>
@@ -310,7 +272,7 @@ class NewQuestionDesigner extends React.Component {
                             id="value-answer" 
                             className="form-control form-control-sm" 
                             size="1"
-                            onChange={(e) => this.setState({ selectedAnswer: parseInt(e.target.value) })}
+                            onChange={e => this.setState({ selectedAnswer: parseInt(e.target.value) })}
                             value={this.state.selectedAnswer}
                         >
                             <option key={-1} value={-1}>Any</option>
@@ -337,7 +299,7 @@ class NewQuestionDesigner extends React.Component {
                                 type="text" 
                                 autoComplete="off"
                                 value={this.state.newQuestionText}
-                                onChange={(e) => this.setState({newQuestionText: e.target.value})}
+                                onChange={e => this.setState({newQuestionText: e.target.value})}
                             />
                         </div>
                     </td>
@@ -373,7 +335,7 @@ class NewAnswerDesigner extends React.Component {
         const { surveyQuestion } = this.props
         if (this.state.newAnswerText.length > 0) {
             const newAnswer = {
-                                id: surveyQuestion.answers.reduce((p,c) => Math.max(p,c.id), 0) + 1,
+                                id: surveyQuestion.answers.reduce((a,c) => Math.max(a,c.id), 0) + 1,
                                 answer: this.state.newAnswerText,
                                 color: this.state.selectedColor
                                 };
@@ -393,7 +355,7 @@ class NewAnswerDesigner extends React.Component {
         return <div className="NewAnswerDesigner">
                     <div className="col d-flex">
                         <button 
-                            type="button" 
+                            type="button"
                             className="btn btn-outline-success py-0 px-2 mr-1" 
                             onClick={this.addSurveyAnswer}
                         >
@@ -404,14 +366,14 @@ class NewAnswerDesigner extends React.Component {
                             type="color"
                             className="value-color mx-2 mt-1"
                             value={this.state.selectedColor}
-                            onChange={(e) => this.setState({ selectedColor: e.target.value })}
+                            onChange={e => this.setState({ selectedColor: e.target.value })}
                         />
                         <input 
                             type="text" 
                             className="value-name" 
                             autoComplete="off"
                             value={this.state.newAnswerText} 
-                            onChange={(e) => this.setState({ newAnswerText: e.target.value })}
+                            onChange={e => this.setState({ newAnswerText: e.target.value })}
                         />
                     </div>
                 </div>
