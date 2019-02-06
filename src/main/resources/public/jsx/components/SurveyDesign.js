@@ -34,18 +34,18 @@ export class SurveyDesign extends React.Component {
 
     convertToSimple = () => {
          const newSurveyQuestions = this.props.surveyQuestions
-            .map((question) => ({...question, componentType: "button", dataType: "text"}));
+            .map(question => ({ ...question, componentType: "button", dataType: "text" }));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     }
 
     toggleSimpleMode = () => {
-        const newMode = this.state.inSimpleMode
-            ? false
-            : !this.props.surveyQuestions.some(q => q.componentType !== "button")
-                    || confirm("This action will revert all questions to type button.  Would you like to proceed?");
-
-            this.setState({inSimpleMode: newMode});
+        this.setState({ inSimpleMode: 
+                        this.state.inSimpleMode
+                        ? false
+                        : !this.props.surveyQuestions.some(q => q.componentType !== "button")
+                                || confirm("This action will revert all questions to type button.  Would you like to proceed?")
+                    });
     }
 
     getChildQuestionIds = (questionId) => {
@@ -81,9 +81,9 @@ export class SurveyDesign extends React.Component {
     }
 
     maxAnswers(componentType, dataType) { 
-        return (componentType || "").toLowerCase() === "input"
-                    ? 1 : (dataType || "").toLowerCase() === "boolean"
-                        ? 2 : 1000
+        return (componentType || "").toLowerCase() === "input" ? 1 
+                    : (dataType || "").toLowerCase() === "boolean" ? 2 
+                        : 1000
     }
 
     render() {
@@ -119,7 +119,7 @@ export class SurveyDesign extends React.Component {
     }
 }
 
-function ModeButtons({inSimpleMode, toggleSimpleMode}) {
+function ModeButtons({ inSimpleMode, toggleSimpleMode }) {
     return (
         <div 
             className="my-3"
@@ -176,12 +176,12 @@ class NewQuestionDesigner extends React.Component {
     componentDidUpdate = (prevProps, prevState) => {
         if (this.props.surveyQuestions.length !== prevProps.surveyQuestions.length) {
             if (!this.props.surveyQuestions.find(question => question.id === this.state.selectedParent)) {
-                this.setState({ selectedParent: -1});
+                this.setState({ selectedParent: -1 });
             }
         }
 
         if (this.state.selectedParent !== prevState.selectedParent) {
-            this.setState({ selectedAnswer: -1});
+            this.setState({ selectedAnswer: -1 });
         }
     }
 
@@ -190,16 +190,16 @@ class NewQuestionDesigner extends React.Component {
             const { surveyQuestions } = this.props;
             const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
             const newQuestion = {
-                                id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
-                                question: this.state.newQuestionText,
-                                answers: [],
-                                parent_question: this.state.selectedParent,
-                                parent_answer: this.state.selectedAnswer,
-                                dataType: dataType,
-                                componentType: componentType,
+                                    id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
+                                    question: this.state.newQuestionText,
+                                    answers: [],
+                                    parent_question: this.state.selectedParent,
+                                    parent_answer: this.state.selectedAnswer,
+                                    dataType: dataType,
+                                    componentType: componentType,
                                 }; 
             this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
-            this.setState({selectedAnswer: -1, newQuestionText: ""});
+            this.setState({ selectedAnswer: -1, newQuestionText: "" });
         } else {
             alert("Please enter a survey question first.");
         }
@@ -250,7 +250,7 @@ class NewQuestionDesigner extends React.Component {
                             {this.props.surveyQuestions.length > 0
                                 ? this.props.surveyQuestions
                                     .filter(question => question.componentType !== "input")
-                                    .map((question) =>
+                                    .map(question =>
                                             <option 
                                                 key={question.id}
                                                 value={question.id}
@@ -272,7 +272,7 @@ class NewQuestionDesigner extends React.Component {
                             id="value-answer" 
                             className="form-control form-control-sm" 
                             size="1"
-                            onChange={(e) => this.setState({selectedAnswer: parseInt(e.target.value)})}
+                            onChange={(e) => this.setState({ selectedAnswer: parseInt(e.target.value) })}
                             value={this.state.selectedAnswer}
                         >
                             <option key={-1} value={-1}>Any</option>
@@ -340,7 +340,7 @@ class NewAnswerDesigner extends React.Component {
                                 color: this.state.selectedColor
                                 };
             const updatedAnswers = [...surveyQuestion.answers, newAnswer];
-            const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
+            const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
             const newSurveyQuestions = this.props.surveyQuestions
                     .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
@@ -366,14 +366,14 @@ class NewAnswerDesigner extends React.Component {
                             type="color"
                             className="value-color mx-2 mt-1"
                             value={this.state.selectedColor}
-                            onChange={(e) => this.setState({selectedColor: e.target.value})}
+                            onChange={(e) => this.setState({ selectedColor: e.target.value })}
                         />
                         <input 
                             type="text" 
                             className="value-name" 
                             autoComplete="off"
                             value={this.state.newAnswerText} 
-                            onChange={(e) => this.setState({newAnswerText: e.target.value})}
+                            onChange={(e) => this.setState({ newAnswerText: e.target.value })}
                         />
                     </div>
                 </div>

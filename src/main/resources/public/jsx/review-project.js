@@ -1,5 +1,5 @@
-import React, { Fragment }  from 'react';
-import ReactDOM from 'react-dom';
+import React, { Fragment }  from "react";
+import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
 import SurveyCardList from "./components/SurveyCardList"
@@ -54,10 +54,10 @@ class Project extends React.Component {
             utils.show_element("spinner");
             fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id, 
                 {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
                     }
               })
             .then(response => {
@@ -67,7 +67,6 @@ class Project extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error publishing project. See console for details.");
-                    return new Promise(resolve => resolve("error"));
                 }
             })
         }
@@ -78,10 +77,10 @@ class Project extends React.Component {
             utils.show_element("spinner");
             fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id, 
                 {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
                     }
             })
             .then(response => {
@@ -91,7 +90,6 @@ class Project extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error closing project. See console for details.");
-                    return new Promise(resolve => resolve("error"));
                 }
             })
         }
@@ -102,10 +100,10 @@ class Project extends React.Component {
             utils.show_element("spinner");
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id, 
                 {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
                     }
             })
             .then(response => {
@@ -117,7 +115,6 @@ class Project extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error archiving project. See console for details.");
-                    return new Promise(resolve => resolve("error"));
                 }
             })
         }
@@ -409,7 +406,7 @@ class ProjectStats extends React.Component {
                             <div>
                                 Date Archived
                                 <span className="badge badge-pill bg-lightgreen ml-3">
-                                    {archivedDate || (availability === 'archived'
+                                    {archivedDate || (availability === "archived"
                                                             ? "Unknown"
                                                             : "Unarchived")}
                                 </span>
@@ -506,7 +503,7 @@ function ProjectVisibility(props) {
             <div id="project-visibility" className="mb-3">
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
-                            value="public" defaultChecked={props.project.projectDetails.privacyLevel === 'public'}
+                            value="public" defaultChecked={props.project.projectDetails.privacyLevel === "public"}
                             disabled
                             />
                     <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
@@ -514,7 +511,7 @@ function ProjectVisibility(props) {
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
                             value="private"
-                            defaultChecked={props.project.projectDetails.privacyLevel === 'private'}
+                            defaultChecked={props.project.projectDetails.privacyLevel === "private"}
                             disabled
                             />
                     <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
@@ -524,7 +521,7 @@ function ProjectVisibility(props) {
                     <input className="form-check-input" type="radio" id="privacy-institution"
                             name="privacy-level"
                             value="institution"
-                            defaultChecked={props.project.projectDetails.privacyLevel === 'institution'}
+                            defaultChecked={props.project.projectDetails.privacyLevel === "institution"}
                             disabled
                             />
                     <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
@@ -534,7 +531,7 @@ function ProjectVisibility(props) {
                     <input className="form-check-input" type="radio" id="privacy-invitation"
                             name="privacy-level"
                             value="invitation"
-                            defaultChecked={props.project.projectDetails.privacyLevel === 'invitation'}
+                            defaultChecked={props.project.projectDetails.privacyLevel === "invitation"}
                             disabled
                             />
                     <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
@@ -624,7 +621,7 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
                                     <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
                                 </td>
                             </tr>
-                            {plotDistribution === 'gridded' &&
+                            {plotDistribution === "gridded" &&
                                 <tr>
                                     <td className="w-80">Plot spacing</td>
                                     <td className="w-20 text-center">
@@ -632,7 +629,7 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
                                     </td>
                                 </tr>
                             }
-                            {plotDistribution != 'shp' &&
+                            {plotDistribution != "shp" &&
                                 <Fragment>
                                     <tr>
                                         <td className="w-80">Plot shape</td>
@@ -676,7 +673,7 @@ function SampleReview({ project: { projectDetails: { sampleDistribution, samples
                                 <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} /plot</span>
                             </td>
                         </tr>
-                        {sampleDistribution === 'gridded' &&
+                        {sampleDistribution === "gridded" &&
                             <tr>
                                 <td className="w-80">Sample Resolution</td>
                                 <td className="w-20 text-center">
@@ -721,24 +718,24 @@ function ProjectManagement(props) {
                         <input type="button" id="project-dashboard" className="btn btn-outline-lightgreen btn-sm btn-block"
                             name="project-dashboard" value="Project Dashboard"
                             onClick={props.gotoProjectDashboard}
-                            style={{display:'block'}}
+                            style={{ display:"block" }}
                         />
                         <input type="button" id="configure-geo-dash" className="btn btn-outline-lightgreen btn-sm btn-block"
                             name="configure-geo-dash" value="Configure Geo-Dash"
                             onClick={props.configureGeoDash}
-                            style={{display: project.projectDetails.availability == 'unpublished' || project.projectDetails.availability == 'published' ? 'block' : 'none'}}
+                            style={{ display: project.projectDetails.availability == "unpublished" || project.projectDetails.availability == "published" ? "block" : "none" }}
                         />
                         <input type="button" id="download-plot-data"
                             className="btn btn-outline-lightgreen btn-sm btn-block"
                             name="download-plot-data" value="Download Plot Data"
                             onClick={props.downloadPlotData}
-                            style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}
+                            style={{ display: project.projectDetails.availability == "published" || project.projectDetails.availability == "closed" ? "block" : "none" }}
                         />
                         <input type="button" id="download-sample-data"
                             className="btn btn-outline-lightgreen btn-sm btn-block"
                             name="download-sample-data" value="Download Sample Data"
                             onClick={props.downloadSampleData}
-                            style={{display: project.projectDetails.availability == 'published' || project.projectDetails.availability == 'closed' ? 'block' : 'none'}}
+                            style={{ display: project.projectDetails.availability == "published" || project.projectDetails.availability == "closed" ? "block" : "none" }}
                         />
                         <input type="button" id="change-availability"
                             className="btn btn-outline-danger btn-sm btn-block"
