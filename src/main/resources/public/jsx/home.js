@@ -198,27 +198,28 @@ class SideBar extends React.Component {
     updateFilterText = (newText) => this.setState({filterText: newText});
 
     sortedName(a, b) {
-        const nameA = a.name.toLowerCase()
-        const nameB = b.name.toLowerCase()
-        return nameA < nameB ? -1 : nameA > nameB
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        return nameA < nameB ? -1 
+                : nameA > nameB ? 1
+                    : 0;
     }
 
     render() {
         const filterTextLower = this.state.filterText.toLocaleLowerCase();
 
         const filteredProjects = this.props.projects
-                .filter(proj => !this.state.filterInstitution 
-                                    ? this.state.useFirstLetter 
+                .filter(proj => !this.state.filterInstitution
+                                    || this.state.useFirstLetter 
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                        : proj.name.toLocaleLowerCase().includes(filterTextLower)
-                                    : true)
+                                        : proj.name.toLocaleLowerCase().includes(filterTextLower))
 
         const filteredInstitutions = this.state.institutions
                 .filter(inst => this.state.filterInstitution
-                                    ? this.state.useFirstLetter 
+                                    || this.state.useFirstLetter 
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                        : inst.name.toLocaleLowerCase().includes(filterTextLower)
-                                    : true)
+                                        : inst.name.toLocaleLowerCase().includes(filterTextLower))
+                                        
                 .filter(inst => !this.state.filterInstitution 
                                     ? filteredProjects.some(proj => inst.id === proj.institution)
                                     : true)
