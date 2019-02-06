@@ -256,7 +256,7 @@ class SideBar extends React.Component {
                     />
                 {this.state.institutions.length > 0 
                     ? filteredInstitutions.length > 0
-                        ? <div><ul className="tree"  style={{height: "calc(100vh - 260px)",overflow: "scroll"}}>
+                        ? <ul className="tree"  style={{height: "calc(100vh - 260px)",overflow: "scroll"}}>
                                 {filteredInstitutions.map((institution, uid) => 
                                         <Institution key={uid}
                                             id={institution.id}
@@ -268,7 +268,7 @@ class SideBar extends React.Component {
                                                                     && this.state.filterText.length > 0}
                                         />
                                 )}
-                        </ul></div>
+                        </ul>
                         : <h3 className="p-3">No Institutions Found...</h3>
                     : <h3 className="p-3">Loading data...</h3> }    
                 </div>
