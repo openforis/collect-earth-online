@@ -1,4 +1,7 @@
 #!/bin/sh
 echo "starting cert renewal"
-certbot certonly --webroot -w /home/openforis/github/collect-earth-online/target/classes/public -n -d collect.earth --deploy-hook /home/openforis/sh/packageKeysAndRestartApps.sh
+CEO_DIR = "/home/openforis/github/collect-earth-online"
+CERT_DOMAIN = "collect.earth"
+
+certbot certonly --webroot -w $CEO_DIR/target/classes/public -n -d $CERT_DOMAIN --deploy-hook $CEO_DIR/deploy/scripts/packageKeysAndRestartApps.sh
 echo "completed cert renewal"
