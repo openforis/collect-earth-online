@@ -25,13 +25,20 @@ export class SurveyQuestions extends React.Component {
         }
     }
 
-    prevSurveyQuestionTree = () => this.state.currentNodeIndex > 0
-                                        ? this.setState({currentNodeIndex: this.state.currentNodeIndex - 1})
-                                        : alert("There are no previous questions.");
+    prevSurveyQuestionTree = () => {
+        if (this.state.currentNodeIndex > 0) {
+            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1})
+        } else {
+            alert("There are no previous questions.");
+        }
+    }
 
-    nextSurveyQuestionTree = () => this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1
-                                        ? this.setState({currentNodeIndex: this.state.currentNodeIndex + 1})
-                                        : alert("There are no more questions.");
+    nextSurveyQuestionTree = () => {
+        if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
+            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1})
+        } else {
+            alert("There are no more questions.");}
+        }
 
     setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
@@ -265,7 +272,7 @@ class AnswerInput extends React.Component{
     render() {
         const { props } = this;
         // fix me, should not need map
-        return props.answers.map((ans) => (
+        return props.answers.map(ans => (
                 <div className="d-inline-flex">
                     <div className="pr-2 pt-2">
                         <div className="circle"

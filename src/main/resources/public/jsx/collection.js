@@ -57,7 +57,7 @@ class Collection extends React.Component {
             {
             this.showProjectPlots();
         }
-        // initiallize current imagery to project default
+        // initialize current imagery to project default
         if (this.state.mapConfig && this.state.currentProject && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
             this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
         }
@@ -193,7 +193,7 @@ class Collection extends React.Component {
                     });
     }
     
-    setImageryYearDG = (evenewImageryYearDGnt) => {
+    setImageryYearDG = (newImageryYearDG) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
         const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({
@@ -220,7 +220,7 @@ class Collection extends React.Component {
         });
     }
 
-    setImageryMonthPlanet = (newImageryMonth) => {
+    setImageryMonthPlanet = (newImageryMonthPlanet) => {
         const monthData = { 1: "January", 
                             2: "February", 
                             3: "March", 
@@ -234,13 +234,13 @@ class Collection extends React.Component {
                             11: "November", 
                             12: "December"
                            };
-        const newImageryMonthPlanet = monthData[parseInt(newImageryMonth)];
+        const newImageryMonthName = monthData[parseInt(newImageryMonthPlanet)];
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthPlanet;
+        const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthName;
         
         this.setState({
-            imageryMonthPlanet: newImageryMonth,
-            imageryMonthNamePlanet: newImageryMonthPlanet,
+            imageryMonthPlanet: newImageryMonthPlanet,
+            imageryMonthNamePlanet: newImageryMonthName,
             imageryAttribution: newImageryAttribution
         });
     }
@@ -596,7 +596,7 @@ class Collection extends React.Component {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
         
         if (Object.keys(this.state.userSamples).length === 1 
-            || (selectedFeatures && selectedFeatures.getArray().length 
+            || (selectedFeatures && selectedFeatures.getLength() 
                     && this.validateCurrentSelection(selectedFeatures, questionText))) {
                 
             const sampleIds = Object.keys(this.state.userSamples).length === 1  
@@ -1096,7 +1096,8 @@ function PlanetMenus(props) {
                     min="2016" 
                     max="2018" 
                     value={props.imageryYearPlanet} 
-                    className="slider" id="myRange"
+                    className="slider" 
+                    id="myRange"
                     onChange={(e) => props.setImageryYearPlanet(e.target.event)}
                 />
                 <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
