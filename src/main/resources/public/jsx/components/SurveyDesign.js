@@ -43,7 +43,7 @@ export class SurveyDesign extends React.Component {
         this.setState({ inSimpleMode: 
                         this.state.inSimpleMode
                         ? false
-                        : !this.props.surveyQuestions.some(q => q.componentType !== "button")
+                        : this.props.surveyQuestions.every(q => q.componentType === "button")
                                 || confirm("This action will revert all questions to type button.  Would you like to proceed?")
                     });
     }
