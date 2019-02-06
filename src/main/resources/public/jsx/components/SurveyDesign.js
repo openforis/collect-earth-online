@@ -86,6 +86,44 @@ export class SurveyDesign extends React.Component {
                         : 1000
     }
 
+    getChildQuestionIds = (questionId) => {
+        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parent_question === questionId);
+        if (childQuestions.length === 0) {
+            return [questionId];
+        } else {
+            return childQuestions.reduce((prev, cur) => {
+                            return [...prev, ...this.getChildQuestionIds(cur.id)];
+                        }, [questionId])
+        }
+    }
+
+    removeQuestion = (removalId) => {
+        const questionsToRemove = this.getChildQuestionIds(removalId)
+
+        const newSurveyQuestions = this.props.surveyQuestions
+                .filter(sq => !questionsToRemove.includes(sq.id) && sq.id !== removalId)
+        
+        this.props.setSurveyQuestions(newSurveyQuestions)
+    }
+
+    removeAnswer = (questionId, removalId) => {
+        const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId)
+        const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== removalId);
+
+        const updatedQuestion = {...surveyQuestion, answers: updatedAnswers}
+
+        const newSurveyQuestions = this.props.surveyQuestions
+                                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq)
+
+        this.props.setSurveyQuestions(newSurveyQuestions)
+    }
+
+    maxAnswers(componentType, dataType) { 
+        return (componentType || "").toLowerCase() === "input"
+                    ? 1 : (dataType || "").toLowerCase() === "boolean"
+                        ? 2 : 1000
+    }
+
     render() {
         return (
             <SectionBlock title="Survey Design">
