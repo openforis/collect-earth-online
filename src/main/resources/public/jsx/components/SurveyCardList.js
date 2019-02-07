@@ -34,11 +34,7 @@ class SurveyCard extends React.Component {
 
     swapQuestionIds = (upOrDown) => {
         const myId = this.props.surveyQuestion.id
-
-        // FIXME can I rely on key for index?
         const myIndex = this.props.topLevelNodeIds.indexOf(this.props.surveyQuestion.id)
-        console.log("props", props.key)
-        console.log(myIndex)
         const swapId = this.props.topLevelNodeIds[myIndex + upOrDown]
 
         const newSurveyQuestions = this.props.surveyQuestions

@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
-import { SurveyQuestions } from "./components/SurveyQuestions"
+import { SurveyQuestions } from "./components/SurveyCollection"
 import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
 
 class Collection extends React.Component {
@@ -28,7 +28,7 @@ class Collection extends React.Component {
             userImages: {},
             collectionStart: 0,
             reviewPlots: false,
-            selectedQuestion: -1,
+            selectedQuestion: { id: 0, question: ""},
             sampleOutlineBlack: true
         };
     }
@@ -581,8 +581,8 @@ class Collection extends React.Component {
                                       answer: answerText, 
                                       answerId: answerId};
                 const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
-                                            .reduce((acc, question) => {
-                                                const { [question]: value, ...rest} = acc
+                                            .reduce((acc, questionText) => {
+                                                const { [questionText]: value, ...rest} = acc
                                                 return {...rest};
                                             }, {...this.state.userSamples[sampleId]});
                                             

@@ -66,11 +66,10 @@ export class SurveyQuestions extends React.Component {
     getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
     render() {
-    
         return (
             <fieldset className="mb-3 justify-content-center text-center">
                 <h3>Survey Questions</h3>
-                {this.props.surveyQuestions.length
+                {this.props.surveyQuestions.length > 0
                 ?
                     <div className="SurveyQuestions__questions">
                         <div className="SurveyQuestions__top-questions">
@@ -172,7 +171,7 @@ class SurveyQuestionTree extends React.Component  {
                     <SurveyAnswers
                         componentType={this.props.surveyNode.componentType}
                         dataType={this.props.surveyNode.dataType}
-                        setQuestion={this.props.surveyNode}
+                        surveyNode={this.props.surveyNode}
                         answers={this.props.surveyNode.answers}
                         setCurrentValue={this.props.setCurrentValue}
                     />
@@ -213,7 +212,7 @@ function AnswerButton(props){
                             //         ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
                             //         : "initial"
                             // }}
-                            onClick={() => props.setCurrentValue(props.setQuestion, ans.id, ans.answer)}
+                            onClick={() => props.setCurrentValue(props.surveyNode, ans.id, ans.answer)}
                         >
                             <div className="circle"
                                 style={{
@@ -239,7 +238,7 @@ function AnswerRadioButton(props) {
                             className="btn-outline-darkgray btn-sm btn-block pl-1"
                             id={ans.answer + "_" + ans.id}
                             name={ans.answer + "_" + ans.id}
-                            onClick={() => props.setCurrentValue(props.setQuestion, ans.id, ans.answer)}
+                            onClick={() => props.setCurrentValue(props.surveyNode, ans.id, ans.answer)}
                         >
                             <div className="circle"
                                 style={{
@@ -265,7 +264,7 @@ class AnswerInput extends React.Component{
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.setQuestion.id !== prevProps.setQuestion.id) {
+        if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             this.setState({ newInput: "" })
         }
     }
@@ -301,7 +300,7 @@ class AnswerInput extends React.Component{
                         name="save-input"
                         value="Save"
                         onClick={() => {
-                            props.setCurrentValue(props.setQuestion, ans.id, this.state.newInput)
+                            props.setCurrentValue(props.surveyNode, ans.id, this.state.newInput)
                             this.setState({ newInput: ""})
                         }}
                     />
@@ -319,7 +318,7 @@ class AnswerDropDown extends React.Component {
     }  
 
     componentDidUpdate (prevProps) {
-        if (this.props.setQuestion !== prevProps.setQuestion) {
+        if (this.props.surveyNode !== prevProps.surveyNode) {
             this.setState({showDropdown: false})
         }
     }
@@ -331,7 +330,7 @@ class AnswerDropDown extends React.Component {
             <div 
                 key={uid} 
                 onClick={() => {
-                        this.props.setCurrentValue(this.props.setQuestion, ans.id, ans.answer);
+                        this.props.setCurrentValue(this.props.surveyNode, ans.id, ans.answer);
                         this.setState({ showDropdown: false });
                     }
                 }
@@ -401,28 +400,28 @@ function SurveyAnswers(props) {
   if (props.componentType && props.componentType.toLowerCase() == "radiobutton") {
         return (<AnswerRadioButton 
                     answers={props.answers} 
-                    setQuestion={props.setQuestion}
+                    surveyNode={props.surveyNode}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);
     } else if (props.componentType && props.componentType.toLowerCase() == "input") {
         return (<AnswerInput
                     answers={props.answers} 
-                    setQuestion={props.setQuestion}
+                    surveyNode={props.surveyNode}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);
     } else if (props.componentType && props.componentType.toLowerCase() == "dropdown") {
         return (<AnswerDropDown 
                     answers={props.answers} 
-                    setQuestion={props.setQuestion} 
+                    surveyNode={props.surveyNode} 
                     childNodes={props.childNodes}  
                     setCurrentValue={props.setCurrentValue}
                 />);
     } else {
         return (<AnswerButton 
                     answers={props.answers} 
-                    setQuestion={props.setQuestion}
+                    surveyNode={props.surveyNode}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);
