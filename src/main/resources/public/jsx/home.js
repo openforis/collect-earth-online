@@ -176,12 +176,6 @@ class SideBar extends React.Component {
             sortByNumber: true,
             containsProjects: false,
         };
-        this.toggleFilterInstitution = this.toggleFilterInstitution.bind(this);
-        this.toggleContainsProjects = this.toggleContainsProjects.bind(this);
-        this.toggleSortByNumber = this.toggleSortByNumber.bind(this);
-        this.toggleUseFirst = this.toggleUseFirst.bind(this);
-        this.updateFilterText = this.updateFilterText.bind(this);
-
     }
 
     componentDidMount() {
@@ -190,65 +184,49 @@ class SideBar extends React.Component {
             .then(response => response.json())
             .then(data => {
                 this.setState({institutions: data});
-                console.log(data)
             });
     }
 
-    toggleFilterInstitution() {
-        this.setState({filterInstitution: !this.state.filterInstitution});
-    }
+    toggleFilterInstitution = () => this.setState({filterInstitution: !this.state.filterInstitution});
     
-    toggleContainsProjects() {
-        this.setState({containsProjects: !this.state.containsProjects});
-    }
-
-    toggleSortByNumber() {
-        this.setState({sortByNumber: !this.state.sortByNumber});
-    }    
-
-    toggleUseFirst() {
-        this.setState({useFirstLetter: !this.state.useFirstLetter});
-    }
-
-    updateFilterText(e) {
-        const filterText = e.target.value;
-        this.setState({filterText: filterText});
-    }
+    toggleContainsProjects = () => this.setState({containsProjects: !this.state.containsProjects});
     
+    toggleSortByNumber = () => this.setState({sortByNumber: !this.state.sortByNumber});
+    
+    toggleUseFirst = () => this.setState({useFirstLetter: !this.state.useFirstLetter});
+
+    updateFilterText = (newText) => this.setState({filterText: newText});
+
     sortedName(a, b) {
-        const nameA=a.name.toLowerCase()
-        const nameB=b.name.toLowerCase()
-        if (nameA < nameB) {return -1;}
-        else if (nameA > nameB) {return 1;}
-        else {return 0;}
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        return nameA < nameB ? -1 
+                : nameA > nameB ? 1
+                    : 0;
     }
 
     render() {
-        const textFiltredProj =
-            this.props.projects
-                .filter(proj => !this.state.filterInstitution 
-                        ? this.state.useFirstLetter 
-                            ? proj.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())
-                            : proj.name.toLocaleLowerCase().includes(this.state.filterText.toLocaleLowerCase())
-                        : true)
+        const filterTextLower = this.state.filterText.toLocaleLowerCase();
 
-        const filteredInstitutions = 
-            this.state.institutions
-                .filter(inst => this.state.filterInstitution
-                                    ? this.state.useFirstLetter 
-                                        ? inst.name.toLocaleLowerCase().startsWith(this.state.filterText.toLocaleLowerCase())
-                                        : inst.name.toLocaleLowerCase().includes(this.state.filterText.toLocaleLowerCase())
-                                    : true)
-                .filter(inst => !this.state.filterInstitution 
-                                    ? textFiltredProj.filter(proj => inst.id === proj.institution).length > 0
-                                    : true)
-                .filter(inst => (this.state.filterInstitution && this.state.containsProjects)
-                                    ? this.props.projects.filter(proj => inst.id === proj.institution).length > 0
-                                    : true)
+        const filteredProjects = this.props.projects
+                .filter(proj => this.state.filterInstitution
+                                    || this.state.useFirstLetter 
+                                        ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
+                                        : proj.name.toLocaleLowerCase().includes(filterTextLower));
+
+        const filteredInstitutions = this.state.institutions
+                .filter(inst => !this.state.filterInstitution
+                                    || this.state.useFirstLetter 
+                                        ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
+                                        : inst.name.toLocaleLowerCase().includes(filterTextLower))
+                .filter(inst => this.state.filterInstitution 
+                                    || filteredProjects.some(proj => inst.id === proj.institution))
+                .filter(inst => !(this.state.filterInstitution && this.state.containsProjects) 
+                                    ||  this.props.projects.some(proj => inst.id === proj.institution))
                 .sort((a, b) => this.state.sortByNumber 
                                     ? this.props.projects.filter(proj => b.id === proj.institution).length 
                                         - this.props.projects.filter(proj => a.id === proj.institution).length 
-                                    : this.sortedName(a,b))
+                                    : this.sortedName(a,b));
 
 
         return this.props.showSidePanel 
@@ -276,24 +254,24 @@ class SideBar extends React.Component {
                 {this.state.institutions.length > 0 
                     ? filteredInstitutions.length > 0
                         ? <ul className="tree"  style={{height: "calc(100vh - 260px)",overflow: "scroll"}}>
-                                {filteredInstitutions.map((institution, uid) => {
-                                    return <Institution key={uid}
+                                {filteredInstitutions.map((institution, uid) => 
+                                        <Institution key={uid}
                                             id={institution.id}
                                             name={institution.name}
                                             documentRoot={this.props.documentRoot}
-                                            projects={textFiltredProj
+                                            projects={filteredProjects
                                                         .filter(project => project.institution === institution.id)}
                                             forceInstitutionExpand={!this.state.filterInstitution 
                                                                     && this.state.filterText.length > 0}
-                                            />
-                                })}
+                                        />
+                                )}
                             </ul>
-                        : <h3>No Institutions Found...</h3>
-                    : <h3>Loading data...</h3> }    
-            </div>
-        ) : (
-            ""
-        )
+                        : <h3 className="p-3">No Institutions Found...</h3>
+                    : <h3 className="p-3">Loading data...</h3> }    
+                </div>
+            ) : (
+                ""
+            )
     }
 }
 
@@ -307,7 +285,7 @@ function InstitutionFilter(props) {
                     placeholder="Enter text to filter"
                     className="form-control"
                     value={props.filterText}
-                    onChange={(e)=>props.updateFilterText(e)}
+                    onChange={(e)=>props.updateFilterText(e.target.value)}
                 />
             </div>
 
@@ -406,12 +384,9 @@ class Institution extends React.Component {
         this.state = {
             showProjectList: false,
         };
-        this.toggleShowProjectList = this.toggleShowProjectList.bind(this);
     }
 
-    toggleShowProjectList() {
-        this.setState({showProjectList: !this.state.showProjectList});
-    }
+    toggleShowProjectList = () => this.setState({showProjectList: !this.state.showProjectList});
 
     render() {
         const { props } = this;
@@ -468,14 +443,18 @@ function Project(props) {
         ?
             <div className="bg-lightgrey text-center p-1 row px-auto">
                 <div className="col-lg-10 pr-lg-1">
-                    <a className="view-project btn btn-sm btn-outline-lightgreen btn-block"
-                    href={props.documentRoot + "/collection/" + props.id}>
+                    <a 
+                        className="view-project btn btn-sm btn-outline-lightgreen btn-block"
+                        href={props.documentRoot + "/collection/" + props.id}
+                    >
                         {props.name}
                     </a>
                 </div>
                 <div className="col-lg-2 pl-lg-0">
-                    <a className="edit-project btn btn-sm btn-outline-yellow btn-block"
-                    href={props.documentRoot + "/review-project/" + props.id}>
+                    <a 
+                        className="edit-project btn btn-sm btn-outline-yellow btn-block"
+                        href={props.documentRoot + "/review-project/" + props.id}
+                    >
                         <i className="fa fa-edit"></i>
                     </a>
                 </div>
@@ -483,8 +462,10 @@ function Project(props) {
         :
             <div className="bg-lightgrey text-center p-1 row">
                 <div className="col mb-1 mx-0">
-                    <a className="btn btn-sm btn-outline-lightgreen btn-block"
-                    href={props.documentRoot + "/collection/" + props.id}>
+                    <a 
+                        className="btn btn-sm btn-outline-lightgreen btn-block"
+                        href={props.documentRoot + "/collection/" + props.id}
+                    >
                         {props.name}
                     </a>
                 </div>

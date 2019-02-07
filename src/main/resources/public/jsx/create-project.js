@@ -1,5 +1,5 @@
-import React, { Fragment } from 'react';
-import ReactDOM from 'react-dom';
+import React, { Fragment } from "react";
+import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents"
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
@@ -106,25 +106,15 @@ class Project extends React.Component {
 
     setProjectTemplate(event) {
         this.setState({templateId: event.target.value});
-        const templateProject = this.state.projectList.find(
-            function (project) {
-                return project.id == event.target.value;
-            },
-            this
-        );
+        const templateProject = this.state.projectList.find(p => p.id == event.target.value);
         
         const newSampleValues = this.convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
-        const detailsNew = {...templateProject, sampleValues: newSampleValues};
-        this.setState({projectDetails: detailsNew});
+        this.setState({projectDetails: {...templateProject, sampleValues: newSampleValues}});
         this.updateUnmanagedComponents(this.state.templateId);
     }
 
     setPrivacyLevel(privacyLevel) {
-        if (this.state.projectDetails != null) {
-            let detailsNew = this.state.projectDetails;
-            detailsNew.privacyLevel = privacyLevel;
-            this.setState({projectDetails: detailsNew});
-        }
+        this.setState({projectDetails: {...this.state.projectDetails, privacyLevel: privacyLevel}});
     }
 
     setBaseMapSource() {
@@ -430,30 +420,30 @@ function ProjectVisibility({ project : { projectDetails : { privacyLevel } } }) 
             <div id="project-visibility" className="mb-3 small">
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-public" name="privacy-level"
-                            value="public" checked={privacyLevel === 'public'}
-                            onChange={() => props.setPrivacyLevel('public')}/>
+                            value="public" checked={privacyLevel === "public"}
+                            onChange={() => props.setPrivacyLevel("public")}/>
                     <label className="form-check-label" htmlFor="privacy-public">Public: <i>All Users</i></label>
                 </div>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-private" name="privacy-level"
-                            value="private" onChange={() => props.setPrivacyLevel('private')}
-                            checked={privacyLevel === 'private'}/>
+                            value="private" onChange={() => props.setPrivacyLevel("private")}
+                            checked={privacyLevel === "private"}/>
                     <label className="form-check-label" htmlFor="privacy-private">Private: <i>Group
                         Admins</i></label>
                 </div>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-institution"
                             name="privacy-level"
-                            value="institution" onChange={() => props.setPrivacyLevel('institution')}
-                            checked={privacyLevel === 'institution'}/>
+                            value="institution" onChange={() => props.setPrivacyLevel("institution")}
+                            checked={privacyLevel === "institution"}/>
                     <label className="form-check-label" htmlFor="privacy-institution">Institution: <i>Group
                         Members</i></label>
                 </div>
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" id="privacy-invitation"
                             name="privacy-level"
-                            value="invitation" onChange={() => props.setPrivacyLevel('invitation')} disabled
-                            checked={privacyLevel === 'invitation'}/>
+                            value="invitation" onChange={() => props.setPrivacyLevel("invitation")} disabled
+                            checked={privacyLevel === "invitation"}/>
                     <label className="form-check-label" htmlFor="privacy-invitation">Invitation: <i>Coming
                         Soon</i></label>
                 </div>
@@ -540,6 +530,7 @@ class PlotDesign extends React.Component {
   }
 
   encodeImageFileAsURL(event) {
+      console.log(event)
     let file = event.target.files[0];
     let reader = new FileReader();
     reader.onloadend = function() {
@@ -634,6 +625,7 @@ class PlotDesign extends React.Component {
                     <label
                       className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                       id="custom-csv-upload"
+                      htmlFor="plot-distribution-csv-file"
                     >
                       Upload CSV
                       <input
@@ -661,6 +653,7 @@ class PlotDesign extends React.Component {
                     <label
                       className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
                       id="custom-shp-upload"
+                      htmlFor="plot-distribution-shp-file"
                     >
                       Upload SHP
                       <input
@@ -783,11 +776,12 @@ class SampleDesign extends React.Component {
         super(props);
     };
     encodeImageFileAsURL(event) {
+        console.log(event)
         let file = event.target.files[0];
         let reader = new FileReader();
         reader.onloadend = function () {
             let base64Data = reader.result;
-            console.log('RESULT', base64Data);
+            console.log("RESULT", base64Data);
         };
         reader.readAsDataURL(file);
     }
@@ -804,9 +798,9 @@ class SampleDesign extends React.Component {
                             id="sample-distribution-random"
                             name="sample-distribution" 
                             defaultValue="random"
-                            onChange={() => this.props.setSampleDistribution('random')}
-                            checked={sampleDistribution === 'random'}
-                            disabled={plotDistribution === 'shp'}
+                            onChange={() => this.props.setSampleDistribution("random")}
+                            checked={sampleDistribution === "random"}
+                            disabled={plotDistribution === "shp"}
                         />
                         <label className="form-check-label"
                             htmlFor="sample-distribution-random">
@@ -820,9 +814,9 @@ class SampleDesign extends React.Component {
                             id="sample-distribution-gridded"
                             name="sample-distribution" 
                             defaultValue="gridded"
-                            onChange={() => this.props.setSampleDistribution('gridded')}
-                            checked={sampleDistribution === 'gridded'}
-                            disabled={plotDistribution === 'shp'}
+                            onChange={() => this.props.setSampleDistribution("gridded")}
+                            checked={sampleDistribution === "gridded"}
+                            disabled={plotDistribution === "shp"}
                         />
                         <label className="form-check-label"
                             htmlFor="sample-distribution-gridded">
@@ -836,13 +830,14 @@ class SampleDesign extends React.Component {
                             id="sample-distribution-csv"
                             name="sample-distribution" 
                             defaultValue="csv"
-                            onChange={() => this.props.setSampleDistribution('csv')}
-                            checked={sampleDistribution === 'csv'}
-                            disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
+                            onChange={() => this.props.setSampleDistribution("csv")}
+                            checked={sampleDistribution === "csv"}
+                            disabled={plotDistribution === "random" || plotDistribution === "gridded"}
                         />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                            style={{opacity: plotDistribution === "random" || plotDistribution === "gridded" ? "0.25" : "1.0"}}
                             id="sample-custom-csv-upload"
-                            htmlFor="sample-distribution-csv">
+                            htmlFor="sample-distribution-csv-file">
                             Upload CSV
                             <input 
                                 type="file" 
@@ -852,7 +847,7 @@ class SampleDesign extends React.Component {
                                 defaultValue=""
                                 onChange={this.encodeImageFileAsURL}
                                 style={{ display: "none" }}
-                                disabled={sampleDistribution != 'csv'}
+                                disabled={sampleDistribution !== "csv"}
                             />
                         </label>
                     </div>
@@ -863,13 +858,14 @@ class SampleDesign extends React.Component {
                             id="sample-distribution-shp"
                             name="sample-distribution" 
                             defaultValue="shp"
-                            onChange={() => this.props.setSampleDistribution('shp')}
-                            checked={sampleDistribution === 'shp'}
-                            disabled={plotDistribution === 'random' || plotDistribution === 'gridded'}
+                            onChange={() => this.props.setSampleDistribution("shp")}
+                            checked={sampleDistribution === "shp"}
+                            disabled={plotDistribution === "random" || plotDistribution === "gridded"}
                         />
                         <label className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                            style={{opacity: plotDistribution === "random" || plotDistribution === "gridded" ? "0.25" : "1.0"}}
                             id="sample-custom-shp-upload"
-                            htmlFor="sample-distribution-shp">
+                            htmlFor="sample-distribution-shp-file">
                             Upload SHP
                             <input
                                 type="file" 
@@ -879,19 +875,19 @@ class SampleDesign extends React.Component {
                                 defaultValue=""
                                 onChange={this.encodeImageFileAsURL}
                                 style={{ display: "none" }}
-                                disabled={sampleDistribution != 'shp'}
+                                disabled={sampleDistribution != "shp"}
                             />
                         </label>
                     </div>
                     <p id="sample-design-text" className="font-italic ml-2 small">-
-                        {sampleDistribution === 'random' &&
-                            'Sample points will be randomly distributed within the plot boundary.'}
-                        {sampleDistribution === 'gridded' &&
-                            'Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below.'}
-                        {sampleDistribution === 'csv' &&
-                            'Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID.'}
-                        {sampleDistribution === 'shp' &&
-                            'Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.'}
+                        {sampleDistribution === "random" &&
+                            "Sample points will be randomly distributed within the plot boundary."}
+                        {sampleDistribution === "gridded" &&
+                            "Sample points will be arranged on a grid within the plot boundary using the sample resolution selected below."}
+                        {sampleDistribution === "csv" &&
+                            "Specify your own sample points by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID,SAMPLEID."}
+                        {sampleDistribution === "shp" &&
+                            "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields."}
                     </p>
                     <div className="form-group mb-3">
                         <label htmlFor="samples-per-plot">Samples per plot</label>
@@ -904,7 +900,7 @@ class SampleDesign extends React.Component {
                             min="0" 
                             step="1"
                             defaultValue={samplesPerPlot || ""}
-                            disabled={sampleDistribution != 'random'}
+                            disabled={sampleDistribution != "random"}
                         />
                     </div>
                     <div className="form-group mb-1">
@@ -918,7 +914,7 @@ class SampleDesign extends React.Component {
                             min="0.0" 
                             step="any"
                             defaultValue={sampleResolution || ""}
-                            disabled={sampleDistribution != 'gridded'}
+                            disabled={sampleDistribution != "gridded"}
                         />
                     </div>
                 </div>
