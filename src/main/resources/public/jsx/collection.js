@@ -551,7 +551,6 @@ class Collection extends React.Component {
                                                                         .some(vs => vs.id === sid));
 
     getChildQuestions(currentQuestionId) {
-        console.log(currentQuestionId)
         const { surveyQuestions } = this.state.currentProject;
         const { question, id } = surveyQuestions.find(sv => sv.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sv => sv.parentQuestion === id);
@@ -561,7 +560,7 @@ class Collection extends React.Component {
         } else {
             return childQuestions.reduce((prev, cur) => {
                 return [...prev, ...this.getChildQuestions(cur.id)];
-            }, [question])
+            }, [question]);
         }
     }
 
