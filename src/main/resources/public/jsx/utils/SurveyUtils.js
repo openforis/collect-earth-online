@@ -19,33 +19,6 @@ export function convertSampleValuesToSurveyQuestions(sampleValues) {
     });
 }
 
-export function getChildQuestionIds(questionId) {
-    const childQuestions = this.props.surveyQuestions.filter(sv => sv.parentQuestion === questionId);
-    if (childQuestions.length === 0) {
-        return [questionId];
-    } else {
-        return childQuestions.reduce((acc, cur) => {
-                        return [...acc, ...this.getChildQuestionIds(cur.id)];
-                    }, [questionId])
-    }
+export function removeEnumerator(questionText) {
+    return questionText.replace('/[\s][(][\d]*[[)]$/', '')
 }
-
-export function getAllChildQuestions(currentQuestion, surveyQuestions) {
-    const childQuestions = surveyQuestions.filter(sv => sv.parentQuestion === currentQuestion.id);
-
-    if (childQuestions.length === 0) {
-        return [currentQuestion];
-    } else {
-        return childQuestions.reduce((acc, cq) => {
-            return [...acc, ...this.getAllChildQuestions(cq, surveyQuestions)];
-        }, [currentQuestion])
-    }
-}
-
-// export function extractUserSamples(samples) {
-//     return newPlot.samples.map((obj, s) => {
-//                     obj[s.id] = s.value || {}
-//                     return obj;
-//                     }, {})  
-//                 : {},
-// }

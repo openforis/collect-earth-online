@@ -11,7 +11,7 @@ class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projectDetails: {baseMapSource = ""},
+            projectDetails: {baseMapSource: ""},
             templateId: "0",
             useTemplatePlots: false,
             imageryList: [],

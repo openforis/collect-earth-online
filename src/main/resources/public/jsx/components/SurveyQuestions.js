@@ -1,5 +1,7 @@
 import React, { Fragment } from "react";
 
+import { removeEnumerator } from "../utils/SurveyUtils"
+
 export class SurveyQuestions extends React.Component {
     constructor(props) {
         super(props);
@@ -162,7 +164,7 @@ class SurveyQuestionTree extends React.Component  {
                                 `}}
                         onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                     >
-                    {this.props.higharcyLabel + this.props.surveyNode.question}
+                    {this.props.higharcyLabel + removeEnumerator(this.props.surveyNode.question)}
                     </button>
                 </div>
 

@@ -2,6 +2,7 @@ import React, {Fragment} from "react";
 
 import { SectionBlock } from "./FormComponents"
 import SurveyCardList from "./SurveyCardList"
+import { removeEnumerator } from "../utils/SurveyUtils"
 
 const componentTypes = [
     {componentType: "button", dataType: "text"},
@@ -189,9 +190,13 @@ class NewQuestionDesigner extends React.Component {
         if (this.state.newQuestionText != "") {
             const { surveyQuestions } = this.props;
             const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
+            const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
+
             const newQuestion = {
                                     id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
-                                    question: this.state.newQuestionText,
+                                    question: repeatedQuestion > 0 
+                                                    ? this.state.newQuestionText + ` (${repeatedQuestions})` 
+                                                    : this.state.newQuestionText,
                                     answers: [],
                                     parentQuestion: this.state.selectedParent,
                                     parentAnswer: this.state.selectedAnswer,

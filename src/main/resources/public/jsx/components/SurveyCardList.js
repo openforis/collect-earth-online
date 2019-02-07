@@ -1,5 +1,7 @@
 import React, { Fragment }  from "react";
 
+import { removeEnumerator } from "../utils/SurveyUtils"
+
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
                             .filter(sq => sq.parentQuestion == -1)
@@ -63,7 +65,11 @@ class SurveyCard extends React.Component {
                                 <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
-                            <h3 className="m-3">{this.state.showQuestions ? "" : `-- ${surveyQuestion.question}`}</h3>
+                            <h3 className="m-3">
+                                {!this.state.showQuestions && `-- ${inDesignMode ? surveyQuestion.question
+                                                                                : removeEnumerator(surveyQuestion.question)}`
+                                }
+                            </h3>
                         </div>
                         {inDesignMode && 
                             <div className="col-2 d-flex pr-1 justify-content-end">
@@ -144,7 +150,9 @@ function SurveyQuestionTree({
                                 <span className="font-weight-bold">X</span>
                             </button>
                         }
-                            <h3 className="font-weight-bold">{surveyQuestion.question}</h3>
+                            <h3 className="font-weight-bold">
+                                {inDesignMode ? surveyQuestion.question : removeEnumerator(surveyQuestion.question)}
+                            </h3>
                         </div>
                         <div className="SurveyQuestionTree__question-information pb-1">
                             <ul className="mb-1">
@@ -157,7 +165,8 @@ function SurveyQuestionTree({
                                 {surveyQuestion.parentQuestion > -1 &&
                                     <Fragment>
                                         <li>
-                                            <span className="font-weight-bold">Parent Question:  </span> {parentQuestion.question}
+                                            <span className="font-weight-bold">Parent Question:  </span> 
+                                            {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
                                         </li>
                                         <li>
                                             <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parentAnswer === -1 
