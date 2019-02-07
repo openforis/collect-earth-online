@@ -89,8 +89,17 @@ You will have to replace that with your domain every place you see it in the ins
 	sudo keytool --importcert -file /etc/letsencrypt/live/$CERT_DOMAIN/fullchain.pem -keystore /etc/ssl/certs/java/cacerts -v -alias ceo_chain -storepass $CACERT_PASSWORD -noprompt
 #+end_src
 4. Edit the gee-gateway config.py CERT and KEY entries to point to the cert.pem and privatekey.pem just created.
-5. Edit collect-earth-online/deploy/scripts/cert_renewal.sh to replace "collect.earth" with "yourdomain.com".
-6. Edit collect-earth-online/deploy/scripts/packageKeysAndRestartApps.sh to replace "collect.earth" with "yourdomain.com".
+5. Edit collect-earth-online/deploy/scripts/cert_renewal.sh variables CEO_DIR, and CERT_DOMAIN:
+    a. CEO_DIR should point to the location of your collect-earth-online install.
+    b. CERT_DOMAIN should be the domain you will be using for your application.
+6. Edit collect-earth-online/deploy/scripts/packageKeysAndRestartApps.sh variables CERT_DOMAIN, CERT_PASSWORD, and CACERT_PASSWORD:
+    a. CERT_DOMAIN should be the domain you will be using for your application.
+    b. CERT_PASSWORD should be the password you would like to use for the certificate.
+    c. CACERT_PASSWORD should be the password for java cacerts keystore (default is changeit.)
+7. Edit collect-earth-online/deploy/scripts/startceo.sh variable CEO_DIR:
+    a. CEO_DIR should point to the location of your collect-earth-online install.
+8. Edit collect-earth-online/deploy/scripts/startgeegateway.sh variable GEE_DIR:
+    a. GEE_DIR should point to the location of your gee-gateway install.
 ** Building OpenForis Collect
 
 In order to easily exchange information with OpenForis' other software
