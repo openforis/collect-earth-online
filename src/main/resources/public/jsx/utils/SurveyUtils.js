@@ -20,5 +20,5 @@ export function convertSampleValuesToSurveyQuestions(sampleValues) {
 }
 
 export function removeEnumerator(questionText) {
-    return questionText.replace('/[\s][(][\d]*[[)]$/', '')
+    return questionText.replace(/[\s][(][\d]*[[)]$/, '')
 }

@@ -187,24 +187,30 @@ class NewQuestionDesigner extends React.Component {
     }
 
     addSurveyQuestion = () => {
-        if (this.state.newQuestionText != "") {
+
+        if (this.state.newQuestionText !== "") {
             const { surveyQuestions } = this.props;
             const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
             const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
+            
+            if (repeatedQuestions === 0 
+                || confirm("Warning: this is a duplicate name.  This will save as " 
+                            + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode")) {
 
-            const newQuestion = {
-                                    id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
-                                    question: repeatedQuestion > 0 
-                                                    ? this.state.newQuestionText + ` (${repeatedQuestions})` 
-                                                    : this.state.newQuestionText,
-                                    answers: [],
-                                    parentQuestion: this.state.selectedParent,
-                                    parentAnswer: this.state.selectedAnswer,
-                                    dataType: dataType,
-                                    componentType: componentType,
-                                }; 
-            this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
-            this.setState({ selectedAnswer: -1, newQuestionText: "" });
+                const newQuestion = {
+                                        id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
+                                        question: repeatedQuestions > 0 
+                                                        ? this.state.newQuestionText + ` (${repeatedQuestions})` 
+                                                        : this.state.newQuestionText,
+                                        answers: [],
+                                        parentQuestion: this.state.selectedParent,
+                                        parentAnswer: this.state.selectedAnswer,
+                                        dataType: dataType,
+                                        componentType: componentType,
+                                    }; 
+                this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
+                this.setState({ selectedAnswer: -1, newQuestionText: "" });
+            }
         } else {
             alert("Please enter a survey question first.");
         }

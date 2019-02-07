@@ -11,8 +11,25 @@ class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projectDetails: {baseMapSource: ""},
-            templateId: "0",
+            projectDetails: {
+                archived: false,
+                availability: "nonexistent",
+                baseMapSource: "",
+                boundary: null,
+                description: "",
+                id: 0,
+                name: "",
+                numPlots: null,
+                plotDistribution: "random",
+                plotShape: "circle",
+                plotSize: null,
+                plotSpacing: null,
+                privacyLevel: "public",
+                sampleDistribution: "random",
+                sampleResolution: null,
+                samplesPerPlot: null,
+                surveyQuestions: []
+            },
             useTemplatePlots: false,
             imageryList: [],
             mapConfig: null,
@@ -28,7 +45,6 @@ class Project extends React.Component {
     componentDidMount() {
         // FIXME, combine promises to load map only once after all data is back
         this.getImageryList();
-        this.getProjectById();
         this.getProjectList();
     }
 
@@ -37,9 +53,9 @@ class Project extends React.Component {
             this.initProjectMap();
         }
 
-        if (this.state.mapConfig 
+        if (this.state.mapConfig && this.state.projectDetails.id
                 && (this.state.mapConfig !== prevState.mapConfig 
-                || this.state.templateId !== prevState.templateId))  {
+                || this.state.projectDetails.id !== prevState.projectDetails.id))  {
             this.updateProjectMap();
         }
 
@@ -49,10 +65,19 @@ class Project extends React.Component {
             mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
         }
 
+        // Set sample distribution to a valid choice based on plot selection
+        if (this.state.projectDetails.plotDistribution !== prevState.projectDetails.plotDistribution) {
+            const { plotDistribution, sampleDistribution } = this.state.projectDetails;
+            this.setSampleDistribution(["random", "gridded"].includes(plotDistribution) 
+                                      && ["csv", "shp"].includes(sampleDistribution) ? "random"
+                                            : plotDistribution === "shp" 
+                                              && ["random", "gridded"].includes(sampleDistribution) ? "shp"
+                                                : sampleDistribution)
+        }
     }
 
-    createProject() {
-        if (confirm("Do you REALLY want to create this project?")) {
+    createProject = () => {
+        if (this.validateSurvey() && confirm("Do you REALLY want to create this project?")) {
             utils.show_element("spinner");
             let formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
@@ -71,7 +96,7 @@ class Project extends React.Component {
             }).done((data) => {
                 utils.hide_element("spinner");
                 if (parseInt(data)) {
-                    window.location = this.props.documentRoot + "/review-project/" + newProjectId;
+                    window.location = this.props.documentRoot + "/review-project/" + data;
                 } else {
                     alert(data);
                 }
@@ -79,62 +104,52 @@ class Project extends React.Component {
         }
     }
 
+    validateSurvey = () => {
+        if (this.state.projectDetails.surveyQuestions.length === 0) {
+            alert("A survey must include at least one quesiont");
+            return false;
+        } else {
+            if (this.state.projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
+                alert("All survey questions must contain at least one answer")
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
     setProjectTemplate = (newTemplateId) => {
         const templateProject = this.state.projectList.find(p => p.id == newTemplateId);
-        
-        const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.surveyQuestions);
-        this.setState({templateId: newTemplateId,
-                      currentProject: { ...templateProject, surveyQuestions: newSurveyQuestions }});
+        const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
+
+        this.setState({projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions }});
     }
 
     setPrivacyLevel = (privacyLevel) => 
-            this.setState({projectDetails: {...this.state.projectDetails, privacyLevel: privacyLevel}});
+            this.setState({projectDetails: { ...this.state.projectDetails, privacyLevel: privacyLevel}});
 
-    setBaseMapSource = (newBaseMapSource) => this.setState({projectDetails: {...projectDetails, 
-                                                                                baseMapSource: newBaseMapSource}});
+    setBaseMapSource = (newBaseMapSource) => 
+            this.setState({ projectDetails: { ...this.state.projectDetails, baseMapSource: newBaseMapSource }});
 
     toggleTemplatePlots = () => this.setState({useTemplatePlots: !this.state.useTemplatePlots});
 
-    setPlotDistribution = (newPlotDistribution) => this.setState({projectDetails: {...projectDetails, 
-                                                                                    plotDistribution: newPlotDistribution}});
+    setPlotDistribution = (newPlotDistribution) => 
+            this.setState({ projectDetails: { ...this.state.projectDetails, plotDistribution: newPlotDistribution }});
 
-    setPlotShape = (newPlotShape) => this.setState({projectDetails: {...projectDetails, 
-                                                                        plotShape: newPlotShape}});
+    setPlotShape = (newPlotShape) => 
+            this.setState({projectDetails: { ...this.state.projectDetails, plotShape: newPlotShape }});
     
-    setSampleDistribution = (newSampleDistribution) => this.setState({projectDetails: {...projectDetails, 
-                                                                                        sampleDistribution: newSampleDistribution}});
+    setSampleDistribution = (newSampleDistribution) => 
+            this.setState({ projectDetails: { ...this.state.projectDetails, sampleDistribution: newSampleDistribution }});
     
-    setProjectName = (newProjectName) => this.setState({projectDetails: {...projectDetails, 
-                                                                        name: newProjectName}});
+    setProjectName = (newProjectName) => 
+            this.setState({ projectDetails: { ...this.state.projectDetails, name: newProjectName }});
                     
-    setDescription = (newDescription) => this.setState({projectDetails: {...projectDetails, 
-                                                                            description: newDescription}});
+    setDescription = (newDescription) => 
+            this.setState({ projectDetails: { ...this.state.projectDetails, description: newDescription }});
                                                                                                 
-    setSurveyQuestions(newSurveyQuestions) {
-        const newProjectDetails = {...this.state.projectDetails, 
-                                    surveyQuestions: newSurveyQuestions}
-        this.setState({projectDetails: newProjectDetails})
-    }
-    
-    getProjectById = () => {
-        fetch(this.props.documentRoot + "/get-project-by-id/0")
-            .then(response => {
-                if (response.ok) {
-                    return response.json()
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the project info. See console for details.");
-                }
-            })
-            .then(data => {
-                if (data == "") {
-                    alert("No project found with ID " + projectId + ".");
-                    window.location = this.state.documentRoot + "/home";
-                } else {
-                    this.setState({projectDetails: data});
-                }
-            });
-    }
+    setSurveyQuestions = (newSurveyQuestions) => 
+            this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }})
 
     getProjectList = () => {
         const { userId } = this.props
@@ -171,12 +186,13 @@ class Project extends React.Component {
     }
 
     initProjectMap = () => {
-        this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
-        mercator.setVisibleLayer(this.state.mapConfig, this.state.imageryList[0].title);
+        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)
+        mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].title);
+        this.setState({mapConfig: newMapConfig});
     }
 
     showPlotCenters(maxPlots) {
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.state.templateId + "/" + maxPlots)
+        fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
             .then(response => {
                 if (response.ok) {
                     return response.json()
@@ -306,9 +322,12 @@ function ProjectTemplateVisibility({ project, setProjectTemplate }) {
             <div id="project-template-selector">
                 <div className="form-group">
                     <h3 htmlFor="project-template">Select Project</h3>
-                    <select className="form-control form-control-sm" id="project-template"
-                            name="project-template"
-                            size="1" value={project.templateId} onChange={e => setProjectTemplate(e.target.value)}>
+                    <select 
+                        className="form-control form-control-sm" id="project-template"
+                        name="project-template"
+                        size="1"
+                        value={project.projectDetails.id} onChange={e => setProjectTemplate(e.target.value)}
+                    >
                         {
                             project.projectList
                                 .filter(proj => proj != null)
@@ -333,7 +352,7 @@ function ProjectInfo(props) {
                     <h3 htmlFor="project-name">Name</h3>
                     <input className="form-control form-control-sm" type="text" id="project-name" name="name"
                         autoComplete="off" defaultValue={projectDetails.name}
-                        onChange={e => props.setProjectName(e.target.details)}/>
+                        onChange={e => props.setProjectName(e.target.value)}/>
                 </div>
                 <div className="form-group">
                     <h3 htmlFor="project-description">Description</h3>
@@ -342,7 +361,7 @@ function ProjectInfo(props) {
                         id="project-description"
                         name="description"
                         value={projectDetails.description} 
-                        onChange={e => props.setDescription(e.target.details)}
+                        onChange={e => props.setDescription(e.target.value)}
                     />
                 </div>
             </div>
