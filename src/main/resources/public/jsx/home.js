@@ -260,7 +260,8 @@ class SideBar extends React.Component {
                     />
                 {this.state.institutions.length > 0 
                     ? filteredInstitutions.length > 0
-                        ? <ul className="tree"  style={{height:(this.props.userName)?(this.state.showFilters?"calc(100vh - 374px)":"calc(100vh - 280px)"):(this.state.showFilters?"calc(100vh - 334px)":"calc(100vh - 240px)"),overflow: "scroll"}}>
+                        ? <ul className="tree"  style={{height:(this.props.userName)?(this.state.showFilters?"calc(100vh - 318px)":"calc(100vh - 224px)"):(this.state.showFilters?"calc(100vh - 280px)":"calc(100vh - 185px)"),
+                                                        overflowY: "scroll",overflowX:"hidden"}}>
                                 {filteredInstitutions.map((institution, uid) => 
                                         <Institution key={uid}
                                             id={institution.id}
@@ -283,7 +284,7 @@ class SideBar extends React.Component {
 }
 
 function InstitutionFilter(props) {
-    let filters = (props.showFilters) ?
+    const filters = (props.showFilters) ?
         <React.Fragment>
             <div className="d-inlineflex">
                 <div className="form-check form-check-inline">
@@ -357,17 +358,13 @@ function InstitutionFilter(props) {
                     Contains projects
                 </div>
             </div>
-            <div className="btn bg-lightgreen btn-block m-0 p-2 rounded-0" onClick={props.toggleShowFilters}>
-                Hide Filters
-            </div>
         </React.Fragment>
         :
-        <div className="btn bg-lightgreen btn-block m-0 p-2 rounded-0" onClick={props.toggleShowFilters}>
-            Show More Filters
-        </div>
+        ""
+
     return (
         <div className="InstitutionFilter form-control">
-            <div id="filter-institution" className="p-2">
+            <div id="filter-institution" style={{display:"inline-flex",width:"100%"}}>
                 <input type="text"
                        id="filterInstitution"
                        autoComplete="off"
@@ -376,10 +373,10 @@ function InstitutionFilter(props) {
                        value={props.filterText}
                        onChange={(e) => props.updateFilterText(e.target.value)}
                 />
+                <a href="#" onClick={props.toggleShowFilters}><img src={props.showFilters?"img/hidefilter.png":"img/showfilter.png"} width="40" height="40" style={{padding:"5px"}} alt="Show/Hide Filters" title="show/hide filters"/></a>
             </div>
             {filters}
         </div>
-
     );
 }
 
