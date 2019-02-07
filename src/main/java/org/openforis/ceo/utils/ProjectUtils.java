@@ -381,7 +381,7 @@ public class ProjectUtils {
 
     public static void runBashScriptForProject(int projectId, String plotsOrSamples, String script, String rpath) {
         try {
-            System.out.println("Runnin " + script);
+            System.out.println("Running " + script);
             var pb = new ProcessBuilder("/bin/sh", script, "project-" + projectId + "-" + plotsOrSamples);
             pb.directory(new File(expandResourcePath(rpath)));
             pb.redirectOutput(new File("out.txt"));
@@ -395,7 +395,7 @@ public class ProjectUtils {
         } catch (Exception e) {
             // for windows
             try {
-                System.out.println("Runnin " + script + " with git bash.");
+                System.out.println("Running " + script + " with git bash.");
                 var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", script, "project-" + projectId + "-" + plotsOrSamples);
                 pb.directory(new File(expandResourcePath(rpath)));
                 // For some reason shp2pgsql needs this to work

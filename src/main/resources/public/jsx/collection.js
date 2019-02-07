@@ -551,6 +551,7 @@ class Collection extends React.Component {
                                                                         .some(vs => vs.id === sid));
 
     getChildQuestions(currentQuestionId) {
+        console.log(currentQuestionId)
         const { surveyQuestions } = this.state.currentProject;
         const { question, id } = surveyQuestions.find(sv => sv.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sv => sv.parentQuestion === id);
@@ -559,7 +560,7 @@ class Collection extends React.Component {
             return [question];
         } else {
             return childQuestions.reduce((prev, cur) => {
-                return [...prev, ...this.getChildQuestions(cur.question)];
+                return [...prev, ...this.getChildQuestions(cur.id)];
             }, [question])
         }
     }
@@ -634,10 +635,12 @@ class Collection extends React.Component {
         
         const { question } = this.state.selectedQuestion
         allFeatures
-            .map(f => f.get("sampleId"))
-            .filter(sampleId => this.state.userSamples[sampleId] 
-                                && this.state.userSamples[sampleId][question])
-            .forEach(sampleId => {
+            .filter(feature => {
+                const sampleId = feature.get("sampleId")
+                return this.state.userSamples[sampleId] 
+                                && this.state.userSamples[sampleId][question]})
+            .forEach(feature => {
+                const sampleId = feature.get("sampleId")
                 const userAnswer = this.state.userSamples[sampleId][question].answer;
                 const matchingAnswer = this.state.selectedQuestion.answers
                                         .find(ans => ans.answer === userAnswer);
