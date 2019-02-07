@@ -2,7 +2,7 @@ import React, { Fragment }  from "react";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
-                            .filter(sq => sq.parent_question == -1)
+                            .filter(sq => sq.parentQuestion == -1)
                             .sort((a, b) => a.id - b.id);
 
     return topLevelNodes.map((sq, index) =>
@@ -32,7 +32,11 @@ class SurveyCard extends React.Component {
 
     swapQuestionIds = (upOrDown) => {
         const myId = this.props.surveyQuestion.id
+
+        // FIXME can I rely on key for index?
         const myIndex = this.props.topLevelNodeIds.indexOf(this.props.surveyQuestion.id)
+        console.log("props", props.key)
+        console.log(myIndex)
         const swapId = this.props.topLevelNodeIds[myIndex + upOrDown]
 
         const newSurveyQuestions = this.props.surveyQuestions
@@ -118,8 +122,8 @@ function SurveyQuestionTree({
     surveyQuestions,
     setSurveyQuestions }) {
 
-    const childNodes = surveyQuestions.filter(sq => sq.parent_question == surveyQuestion.id);
-    const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parent_question);
+    const childNodes = surveyQuestions.filter(sq => sq.parentQuestion == surveyQuestion.id);
+    const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
     return (
         <Fragment>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
@@ -150,13 +154,13 @@ function SurveyQuestionTree({
                                         {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                                     </li>
                                 }
-                                {surveyQuestion.parent_question > -1 &&
+                                {surveyQuestion.parentQuestion > -1 &&
                                     <Fragment>
                                         <li>
                                             <span className="font-weight-bold">Parent Question:  </span> {parentQuestion.question}
                                         </li>
                                         <li>
-                                            <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parent_answer === -1 
+                                            <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parentAnswer === -1 
                                                 ? "Any" 
                                                 : parentQuestion.answers
                                                     .find(ans => ans.id === surveyQuestion.parent_answer).answer}

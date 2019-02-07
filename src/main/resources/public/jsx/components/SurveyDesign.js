@@ -49,7 +49,7 @@ export class SurveyDesign extends React.Component {
     }
 
     getChildQuestionIds = (questionId) => {
-        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parent_question === questionId);
+        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parentQuestion === questionId);
         if (childQuestions.length === 0) {
             return [questionId];
         } else {
@@ -193,8 +193,8 @@ class NewQuestionDesigner extends React.Component {
                                     id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
                                     question: this.state.newQuestionText,
                                     answers: [],
-                                    parent_question: this.state.selectedParent,
-                                    parent_answer: this.state.selectedAnswer,
+                                    parentQuestion: this.state.selectedParent,
+                                    parentAnswer: this.state.selectedAnswer,
                                     dataType: dataType,
                                     componentType: componentType,
                                 }; 

@@ -3,8 +3,9 @@ import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents"
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { utils } from "../js/utils.js";
 import { SurveyDesign } from "./components/SurveyDesign"
+import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
+import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
     constructor(props) {
@@ -48,7 +49,7 @@ class Project extends React.Component {
             utils.show_element("spinner");
             let formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
-            formData.append("sample-values", JSON.stringify(this.state.projectDetails.sampleValues));
+            formData.append("sample-values", JSON.stringify(this.state.projectDetails.surveyQuestions));
             let ref = this;
             $.ajax({
                 url: this.props.documentRoot + "/create-project",
@@ -77,39 +78,13 @@ class Project extends React.Component {
         }
     }
 
-    convertSampleValuesToSurveyQuestions(sampleValues) {
-        return sampleValues.map(sampleValue => {
-            if (sampleValue.name && sampleValue.values) {
-                const surveyQuestionAnswers = sampleValue.values.map(value => {
-                    if (value.name) {
-                        return {
-                            id: value.id,
-                            answer: value.name,
-                            color: value.color
-                        };
-                    } else {
-                        return value;
-                    }
-                });
-                return {
-                    id: sampleValue.id,
-                    question: sampleValue.name,
-                    answers: surveyQuestionAnswers,
-                    parent_question: -1,
-                    parent_answer: -1
-                };
-            } else {
-                return sampleValue;
-            }
-        });
-    }
-
     setProjectTemplate(event) {
         this.setState({templateId: event.target.value});
         const templateProject = this.state.projectList.find(p => p.id == event.target.value);
         
-        const newSampleValues = this.convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
-        this.setState({projectDetails: {...templateProject, sampleValues: newSampleValues}});
+        const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.surveyQuestions);
+        this.setState({currentProject: { ...templateProject, surveyQuestions: newSurveyQuestions }});
+
         this.updateUnmanagedComponents(this.state.templateId);
     }
 
@@ -301,7 +276,7 @@ class Project extends React.Component {
 
     setSurveyQuestions(newSurveyQuestions) {
         const newProjectDetails = {...this.state.projectDetails, 
-                                    sampleValues: newSurveyQuestions}
+                                    surveyQuestions: newSurveyQuestions}
         this.setState({projectDetails: newProjectDetails})
     }
 
@@ -359,7 +334,7 @@ function ProjectDesignForm(props) {
                     <SampleDesign project={props.project} setSampleDistribution={props.setSampleDistribution}/>
                 }
                 <SurveyDesign 
-                    surveyQuestions={props.project.projectDetails.sampleValues} 
+                    surveyQuestions={props.project.projectDetails.surveyQuestions} 
                     setSurveyQuestions={props.setSurveyQuestions} 
                 />
 
