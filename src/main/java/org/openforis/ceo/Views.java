@@ -1,5 +1,6 @@
 package org.openforis.ceo;
-
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -51,17 +52,38 @@ public class Views {
 
     private static Route makeRoute(String navlink, FreeMarkerEngine freemarker) {
         var templateFileName = navlink.toLowerCase() + ".ftl";
-        return (req, res) -> {
-            var model = getBaseModel(req, navlink);
-            return freemarker.render(new ModelAndView(model, templateFileName));
-        };
+
+        if(navlink == "geodashhelp"){
+            //var model = mergeParams(getBaseModel(req, navlink), Map.of("browserLanguage", language), req);
+            // return freemarker.render(new ModelAndView(model, templateFileName));
+            return makeRoute( navlink,  freemarker,  Map.of("browserLanguage", ""));
+
+        }
+        else {
+            return (req, res) -> {
+                var model = getBaseModel(req, navlink);
+                return freemarker.render(new ModelAndView(model, templateFileName));
+            };
+        }
     }
 
     private static Route makeRoute(String navlink, FreeMarkerEngine freemarker, Map<String, Object> extraParams) {
         var templateFileName = navlink.toLowerCase() + ".ftl";
+
         return (req, res) -> {
-            var model = mergeParams(getBaseModel(req, navlink), extraParams, req);
-            return freemarker.render(new ModelAndView(model, templateFileName));
+            if(navlink == "geodashhelp"){
+                Object country = req.raw().getLocale();
+                var theLocal = Map.of("browserLanguage", country);
+                HashMap map3 = new HashMap<>();
+                map3.putAll(extraParams);
+                map3.putAll(theLocal);
+                var model = mergeParams(getBaseModel(req, navlink),map3 , req);
+                return freemarker.render(new ModelAndView(model, templateFileName));
+            }
+            else {
+                var model = mergeParams(getBaseModel(req, navlink), extraParams, req);
+                return freemarker.render(new ModelAndView(model, templateFileName));
+            }
         };
     }
 

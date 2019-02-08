@@ -1,0 +1,15 @@
+{
+  "title": "Geo-Dash Help Center",
+  "head_image_collection_widget":"To add an Image Collection Widget:",
+  "click_add_widget":"Click Add Widget",
+  "select_image_collection":"Select Image Collection in the type drop down",
+  "choose_basemap":"Choose Basemap source from dropdown",
+  "select_data":"Select Data:",
+  "ic_data_info_preset":"NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct bands and image parameters.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.  There is an option to overlay an additional date range for comparison.  If you would like to enable this feature tick the checkbox and select the second date range.",
+  "ic_data_info_configure":"Landsat 5, Landsat 7, Landsat 8, and Sentinel 2 are partially configured leaving you the option to adjust the bands, min, max, and cloud score.  Available bands for each are:",
+  "custom_widget_info":"Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:",
+  "custom_widget_warning":"Notice the double quotes in the image parameters for both the property name and the value.  Also, notice there are no spaces.  The vision parameters are similar but slightly different than you would add directly in the Google Earth Engine code editor. For example, the bands parameter in the editor is an array of comma-separated strings, and here it is a single comma separated string",
+  "select_date_range":"Select date range",
+  "click_create":"Click Create",
+  "reposition":"Reposition and resize to your liking"
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Centro de ayuda de Geo-Dash",
+  "head_image_collection_widget":"Para agregar un widget de colección de imágenes:",
+  "click_add_widget":"Haga clic en Add Widget",
+  "select_image_collection":"Seleccione el Image Collection en el menú desplegable.",
+  "choose_basemap":"Seleccione el tipo de Basemap source desde el menú desplegable",
+  "select_data":"Seleccione el tipo de datos que desea utilizar desde el menú desplegable Data:",
+  "ic_data_info_preset":"NDVI, EVI, EVI 2, NDMI, y NDWI están preconfigurados con las bandas y los parámetros de imagen correctos. Si selecciona esos, solo deberá agregar un título para el widget (recomendamos {Datos} {Rango de fechas} por ejemplo, NDVI 2001 o NDVI 2001 - 2002}) y el rango de fechas. Hay una opción para superponer un intervalo de fechas adicional para la comparación. Si desea habilitar esta función, marque la casilla y seleccione el segundo intervalo de fechas.",
+  "ic_data_info_configure":"Landsat 5, Landsat 7, Landsat 8, y Sentinel 2 están configurados parcialmente, lo que le permite ajustar las bandas, el mínimo, el máximo y la puntuación de las nubes. Las bandas disponibles para cada uno son:",
+  "custom_widget_info":"Widget personalizado - se puede agregar cualquier colección de Google Earth Engine si conoce el conjunto de datos. Simplemente necesita saber el nombre de la imagen y los parámetros de imagen que le gustaría, por ejemplo:",
+  "custom_widget_warning":"Observe las comillas dobles en los parámetros de imagen tanto para el nombre de la propiedad como para el valor. Además, note que no hay espacios. Los parámetros de la visión son similares pero ligeramente diferentes a los que agregarías directamente en el editor de código de Google Earth Engine. Por ejemplo, el parámetro de bandas en el editor es una matriz de cadenas separadas por comas, y aquí es una sola cadena separada por comas.",
+  "select_date_range":"Seleccionar el rango de fechas",
+  "click_create":"Haga clic en Create",
+  "reposition":"Reposicione y redimensione a su gusto."
+}

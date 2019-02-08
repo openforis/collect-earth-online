@@ -66,30 +66,87 @@
         }
     </script>
     <div class="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
-        <h1>Geo-Dash Help Center</h1>
 
-            <h2>To add an Image Collection Widget:</h2>
+        <script type="text/javascript" language="JavaScript">
+            function Translate() {
+                //initialization
+                this.init =  function(attribute, lng){
+                    this.attribute = attribute;
+                    this.lng = lng;
+                }
+                //translate
+                this.process = function(){
+                    _self = this;
+                    var xrhFile = new XMLHttpRequest();
+                    //load content data
+                    this.lng = this.lng == "es"? "es":"en";
+                    xrhFile.open("GET", "../locale/geodashhelp_"+this.lng+".json", false);
+                    xrhFile.onreadystatechange = function ()
+                    {
+                        if(xrhFile.readyState === 4)
+                        {
+                            if(xrhFile.status === 200 || xrhFile.status == 0)
+                            {
+                                var LngObject = JSON.parse(xrhFile.responseText);
+                                console.log(LngObject["name1"]);
+                                var allDom = document.getElementsByTagName("*");
+                                for(var i =0; i < allDom.length; i++){
+                                    var elem = allDom[i];
+                                    var key = elem.getAttribute(_self.attribute);
+
+                                    if(key != null) {
+                                        console.log(key);
+                                        elem.innerHTML = LngObject[key]  ;
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                    xrhFile.send();
+                }
+            }
+            var tLanguage = "${browserLanguage}" == "es"?"es":"en";
+            function runOnLoad() {
+                var translate = new Translate();
+                var currentLng = tLanguage;//'fr'
+                var attributeName = 'data-tag';
+                translate.init(attributeName, currentLng);
+                translate.process();
+            }
+            // if(document.readyState === "complete") {
+            //     runOnLoad();
+            // } else {
+            //     document.onreadystatechange = function() {
+            //         if(document .readyState === "complete") {
+            //             runOnLoad();
+            //         }
+            //     }
+            // }
+        </script>
+
+    <h1 data-tag="title"></h1>
+
+            <h2 data-tag="head_image_collection_widget"></h2>
 
                 <img src="${root}/img/image_collection_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
                 <br class="previewbreak" />
                 <ol>
-                    <li>
-                        Click Add Widget
+                    <li data-tag="click_add_widget">
+
+                    </li>
+                    <li data-tag="select_image_collection">
+                    </li>
+                    <li data-tag="choose_basemap">
                     </li>
                     <li>
-                        Select Image Collection in the type drop down
-                    </li>
-                    <li>
-                        Choose Basemap source from dropdown
-                    </li>
-                    <li>
-                        Select Data:
+                        <span data-tag="select_data"></span>
                         <ol style="list-style-type: lower-alpha">
-                            <li>
-                                NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct bands and image parameters.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.  There is an option to overlay an additional date range for comparison.  If you would like to enable this feature tick the checkbox and select the second date range.
+                            <li data-tag="ic_data_info_preset">
+
                             </li>
-                            <li>
-                                Landsat 5, Landsat 7, Landsat 8, and Sentinel 2 are partially configured leaving you the option to adjust the bands, min, max, and cloud score.  Available bands for each are:
+                            <li data-tag="ic_data_info_configure">
+
                                 <ol style="list-style-type: lower-roman">
                                     <li>
                                         Landsat 5 - B1, B2, B3, B4, B5, B6, B7
@@ -106,25 +163,25 @@
                                 </ol>
                             </li>
                             <li>
-                                Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
+                                <span data-tag="custom_widget_info"></span>
                                 <ol style="list-style-type: lower-roman">
                                     <li>
                                         Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"} 2018-01-01 to 2018-12-31
                                     </li>
-                                    <li>
-                                        Notice the double quotes in the image parameters for both the property name and the value.  Also, notice there are no spaces.  The vision parameters are similar but slightly different than you would add directly in the Google Earth Engine code editor. For example, the bands parameter in the editor is an array of comma-separated strings, and here it is a single comma separated string
+                                    <li data-tag="custom_widget_warning">
+
                                     </li>
                                 </ol>
                             </li>
                         </ol>
                     </li>
-                    <li>
-                        Select date range
+                    <li data-tag="select_date_range">
+
                     </li>
-                    <li>
-                        Click Create
+                    <li data-tag="click_create">
+
                     </li>
-                    <li>Reposition and resize to your liking</li>
+                    <li data-tag="reposition"></li>
                 </ol>
 
         <h2>To add a Time Series Graph Widget:</h2>
@@ -132,14 +189,14 @@
         <img src="${root}/img/time_series_graph_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
         <br class="previewbreak" />
         <ol>
-            <li>
-                Click Add Widget
+            <li data-tag="click_add_widget">
+
             </li>
             <li>
                 Select Time Series Graph in the type drop down
             </li>
             <li>
-                Select Data:
+                <span data-tag="select_data"></span>
                 <ol style="list-style-type: lower-alpha">
                     <li>
                         NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct band.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.
@@ -160,13 +217,13 @@
                     </li>
                 </ol>
             </li>
-            <li>
-                Select date range
+            <li data-tag="select_date_range">
+
             </li>
-            <li>
-                Click Create
+            <li data-tag="click_create">
+
             </li>
-            <li>Reposition and resize to your liking</li>
+            <li data-tag="reposition"></li>
         </ol>
 
 
@@ -175,8 +232,8 @@
         <img src="${root}/img/statistics_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
         <br class="previewbreak" />
         <ol>
-            <li>
-                Click Add Widget
+            <li data-tag="click_add_widget">
+
             </li>
             <li>
                 Select Statistics in the type drop down
@@ -184,10 +241,10 @@
             <li>
                 Give widget a title
             </li>
-            <li>
-                Click Create
+            <li data-tag="click_create">
+
             </li>
-            <li>Reposition and resize to your liking</li>
+            <li data-tag="reposition"></li>
         </ol>
         <br style="clear:both;" />
 
@@ -198,23 +255,22 @@
         <img src="${root}/img/dual_image_collection_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
         <br class="previewbreak" />
         <ol>
-            <li>
-                Click Add Widget
+            <li data-tag="click_add_widget">
             </li>
             <li>
                 Select Dual Image Collection in the type drop down
             </li>
-            <li>
-                Choose Basemap source from dropdown
+            <li data-tag="choose_basemap">
+
             </li>
             <li>
-                Select Data:
+                <span data-tag="select_data"></span>
                 <ol style="list-style-type: lower-alpha">
-                    <li>
-                        NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct bands and image parameters.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.  There is an option to overlay an additional date range for comparison.  If you would like to enable this feature tick the checkbox and select the second date range.
+                    <li data-tag="ic_data_info_preset">
+
                     </li>
-                    <li>
-                        Landsat 5, Landsat 7, Landsat 8, and Sentinel 2 are partially configured leaving you the option to adjust the bands, min, max, and cloud score.  Available bands for each are:
+                    <li data-tag="ic_data_info_configure">
+
                         <ol style="list-style-type: lower-roman">
                             <li>
                                 Landsat 5 - B1, B2, B3, B4, B5, B6, B7
@@ -251,20 +307,20 @@
                         </ol>
                     </li>
                     <li>
-                        Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
+                        <span data-tag="custom_widget_info"></span>
                         <ol style="list-style-type: lower-roman">
                             <li>
                                 Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"} 2018-01-01 to 2018-12-31
                             </li>
-                            <li>
-                                Notice the double quotes in the image parameters for both the property name and the value.  Also, notice there are no spaces.  The vision parameters are similar but slightly different than you would add directly in the Google Earth Engine code editor. For example, the bands parameter in the editor is an array of comma-separated strings, and here it is a single comma separated string
+                            <li  data-tag="custom_widget_warning">
+
                             </li>
                         </ol>
                     </li>
                 </ol>
             </li>
-            <li>
-                Select date range
+            <li data-tag="select_date_range">
+
             </li>
             <li>
                 Click Step 2
@@ -275,8 +331,8 @@
                     <li>
                         NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct bands and image parameters.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.  There is an option to overlay an additional date range for comparison.  If you would like to enable this feature tick the checkbox and select the second date range.
                     </li>
-                    <li>
-                        Landsat 5, Landsat 7, Landsat 8, and Sentinel 2 are partially configured leaving you the option to adjust the bands, min, max, and cloud score.  Available bands for each are:
+                    <li data-tag="ic_data_info_configure">
+
                         <ol style="list-style-type: lower-roman">
                             <li>
                                 Landsat 5 - B1, B2, B3, B4, B5, B6, B7
@@ -310,25 +366,25 @@
                         </ol>
                     </li>
                     <li>
-                        Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name and the image parameters you would like for example:
+                        <span data-tag="custom_widget_info"></span>
                         <ol style="list-style-type: lower-roman">
                             <li>
                                 Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"} 2018-01-01 to 2018-12-31
                             </li>
-                            <li>
-                                Notice the double quotes in the image parameters for both the property name and the value.  Also, notice there are no spaces.  The vision parameters are similar but slightly different than you would add directly in the Google Earth Engine code editor. For example, the bands parameter in the editor is an array of comma-separated strings, and here it is a single comma separated string
+                            <li data-tag="custom_widget_warning">
+
                             </li>
                         </ol>
                     </li>
                 </ol>
             </li>
             <li>
-                Select date range for data 2
+                <span data-tag="select_date_range"></span> for data 2
             </li>
-            <li>
-                Click Create
+            <li data-tag="click_create">
+
             </li>
-            <li>Reposition and resize to your liking</li>
+            <li data-tag="reposition"></li>
         </ol>
         <br style="clear:both;" />
 
@@ -337,14 +393,13 @@
         <img src="${root}/img/image_asset_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
         <br class="previewbreak" />
         <ol>
-            <li>
-                Click Add Widget
+            <li data-tag="click_add_widget">
             </li>
             <li>
                 Select Image Asset in the type drop down
             </li>
-            <li>
-                Choose Basemap source from dropdown
+            <li data-tag="choose_basemap">
+
             </li>
             <li>
                 Give widget a title
@@ -355,10 +410,10 @@
             <li>
                 Enter Image Parameters for asset - Example: {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"}
             </li>
-            <li>
-                Click Create
+            <li data-tag="click_create">
+
             </li>
-            <li>Reposition and resize to your liking</li>
+            <li data-tag="reposition"></li>
         </ol>
         <br style="clear:both;" />
 
@@ -367,14 +422,14 @@
         <img src="${root}/img/image_collection_asset_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
         <br class="previewbreak" />
         <ol>
-            <li>
-                Click Add Widget
+            <li data-tag="click_add_widget">
+
             </li>
             <li>
                 Select Image Collection Asset in the type drop down
             </li>
-            <li>
-                Choose Basemap source from dropdown
+            <li data-tag="choose_basemap">
+
             </li>
             <li>
                 Give widget a title
@@ -385,10 +440,10 @@
             <li>
                 Enter Image Parameters for asset - Example: {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
             </li>
-            <li>
-                Click Create
+            <li data-tag="click_create">
+
             </li>
-            <li>Reposition and resize to your liking</li>
+            <li data-tag="reposition"></li>
         </ol>
         <br style="clear:both;" />
 
@@ -413,6 +468,9 @@
 
 
         <p>Please access <a href="http://www.openforis.org/tools/sepal.html" target="_blank">OpenForis-SEPAL</a> for more information about SEPAL.</p>
+        <script type="text/javascript">
+            runOnLoad();
+        </script>
         <#include "logo-banner.ftl">
     </div>
 </section>
