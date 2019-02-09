@@ -114,104 +114,97 @@
                 translate.init(attributeName, currentLng);
                 translate.process();
             }
-            // if(document.readyState === "complete") {
-            //     runOnLoad();
-            // } else {
-            //     document.onreadystatechange = function() {
-            //         if(document .readyState === "complete") {
-            //             runOnLoad();
-            //         }
-            //     }
-            // }
         </script>
 
-    <h1 data-tag="title"></h1>
+        <h1 data-tag="title"></h1>
 
-            <h2 data-tag="head_image_collection_widget"></h2>
+        <h2 data-tag="head_image_collection_widget"></h2>
 
-                <img src="${root}/img/image_collection_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
-                <br class="previewbreak" />
-                <ol>
-                    <li data-tag="click_add_widget">
-
-                    </li>
-                    <li data-tag="select_image_collection">
-                    </li>
-                    <li data-tag="choose_basemap">
-                    </li>
-                    <li>
-                        <span data-tag="select_data"></span>
-                        <ol style="list-style-type: lower-alpha">
-                            <li data-tag="ic_data_info_preset">
-
-                            </li>
-                            <li data-tag="ic_data_info_configure">
-
-                                <ol style="list-style-type: lower-roman">
-                                    <li>
-                                        Landsat 5 - B1, B2, B3, B4, B5, B6, B7
-                                    </li>
-                                    <li>
-                                        Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
-                                    </li>
-                                    <li>
-                                        Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
-                                    </li>
-                                    <li>
-                                        Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
-                                    </li>
-                                </ol>
-                            </li>
-                            <li>
-                                <span data-tag="custom_widget_info"></span>
-                                <ol style="list-style-type: lower-roman">
-                                    <li>
-                                        Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"} 2018-01-01 to 2018-12-31
-                                    </li>
-                                    <li data-tag="custom_widget_warning">
-
-                                    </li>
-                                </ol>
-                            </li>
-                        </ol>
-                    </li>
-                    <li data-tag="select_date_range">
-
-                    </li>
-                    <li data-tag="click_create">
-
-                    </li>
-                    <li data-tag="reposition"></li>
-                </ol>
-
-        <h2>To add a Time Series Graph Widget:</h2>
-
-        <img src="${root}/img/time_series_graph_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
-        <br class="previewbreak" />
+        <img src="${root}/img/image_collection_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
+        <br class="previewbreak"/>
         <ol>
             <li data-tag="click_add_widget">
 
             </li>
-            <li>
-                Select Time Series Graph in the type drop down
+            <li data-tag="select_image_collection">
+            </li>
+            <li data-tag="choose_basemap">
             </li>
             <li>
                 <span data-tag="select_data"></span>
                 <ol style="list-style-type: lower-alpha">
-                    <li>
-                        NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct band.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.
+                    <li data-tag="ic_data_info_preset">
+
                     </li>
-                    <li>
-                        Custom widget - Any collection from Google Earth Engine can be added if you know the dataset.  You simply need to know the image name, the band you would like graphed, and how you would like the graph reduced, for example.
+                    <li data-tag="ic_data_info_configure">
+
                         <ol style="list-style-type: lower-roman">
                             <li>
-                                GEE Image Collection - COPERNICUS/S5P/OFFL/L3_CO
+                                Landsat 5 - B1, B2, B3, B4, B5, B6, B7
                             </li>
                             <li>
-                                Band to graph - CO_column_number_density
+                                Landsat 7 - B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8
                             </li>
                             <li>
-                                Select the Reducer in the dropdown
+                                Landsat 8 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11
+                            </li>
+                            <li>
+                                Sentinel 2 - B1, B2, B3, B4, B5, B6, B7, B8, B8a, B9, B10, B11, B12
+                            </li>
+                        </ol>
+                    </li>
+                    <li>
+                        <span data-tag="custom_widget_info"></span>
+                        <ol style="list-style-type: lower-roman">
+                            <li>
+                                Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO
+                                {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"}
+                                2018-01-01 to 2018-12-31
+                            </li>
+                            <li data-tag="custom_widget_warning">
+
+                            </li>
+                        </ol>
+                    </li>
+                </ol>
+            </li>
+            <li data-tag="select_date_range">
+
+            </li>
+            <li data-tag="click_create">
+
+            </li>
+            <li data-tag="reposition"></li>
+        </ol>
+
+        <h2 data-tag="add_time_series_graph"></h2>
+
+        <img src="${root}/img/time_series_graph_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
+        <br class="previewbreak"/>
+        <ol>
+            <li data-tag="click_add_widget">
+
+            </li>
+            <li data-tag="select_time_series">
+
+            </li>
+            <li>
+                <span data-tag="select_data"></span>
+                <ol style="list-style-type: lower-alpha">
+                    <li data-tag="configured_graph">
+
+                    </li>
+                    <li>
+                        <span data-tag="custom_graph"></span>
+                        <ol style="list-style-type: lower-roman">
+                            <li data-tag="image_collection_graph">
+
+                            </li>
+                            <li data-tag="band_to_graph">
+
+                            </li>
+                            <li data-tag="graph_reducer">
+
                             </li>
                         </ol>
                     </li>
@@ -227,38 +220,37 @@
         </ol>
 
 
-        <h2>To add a Statistics Widget:</h2>
+        <h2 data-tag="add_stats_widget"></h2>
 
         <img src="${root}/img/statistics_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
-        <br class="previewbreak" />
+        <br class="previewbreak"/>
         <ol>
             <li data-tag="click_add_widget">
 
             </li>
-            <li>
-                Select Statistics in the type drop down
+            <li data-tag="select_stats">
+
             </li>
-            <li>
-                Give widget a title
+            <li data-tag="give_title">
+
             </li>
             <li data-tag="click_create">
 
             </li>
             <li data-tag="reposition"></li>
         </ol>
-        <br style="clear:both;" />
+        <br style="clear:both;"/>
 
 
-
-        <h2>To add a Dual Image Collection Widget:</h2>
+        <h2 data-tag="add_dual_image_collection"></h2>
 
         <img src="${root}/img/dual_image_collection_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
-        <br class="previewbreak" />
+        <br class="previewbreak"/>
         <ol>
             <li data-tag="click_add_widget">
             </li>
-            <li>
-                Select Dual Image Collection in the type drop down
+            <li data-tag="select_dual_image_collection">
+
             </li>
             <li data-tag="choose_basemap">
 
@@ -286,23 +278,23 @@
                             </li>
                         </ol>
                     </li>
-                    <li>
-                        Image Asset (see Image Asset example below and skip the next step as you will not need to select a date range)
+                    <li data-tag="image_asset">
+
                     </li>
                     <li>
-                        Image Collection Asset
+                        <span data-tag="image_collection_asset"></span>
                         <ol style="list-style-type: lower-roman">
-                            <li>
-                                Give widget a title
+                            <li data-tag="give_title">
+
                             </li>
                             <li>
-                                Enter the GEE Image Asset - Example: users/ValeriaContessa/Indonesia_2000
+                                <span data-tag="enter_image_asset"></span> users/ValeriaContessa/Indonesia_2000
                             </li>
                             <li>
-                                Enter Image Parameters for asset - Example: {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
+                                <span data-tag="enter_image_asset_params"> </span>{"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
                             </li>
-                            <li>
-                                Skip selecting date since this is a preprocessed asset
+                            <li data-tag="skip_date">
+
                             </li>
                         </ol>
                     </li>
@@ -310,9 +302,11 @@
                         <span data-tag="custom_widget_info"></span>
                         <ol style="list-style-type: lower-roman">
                             <li>
-                                Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"} 2018-01-01 to 2018-12-31
+                                Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO
+                                {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"}
+                                2018-01-01 to 2018-12-31
                             </li>
-                            <li  data-tag="custom_widget_warning">
+                            <li data-tag="custom_widget_warning">
 
                             </li>
                         </ol>
@@ -322,14 +316,14 @@
             <li data-tag="select_date_range">
 
             </li>
-            <li>
-                Click Step 2
+            <li data-tag="click_step2">
+
             </li>
             <li>
-                Select Data 2:
+                <span data-tag="select_data2"></span>
                 <ol style="list-style-type: lower-alpha">
-                    <li>
-                        NDVI, EVI, EVI 2, NDMI, and NDWI are preconfigured with the correct bands and image parameters.  If you select those you will just need to add a title for the widget (I recommend {Data} {Date range} for example NDVI 2001 or NDVI 2001 - 2002}) and the date range.  There is an option to overlay an additional date range for comparison.  If you would like to enable this feature tick the checkbox and select the second date range.
+                    <li data-tag="ic_data_info_preset">
+
                     </li>
                     <li data-tag="ic_data_info_configure">
 
@@ -348,20 +342,21 @@
                             </li>
                         </ol>
                     </li>
-                    <li>
-                        Image Asset (see Image Asset example below and skip the next step as you will not need to select a date range)
+                    <li data-tag="image_asset">
+
                     </li>
                     <li>
-                        Image Collection Asset
+                        <span data-tag="image_collection_asset"></span>
                         <ol style="list-style-type: lower-roman">
                             <li>
-                                Enter the GEE Image Asset - Example: users/ValeriaContessa/Indonesia_2000
+                                <span data-tag="enter_image_asset"></span> users/ValeriaContessa/Indonesia_2000
                             </li>
                             <li>
-                                Enter Image Parameters for asset - Example: {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
+                                <span data-tag="enter_image_asset_params"> </span>
+                                {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
                             </li>
-                            <li>
-                                Skip selecting date since this is a preprocessed asset
+                            <li data-tag="skip_date">
+
                             </li>
                         </ol>
                     </li>
@@ -369,7 +364,9 @@
                         <span data-tag="custom_widget_info"></span>
                         <ol style="list-style-type: lower-roman">
                             <li>
-                                Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"} 2018-01-01 to 2018-12-31
+                                Offline Carbon Monoxide - COPERNICUS/S5P/OFFL/L3_CO
+                                {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"}
+                                2018-01-01 to 2018-12-31
                             </li>
                             <li data-tag="custom_widget_warning">
 
@@ -379,95 +376,98 @@
                 </ol>
             </li>
             <li>
-                <span data-tag="select_date_range"></span> for data 2
+                <span data-tag="select_date_range"></span> <span data-tag="for_data2"></span>
             </li>
             <li data-tag="click_create">
 
             </li>
             <li data-tag="reposition"></li>
         </ol>
-        <br style="clear:both;" />
+        <br style="clear:both;"/>
 
-        <h2>To add a Image Asset Widget:</h2>
+        <h2 data-tag="add_image_asset"></h2>
 
         <img src="${root}/img/image_asset_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
-        <br class="previewbreak" />
+        <br class="previewbreak"/>
         <ol>
             <li data-tag="click_add_widget">
             </li>
-            <li>
-                Select Image Asset in the type drop down
+            <li data-tag="select_image_asset">
+
             </li>
             <li data-tag="choose_basemap">
 
             </li>
-            <li>
-                Give widget a title
+            <li data-tag="give_title">
+
             </li>
             <li>
-                Enter the GEE Image Asset - Example: users/billyz313/carbon_monoxide
+                <span data-tag="enter_image_asset"></span> users/billyz313/carbon_monoxide
             </li>
             <li>
-                Enter Image Parameters for asset - Example: {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"}
+                <span data-tag="enter_image_asset_params"></span>
+                {"bands":"CO_column_number_density,H2O_column_number_density,cloud_height","min":"0","max":"0.5"}
             </li>
             <li data-tag="click_create">
 
             </li>
             <li data-tag="reposition"></li>
         </ol>
-        <br style="clear:both;" />
+        <br style="clear:both;"/>
 
-        <h2>To add a Image Collection Asset Widget:</h2>
+        <h2 data-tag="add_image_collection_widget"></h2>
 
         <img src="${root}/img/image_collection_asset_widget.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
-        <br class="previewbreak" />
+        <br class="previewbreak"/>
         <ol>
             <li data-tag="click_add_widget">
 
             </li>
-            <li>
-                Select Image Collection Asset in the type drop down
+            <li data-tag="select_image_collection">
+
             </li>
             <li data-tag="choose_basemap">
 
             </li>
-            <li>
-                Give widget a title
+            <li data-tag="give_title">
+
             </li>
             <li>
-                Enter the GEE Image Collection Asset - Example: users/ValeriaContessa/Indonesia_2000
+                <span data-tag="enter_image_collection_asset"></span> users/ValeriaContessa/Indonesia_2000
             </li>
             <li>
-                Enter Image Parameters for asset - Example: {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
+                <span dtat-tag="enter_image_asset_params"></span> {"bands":"B4,B5,B3","min":"10,0,10","max":"120,90,70"}
             </li>
             <li data-tag="click_create">
 
             </li>
             <li data-tag="reposition"></li>
         </ol>
-        <br style="clear:both;" />
+        <br style="clear:both;"/>
 
-        <h2>To move and resize widgets</h2>
+        <h2 data-tag="to_move_resize"></h2>
         <img src="${root}/img/change_widget_layout.gif" class="previewImg" onclick="toggleHelpImage(this);"/>
-        <br class="previewbreak" />
+        <br class="previewbreak"/>
         <ol>
-            <li>
-                Drag and drop
+            <li data-tag="drag_drop">
+
             </li>
-            <li>
-                Resize by dragging from the bottom right corner
+            <li data-tag="resize_by">
+
             </li>
-            <li>
-                Widgets are updated in realtime
+            <li data-tag="widgets_realtime">
+
             </li>
-            <li>
-                View rendered results in the Geo-Dash window
+            <li data-tag="view_rendered">
+
             </li>
         </ol>
-        <br style="clear:both;" />
+        <br style="clear:both;"/>
 
 
-        <p>Please access <a href="http://www.openforis.org/tools/sepal.html" target="_blank">OpenForis-SEPAL</a> for more information about SEPAL.</p>
+        <p><span data-tag="pre_sepal_link"></span> <a href="http://www.openforis.org/tools/sepal.html"
+                                                                   target="_blank">OpenForis-SEPAL</a> <span
+                data-tag="post_sepal_link"></span></p>
         <script type="text/javascript">
             runOnLoad();
         </script>
