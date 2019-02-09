@@ -28,7 +28,7 @@ class Collection extends React.Component {
             userImages: {},
             collectionStart: 0,
             reviewPlots: false,
-            selectedQuestion: { id: 0, question: ""},
+            selectedQuestion: { id: 0, question: "", answers: []},
             sampleOutlineBlack: true
         };
     }
