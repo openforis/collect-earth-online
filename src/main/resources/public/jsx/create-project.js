@@ -130,6 +130,16 @@ class Project extends React.Component {
             alert("A plot size is required");
             return false;
 
+        } else if (projectDetails.plotDistribution === "csv" 
+                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".csv"))) {
+            alert("A plot CSV file is required");
+            return false;
+
+        } else if (projectDetails.plotDistribution === "shp" 
+                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".shp"))) {
+            alert("A plot SHP file is required");
+            return false;
+
         } else if (projectDetails.sampleDistribution === "random" 
                     && (!projectDetails.samplesPerPlot || projectDetails.samplesPerPlot === 0)) {
             alert("A number of samples per plot is required for random sample distribution");
@@ -138,6 +148,16 @@ class Project extends React.Component {
         } else if (projectDetails.sampleDistribution === "gridded" 
                 && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
             alert("A sample resolution is required for gridded sample distribution");
+            return false;
+
+        } else if (projectDetails.sampleDistribution === "csv" 
+                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".csv"))) {
+            alert("A sample CSV file is required");
+            return false;
+
+            } else if (projectDetails.sampleDistribution === "shp" 
+                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".shp"))) {
+            alert("A sample SHP file is required");
             return false;
 
         } else if (projectDetails.surveyQuestions.length === 0) {
@@ -283,7 +303,7 @@ class Project extends React.Component {
                             setProjectTemplate={this.setProjectTemplate} 
                             setSurveyQuestions={this.setSurveyQuestions}
                             toggleTemplatePlots={this.toggleTemplatePlots}
-                            useTemplatePlots={this.useTemplatePlots}
+                            useTemplatePlots={this.state.useTemplatePlots}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -298,7 +318,6 @@ function ProjectDesignForm(props) {
         <form id="project-design-form" className="px-2 pb-2" method="post"
               action={props.documentRoot + "/create-project"}
               encType="multipart/form-data">
-        
                 {props.projectList && 
                     <ProjectTemplateVisibility 
                         projectId={props.projectDetails.id} 
@@ -562,19 +581,8 @@ function ProjectImagery({ baseMapSource, imageryList, setProjectDetail }) {
     );
 }
 
-function encodeImageFileAsURL(event) {
-      console.log(event)
-    const file = event.target.files[0];
-    let reader = new FileReader();
-    reader.onloadend = function() {
-      let base64Data = reader.result;
-      console.log("RESULT", base64Data);
-    };
-    reader.readAsDataURL(file);
-  }
-
 function PlotDesign ({
-    projectDetails: { id, plotDistribution, plotShape, numPlots, plotSpacing, plotSize },
+    projectDetails: { id, plotDistribution, plotShape, numPlots, plotSpacing, plotSize, plotFileName },
     setProjectDetail,
     toggleTemplatePlots,
     useTemplatePlots,
@@ -665,7 +673,7 @@ function PlotDesign ({
                             id="plot-distribution-csv-file"
                             defaultValue=""
                             name="plot-distribution-csv-file"
-                            onChange={encodeImageFileAsURL}
+                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
                             style={{ display: "none" }}
                             disabled={plotDistribution != "csv"}
                         />
@@ -693,12 +701,17 @@ function PlotDesign ({
                             id="plot-distribution-shp-file"
                             defaultValue=""
                             name="plot-distribution-shp-file"
-                            onChange={encodeImageFileAsURL}
+                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
                             style={{ display: "none" }}
                             disabled={plotDistribution != "shp"}
                         />
                         </label>
                     </div>
+                    {["csv", "shp"].includes(plotDistribution) &&
+                        <div className="PlotDesign__file-display ml-3 d-inline">
+                            File: {!plotFileName ? <span className="font-italic">None</span> : plotFileName}
+                        </div>
+                    }
                     <p id="plot-design-text" className="font-italic ml-2 small">-
                         {plotDistribution === "random" &&
                         "Plot centers will be randomly distributed within the AOI."}
@@ -806,7 +819,7 @@ function PlotDesign ({
 
 function SampleDesign ({
     setProjectDetail, 
-    projectDetails: { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution }
+    projectDetails: { plotDistribution, sampleDistribution, samplesPerPlot, sampleResolution, sampleFileName }
     }) {
     return (
         <SectionBlock title="Sample Design">
@@ -866,7 +879,7 @@ function SampleDesign ({
                             id="sample-distribution-csv-file"
                             name="sample-distribution-csv-file"
                             defaultValue=""
-                            onChange={encodeImageFileAsURL}
+                            onChange={e => setProjectDetail("shapeFileName", e.target.files[0].name)}
                             style={{ display: "none" }}
                             disabled={sampleDistribution !== "csv"}
                         />
@@ -894,12 +907,17 @@ function SampleDesign ({
                             id="sample-distribution-shp-file"
                             name="sample-distribution-shp-file"
                             defaultValue=""
-                            onChange={encodeImageFileAsURL}
+                            onChange={() => setProjectDetail("sampleFileName", event.target.files[0].name)}
                             style={{ display: "none" }}
                             disabled={sampleDistribution != "shp"}
                         />
                     </label>
                 </div>
+                {["csv", "shp"].includes(sampleDistribution) &&
+                    <div className="SampleDesign__file-display ml-3 d-inline">
+                        File: {!sampleFileName ? <span className="font-italic">None</span> : sampleFileName}
+                    </div>
+                }
                 <p id="sample-design-text" className="font-italic ml-2 small">-
                     {sampleDistribution === "random" &&
                         "Sample points will be randomly distributed within the plot boundary."}
