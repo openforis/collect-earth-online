@@ -44,7 +44,6 @@ class Project extends React.Component {
     };
 
     componentDidMount() {
-        // FIXME, combine promises to load map only once after all data is back
         this.getImageryList();
         this.getProjectList();
     }
@@ -57,13 +56,36 @@ class Project extends React.Component {
         if (this.state.mapConfig
                 && (this.state.mapConfig !== prevState.mapConfig 
                 || this.state.projectDetails.id !== prevState.projectDetails.id))  {
-            this.updateProjectMap();
+            this.updateProjectBoundary();
+        }
+
+        if (this.state.mapConfig && this.state.projectDetails.id > 0
+            && this.state.projectDetails.id !== prevState.projectDetails.id)  {
+            this.getProjectPlots();
         }
 
         if (this.state.mapConfig 
             && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
 
             mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
+        }
+
+        if (this.state.mapConfig 
+            && (!this.state.useTemplatePlots || this.state.plotList.length === 0)
+            && (prevState.useTemplatePlots || prevState.plotList.length > 0)) {
+                
+            mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
+        }
+
+        if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.useTemplatePlots
+            && (prevState.plotList.length === 0 || !prevState.useTemplatePlots)) {
+
+            mercator.addVectorLayer(this.state.mapConfig,
+                                    "projectPlots",
+                                    mercator.plotsToVectorSource(this.state.plotList),
+                                    this.state.projectDetails.plotShape == "circle" 
+                                        ? ceoMapStyles.yellowCircle 
+                                        : ceoMapStyles.yellowSquare);
         }
 
         // Set sample distribution to a valid choice based on plot selection
@@ -174,10 +196,18 @@ class Project extends React.Component {
     }
 
     setProjectTemplate = (newTemplateId) => {
-        const templateProject = this.state.projectList.find(p => p.id == newTemplateId);
-        const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
-
-        this.setState({projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions }});
+        if (parseInt(newTemplateId) === 0) {
+            this.setState({ projectDetails: { ...this.state.projectDetails, id: 0 },
+                            plotList: [], 
+                            useTemplatePlots: false });
+        } else {
+            const templateProject = this.state.projectList.find(p => p.id == newTemplateId);
+            const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
+    
+            this.setState({ projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions },
+                            plotList: [],
+                            useTemplatePlots: true });
+        }
     }
 
     toggleTemplatePlots = () => this.setState({useTemplatePlots: !this.state.useTemplatePlots});
@@ -230,7 +260,8 @@ class Project extends React.Component {
         this.setState({mapConfig: newMapConfig});
     }
 
-    showPlotCenters(maxPlots) {
+    getProjectPlots() {
+        const maxPlots = 300;
         fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
             .then(response => {
                 if (response.ok) {
@@ -242,16 +273,13 @@ class Project extends React.Component {
             })
             .then(data => {
                 this.setState({plotList: data});
-                mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.details.plotShape);
             })
-            .catch(e => this.setState({plotList: null}));
+            .catch(e => this.setState({plotList: []}));
     }
 
-    updateProjectMap() {
+    updateProjectBoundary() {
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-        mercator.removeLayerByTitle(this.state.mapConfig, "flaggedPlots");
-        mercator.removeLayerByTitle(this.state.mapConfig, "analyzedPlots");
-        mercator.removeLayerByTitle(this.state.mapConfig, "unanalyzedPlots");
+
         if (this.state.projectDetails.id === 0) {
             // Enable dragbox interaction if we are creating a new project
             let displayDragBoxBounds = (dragBox) => {
@@ -277,15 +305,11 @@ class Project extends React.Component {
                             });
 
             // Display a bounding box with the project's AOI on the map and zoom to it
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
             mercator.addVectorLayer(this.state.mapConfig,
                 "currentAOI",
                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
                 ceoMapStyles.yellowPolygon);
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-
-            // Get the new plotlist
-            this.showPlotCenters(300);
         }
     }
 
@@ -372,9 +396,10 @@ function ProjectTemplateVisibility({ projectId, projectList, setProjectTemplate 
                         size="1"
                         value={projectId} onChange={e => setProjectTemplate(e.target.value)}
                     >
+                        <option key={0} value={0}>None</option>
                         {
                             projectList
-                                .filter(proj => proj != null)
+                                .filter(proj => proj && proj.id > 0)
                                 .map((proj,uid) =>
                                     <option key={uid} value={proj.id}>{proj.name}</option>
                                 )
@@ -593,29 +618,31 @@ function PlotDesign ({
         <div id="plot-design">
           <div className="row">
             <div id="plot-design-col1" className="col">
-              <h3>Template Plots</h3>
                 {id > 0 &&
-                  <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="use-template-plots"
-                        name="use-template-plots"
-                        defaultValue={useTemplatePlots}
-                        onChange={toggleTemplatePlots}
-                        checked={useTemplatePlots}
-                    />
-                    <label
-                        className="form-check-label"
-                        htmlFor="use-template-plots"
-                    >
-                        Use Template Plots and Samples
-                    </label>
-                </div>
+                    <Fragment>
+                    <h3>Template Plots</h3>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="use-template-plots"
+                            name="use-template-plots"
+                            defaultValue={useTemplatePlots}
+                            onChange={toggleTemplatePlots}
+                            checked={useTemplatePlots}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="use-template-plots"
+                        >
+                            Copy Template Plots and Samples
+                        </label>
+                    </div>
+                    <hr />
+                    </Fragment>
                 }
                 {!useTemplatePlots && (
                     <Fragment>
-                    <hr />
                     <h3 className="mb-3">Spatial Distribution</h3>
                     <div className="form-check form-check-inline">
                         <input
