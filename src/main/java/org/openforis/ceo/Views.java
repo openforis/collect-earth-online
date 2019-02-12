@@ -1,6 +1,5 @@
 package org.openforis.ceo;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -193,7 +192,7 @@ public class Views {
     }
 
     public static Route geodashhelp(FreeMarkerEngine freemarker) {
-        Function<Request, String> getBrowserLanguage = (req) -> req.raw().geLocale();
+        Function<Request, String> getBrowserLanguage = (req) -> req.raw().getLocale();
         return makeRoute("GeoDashHelp", freemarker,
                          Map.of("browserLanguage", getBrowserLanguage));
     }
