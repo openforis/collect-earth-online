@@ -168,7 +168,7 @@ class Project extends React.Component {
             return false;
 
         } else if (projectDetails.sampleDistribution === "gridded" 
-                && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
+                    && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
             alert("A sample resolution is required for gridded sample distribution");
             return false;
 
@@ -177,7 +177,7 @@ class Project extends React.Component {
             alert("A sample CSV (.csv) file is required");
             return false;
 
-            } else if (projectDetails.sampleDistribution === "shp" 
+        } else if (projectDetails.sampleDistribution === "shp" 
                     && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".zip"))) {
             alert("A sample SHP (.zip) file is required");
             return false;
