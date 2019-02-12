@@ -158,7 +158,7 @@ class Project extends React.Component {
             return false;
 
         } else if (projectDetails.plotDistribution === "shp" 
-                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".shp"))) {
+                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".zip"))) {
             alert("A plot SHP file is required");
             return false;
 
@@ -178,7 +178,7 @@ class Project extends React.Component {
             return false;
 
             } else if (projectDetails.sampleDistribution === "shp" 
-                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".shp"))) {
+                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".zip"))) {
             alert("A sample SHP file is required");
             return false;
 
