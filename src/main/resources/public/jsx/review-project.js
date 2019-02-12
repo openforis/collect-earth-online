@@ -727,7 +727,7 @@ function ProjectManagement(props) {
 export function renderReviewProjectPage(args) {
     ReactDOM.render(
         // FIXME get institution from project data.
-        <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId} institutionId={args.institutionId}/>,
+        <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId}/>,
         document.getElementById("project")
     );
 }
