@@ -192,7 +192,7 @@ public class Views {
     }
 
     public static Route geodashhelp(FreeMarkerEngine freemarker) {
-        Function<Request, String> getBrowserLanguage = (req) -> req.raw().getLocale();
+        Function<Request, String> getBrowserLanguage = (req) -> req.raw().getLocale().getLanguage();
         return makeRoute("GeoDashHelp", freemarker,
                          Map.of("browserLanguage", getBrowserLanguage));
     }
