@@ -165,10 +165,12 @@ function SurveyQuestionTree({
                                             {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
                                         </li>
                                         <li>
-                                            <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parentAnswer === -1 
+                                            <span className="font-weight-bold">Parent Answer:  </span>
+                                            {surveyQuestion.parentAnswer === -1 
                                                 ? "Any" 
                                                 : parentQuestion.answers
-                                                    .find(ans => ans.id === surveyQuestion.parentAnswer).answer}
+                                                    .find(ans => ans.id === surveyQuestion.parentAnswer).answer
+                                            }
                                         </li>
                                     </Fragment>
                                 }
