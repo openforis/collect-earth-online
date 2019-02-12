@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
+import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
 
 function Account(props) {
     return (

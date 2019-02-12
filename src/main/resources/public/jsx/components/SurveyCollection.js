@@ -47,8 +47,8 @@ export class SurveyQuestions extends React.Component {
 
     checkAllSelected = (currentQuestionId) => {
         const { surveyQuestions } = this.props;
-        const { visible, answered } = surveyQuestions.find(sv => sv.id === currentQuestionId);
-        const childQuestions = surveyQuestions.filter(sv => sv.parentQuestion === currentQuestionId);
+        const { visible, answered } = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
         if (childQuestions.length === 0) {
             return visible === answered;
@@ -114,7 +114,7 @@ export class SurveyQuestions extends React.Component {
                                 setCurrentValue={this.props.setCurrentValue}
                                 selectedQuestion={this.props.selectedQuestion}
                                 setSelectedQuestion={this.props.setSelectedQuestion}
-                                higharcyLabel=""
+                                hierarchyLabel=""
                             />
                         }
                     </div>
@@ -163,7 +163,7 @@ class SurveyQuestionTree extends React.Component  {
                                 `}}
                         onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                     >
-                    {this.props.higharcyLabel + removeEnumerator(this.props.surveyNode.question)}
+                    {this.props.hierarchyLabel + removeEnumerator(this.props.surveyNode.question)}
                     </button>
                 </div>
 
@@ -187,7 +187,7 @@ class SurveyQuestionTree extends React.Component  {
                                 setCurrentValue={this.props.setCurrentValue}
                                 selectedQuestion={this.props.selectedQuestion}
                                 setSelectedQuestion={this.props.setSelectedQuestion}
-                                higharcyLabel={this.props.higharcyLabel + "- "}
+                                hierarchyLabel={this.props.hierarchyLabel + "- "}
                             />
                             }
                         </Fragment>

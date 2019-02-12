@@ -195,7 +195,7 @@ class NewQuestionDesigner extends React.Component {
             
             if (repeatedQuestions === 0 
                 || confirm("Warning: this is a duplicate name.  This will save as " 
-                            + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode")) {
+                            + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
 
                 const newQuestion = {
                                         id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
