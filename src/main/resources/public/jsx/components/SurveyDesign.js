@@ -2,6 +2,7 @@ import React, {Fragment} from "react";
 
 import { SectionBlock } from "./FormComponents"
 import SurveyCardList from "./SurveyCardList"
+import { removeEnumerator } from "../utils/SurveyUtils"
 
 const componentTypes = [
     {componentType: "button", dataType: "text"},
@@ -49,7 +50,7 @@ export class SurveyDesign extends React.Component {
     }
 
     getChildQuestionIds = (questionId) => {
-        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parent_question === questionId);
+        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parentQuestion === questionId);
         if (childQuestions.length === 0) {
             return [questionId];
         } else {
@@ -186,20 +187,30 @@ class NewQuestionDesigner extends React.Component {
     }
 
     addSurveyQuestion = () => {
-        if (this.state.newQuestionText != "") {
+
+        if (this.state.newQuestionText !== "") {
             const { surveyQuestions } = this.props;
             const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
-            const newQuestion = {
-                                    id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
-                                    question: this.state.newQuestionText,
-                                    answers: [],
-                                    parent_question: this.state.selectedParent,
-                                    parent_answer: this.state.selectedAnswer,
-                                    dataType: dataType,
-                                    componentType: componentType,
-                                }; 
-            this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
-            this.setState({ selectedAnswer: -1, newQuestionText: "" });
+            const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
+            
+            if (repeatedQuestions === 0 
+                || confirm("Warning: this is a duplicate name.  This will save as " 
+                            + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode")) {
+
+                const newQuestion = {
+                                        id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
+                                        question: repeatedQuestions > 0 
+                                                        ? this.state.newQuestionText + ` (${repeatedQuestions})` 
+                                                        : this.state.newQuestionText,
+                                        answers: [],
+                                        parentQuestion: this.state.selectedParent,
+                                        parentAnswer: this.state.selectedAnswer,
+                                        dataType: dataType,
+                                        componentType: componentType,
+                                    }; 
+                this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
+                this.setState({ selectedAnswer: -1, newQuestionText: "" });
+            }
         } else {
             alert("Please enter a survey question first.");
         }

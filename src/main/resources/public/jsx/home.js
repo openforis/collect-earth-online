@@ -210,15 +210,15 @@ class SideBar extends React.Component {
 
         const filteredProjects = this.props.projects
                 .filter(proj => this.state.filterInstitution
-                                    || this.state.useFirstLetter 
+                                    || (this.state.useFirstLetter 
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                        : proj.name.toLocaleLowerCase().includes(filterTextLower));
-
+                                        : proj.name.toLocaleLowerCase().includes(filterTextLower)));
+                                        
         const filteredInstitutions = this.state.institutions
                 .filter(inst => !this.state.filterInstitution
-                                    || this.state.useFirstLetter 
+                                    || (this.state.useFirstLetter 
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
-                                        : inst.name.toLocaleLowerCase().includes(filterTextLower))
+                                        : inst.name.toLocaleLowerCase().includes(filterTextLower)))
                 .filter(inst => this.state.filterInstitution 
                                     || filteredProjects.some(proj => inst.id === proj.institution))
                 .filter(inst => !(this.state.filterInstitution && this.state.containsProjects) 

@@ -1,8 +1,10 @@
 import React, { Fragment }  from "react";
 
+import { removeEnumerator } from "../utils/SurveyUtils"
+
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
-                            .filter(sq => sq.parent_question == -1)
+                            .filter(sq => sq.parentQuestion == -1)
                             .sort((a, b) => a.id - b.id);
 
     return topLevelNodes.map((sq, index) =>
@@ -59,7 +61,11 @@ class SurveyCard extends React.Component {
                                 <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
-                            <h3 className="m-3">{this.state.showQuestions ? "" : `-- ${surveyQuestion.question}`}</h3>
+                            <h3 className="m-3">
+                                {!this.state.showQuestions && `-- ${inDesignMode ? surveyQuestion.question
+                                                                                : removeEnumerator(surveyQuestion.question)}`
+                                }
+                            </h3>
                         </div>
                         {inDesignMode && 
                             <div className="col-2 d-flex pr-1 justify-content-end">
@@ -118,8 +124,8 @@ function SurveyQuestionTree({
     surveyQuestions,
     setSurveyQuestions }) {
 
-    const childNodes = surveyQuestions.filter(sq => sq.parent_question == surveyQuestion.id);
-    const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parent_question);
+    const childNodes = surveyQuestions.filter(sq => sq.parentQuestion == surveyQuestion.id);
+    const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
     return (
         <Fragment>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
@@ -140,7 +146,9 @@ function SurveyQuestionTree({
                                 <span className="font-weight-bold">X</span>
                             </button>
                         }
-                            <h3 className="font-weight-bold">{surveyQuestion.question}</h3>
+                            <h3 className="font-weight-bold">
+                                {inDesignMode ? surveyQuestion.question : removeEnumerator(surveyQuestion.question)}
+                            </h3>
                         </div>
                         <div className="SurveyQuestionTree__question-information pb-1">
                             <ul className="mb-1">
@@ -150,13 +158,14 @@ function SurveyQuestionTree({
                                         {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                                     </li>
                                 }
-                                {surveyQuestion.parent_question > -1 &&
+                                {surveyQuestion.parentQuestion > -1 &&
                                     <Fragment>
                                         <li>
-                                            <span className="font-weight-bold">Parent Question:  </span> {parentQuestion.question}
+                                            <span className="font-weight-bold">Parent Question:  </span> 
+                                            {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
                                         </li>
                                         <li>
-                                            <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parent_answer === -1 
+                                            <span className="font-weight-bold">Parent Answer:  </span>{surveyQuestion.parentAnswer === -1 
                                                 ? "Any" 
                                                 : parentQuestion.answers
                                                     .find(ans => ans.id === surveyQuestion.parent_answer).answer}
