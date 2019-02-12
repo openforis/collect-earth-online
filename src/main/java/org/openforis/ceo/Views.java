@@ -1,5 +1,5 @@
 package org.openforis.ceo;
-import java.util.HashMap;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -52,38 +52,17 @@ public class Views {
 
     private static Route makeRoute(String navlink, FreeMarkerEngine freemarker) {
         var templateFileName = navlink.toLowerCase() + ".ftl";
-
-        if(navlink == "geodashhelp"){
-            //var model = mergeParams(getBaseModel(req, navlink), Map.of("browserLanguage", language), req);
-            // return freemarker.render(new ModelAndView(model, templateFileName));
-            return makeRoute( navlink,  freemarker,  Map.of("browserLanguage", ""));
-
-        }
-        else {
-            return (req, res) -> {
-                var model = getBaseModel(req, navlink);
-                return freemarker.render(new ModelAndView(model, templateFileName));
-            };
-        }
+        return (req, res) -> {
+            var model = getBaseModel(req, navlink);
+            return freemarker.render(new ModelAndView(model, templateFileName));
+        };
     }
 
     private static Route makeRoute(String navlink, FreeMarkerEngine freemarker, Map<String, Object> extraParams) {
         var templateFileName = navlink.toLowerCase() + ".ftl";
-
         return (req, res) -> {
-            if(navlink == "geodashhelp"){
-                Object country = req.raw().getLocale();
-                var theLocal = Map.of("browserLanguage", country);
-                HashMap map3 = new HashMap<>();
-                map3.putAll(extraParams);
-                map3.putAll(theLocal);
-                var model = mergeParams(getBaseModel(req, navlink),map3 , req);
-                return freemarker.render(new ModelAndView(model, templateFileName));
-            }
-            else {
-                var model = mergeParams(getBaseModel(req, navlink), extraParams, req);
-                return freemarker.render(new ModelAndView(model, templateFileName));
-            }
+            var model = mergeParams(getBaseModel(req, navlink), extraParams, req);
+            return freemarker.render(new ModelAndView(model, templateFileName));
         };
     }
 
@@ -116,8 +95,6 @@ public class Views {
     public static Route about(FreeMarkerEngine freemarker) {
         return makeRoute("About", freemarker);
     }
-
-    public static Route geodashhelp(FreeMarkerEngine freemarker) { return makeRoute("geodashhelp", freemarker); }
 
     public static Route support(FreeMarkerEngine freemarker) {
         return makeRoute("Support", freemarker);
@@ -213,6 +190,12 @@ public class Views {
         Function<Request, String> getEditable = (req) -> req.queryParams("editable");
         return makeRoute("Geo-Dash", freemarker,
                          Map.of("editable", getEditable));
+    }
+
+    public static Route geodashhelp(FreeMarkerEngine freemarker) {
+        Function<Request, String> getBrowserLanguage = (req) -> req.raw().geLocale();
+        return makeRoute("GeoDashHelp", freemarker,
+                         Map.of("browserLanguage", getBrowserLanguage));
     }
 
     public static Route editWidgetLayout(FreeMarkerEngine freemarker) {
