@@ -294,10 +294,10 @@ function InstitutionFilter(props) {
                            placeholder="Enter text to filter"
                            className="form-control"
                            value={props.filterText}
-                           onChange={(e) => props.updateFilterText(e.target.value)}
+                           onChange={e => props.updateFilterText(e.target.value)}
                     />
-                    <a href="#" onClick={props.toggleShowFilters}><img
-                        src={"img/hidefilter.png"} width="40" height="40"
+                    <a href="#" onClick={props.toggleShowFilters}>
+                        <img src={props.documentRoot+"/img/hidefilter.png"} width="40" height="40"
                         style={{padding: "5px"}} alt="Show/Hide Filters" title="show/hide filters"/></a>
                 </div>
                 <div className="d-inlineflex">
@@ -382,10 +382,10 @@ function InstitutionFilter(props) {
                            placeholder="Enter text to filter"
                            className="form-control"
                            value={props.filterText}
-                           onChange={(e) => props.updateFilterText(e.target.value)}
+                           onChange={e => props.updateFilterText(e.target.value)}
                     />
-                    <a href="#" onClick={props.toggleShowFilters}><img
-                        src={"img/showfilter.png"} width="40" height="40"
+                    <a href="#" onClick={props.toggleShowFilters}>
+                        <img src={props.documentRoot+"/img/showfilter.png"} width="40" height="40"
                         style={{padding: "5px"}} alt="Show/Hide Filters" title="show/hide filters"/></a>
                 </div>
             </div>
