@@ -95,8 +95,6 @@ public class Views {
         return makeRoute("About", freemarker);
     }
 
-    public static Route geodashhelp(FreeMarkerEngine freemarker) { return makeRoute("geodashhelp", freemarker); }
-
     public static Route support(FreeMarkerEngine freemarker) {
         return makeRoute("Support", freemarker);
     }
@@ -191,6 +189,12 @@ public class Views {
         Function<Request, String> getEditable = (req) -> req.queryParams("editable");
         return makeRoute("Geo-Dash", freemarker,
                          Map.of("editable", getEditable));
+    }
+
+    public static Route geodashhelp(FreeMarkerEngine freemarker) {
+        Function<Request, String> getBrowserLanguage = (req) -> req.raw().getLocale();
+        return makeRoute("GeoDashHelp", freemarker,
+                         Map.of("browserLanguage", getBrowserLanguage));
     }
 
     public static Route editWidgetLayout(FreeMarkerEngine freemarker) {
