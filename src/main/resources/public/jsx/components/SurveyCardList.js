@@ -48,7 +48,6 @@ class SurveyCard extends React.Component {
 
     render() {
         const { cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds } = this.props;
-        console.log(this.props.surveyQuestions)
         return (
             <div className="SurveyCard border rounded border-dark">
                 <div className="container">
