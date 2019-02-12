@@ -105,24 +105,23 @@ class Project extends React.Component {
             let formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("sample-values", JSON.stringify(this.state.projectDetails.surveyQuestions));
-            $.ajax({
-                url: this.props.documentRoot + "/create-project",
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: false,
-                processData: false,
-                data: formData
-            }).fail(() => {
+
+            fetch(this.props.documentRoot + "/create-project", 
+                {
+                    method: "POST",
+                    body: formData
+            })
+            .then(response => {
                 utils.hide_element("spinner");
-                alert("Error creating project. See console for details.");
-            }).done((data) => {
-                utils.hide_element("spinner");
-                if (parseInt(data)) {
-                    window.location = this.props.documentRoot + "/review-project/" + data;
+                if (response.ok) {
+                    return response.json();
                 } else {
-                    alert(data);
+                    console.log(response);
+                    alert("Error creating project. See console for details.");
                 }
+            })
+            .then(projectId => {
+                window.location = this.props.documentRoot + "/review-project/" + projectId;
             });
         }
     }
@@ -158,7 +157,7 @@ class Project extends React.Component {
             return false;
 
         } else if (projectDetails.plotDistribution === "shp" 
-                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".shp"))) {
+                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".zip"))) {
             alert("A plot SHP file is required");
             return false;
 
@@ -178,7 +177,7 @@ class Project extends React.Component {
             return false;
 
             } else if (projectDetails.sampleDistribution === "shp" 
-                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".shp"))) {
+                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".zip"))) {
             alert("A sample SHP file is required");
             return false;
 
