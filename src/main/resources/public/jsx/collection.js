@@ -578,8 +578,7 @@ class Collection extends React.Component {
                                 : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
-                const newQuestion = { questionText: questionToSet.question, 
-                                      questionId: questionToSet.id, 
+                const newQuestion = { questionId: questionToSet.id, 
                                       answer: answerText, 
                                       answerId: answerId };
                 const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
