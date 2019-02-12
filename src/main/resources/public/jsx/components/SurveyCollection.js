@@ -1,5 +1,7 @@
 import React, { Fragment } from "react";
 
+import { removeEnumerator } from "../utils/SurveyUtils"
+
 export class SurveyQuestions extends React.Component {
     constructor(props) {
         super(props);
@@ -11,7 +13,7 @@ export class SurveyQuestions extends React.Component {
 
     componentDidMount() {
         const topLevelNodeIds = this.props.surveyQuestions
-                                .filter(sq => sq.parent_question == -1)
+                                .filter(sq => sq.parentQuestion == -1)
                                 .sort((a, b) => a.id - b.id)
                                 .map(sq => sq.id);
         this.setState({
@@ -21,13 +23,13 @@ export class SurveyQuestions extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.currentNodeIndex !== prevState.currentNodeIndex) {
-            this.props.setSelectedQuestionText(this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex]).question);
+            this.props.setSelectedQuestion(this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex]));
         }
     }
 
     prevSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex > 0) {
-            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1})
+            this.setState({currentNodeIndex: this.state.currentNodeIndex - 1});
         } else {
             alert("There are no previous questions.");
         }
@@ -35,17 +37,18 @@ export class SurveyQuestions extends React.Component {
 
     nextSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
-            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1})
+            this.setState({currentNodeIndex: this.state.currentNodeIndex + 1});
         } else {
-            alert("There are no more questions.");}
+            alert("There are no more questions.");
         }
+    }
 
     setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
     checkAllSelected = (currentQuestionId) => {
         const { surveyQuestions } = this.props;
         const { visible, answered } = surveyQuestions.find(sv => sv.id === currentQuestionId);
-        const childQuestions = surveyQuestions.filter(sv => sv.parent_question === currentQuestionId);
+        const childQuestions = surveyQuestions.filter(sv => sv.parentQuestion === currentQuestionId);
 
         if (childQuestions.length === 0) {
             return visible === answered;
@@ -63,11 +66,10 @@ export class SurveyQuestions extends React.Component {
     getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
     render() {
-    
         return (
             <fieldset className="mb-3 justify-content-center text-center">
                 <h3>Survey Questions</h3>
-                {this.props.surveyQuestions
+                {this.props.surveyQuestions.length > 0
                 ?
                     <div className="SurveyQuestions__questions">
                         <div className="SurveyQuestions__top-questions">
@@ -110,8 +112,8 @@ export class SurveyQuestions extends React.Component {
                                 surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
                                 surveyQuestions={this.props.surveyQuestions}
                                 setCurrentValue={this.props.setCurrentValue}
-                                selectedQuestionText={this.props.selectedQuestionText}
-                                setSelectedQuestionText={this.props.setSelectedQuestionText}
+                                selectedQuestion={this.props.selectedQuestion}
+                                setSelectedQuestion={this.props.setSelectedQuestion}
                                 higharcyLabel=""
                             />
                         }
@@ -135,7 +137,7 @@ class SurveyQuestionTree extends React.Component  {
     toggleShowAnswers = () => this.setState({ showAnswers: !this.state.showAnswers });
 
     render() {
-        const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parent_question == this.props.surveyNode.id);
+        const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parentQuestion == this.props.surveyNode.id);
         const shadowColor = this.props.surveyNode.answered === 0 
                             ? "0px 0px 15px 4px red inset"
                             : this.props.surveyNode.answered === this.props.surveyNode.visible
@@ -154,14 +156,14 @@ class SurveyQuestionTree extends React.Component  {
                     <button
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm col-10"
-                        style={{boxShadow: `${(this.props.surveyNode.question === this.props.selectedQuestionText)
+                        style={{boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
                                     ? "0px 0px 2px 2px black inset,"
                                     : ""}
                                     ${shadowColor}
                                 `}}
-                        onClick={() => this.props.setSelectedQuestionText(this.props.surveyNode.question)}
+                        onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                     >
-                    {this.props.higharcyLabel + this.props.surveyNode.question}
+                    {this.props.higharcyLabel + removeEnumerator(this.props.surveyNode.question)}
                     </button>
                 </div>
 
@@ -169,22 +171,22 @@ class SurveyQuestionTree extends React.Component  {
                     <SurveyAnswers
                         componentType={this.props.surveyNode.componentType}
                         dataType={this.props.surveyNode.dataType}
-                        question={this.props.surveyNode.question}
+                        surveyNode={this.props.surveyNode}
                         answers={this.props.surveyNode.answers}
                         setCurrentValue={this.props.setCurrentValue}
                     />
                 }
                 {
-                    childNodes.map((surveyNode, uid) =>
+                    childNodes.map((childNode, uid) =>
                         <Fragment key={uid}>
-                            {this.props.surveyQuestions.find(sq => sq.id === surveyNode.id).visible > 0 &&
+                            {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible > 0 &&
                             <SurveyQuestionTree 
                                 key={uid}
-                                surveyNode={surveyNode}
+                                surveyNode={childNode}
                                 surveyQuestions={this.props.surveyQuestions}
                                 setCurrentValue={this.props.setCurrentValue}
-                                selectedQuestionText={this.props.selectedQuestionText}
-                                setSelectedQuestionText={this.props.setSelectedQuestionText}
+                                selectedQuestion={this.props.selectedQuestion}
+                                setSelectedQuestion={this.props.setSelectedQuestion}
                                 higharcyLabel={this.props.higharcyLabel + "- "}
                             />
                             }
@@ -210,7 +212,7 @@ function AnswerButton(props){
                             //         ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
                             //         : "initial"
                             // }}
-                            onClick={() => props.setCurrentValue(props.question, ans.id, ans.answer, ans.color) }
+                            onClick={() => props.setCurrentValue(props.surveyNode, ans.id, ans.answer)}
                         >
                             <div className="circle"
                                 style={{
@@ -236,7 +238,7 @@ function AnswerRadioButton(props) {
                             className="btn-outline-darkgray btn-sm btn-block pl-1"
                             id={ans.answer + "_" + ans.id}
                             name={ans.answer + "_" + ans.id}
-                            onClick={() => props.setCurrentValue(props.question, ans.id, ans.answer, ans.color) }
+                            onClick={() => props.setCurrentValue(props.surveyNode, ans.id, ans.answer)}
                         >
                             <div className="circle"
                                 style={{
@@ -262,7 +264,7 @@ class AnswerInput extends React.Component{
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.question !== prevProps.question) {
+        if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             this.setState({ newInput: "" })
         }
     }
@@ -298,7 +300,7 @@ class AnswerInput extends React.Component{
                         name="save-input"
                         value="Save"
                         onClick={() => {
-                            props.setCurrentValue(props.question, ans.id, this.state.newInput, ans.color)
+                            props.setCurrentValue(props.surveyNode, ans.id, this.state.newInput)
                             this.setState({ newInput: ""})
                         }}
                     />
@@ -316,7 +318,7 @@ class AnswerDropDown extends React.Component {
     }  
 
     componentDidUpdate (prevProps) {
-        if (this.props.question !== prevProps.question) {
+        if (this.props.surveyNode !== prevProps.surveyNode) {
             this.setState({showDropdown: false})
         }
     }
@@ -328,7 +330,7 @@ class AnswerDropDown extends React.Component {
             <div 
                 key={uid} 
                 onClick={() => {
-                        this.props.setCurrentValue(this.props.question, ans.id, ans.answer, ans.color);
+                        this.props.setCurrentValue(this.props.surveyNode, ans.id, ans.answer);
                         this.setState({ showDropdown: false });
                     }
                 }
@@ -398,28 +400,28 @@ function SurveyAnswers(props) {
   if (props.componentType && props.componentType.toLowerCase() == "radiobutton") {
         return (<AnswerRadioButton 
                     answers={props.answers} 
-                    question={props.question}
+                    surveyNode={props.surveyNode}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);
     } else if (props.componentType && props.componentType.toLowerCase() == "input") {
         return (<AnswerInput
                     answers={props.answers} 
-                    question={props.question}
+                    surveyNode={props.surveyNode}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);
     } else if (props.componentType && props.componentType.toLowerCase() == "dropdown") {
         return (<AnswerDropDown 
                     answers={props.answers} 
-                    question={props.question} 
+                    surveyNode={props.surveyNode} 
                     childNodes={props.childNodes}  
                     setCurrentValue={props.setCurrentValue}
                 />);
     } else {
         return (<AnswerButton 
                     answers={props.answers} 
-                    question={props.question}
+                    surveyNode={props.surveyNode}
                     dataType={props.dataType}
                     setCurrentValue={props.setCurrentValue}
                 />);

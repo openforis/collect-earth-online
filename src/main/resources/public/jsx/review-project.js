@@ -1,8 +1,9 @@
 import React, { Fragment }  from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
-import SurveyCardList from "./components/SurveyCardList"
+import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
+import SurveyCardList from "./components/SurveyCardList";
+import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
@@ -147,33 +148,6 @@ class Project extends React.Component {
         window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.projectDetails.id, "_blank");
     }
 
-    convertSampleValuesToSurveyQuestions(sampleValues) {
-        return sampleValues.map(sampleValue => {
-            if (sampleValue.name && sampleValue.values) {
-                const surveyQuestionAnswers = sampleValue.values.map(value => {
-                    if (value.name) {
-                        return {
-                            id: value.id,
-                            answer: value.name,
-                            color: value.color
-                        };
-                    } else {
-                        return value;
-                    }
-                });
-                return {
-                    id: sampleValue.id,
-                    question: sampleValue.name,
-                    answers: surveyQuestionAnswers,
-                    parent_question: -1,
-                    parent_answer: -1
-                };
-            } else {
-                return sampleValue;
-            }
-        });
-    }
-
     getProjectById = () => {
         const { projectId } = this.props
         fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
@@ -190,8 +164,8 @@ class Project extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {                   
-                    const newSampleValues = this.convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.setState({projectDetails: {...data, sampleValues: newSampleValues}});
+                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
+                    this.setState({projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
                 }
             });
     }
@@ -479,7 +453,7 @@ function ProjectDesignReview({ project, projectId }) {
             }
             <PlotReview project={project}/>
             <SampleReview project={project}/>
-            <SurveyReview surveyQuestions={project.projectDetails.sampleValues} />
+            <SurveyReview surveyQuestions={project.projectDetails.surveyQuestions} />
         </div>
     );
 }
@@ -595,7 +569,7 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
 function ProjectImageryReview({ baseMapSource }) {
     return (
         <SectionBlock id="project-imagery-review" title="Project Imagery">
-            <h3 className="font-weight-bold">Basemap Sourc</h3>
+            <h3 className="font-weight-bold">Basemap Source</h3>
             <p className="ml-2">{baseMapSource}</p>
         </SectionBlock>
     );

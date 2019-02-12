@@ -3,11 +3,13 @@ import ReactDOM from 'react-dom';
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
+import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
+
 class ProjectDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            details: {},
+            projectDetails: {},
             stats: {},
             imageryList: [],
             mapConfig: null,
@@ -32,15 +34,15 @@ class ProjectDashboard extends React.Component {
     }
 
     componentDidUpdate(){
-        if (this.state.imageryList.length > 0 && this.state.details.id && !this.state.isMapShown) {
-            let detailsNew = this.state.details;
-            detailsNew.baseMapSource = this.state.details.baseMapSource || this.state.imageryList[0].title;
-            this.setState({details: detailsNew,
+        if (this.state.imageryList.length > 0 && this.state.projectDetails.id && !this.state.isMapShown) {
+            let detailsNew = this.state.projectDetails;
+            detailsNew.baseMapSource = this.state.projectDetails.baseMapSource || this.state.imageryList[0].title;
+            this.setState({projectDetails: detailsNew,
                            isMapShown: true});
             this.showProjectMap();
         }
         if (this.state.isMapShown && this.state.plotList.length > 0) {
-            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.details.plotShape);
+            mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
         }
     }
 
@@ -59,40 +61,11 @@ class ProjectDashboard extends React.Component {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.props.documentRoot + "/home";
                 } else {
-                    const surveyQuestions = this.convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    data.sampleValues = surveyQuestions;
-                    this.setState({details: data});
+                    const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
+                    this.setState({projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
                 }
             });
     }
-
-    convertSampleValuesToSurveyQuestions(sampleValues) {
-        return sampleValues.map(sampleValue => {
-            if (sampleValue.name && sampleValue.values) {
-                const surveyQuestionAnswers = sampleValue.values.map(value => {
-                    if (value.name) {
-                        return {
-                            id: value.id,
-                            answer: value.name,
-                            color: value.color
-                        };
-                    } else {
-                        return value;
-                    }
-                });
-                return {
-                    id: sampleValue.id,
-                    question: sampleValue.name,
-                    answers: surveyQuestionAnswers,
-                    parent_question: -1,
-                    parent_answer: -1
-                };
-            } else {
-                return sampleValue;
-            }
-        });
-    }
-
 
     getProjectStats(projectId) {
         fetch(this.props.documentRoot + "/get-project-stats/" + projectId)
@@ -142,11 +115,11 @@ class ProjectDashboard extends React.Component {
     showProjectMap() {
         // Initialize the basemap
         let mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
-        mercator.setVisibleLayer(mapConfig, this.state.details.baseMapSource);
+        mercator.setVisibleLayer(mapConfig, this.state.projectDetails.baseMapSource);
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.addVectorLayer(mapConfig,
             "currentAOI",
-            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.details.boundary, true)),
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
             ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         // Show the plot centers on the map (but constrain to <= 100 points)
@@ -190,7 +163,7 @@ function ProjectStats(props) {
                     </tr>
                     <tr>
                         <td>Total Plots</td>
-                        <td>{props.project.details.numPlots}</td>
+                        <td>{props.project.projectDetails.numPlots}</td>
                         <td>Date Created</td>
                         <td>{props.project.dateCreated}</td>
                     </tr>
