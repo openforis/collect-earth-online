@@ -154,12 +154,12 @@ class Project extends React.Component {
 
         } else if (projectDetails.plotDistribution === "csv" 
                     && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".csv"))) {
-            alert("A plot CSV file is required");
+            alert("A plot CSV (.csv) file is required");
             return false;
 
         } else if (projectDetails.plotDistribution === "shp" 
                     && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".zip"))) {
-            alert("A plot SHP file is required");
+            alert("A plot SHP (.zip) file is required");
             return false;
 
         } else if (projectDetails.sampleDistribution === "random" 
@@ -168,18 +168,18 @@ class Project extends React.Component {
             return false;
 
         } else if (projectDetails.sampleDistribution === "gridded" 
-                && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
+                    && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
             alert("A sample resolution is required for gridded sample distribution");
             return false;
 
         } else if (projectDetails.sampleDistribution === "csv" 
                     && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".csv"))) {
-            alert("A sample CSV file is required");
+            alert("A sample CSV (.csv) file is required");
             return false;
 
-            } else if (projectDetails.sampleDistribution === "shp" 
+        } else if (projectDetails.sampleDistribution === "shp" 
                     && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".zip"))) {
-            alert("A sample SHP file is required");
+            alert("A sample SHP (.zip) file is required");
             return false;
 
         } else if (projectDetails.surveyQuestions.length === 0) {
