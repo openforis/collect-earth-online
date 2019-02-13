@@ -1036,7 +1036,7 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
                                                         callBack.call(null, feature);
                                                     }
                                                 }
-                                            });
+                                            }, {hitTolerance:10});
     };
     mapConfig.map.on("click", clickHandler);
 
