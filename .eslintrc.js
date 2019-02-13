@@ -12,6 +12,11 @@ module.exports = {
         browser: true,
         node: true
     },
+    settings: {
+        react: {
+            version: "16.7.0"
+        }
+      },
     // globals: {
     //     React: false,
     //     ReactDOM: false
@@ -54,6 +59,8 @@ module.exports = {
         "no-var": [
             "error"
         ],
+        "arrow-body-style": ["error", "as-needed"],
+        "no-trailing-spaces" : [2],
         "no-console": 0,
         "no-multi-spaces": [0],
         "consistent-return": [0],

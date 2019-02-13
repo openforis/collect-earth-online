@@ -8,7 +8,6 @@ class Home extends React.Component {
         this.state = {
             projects: [],
             showSidePanel: true,
-            
         };
         this.toggleSidebar=this.toggleSidebar.bind(this);
 
@@ -22,7 +21,7 @@ class Home extends React.Component {
     }
 
     toggleSidebar() {
-        this.setState({ showSidePanel: !this.state.showSidePanel })
+        this.setState({ showSidePanel: !this.state.showSidePanel });
     }
 
     render() {
@@ -31,14 +30,14 @@ class Home extends React.Component {
                 <span id="mobilespan"></span>
                 <div className="Wrapper">
                     <div className="row tog-effect">
-                        <SideBar 
+                        <SideBar
                             documentRoot={this.props.documentRoot}
                             userName={this.props.userName}
-                            projects={this.state.projects} 
+                            projects={this.state.projects}
                             userId={this.props.userId}
                             showSidePanel={this.state.showSidePanel}
                         />
-                        <MapPanel 
+                        <MapPanel
                             documentRoot={this.props.documentRoot}
                             userId={this.props.userId}
                             projects={this.state.projects}
@@ -76,9 +75,9 @@ class MapPanel extends React.Component {
             mercator.setVisibleLayer(mapConfig, this.state.imagery[0].title);
             this.setState({mapConfig: mapConfig});
         }
-        if (this.state.mapConfig && this.props.projects.length > 0 
+        if (this.state.mapConfig && this.props.projects.length > 0
             && (!prevState.mapConfig || prevProps.projects.length === 0)) {
-            
+
             this.addProjectMarkersAndZoom(this.state.mapConfig,
                                           this.props.projects,
                                           this.props.documentRoot,
@@ -128,16 +127,16 @@ class MapPanel extends React.Component {
 
     render() {
         return (
-            <div 
-                id="mapPanel" 
-                className={this.props.showSidePanel 
-                                ? "col-lg-9 col-md-12 pl-0" 
+            <div
+                id="mapPanel"
+                className={this.props.showSidePanel
+                                ? "col-lg-9 col-md-12 pl-0"
                                 : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9"}
             >
                 <div className="row no-gutters ceo-map-toggle">
-                    <div 
-                        id="togbutton" 
-                        className="button col-xl-1 bg-lightgray d-none d-xl-block" 
+                    <div
+                        id="togbutton"
+                        className="button col-xl-1 bg-lightgray d-none d-xl-block"
                         onClick={this.props.toggleSidebar}
                     >
                         <div className="empty-div" style={{height: "50vh"}}/>
@@ -154,7 +153,7 @@ class MapPanel extends React.Component {
                         <div id="home-map-pane" style={{width: "100%", height: "100%", position: "fixed"}}></div>
                     </div>
                 </div>
-                <ProjectPopup 
+                <ProjectPopup
                     mapConfig={this.state.mapConfig}
                     clusterExtent={this.state.clusterExtent}
                     features={this.state.clickedFeatures}
@@ -188,11 +187,11 @@ class SideBar extends React.Component {
     }
 
     toggleFilterInstitution = () => this.setState({filterInstitution: !this.state.filterInstitution});
-    
+
     toggleContainsProjects = () => this.setState({containsProjects: !this.state.containsProjects});
-    
+
     toggleSortByNumber = () => this.setState({sortByNumber: !this.state.sortByNumber});
-    
+
     toggleUseFirst = () => this.setState({useFirstLetter: !this.state.useFirstLetter});
 
     updateFilterText = (newText) => this.setState({filterText: newText});
@@ -200,7 +199,7 @@ class SideBar extends React.Component {
     sortedName(a, b) {
         const nameA = a.name.toLowerCase();
         const nameB = b.name.toLowerCase();
-        return nameA < nameB ? -1 
+        return nameA < nameB ? -1
                 : nameA > nameB ? 1
                     : 0;
     }
@@ -210,26 +209,26 @@ class SideBar extends React.Component {
 
         const filteredProjects = this.props.projects
                 .filter(proj => this.state.filterInstitution
-                                    || (this.state.useFirstLetter 
+                                    || (this.state.useFirstLetter
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : proj.name.toLocaleLowerCase().includes(filterTextLower)));
-                                        
+
         const filteredInstitutions = this.state.institutions
                 .filter(inst => !this.state.filterInstitution
-                                    || (this.state.useFirstLetter 
+                                    || (this.state.useFirstLetter
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : inst.name.toLocaleLowerCase().includes(filterTextLower)))
-                .filter(inst => this.state.filterInstitution 
+                .filter(inst => this.state.filterInstitution
                                     || filteredProjects.some(proj => inst.id === proj.institution))
-                .filter(inst => !(this.state.filterInstitution && this.state.containsProjects) 
+                .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
                                     ||  this.props.projects.some(proj => inst.id === proj.institution))
-                .sort((a, b) => this.state.sortByNumber 
-                                    ? this.props.projects.filter(proj => b.id === proj.institution).length 
-                                        - this.props.projects.filter(proj => a.id === proj.institution).length 
+                .sort((a, b) => this.state.sortByNumber
+                                    ? this.props.projects.filter(proj => b.id === proj.institution).length
+                                        - this.props.projects.filter(proj => a.id === proj.institution).length
                                     : this.sortedName(a,b));
 
 
-        return this.props.showSidePanel 
+        return this.props.showSidePanel
             ? (<div id="lPanel" className="col-lg-3 pr-0 pl-0" style={{height:"-webkit-fill-available",overflow:"hidden"}}>
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
@@ -237,41 +236,42 @@ class SideBar extends React.Component {
                 {this.props.userName &&
                     <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
-                <InstitutionFilter 
-                        documentRoot={this.props.documentRoot} 
-                        filteredInstitutions={this.state.institutions}
-                        updateFilterText={this.updateFilterText}
-                        filterText={this.state.filterText} 
-                        toggleUseFirst={this.toggleUseFirst} 
-                        useFirstLetter={this.state.useFirstLetter}
-                        filterInstitution={this.state.filterInstitution}
-                        toggleFilterInstitution={this.toggleFilterInstitution}
-                        sortByNumber={this.state.sortByNumber}
-                        toggleSortByNumber={this.toggleSortByNumber}
-                        containsProjects={this.state.containsProjects}
-                        toggleContainsProjects={this.toggleContainsProjects}
-                    />
-                {this.state.institutions.length > 0 
+                <InstitutionFilter
+                    documentRoot={this.props.documentRoot}
+                    filteredInstitutions={this.state.institutions}
+                    updateFilterText={this.updateFilterText}
+                    filterText={this.state.filterText}
+                    toggleUseFirst={this.toggleUseFirst}
+                    useFirstLetter={this.state.useFirstLetter}
+                    filterInstitution={this.state.filterInstitution}
+                    toggleFilterInstitution={this.toggleFilterInstitution}
+                    sortByNumber={this.state.sortByNumber}
+                    toggleSortByNumber={this.toggleSortByNumber}
+                    containsProjects={this.state.containsProjects}
+                    toggleContainsProjects={this.toggleContainsProjects}
+                />
+                {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
                         ? <ul className="tree"  style={{height: "calc(100vh - 260px)",overflow: "scroll"}}>
-                                {filteredInstitutions.map((institution, uid) => 
-                                        <Institution key={uid}
-                                            id={institution.id}
-                                            name={institution.name}
-                                            documentRoot={this.props.documentRoot}
-                                            projects={filteredProjects
-                                                        .filter(project => project.institution === institution.id)}
-                                            forceInstitutionExpand={!this.state.filterInstitution 
+                            {filteredInstitutions.map((institution, uid) =>
+                                <Institution
+                                    key={uid}
+                                    id={institution.id}
+                                    name={institution.name}
+                                    documentRoot={this.props.documentRoot}
+                                    projects={filteredProjects
+                                            .filter(project => project.institution === institution.id)}
+                                    forceInstitutionExpand={!this.state.filterInstitution
                                                                     && this.state.filterText.length > 0}
-                                        />
-                                )}
-                            </ul>
+                                />
+                            )}
+                        </ul>
                         : <h3 className="p-3">No Institutions Found...</h3>
-                    : <h3 className="p-3">Loading data...</h3> }    
-                </div>
+                    : <h3 className="p-3">Loading data...</h3> }
+            </div>
             ) : (
                 ""
-            )
+            );
     }
 }
 
@@ -279,9 +279,10 @@ function InstitutionFilter(props) {
     return (
         <div className="InstitutionFilter form-control">
             <div id="filter-institution">
-                <input type="text" 
-                    id="filterInstitution" 
-                    autoComplete="off" 
+                <input
+                    type="text"
+                    id="filterInstitution"
+                    autoComplete="off"
                     placeholder="Enter text to filter"
                     className="form-control"
                     value={props.filterText}
@@ -294,33 +295,33 @@ function InstitutionFilter(props) {
                     Filter By:
                 </div>
                 <div className="form-check form-check-inline">
-                    <input 
-                        className="form-check-input" 
-                        type="radio" 
+                    <input
+                        className="form-check-input"
+                        type="radio"
                         id="filter-by-word"
-                        name="filter-institution" 
-                        checked={props.filterInstitution} 
-                        onChange={props.toggleFilterInstitution} 
+                        name="filter-institution"
+                        checked={props.filterInstitution}
+                        onChange={props.toggleFilterInstitution}
                     />
                     Institution
                 </div>
                 <div className="form-check form-check-inline">
-                    <input 
-                        className="form-check-input" 
-                        type="radio" 
+                    <input
+                        className="form-check-input"
+                        type="radio"
                         id="filter-by-letter"
-                        name="filter-institution" 
-                        checked={!props.filterInstitution} 
-                        onChange={props.toggleFilterInstitution} 
+                        name="filter-institution"
+                        checked={!props.filterInstitution}
+                        onChange={props.toggleFilterInstitution}
                     />
                     Project
                 </div>
                 <div className="form-check form-check-inline">
-                    <input 
-                        className="form-check-input" 
-                        type="checkbox" 
+                    <input
+                        className="form-check-input"
+                        type="checkbox"
                         id="filter-by-first-letter"
-                        onChange={props.toggleUseFirst} 
+                        onChange={props.toggleUseFirst}
                         checked={props.useFirstLetter}
                     />
                     Match from beginning
@@ -332,31 +333,31 @@ function InstitutionFilter(props) {
                     Sort By:
                 </div>
                 <div className="form-check form-check-inline">
-                    <input 
-                        className="form-check-input" 
-                        type="radio" 
-                        name="sort-institution" 
-                        checked={props.sortByNumber} 
-                        onChange={props.toggleSortByNumber} 
+                    <input
+                        className="form-check-input"
+                        type="radio"
+                        name="sort-institution"
+                        checked={props.sortByNumber}
+                        onChange={props.toggleSortByNumber}
                     />
                     # of Projects
                 </div>
                 <div className="form-check form-check-inline">
-                    <input 
-                        className="form-check-input" 
-                        type="radio" 
-                        name="sort-institution" 
-                        checked={!props.sortByNumber} 
-                        onChange={props.toggleSortByNumber} 
+                    <input
+                        className="form-check-input"
+                        type="radio"
+                        name="sort-institution"
+                        checked={!props.sortByNumber}
+                        onChange={props.toggleSortByNumber}
                     />
                     ABC..
                 </div>
                 <div className="form-check form-check-inline">
                     <input
-                        className="form-check-input" 
-                        type="checkbox" 
+                        className="form-check-input"
+                        type="checkbox"
                         checked={props.containsProjects}
-                        onChange={props.toggleContainsProjects} 
+                        onChange={props.toggleContainsProjects}
                     />
                     Contains projects
                 </div>
@@ -368,11 +369,12 @@ function InstitutionFilter(props) {
 function CreateInstitutionButton(props) {
     return (
         <div className="bg-yellow text-center p-2">
-            <a className="create-institution" 
-                style={{display:"block"}} 
+            <a
+                className="create-institution"
+                style={{display:"block"}}
                 href={props.documentRoot + "/create-institution/0"}
             >
-                <i className="fa fa-file" /> Create New Institution 
+                <i className="fa fa-file" /> Create New Institution
             </a>
         </div>
     );
@@ -392,31 +394,35 @@ class Institution extends React.Component {
         const { props } = this;
         return (
             <li>
-                <div 
+                <div
                     className="btn bg-lightgreen btn-block m-0 p-2 rounded-0"
-                    onClick={this.toggleShowProjectList}   
+                    onClick={this.toggleShowProjectList}
                 >
                     <div className="row">
                         <div className="col-lg-10 my-auto">
-                            <p className="tree_label text-white m-0"
-                            htmlFor={"c" + props.id}>
+                            <p
+                                className="tree_label text-white m-0"
+                                htmlFor={"c" + props.id}
+                            >
                                 <input type="checkbox" className="d-none" id={"c" + props.id}/>
                                 <span className="">{props.name}</span>
                             </p>
                         </div>
                         <div className="col-lg-1">
-                            <a className="institution_info btn btn-sm btn-outline-lightgreen"
-                            href={props.documentRoot + "/review-institution/" + props.id}>
+                            <a
+                                className="institution_info btn btn-sm btn-outline-lightgreen"
+                                href={props.documentRoot + "/review-institution/" + props.id}
+                            >
                                 <i className="fa fa-info" style={{color: "white"}}></i>
                             </a>
                         </div>
                     </div>
                 </div>
-                
+
                 {(props.forceInstitutionExpand || this.state.showProjectList) &&
-                    <ProjectList 
-                        id={props.id} 
-                        projects={props.projects} 
+                    <ProjectList
+                        id={props.id}
+                        projects={props.projects}
                         documentRoot={props.documentRoot}
                     />
                 }
@@ -426,24 +432,26 @@ class Institution extends React.Component {
 }
 
 function ProjectList(props) {
-    return props.projects.map(
-                    (project, uid) =>
-                        <Project key={uid}
-                                 id={project.id}
-                                 institutionId={props.id}
-                                 editable={project.editable}
-                                 name={project.name}
-                                 documentRoot={props.documentRoot}
-                        />
-                );
+    return props.projects
+        .map(
+            (project, uid) =>
+                <Project
+                    key={uid}
+                    id={project.id}
+                    institutionId={props.id}
+                    editable={project.editable}
+                    name={project.name}
+                    documentRoot={props.documentRoot}
+                />
+        );
 }
 
 function Project(props) {
-    return props.editable 
+    return props.editable
         ?
             <div className="bg-lightgrey text-center p-1 row px-auto">
                 <div className="col-lg-10 pr-lg-1">
-                    <a 
+                    <a
                         className="view-project btn btn-sm btn-outline-lightgreen btn-block"
                         href={props.documentRoot + "/collection/" + props.id}
                     >
@@ -451,7 +459,7 @@ function Project(props) {
                     </a>
                 </div>
                 <div className="col-lg-2 pl-lg-0">
-                    <a 
+                    <a
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
                         href={props.documentRoot + "/review-project/" + props.id}
                     >
@@ -462,14 +470,14 @@ function Project(props) {
         :
             <div className="bg-lightgrey text-center p-1 row">
                 <div className="col mb-1 mx-0">
-                    <a 
+                    <a
                         className="btn btn-sm btn-outline-lightgreen btn-block"
                         href={props.documentRoot + "/collection/" + props.id}
                     >
                         {props.name}
                     </a>
                 </div>
-            </div>
+            </div>;
 }
 
 class ProjectPopup extends React.Component {

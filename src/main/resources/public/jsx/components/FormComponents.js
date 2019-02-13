@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 // import PropTypes from 'prop-types'
 
 export function FormLayout({ title, children }) {
@@ -11,7 +11,7 @@ export function FormLayout({ title, children }) {
                 {children}
             </div>
         </div>
-    )
+    );
 }
 
 export function SectionBlock({ title, children }) {
@@ -22,7 +22,7 @@ export function SectionBlock({ title, children }) {
                 {children}
             </div>
         </div>
-    )
+    );
 }
 
 export function StatsCell({title, children}) {
@@ -46,13 +46,13 @@ export function StatsRow({ title, plots, analysisTime, wide }) {
                 <span className="badge badge-pill bg-lightgreen">{plots} plots </span>
             </div>
             <div className="col-1">
-                {analysisTime ? 
+                {analysisTime ?
                     (
-                    <span className="badge badge-pill bg-lightgreen">{analysisTime} sec/plot </span>
+                        <span className="badge badge-pill bg-lightgreen">{analysisTime} sec/plot </span>
                     )
                     : ("Untimed")
                 }
             </div>
         </div>
-    )
+    );
 }
