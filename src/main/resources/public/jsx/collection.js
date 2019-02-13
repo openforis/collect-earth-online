@@ -534,7 +534,7 @@ class Collection extends React.Component {
             });
     };
 
-    getImageryAttributes() {
+    getImageryAttributes = () => {
         if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
             return {imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG};
         } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
@@ -542,7 +542,7 @@ class Collection extends React.Component {
         } else {
             return {};
         }
-    }
+    };
 
     validateCurrentSelection = (selectedFeatures, questionId) => {
         const visibleSamples = this.getVisibleSamples(questionId);

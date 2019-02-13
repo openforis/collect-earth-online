@@ -118,7 +118,7 @@ class Project extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error creating project. See console for details.");
-                    return new Promise.reject("Error creating project")
+                    return new Promise.reject("Error creating project");
                 }
             })
             .then(projectId => {
