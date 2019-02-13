@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 
-import { removeEnumerator } from "../utils/SurveyUtils"
+import { removeEnumerator } from "../utils/SurveyUtils";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -33,7 +33,7 @@ export class SurveyCollection extends React.Component {
         } else {
             alert("There are no previous questions.");
         }
-    }
+    };
 
     nextSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
@@ -41,7 +41,7 @@ export class SurveyCollection extends React.Component {
         } else {
             alert("There are no more questions.");
         }
-    }
+    };
 
     setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
@@ -55,7 +55,7 @@ export class SurveyCollection extends React.Component {
         } else {
             return visible === answered && childQuestions.every(cq => this.checkAllSelected(cq.id));
         }   
-    }
+    };
 
     getTopColor = (node) => this.checkAllSelected(node.id)
                                 ? "0px 0px 15px 4px green inset"
@@ -267,7 +267,7 @@ class AnswerInput extends React.Component{
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             this.setState({ newInput: "" })
         }
-    }
+    };
 
     updateInputValue = (value) => this.setState({ newInput: value });
     

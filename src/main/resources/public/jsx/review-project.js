@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
 import SurveyCardList from "./components/SurveyCardList";
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
+import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
@@ -71,7 +71,7 @@ class Project extends React.Component {
                 }
             })
         }
-    }
+    };
 
     closeProject = () => {
         if (confirm("Do you REALLY want to close this project?")) {
@@ -94,7 +94,7 @@ class Project extends React.Component {
                 }
             })
         }
-    }
+    };
 
     archiveProject = () => {
         if (confirm("Do you REALLY want to archive this project?!")) {
@@ -119,7 +119,7 @@ class Project extends React.Component {
                 }
             })
         }
-    }
+    };
 
     changeAvailability = () => {
         if (this.state.projectDetails.availability == "unpublished") {
@@ -129,7 +129,7 @@ class Project extends React.Component {
         } else if (this.state.projectDetails.availability == "closed") {
             this.archiveProject();
         }
-    }
+    };
 
     configureGeoDash = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
@@ -138,15 +138,15 @@ class Project extends React.Component {
                     + "&pid=" + this.state.projectDetails.id),
                 "_geo-dash");
         }
-    }
+    };
 
     downloadPlotData = () => {
         window.open(this.props.documentRoot + "/dump-project-aggregate-data/" + this.state.projectDetails.id, "_blank");
-    }
+    };
 
     downloadSampleData = () => {
         window.open(this.props.documentRoot + "/dump-project-raw-data/" + this.state.projectDetails.id, "_blank");
-    }
+    };
 
     getProjectById = () => {
         const { projectId } = this.props
@@ -168,7 +168,7 @@ class Project extends React.Component {
                     this.setState({projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
                 }
             });
-    }
+    };
 
     getImageryList = () => {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.projectDetails.institution)
@@ -183,7 +183,7 @@ class Project extends React.Component {
             .then(data => {
                 this.setState({imageryList: data});
             });
-    }
+    };
 
     getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/300")
@@ -199,11 +199,11 @@ class Project extends React.Component {
                 this.setState({plotList: data});
             })
             .catch(e => this.setState({plotList: []}));
-    }
+    };
 
     initProjectMap = () => {
         this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
-    }
+    };
 
     showProjectMap = () => {
         mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource || this.state.imageryList[0].title);
@@ -222,13 +222,13 @@ class Project extends React.Component {
             mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
             ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-    }
+    };
 
     gotoProjectDashboard = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
             window.open(this.props.documentRoot + "/project-dashboard/"+this.state.projectDetails.id);
         }
-    }
+    };
 
     render() {
         return (

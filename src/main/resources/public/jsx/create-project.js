@@ -118,13 +118,14 @@ class Project extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error creating project. See console for details.");
+                    return new Promise.reject("Error creating project")
                 }
             })
             .then(projectId => {
                 window.location = this.props.documentRoot + "/review-project/" + projectId;
             });
         }
-    }
+    };
 
     validateProject = () => {
         const { projectDetails, coordinates } = this.state;
@@ -192,7 +193,7 @@ class Project extends React.Component {
         } else {
             return true;
         }
-    }
+    };
 
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
@@ -207,7 +208,7 @@ class Project extends React.Component {
                             plotList: [],
                             useTemplatePlots: true });
         }
-    }
+    };
 
     toggleTemplatePlots = () => this.setState({useTemplatePlots: !this.state.useTemplatePlots});
 
@@ -235,7 +236,7 @@ class Project extends React.Component {
                 projList.unshift(JSON.parse(JSON.stringify(this.state.projectDetails)));
                 this.setState({projectList: projList});
             });
-    }
+    };
 
     getImageryList = () => {
         const { institutionId } = this.props
@@ -251,13 +252,13 @@ class Project extends React.Component {
             .then(data => {
                 this.setState({imageryList: data});
             });
-    }
+    };
 
     initProjectMap = () => {
         const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
         mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].title);
         this.setState({mapConfig: newMapConfig});
-    }
+    };
 
     getProjectPlots() {
         const maxPlots = 300;
@@ -274,7 +275,7 @@ class Project extends React.Component {
                 this.setState({plotList: data});
             })
             .catch(e => this.setState({plotList: []}));
-    }
+    };
 
     updateProjectBoundary() {
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");

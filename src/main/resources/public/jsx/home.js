@@ -435,7 +435,7 @@ function ProjectList(props) {
                                  name={project.name}
                                  documentRoot={props.documentRoot}
                         />
-                )
+                );
 }
 
 function Project(props) {

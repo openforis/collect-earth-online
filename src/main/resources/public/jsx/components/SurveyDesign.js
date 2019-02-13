@@ -1,8 +1,8 @@
 import React, {Fragment} from "react";
 
-import { SectionBlock } from "./FormComponents"
-import SurveyCardList from "./SurveyCardList"
-import { removeEnumerator } from "../utils/SurveyUtils"
+import { SectionBlock } from "./FormComponents";
+import SurveyCardList from "./SurveyCardList";
+import { removeEnumerator } from "../utils/SurveyUtils";
 
 const componentTypes = [
     {componentType: "button", dataType: "text"},
@@ -31,14 +31,14 @@ export class SurveyDesign extends React.Component {
                 
             this.convertToSimple();
         }
-    }
+    };
 
     convertToSimple = () => {
          const newSurveyQuestions = this.props.surveyQuestions
             .map(question => ({ ...question, componentType: "button", dataType: "text" }));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
-    }
+    };
 
     toggleSimpleMode = () => {
         this.setState({ inSimpleMode: 
@@ -47,18 +47,18 @@ export class SurveyDesign extends React.Component {
                         : this.props.surveyQuestions.every(q => q.componentType === "button")
                                 || confirm("This action will revert all questions to type button.  Would you like to proceed?")
                     });
-    }
+    };
 
     getChildQuestionIds = (questionId) => {
-        const childQuestions = this.props.surveyQuestions.filter(sv => sv.parentQuestion === questionId);
+        const childQuestions = this.props.surveyQuestions.filter(sq => sq.parentQuestion === questionId);
         if (childQuestions.length === 0) {
             return [questionId];
         } else {
             return childQuestions.reduce((acc, cur) => {
-                            return [...acc, ...this.getChildQuestionIds(cur.id)];
+                            [...acc, ...this.getChildQuestionIds(cur.id)];
                         }, [questionId])
         }
-    }
+    };
 
     removeQuestion = (questionId) => {
         const questionsToRemove = this.getChildQuestionIds(questionId);
@@ -67,7 +67,7 @@ export class SurveyDesign extends React.Component {
                 .filter(sq => !questionsToRemove.includes(sq.id));
         
         this.props.setSurveyQuestions(newSurveyQuestions);
-    }
+    };
 
     removeAnswer = (questionId, answerId) => {
         const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
@@ -79,13 +79,13 @@ export class SurveyDesign extends React.Component {
                                     .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
         this.props.setSurveyQuestions(newSurveyQuestions);
-    }
+    };
 
     maxAnswers(componentType, dataType) { 
         return (componentType || "").toLowerCase() === "input"
                     ? 1 : (dataType || "").toLowerCase() === "boolean"
                         ? 2 : 1000;
-    }
+    };
 
     render() {
         return (
@@ -184,7 +184,7 @@ class NewQuestionDesigner extends React.Component {
         if (this.state.selectedParent !== prevState.selectedParent) {
             this.setState({ selectedAnswer: -1 });
         }
-    }
+    };
 
     addSurveyQuestion = () => {
 
@@ -214,7 +214,7 @@ class NewQuestionDesigner extends React.Component {
         } else {
             alert("Please enter a survey question first.");
         }
-    }
+    };
 
     render() {
         return (
@@ -360,7 +360,7 @@ class NewAnswerDesigner extends React.Component {
         } else {
             alert("A survey answer must possess both an answer and a color.")
         }
-    }
+    };
 
     render() {
         return <div className="NewAnswerDesigner">

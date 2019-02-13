@@ -124,7 +124,7 @@ class Collection extends React.Component {
                     this.setState({currentProject: { ...project, surveyQuestions: surveyQuestions }});
                 }
             });
-    }
+    };
 
     getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
@@ -140,7 +140,7 @@ class Collection extends React.Component {
             .then(data => {
                 this.setState({plotList: data});
             });
-    }
+    };
 
     getImageryList = () => {
         const { institution } = this.state.currentProject
@@ -157,7 +157,7 @@ class Collection extends React.Component {
             .then(data => {
                 this.setState({imageryList: data});
             });
-    }
+    };
 
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
@@ -167,7 +167,7 @@ class Collection extends React.Component {
                                 ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({mapConfig: mapConfig});
-    }
+    };
 
     showProjectPlots = () => {
         mercator.addPlotLayer(this.state.mapConfig,
@@ -178,7 +178,7 @@ class Collection extends React.Component {
                                   });
                                   this.getPlotData(feature.get("features")[0].get("plotId"));
                               });
-    }
+    };
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
@@ -192,7 +192,7 @@ class Collection extends React.Component {
                         currentImagery: newImagery,
                         imageryAttribution: newImageryAttribution
                     });
-    }
+    };
     
     setImageryYearDG = (newImageryYearDG) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
@@ -201,7 +201,7 @@ class Collection extends React.Component {
             imageryYearDG: newImageryYearDG,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     setStackingProfileDG = (newStackingProfileDG) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
@@ -210,7 +210,7 @@ class Collection extends React.Component {
             stackingProfileDG: newStackingProfileDG,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
@@ -219,7 +219,7 @@ class Collection extends React.Component {
             imageryYearPlanet: newImageryYearPlanet,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
         const monthData = { 1: "January", 
@@ -244,7 +244,7 @@ class Collection extends React.Component {
             imageryMonthNamePlanet: newImageryMonthName,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     updateMapImagery() {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
@@ -474,7 +474,7 @@ class Collection extends React.Component {
         } else {
             alert("Please enter a number to go to plot.");
         }
-    }
+    };
 
     setReviewPlots = () => this.setState({ reviewPlots: !this.state.reviewPlots, 
                                             prevPlotButtonDisabled: false,
@@ -504,7 +504,7 @@ class Collection extends React.Component {
                     }
                 });
         }
-    }
+    };
 
     postValuesToDB = () => {
         fetch(this.props.documentRoot + "/add-user-samples",
@@ -532,7 +532,7 @@ class Collection extends React.Component {
                     alert("Error saving your assignments to the database. See console for details.");
                 }
             });
-    }
+    };
 
     getImageryAttributes() {
         if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
@@ -545,12 +545,12 @@ class Collection extends React.Component {
     }
 
     validateCurrentSelection = (selectedFeatures, questionId) => {
-        const visibleSamples = this.getVisibleSamples(questionId)
+        const visibleSamples = this.getVisibleSamples(questionId);
 
         selectedFeatures.getArray()
         .map(sf => sf.get("sampleId"))
         .every(sid => visibleSamples.some(vs => vs.id === sid));
-    }
+    };
 
     getChildQuestions(currentQuestionId) {
         const { surveyQuestions } = this.state.currentProject;
@@ -561,7 +561,7 @@ class Collection extends React.Component {
             return [question];
         } else {
             return childQuestions.reduce((prev, cur) => {
-                return [...prev, ...this.getChildQuestions(cur.id)];
+                [...prev, ...this.getChildQuestions(cur.id)];
             }, [question]);
         }
     }
@@ -611,7 +611,7 @@ class Collection extends React.Component {
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         }
-    }
+    };
 
     setSelectedQuestion = (newselectedQuestion) => this.setState({selectedQuestion: newselectedQuestion});
 

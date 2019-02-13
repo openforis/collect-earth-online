@@ -35,8 +35,7 @@ class ProjectDashboard extends React.Component {
 
     componentDidUpdate(){
         if (this.state.imageryList.length > 0 && this.state.projectDetails.id && !this.state.isMapShown) {
-            const detailsNew = this.state.projectDetails;
-            this.setState({ projectDetails: { ...detailsNew, 
+            this.setState({ projectDetails: { ...this.state.projectDetails, 
                                                 baseMapSource:  this.state.projectDetails.baseMapSource 
                                                                 || this.state.imageryList[0].title},
                            isMapShown: true });

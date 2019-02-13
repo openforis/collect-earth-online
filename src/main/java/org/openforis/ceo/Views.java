@@ -151,10 +151,8 @@ public class Views {
     // We could/should be loading the imagery list based on the project institution.
     public static Route reviewProject(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
-        Function<Request, String> getInstitutionId = (req) -> req.queryParams("institution");
         return makeAuthenticatedRoute("Review-Project", freemarker,
-                Map.of("project_id", getProjectId,
-                        "institution_id", getInstitutionId));
+                Map.of("project_id", getProjectId));
     }
 
     public static Route projectDashboard(FreeMarkerEngine freemarker) {

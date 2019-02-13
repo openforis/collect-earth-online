@@ -29,6 +29,7 @@ class UserStats extends React.Component {
         this.getUserStats = this.getUserStats.bind(this);
 
     }
+
     componentDidMount() {
         this.getUserStats();
     }
@@ -53,6 +54,7 @@ class UserStats extends React.Component {
                 }
             });
     }
+    
     render () {
         let { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
         return (
