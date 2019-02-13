@@ -54,9 +54,9 @@ export class SurveyDesign extends React.Component {
         if (childQuestions.length === 0) {
             return [questionId];
         } else {
-            return childQuestions.reduce((acc, cur) => {
-                            [...acc, ...this.getChildQuestionIds(cur.id)];
-                        }, [questionId])
+            return childQuestions.reduce((acc, cur) => (
+                                            [...acc, ...this.getChildQuestionIds(cur.id)]
+                                        ), [questionId])
         }
     };
 

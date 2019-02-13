@@ -547,9 +547,9 @@ class Collection extends React.Component {
     validateCurrentSelection = (selectedFeatures, questionId) => {
         const visibleSamples = this.getVisibleSamples(questionId);
 
-        selectedFeatures.getArray()
-        .map(sf => sf.get("sampleId"))
-        .every(sid => visibleSamples.some(vs => vs.id === sid));
+        return selectedFeatures.getArray()
+                .map(sf => sf.get("sampleId"))
+                .every(sid => visibleSamples.some(vs => vs.id === sid));
     };
 
     getChildQuestions(currentQuestionId) {
@@ -560,15 +560,15 @@ class Collection extends React.Component {
         if (childQuestions.length === 0) {
             return [question];
         } else {
-            return childQuestions.reduce((prev, cur) => {
-                [...prev, ...this.getChildQuestions(cur.id)];
-            }, [question]);
+            return childQuestions.reduce((prev, acc) => (
+                                            [...prev, ...this.getChildQuestions(acc.id)]
+                                        ), [question]);
         }
     }
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        
+
         if (Object.keys(this.state.userSamples).length === 1 
             || (selectedFeatures && selectedFeatures.getLength() 
                     && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
