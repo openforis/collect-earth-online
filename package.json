@@ -81,7 +81,6 @@
         "webpack-dev": "webpack --config webpack.dev.js",
         "webpack-prod": "webpack --config webpack.prod.js",
         "server-json": "mvn compile exec:java -Dexec.args=JSON",
-        "server-pg": "mvn compile exec:java -Dexec.args=POSTGRES",
-        "start": "npm run server-pg"
+        "server-pg": "mvn compile exec:java -Dexec.args=POSTGRES"
     }
 }
