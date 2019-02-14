@@ -435,7 +435,6 @@ class Collection extends React.Component {
 
     showPlotSamples() {
         const { mapConfig, selectedQuestion: { visible }} = this.state;
-        console.log(this.state.selectedQuestion);
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
@@ -448,7 +447,9 @@ class Collection extends React.Component {
                                     : visible[0].geom
                                         ? ceoMapStyles.whitePolygon
                                         : ceoMapStyles.whiteCircle);
-        mercator.enableSelection(mapConfig, "currentSamples");
+        mercator.enableSelection(mapConfig, 
+                                "currentSamples",
+                                (sampleId) => this.setState({selectedSampleId: sampleId}));
     }
 
     showGeoDash() {
