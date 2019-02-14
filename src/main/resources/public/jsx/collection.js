@@ -197,9 +197,9 @@ class Collection extends React.Component {
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                             :  newImagery.attribution;
         this.setState({
-                        currentImagery: newImagery,
-                        imageryAttribution: newImageryAttribution,
-                    });
+            currentImagery: newImagery,
+            imageryAttribution: newImageryAttribution,
+        });
     };
 
     setImageryYearDG = (newImageryYearDG) => {
@@ -447,9 +447,9 @@ class Collection extends React.Component {
                                     : visible[0].geom
                                         ? ceoMapStyles.whitePolygon
                                         : ceoMapStyles.whiteCircle);
-        mercator.enableSelection(mapConfig, 
-                                "currentSamples",
-                                (sampleId) => this.setState({selectedSampleId: sampleId}));
+        mercator.enableSelection(mapConfig,
+                                 "currentSamples",
+                                 (sampleId) => this.setState({ selectedSampleId: sampleId }));
     }
 
     showGeoDash() {
@@ -590,10 +590,10 @@ class Collection extends React.Component {
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
-                            questionId: questionToSet.id,
-                            answer: answerText,
-                            answerId: answerId,
-                        };
+                    questionId: questionToSet.id,
+                    answer: answerText,
+                    answerId: answerId,
+                };
                 const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
                                             .reduce((acc, questionText) => {
                                                 const { [questionText]: value, ...rest } = acc;
@@ -619,10 +619,11 @@ class Collection extends React.Component {
                                    }), {});
 
             this.setState({
-                            userSamples: { ...this.state.userSamples, ...newSamples },
-                            userImages: { ...this.state.userImages, ...newUserImages },
-                            selectedQuestion: questionToSet,
-                          });
+                userSamples: { ...this.state.userSamples, ...newSamples },
+                userImages: { ...this.state.userImages, ...newUserImages },
+                selectedQuestion: questionToSet,
+            });
+
             return true;
         } else if(selectedFeatures && selectedFeatures.getLength() === 0 ) {
             alert("No samples selected. Please click some first.");
