@@ -276,6 +276,7 @@ class BasicLayout extends React.PureComponent{
         return url;
     };
     buildImageryObject(img){
+        console.log(img);
         let gatewayUrl = this.getGatewayUrl(img);
         let title = img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
@@ -462,10 +463,11 @@ class BasicLayout extends React.PureComponent{
             if(this.state.selectedDataType == "imageAsset")
             {
                 //add image asset parameters
+                console.log("*********************" + this.state.imageCollection);
                 img1.visParams = JSON.parse(this.state.imageParams);
                 img1.imageAsset = this.state.imageCollection;
                 this.addCustomImagery(this.buildImageryObject({
-                    ImageAsset: img1.ImageAsset,
+                    ImageAsset: this.state.imageCollection,
                     startDate: "",
                     endDate: "",
                     filterType: "",
@@ -484,7 +486,7 @@ class BasicLayout extends React.PureComponent{
                     startDate: "",
                     endDate: "",
                     filterType: "",
-                    visParams: img1.visParams
+                    visParams: JSON.parse(this.state.imageParams)
                 }));
             }
             if(this.state.selectedDataTypeDual == "imageAsset")
@@ -495,11 +497,11 @@ class BasicLayout extends React.PureComponent{
                 let ref = this;
                 setTimeout(function() {
                     ref.addCustomImagery(ref.buildImageryObject({
-                        ImageAsset: img2.ImageAsset,
+                        ImageAsset: this.state.imageCollectionDual,
                         startDate: "",
                         endDate: "",
                         filterType: "",
-                        visParams: img2.visParams
+                        visParams: JSON.parse(this.state.imageParamsDual)
                     }));
                 }, 500);
 
