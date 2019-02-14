@@ -4,7 +4,7 @@ import { removeEnumerator } from "../utils/SurveyUtils";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
-                            .filter(sq => sq.parentQuestion == -1)
+                            .filter(sq => sq.parentQuestion === -1)
                             .sort((a, b) => a.id - b.id);
 
     return topLevelNodes.map((sq, index) =>
@@ -28,7 +28,7 @@ class SurveyCard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showQuestions: true
+            showQuestions: true,
         };
     }
 
@@ -38,10 +38,12 @@ class SurveyCard extends React.Component {
         const swapId = this.props.topLevelNodeIds[myIndex + upOrDown];
 
         const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(sq =>  ({...sq,
-                                                    id: sq.id === myId ? swapId
-                                                        : sq.id === swapId ? myId
-                                                            : sq.id}));
+                                    .map(sq =>  ({
+                                        ...sq,
+                                        id: sq.id === myId ? swapId
+                                            : sq.id === swapId ? myId
+                                                : sq.id,
+                                    }));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     };
@@ -56,7 +58,7 @@ class SurveyCard extends React.Component {
                             <button
                                 type="button"
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                onClick={() => this.setState({showQuestions: !this.state.showQuestions})}
+                                onClick={() => this.setState({ showQuestions: !this.state.showQuestions })}
                             >
                                 <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
                             </button>
@@ -74,7 +76,7 @@ class SurveyCard extends React.Component {
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(-1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[0]}
-                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}
+                                    style={{ opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0" }}
                                 >
                                     <i className={"fa fa-caret-up"} />
                                 </button>
@@ -83,8 +85,10 @@ class SurveyCard extends React.Component {
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1]}
-                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1]
-                                                                                ? "0.25" : "1.0"}}
+                                    style={{
+                                        opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1]
+                                                                        ? "0.25" : "1.0",
+                                    }}
                                 >
                                     <i className={"fa fa-caret-down"} />
                                 </button>
@@ -122,9 +126,10 @@ function SurveyQuestionTree({
     removeQuestion,
     surveyQuestion,
     surveyQuestions,
-    setSurveyQuestions }) {
+    setSurveyQuestions,
+}) {
 
-    const childNodes = surveyQuestions.filter(sq => sq.parentQuestion == surveyQuestion.id);
+    const childNodes = surveyQuestions.filter(sq => sq.parentQuestion === surveyQuestion.id);
     const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
     return (
         <Fragment>
@@ -222,8 +227,10 @@ function ExistingAnswer({ answer, color, removeAnswer }) {
                     </button>
                 }
                 <div className="ExistingAnswer__circle">
-                    <div className="circle mt-1 mr-3"
-                         style={{backgroundColor: color, border: "solid 1px"}}>
+                    <div
+                        className="circle mt-1 mr-3"
+                        style={{ backgroundColor: color, border: "solid 1px" }}
+                    >
                     </div>
                 </div>
                 <div className="ExistingAnswer__answer">

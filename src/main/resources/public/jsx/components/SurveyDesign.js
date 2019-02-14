@@ -5,13 +5,13 @@ import SurveyCardList from "./SurveyCardList";
 import { removeEnumerator } from "../utils/SurveyUtils";
 
 const componentTypes = [
-    {componentType: "button", dataType: "text"},
-    {componentType: "input", dataType: "number"},
-    {componentType: "input", dataType: "text"},
-    {componentType: "radiobutton", dataType: "boolean"},
-    {componentType: "radiobutton", dataType: "text"},
-    {componentType: "dropdown", dataType: "boolean"},
-    {componentType: "dropdown", dataType: "text"},
+    { componentType: "button", dataType: "text" },
+    { componentType: "input", dataType: "number" },
+    { componentType: "input", dataType: "text" },
+    { componentType: "radiobutton", dataType: "boolean" },
+    { componentType: "radiobutton", dataType: "text" },
+    { componentType: "dropdown", dataType: "boolean" },
+    { componentType: "dropdown", dataType: "text" },
     // {component: "point", dataType: "dgitizer"},
     // {component: "linestring", dataType: "dgitizer"},
     // {component: "polygon", dataType: "dgitizer"},
@@ -41,12 +41,12 @@ export class SurveyDesign extends React.Component {
     };
 
     toggleSimpleMode = () => {
-        this.setState({ inSimpleMode:
-                        this.state.inSimpleMode
-                        ? false
-                        : this.props.surveyQuestions.every(q => q.componentType === "button")
-                                || confirm("This action will revert all questions to type button.  Would you like to proceed?")
-                    });
+        this.setState({
+            inSimpleMode: this.state.inSimpleMode
+                            ? false
+                            : this.props.surveyQuestions.every(q => q.componentType === "button")
+                                    || confirm("This action will revert all questions to type button.  Would you like to proceed?"),
+        });
     };
 
     getChildQuestionIds = (questionId) => {
@@ -73,7 +73,7 @@ export class SurveyDesign extends React.Component {
         const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
         const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
 
-        const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
+        const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
 
         const newSurveyQuestions = this.props.surveyQuestions
                                     .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
@@ -101,11 +101,11 @@ export class SurveyDesign extends React.Component {
                         removeQuestion={this.removeQuestion}
                         newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length
                                 < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType)
-                                 && <NewAnswerDesigner
-                                        setSurveyQuestions={this.props.setSurveyQuestions}
-                                        surveyQuestions={this.props.surveyQuestions}
-                                        surveyQuestion={surveyQuestion}
-                                    />
+                                && <NewAnswerDesigner
+                                    setSurveyQuestions={this.props.setSurveyQuestions}
+                                    surveyQuestions={this.props.surveyQuestions}
+                                    surveyQuestion={surveyQuestion}
+                                   />
                         }
                     />
 
@@ -124,7 +124,7 @@ function ModeButtons({ inSimpleMode, toggleSimpleMode }) {
     return (
         <div
             className="my-3"
-            style={{overflow: "hidden", border: "1px solid #31BAB0",backgroundColor: "#f1f1f1"}}
+            style={{ overflow: "hidden", border: "1px solid #31BAB0", backgroundColor: "#f1f1f1" }}
         >
             <input
                 type="button"
@@ -139,7 +139,7 @@ function ModeButtons({ inSimpleMode, toggleSimpleMode }) {
                     cursor: "pointer",
                     padding: "14px 16px",
                     transition: "0.3s",
-                    fontSize: "17px"
+                    fontSize: "17px",
                 }}
             />
             <input
@@ -154,7 +154,7 @@ function ModeButtons({ inSimpleMode, toggleSimpleMode }) {
                     cursor: "pointer",
                     padding: "14px 16px",
                     transition: "0.3s",
-                    fontSize: "17px"
+                    fontSize: "17px",
                 }}
             />
         </div>
@@ -198,7 +198,7 @@ class NewQuestionDesigner extends React.Component {
                             + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
 
                 const newQuestion = {
-                                        id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
+                                        id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
                                         question: repeatedQuestions > 0
                                                         ? this.state.newQuestionText + ` (${repeatedQuestions})`
                                                         : this.state.newQuestionText,
@@ -230,7 +230,7 @@ class NewQuestionDesigner extends React.Component {
                                 id="value-componenttype"
                                 className="form-control form-control-sm"
                                 size="1"
-                                onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
+                                onChange={e => this.setState({ selectedType: parseInt(e.target.value) })}
                                 value={this.state.selectedType}
                             >
                                 {componentTypes.map((type, index) =>
@@ -254,7 +254,7 @@ class NewQuestionDesigner extends React.Component {
                                 id="value-parent"
                                 className="form-control form-control-sm"
                                 size="1"
-                                onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
+                                onChange={e => this.setState({ selectedParent: parseInt(e.target.value) })}
                                 value={this.state.selectedParent}
                             >
                                 <option key={-1} value={-1}>None</option>
@@ -263,9 +263,9 @@ class NewQuestionDesigner extends React.Component {
                                     .filter(question => question.componentType !== "input")
                                     .map(question =>
                                         <option
-                                                key={question.id}
-                                                value={question.id}
-                                            >
+                                            key={question.id}
+                                            value={question.id}
+                                        >
                                             {question.question}
                                         </option>)
                                     : ""
@@ -310,7 +310,7 @@ class NewQuestionDesigner extends React.Component {
                                     type="text"
                                     autoComplete="off"
                                     value={this.state.newQuestionText}
-                                    onChange={e => this.setState({newQuestionText: e.target.value})}
+                                    onChange={e => this.setState({ newQuestionText: e.target.value })}
                                 />
                             </div>
                         </td>
@@ -346,17 +346,17 @@ class NewAnswerDesigner extends React.Component {
         const { surveyQuestion } = this.props;
         if (this.state.newAnswerText.length > 0) {
             const newAnswer = {
-                                id: surveyQuestion.answers.reduce((a,c) => Math.max(a,c.id), 0) + 1,
-                                answer: this.state.newAnswerText,
-                                color: this.state.selectedColor
-                                };
+                id: surveyQuestion.answers.reduce((a, c) => Math.max(a, c.id), 0) + 1,
+                answer: this.state.newAnswerText,
+                color: this.state.selectedColor,
+            };
             const updatedAnswers = [...surveyQuestion.answers, newAnswer];
             const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
             const newSurveyQuestions = this.props.surveyQuestions
                     .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
             this.props.setSurveyQuestions(newSurveyQuestions);
-            this.setState({selectedColor: "#1527F6", newAnswerText: ""});
+            this.setState({ selectedColor: "#1527F6", newAnswerText: "" });
         } else {
             alert("A survey answer must possess both an answer and a color.");
         }

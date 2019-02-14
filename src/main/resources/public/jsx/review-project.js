@@ -18,7 +18,7 @@ class Project extends React.Component {
             lonMin: "",
             latMin: "",
             lonMax: "",
-            latMax: ""
+            latMax: "",
         };
     }
 
@@ -58,13 +58,13 @@ class Project extends React.Component {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    }
+                        "Content-Type": "application/json",
+                    },
               })
             .then(response => {
                 utils.hide_element("spinner");
                 if (response.ok) {
-                    this.setState({projectDetails: {...this.state.projectDetails, availability: "published"}});
+                    this.setState({ projectDetails: { ...this.state.projectDetails, availability: "published" }});
                 } else {
                     console.log(response);
                     alert("Error publishing project. See console for details.");
@@ -81,13 +81,13 @@ class Project extends React.Component {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    }
+                        "Content-Type": "application/json",
+                    },
             })
             .then(response => {
                 utils.hide_element("spinner");
                 if (response.ok) {
-                    this.setState({projectDetails: {...this.state.projectDetails, availability: "closed"}});
+                    this.setState({ projectDetails: { ...this.state.projectDetails, availability: "closed" }});
                 } else {
                     console.log(response);
                     alert("Error closing project. See console for details.");
@@ -104,13 +104,13 @@ class Project extends React.Component {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    }
+                        "Content-Type": "application/json",
+                    },
             })
             .then(response => {
                 utils.hide_element("spinner");
                 if (response.ok) {
-                    this.setState({projectDetails: {...this.state.projectDetails, availability: "archived"}});
+                    this.setState({ projectDetails: { ...this.state.projectDetails, availability: "archived" }});
                     alert("Project " + this.state.projectDetails.id + " has been archived.");
                     window.location = this.props.documentRoot + "/home";
                 } else {
@@ -122,11 +122,11 @@ class Project extends React.Component {
     };
 
     changeAvailability = () => {
-        if (this.state.projectDetails.availability == "unpublished") {
+        if (this.state.projectDetails.availability === "unpublished") {
             this.publishProject();
-        } else if (this.state.projectDetails.availability == "published") {
+        } else if (this.state.projectDetails.availability === "published") {
             this.closeProject();
-        } else if (this.state.projectDetails.availability == "closed") {
+        } else if (this.state.projectDetails.availability === "closed") {
             this.archiveProject();
         }
     };
@@ -160,12 +160,12 @@ class Project extends React.Component {
                 }
             })
             .then(data => {
-                if (data == "") {
+                if (data === "") {
                     alert("No project found with ID " + projectId + ".");
                     window.location = this.state.documentRoot + "/home";
                 } else {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
-                    this.setState({projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
+                    this.setState({ projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
                 }
             });
     };
@@ -181,7 +181,7 @@ class Project extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({imageryList: data});
+                this.setState({ imageryList: data });
             });
     };
 
@@ -196,13 +196,13 @@ class Project extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({plotList: data});
+                this.setState({ plotList: data });
             })
-            .catch(() => this.setState({plotList: []}));
+            .catch(() => this.setState({ plotList: [] }));
     };
 
     initProjectMap = () => {
-        this.setState({mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)});
+        this.setState({ mapConfig: mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList) });
     };
 
     showProjectMap = () => {
@@ -210,10 +210,11 @@ class Project extends React.Component {
 
         // // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
-        this.setState({lonMin: boundaryExtent[0]});
-        this.setState({latMin: boundaryExtent[1]});
-        this.setState({lonMax: boundaryExtent[2]});
-        this.setState({latMax: boundaryExtent[3]});
+
+        this.setState({ lonMin: boundaryExtent[0] });
+        this.setState({ latMin: boundaryExtent[1] });
+        this.setState({ lonMax: boundaryExtent[2] });
+        this.setState({ latMax: boundaryExtent[3] });
 
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
@@ -249,7 +250,8 @@ class Project extends React.Component {
                         <ProjectManagement
                             project={this.state}
                             projectId={this.props.projectId}
-                            configureGeoDash={this.configureGeoDash} downloadPlotData={this.downloadPlotData}
+                            configureGeoDash={this.configureGeoDash}
+                            downloadPlotData={this.downloadPlotData}
                             downloadSampleData={this.downloadSampleData}
                             changeAvailability={this.changeAvailability}
                             gotoProjectDashboard={this.gotoProjectDashboard}
@@ -275,11 +277,11 @@ class ProjectStatsGroup extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showStats: false
+            showStats: false,
         };
     }
 
-    updateShown =() => this.setState({showStats: !this.state.showStats});
+    updateShown =() => this.setState({ showStats: !this.state.showStats });
 
     render() {
         return (
@@ -301,7 +303,7 @@ class ProjectStats extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            stats: {}
+            stats: {},
         };
     }
 
@@ -327,7 +329,7 @@ class ProjectStats extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({stats: data});
+                this.setState({ stats: data });
             });
     }
 
@@ -343,8 +345,8 @@ class ProjectStats extends React.Component {
                     members,
                     publishedDate,
                     unanalyzedPlots,
-                    userStats
-                }
+                    userStats,
+                },
             } = this.state;
         const { availability } = this.props;
         const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
@@ -476,9 +478,11 @@ function ProjectVisibility(props) {
                 <div className="form-check form-check-inline">
                     <input
                         className="form-check-input"
-                        type="radio" id="privacy-public"
+                        type="radio"
+                        id="privacy-public"
                         name="privacy-level"
-                        value="public" defaultChecked={props.project.projectDetails.privacyLevel === "public"}
+                        value="public"
+                        defaultChecked={props.project.projectDetails.privacyLevel === "public"}
                         disabled
                     />
                     <label className="form-check-label small" htmlFor="privacy-public">Public: <i>All Users</i></label>
@@ -493,8 +497,9 @@ function ProjectVisibility(props) {
                         defaultChecked={props.project.projectDetails.privacyLevel === "private"}
                         disabled
                     />
-                    <label className="form-check-label small" htmlFor="privacy-private">Private: <i>Group
-                        Admins</i></label>
+                    <label className="form-check-label small" htmlFor="privacy-private">
+                        Private: <i>Group Admins</i>
+                    </label>
                 </div>
                 <div className="form-check form-check-inline">
                     <input
@@ -506,8 +511,9 @@ function ProjectVisibility(props) {
                         defaultChecked={props.project.projectDetails.privacyLevel === "institution"}
                         disabled
                     />
-                    <label className="form-check-label small" htmlFor="privacy-institution">Institution: <i>Group
-                        Members</i></label>
+                    <label className="form-check-label small" htmlFor="privacy-institution">
+                        Institution: <i>Group Members</i>
+                    </label>
                 </div>
                 <div className="form-check form-check-inline">
                     <input
@@ -519,15 +525,16 @@ function ProjectVisibility(props) {
                         defaultChecked={props.project.projectDetails.privacyLevel === "invitation"}
                         disabled
                     />
-                    <label className="form-check-label small" htmlFor="privacy-invitation">Invitation: <i>Coming
-                        Soon</i></label>
+                    <label className="form-check-label small" htmlFor="privacy-invitation">
+                        Invitation: <i>Coming Soon</i>
+                    </label>
                 </div>
             </div>
         </SectionBlock>
     );
 }
 
-function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
+function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin }}) {
     return (
         <SectionBlock title="Project AOI">
             <div id="project-aoi">
@@ -536,9 +543,16 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
                     <div className="row">
                         <div className="col-md-6 offset-md-3">
                             <input
-                                className="form-control form-control-sm" type="number" id="lat-max" name="lat-max"
-                                defaultValue={latMax} placeholder="North" autoComplete="off" min="-90.0"
-                                max="90.0" step="any"
+                                className="form-control form-control-sm"
+                                type="number"
+                                id="lat-max"
+                                name="lat-max"
+                                defaultValue={latMax}
+                                placeholder="North"
+                                autoComplete="off"
+                                min="-90.0"
+                                max="90.0"
+                                step="any"
                                 disabled
                             />
                         </div>
@@ -546,17 +560,31 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
                     <div className="row">
                         <div className="col-md-6">
                             <input
-                                className="form-control form-control-sm" type="number" id="lon-min" name="lon-min"
-                                defaultValue={lonMin} placeholder="West" autoComplete="off" min="-180.0"
-                                max="180.0" step="any"
+                                className="form-control form-control-sm"
+                                type="number"
+                                id="lon-min"
+                                name="lon-min"
+                                defaultValue={lonMin}
+                                placeholder="West"
+                                autoComplete="off"
+                                min="-180.0"
+                                max="180.0"
+                                step="any"
                                 disabled
                             />
                         </div>
                         <div className="col-md-6">
                             <input
-                                className="form-control form-control-sm" type="number" id="lon-max" name="lon-max"
-                                defaultValue={lonMax} placeholder="East" autoComplete="off" min="-180.0"
-                                max="180.0" step="any"
+                                className="form-control form-control-sm"
+                                type="number"
+                                id="lon-max"
+                                name="lon-max"
+                                defaultValue={lonMax}
+                                placeholder="East"
+                                autoComplete="off"
+                                min="-180.0"
+                                max="180.0"
+                                step="any"
                                 disabled
                             />
                         </div>
@@ -564,9 +592,16 @@ function ProjectAOI({ project: { latMax, lonMin, lonMax, latMin } }) {
                     <div className="row">
                         <div className="col-md-6 offset-md-3">
                             <input
-                                className="form-control form-control-sm" type="number" id="lat-min" name="lat-min"
-                                defaultValue={latMin} placeholder="South" autoComplete="off" min="-90.0"
-                                max="90.0" step="any"
+                                className="form-control form-control-sm"
+                                type="number"
+                                id="lat-min"
+                                name="lat-min"
+                                defaultValue={latMin}
+                                placeholder="South"
+                                autoComplete="off"
+                                min="-90.0"
+                                max="90.0"
+                                step="any"
                                 disabled
                             />
                         </div>
@@ -586,7 +621,7 @@ function ProjectImageryReview({ baseMapSource }) {
     );
 }
 
-function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, plotSpacing, plotShape, plotSize }} }) {
+function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, plotSpacing, plotShape, plotSize }}}) {
     return (
         <SectionBlock title="Plot Review">
             <div id="plot-design">
@@ -614,7 +649,7 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
                                     </td>
                                 </tr>
                             }
-                                {plotDistribution != "shp" &&
+                                {plotDistribution !== "shp" &&
                                 <Fragment>
                                     <tr>
                                         <td className="w-80">Plot shape</td>
@@ -639,7 +674,7 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
     );
 }
 
-function SampleReview({ project: { projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }} }){
+function SampleReview({ project: { projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }}}){
 
     return (
         <SectionBlock title="Sample Design">
@@ -691,7 +726,7 @@ function ProjectManagement(props) {
         unpublished: "Publish",
         published: "Close",
         closed: "Archive",
-        archived: "Archive"
+        archived: "Archive",
     };
     return (
         <div id="project-management" className="col mb-3">
@@ -715,7 +750,7 @@ function ProjectManagement(props) {
                             name="configure-geo-dash"
                             value="Configure Geo-Dash"
                             onClick={props.configureGeoDash}
-                            style={{ display: project.projectDetails.availability == "unpublished" || project.projectDetails.availability == "published" ? "block" : "none" }}
+                            style={{ display: project.projectDetails.availability === "unpublished" || project.projectDetails.availability === "published" ? "block" : "none" }}
                         />
                         <input
                             type="button"
@@ -724,7 +759,7 @@ function ProjectManagement(props) {
                             name="download-plot-data"
                             value="Download Plot Data"
                             onClick={props.downloadPlotData}
-                            style={{ display: project.projectDetails.availability == "published" || project.projectDetails.availability == "closed" ? "block" : "none" }}
+                            style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
                         />
                         <input
                             type="button"
@@ -733,7 +768,7 @@ function ProjectManagement(props) {
                             name="download-sample-data"
                             value="Download Sample Data"
                             onClick={props.downloadSampleData}
-                            style={{ display: project.projectDetails.availability == "published" || project.projectDetails.availability == "closed" ? "block" : "none" }}
+                            style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
                         />
                         <input
                             type="button"

@@ -50,13 +50,13 @@ class UserStats extends React.Component {
                     alert("No user found with ID " + this.props.userName + ".");
                     window.location = this.props.documentRoot + "/home";
                 } else {
-                    this.setState({stats: stats});
+                    this.setState({ stats: stats });
                 }
             });
     }
 
     render () {
-        let { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
+        const { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
         return (
             <SectionBlock title="User Stats">
 
@@ -103,7 +103,7 @@ class UserStats extends React.Component {
 function AccountForm(props) {
     return (
         <SectionBlock title="Account Settings">
-            {props.userId == props.accountId ?
+            {props.userId === props.accountId ?
                 <Fragment>
                     <h1>{props.userName}</h1>
                     <form action={props.documentRoot + "/account/" + props.accountId} method="post">
@@ -153,12 +153,17 @@ function AccountForm(props) {
                                 id="current-password"
                                 name="current-password"
                                 placeholder="Current password"
-                                defaultValue="" type="password"
+                                defaultValue=""
+                                type="password"
                                 className="form-control"
                             />
                         </div>
-                        <input className="btn btn-outline-lightgreen btn-block" name="update-account"
-                               defaultValue="Update account settings" type="submit"/>
+                        <input
+                            className="btn btn-outline-lightgreen btn-block"
+                            name="update-account"
+                            defaultValue="Update account settings"
+                            type="submit"
+                        />
                     </form>
                 </Fragment>
         :

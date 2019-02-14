@@ -17,7 +17,7 @@ class Home extends React.Component {
         // Fetch projects
         fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
             .then(response => response.json())
-            .then(data => this.setState({projects: data}));
+            .then(data => this.setState({ projects: data }));
     }
 
     toggleSidebar() {
@@ -66,14 +66,14 @@ class MapPanel extends React.Component {
         // Fetch imagery
         fetch(this.props.documentRoot + "/get-all-imagery")
             .then(response => response.json())
-            .then(data => this.setState({imagery: data}));
+            .then(data => this.setState({ imagery: data }));
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.mapConfig == null && this.state.imagery.length > 0 && prevState.imagery.length === 0) {
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.state.imagery.slice(0,1));
+            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.state.imagery.slice(0, 1));
             mercator.setVisibleLayer(mapConfig, this.state.imagery[0].title);
-            this.setState({mapConfig: mapConfig});
+            this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
             && (!prevState.mapConfig || prevProps.projects.length === 0)) {
@@ -103,7 +103,7 @@ class MapPanel extends React.Component {
         mapConfig.map.on("click",
                          event => {
                              if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
-                                 let clickedFeatures = [];
+                                 const clickedFeatures = [];
                                  mapConfig.map.forEachFeatureAtPixel(event.pixel, feature => clickedFeatures.push(feature));
                                  this.showProjectPopup(overlay, clickedFeatures[0]);
                              } else {
@@ -116,12 +116,16 @@ class MapPanel extends React.Component {
     showProjectPopup(overlay, feature) {
         if (mercator.isCluster(feature)) {
             overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
-            this.setState({clusterExtent: mercator.getClusterExtent(feature),
-                           clickedFeatures: feature.get("features")});
+            this.setState({
+                clusterExtent: mercator.getClusterExtent(feature),
+                clickedFeatures: feature.get("features"),
+            });
         } else {
             overlay.setPosition(feature.getGeometry().getCoordinates());
-            this.setState({clusterExtent: [],
-                           clickedFeatures: feature.get("features")});
+            this.setState({
+                clusterExtent: [],
+                clickedFeatures: feature.get("features"),
+            });
         }
     }
 
@@ -139,7 +143,7 @@ class MapPanel extends React.Component {
                         className="button col-xl-1 bg-lightgray d-none d-xl-block"
                         onClick={this.props.toggleSidebar}
                     >
-                        <div className="empty-div" style={{height: "50vh"}}/>
+                        <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
                             <div className={this.props.showSidePanel ? "" : "d-none"}>
                                 <i className={"fa fa-caret-left"} />
@@ -150,7 +154,7 @@ class MapPanel extends React.Component {
                         </div>
                     </div>
                     <div className="col-xl-11 mr-0 ml-0 bg-lightgray">
-                        <div id="home-map-pane" style={{width: "100%", height: "100%", position: "fixed"}}></div>
+                        <div id="home-map-pane" style={{ width: "100%", height: "100%", position: "fixed" }}></div>
                     </div>
                 </div>
                 <ProjectPopup
@@ -182,19 +186,19 @@ class SideBar extends React.Component {
         fetch(this.props.documentRoot + "/get-all-institutions")
             .then(response => response.json())
             .then(data => {
-                this.setState({institutions: data});
+                this.setState({ institutions: data });
             });
     }
 
-    toggleFilterInstitution = () => this.setState({filterInstitution: !this.state.filterInstitution});
+    toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
 
-    toggleContainsProjects = () => this.setState({containsProjects: !this.state.containsProjects});
+    toggleContainsProjects = () => this.setState({ containsProjects: !this.state.containsProjects });
 
-    toggleSortByNumber = () => this.setState({sortByNumber: !this.state.sortByNumber});
+    toggleSortByNumber = () => this.setState({ sortByNumber: !this.state.sortByNumber });
 
-    toggleUseFirst = () => this.setState({useFirstLetter: !this.state.useFirstLetter});
+    toggleUseFirst = () => this.setState({ useFirstLetter: !this.state.useFirstLetter });
 
-    updateFilterText = (newText) => this.setState({filterText: newText});
+    updateFilterText = (newText) => this.setState({ filterText: newText });
 
     sortedName(a, b) {
         const nameA = a.name.toLowerCase();
@@ -225,11 +229,11 @@ class SideBar extends React.Component {
                 .sort((a, b) => this.state.sortByNumber
                                     ? this.props.projects.filter(proj => b.id === proj.institution).length
                                         - this.props.projects.filter(proj => a.id === proj.institution).length
-                                    : this.sortedName(a,b));
+                                    : this.sortedName(a, b));
 
 
         return this.props.showSidePanel
-            ? (<div id="lPanel" className="col-lg-3 pr-0 pl-0" style={{height:"-webkit-fill-available",overflow:"hidden"}}>
+            ? (<div id="lPanel" className="col-lg-3 pr-0 pl-0" style={{ height:"-webkit-fill-available", overflow:"hidden" }}>
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
@@ -252,7 +256,7 @@ class SideBar extends React.Component {
                 />
                 {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
-                        ? <ul className="tree"  style={{height: "calc(100vh - 260px)",overflow: "scroll"}}>
+                        ? <ul className="tree"  style={{ height: "calc(100vh - 260px)", overflow: "scroll" }}>
                             {filteredInstitutions.map((institution, uid) =>
                                 <Institution
                                     key={uid}
@@ -371,7 +375,7 @@ function CreateInstitutionButton(props) {
         <div className="bg-yellow text-center p-2">
             <a
                 className="create-institution"
-                style={{display:"block"}}
+                style={{ display:"block" }}
                 href={props.documentRoot + "/create-institution/0"}
             >
                 <i className="fa fa-file" /> Create New Institution
@@ -388,7 +392,7 @@ class Institution extends React.Component {
         };
     }
 
-    toggleShowProjectList = () => this.setState({showProjectList: !this.state.showProjectList});
+    toggleShowProjectList = () => this.setState({ showProjectList: !this.state.showProjectList });
 
     render() {
         const { props } = this;
@@ -413,7 +417,7 @@ class Institution extends React.Component {
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
                                 href={props.documentRoot + "/review-institution/" + props.id}
                             >
-                                <i className="fa fa-info" style={{color: "white"}}></i>
+                                <i className="fa fa-info" style={{ color: "white" }}></i>
                             </a>
                         </div>
                     </div>
@@ -495,22 +499,24 @@ class ProjectPopup extends React.Component {
                 <div className="cTitle">
                     <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
                 </div>
-                <div className="cContent" style={{padding:"10px"}}>
+                <div className="cContent" style={{ padding:"10px" }}>
                     <table className="table table-sm">
                         <tbody>
                             {
                                 this.props.features.map((feature, uid) =>
                                     <React.Fragment key={uid}>
-                                        <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
+                                        <tr className="d-flex" style={{ borderTop: "1px solid gray" }}>
                                             <td className="small col-6 px-0 my-auto">Name</td>
                                             <td className="small col-6 pr-0">
-                                                <a href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
-                                                   className="btn btn-sm btn-block btn-outline-lightgreen"
-                                                   style={{
+                                                <a
+                                                    href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
+                                                    className="btn btn-sm btn-block btn-outline-lightgreen"
+                                                    style={{
                                                        whiteSpace: "nowrap",
                                                        overflow: "hidden",
-                                                       textOverflow: "ellipsis"
-                                                   }}>
+                                                       textOverflow: "ellipsis",
+                                                   }}
+                                                >
                                                     {feature.get("name")}
                                                 </a>
                                             </td>
@@ -519,7 +525,7 @@ class ProjectPopup extends React.Component {
                                             <td className="small col-6 px-0 my-auto">Description</td>
                                             <td className="small col-6 pr-0">{feature.get("description")}</td>
                                         </tr>
-                                        <tr className="d-flex" style={{borderBottom: "1px solid gray"}}>
+                                        <tr className="d-flex" style={{ borderBottom: "1px solid gray" }}>
                                             <td className="small col-6 px-0 my-auto">Number of plots</td>
                                             <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
                                         </tr>
@@ -529,13 +535,15 @@ class ProjectPopup extends React.Component {
                         </tbody>
                     </table>
                 </div>
-                <button id="zoomToCluster"
-                        className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
-                        style={{
-                            cursor: "pointer",
-                            minWidth: "350px",
-                            display: this.props.features.length > 1 ? "block" : "none"
-                        }}>
+                <button
+                    id="zoomToCluster"
+                    className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+                    style={{
+                        cursor: "pointer",
+                        minWidth: "350px",
+                        display: this.props.features.length > 1 ? "block" : "none",
+                    }}
+                >
                     <i className="fa fa-search-plus"></i> Zoom to cluster
                 </button>
             </div>

@@ -9,11 +9,11 @@ class Collection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            currentProject: {surveyQuestions: [], institution: ""},
+            currentProject: { surveyQuestions: [], institution: "" },
             plotList: [],
             imageryList: [],
             mapConfig: null,
-            currentImagery: {id: ""},
+            currentImagery: { id: "" },
             imageryAttribution: "",
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
@@ -28,8 +28,8 @@ class Collection extends React.Component {
             userImages: {},
             collectionStart: 0,
             reviewPlots: false,
-            selectedQuestion: { id: 0, question: "", answers: []},
-            sampleOutlineBlack: true
+            selectedQuestion: { id: 0, question: "", answers: [] },
+            sampleOutlineBlack: true,
         };
     }
 
@@ -54,12 +54,12 @@ class Collection extends React.Component {
         // Load all project plots initially
         if (this.state.mapConfig && this.state.plotList.length > 0
             && (this.state.mapConfig !== prevState.mapConfig
-                || prevState.plotList.length === 0))
-            {
+                || prevState.plotList.length === 0)) {
             this.showProjectPlots();
         }
         // initialize current imagery to project default
-        if (this.state.mapConfig && this.state.currentProject && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
+        if (this.state.mapConfig && this.state.currentProject
+            && this.state.imageryList.length > 0 && !this.state.currentImagery.id) {
             this.setBaseMapSource(this.getImageryByTitle(this.state.currentProject.baseMapSource).id);
         }
 
@@ -86,7 +86,8 @@ class Collection extends React.Component {
             }
         }
 
-        if (this.state.currentProject.surveyQuestions.length > 0 && this.state.userSamples !== prevState.userSamples) {
+        if (this.state.currentProject.surveyQuestions.length > 0
+            && this.state.userSamples !== prevState.userSamples) {
             this.updateQuestionStatus();
         }
 
@@ -97,11 +98,13 @@ class Collection extends React.Component {
             this.updateMapImagery();
         }
 
-        if (this.state.imageryYearDG !== prevState.imageryYearDG || this.state.stackingProfileDG !== prevState.stackingProfileDG) {
+        if (this.state.imageryYearDG !== prevState.imageryYearDG
+            || this.state.stackingProfileDG !== prevState.stackingProfileDG) {
             this.updateDGWMSLayer();
         }
 
-        if (this.state.imageryMonthPlanet !== prevState.imageryMonthPlanet || this.state.imageryYearPlanet !== prevState.imageryYearPlanet) {
+        if (this.state.imageryMonthPlanet !== prevState.imageryMonthPlanet
+            || this.state.imageryYearPlanet !== prevState.imageryYearPlanet) {
             this.updatePlanetLayer();
         }
     }
@@ -118,11 +121,11 @@ class Collection extends React.Component {
                 }
             })
             .then(project => {
-                if (project == null || project.id == 0) {
+                if (project == null || project.id === 0) {
                     alert("No project found with ID " + this.props.projectId + ".");
                 } else {
                     const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                    this.setState({currentProject: { ...project, surveyQuestions: surveyQuestions }});
+                    this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
                 }
             });
     };
@@ -139,7 +142,7 @@ class Collection extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({plotList: data});
+                this.setState({ plotList: data });
             });
     };
 
@@ -156,7 +159,7 @@ class Collection extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({imageryList: data});
+                this.setState({ imageryList: data });
             });
     };
 
@@ -167,7 +170,7 @@ class Collection extends React.Component {
                                 mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
                                 ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
-        this.setState({mapConfig: mapConfig});
+        this.setState({ mapConfig: mapConfig });
     };
 
     showProjectPlots = () => {
@@ -184,14 +187,14 @@ class Collection extends React.Component {
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
 
-        const newImageryAttribution = newImagery.title == "DigitalGlobeWMSImagery"
+        const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-                        : newImagery.title == "PlanetGlobalMosaic"
+                        : newImagery.title === "PlanetGlobalMosaic"
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                             :  newImagery.attribution;
         this.setState({
                         currentImagery: newImagery,
-                        imageryAttribution: newImageryAttribution
+                        imageryAttribution: newImageryAttribution,
                     });
     };
 
@@ -200,7 +203,7 @@ class Collection extends React.Component {
         const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({
             imageryYearDG: newImageryYearDG,
-            imageryAttribution: newImageryAttribution
+            imageryAttribution: newImageryAttribution,
         });
     };
 
@@ -209,7 +212,7 @@ class Collection extends React.Component {
         const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
         this.setState({
             stackingProfileDG: newStackingProfileDG,
-            imageryAttribution: newImageryAttribution
+            imageryAttribution: newImageryAttribution,
         });
     };
 
@@ -218,24 +221,25 @@ class Collection extends React.Component {
         const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
-            imageryAttribution: newImageryAttribution
+            imageryAttribution: newImageryAttribution,
         });
     };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
-        const monthData = { 1: "January",
-                            2: "February",
-                            3: "March",
-                            4: "April",
-                            5: "May",
-                            6: "June",
-                            7: "July",
-                            8: "August",
-                            9:  "September",
-                            10: "October",
-                            11: "November",
-                            12: "December"
-                           };
+        const monthData = {
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9:  "September",
+            10: "October",
+            11: "November",
+            12: "December",
+        };
         const newImageryMonthName = monthData[parseInt(newImageryMonthPlanet)];
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
         const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthName;
@@ -243,7 +247,7 @@ class Collection extends React.Component {
         this.setState({
             imageryMonthPlanet: newImageryMonthPlanet,
             imageryMonthNamePlanet: newImageryMonthName,
-            imageryAttribution: newImageryAttribution
+            imageryAttribution: newImageryAttribution,
         });
     };
 
@@ -251,19 +255,19 @@ class Collection extends React.Component {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
 
-        if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
+        if (this.state.currentImagery.title === "DigitalGlobeWMSImagery") {
             this.updateDGWMSLayer();
-        } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
+        } else if (this.state.currentImagery.title === "PlanetGlobalMosaic") {
             this.updatePlanetLayer();
         }
     }
 
     getImageryByTitle(imageryTitle) {
-        return this.state.imageryList.find(imagery => imagery.title == imageryTitle);
+        return this.state.imageryList.find(imagery => imagery.title === imageryTitle);
     }
 
     getImageryById(imageryId) {
-        return this.state.imageryList.find(imagery => imagery.id == imageryId);
+        return this.state.imageryList.find(imagery => imagery.id === imageryId);
     }
 
     updateDGWMSLayer() {
@@ -273,12 +277,12 @@ class Collection extends React.Component {
                                       {
                                           COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYearDG + "-01-01')"
                                               + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
-                                          FEATUREPROFILE: stackingProfileDG
+                                          FEATUREPROFILE: stackingProfileDG,
                                       });
     }
 
     updatePlanetLayer() {
-        const { imageryMonthPlanet, imageryYearPlanet} = this.state;
+        const { imageryMonthPlanet, imageryYearPlanet } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
                                    "PlanetGlobalMosaic",
                                    sourceConfig => {
@@ -302,7 +306,7 @@ class Collection extends React.Component {
                 }
             })
             .then(data => {
-                if (data == "done") {
+                if (data === "done") {
                     alert(this.state.reviewPlots
                         ? "This plot was analyzed by someone else."
                         : "This plot has already been analyzed.");
@@ -312,7 +316,7 @@ class Collection extends React.Component {
                         currentPlot: newPlot,
                         ...this.resetPlotValues(newPlot),
                         prevPlotButtonDisabled: false,
-                        nextPlotButtonDisabled: false
+                        nextPlotButtonDisabled: false,
                     });
                 }
             });
@@ -331,13 +335,13 @@ class Collection extends React.Component {
                 }
             })
             .then(data => {
-                if (data == "done") {
-                    if (plotId == -1) {
+                if (data === "done") {
+                    if (plotId === -1) {
                         alert(this.state.reviewPlots
                                 ? "You have not reviewd any plots"
                                 : "All plots have been analyzed for this project.");
                     } else {
-                        this.setState({nextPlotButtonDisabled: true});
+                        this.setState({ nextPlotButtonDisabled: true });
                         alert("You have reached the end of the plot list.");
                     }
                 } else {
@@ -345,7 +349,7 @@ class Collection extends React.Component {
                     this.setState({
                         currentPlot: newPlot,
                         ...this.resetPlotValues(newPlot),
-                        prevPlotButtonDisabled: plotId == -1
+                        prevPlotButtonDisabled: plotId === -1,
                     });
                 }
             });
@@ -364,8 +368,8 @@ class Collection extends React.Component {
                 }
             })
             .then(data => {
-                if (data == "done") {
-                    this.setState({prevPlotButtonDisabled: true});
+                if (data === "done") {
+                    this.setState({ prevPlotButtonDisabled: true });
                     alert(this.state.reviewPlots
                             ? "No previous plots were analyzed by you."
                             : "All previous plots have been analyzed.");
@@ -374,7 +378,7 @@ class Collection extends React.Component {
                     this.setState({
                         currentPlot: newPlot,
                         ...this.resetPlotValues(newPlot),
-                        nextPlotButtonDisabled: false
+                        nextPlotButtonDisabled: false,
                     });
                 }
             });
@@ -397,9 +401,9 @@ class Collection extends React.Component {
                 : {},
             selectedQuestion: this.state.currentProject.surveyQuestions
                                 .sort((a, b) => a.id - b.id)
-                                .find(surveyNode => surveyNode.parentQuestion == -1),
+                                .find(surveyNode => surveyNode.parentQuestion === -1),
             collectionStart: Date.now(),
-            sampleOutlineBlack: true
+            sampleOutlineBlack: true,
         };
     }
 
@@ -431,15 +435,15 @@ class Collection extends React.Component {
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
-            "currentSamples",
-            mercator.samplesToVectorSource(shownSamples),
-            this.state.sampleOutlineBlack
-            ? shownSamples[0].geom
-                ? ceoMapStyles.blackPolygon
-                : ceoMapStyles.blackCircle
-            : shownSamples[0].geom
-                ? ceoMapStyles.whitePolygon
-                : ceoMapStyles.whiteCircle);
+                                "currentSamples",
+                                mercator.samplesToVectorSource(shownSamples),
+                                this.state.sampleOutlineBlack
+                                    ? shownSamples[0].geom
+                                        ? ceoMapStyles.blackPolygon
+                                        : ceoMapStyles.blackCircle
+                                    : shownSamples[0].geom
+                                        ? ceoMapStyles.whitePolygon
+                                        : ceoMapStyles.whiteCircle);
         mercator.enableSelection(mapConfig, "currentSamples");
     }
 
@@ -461,8 +465,8 @@ class Collection extends React.Component {
     goToFirstPlot = () => this.getNextPlotData(-1);
 
     prevPlot = () =>  this.getPrevPlotData(this.state.currentPlot.plotId
-                            ? parseInt(this.state.currentPlot.plotId)
-                            : this.state.currentPlot.id);
+                        ? parseInt(this.state.currentPlot.plotId)
+                        : this.state.currentPlot.id);
 
     nextPlot = () => this.getNextPlotData(this.state.currentPlot.plotId
                         ? parseInt(this.state.currentPlot.plotId)
@@ -476,9 +480,11 @@ class Collection extends React.Component {
         }
     };
 
-    setReviewPlots = () => this.setState({ reviewPlots: !this.state.reviewPlots,
-                                            prevPlotButtonDisabled: false,
-                                            nextPlotButtonDisabled: false});
+    setReviewPlots = () => this.setState({
+                                reviewPlots: !this.state.reviewPlots,
+                                prevPlotButtonDisabled: false,
+                                nextPlotButtonDisabled: false,
+                            });
 
     flagPlotInDB = () => {
         if (this.state.currentPlot != null) {
@@ -487,13 +493,13 @@ class Collection extends React.Component {
                       method: "post",
                       headers: {
                           "Accept": "application/json",
-                          "Content-Type": "application/json"
+                          "Content-Type": "application/json",
                       },
                       body: JSON.stringify({
                           projectId: this.props.projectId,
                           plotId: this.state.currentPlot.id,
-                          userId: this.props.userName
-                      })
+                          userId: this.props.userName,
+                      }),
                   })
                 .then(response => {
                     if (response.ok) {
@@ -512,7 +518,7 @@ class Collection extends React.Component {
                   method: "post",
                   headers: {
                       "Accept": "application/json",
-                      "Content-Type": "application/json"
+                      "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
                       projectId: this.props.projectId,
@@ -521,8 +527,8 @@ class Collection extends React.Component {
                       confidence: -1,
                       collectionStart: this.state.collectionStart,
                       userSamples: this.state.userSamples,
-                      userImages: this.state.userImages
-                  })
+                      userImages: this.state.userImages,
+                  }),
               })
             .then(response => {
                 if (response.ok) {
@@ -535,10 +541,10 @@ class Collection extends React.Component {
     };
 
     getImageryAttributes = () => {
-        if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
-            return {imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG};
-        } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
-            return {imageryMonthPlanet: this.state.imageryMonthPlanet, imageryYearPlanet: this.state.imageryYearPlanet};
+        if (this.state.currentImagery.title === "DigitalGlobeWMSImagery") {
+            return { imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG };
+        } else if (this.state.currentImagery.title === "PlanetGlobalMosaic") {
+            return { imageryMonthPlanet: this.state.imageryMonthPlanet, imageryYearPlanet: this.state.imageryYearPlanet };
         } else {
             return {};
         }
@@ -578,31 +584,42 @@ class Collection extends React.Component {
                                 : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
-                const newQuestion = { questionId: questionToSet.id,
-                                      answer: answerText,
-                                      answerId: answerId };
+                const newQuestion = {
+                            questionId: questionToSet.id,
+                            answer: answerText,
+                            answerId: answerId,
+                        };
                 const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
                                             .reduce((acc, questionText) => {
-                                                const { [questionText]: value, ...rest} = acc;
-                                                return {...rest};
-                                            }, {...this.state.userSamples[sampleId]});
+                                                const { [questionText]: value, ...rest } = acc;
+                                                return { ...rest };
+                                            }, { ...this.state.userSamples[sampleId] });
 
-                return {...acc, [sampleId]: {...clearedSubQuestions,
-                                        [questionToSet.question]: newQuestion}};
+                return {
+                    ...acc,
+                    [sampleId]: {
+                        ...clearedSubQuestions,
+                        [questionToSet.question]: newQuestion,
+                    },
+                };
+
             }, {});
 
-            const newUserImages = sampleIds.reduce((acc, sampleId) => ({...acc, [sampleId]:
-                                    { id: this.state.currentImagery.id,
-                                    attributes: this.getImageryAttributes() }
-                        }), {});
+            const newUserImages = sampleIds.reduce((acc, sampleId) => ({
+                                        ...acc,
+                                        [sampleId]: {
+                                            id: this.state.currentImagery.id,
+                                            attributes: this.getImageryAttributes(),
+                                        },
+                                   }), {});
 
             this.setState({
-                        userSamples: {...this.state.userSamples, ...newSamples},
-                        userImages: {...this.state.userImages, ...newUserImages},
-                        selectedQuestion: questionToSet
-                    });
+                            userSamples: { ...this.state.userSamples, ...newSamples },
+                            userImages: { ...this.state.userImages, ...newUserImages },
+                            selectedQuestion: questionToSet,
+                          });
             return true;
-        } else if(selectedFeatures && selectedFeatures.getLength() == 0 ) {
+        } else if(selectedFeatures && selectedFeatures.getLength() === 0 ) {
             alert("No samples selected. Please click some first.");
             return false;
         } else {
@@ -611,7 +628,7 @@ class Collection extends React.Component {
         }
     };
 
-    setSelectedQuestion = (newselectedQuestion) => this.setState({selectedQuestion: newselectedQuestion});
+    setSelectedQuestion = (newselectedQuestion) => this.setState({ selectedQuestion: newselectedQuestion });
 
     invertColor(hex) {
         const dehashed = hex.indexOf("#") === 0 ? hex.slice(1) : hex;
@@ -636,7 +653,8 @@ class Collection extends React.Component {
             .filter(feature => {
                 const sampleId = feature.get("sampleId");
                 return this.state.userSamples[sampleId]
-                                && this.state.userSamples[sampleId][question];})
+                                && this.state.userSamples[sampleId][question];
+            })
             .forEach(feature => {
                 const sampleId = feature.get("sampleId");
                 const userAnswer = this.state.userSamples[sampleId][question].answer;
@@ -681,7 +699,7 @@ class Collection extends React.Component {
     }
 
     getAnsweredSamples(currentQuestionId) {
-        const { currentProject : { surveyQuestions}, userSamples } = this.state;
+        const { currentProject : { surveyQuestions }, userSamples } = this.state;
         const { parentQuestion, parentAnswer, question } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1 ? "" : surveyQuestions.find(sq => sq.id === parentQuestion).question;
 
@@ -708,10 +726,10 @@ class Collection extends React.Component {
         const newSampleValues = surveyQuestions.map(value => ({
                                     ...value,
                                     visible: this.getVisibleSamples(value.id).length,
-                                    answered: this.getAnsweredSamples(value.id).length
+                                    answered: this.getAnsweredSamples(value.id).length,
                                 }));
 
-        this.setState({currentProject: {...this.state.currentProject, surveyQuestions: newSampleValues}});
+        this.setState({ currentProject: { ...this.state.currentProject, surveyQuestions: newSampleValues }});
     }
 
     render() {
@@ -770,23 +788,23 @@ class Collection extends React.Component {
                             <h3>Loading imagery data...</h3>
                     }
                     {this.state.currentPlot
-                    ?
-                        <SurveyCollection
-                            selectedQuestion={this.state.selectedQuestion}
-                            surveyQuestions={this.state.currentProject.surveyQuestions}
-                            setCurrentValue={this.setCurrentValue}
-                            setSelectedQuestion={this.setSelectedQuestion}
-                        />
-                    :
-                        <fieldset className="mb-3 justify-content-center text-center">
-                            <h3>Survey Questions</h3>
-                            <p>Please go to a plot to see survey questions</p>
-                        </fieldset>
+                        ?
+                            <SurveyCollection
+                                selectedQuestion={this.state.selectedQuestion}
+                                surveyQuestions={this.state.currentProject.surveyQuestions}
+                                setCurrentValue={this.setCurrentValue}
+                                setSelectedQuestion={this.setSelectedQuestion}
+                            />
+                        :
+                            <fieldset className="mb-3 justify-content-center text-center">
+                                <h3>Survey Questions</h3>
+                                <p>Please go to a plot to see survey questions</p>
+                            </fieldset>
                     }
                 </SideBar>
                 <QuitMenu documentRoot={this.props.documentRoot}/>
                 {this.state.plotList.length === 0 &&
-                    <div id="spinner" style={{top: "45%", left: "38%"}}></div>
+                    <div id="spinner" style={{ top: "45%", left: "38%" }}></div>
                 }
             </Fragment>
         );
@@ -807,7 +825,7 @@ function ImageAnalysisPane(props) {
 function SideBar(props) {
     const saveValuesButtonEnabled = props.surveyQuestions.reduce((prev, cur) => prev && cur.visible === cur.answered, true);
     return (
-        <div id="sidebar" className="col-xl-3 border-left" style={{overflow: "scroll"}}>
+        <div id="sidebar" className="col-xl-3 border-left" style={{ overflow: "scroll" }}>
             <h2 className="header">{props.projectName || ""}</h2>
 
             {props.children}
@@ -821,7 +839,7 @@ function SideBar(props) {
                         name="save-values"
                         value="Save"
                         onClick={props.postValuesToDB}
-                        style={{opacity: saveValuesButtonEnabled ? "1.0" : ".25"}}
+                        style={{ opacity: saveValuesButtonEnabled ? "1.0" : ".25" }}
                         disabled={!saveValuesButtonEnabled}
                     />
                     <ProjectStatsGroup
@@ -856,11 +874,11 @@ class PlotNavigation extends React.Component{
 
     componentDidUpdate(prevProps) {
         if (this.props.plotId !== prevProps.plotId) {
-            this.setState({newPlotInput: this.props.plotId});
+            this.setState({ newPlotInput: this.props.plotId });
         }
     }
 
-    updateNewPlotId = (value) => this.setState({newPlotInput: value});
+    updateNewPlotId = (value) => this.setState({ newPlotInput: value });
 
     render() {
         const { props } = this;
@@ -891,56 +909,56 @@ class PlotNavigation extends React.Component{
                 }
 
                 {!props.navButtonsShown
-                ?
-                    <div className="row" id="go-to-first-plot">
-                        <div className="col">
-                            <input
-                                id="go-to-first-plot-button"
-                                className="btn btn-outline-lightgreen btn-sm btn-block"
-                                type="button"
-                                name="new-plot"
-                                value="Go to first plot"
-                                onClick={props.goToFirstPlot}
-                            />
+                    ?
+                        <div className="row" id="go-to-first-plot">
+                            <div className="col">
+                                <input
+                                    id="go-to-first-plot-button"
+                                    className="btn btn-outline-lightgreen btn-sm btn-block"
+                                    type="button"
+                                    name="new-plot"
+                                    value="Go to first plot"
+                                    onClick={props.goToFirstPlot}
+                                />
+                            </div>
                         </div>
-                    </div>
-                :
-                    <div className="row justify-content-center py-2" id="plot-nav">
-                        <div className="px-1">
-                            <input
-                                id="prev-plot-button"
-                                className="btn btn-outline-lightgreen"
-                                type="button"
-                                name="new-plot"
-                                value="Prev"
-                                onClick={props.prevPlot}
-                                style={{opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
-                                disabled={props.prevPlotButtonDisabled}
-                            />
+                    :
+                        <div className="row justify-content-center py-2" id="plot-nav">
+                            <div className="px-1">
+                                <input
+                                    id="prev-plot-button"
+                                    className="btn btn-outline-lightgreen"
+                                    type="button"
+                                    name="new-plot"
+                                    value="Prev"
+                                    onClick={props.prevPlot}
+                                    style={{ opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0" }}
+                                    disabled={props.prevPlotButtonDisabled}
+                                />
+                            </div>
+                            <div className="px-1">
+                                <input
+                                    id="new-plot-button"
+                                    className="btn btn-outline-lightgreen"
+                                    type="button"
+                                    name="new-plot"
+                                    value="Next"
+                                    onClick={props.nextPlot}
+                                    style={{ opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0" }}
+                                    disabled={props.nextPlotButtonDisabled}
+                                />
+                            </div>
+                            <div className="px-1">
+                                <input
+                                    id="flag-plot-button"
+                                    className="btn btn-outline-lightgreen"
+                                    type="button"
+                                    name="flag-plot"
+                                    value="Flag"
+                                    onClick={props.flagPlotInDB}
+                                />
+                            </div>
                         </div>
-                        <div className="px-1">
-                            <input
-                                id="new-plot-button"
-                                className="btn btn-outline-lightgreen"
-                                type="button"
-                                name="new-plot"
-                                value="Next"
-                                onClick={props.nextPlot}
-                                style={{opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
-                                disabled={props.nextPlotButtonDisabled}
-                            />
-                        </div>
-                        <div className="px-1">
-                            <input
-                                id="flag-plot-button"
-                                className="btn btn-outline-lightgreen"
-                                type="button"
-                                name="flag-plot"
-                                value="Flag"
-                                onClick={props.flagPlotInDB}
-                            />
-                        </div>
-                    </div>
                 }
 
                 <div className="PlotNavigation__review-option row justify-content-center">
@@ -1050,7 +1068,7 @@ function DigitalGlobeMenus(props) {
                 onChange={(e) => props.setStackingProfileDG(e.target.value)}
             >
                 {
-                    ["Accuracy_Profile","Cloud_Cover_Profile","Global_Currency_Profile","MyDG_Color_Consumer_Profile","MyDG_Consumer_Profile"]
+                    ["Accuracy_Profile", "Cloud_Cover_Profile", "Global_Currency_Profile", "MyDG_Color_Consumer_Profile", "MyDG_Consumer_Profile"]
                         .map(profile => <option key={profile} value={profile}>{profile}</option>)
                 }
             </select>
@@ -1093,7 +1111,7 @@ class ProjectStatsGroup extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showStats: false
+            showStats: false,
         };
     }
 
@@ -1103,7 +1121,7 @@ class ProjectStatsGroup extends React.Component {
         }
     }
 
-    updateShown = () => this.setState({showStats: !this.state.showStats});
+    updateShown = () => this.setState({ showStats: !this.state.showStats });
 
     render() {
         return (
@@ -1131,7 +1149,7 @@ class ProjectStats extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            stats: {}
+            stats: {},
         };
     }
 
@@ -1157,7 +1175,7 @@ class ProjectStats extends React.Component {
                 }
             })
             .then(data => {
-                this.setState({stats: data});
+                this.setState({ stats: data });
             });
     }
 
@@ -1239,8 +1257,14 @@ class ProjectStats extends React.Component {
 // remains hidden, shows a styled menu when the quit button is clicked
 function QuitMenu(props) {
     return (
-        <div className="modal fade" id="confirmation-quit" tabIndex="-1" role="dialog"
-             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div
+            className="modal fade"
+            id="confirmation-quit"
+            tabIndex="-1"
+            role="dialog"
+            aria-labelledby="exampleModalCenterTitle"
+            aria-hidden="true"
+        >
             <div className="modal-dialog modal-dialog-centered" role="document">
                 <div className="modal-content">
                     <div className="modal-header">
