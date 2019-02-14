@@ -197,7 +197,7 @@ class Project extends React.Component {
     };
 
     setProjectTemplate = (newTemplateId) => {
-        if (parseInt(newTemplateId) === 0) {
+        if (newTemplateId === 0) {
             this.setState({
                 projectDetails: { ...this.state.projectDetails, id: 0 },
                 plotList: [],
@@ -411,7 +411,7 @@ function ProjectTemplateVisibility({ projectId, projectList, setProjectTemplate 
                         name="project-template"
                         size="1"
                         value={projectId}
-                        onChange={e => setProjectTemplate(e.target.value)}
+                        onChange={e => setProjectTemplate(parseInt(e.target.value))}
                     >
                         <option key={0} value={0}>None</option>
                         {
