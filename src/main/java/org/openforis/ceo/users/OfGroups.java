@@ -135,6 +135,90 @@ public class OfGroups implements Institutions {
         }
     }
 
+    public String createInstitution(Request req, Response res) {
+        try {
+            // Create a new multipart config for the servlet
+            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
+            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
+
+            var userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
+            var name = partToString(req.raw().getPart("institution-name"));
+            var url = partToString(req.raw().getPart("institution-url"));
+            var description = partToString(req.raw().getPart("institution-description"));
+
+            var members = new JsonArray();
+            var admins = new JsonArray();
+            var pending = new JsonArray();
+            var imagery = new JsonArray();
+            members.add(1); // adding the admin user by default
+            admins.add(1); // adding the admin user by default
+            if (userid != 1) {
+                members.add(userid);
+                admins.add(userid);
+            }
+
+            // FIXME: Remove this code once the Institution page supports adding new imagery entries
+            imagery.add(1);
+            imagery.add(2);
+            imagery.add(3);
+            imagery.add(4);
+            imagery.add(5);
+            imagery.add(6);
+
+            // Add parameters
+            var parameters = Map.of("userid",      "" + userid,
+                                    "name",        name,
+                                    "url",         url,
+                                    "description", description);
+            var content = new MultipartContent().setMediaType(new HttpMediaType("multipart/form-data").setParameter("boundary", "__END_OF_PART__"));
+            for (var key : parameters.keySet()) {
+                var part = new MultipartContent.Part(new ByteArrayContent(null, parameters.get(key).getBytes()));
+                part.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"%s\"", key)));
+                content.addPart(part);
+            }
+            // Add file
+            var logo = req.raw().getPart("institution-logo");
+            var fileName = logo.getSubmittedFileName();
+            if (fileName != null) {
+                var contentType = logo.getContentType();
+                var bytes = IOUtils.toByteArray(logo.getInputStream());
+                var part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
+                part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
+                content.addPart(part1);
+                var part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
+                part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
+                content.addPart(part2);
+            }
+            var response = preparePostRequest(OF_USERS_API_URL + "group", content).execute(); // create a new group
+            if (response.isSuccessStatusCode()) {
+                var group = getResponseAsJson(response).getAsJsonObject();
+
+                var data = new GenericData();
+                data.put("roleCode", "ADM");
+                data.put("statusCode", "A");
+                preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), 1), data).execute();
+                if (userid != 1) {
+                    preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), userid), data).execute();
+                }
+
+                var newInstitution = new JsonObject();
+                newInstitution.addProperty("id", group.get("id").getAsString());
+                newInstitution.addProperty("name", name);
+                newInstitution.addProperty("logo", "");
+                newInstitution.addProperty("url", url);
+                newInstitution.addProperty("description", description);
+                newInstitution.addProperty("archived", false);
+                newInstitution.add("members", members);
+                newInstitution.add("admins", admins);
+                newInstitution.add("pending", pending);
+                newInstitution.add("imagery", imagery);
+                return newInstitution.toString();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return "";
+    }
     public String updateInstitution(Request req, Response res) {
         try {
             var institutionId = req.params(":id");
@@ -148,116 +232,43 @@ public class OfGroups implements Institutions {
             var url = partToString(req.raw().getPart("institution-url"));
             var description = partToString(req.raw().getPart("institution-description"));
 
-            if (institutionId.equals("0")) {
-                // NOTE: This branch creates a new institution
-
-                var members = new JsonArray();
-                var admins = new JsonArray();
-                var pending = new JsonArray();
-                var imagery = new JsonArray();
-                members.add(1); // adding the admin user by default
-                admins.add(1); // adding the admin user by default
-                if (userid != 1) {
-                    members.add(userid);
-                    admins.add(userid);
-                }
-
-                // FIXME: Remove this code once the Institution page supports adding new imagery entries
-                imagery.add(1);
-                imagery.add(2);
-                imagery.add(3);
-                imagery.add(4);
-                imagery.add(5);
-                imagery.add(6);
-
-                // Add parameters
-                var parameters = Map.of("userid",      "" + userid,
-                                        "name",        name,
-                                        "url",         url,
-                                        "description", description);
-                var content = new MultipartContent().setMediaType(new HttpMediaType("multipart/form-data").setParameter("boundary", "__END_OF_PART__"));
-                for (var key : parameters.keySet()) {
-                    var part = new MultipartContent.Part(new ByteArrayContent(null, parameters.get(key).getBytes()));
-                    part.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"%s\"", key)));
-                    content.addPart(part);
-                }
-                // Add file
-                var logo = req.raw().getPart("institution-logo");
-                var fileName = logo.getSubmittedFileName();
-                if (fileName != null) {
-                    var contentType = logo.getContentType();
-                    var bytes = IOUtils.toByteArray(logo.getInputStream());
-                    var part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
-                    part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
-                    content.addPart(part1);
-                    var part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
-                    part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
-                    content.addPart(part2);
-                }
-                var response = preparePostRequest(OF_USERS_API_URL + "group", content).execute(); // create a new group
-                if (response.isSuccessStatusCode()) {
-                    var group = getResponseAsJson(response).getAsJsonObject();
-
-                    var data = new GenericData();
-                    data.put("roleCode", "ADM");
-                    data.put("statusCode", "A");
-                    preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), 1), data).execute();
-                    if (userid != 1) {
-                        preparePostRequest(String.format(OF_USERS_API_URL + "group/%s/user/%s", group.get("id").getAsString(), userid), data).execute();
-                    }
-
-                    var newInstitution = new JsonObject();
-                    newInstitution.addProperty("id", group.get("id").getAsString());
-                    newInstitution.addProperty("name", name);
-                    newInstitution.addProperty("logo", "");
-                    newInstitution.addProperty("url", url);
-                    newInstitution.addProperty("description", description);
-                    newInstitution.addProperty("archived", false);
-                    newInstitution.add("members", members);
-                    newInstitution.add("admins", admins);
-                    newInstitution.add("pending", pending);
-                    newInstitution.add("imagery", imagery);
-                    return newInstitution.toString();
-                }
-            } else {
-                // NOTE: This branch edits an existing institution
-                // Add parameters
-                var parameters = Map.of("userid", "" + userid,
-                                        "name", name,
-                                        "url", url,
-                                        "description", description);
-                var content = new MultipartContent().setMediaType(new HttpMediaType("multipart/form-data").setParameter("boundary", "__END_OF_PART__"));
-                for (var key : parameters.keySet()) {
-                    var part = new MultipartContent.Part(new ByteArrayContent(null, parameters.get(key).getBytes()));
-                    part.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"%s\"", key)));
-                    content.addPart(part);
-                }
-                // Add file
-                var logo = req.raw().getPart("institution-logo");
-                var fileName = logo.getSubmittedFileName();
-                if (fileName != null) {
-                    var contentType = logo.getContentType();
-                    var bytes = IOUtils.toByteArray(logo.getInputStream());
-                    var part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
-                    part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
-                    content.addPart(part1);
-                    var part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
-                    part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
-                    content.addPart(part2);
-                }
-                // Request
-                var response = preparePatchRequest(OF_USERS_API_URL + "group/" + institutionId, content).execute(); // create a new group
-                if (response.isSuccessStatusCode()) {
-                    var group = getResponseAsJson(response).getAsJsonObject();
-                    //
-                    var newInstitution = new JsonObject();
-                    newInstitution.addProperty("id", group.get("id").getAsString());
-                    newInstitution.addProperty("name", name);
-                    newInstitution.addProperty("logo", "");
-                    newInstitution.addProperty("url", url);
-                    newInstitution.addProperty("description", description);
-                    return newInstitution.toString();
-                }
+            // NOTE: This branch edits an existing institution
+            // Add parameters
+            var parameters = Map.of("userid", "" + userid,
+                                    "name", name,
+                                    "url", url,
+                                    "description", description);
+            var content = new MultipartContent().setMediaType(new HttpMediaType("multipart/form-data").setParameter("boundary", "__END_OF_PART__"));
+            for (var key : parameters.keySet()) {
+                var part = new MultipartContent.Part(new ByteArrayContent(null, parameters.get(key).getBytes()));
+                part.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"%s\"", key)));
+                content.addPart(part);
+            }
+            // Add file
+            var logo = req.raw().getPart("institution-logo");
+            var fileName = logo.getSubmittedFileName();
+            if (fileName != null) {
+                var contentType = logo.getContentType();
+                var bytes = IOUtils.toByteArray(logo.getInputStream());
+                var part1 = new MultipartContent.Part(new ByteArrayContent(req.raw().getContentType(), bytes));
+                part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"logo\"; filename=\"%s\"", fileName)));
+                content.addPart(part1);
+                var part2 = new MultipartContent.Part(new ByteArrayContent(null, contentType.getBytes()));
+                part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"contentType\"", contentType)));
+                content.addPart(part2);
+            }
+            // Request
+            var response = preparePatchRequest(OF_USERS_API_URL + "group/" + institutionId, content).execute(); // create a new group
+            if (response.isSuccessStatusCode()) {
+                var group = getResponseAsJson(response).getAsJsonObject();
+                //
+                var newInstitution = new JsonObject();
+                newInstitution.addProperty("id", group.get("id").getAsString());
+                newInstitution.addProperty("name", name);
+                newInstitution.addProperty("logo", "");
+                newInstitution.addProperty("url", url);
+                newInstitution.addProperty("description", description);
+                return newInstitution.toString();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

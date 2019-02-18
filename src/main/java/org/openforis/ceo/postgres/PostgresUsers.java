@@ -252,51 +252,52 @@ public class PostgresUsers implements Users {
     }
 
     public String getAllUsers(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
+        try (var conn = connect(); 
+                var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
 
-        if (institutionId == null || institutionId.isEmpty()) {
-            try (var conn = connect(); 
-                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
-
-                var allUsers = new JsonArray();
-                try(var rs = pstmt.executeQuery()){
-                    while (rs.next()) {
-                        var userJson = new JsonObject();
-                        userJson.addProperty("id", rs.getInt("id"));
-                        userJson.addProperty("email", rs.getString("email"));
-                        userJson.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user" );
-                        // FIXME reset key should be removed from return values
-                        userJson.addProperty("resetKey", rs.getString("reset_key"));
-                        
-                        allUsers.add(userJson);
-                    }
+            var allUsers = new JsonArray();
+            try(var rs = pstmt.executeQuery()){
+                while (rs.next()) {
+                    var userJson = new JsonObject();
+                    userJson.addProperty("id", rs.getInt("id"));
+                    userJson.addProperty("email", rs.getString("email"));
+                    userJson.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user" );
+                    
+                    allUsers.add(userJson);
                 }
-                return allUsers.toString();
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
             }
-        } else {
-            try (var conn = connect();
-                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users_by_institution_id(?)")) {
-
-                pstmt.setInt(1, Integer.parseInt(institutionId));
-                var instAllUsers = new JsonArray();
-                try(var rs = pstmt.executeQuery()){
-                    while (rs.next()) {
-                        var instUsers = new JsonObject();
-                        instUsers.addProperty("id", rs.getInt("id"));
-                        instUsers.addProperty("email", rs.getString("email"));
-                        instUsers.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");
-                        instUsers.addProperty("resetKey", rs.getString("reset_key"));
-                        instUsers.addProperty("institutionRole", rs.getString("institution_role"));
-                        instAllUsers.add(instUsers);
-                    }
-                }
-                return instAllUsers.toString();
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
+            return allUsers.toString();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
+        
+        return "";
+    }
+
+    public String getInstitutionUsers(Request req, Response res) {
+        final var institutionId = req.params(":id");
+
+        try (var conn = connect();
+                var pstmt = conn.prepareStatement("SELECT * FROM get_all_users_by_institution_id(?)")) {
+
+            pstmt.setInt(1, Integer.parseInt(institutionId));
+            var instAllUsers = new JsonArray();
+            try(var rs = pstmt.executeQuery()){
+                while (rs.next()) {
+                    var instUsers = new JsonObject();
+                    instUsers.addProperty("id", rs.getInt("id"));
+                    instUsers.addProperty("email", rs.getString("email"));
+                    instUsers.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");
+                    instUsers.addProperty("resetKey", rs.getString("reset_key"));
+                    instUsers.addProperty("institutionRole", rs.getString("institution_role"));
+                    instAllUsers.add(instUsers);
+                }
+            }
+            return instAllUsers.toString();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
         return "";
     }
 

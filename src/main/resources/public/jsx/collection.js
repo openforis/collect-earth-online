@@ -142,7 +142,7 @@ class Collection extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error loading plot data. See console for details.");
-                    return new Promise(resolve => resolve(null));
+                    return new Promise(resolve => resolve([]));
                 }
             })
             .then(data => {
@@ -159,7 +159,7 @@ class Collection extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error retrieving the imagery list. See console for details.");
-                    return new Promise(resolve => resolve(null));
+                    return new Promise(resolve => resolve([]));
                 }
             })
             .then(data => {

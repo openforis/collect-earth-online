@@ -79,7 +79,7 @@ public class JsonImagery implements Imagery {
             imageryList.add(newImagery);
             writeJsonFile("imagery-list.json", imageryList);
 
-            return "";
+            return newImageryId + "";
         } catch (Exception e) {
             // Indicate that an error occurred with imagery creation
             throw new RuntimeException(e);

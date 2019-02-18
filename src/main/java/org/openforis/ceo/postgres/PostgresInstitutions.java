@@ -94,9 +94,8 @@ public class PostgresInstitutions implements Institutions {
         return getInstitutionById(institutionId);
     }
     
-    public String updateInstitution(Request req, Response res) {
+    public String createInstitution(Request req, Response res) {
         try {
-            var institutionId = req.params(":id");
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
             req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
@@ -105,96 +104,105 @@ public class PostgresInstitutions implements Institutions {
             var name =          partToString(req.raw().getPart("institution-name"));
             var url =           partToString(req.raw().getPart("institution-url"));
             var description =   partToString(req.raw().getPart("institution-description"));
+            try (var conn = connect();
+                    var pstmt = conn.prepareStatement("SELECT * FROM add_institution( ?, ?, ?, ?, ?)")) {
 
-            if (institutionId.equals("0")) {
-                // NOTE: This branch creates a new institution
-                try (var conn = connect();
-                     var pstmt = conn.prepareStatement("SELECT * FROM add_institution( ?, ?, ?, ?, ?)")) {
-
-                    pstmt.setString(1, name);
-                    pstmt.setString(2, "");
-                    pstmt.setString(3, description);
-                    pstmt.setString(4, url);
-                    pstmt.setBoolean(5, false);
-                    try(var rs = pstmt.executeQuery()){
-                        if (rs.next()) {
-                            var newInstitutionId = rs.getInt("add_institution");
-                            var logoFileName = writeFilePart(req,
-                                    "institution-logo",
-                                    expandResourcePath("/public/img/institution-logos"),
-                                    "institution-" + newInstitutionId);
-                            var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
-                            
-                            try(var logoPstmt = conn.prepareStatement("SELECT * FROM update_institution_logo(?,?)")){
-                                logoPstmt.setInt(1, newInstitutionId);
-                                logoPstmt.setString(2, logoPath);
-                                logoPstmt.executeQuery();
-                            }
-                            
-                            // add user and default admin to group
-                            try(var userPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")){
-                                userPstmt.setInt(1,newInstitutionId);
-                                userPstmt.setInt(2,userid);
-                                userPstmt.setInt(3,1);
-                                userPstmt.execute();
-                            }
-
-                            try(var adminPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")){
-                                adminPstmt.setInt(1,newInstitutionId);
-                                adminPstmt.setInt(2,1);
-                                adminPstmt.setInt(3,1);
-                                adminPstmt.execute();
-                            }
-    
-                            return getInstitutionById(newInstitutionId);
+                pstmt.setString(1, name);
+                pstmt.setString(2, "");
+                pstmt.setString(3, description);
+                pstmt.setString(4, url);
+                pstmt.setBoolean(5, false);
+                try(var rs = pstmt.executeQuery()){
+                    if (rs.next()) {
+                        var newInstitutionId = rs.getInt("add_institution");
+                        var logoFileName = writeFilePart(req,
+                                "institution-logo",
+                                expandResourcePath("/public/img/institution-logos"),
+                                "institution-" + newInstitutionId);
+                        var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+                        
+                        try(var logoPstmt = conn.prepareStatement("SELECT * FROM update_institution_logo(?,?)")){
+                            logoPstmt.setInt(1, newInstitutionId);
+                            logoPstmt.setString(2, logoPath);
+                            logoPstmt.executeQuery();
                         }
-                    }
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-
-                return "";
-            } else {
-                // NOTE: This branch edits an existing institution
-
-                
-                try (var conn = connect(); 
-                     var pstmt = conn.prepareStatement("SELECT * FROM select_institution_by_id(?)")) {
-
-                    pstmt.setInt(1, Integer.parseInt(institutionId));
-                    try(var rs = pstmt.executeQuery()){
-                        if (rs.next()) {
-                            var logoPath = rs.getString("logo");
-                            var logodata = partToString(req.raw().getPart("institution-logo"));
-                            if (!logodata.equals("null") && logodata.length() > 0) {
-                                var logoFileName = writeFilePart(req,
-                                                                "institution-logo",
-                                                                expandResourcePath("/public/img/institution-logos"),
-                                                                "institution-" + institutionId);
-                                logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
-                            }
-                            try(var updatePstmt = 
-                                 conn.prepareStatement("SELECT * FROM update_institution(?, ?, ?, ?, ?)")){
-                                updatePstmt.setInt(1, Integer.parseInt(institutionId));
-                                updatePstmt.setString(2, name);
-                                updatePstmt.setString(3, logoPath);
-                                updatePstmt.setString(4, description);
-                                updatePstmt.setString(5, url);
-                                updatePstmt.execute();
-                            }
-
-                            var updatedInstitution = new JsonObject();
-                            updatedInstitution.addProperty("id", institutionId);
-                            updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
-                            return updatedInstitution.toString();
+                        
+                        // add user and default admin to group
+                        try(var userPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")){
+                            userPstmt.setInt(1,newInstitutionId);
+                            userPstmt.setInt(2,userid);
+                            userPstmt.setInt(3,1);
+                            userPstmt.execute();
                         }
+
+                        try(var adminPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")){
+                            adminPstmt.setInt(1,newInstitutionId);
+                            adminPstmt.setInt(2,1);
+                            adminPstmt.setInt(3,1);
+                            adminPstmt.execute();
+                        }
+
+                        return getInstitutionById(newInstitutionId);
                     }
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
                 }
-                
-                return "";
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
             }
+
+            return "";
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public String updateInstitution(Request req, Response res) {
+        try {
+            var institutionId = req.params(":id");
+            // Create a new multipart config for the servlet
+            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
+            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
+
+            var name =          partToString(req.raw().getPart("institution-name"));
+            var url =           partToString(req.raw().getPart("institution-url"));
+            var description =   partToString(req.raw().getPart("institution-description"));
+                
+            try (var conn = connect(); 
+                    var pstmt = conn.prepareStatement("SELECT * FROM select_institution_by_id(?)")) {
+
+                pstmt.setInt(1, Integer.parseInt(institutionId));
+                try(var rs = pstmt.executeQuery()){
+                    if (rs.next()) {
+                        var logoPath = rs.getString("logo");
+                        var logodata = partToString(req.raw().getPart("institution-logo"));
+                        if (!logodata.equals("null") && logodata.length() > 0) {
+                            var logoFileName = writeFilePart(req,
+                                                            "institution-logo",
+                                                            expandResourcePath("/public/img/institution-logos"),
+                                                            "institution-" + institutionId);
+                            logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+                        }
+                        try(var updatePstmt = 
+                                conn.prepareStatement("SELECT * FROM update_institution(?, ?, ?, ?, ?)")){
+                            updatePstmt.setInt(1, Integer.parseInt(institutionId));
+                            updatePstmt.setString(2, name);
+                            updatePstmt.setString(3, logoPath);
+                            updatePstmt.setString(4, description);
+                            updatePstmt.setString(5, url);
+                            updatePstmt.execute();
+                        }
+
+                        var updatedInstitution = new JsonObject();
+                        updatedInstitution.addProperty("id", institutionId);
+                        updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
+                        return updatedInstitution.toString();
+                    }
+                }
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+            
+            return "";
+            
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
