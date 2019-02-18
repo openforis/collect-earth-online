@@ -1,6 +1,6 @@
 import React, { Fragment }  from "react";
 
-import { removeEnumerator } from "../utils/SurveyUtils"
+import { removeEnumerator } from "../utils/SurveyUtils";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
@@ -44,7 +44,7 @@ class SurveyCard extends React.Component {
                                                             : sq.id}));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
-    }
+    };
 
     render() {
         const { cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds } = this.props;
