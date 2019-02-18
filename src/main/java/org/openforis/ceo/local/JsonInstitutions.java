@@ -46,7 +46,7 @@ public class JsonInstitutions implements Institutions {
         }
     }
 
-    public static String createInstitution(Request req, Response res) {
+    public String createInstitution(Request req, Response res) {
         try {
             // Create a new multipart config for the servlet
             // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.

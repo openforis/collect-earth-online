@@ -981,7 +981,7 @@ public class CollectProjects implements Projects {
             return new String[]{};
         } else if (privacyLevel.equals("public")) {
             // return all users
-            var users = OfUsers.getAllUsers(institutionId);
+            var users = OfUsers.getAllUsers();
             return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
         } else {
             var institutions = OfGroups.getAllInstitutions(null);

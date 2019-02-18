@@ -323,7 +323,7 @@ public class OfUsers implements Users {
         }
     }
     
-    private static JsonArray getAllUsers() {
+    public static JsonArray getAllUsers() {
         try {
             var response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
             if (response.isSuccessStatusCode()) {
