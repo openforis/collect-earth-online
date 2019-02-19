@@ -1,10 +1,10 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock } from "./components/FormComponents"
+import { FormLayout, SectionBlock } from "./components/FormComponents";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-import { SurveyDesign } from "./components/SurveyDesign"
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
+import { SurveyDesign } from "./components/SurveyDesign";
+import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
 import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
@@ -95,7 +95,7 @@ class Project extends React.Component {
                                       && ["csv", "shp"].includes(sampleDistribution) ? "random"
                                             : plotDistribution === "shp" 
                                               && ["random", "gridded"].includes(sampleDistribution) ? "shp"
-                                                : sampleDistribution)
+                                                : sampleDistribution);
         }
     }
 
@@ -105,27 +105,27 @@ class Project extends React.Component {
             let formData = new FormData(document.getElementById("project-design-form"));
             formData.append("institution", this.props.institutionId);
             formData.append("sample-values", JSON.stringify(this.state.projectDetails.surveyQuestions));
-            $.ajax({
-                url: this.props.documentRoot + "/create-project",
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: false,
-                processData: false,
-                data: formData
-            }).fail(() => {
+
+            fetch(this.props.documentRoot + "/create-project", 
+                {
+                    method: "POST",
+                    body: formData
+            })
+            .then(response => {
                 utils.hide_element("spinner");
-                alert("Error creating project. See console for details.");
-            }).done((data) => {
-                utils.hide_element("spinner");
-                if (parseInt(data)) {
-                    window.location = this.props.documentRoot + "/review-project/" + data;
+                if (response.ok) {
+                    return response.json();
                 } else {
-                    alert(data);
+                    console.log(response);
+                    alert("Error creating project. See console for details.");
+                    return new Promise.reject("Error creating project");
                 }
+            })
+            .then(projectId => {
+                window.location = this.props.documentRoot + "/review-project/" + projectId;
             });
         }
-    }
+    };
 
     validateProject = () => {
         const { projectDetails, coordinates } = this.state;
@@ -154,12 +154,12 @@ class Project extends React.Component {
 
         } else if (projectDetails.plotDistribution === "csv" 
                     && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".csv"))) {
-            alert("A plot CSV file is required");
+            alert("A plot CSV (.csv) file is required");
             return false;
 
         } else if (projectDetails.plotDistribution === "shp" 
-                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".shp"))) {
-            alert("A plot SHP file is required");
+                    && !(projectDetails.plotFileName && projectDetails.plotFileName.includes(".zip"))) {
+            alert("A plot SHP (.zip) file is required");
             return false;
 
         } else if (projectDetails.sampleDistribution === "random" 
@@ -168,18 +168,18 @@ class Project extends React.Component {
             return false;
 
         } else if (projectDetails.sampleDistribution === "gridded" 
-                && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
+                    && (!projectDetails.sampleResolution || projectDetails.sampleResolution === 0)) {
             alert("A sample resolution is required for gridded sample distribution");
             return false;
 
         } else if (projectDetails.sampleDistribution === "csv" 
                     && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".csv"))) {
-            alert("A sample CSV file is required");
+            alert("A sample CSV (.csv) file is required");
             return false;
 
-            } else if (projectDetails.sampleDistribution === "shp" 
-                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".shp"))) {
-            alert("A sample SHP file is required");
+        } else if (projectDetails.sampleDistribution === "shp" 
+                    && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".zip"))) {
+            alert("A sample SHP (.zip) file is required");
             return false;
 
         } else if (projectDetails.surveyQuestions.length === 0) {
@@ -187,13 +187,13 @@ class Project extends React.Component {
             return false;
 
         } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
-            alert("All survey questions must contain at least one answer")
+            alert("All survey questions must contain at least one answer");
             return false;
 
         } else {
             return true;
         }
-    }
+    };
 
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
@@ -208,7 +208,7 @@ class Project extends React.Component {
                             plotList: [],
                             useTemplatePlots: true });
         }
-    }
+    };
 
     toggleTemplatePlots = () => this.setState({useTemplatePlots: !this.state.useTemplatePlots});
 
@@ -217,11 +217,11 @@ class Project extends React.Component {
   
                                                                                           
     setSurveyQuestions = (newSurveyQuestions) => 
-            this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }})
+            this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
 
 
     getProjectList = () => {
-        const { userId } = this.props
+        const { userId } = this.props;
         fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
             .then(response => {
                 if (response.ok) {
@@ -236,9 +236,9 @@ class Project extends React.Component {
                 projList.unshift(JSON.parse(JSON.stringify(this.state.projectDetails)));
                 this.setState({projectList: projList});
             });
-    }
+    };
 
-    getImageryList = () =>{
+    getImageryList = () => {
         const { institutionId } = this.props
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
             .then(response => {
@@ -252,13 +252,13 @@ class Project extends React.Component {
             .then(data => {
                 this.setState({imageryList: data});
             });
-    }
+    };
 
     initProjectMap = () => {
-        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList)
+        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.state.imageryList);
         mercator.setVisibleLayer(newMapConfig, this.state.imageryList[0].title);
         this.setState({mapConfig: newMapConfig});
-    }
+    };
 
     getProjectPlots() {
         const maxPlots = 300;
@@ -275,15 +275,15 @@ class Project extends React.Component {
                 this.setState({plotList: data});
             })
             .catch(e => this.setState({plotList: []}));
-    }
+    };
 
     updateProjectBoundary() {
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
 
         if (this.state.projectDetails.id === 0) {
             // Enable dragbox interaction if we are creating a new project
-            let displayDragBoxBounds = (dragBox) => {
-                let extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+            const displayDragBoxBounds = (dragBox) => {
+                const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
                 // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
                 this.setState({coordinates: { lonMin: extent[0],
                                                 latMin: extent[1],
@@ -296,7 +296,7 @@ class Project extends React.Component {
             mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
         } else {
             // Extract bounding box coordinates from the project boundary and show on the map
-            let boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
+            const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
             // FIXME like above, these values are stored in the state but never used.
             this.setState({coordinates: { lonMin: boundaryExtent[0],
                                         latMin: boundaryExtent[1],
@@ -391,10 +391,12 @@ function ProjectTemplateVisibility({ projectId, projectList, setProjectTemplate 
                 <div className="form-group">
                     <h3 htmlFor="project-template">Select Project</h3>
                     <select 
-                        className="form-control form-control-sm" id="project-template"
+                        className="form-control form-control-sm"
+                        id="project-template"
                         name="project-template"
                         size="1"
-                        value={projectId} onChange={e => setProjectTemplate(e.target.value)}
+                        value={projectId}
+                        onChange={e => setProjectTemplate(e.target.value)}
                     >
                         <option key={0} value={0}>None</option>
                         {
@@ -478,7 +480,8 @@ function ProjectVisibility({ privacyLevel, setProjectDetail }) {
                 <div className="form-check form-check-inline">
                     <input
                         className="form-check-input"
-                        type="radio" id="privacy-institution"
+                        type="radio"
+                        id="privacy-institution"
                         name="privacy-level"
                         value="institution"
                         onChange={() => setProjectDetail("privacyLevel", "institution")}
@@ -642,52 +645,52 @@ function PlotDesign ({
                     <h3 className="mb-3">Spatial Distribution</h3>
                     <div className="form-check form-check-inline">
                         <input
-                        className="form-check-input"
-                        type="radio"
-                        id="plot-distribution-random"
-                        name="plot-distribution"
-                        defaultValue="random"
-                        onChange={() => setProjectDetail("plotDistribution", "random")}
-                        checked={plotDistribution === "random"}
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-random"
+                            name="plot-distribution"
+                            defaultValue="random"
+                            onChange={() => setProjectDetail("plotDistribution", "random")}
+                            checked={plotDistribution === "random"}
                         />
                         <label
-                        className="form-check-label"
-                        htmlFor="plot-distribution-random"
+                            className="form-check-label"
+                            htmlFor="plot-distribution-random"
                         >
-                        Random
+                            Random
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
-                        className="form-check-input"
-                        type="radio"
-                        id="plot-distribution-gridded"
-                        name="plot-distribution"
-                        defaultValue="gridded"
-                        onChange={() => setProjectDetail("plotDistribution", "gridded")}
-                        checked={plotDistribution === "gridded"}
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-gridded"
+                            name="plot-distribution"
+                            defaultValue="gridded"
+                            onChange={() => setProjectDetail("plotDistribution", "gridded")}
+                            checked={plotDistribution === "gridded"}
                         />
                         <label
-                        className="form-check-label"
-                        htmlFor="plot-distribution-gridded"
+                            className="form-check-label"
+                            htmlFor="plot-distribution-gridded"
                         >
-                        Gridded
+                            Gridded
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
-                        className="form-check-input"
-                        type="radio"
-                        id="plot-distribution-csv"
-                        name="plot-distribution"
-                        defaultValue="csv"
-                        onChange={() => setProjectDetail("plotDistribution", "csv")}
-                        checked={plotDistribution === "csv"}
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-csv"
+                            name="plot-distribution"
+                            defaultValue="csv"
+                            onChange={() => setProjectDetail("plotDistribution", "csv")}
+                            checked={plotDistribution === "csv"}
                         />
                         <label
-                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                        id="custom-csv-upload"
-                        htmlFor="plot-distribution-csv-file"
+                            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                            id="custom-csv-upload"
+                            htmlFor="plot-distribution-csv-file"
                         >
                         Upload CSV
                         <input
@@ -704,18 +707,18 @@ function PlotDesign ({
                     </div>
                     <div className="form-check form-check-inline">
                         <input
-                        className="form-check-input"
-                        type="radio"
-                        id="plot-distribution-shp"
-                        name="plot-distribution"
-                        defaultValue="shp"
-                        onChange={() => setProjectDetail("plotDistribution", "shp")}
-                        checked={plotDistribution === "shp"}
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-shp"
+                            name="plot-distribution"
+                            defaultValue="shp"
+                            onChange={() => setProjectDetail("plotDistribution", "shp")}
+                            checked={plotDistribution === "shp"}
                         />
                         <label
-                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                        id="custom-shp-upload"
-                        htmlFor="plot-distribution-shp-file"
+                            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                            id="custom-shp-upload"
+                            htmlFor="plot-distribution-shp-file"
                         >
                         Upload SHP
                         <input
@@ -749,69 +752,69 @@ function PlotDesign ({
                     <div className="form-group mb-3">
                         <label htmlFor="num-plots">Number of plots</label>
                         <input
-                        className="form-control form-control-sm"
-                        type="number"
-                        id="num-plots"
-                        name="num-plots"
-                        autoComplete="off"
-                        min="0"
-                        step="1"
-                        value={numPlots || ""}
-                        disabled={plotDistribution != "random"}
-                        onChange={e => setProjectDetail("numPlots", e.target.value)}
+                            className="form-control form-control-sm"
+                            type="number"
+                            id="num-plots"
+                            name="num-plots"
+                            autoComplete="off"
+                            min="0"
+                            step="1"
+                            value={numPlots || ""}
+                            disabled={plotDistribution != "random"}
+                            onChange={e => setProjectDetail("numPlots", e.target.value)}
                         />
                     </div>
                     <div className="form-group mb-1">
                         <label htmlFor="plot-spacing">Plot spacing (m)</label>
                         <input
-                        className="form-control form-control-sm"
-                        type="number"
-                        id="plot-spacing"
-                        name="plot-spacing"
-                        autoComplete="off"
-                        min="0.0"
-                        step="any"
-                        value={plotSpacing || ""}
-                        disabled={plotDistribution != "gridded"}
-                        onChange={e => setProjectDetail("plotSpacing", e.target.value)}
+                            className="form-control form-control-sm"
+                            type="number"
+                            id="plot-spacing"
+                            name="plot-spacing"
+                            autoComplete="off"
+                            min="0.0"
+                            step="any"
+                            value={plotSpacing || ""}
+                            disabled={plotDistribution != "gridded"}
+                            onChange={e => setProjectDetail("plotSpacing", e.target.value)}
                         />
                     </div>
                     <hr />
                     <h3>Plot Shape</h3>
                     <div className="form-check form-check-inline">
                         <input
-                        className="form-check-input"
-                        type="radio"
-                        id="plot-shape-circle"
-                        name="plot-shape"
-                        defaultValue="circle"
-                        onChange={() => setProjectDetail("plotShape", "circle")}
-                        checked={plotShape === "circle"}
-                        disabled={plotDistribution === "shp"}
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-shape-circle"
+                            name="plot-shape"
+                            defaultValue="circle"
+                            onChange={() => setProjectDetail("plotShape", "circle")}
+                            checked={plotShape === "circle"}
+                            disabled={plotDistribution === "shp"}
                         />
                         <label
-                        className="form-check-label"
-                        htmlFor="plot-shape-circle"
+                            className="form-check-label"
+                            htmlFor="plot-shape-circle"
                         >
-                        Circle
+                            Circle
                         </label>
                     </div>
                     <div className="form-check form-check-inline">
                         <input
-                        className="form-check-input"
-                        type="radio"
-                        id="plot-shape-square"
-                        name="plot-shape"
-                        defaultValue="square"
-                        onChange={() => setProjectDetail("plotShape", "square")}
-                        checked={plotShape === "square"}
-                        disabled={plotDistribution === "shp"}
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-shape-square"
+                            name="plot-shape"
+                            defaultValue="square"
+                            onChange={() => setProjectDetail("plotShape", "square")}
+                            checked={plotShape === "square"}
+                            disabled={plotDistribution === "shp"}
                         />
                         <label
-                        className="form-check-label"
-                        htmlFor="plot-shape-square"
+                            className="form-check-label"
+                            htmlFor="plot-shape-square"
                         >
-                        Square
+                            Square
                         </label>
                     </div>
                     <br/>

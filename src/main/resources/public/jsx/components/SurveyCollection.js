@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 
-import { removeEnumerator } from "../utils/SurveyUtils"
+import { removeEnumerator } from "../utils/SurveyUtils";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {
@@ -33,7 +33,7 @@ export class SurveyCollection extends React.Component {
         } else {
             alert("There are no previous questions.");
         }
-    }
+    };
 
     nextSurveyQuestionTree = () => {
         if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
@@ -41,21 +41,21 @@ export class SurveyCollection extends React.Component {
         } else {
             alert("There are no more questions.");
         }
-    }
+    };
 
     setSurveyQuestionTree = (index) => this.setState({currentNodeIndex: index});
 
     checkAllSelected = (currentQuestionId) => {
         const { surveyQuestions } = this.props;
-        const { visible, answered } = surveyQuestions.find(sv => sv.id === currentQuestionId);
-        const childQuestions = surveyQuestions.filter(sv => sv.parentQuestion === currentQuestionId);
+        const { visible, answered } = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
         if (childQuestions.length === 0) {
             return visible === answered;
         } else {
             return visible === answered && childQuestions.every(cq => this.checkAllSelected(cq.id));
         }   
-    }
+    };
 
     getTopColor = (node) => this.checkAllSelected(node.id)
                                 ? "0px 0px 15px 4px green inset"
@@ -114,7 +114,7 @@ export class SurveyCollection extends React.Component {
                                 setCurrentValue={this.props.setCurrentValue}
                                 selectedQuestion={this.props.selectedQuestion}
                                 setSelectedQuestion={this.props.setSelectedQuestion}
-                                higharcyLabel=""
+                                hierarchyLabel=""
                             />
                         }
                     </div>
@@ -163,7 +163,7 @@ class SurveyQuestionTree extends React.Component  {
                                 `}}
                         onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                     >
-                    {this.props.higharcyLabel + removeEnumerator(this.props.surveyNode.question)}
+                    {this.props.hierarchyLabel + removeEnumerator(this.props.surveyNode.question)}
                     </button>
                 </div>
 
@@ -187,7 +187,7 @@ class SurveyQuestionTree extends React.Component  {
                                 setCurrentValue={this.props.setCurrentValue}
                                 selectedQuestion={this.props.selectedQuestion}
                                 setSelectedQuestion={this.props.setSelectedQuestion}
-                                higharcyLabel={this.props.higharcyLabel + "- "}
+                                hierarchyLabel={this.props.hierarchyLabel + "- "}
                             />
                             }
                         </Fragment>
@@ -267,7 +267,7 @@ class AnswerInput extends React.Component{
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             this.setState({ newInput: "" })
         }
-    }
+    };
 
     updateInputValue = (value) => this.setState({ newInput: value });
     

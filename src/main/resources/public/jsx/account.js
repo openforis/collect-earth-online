@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
-import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents"
+import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
 
 function Account(props) {
     return (
@@ -29,6 +29,7 @@ class UserStats extends React.Component {
         this.getUserStats = this.getUserStats.bind(this);
 
     }
+
     componentDidMount() {
         this.getUserStats();
     }
@@ -53,6 +54,7 @@ class UserStats extends React.Component {
                 }
             });
     }
+    
     render () {
         let { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
         return (

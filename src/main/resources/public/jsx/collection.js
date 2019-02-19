@@ -2,8 +2,8 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
-import { SurveyCollection } from "./components/SurveyCollection"
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
+import { SurveyCollection } from "./components/SurveyCollection";
+import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -124,7 +124,7 @@ class Collection extends React.Component {
                     this.setState({currentProject: { ...project, surveyQuestions: surveyQuestions }});
                 }
             });
-    }
+    };
 
     getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
@@ -140,7 +140,7 @@ class Collection extends React.Component {
             .then(data => {
                 this.setState({plotList: data});
             });
-    }
+    };
 
     getImageryList = () => {
         const { institution } = this.state.currentProject
@@ -157,7 +157,7 @@ class Collection extends React.Component {
             .then(data => {
                 this.setState({imageryList: data});
             });
-    }
+    };
 
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
@@ -167,7 +167,7 @@ class Collection extends React.Component {
                                 ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({mapConfig: mapConfig});
-    }
+    };
 
     showProjectPlots = () => {
         mercator.addPlotLayer(this.state.mapConfig,
@@ -178,7 +178,7 @@ class Collection extends React.Component {
                                   });
                                   this.getPlotData(feature.get("features")[0].get("plotId"));
                               });
-    }
+    };
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
@@ -192,7 +192,7 @@ class Collection extends React.Component {
                         currentImagery: newImagery,
                         imageryAttribution: newImageryAttribution
                     });
-    }
+    };
     
     setImageryYearDG = (newImageryYearDG) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
@@ -201,7 +201,7 @@ class Collection extends React.Component {
             imageryYearDG: newImageryYearDG,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     setStackingProfileDG = (newStackingProfileDG) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
@@ -210,7 +210,7 @@ class Collection extends React.Component {
             stackingProfileDG: newStackingProfileDG,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
@@ -219,7 +219,7 @@ class Collection extends React.Component {
             imageryYearPlanet: newImageryYearPlanet,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     setImageryMonthPlanet = (newImageryMonthPlanet) => {
         const monthData = { 1: "January", 
@@ -244,7 +244,7 @@ class Collection extends React.Component {
             imageryMonthNamePlanet: newImageryMonthName,
             imageryAttribution: newImageryAttribution
         });
-    }
+    };
 
     updateMapImagery() {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
@@ -474,7 +474,7 @@ class Collection extends React.Component {
         } else {
             alert("Please enter a number to go to plot.");
         }
-    }
+    };
 
     setReviewPlots = () => this.setState({ reviewPlots: !this.state.reviewPlots, 
                                             prevPlotButtonDisabled: false,
@@ -504,7 +504,7 @@ class Collection extends React.Component {
                     }
                 });
         }
-    }
+    };
 
     postValuesToDB = () => {
         fetch(this.props.documentRoot + "/add-user-samples",
@@ -532,9 +532,9 @@ class Collection extends React.Component {
                     alert("Error saving your assignments to the database. See console for details.");
                 }
             });
-    }
+    };
 
-    getImageryAttributes() {
+    getImageryAttributes = () => {
         if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
             return {imageryYearDG: this.state.imageryYearDG, stackingProfileDG: this.state.stackingProfileDG};
         } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
@@ -542,47 +542,48 @@ class Collection extends React.Component {
         } else {
             return {};
         }
-    }
+    };
 
-    validateCurrentSelection = (selectedFeatures, questionId) => selectedFeatures.getArray()
-                                                                    .map(sf => sf.get("sampleId"))
-                                                                    .every(sid => 
-                                                                        this.getVisibleSamples(questionId)
-                                                                        .some(vs => vs.id === sid));
+    validateCurrentSelection = (selectedFeatures, questionId) => {
+        const visibleSamples = this.getVisibleSamples(questionId);
+
+        return selectedFeatures.getArray()
+                .map(sf => sf.get("sampleId"))
+                .every(sid => visibleSamples.some(vs => vs.id === sid));
+    };
 
     getChildQuestions(currentQuestionId) {
         const { surveyQuestions } = this.state.currentProject;
-        const { question, id } = surveyQuestions.find(sv => sv.id === currentQuestionId);
-        const childQuestions = surveyQuestions.filter(sv => sv.parentQuestion === id);
+        const { question, id } = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === id);
 
         if (childQuestions.length === 0) {
             return [question];
         } else {
-            return childQuestions.reduce((prev, cur) => {
-                return [...prev, ...this.getChildQuestions(cur.id)];
-            }, [question]);
+            return childQuestions.reduce((prev, acc) => (
+                                            [...prev, ...this.getChildQuestions(acc.id)]
+                                        ), [question]);
         }
     }
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        
+
         if (Object.keys(this.state.userSamples).length === 1 
             || (selectedFeatures && selectedFeatures.getLength() 
                     && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
                 
             const sampleIds = Object.keys(this.state.userSamples).length === 1  
                                 ? [Object.keys(this.state.userSamples)[0]]
-                                : selectedFeatures.getArray().map(sf => sf.get("sampleId"))
+                                : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
-                const newQuestion = { questionText: questionToSet.id, 
-                                      questionId: questionToSet.question, 
+                const newQuestion = { questionId: questionToSet.id, 
                                       answer: answerText, 
-                                      answerId: answerId};
+                                      answerId: answerId };
                 const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
                                             .reduce((acc, questionText) => {
-                                                const { [questionText]: value, ...rest} = acc
+                                                const { [questionText]: value, ...rest} = acc;
                                                 return {...rest};
                                             }, {...this.state.userSamples[sampleId]});
                                             
@@ -594,7 +595,7 @@ class Collection extends React.Component {
                 return {...acc, [sampleId]: 
                                     { id: this.state.currentImagery.id,
                                     attributes: this.getImageryAttributes() }
-                        }
+                        };
             }, {});
 
             this.setState({
@@ -610,7 +611,7 @@ class Collection extends React.Component {
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         }
-    }
+    };
 
     setSelectedQuestion = (newselectedQuestion) => this.setState({selectedQuestion: newselectedQuestion});
 
@@ -625,21 +626,21 @@ class Collection extends React.Component {
         const g = (255 - parseInt(hexFormatted.slice(2, 4), 16)).toString(16);
         const b = (255 - parseInt(hexFormatted.slice(4, 6), 16)).toString(16);
         // pad each with zeros and return
-        const padZero = (str) => (new Array(2).join("0") + str).slice(-2)
+        const padZero = (str) => (new Array(2).join("0") + str).slice(-2);
         return "#" + padZero(r) + padZero(g) + padZero(b);
     }
 
     highlightSamplesByQuestion() {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         
-        const { question } = this.state.selectedQuestion
+        const { question } = this.state.selectedQuestion;
         allFeatures
             .filter(feature => {
-                const sampleId = feature.get("sampleId")
+                const sampleId = feature.get("sampleId");
                 return this.state.userSamples[sampleId] 
-                                && this.state.userSamples[sampleId][question]})
+                                && this.state.userSamples[sampleId][question];})
             .forEach(feature => {
-                const sampleId = feature.get("sampleId")
+                const sampleId = feature.get("sampleId");
                 const userAnswer = this.state.userSamples[sampleId][question].answer;
                 const matchingAnswer = this.state.selectedQuestion.answers
                                         .find(ans => ans.answer === userAnswer);
@@ -650,7 +651,7 @@ class Collection extends React.Component {
                                     : this.invertColor(this.state.selectedQuestion.answers[0].color)
                                 : matchingAnswer
                                     ? matchingAnswer.color
-                                    : ""
+                                    : "";
 
                 mercator.highlightSampleGeometry(feature, color);
             });
@@ -660,17 +661,16 @@ class Collection extends React.Component {
     
     getVisibleSamples(currentQuestionId) {
         const { currentProject : { surveyQuestions }, userSamples } = this.state;
-        const { parentQuestion, parentAnswer } = surveyQuestions.find(sv => sv.id === currentQuestionId);
+        const { parentQuestion, parentAnswer } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1 
                 ? "" 
-                : surveyQuestions.find(sv => sv.id === parentQuestion).question;
+                : surveyQuestions.find(sq => sq.id === parentQuestion).question;
         
         if (parentQuestion === -1) {
             return this.state.currentPlot.samples;
-        }
-        else {
+        } else {
             const correctAnswerText = surveyQuestions
-                                    .find(sv => sv.id === parentQuestion).answers
+                                    .find(sq => sq.id === parentQuestion).answers
                                     .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
             return this.getVisibleSamples(parentQuestion)
@@ -684,14 +684,14 @@ class Collection extends React.Component {
 
     getAnsweredSamples(currentQuestionId) {
         const { currentProject : { surveyQuestions}, userSamples } = this.state;
-        const { parentQuestion, parentAnswer, question } = surveyQuestions.find(sv => sv.id === currentQuestionId);
-        const parentQuestionText = parentQuestion === -1 ? "" : surveyQuestions.find(sv => sv.id === parentQuestion).question;
+        const { parentQuestion, parentAnswer, question } = surveyQuestions.find(sq => sq.id === currentQuestionId);
+        const parentQuestionText = parentQuestion === -1 ? "" : surveyQuestions.find(sq => sq.id === parentQuestion).question;
         
         if (parentQuestion === -1) {
             return this.state.currentPlot.samples.filter(s => userSamples[s.id][question]);
         } else {
             const correctAnswerText = surveyQuestions
-                                    .find(sv => sv.id === parentQuestion).answers
+                                    .find(sq => sq.id === parentQuestion).answers
                                     .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
             return this.getVisibleSamples(parentQuestion)
@@ -747,7 +747,6 @@ class Collection extends React.Component {
                     toggleSampleBW={this.toggleSampleBW}
                     loadingPlots={this.state.plotList.length === 0}
                 />
-
                 <ImageryOptions 
                     baseMapSource={this.state.currentImagery.id}
                     imageryTitle={this.state.currentImagery.title}
@@ -764,10 +763,9 @@ class Collection extends React.Component {
                     setImageryMonthPlanet={this.setImageryMonthPlanet}
                     loadingImages={this.state.imageryList.length === 0}
                 />
-
                 {this.state.currentPlot 
                 ? 
-                    <SurveyCollection 
+                    <SurveyCollection
                         selectedQuestion={this.state.selectedQuestion}
                         surveyQuestions={this.state.currentProject.surveyQuestions}
                         setCurrentValue={this.setCurrentValue}
