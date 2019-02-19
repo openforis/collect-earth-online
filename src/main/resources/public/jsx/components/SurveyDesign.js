@@ -2,7 +2,7 @@ import React from "react";
 
 import { SectionBlock } from "./FormComponents";
 import SurveyCardList from "./SurveyCardList";
-import { removeEnumerator } from "../utils/SurveyUtils";
+import { removeEnumerator } from "../utils/surveyUtils";
 
 const componentTypes = [
     { componentType: "button", dataType: "text" },

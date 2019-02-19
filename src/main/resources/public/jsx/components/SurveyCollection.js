@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 
-import { removeEnumerator } from "../utils/SurveyUtils";
+import { removeEnumerator } from "../utils/surveyUtils";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {

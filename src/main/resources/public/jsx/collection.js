@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
 import { SurveyCollection } from "./components/SurveyCollection";
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
+import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 
 class Collection extends React.Component {
     constructor(props) {
@@ -24,7 +24,6 @@ class Collection extends React.Component {
             plotList: [],
             prevPlotButtonDisabled: false,
             reviewPlots: false,
-            saveValuesButtonEnabled: false,
             sampleOutlineBlack: true,
             selectedQuestion: { id: 0, question: "", answers: [] },
             selectedSampleId: -1,

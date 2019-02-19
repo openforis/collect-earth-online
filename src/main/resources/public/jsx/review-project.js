@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
 import SurveyCardList from "./components/SurveyCardList";
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
+import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 

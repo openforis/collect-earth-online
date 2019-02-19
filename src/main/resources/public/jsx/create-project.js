@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import { FormLayout, SectionBlock } from "./components/FormComponents";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
+import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
