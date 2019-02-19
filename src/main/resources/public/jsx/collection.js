@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 
-import { SurveyQuestions } from "./components/SurveyCollection"
+import { SurveyCollection } from "./components/SurveyCollection"
 import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
 
 class Collection extends React.Component {
@@ -762,12 +762,12 @@ class Collection extends React.Component {
                     imageryMonthNamePlanet={this.imageryMonthNamePlanet}
                     setImageryYearPlanet={this.setImageryYearPlanet}
                     setImageryMonthPlanet={this.setImageryMonthPlanet}
-                    loadingImages={this.state.imageryList.length > 0}
+                    loadingImages={this.state.imageryList.length === 0}
                 />
 
                 {this.state.currentPlot 
                 ? 
-                    <SurveyQuestions 
+                    <SurveyCollection 
                         selectedQuestion={this.state.selectedQuestion}
                         surveyQuestions={this.state.currentProject.surveyQuestions}
                         setCurrentValue={this.setCurrentValue}

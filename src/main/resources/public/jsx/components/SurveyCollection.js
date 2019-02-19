@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 
 import { removeEnumerator } from "../utils/SurveyUtils"
 
-export class SurveyQuestions extends React.Component {
+export class SurveyCollection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
