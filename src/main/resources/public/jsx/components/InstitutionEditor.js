@@ -1,18 +1,24 @@
 import React from "react";
 
 
-    // encodeImageFileAsURL(event) {
-    //     const file = event.target.files[0];
-    //     const reader = new FileReader();
-    //     reader.onloadend = function () {
-    //         const base64Data = reader.result;
-    //         console.log("RESULT", base64Data);
-    //     };
-    //     reader.readAsDataURL(file);
-    // }
 
 
-export default function InstitutionEditor({ title, name, description, url, buttonGroup, setInstituionDetails }) {
+export default function InstitutionEditor({
+    title,
+    name,
+    description,
+    url,
+    buttonGroup,
+    setInstituionDetails,
+}) {
+    const encodeImageFileAsURL = (file, callback)  => {
+
+        const reader = new FileReader();
+
+        reader.onloadend = () => callback(reader.result);
+        reader.readAsDataURL(file);
+
+    };
     return (
         <div id="institution-details" className="row justify-content-center">
             <div id="institution-edit" className="col-xl-6 col-lg-6 border pb-3 mb-2">
@@ -47,7 +53,10 @@ export default function InstitutionEditor({ title, name, description, url, butto
                             className="form-control mb-1 mr-sm-2"
                             type="file"
                             accept="image/*"
-                            onChange={e => setInstituionDetails("logo", e.target.files[0])}
+                            onChange={e => {
+                                setInstituionDetails("logo", e.target.files[0]);
+                                encodeImageFileAsURL(e.target.files[0], (r) => setInstituionDetails("base64Image", r));
+                            }}
                         />
                     </div>
                     <div className="form-group">

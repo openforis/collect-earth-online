@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { sortAlphabetically } from "./utils/textUtils.js";
 
 class Home extends React.Component {
     constructor(props) {
@@ -200,36 +201,28 @@ class SideBar extends React.Component {
 
     updateFilterText = (newText) => this.setState({ filterText: newText });
 
-    sortedName(a, b) {
-        const nameA = a.name.toLowerCase();
-        const nameB = b.name.toLowerCase();
-        return nameA < nameB ? -1
-                : nameA > nameB ? 1
-                    : 0;
-    }
-
     render() {
         const filterTextLower = this.state.filterText.toLocaleLowerCase();
 
         const filteredProjects = this.props.projects
-                .filter(proj => this.state.filterInstitution
+            .filter(proj => this.state.filterInstitution
                                     || (this.state.useFirstLetter
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : proj.name.toLocaleLowerCase().includes(filterTextLower)));
 
         const filteredInstitutions = this.state.institutions
-                .filter(inst => !this.state.filterInstitution
+            .filter(inst => !this.state.filterInstitution
                                     || (this.state.useFirstLetter
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : inst.name.toLocaleLowerCase().includes(filterTextLower)))
-                .filter(inst => this.state.filterInstitution
+            .filter(inst => this.state.filterInstitution
                                     || filteredProjects.some(proj => inst.id === proj.institution))
-                .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
+            .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
                                     ||  this.props.projects.some(proj => inst.id === proj.institution))
-                .sort((a, b) => this.state.sortByNumber
+            .sort((a, b) => this.state.sortByNumber
                                     ? this.props.projects.filter(proj => b.id === proj.institution).length
                                         - this.props.projects.filter(proj => a.id === proj.institution).length
-                                    : this.sortedName(a, b));
+                                    : sortAlphabetically(a.name, b.name));
 
 
         return this.props.showSidePanel
@@ -264,7 +257,7 @@ class SideBar extends React.Component {
                                     name={institution.name}
                                     documentRoot={this.props.documentRoot}
                                     projects={filteredProjects
-                                            .filter(project => project.institution === institution.id)}
+                                        .filter(project => project.institution === institution.id)}
                                     forceInstitutionExpand={!this.state.filterInstitution
                                                                     && this.state.filterText.length > 0}
                                 />
@@ -512,10 +505,10 @@ class ProjectPopup extends React.Component {
                                                     href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
                                                     className="btn btn-sm btn-block btn-outline-lightgreen"
                                                     style={{
-                                                       whiteSpace: "nowrap",
-                                                       overflow: "hidden",
-                                                       textOverflow: "ellipsis",
-                                                   }}
+                                                        whiteSpace: "nowrap",
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                    }}
                                                 >
                                                     {feature.get("name")}
                                                 </a>
