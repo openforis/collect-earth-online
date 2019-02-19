@@ -74,6 +74,7 @@ export class SurveyCollection extends React.Component {
                     <div className="SurveyQuestions__questions">
                         <div className="SurveyQuestions__top-questions">
                             <button
+                                type="button"
                                 id="prev-survey-question"
                                 className="btn btn-outline-lightgreen m-2"
                                 onClick={this.prevSurveyQuestionTree}
@@ -84,6 +85,7 @@ export class SurveyCollection extends React.Component {
                             </button>
                             {this.state.topLevelNodeIds.map((node, i) =>
                                 <button
+                                    type="button"
                                     id="top-select"
                                     key={i}
                                     className="btn btn-outline-lightgreen m-2"
@@ -96,10 +98,11 @@ export class SurveyCollection extends React.Component {
                                                     `,
                                     }}
                                 >
-                                    {i+1}
+                                    {i + 1}
                                 </button>
                             )}
                             <button
+                                type="button"
                                 id="next-survey-question"
                                 className="btn btn-outline-lightgreen"
                                 onClick={this.nextSurveyQuestionTree}
@@ -129,7 +132,7 @@ export class SurveyCollection extends React.Component {
     }
 }
 
-class SurveyQuestionTree extends React.Component  {
+class SurveyQuestionTree extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -150,6 +153,7 @@ class SurveyQuestionTree extends React.Component  {
             <fieldset className={"mb-1 justify-content-center text-center"}>
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2">
                     <button
+                        type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm col-2 text-bold"
                         onClick={this.toggleShowAnswers}
@@ -157,6 +161,7 @@ class SurveyQuestionTree extends React.Component  {
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
                     <button
+                        type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm col-10"
                         style={{
@@ -264,7 +269,7 @@ function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, sele
                     <span className="small">{ans.answer}</span>
                 </button>
             </li>
-                )}
+        )}
     </ul>;
 }
 
@@ -412,6 +417,7 @@ class AnswerDropDown extends React.Component {
                         )}
                     </div>
                     <button
+                        type="button"
                         onClick={this.toggleDropDown}
                         className="dropbtn"
                         style={{

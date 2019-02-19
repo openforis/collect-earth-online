@@ -56,12 +56,12 @@ class Project extends React.Component {
 
         if (this.state.mapConfig
                 && (this.state.mapConfig !== prevState.mapConfig
-                || this.state.projectDetails.id !== prevState.projectDetails.id))  {
+                || this.state.projectDetails.id !== prevState.projectDetails.id)) {
             this.updateProjectBoundary();
         }
 
         if (this.state.mapConfig && this.state.projectDetails.id > 0
-            && this.state.projectDetails.id !== prevState.projectDetails.id)  {
+            && this.state.projectDetails.id !== prevState.projectDetails.id) {
             this.getProjectPlots();
         }
 

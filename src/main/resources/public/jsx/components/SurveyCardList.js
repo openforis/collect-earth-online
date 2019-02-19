@@ -1,4 +1,4 @@
-import React, { Fragment }  from "react";
+import React, { Fragment } from "react";
 
 import { removeEnumerator } from "../utils/SurveyUtils";
 
@@ -38,7 +38,7 @@ class SurveyCard extends React.Component {
         const swapId = this.props.topLevelNodeIds[myIndex + upOrDown];
 
         const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(sq =>  ({
+                                    .map(sq => ({
                                         ...sq,
                                         id: sq.id === myId ? swapId
                                             : sq.id === swapId ? myId
@@ -84,9 +84,9 @@ class SurveyCard extends React.Component {
                                     type="button"
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(1)}
-                                    disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1]}
+                                    disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]}
                                     style={{
-                                        opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1]
+                                        opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]
                                                                         ? "0.25" : "1.0",
                                     }}
                                 >

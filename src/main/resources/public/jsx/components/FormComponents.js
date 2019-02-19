@@ -25,7 +25,7 @@ export function SectionBlock({ title, children }) {
     );
 }
 
-export function StatsCell({title, children}) {
+export function StatsCell({ title, children }) {
     return (
         <div className="row mb-2">
             <div className="col-7">

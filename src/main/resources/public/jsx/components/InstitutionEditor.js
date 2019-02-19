@@ -11,7 +11,7 @@ export default function InstitutionEditor({
     buttonGroup,
     setInstituionDetails,
 }) {
-    const encodeImageFileAsURL = (file, callback)  => {
+    const encodeImageFileAsURL = (file, callback) => {
 
         const reader = new FileReader();
 

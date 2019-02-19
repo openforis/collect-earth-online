@@ -98,7 +98,7 @@ function InstitutionColumn({ title, count, children }) {
 class InstitutionDescription extends React.Component {
     constructor(props) {
         super(props);
-        this.state={
+        this.state = {
             institutionDetails: {
                 id: "-1",
                 name: "",
@@ -312,7 +312,7 @@ class InstitutionDescription extends React.Component {
 class ImageryList extends React.Component {
     constructor(props) {
         super(props);
-        this.state ={
+        this.state = {
             editMode: false,
             imageryList:[],
         };
@@ -414,7 +414,7 @@ class ImageryList extends React.Component {
 class NewImagery extends React.Component {
     constructor(props) {
         super(props);
-        this.state ={
+        this.state = {
             newImageryTitle: "",
             newImageryAttribution: "",
             newGeoServerURL: "",
@@ -522,6 +522,7 @@ class NewImagery extends React.Component {
                             <i className="fa fa-plus-square mr-1 mt-1"/>Add New Imagery
                         </button>
                         <button
+                            type="button"
                             className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
                             onClick={this.props.toggleEditMode}
                         >
@@ -537,7 +538,12 @@ class NewImagery extends React.Component {
 function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
     return <div className="row mb-1">
         <div className="col">
-            <button className="btn btn-outline-lightgreen btn-sm btn-block">{title}</button>
+            <button
+                type="button"
+                className="btn btn-outline-lightgreen btn-sm btn-block"
+            >
+                {title}
+            </button>
         </div>
         {(isAdmin && isInstitutionImage) &&
         <div className="pr-3">
@@ -585,7 +591,7 @@ function ProjectList ({ isAdmin, institutionId, projectList, documentRoot }) {
 class Project extends React.Component {
     constructor(props) {
         super(props);
-        this.state ={
+        this.state = {
             boxShadow: "",
         };
     }
@@ -649,7 +655,7 @@ class Project extends React.Component {
 class UserList extends React.Component {
     constructor(props) {
         super(props);
-        this.state ={
+        this.state = {
             institutionUserList: [],
             activeUserList: [],
         };
@@ -738,7 +744,7 @@ class UserList extends React.Component {
                     currentIsInstitutionMember={this.currentIsInstitutionMember}
                     isAdmin={this.props.isAdmin}
                     isActiveUser={this.isActiveUser}
-                    isInstitutionMember={this.currentIsInstitutionMember}
+                    isInstitutionMember={this.isInstitutionMember}
                     findUserByEmail={this.findUserByEmail}
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
@@ -802,7 +808,7 @@ function User ({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
 class NewUserButtons extends React.Component {
     constructor(props) {
         super(props);
-        this.state ={
+        this.state = {
             newUserEmail:"",
         };
     }
@@ -865,6 +871,7 @@ class NewUserButtons extends React.Component {
                     </div>
                     <div className="col-3 pl-0">
                         <button
+                            type="button"
                             className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
                             name="add-institution-user"
                             onClick={() => this.checkUserEmail() && this.addUser()}
@@ -877,6 +884,7 @@ class NewUserButtons extends React.Component {
             {(this.props.userId !== "" && !this.props.currentIsInstitutionMember) &&
             <div>
                 <button
+                    type="button"
                     className="btn btn-sm btn-outline-yellow btn-block mb-2"
                     id="request-membership-button"
                     name="request-membership-button"

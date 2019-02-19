@@ -10,8 +10,6 @@ class Home extends React.Component {
             projects: [],
             showSidePanel: true,
         };
-        this.toggleSidebar=this.toggleSidebar.bind(this);
-
     }
 
     componentDidMount() {
@@ -21,9 +19,7 @@ class Home extends React.Component {
             .then(data => this.setState({ projects: data }));
     }
 
-    toggleSidebar() {
-        this.setState({ showSidePanel: !this.state.showSidePanel });
-    }
+    toggleSidebar = () => this.setState({ showSidePanel: !this.state.showSidePanel });
 
     render() {
         return (
@@ -218,7 +214,7 @@ class SideBar extends React.Component {
             .filter(inst => this.state.filterInstitution
                                     || filteredProjects.some(proj => inst.id === proj.institution))
             .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
-                                    ||  this.props.projects.some(proj => inst.id === proj.institution))
+                                    || this.props.projects.some(proj => inst.id === proj.institution))
             .sort((a, b) => this.state.sortByNumber
                                     ? this.props.projects.filter(proj => b.id === proj.institution).length
                                         - this.props.projects.filter(proj => a.id === proj.institution).length
@@ -249,7 +245,7 @@ class SideBar extends React.Component {
                 />
                 {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
-                        ? <ul className="tree"  style={{ height: "calc(100vh - 260px)", overflow: "scroll" }}>
+                        ? <ul className="tree" style={{ height: "calc(100vh - 260px)", overflow: "scroll" }}>
                             {filteredInstitutions.map((institution, uid) =>
                                 <Institution
                                     key={uid}
@@ -529,6 +525,7 @@ class ProjectPopup extends React.Component {
                     </table>
                 </div>
                 <button
+                    type="button"
                     id="zoomToCluster"
                     className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
                     style={{
@@ -537,7 +534,7 @@ class ProjectPopup extends React.Component {
                         display: this.props.features.length > 1 ? "block" : "none",
                     }}
                 >
-                    <i className="fa fa-search-plus"></i> Zoom to cluster
+                    <i className="fa fa-search-plus"/>Zoom to cluster
                 </button>
             </div>
         );

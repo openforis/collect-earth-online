@@ -195,7 +195,7 @@ class Collection extends React.Component {
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
                         : newImagery.title === "PlanetGlobalMosaic"
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                            :  newImagery.attribution;
+                            : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -469,7 +469,7 @@ class Collection extends React.Component {
 
     goToFirstPlot = () => this.getNextPlotData(-1);
 
-    prevPlot = () =>  this.getPrevPlotData(this.state.currentPlot.plotId
+    prevPlot = () => this.getPrevPlotData(this.state.currentPlot.plotId
                         ? parseInt(this.state.currentPlot.plotId)
                         : this.state.currentPlot.id);
 
@@ -1124,6 +1124,7 @@ class ProjectStatsGroup extends React.Component {
         return (
             <div className="ProjectStatsGroup">
                 <button
+                    type="button"
                     className="btn btn-outline-lightgreen btn-sm btn-block my-2"
                     onClick={this.updateShown}
                 >

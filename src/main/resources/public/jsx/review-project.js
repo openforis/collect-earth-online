@@ -1,4 +1,4 @@
-import React, { Fragment }  from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
@@ -227,13 +227,13 @@ class Project extends React.Component {
 
     gotoProjectDashboard = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
-            window.open(this.props.documentRoot + "/project-dashboard/"+this.state.projectDetails.id);
+            window.open(this.props.documentRoot + "/project-dashboard/" + this.state.projectDetails.id);
         }
     };
 
     render() {
         return (
-            <FormLayout id="project-design"  title="Review Project">
+            <FormLayout id="project-design" title="Review Project">
                 {this.state.projectDetails && parseInt(this.state.projectDetails.id) > 0
                 ?
                     <Fragment>
@@ -287,6 +287,7 @@ class ProjectStatsGroup extends React.Component {
         return (
             <div className="ProjectStatsGroup">
                 <button
+                    type="button"
                     className="btn btn-outline-lightgreen btn-sm btn-block my-2"
                     onClick={this.updateShown}
                 >
@@ -364,7 +365,7 @@ class ProjectStats extends React.Component {
                             <div className="pr-5">
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
-                                    {publishedDate ||  (availability === "unpublished"
+                                    {publishedDate || (availability === "unpublished"
                                                             ? "Unpublished"
                                                             : "Unknown" )}
                                 </span>

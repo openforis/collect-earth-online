@@ -165,7 +165,7 @@ class NewQuestionDesigner extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state ={
+        this.state = {
             selectedAnswer: -1,
             selectedParent: -1,
             selectedType: 0,
@@ -336,7 +336,7 @@ class NewAnswerDesigner extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state ={
+        this.state = {
             selectedColor: "#1527F6",
             newAnswerText: "",
         };
