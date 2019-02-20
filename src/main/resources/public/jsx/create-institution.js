@@ -8,58 +8,60 @@ class CreateInstitution extends React.Component {
         this.state = {
             name: "",
             logo: "",
+            base64Image: "",
             url: "",
             description: "",
         };
     }
 
     createInstitution = () => {
-        const formData = new FormData();
-        formData.append("userid", this.props.userId);
-        formData.append("institution-name", this.state.name);
-        formData.append("institution-logo", this.state.logo);
-        formData.append("institution-url", this.state.details.url);
-        formData.append("institution-description", this.state.description);
         fetch(this.props.documentRoot + "/create-institution",
             {
                 method: "POST",
-                body: formData,
+                body: JSON.stringify({
+                    userId: this.props.userId,
+                    name: this.state.name,
+                    logo: this.state.logo,
+                    base64Image: this.state.base64Image,
+                    url: this.state.url,
+                    description: this.state.description,
+                }),
         })
         .then(response => {
             if (response.ok) {
                 return response.json();
             } else {
-                console.log(response);
-                alert("Error creating institution. See console for details.");
-                return new Promise.reject("Error creating instituion");
+                return new Promise((resolve, reject) => reject(response));
             }
         })
-        .then(data => window.location = this.props.documentRoot + "/review-institution/" + data);
+        .then(data => window.location = this.props.documentRoot + "/review-institution/" + data.id)
+        .catch(response => {
+            console.log(response);
+            alert("Error creating institution. See console for details.");
+        });
     }
 
     setInstituionDetails = (key, newValue) => this.setState({ [key]: newValue })
 
-    reanderButtonGroup = () => {
+    reanderButtonGroup = () =>
         <input
             id="create-institution"
             className="btn btn-outline-lightgreen btn-sm btn-block"
             type="button"
-            name="create-institution"
             value="Create Institution"
             onClick={this.createInstitution}
-            disabled={this.state.name === "" && this.state.description === ""}
+            disabled={this.state.name === "" || this.state.description === ""}
         />;
-    }
 
     render() {
         return (
             <InstitutionEditor
-                title="Create New Institution"
+                instTitle="Create New Institution"
                 name={this.state.name}
                 logo={this.state.logo}
                 url={this.state.url}
                 description={this.state.description}
-                buttonGroup={this.buttonGroup}
+                buttonGroup={this.reanderButtonGroup}
                 setInstituionDetails={this.setInstituionDetails}
             />
         );

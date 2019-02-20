@@ -3,8 +3,7 @@ package org.openforis.ceo.postgres;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
-import static org.openforis.ceo.utils.PartUtils.partToString;
-import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -26,7 +25,7 @@ public class PostgresInstitutions implements Institutions {
         try {
             newInstitution.addProperty("id", rs.getInt("id"));
             newInstitution.addProperty("name", rs.getString("name"));
-            newInstitution.addProperty("logo", rs.getString("logo"));
+            newInstitution.addProperty("logo", rs.getString("logo")+ "?t=" + (new Date().toString()));
             newInstitution.addProperty("description", rs.getString("description"));
             newInstitution.addProperty("url", rs.getObject("url").toString());
             newInstitution.addProperty("archived", rs.getObject("archived").toString());
@@ -96,14 +95,14 @@ public class PostgresInstitutions implements Institutions {
     
     public String createInstitution(Request req, Response res) {
         try {
-            // Create a new multipart config for the servlet
-            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
+            final var userId = jsonInputs.get("userId").getAsInt();
+            final var name = jsonInputs.get("name").getAsString();
+            final var url = jsonInputs.get("url").getAsString();
+            final var logo = jsonInputs.get("logo").getAsString();
+            final var base64Image = jsonInputs.get("base64Image").getAsString();
+            final var description = jsonInputs.get("description").getAsString();
 
-            var userid =        Integer.parseInt(partToString(req.raw().getPart("userid")));
-            var name =          partToString(req.raw().getPart("institution-name"));
-            var url =           partToString(req.raw().getPart("institution-url"));
-            var description =   partToString(req.raw().getPart("institution-description"));
             try (var conn = connect();
                     var pstmt = conn.prepareStatement("SELECT * FROM add_institution( ?, ?, ?, ?, ?)")) {
 
@@ -114,23 +113,28 @@ public class PostgresInstitutions implements Institutions {
                 pstmt.setBoolean(5, false);
                 try(var rs = pstmt.executeQuery()){
                     if (rs.next()) {
-                        var newInstitutionId = rs.getInt("add_institution");
-                        var logoFileName = writeFilePart(req,
-                                "institution-logo",
-                                expandResourcePath("/public/img/institution-logos"),
-                                "institution-" + newInstitutionId);
-                        var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
-                        
+                        final var newInstitutionId = rs.getInt("add_institution");
+                        final var logoFileName =  !logo.equals("") 
+                                            ? writeFilePartBase64(
+                                                    logo,
+                                                    base64Image,
+                                                    expandResourcePath("/public/img/institution-logos"),
+                                                    "institution-" + newInstitutionId
+                                                )
+                                            : null;
+
                         try(var logoPstmt = conn.prepareStatement("SELECT * FROM update_institution_logo(?,?)")){
                             logoPstmt.setInt(1, newInstitutionId);
-                            logoPstmt.setString(2, logoPath);
+                            logoPstmt.setString(2, logoFileName != null 
+                                                    ? "img/institution-logos/" + logoFileName 
+                                                    : "");
                             logoPstmt.executeQuery();
                         }
                         
                         // add user and default admin to group
                         try(var userPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")){
                             userPstmt.setInt(1,newInstitutionId);
-                            userPstmt.setInt(2,userid);
+                            userPstmt.setInt(2,userId);
                             userPstmt.setInt(3,1);
                             userPstmt.execute();
                         }
@@ -157,14 +161,14 @@ public class PostgresInstitutions implements Institutions {
     
     public String updateInstitution(Request req, Response res) {
         try {
-            var institutionId = req.params(":id");
-            // Create a new multipart config for the servlet
-            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
+            final var institutionId = req.params(":id");
 
-            var name =          partToString(req.raw().getPart("institution-name"));
-            var url =           partToString(req.raw().getPart("institution-url"));
-            var description =   partToString(req.raw().getPart("institution-description"));
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
+            final var name = jsonInputs.get("name").getAsString();
+            final var url = jsonInputs.get("url").getAsString();
+            final var logo = jsonInputs.get("logo").getAsString();
+            final var base64Image = jsonInputs.get("base64Image").getAsString();
+            final var description = jsonInputs.get("description").getAsString();
                 
             try (var conn = connect(); 
                     var pstmt = conn.prepareStatement("SELECT * FROM select_institution_by_id(?)")) {
@@ -172,29 +176,28 @@ public class PostgresInstitutions implements Institutions {
                 pstmt.setInt(1, Integer.parseInt(institutionId));
                 try(var rs = pstmt.executeQuery()){
                     if (rs.next()) {
-                        var logoPath = rs.getString("logo");
-                        var logodata = partToString(req.raw().getPart("institution-logo"));
-                        if (!logodata.equals("null") && logodata.length() > 0) {
-                            var logoFileName = writeFilePart(req,
-                                                            "institution-logo",
+                        final var logoFileName = !logo.equals("") 
+                                                    ? writeFilePartBase64(
+                                                            logo,
+                                                            base64Image,
                                                             expandResourcePath("/public/img/institution-logos"),
-                                                            "institution-" + institutionId);
-                            logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
-                        }
+                                                            "institution-" + institutionId
+                                                        )
+                                                    : null;
+                        
                         try(var updatePstmt = 
                                 conn.prepareStatement("SELECT * FROM update_institution(?, ?, ?, ?, ?)")){
                             updatePstmt.setInt(1, Integer.parseInt(institutionId));
                             updatePstmt.setString(2, name);
-                            updatePstmt.setString(3, logoPath);
+                            updatePstmt.setString(3, logoFileName != null 
+                                                        ? "img/institution-logos/" + logoFileName 
+                                                        : rs.getString("logo"));
                             updatePstmt.setString(4, description);
                             updatePstmt.setString(5, url);
                             updatePstmt.execute();
                         }
 
-                        var updatedInstitution = new JsonObject();
-                        updatedInstitution.addProperty("id", institutionId);
-                        updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
-                        return updatedInstitution.toString();
+                        return institutionId + "";
                     }
                 }
             } catch (SQLException e) {

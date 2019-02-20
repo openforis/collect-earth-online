@@ -33,7 +33,8 @@ class ReviewInstitution extends React.Component {
                     alert("Error retrieving the project info. See console for details.");
                     return new Promise(resolve => resolve([]));
                 }
-            }).then(data => this.setState({ projectList: data }));
+            })
+            .then(data => this.setState({ projectList: data }));
     }
 
     setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
@@ -52,23 +53,41 @@ class ReviewInstitution extends React.Component {
                     storage={this.props.storage}
                 />
                 <div className="row">
-                    <InstitutionColumn title="Imagery" count={this.state.imageryCount}>
+                    <div className="col-lg-3 col-xs-12">
+                        <h2 className="header">
+                            Imagery
+                            <span className="badge badge-pill badge-light ml-2">
+                                {this.state.imageryCount}
+                            </span>
+                        </h2>
                         <ImageryList
                             documentRoot={this.props.documentRoot}
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             setImageryCount={this.setImageryCount}
                         />
-                    </InstitutionColumn>
-                    <InstitutionColumn title="Projects" count={this.state.projectList.length}>
+                    </div>
+                    <div className="col-lg-5 col-xs-12">
+                        <h2 className="header">
+                            Projects
+                            <span className="badge badge-pill badge-light ml-2">
+                                {this.state.projectList.length}
+                            </span>
+                        </h2>
                         <ProjectList
                             documentRoot={this.props.documentRoot}
                             isAdmin={this.state.isAdmin}
                             institutionId={this.props.institutionId}
                             projectList={this.state.projectList}
                         />
-                    </InstitutionColumn>
-                    <InstitutionColumn title="Users" count={this.state.usersCount}>
+                    </div>
+                    <div className="col-lg-4 col-xs-12">
+                        <h2 className="header">
+                            Users
+                            <span className="badge badge-pill badge-light ml-2">
+                                {this.state.usersCount}
+                            </span>
+                        </h2>
                         <UserList
                             documentRoot={this.props.documentRoot}
                             institutionId={this.props.institutionId}
@@ -76,23 +95,11 @@ class ReviewInstitution extends React.Component {
                             setUsersCount={this.setUsersCount}
                             userId={this.props.userId}
                         />
-                    </InstitutionColumn>
+                    </div>
                 </div>
             </div>
         );
     }
-}
-
-function InstitutionColumn({ title, count, children }) {
-    return <div id="user-list" className="col-lg-4 col-xs-12">
-        <h2 className="header">
-            {title}
-            <span className="badge badge-pill badge-light ml-2">
-                {count}
-            </span>
-        </h2>
-        {children}
-    </div>;
 }
 
 class InstitutionDescription extends React.Component {
@@ -123,11 +130,6 @@ class InstitutionDescription extends React.Component {
         this.getInstitutionDetails();
     }
 
-    // componentDidUpdate(prevProps, prevState) {
-    //     if (prevState.newInstitutionDetails.logo !== this.state.institutionDetails.logo) {
-    //         this.encodeImageFileAsURL(this.state.institutionDetails.logo);
-    //     }
-    // }
     getInstitutionDetails = () => {
         fetch(this.props.documentRoot + "/get-institution-details/" + this.props.institutionId)
             .then(response => {
@@ -149,7 +151,14 @@ class InstitutionDescription extends React.Component {
             .then(data =>
                 this.setState({
                     institutionDetails: data,
-                    newInstitutionDetails: data,
+                    newInstitutionDetails: {
+                        id: data.id,
+                        name: data.name,
+                        url: data.url,
+                        description: data.description,
+                        logo: "",
+                        base64Image: "",
+                    },
                     // isAdmin: this.props.userId !== ""
                     //             && data.admins.includes(parseInt(this.props.userId)),
                 })
@@ -157,26 +166,26 @@ class InstitutionDescription extends React.Component {
     }
 
     updateInstitution = () => {
-        const formData = new FormData();
-        formData.append("institution-name", this.state.newInstitutionDetails.name);
-        formData.append("institution-logo", this.state.newInstitutionDetails.logo);
-        formData.append("institution-url", this.state.newInstitutionDetails.url);
-        formData.append("institution-description", this.state.newInstitutionDetails.description);
-
         fetch(this.props.documentRoot + "/update-institution/" + this.props.institutionId,
-              {
-                  method: "POST",
-                  body: formData,
-              })
-            .then(response => {
-                if (response.ok) {
-                    this.getInstitutionDetails();
-                    this.setState({ editMode: false });
-                } else {
-                    console.log(response);
-                    alert("Error updating institution details. See console for details.");
-                }
-            });
+            {
+                method: "POST",
+                body: JSON.stringify({
+                name: this.state.newInstitutionDetails.name,
+                logo: this.state.newInstitutionDetails.logo,
+                base64Image: this.state.newInstitutionDetails.base64Image,
+                url: this.state.newInstitutionDetails.url,
+                description: this.state.newInstitutionDetails.description,
+            }),
+        })
+        .then(response => {
+            if (response.ok) {
+                this.getInstitutionDetails();
+                this.setState({ editMode: false });
+            } else {
+                console.log(response);
+                alert("Error updating institution details. See console for details.");
+            }
+        });
     }
 
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
@@ -200,7 +209,7 @@ class InstitutionDescription extends React.Component {
                   })
                 .then(response => {
                     if (response.ok) {
-                        alert("Institution " + this.state.details.name + " has been deleted.");
+                        alert("Institution " + this.state.institutionDetails.name + " has been deleted.");
                         window.location = this.props.documentRoot + "/home";
                     } else {
                         console.log(response);
@@ -231,15 +240,6 @@ class InstitutionDescription extends React.Component {
         </div>
     </div>;
 
-    encodeImageFileAsURL(file) {
-
-        const reader = new FileReader();
-
-        reader.onloadend = () => Promise.resolve(reader.result);
-        reader.readAsDataURL(file)
-            .then(data => console.log(data));
-    }
-
     render() {
         const { documentRoot, of_users_api_url, storage } = this.props;
         return this.state.editMode
@@ -247,7 +247,6 @@ class InstitutionDescription extends React.Component {
             <InstitutionEditor
                 title="Create New Institution"
                 name={this.state.newInstitutionDetails.name}
-                logo={this.state.newInstitutionDetails.logo}
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
                 buttonGroup={this.renderEditButtonGroup}
@@ -451,62 +450,57 @@ class NewImagery extends React.Component {
     render() {
         return <div className="row" id="add-imagery">
             <div className="col">
-                <form className="mb-2 p-2 border rounded">
-                    <div className="form-group">
+                <div className="mb-2 p-2 border rounded">
+                    <div className="mb-3">
                         <label htmlFor="newImageryTitle">Title</label>
                         <input
                             className="form-control"
                             id="newImageryTitle"
                             type="text"
-                            name="imagery-title"
                             autoComplete="off"
                             onChange={e => this.setState({ newImageryTitle: e.target.value })}
                             value={this.state.newImageryTitle}
                         />
                     </div>
-                    <div className="form-group">
+                    <div className="mb-3">
                         <label htmlFor="newImageryAttribution">Attribution</label>
                         <input
                             className="form-control"
                             id="newImageryAttribution"
                             type="text"
-                            name="imagery-attribution"
                             autoComplete="off"
                             onChange={e => this.setState({ newImageryAttribution: e.target.value })}
                             value={this.state.newImageryAttribution}
                         />
                     </div>
-                    <div className="form-group">
+                    <div className="mb-3">
                         <label htmlFor="newGeoServerURL">GeoServer URL</label>
                         <input
                             className="form-control"
                             id="newGeoServerURL"
                             type="text"
-                            name="imagery-geoserver-url"
                             autoComplete="off"
                             onChange={e => this.setState({ newGeoServerURL: e.target.value })}
                             value={this.state.newGeoServerURL}
                         />
                     </div>
-                    <div className="form-group">
+                    <div className="mb-3">
                         <label htmlFor="newLayerName">GeoServer Layer Name</label>
                         <input
                             className="form-control"
                             id="newLayerName"
                             type="text"
-                            name="imagery-layer-name"
                             autoComplete="off"
                             onChange={e => this.setState({ newLayerName: e.target.value })}
                             value={this.state.newLayerName}
                         />
                     </div>
-                    <div className="form-group">
+                    <div className="mb-3">
                         <label htmlFor="newGeoServerParams">GeoServer Params<br/>(as JSON string)</label>
                         <input
                             className="form-control"
                             id="newGeoServerParams"
                             type="text"
-                            name="imagery-geoserver-params"
                             autoComplete="off"
                             onChange={e => this.setState({ newGeoServerParams: e.target.value })}
                             value={this.state.newGeoServerParams}
@@ -529,7 +523,7 @@ class NewImagery extends React.Component {
                             <i className="fa fa-ban mr-1 mt-1"/>Discard
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>;
     }
@@ -537,10 +531,10 @@ class NewImagery extends React.Component {
 
 function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
     return <div className="row mb-1">
-        <div className="col">
+        <div className="col overflow-hidden">
             <button
                 type="button"
-                className="btn btn-outline-lightgreen btn-sm btn-block"
+                className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
             >
                 {title}
             </button>
@@ -553,7 +547,7 @@ function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
                 type="button"
                 onClick={deleteImagery}
             >
-                <i className="fa fa-trash-alt mr-1"/>Delete
+                <i className="fa fa-trash-alt mr-1"/>
             </button>
         </div>
         }
@@ -627,9 +621,9 @@ class Project extends React.Component {
                     {capitalizeFirst(project.privacyLevel)}
                 </div>
             </div>
-            <div className="col">
+            <div className="col overflow-hidden">
                 <a
-                    className="btn btn-sm btn-outline-lightgreen btn-block"
+                    className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     href={documentRoot + "/collection/" + project.id}
                     style={{
                         boxShadow: this.state.boxShadow,
@@ -729,6 +723,26 @@ class UserList extends React.Component {
 
     }
 
+    requestMembership = () => {
+        fetch(this.props.documentRoot + "/request-institution-membership",
+              {
+                  method: "POST",
+                  body: JSON.stringify({
+                      institutionId: this.props.institutionId,
+                      userId: parseInt(this.props.userId),
+                  }),
+              })
+            .then(response => {
+                if (response.ok) {
+                    alert("Membership requested for user " + this.props.userId + ".");
+                    this.getInstitutionUserList();
+                } else {
+                    console.log(response);
+                    alert("Error requesting institution membership. See console for details.");
+                }
+            });
+    }
+
     currentIsInstitutionMember = () => this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
 
     isInstitutionMember = (userEmail) => this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.email === userEmail);
@@ -741,7 +755,8 @@ class UserList extends React.Component {
         return (
             <Fragment>
                 <NewUserButtons
-                    currentIsInstitutionMember={this.currentIsInstitutionMember}
+                    currentIsInstitutionMember={this.currentIsInstitutionMember()}
+                    requestMembership={this.requestMembership}
                     isAdmin={this.props.isAdmin}
                     isActiveUser={this.isActiveUser}
                     isInstitutionMember={this.isInstitutionMember}
@@ -779,9 +794,9 @@ function User ({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
                     </div>
                 </div>
             }
-            <div className="col mb-1">
+            <div className="col mb-1 overflow-hidden">
                 <a
-                    className="btn btn-sm btn-outline-lightgreen btn-block"
+                    className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
                     href={documentRoot + "/account/" + user.id}
                 >{user.email}</a>
             </div>
@@ -790,7 +805,6 @@ function User ({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
                     <select
                         value={user.institutionRole}
                         className="custom-select custom-select-sm"
-                        name="user-institution-role"
                         size="1"
                         onChange={(e) => updateUserInstitutionRole(user.id, user.email, e.target.value)}
                     >
@@ -811,26 +825,6 @@ class NewUserButtons extends React.Component {
         this.state = {
             newUserEmail:"",
         };
-    }
-
-    requestMembership = () => {
-        fetch(this.props.documentRoot + "/request-institution-membership",
-              {
-                  method: "POST",
-                  body: JSON.stringify({
-                      institutionId: this.state.details.id,
-                      userId: parseInt(this.props.userId),
-                  }),
-              })
-            .then(response => {
-                if (response.ok) {
-                    alert("Membership requested for user " + this.props.userId + ".");
-                    this.getUserList(this.props.institutionId);
-                } else {
-                    console.log(response);
-                    alert("Error requesting institution membership. See console for details.");
-                }
-            });
     }
 
     checkUserEmail = () => {
@@ -862,7 +856,6 @@ class NewUserButtons extends React.Component {
                         <input
                             className="form-control form-control-sm py-2"
                             type="email"
-                            name="new-institution-user"
                             autoComplete="off"
                             placeholder="Email"
                             onChange={e => this.setState({ newUserEmail: e.target.value })}
@@ -873,7 +866,6 @@ class NewUserButtons extends React.Component {
                         <button
                             type="button"
                             className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
-                            name="add-institution-user"
                             onClick={() => this.checkUserEmail() && this.addUser()}
                         >
                             <i className="fa fa-plus-square mr-1"/>Add User
@@ -887,8 +879,7 @@ class NewUserButtons extends React.Component {
                     type="button"
                     className="btn btn-sm btn-outline-yellow btn-block mb-2"
                     id="request-membership-button"
-                    name="request-membership-button"
-                    onClick={this.requestMembership}
+                    onClick={this.props.requestMembership}
                 >
                     <i className="fa fa-plus- mr-1"/>Request membership
                 </button>

@@ -365,7 +365,7 @@ function CreateInstitutionButton(props) {
             <a
                 className="create-institution"
                 style={{ display:"block" }}
-                href={props.documentRoot + "/create-institution/0"}
+                href={props.documentRoot + "/create-institution"}
             >
                 <i className="fa fa-file" /> Create New Institution
             </a>

@@ -522,6 +522,10 @@ ul.samplevalue{
 /*********************************************************************/
 /* INSTITUTION PAGE */
 /*********************************************************************/
+.overflow-hidden {
+    overflow: hidden;
+}
+
 #institution .header{margin:1rem 0;}
 #institution .badge-light{
 	color: #31BAB0;
