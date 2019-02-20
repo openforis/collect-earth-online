@@ -80,7 +80,7 @@ mercator.getViewRadius = function (mapConfig) {
 // is invalid.
 mercator.createSource = function (sourceConfig) {
     if (sourceConfig.type == "DigitalGlobe") {
-        return new ol.source.XYZ({url: "http://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
+        return new ol.source.XYZ({url: "https://api.tiles.mapbox.com/v4/" + sourceConfig.imageryId
                                   + "/{z}/{x}/{y}.png?access_token=" + sourceConfig.accessToken,
                                   attribution: "© DigitalGlobe, Inc"});
     } else if (sourceConfig.type == "Planet") {
