@@ -279,7 +279,7 @@ function InstitutionFilter(props) {
                     placeholder="Enter text to filter"
                     className="form-control"
                     value={props.filterText}
-                    onChange={(e)=>props.updateFilterText(e.target.value)}
+                    onChange={e => props.updateFilterText(e.target.value)}
                 />
             </div>
 

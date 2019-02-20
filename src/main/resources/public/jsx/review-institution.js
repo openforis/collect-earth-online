@@ -814,7 +814,7 @@ function User ({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
                         value={user.institutionRole}
                         className="custom-select custom-select-sm"
                         size="1"
-                        onChange={(e) => updateUserInstitutionRole(user.id, user.email, e.target.value)}
+                        onChange={e => updateUserInstitutionRole(user.id, user.email, e.target.value)}
                     >
                         {user.institutionRole === "pending" && <option value="pending">Pending</option>}
                         <option value="member">Member</option>
