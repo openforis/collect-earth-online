@@ -485,10 +485,10 @@ class Collection extends React.Component {
     };
 
     setReviewPlots = () => this.setState({
-                                reviewPlots: !this.state.reviewPlots,
-                                prevPlotButtonDisabled: false,
-                                nextPlotButtonDisabled: false,
-                            });
+        reviewPlots: !this.state.reviewPlots,
+        prevPlotButtonDisabled: false,
+        nextPlotButtonDisabled: false,
+    });
 
     flagPlotInDB = () => {
         if (this.state.currentPlot != null) {

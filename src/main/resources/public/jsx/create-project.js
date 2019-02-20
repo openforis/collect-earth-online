@@ -108,19 +108,20 @@ class Project extends React.Component {
             formData.append("sample-values", JSON.stringify(this.state.projectDetails.surveyQuestions));
 
             fetch(this.props.documentRoot + "/create-project",
-                {
-                    method: "POST",
-                    body: formData,
-                })
-            .then(response => {
-                utils.hide_element("spinner");
-                if (response.ok) {
-                    window.location = this.props.documentRoot + "/review-project/" + response.json();
-                } else {
-                    console.log(response);
-                    alert("Error creating project. See console for details.");
-                }
-            });
+                  {
+                      method: "POST",
+                      body: formData,
+                  }
+            )
+                .then(response => {
+                    utils.hide_element("spinner");
+                    if (response.ok) {
+                        window.location = this.props.documentRoot + "/review-project/" + response.json();
+                    } else {
+                        console.log(response);
+                        alert("Error creating project. See console for details.");
+                    }
+                });
         }
     };
 
@@ -303,7 +304,7 @@ class Project extends React.Component {
             const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
             // FIXME like above, these values are stored in the state but never used.
             this.setState({
-                 coordinates: {
+                coordinates: {
                     lonMin: boundaryExtent[0],
                     latMin: boundaryExtent[1],
                     lonMax: boundaryExtent[2],

@@ -18,36 +18,36 @@ class CreateInstitution extends React.Component {
 
     createInstitution = () => {
         fetch(this.props.documentRoot + "/create-institution",
-            {
-                method: "POST",
-                body: JSON.stringify({
-                    userId: this.props.userId,
-                    name: this.state.newInstitutionDetails.name,
-                    logo: this.state.newInstitutionDetails.logo,
-                    base64Image: this.state.newInstitutionDetails.base64Image,
-                    url: this.state.newInstitutionDetails.url,
-                    description: this.state.newInstitutionDetails.description,
-                }),
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                return new Promise((resolve, reject) => reject(response));
-            }
-        })
-        .then(data => window.location = this.props.documentRoot + "/review-institution/" + data.id)
-        .catch(response => {
-            console.log(response);
-            alert("Error creating institution. See console for details.");
-        });
+              {
+                  method: "POST",
+                  body: JSON.stringify({
+                      userId: this.props.userId,
+                      name: this.state.newInstitutionDetails.name,
+                      logo: this.state.newInstitutionDetails.logo,
+                      base64Image: this.state.newInstitutionDetails.base64Image,
+                      url: this.state.newInstitutionDetails.url,
+                      description: this.state.newInstitutionDetails.description,
+                  }),
+              })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return new Promise((resolve, reject) => reject(response));
+                }
+            })
+            .then(data => window.location = this.props.documentRoot + "/review-institution/" + data.id)
+            .catch(response => {
+                console.log(response);
+                alert("Error creating institution. See console for details.");
+            });
     }
 
     setInstituionDetails = (key, newValue) => this.setState({
         newInstitutionDetails: {
             ...this.state.newInstitutionDetails, [key]: newValue,
-            },
-        })
+        },
+    })
 
     reanderButtonGroup = () =>
         <input
@@ -78,7 +78,7 @@ export function renderCreateInstitutionPage(args) {
     ReactDOM.render(
         <CreateInstitution
             documentRoot={args.documentRoot}
-            userId={args.userId}
+            userId={args.userId === "" ? -1 : parseInt(args.userId)}
         />,
         document.getElementById("institution")
     );

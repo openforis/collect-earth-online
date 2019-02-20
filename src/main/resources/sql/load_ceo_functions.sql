@@ -1060,7 +1060,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
     WITH project_roles AS (
         SELECT *
         FROM projects
-        LEFT JOIN get_institution_user_roles(234) AS roles USING (institution_id)
+        LEFT JOIN get_institution_user_roles(_user_id) AS roles USING (institution_id)
     )
     SELECT p.id,p.institution_id,p.availability,p.name,p.description,p.privacy_level,ST_AsGeoJSON(p.boundary) as boundary,
         p.base_map_source,p.plot_distribution,p.num_plots,p.plot_spacing,p.plot_shape,p.plot_size,p.sample_distribution,

@@ -23,7 +23,8 @@ class ReviewInstitution extends React.Component {
     getProjectList = () => {
         //get projects
         fetch(this.props.documentRoot + "/get-all-projects?userId="
-                + this.props.userId + "&institutionId=" + this.props.institutionId)
+                + this.props.userId + "&institutionId=" + this.props.institutionId
+        )
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -164,30 +165,31 @@ class InstitutionDescription extends React.Component {
                 });
                 this.props.setIsAdmin(this.props.userId > 0 && data.admins.includes(this.props.userId));
             });
-    }
+    };
 
     updateInstitution = () => {
         fetch(this.props.documentRoot + "/update-institution/" + this.props.institutionId,
-            {
-                method: "POST",
-                body: JSON.stringify({
-                name: this.state.newInstitutionDetails.name,
-                logo: this.state.newInstitutionDetails.logo,
-                base64Image: this.state.newInstitutionDetails.base64Image,
-                url: this.state.newInstitutionDetails.url,
-                description: this.state.newInstitutionDetails.description,
-            }),
-        })
-        .then(response => {
-            if (response.ok) {
-                this.getInstitutionDetails();
-                this.setState({ editMode: false });
-            } else {
-                console.log(response);
-                alert("Error updating institution details. See console for details.");
-            }
-        });
-    }
+              {
+                  method: "POST",
+                  body: JSON.stringify({
+                      name: this.state.newInstitutionDetails.name,
+                      logo: this.state.newInstitutionDetails.logo,
+                      base64Image: this.state.newInstitutionDetails.base64Image,
+                      url: this.state.newInstitutionDetails.url,
+                      description: this.state.newInstitutionDetails.description,
+                  }),
+              }
+        )
+            .then(response => {
+                if (response.ok) {
+                    this.getInstitutionDetails();
+                    this.setState({ editMode: false });
+                } else {
+                    console.log(response);
+                    alert("Error updating institution details. See console for details.");
+                }
+            });
+    };
 
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
 
@@ -207,7 +209,8 @@ class InstitutionDescription extends React.Component {
                           "Accept": "application/json",
                           "Content-Type": "application/json",
                       },
-                  })
+                  }
+            )
                 .then(response => {
                     if (response.ok) {
                         alert("Institution " + this.state.institutionDetails.name + " has been deleted.");
@@ -218,7 +221,7 @@ class InstitutionDescription extends React.Component {
                     }
                 });
         }
-    }
+    };
 
     renderEditButtonGroup = () => <div className="row">
         <div className="col-6">
@@ -351,7 +354,8 @@ class ImageryList extends React.Component {
                           institutionId: this.props.institutionId,
                           imageryId: imageryId,
                       }),
-                  })
+                  }
+            )
                 .then(response => {
                     if (response.ok) {
                         this.getImageryList();
@@ -364,9 +368,9 @@ class ImageryList extends React.Component {
         }
     }
 
-    toggleEditMode = () => this.setState({ editMode: !this.state.editMode })
+    toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
 
-    updateState = (key, newValue) => this.setState({ [key]: newValue })
+    updateState = (key, newValue) => this.setState({ [key]: newValue });
 
     render() {
         const isAdmin = this.props.isAdmin;
@@ -446,7 +450,7 @@ class NewImagery extends React.Component {
                 }
             });
 
-    }
+    };
 
     render() {
         return <div className="row" id="add-imagery">
@@ -571,14 +575,13 @@ function ProjectList ({ isAdmin, institutionId, projectList, documentRoot }) {
                 </div>
             </div>
         }
-        {
-            projectList.map((project, uid) =>
-                <Project
-                    key={uid}
-                    documentRoot={documentRoot}
-                    project={project}
-                    isAdmin={isAdmin}
-                />)
+        {projectList.map((project, uid) =>
+            <Project
+                key={uid}
+                documentRoot={documentRoot}
+                project={project}
+                isAdmin={isAdmin}
+            />)
         }
     </Fragment>;
 }
@@ -607,10 +610,10 @@ class Project extends React.Component {
             })
             .then(data => this.setState({
                 boxShadow: data.unanalyzedPlots === 0
-                        ? "0px 0px 8px 1px green inset"
-                        : (data.flaggedPlots + data.analyzedPlots) > 0
-                            ? "0px 0px 8px 1px yellow inset"
-                            : "0px 0px 8px 1px red inset",
+                    ? "0px 0px 8px 1px green inset"
+                    : (data.flaggedPlots + data.analyzedPlots) > 0
+                        ? "0px 0px 8px 1px yellow inset"
+                        : "0px 0px 8px 1px red inset",
             }));
     };
 
@@ -663,9 +666,11 @@ class UserList extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.institutionUserList.length !== prevState.institutionUserList.length) {
-            this.props.setUsersCount(this.props.isAdmin ? this.state.institutionUserList.length
-                                        : this.state.institutionUserList
-                                            .filter(user => user.institutionRole !== "pending").length);
+            this.props.setUsersCount(
+                this.props.isAdmin
+                    ? this.state.institutionUserList.length
+                    : this.state.institutionUserList.filter(user => user.institutionRole !== "pending").length
+            );
         }
     }
 
@@ -744,11 +749,11 @@ class UserList extends React.Component {
             });
     }
 
-    currentIsInstitutionMember = () => this.props.userId === 1
-                                        || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
+    currentIsInstitutionMember = () =>
+        this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
 
-    isInstitutionMember = (userEmail) => this.props.userId === 1
-                                            || this.state.institutionUserList.some(iu => iu.email === userEmail);
+    isInstitutionMember = (userEmail) =>
+        this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.email === userEmail);
 
     isActiveUser = (userEmail) => this.state.activeUserList.some(au => au.email === userEmail);
 
@@ -846,8 +851,11 @@ class NewUserButtons extends React.Component {
     }
 
     addUser = () => {
-        const newUserId = this.props.findUserByEmail(this.state.newUserEmail).id;
-        this.props.updateUserInstitutionRole(newUserId, this.state.newUserEmail, "member");
+        this.props.updateUserInstitutionRole(
+            this.props.findUserByEmail(this.state.newUserEmail).id,
+            this.state.newUserEmail,
+            "member"
+        );
     }
 
     render() {

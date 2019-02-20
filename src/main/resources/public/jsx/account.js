@@ -81,19 +81,19 @@ class UserStats extends React.Component {
                     </div>
 
                     {perProject &&
-                    <div className="ProjectStats__user-table">
-                        <strong>User Stats:</strong>
-                        {perProject.map((project, uid) => (
-                            <StatsRow
-                                key={uid}
-                                title={`#${project.id} - ${project.name}`}
-                                plots={project.plotCount}
-                                analysisTime={project.analysisAverage}
-                                wide
-                            />
-                        ))}
-                    </div>
-                }
+                        <div className="ProjectStats__user-table">
+                            <strong>User Stats:</strong>
+                            {perProject.map((project, uid) => (
+                                <StatsRow
+                                    key={uid}
+                                    title={`#${project.id} - ${project.name}`}
+                                    plots={project.plotCount}
+                                    analysisTime={project.analysisAverage}
+                                    wide
+                                />
+                            ))}
+                        </div>
+                    }
                 </div>
             </SectionBlock>
         );
@@ -168,7 +168,7 @@ function AccountForm(props) {
                 </Fragment>
         :
                 <h1>{props.userName}</h1>
-        }
+            }
         </SectionBlock>
     );
 }
