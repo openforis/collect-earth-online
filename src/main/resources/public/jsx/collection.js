@@ -15,10 +15,10 @@ class Collection extends React.Component {
             currentPlot: null,
             imageryAttribution: "",
             imageryList: [],
-            imageryMonthPlanet: "03",
+            imageryMonthPlanet: 3,
             imageryMonthNamePlanet: "March",
             imageryYearDG: 2009,
-            imageryYearPlanet: "2018",
+            imageryYearPlanet: 2018,
             mapConfig: null,
             nextPlotButtonDisabled: false,
             plotList: [],
@@ -194,7 +194,7 @@ class Collection extends React.Component {
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
                         : newImagery.title === "PlanetGlobalMosaic"
-                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
+                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthNamePlanet
                             :  newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
@@ -222,7 +222,7 @@ class Collection extends React.Component {
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthNamePlanet;
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
             imageryAttribution: newImageryAttribution,
@@ -1011,7 +1011,7 @@ function ImageryOptions(props) {
                 name="base-map-source"
                 size="1"
                 value={props.baseMapSource || ""}
-                onChange={(e) => props.setBaseMapSource(e.target.value)}
+                onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
             >
                 {
                     props.imageryList.map(
@@ -1052,7 +1052,7 @@ function DigitalGlobeMenus(props) {
                     value={props.imageryYearDG}
                     className="slider"
                     id="myRange"
-                    onChange={(e) => props.setImageryYearDG(e.target.value)}
+                    onChange={e => props.setImageryYearDG(parseInt(e.target.value))}
                 />
                 <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
             </div>
@@ -1062,7 +1062,7 @@ function DigitalGlobeMenus(props) {
                 name="dg-stacking-profile"
                 size="1"
                 value={props.stackingProfileDG}
-                onChange={(e) => props.setStackingProfileDG(e.target.value)}
+                onChange={e => props.setStackingProfileDG(e.target.value)}
             >
                 {
                     ["Accuracy_Profile", "Cloud_Cover_Profile", "Global_Currency_Profile", "MyDG_Color_Consumer_Profile", "MyDG_Consumer_Profile"]
@@ -1084,7 +1084,7 @@ function PlanetMenus(props) {
                     value={props.imageryYearPlanet}
                     className="slider"
                     id="myRange"
-                    onChange={(e) => props.setImageryYearPlanet(e.target.event)}
+                    onChange={e => props.setImageryYearPlanet(parseInt(e.target.value))}
                 />
                 <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
             </div>
@@ -1096,7 +1096,7 @@ function PlanetMenus(props) {
                     value={props.imageryMonthPlanet}
                     className="slider"
                     id="myRangemonth"
-                    onChange={(e) => props.setImageryMonthPlanet(e.target.event)}
+                    onChange={e => props.setImageryMonthPlanet(parseInt(e.target.value))}
                 />
                 <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
             </div>
