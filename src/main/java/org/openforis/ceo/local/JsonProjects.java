@@ -16,9 +16,7 @@ import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.toElementStream;
 import static org.openforis.ceo.utils.JsonUtils.toStream;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
-import static org.openforis.ceo.utils.PartUtils.partToString;
-import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
-import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.createRandomPointsInBounds;
@@ -818,16 +816,6 @@ public class JsonProjects implements Projects {
         return "";
     }
 
-    private static JsonObject addToKey(JsonObject existing, String userName, Integer increment) {
-        if (existing.has(userName)) {
-            existing.addProperty(userName, existing.get(userName).getAsInt() + increment);
-            return existing;
-        } else {
-            existing.addProperty(userName, increment);
-            return existing;
-        }
-    }
-
     public synchronized String addUserSamples(Request req, Response res) {
         var jsonInputs =            parseJson(req.body()).getAsJsonObject();
         var projectId =             jsonInputs.get("projectId").getAsString();
@@ -1096,7 +1084,7 @@ public class JsonProjects implements Projects {
         }
     }
 
-    public static JsonObject newProjectObject(JsonObject newProjectData, Request req, Integer newProjectId) {
+    public static JsonObject newProjectObject(JsonObject newProjectData, JsonObject fileData, Request req, Integer newProjectId) {
         if (getOrZero(newProjectData, "useTemplatePlots").getAsBoolean() 
                 && getOrZero(newProjectData, "projectTemplate").getAsInt() > 0) {
                     var templateID = newProjectData.get("projectTemplate").getAsString();
@@ -1179,44 +1167,60 @@ public class JsonProjects implements Projects {
         } else {
             // Upload the plot-distribution-csv-file if one was provided
             if (newProjectData.get("plotDistribution").getAsString().equals("csv")) {
-                var csvFileName = writeFilePart(req,
-                        "plot-distribution-csv-file",
+                newProjectData.addProperty(
+                    "plots-csv", 
+                    writeFilePartBase64(
+                        fileData.get("plotFileName").getAsString(),
+                        fileData.get("plotFileBase64").getAsString(),
                         expandResourcePath("/csv"),
-                        "project-" + newProjectId + "-plots");
-                newProjectData.addProperty("plots-csv", csvFileName);
+                        "project-" + newProjectId + "-plots"
+                    )
+                );
             } else {
                 newProjectData.add("plots-csv", null);
             }
 
             // Upload the sample-distribution-csv-file if one was provided
             if (newProjectData.get("sampleDistribution").getAsString().equals("csv")) {
-                var csvFileName = writeFilePart(req,
-                        "sample-distribution-csv-file",
+                newProjectData.addProperty(
+                    "samples-csv", 
+                    writeFilePartBase64(
+                        fileData.get("plotFileName").getAsString(),
+                        fileData.get("plotFileBase64").getAsString(),
                         expandResourcePath("/csv"),
-                        "project-" + newProjectId + "-samples");
-                newProjectData.addProperty("samples-csv", csvFileName);
+                        "project-" + newProjectId + "-samples"
+                    )
+                );
             } else {
                 newProjectData.add("samples-csv", null);
             }
 
             // Upload the plot-distribution-shp-file if one was provided (this should be a ZIP file)
             if (newProjectData.get("plotDistribution").getAsString().equals("shp")) {
-                var shpFileName = writeFilePart(req,
-                                                "plot-distribution-shp-file",
-                                                expandResourcePath("/shp"),
-                                                "project-" + newProjectId + "-plots");
-                newProjectData.addProperty("plots-shp", shpFileName);
+                newProjectData.addProperty(
+                    "plots-shp",
+                    writeFilePartBase64(
+                        fileData.get("plotFileName").getAsString(),
+                        fileData.get("plotFileBase64").getAsString(),
+                        expandResourcePath("/shp"),
+                        "project-" + newProjectId + "-plots"
+                    )
+                );
             } else {
                 newProjectData.add("plots-shp", null);
             }
 
             // Upload the sample-distribution-shp-file if one was provided (this should be a ZIP file)
             if (newProjectData.get("sampleDistribution").getAsString().equals("shp")) {
-                var shpFileName = writeFilePart(req,
-                                                "sample-distribution-shp-file",
-                                                expandResourcePath("/shp"),
-                                                "project-" + newProjectId + "-samples");
-                newProjectData.addProperty("samples-shp", shpFileName);
+                newProjectData.addProperty(
+                    "samples-shp",
+                    writeFilePartBase64(
+                        fileData.get("plotFileName").getAsString(),
+                        fileData.get("plotFileBase64").getAsString(),
+                        expandResourcePath("/shp"),
+                        "project-" + newProjectId + "-samples"
+                    )
+                );
             } else {
                 newProjectData.add("samples-shp", null);
             }
@@ -1230,18 +1234,18 @@ public class JsonProjects implements Projects {
     private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         var projectId =          newProject.get("id").getAsInt();
-        var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
-        var latMin =             getOrZero(newProject,"latMin").getAsDouble();
-        var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
-        var latMax =             getOrZero(newProject,"latMax").getAsDouble();
+        var lonMin =             newProject.get("lonMin").getAsDouble();
+        var latMin =             newProject.get("latMin").getAsDouble();
+        var lonMax =             newProject.get("lonMax").getAsDouble();
+        var latMax =             newProject.get("latMax").getAsDouble();
         var plotDistribution =   newProject.get("plotDistribution").getAsString();
-        var numPlots =           getOrZero(newProject,"numPlots").getAsInt();
-        var plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
-        var plotShape =          getOrEmptyString(newProject,"plotShape").getAsString();
-        var plotSize =           getOrZero(newProject,"plotSize").getAsDouble();
+        var numPlots =           newProject.get("numPlots").getAsInt();
+        var plotSpacing =        newProject.get("plotSpacing").getAsDouble();
+        var plotShape =          newProject.get("plotShape").getAsString();
+        var plotSize =           newProject.get("plotSize").getAsDouble();
         var sampleDistribution = newProject.get("sampleDistribution").getAsString();
-        var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
-        var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
+        var samplesPerPlot =     newProject.get("samplesPerPlot").getAsInt();
+        var sampleResolution =   newProject.get("sampleResolution").getAsDouble();
 
         // If plotDistribution is csv, calculate the lat/lon bounds from the csv contents
         var csvPlotPoints = new HashMap<Integer, Double[]>();
@@ -1403,24 +1407,45 @@ public class JsonProjects implements Projects {
 
     public synchronized String createProject(Request req, Response res) {
         try {
-            // Create a new multipart config for the servlet
-            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
 
-            // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
-            var newProject = partsToJsonObject(req,
-                    new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
-                            "lat-max", "base-map-source", "plot-distribution", "num-plots",
-                            "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                            "samples-per-plot", "sample-resolution", "sample-values", "survey-rules",
-                            "project-template", "use-template-plots"});
-                            
-            // Manually add the name and description fields since they may be invalid JSON or missing from UI
-            newProject.addProperty("name", partToString(req.raw().getPart("name")));
-            newProject.addProperty("description", partToString(req.raw().getPart("description")));
-            newProject.addProperty("archived", false);
+            var newProject = new JsonObject();
+
+            newProject.addProperty("institution", getOrZero(jsonInputs,"institution").getAsInt());
+
+            newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
+            newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
+            newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());
+            newProject.addProperty("latMax", getOrZero(jsonInputs,"latMax").getAsDouble());
+
+            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
+            newProject.addProperty("name", jsonInputs.get("name").getAsString());
+            newProject.addProperty("description", jsonInputs.get("description").getAsString());
+            newProject.addProperty("numPlots", getOrZero(jsonInputs,"numPlots").getAsInt());
+            newProject.addProperty("plotDistribution", jsonInputs.get("plotDistribution").getAsString());
+            newProject.addProperty("plotShape", getOrEmptyString(jsonInputs,"plotShape").getAsString());
+            newProject.addProperty("plotSize", getOrZero(jsonInputs,"plotSize").getAsDouble());
+            newProject.addProperty("plotSpacing", getOrZero(jsonInputs,"plotSpacing").getAsDouble());
+            newProject.addProperty("privacyLevel", jsonInputs.get("privacyLevel").getAsString());
+            newProject.addProperty("projectTemplate", getOrZero(jsonInputs,"projectTemplate").getAsInt());
+            newProject.addProperty("sampleDistribution", jsonInputs.get("sampleDistribution").getAsString());
+            newProject.addProperty("samplesPerPlot", getOrZero(jsonInputs,"samplesPerPlot").getAsInt());
+            newProject.addProperty("sampleResolution", getOrZero(jsonInputs,"sampleResolution").getAsDouble());
+            newProject.addProperty("sampleValues", jsonInputs.get("sampleValues").getAsString());
+            newProject.addProperty("surveyRules", jsonInputs.get("surveyRules").getAsString());
+            newProject.addProperty("useTemplatePlots", getOrZero(jsonInputs,"useTemplatePlots").getAsDouble());
+            
+            // Add constant values
             newProject.addProperty("availability", "unpublished");
+            newProject.addProperty("archived", false);
             newProject.addProperty("created_date", LocalDate.now().toString());
+            
+            // Track file data
+            var fileData = new JsonObject();
+            fileData.addProperty("plotFileName", jsonInputs.get("surveyRules").getAsString());
+            fileData.addProperty("plotFileBase64", jsonInputs.get("surveyRules").getAsString());
+            fileData.addProperty("sampleFileName", jsonInputs.get("surveyRules").getAsString());
+            fileData.addProperty("sampleFileBase64", jsonInputs.get("surveyRules").getAsString());
 
             // Read in the existing project list
             var projects = readJsonFile("project-list.json").getAsJsonArray();
@@ -1430,7 +1455,7 @@ public class JsonProjects implements Projects {
             newProject.addProperty("id", newProjectId);
 
             // Write the new entry to project-list.json
-            projects.add(newProjectObject(newProject, req, newProjectId));
+            projects.add(newProjectObject(newProject, fileData, req, newProjectId));
             writeJsonFile("project-list.json", projects);
 
             // Indicate that the project was created successfully

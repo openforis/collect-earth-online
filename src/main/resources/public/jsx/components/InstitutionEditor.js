@@ -1,5 +1,5 @@
 import React from "react";
-import { encodeImageFileAsURL } from "../utils/fileUtils.js";
+import { encodeFileAsBase64 } from "../utils/fileUtils.js";
 
 export default function InstitutionEditor({
     title,
@@ -44,9 +44,9 @@ export default function InstitutionEditor({
                         type="file"
                         accept="image/*"
                         onChange={e => {
-                                setInstituionDetails("logo", e.target.files[0].name);
-                                encodeImageFileAsURL(e.target.files[0], r => setInstituionDetails("base64Image", r));
-                            }}
+                            setInstituionDetails("logo", e.target.files[0].name);
+                            encodeFileAsBase64(e.target.files[0], r => setInstituionDetails("base64Image", r));
+                        }}
                     />
                 </div>
                 <div className="mb-3">

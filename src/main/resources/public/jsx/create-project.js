@@ -5,6 +5,7 @@ import { FormLayout, SectionBlock } from "./components/FormComponents";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
+import { encodeFileAsBase64 } from "./utils/fileUtils.js";
 import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
@@ -103,14 +104,36 @@ class Project extends React.Component {
     createProject = () => {
         if (this.validateProject() && confirm("Do you REALLY want to create this project?")) {
             utils.show_element("spinner");
-            const formData = new FormData(document.getElementById("project-design-form"));
-            formData.append("institution", this.props.institutionId);
-            formData.append("sample-values", JSON.stringify(this.state.projectDetails.surveyQuestions));
 
             fetch(this.props.documentRoot + "/create-project",
                   {
                       method: "POST",
-                      body: formData,
+                      body: JSON.stringify({
+                          institution: this.props.institutionId,
+                          lonMin: this.state.coordinates.lonMin,
+                          lonMax: this.state.coordinates.lonMax,
+                          latMin: this.state.coordinates.latMin,
+                          latMax: this.state.coordinates.latMax,
+                          baseMapSource: this.state.projectDetails.baseMapSource,
+                          description: this.state.projectDetails.description,
+                          name: this.state.projectDetails.name,
+                          numPlots: this.state.projectDetails.numPlots,
+                          plotDistribution: this.state.projectDetails.plotDistribution,
+                          plotShape: this.state.projectDetails.plotShape,
+                          plotSize: this.state.projectDetails.plotSize,
+                          plotSpacing: this.state.projectDetails.plotSpacing,
+                          privacyLevel: this.state.projectDetails.privacyLevel,
+                          projectTemplate: this.state.projectDetails.id,
+                          sampleDistribution: this.state.projectDetails.sampleDistribution,
+                          samplesPerPlot: this.state.projectDetails.samplesPerPlot,
+                          sampleResolution: this.state.projectDetails.sampleDistribution,
+                          sampleValues: this.state.projectDetails.surveyQuestions,
+                          plotFileName: this.state.projectDetails.plotFileName,
+                          plotFileBase64: this.state.projectDetails.plotFileBase64,
+                          sampleFileName: this.state.projectDetails.sampleFileName,
+                          sampleFileBase64: this.state.projectDetails.sampleFileBase64,
+                          useTemplatePlots: this.state.useTemplatePlots,
+                      }),
                   }
             )
                 .then(response => {
@@ -396,33 +419,53 @@ function ProjectDesignForm(props) {
     );
 }
 
-function ProjectTemplateVisibility({ projectId, projectList, setProjectTemplate }) {
-    return (
-        <SectionBlock title = "Use Project Template (Optional)">
-            <div id="project-template-selector">
-                <div className="form-group">
-                    <h3 htmlFor="project-template">Select Project</h3>
-                    <select
-                        className="form-control form-control-sm"
-                        id="project-template"
-                        name="project-template"
-                        size="1"
-                        value={projectId}
-                        onChange={e => setProjectTemplate(parseInt(e.target.value))}
-                    >
-                        <option key={0} value={0}>None</option>
-                        {
-                            projectList
-                                .filter(proj => proj && proj.id > 0)
-                                .map((proj, uid) =>
-                                    <option key={uid} value={proj.id}>{proj.name}</option>
-                                )
-                        }
-                    </select>
+class ProjectTemplateVisibility extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            projectFilter: "",
+        };
+    }
+
+    render() {
+        const { projectId, projectList, setProjectTemplate } = this.props;
+        return (
+            <SectionBlock title = "Use Project Template (Optional)">
+                <div id="project-template-selector">
+                    <div className="form-group">
+                        <label htmlFor="project-filter">
+                            Project Filter
+                            <input
+                                className="form-control"
+                                id="project-filter"
+                                type="text"
+                                value={this.state.projectFilter}
+                                onChange={e => this.setState({ projectFilter: e.target.value })}
+                            />
+                        </label>
+                        <h3 htmlFor="project-template">Select Project</h3>
+                        <select
+                            className="form-control form-control-sm"
+                            id="project-template"
+                            name="project-template"
+                            size="1"
+                            value={projectId}
+                            onChange={e => setProjectTemplate(parseInt(e.target.value))}
+                        >
+                            <option key={0} value={0}>None</option>
+                            {
+                                projectList
+                                    .filter(proj => proj && proj.id > 0 && proj.name.includes(this.state.projectFilter))
+                                    .map((proj, uid) =>
+                                        <option key={uid} value={proj.id}>{proj.name}</option>
+                                    )
+                            }
+                        </select>
+                    </div>
                 </div>
-            </div>
-        </SectionBlock>
-    );
+            </SectionBlock>
+        );
+    }
 }
 
 function ProjectInfo({ name, description, setProjectDetail }) {
@@ -727,7 +770,10 @@ function PlotDesign ({
                                             id="plot-distribution-csv-file"
                                             defaultValue=""
                                             name="plot-distribution-csv-file"
-                                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
+                                            onChange={e => {
+                                                setProjectDetail("plotFileName", e.target.files[0].name);
+                                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("plotFileBase64", base64));
+                                            }}
                                             style={{ display: "none" }}
                                             disabled={plotDistribution !== "csv"}
                                         />
@@ -755,7 +801,10 @@ function PlotDesign ({
                                             id="plot-distribution-shp-file"
                                             defaultValue=""
                                             name="plot-distribution-shp-file"
-                                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
+                                            onChange={e => {
+                                                setProjectDetail("plotFileName", e.target.files[0].name);
+                                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("plotFileBase64", base64));
+                                            }}
                                             style={{ display: "none" }}
                                             disabled={plotDistribution !== "shp"}
                                         />
@@ -945,7 +994,10 @@ function SampleDesign ({
                             id="sample-distribution-csv-file"
                             name="sample-distribution-csv-file"
                             defaultValue=""
-                            onChange={e => setProjectDetail("shapeFileName", e.target.files[0].name)}
+                            onChange={e => {
+                                setProjectDetail("sampleFileName", e.target.files[0].name);
+                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("sampleFileBase64", base64));
+                            }}
                             style={{ display: "none" }}
                             disabled={sampleDistribution !== "csv"}
                         />
@@ -975,7 +1027,10 @@ function SampleDesign ({
                             id="sample-distribution-shp-file"
                             name="sample-distribution-shp-file"
                             defaultValue=""
-                            onChange={() => setProjectDetail("sampleFileName", event.target.files[0].name)}
+                            onChange={e => {
+                                setProjectDetail("sampleFileName", e.target.files[0].name);
+                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("sampleFileBase64", base64));
+                            }}
                             style={{ display: "none" }}
                             disabled={sampleDistribution !== "shp"}
                         />
