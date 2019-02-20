@@ -527,10 +527,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin } }) {
                                     name="lat-max"
                                     value={latMax}
                                     placeholder="North"
-                                    autoComplete="off"
                                     min="-90.0"
                                     max="90.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -543,10 +542,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin } }) {
                                     name="lon-min"
                                     value={lonMin}
                                     placeholder="West"
-                                    autoComplete="off"
                                     min="-180.0"
                                     max="180.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                             <div className="col-md-6">
@@ -557,10 +555,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin } }) {
                                     name="lon-max"
                                     value={lonMax}
                                     placeholder="East"
-                                    autoComplete="off"
                                     min="-180.0"
                                     max="180.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -573,10 +570,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin } }) {
                                     name="lat-min"
                                     value={latMin}
                                     placeholder="South"
-                                    autoComplete="off"
                                     min="-90.0"
                                     max="90.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -641,9 +637,9 @@ function PlotDesign ({
                             Copy Template Plots and Samples
                         </label>
                     </div>
-                    <hr />
                     </Fragment>
                 }
+                {(id > 0 && !useTemplatePlots) && <hr />}
                 {!useTemplatePlots && (
                     <Fragment>
                     <h3 className="mb-3">Spatial Distribution</h3>

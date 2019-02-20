@@ -145,17 +145,17 @@ class SurveyQuestionTree extends React.Component  {
                                 : "0px 0px 15px 4px yellow inset";
         return (
             <fieldset className={"mb-1 justify-content-center text-center"}>
-                <div className="SurveyQuestionTree__question-buttons btn-block my-2">
+                <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
                     <button
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm col-2 text-bold"
+                        className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2"
                         onClick={this.toggleShowAnswers}
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
                     </button>
                     <button
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm col-10"
+                        className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                         style={{boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
                                     ? "0px 0px 2px 2px black inset,"
                                     : ""}
