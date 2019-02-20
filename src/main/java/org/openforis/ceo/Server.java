@@ -161,6 +161,7 @@ public class Server implements SparkApplication {
 
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));
+
         // Handle Exceptions
         exception(Exception.class, (e, req, res) -> e.printStackTrace());
     }
