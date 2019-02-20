@@ -79,7 +79,7 @@ public class JsonImagery implements Imagery {
             imageryList.add(newImagery);
             writeJsonFile("imagery-list.json", imageryList);
 
-            return newImageryId + "";
+            return "";
         } catch (Exception e) {
             // Indicate that an error occurred with imagery creation
             throw new RuntimeException(e);
@@ -104,7 +104,7 @@ public class JsonImagery implements Imagery {
             if (matchingImagery.isPresent()) {
                 var imagery = matchingImagery.get();
 
-                if (imagery.get("institution").getAsString().equals(institutionId)) {
+                if (imagery.get("institution").getAsInt() == institutionId) {
                     // This imagery has already been added to this institution
                     return "";
                 } else {
@@ -168,11 +168,11 @@ public class JsonImagery implements Imagery {
     public synchronized String deleteInstitutionImagery(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var imageryId = jsonInputs.get("imageryId").getAsString();
-        var institutionId = jsonInputs.get("institutionId").getAsString();
+        var institutionId = jsonInputs.get("institutionId").getAsInt();
 
         filterJsonFile("imagery-list.json",
                        imagery -> !imagery.get("id").getAsString().equals(imageryId)
-                               || !imagery.get("institution").getAsString().equals(institutionId));
+                               || imagery.get("institution").getAsInt() != institutionId);
 
         return "";
     }

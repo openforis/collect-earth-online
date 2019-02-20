@@ -57,7 +57,7 @@ public class JsonUsers implements Users {
             var storedId = user.get("id").getAsString();
             var storedPassword = user.get("password").getAsString();
             var storedRole = user.get("role").getAsString();
-            if (false && !inputPassword.equals(storedPassword)) {
+            if (!inputPassword.equals(storedPassword)) {
                 // Authentication failed
                 req.session().attribute("flash_message", "Invalid email/password combination.");
                 return req;
@@ -458,12 +458,12 @@ public class JsonUsers implements Users {
     public synchronized String updateInstitutionRole(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var userId = jsonInputs.get("userId");
-        var institutionId = jsonInputs.get("institutionId").getAsString();
+        var institutionId = jsonInputs.get("institutionId").getAsInt();
         var role = jsonInputs.get("role").getAsString();
 
         mapJsonFile("institution-list.json",
                     institution -> {
-                        if (institution.get("id").getAsString().equals(institutionId)) {
+                        if (institution.get("id").getAsInt() == institutionId) {
                             var members = institution.getAsJsonArray("members");
                             var admins = institution.getAsJsonArray("admins");
                             var pending = institution.getAsJsonArray("pending");
@@ -507,11 +507,11 @@ public class JsonUsers implements Users {
     public synchronized String requestInstitutionMembership(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var userId = jsonInputs.get("userId");
-        var institutionId = jsonInputs.get("institutionId").getAsString();
+        var institutionId = jsonInputs.get("institutionId").getAsInt();
 
         mapJsonFile("institution-list.json",
                     institution -> {
-                        if (institution.get("id").getAsString().equals(institutionId)) {
+                        if (institution.get("id").getAsInt() == institutionId) {
                             var members = institution.getAsJsonArray("members");
                             var pending = institution.getAsJsonArray("pending");
                             if (!members.contains(userId) && !pending.contains(userId)) {
@@ -523,7 +523,6 @@ public class JsonUsers implements Users {
                             return institution;
                         }
                     });
-
         return "";
     }
 

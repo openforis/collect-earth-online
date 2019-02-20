@@ -9,10 +9,9 @@ class ReviewInstitution extends React.Component {
         super(props);
         this.state = {
             imageryCount: 0,
-            // projectCount: 0,
             usersCount: 0,
             projectList: [],
-            isAdmin: true,
+            isAdmin: false,
         };
     }
 
@@ -41,16 +40,19 @@ class ReviewInstitution extends React.Component {
 
     setUsersCount = (newCount) => this.setState({ usersCount: newCount });
 
+    setIsAdmin = (isAdmin) => this.setState({ isAdmin: isAdmin });
+
     render() {
         return (
             <div className="ReviewInstitution">
                 <InstitutionDescription
-                    userId={this.props.userId}
                     documentRoot={this.props.documentRoot}
-                    of_users_api_url={this.props.of_users_api_url}
                     institutionId={this.props.institutionId}
                     isAdmin={this.state.isAdmin}
+                    of_users_api_url={this.props.of_users_api_url}
                     storage={this.props.storage}
+                    setIsAdmin={this.setIsAdmin}
+                    userId={this.props.userId}
                 />
                 <div className="row">
                     <div className="col-lg-3 col-xs-12">
@@ -148,7 +150,7 @@ class InstitutionDescription extends React.Component {
                     }));
                 }
             })
-            .then(data =>
+            .then(data =>{
                 this.setState({
                     institutionDetails: data,
                     newInstitutionDetails: {
@@ -159,10 +161,9 @@ class InstitutionDescription extends React.Component {
                         logo: "",
                         base64Image: "",
                     },
-                    // isAdmin: this.props.userId !== ""
-                    //             && data.admins.includes(parseInt(this.props.userId)),
-                })
-            );
+                });
+                this.props.setIsAdmin(this.props.userId > 0 && data.admins.includes(this.props.userId));
+            });
     }
 
     updateInstitution = () => {
@@ -402,7 +403,7 @@ class ImageryList extends React.Component {
                                 key={uid}
                                 title={imageryItem.title}
                                 isAdmin={isAdmin}
-                                isInstitutionImage={parseInt(this.props.institutionId) === imageryItem.institution}
+                                isInstitutionImage={this.props.institutionId === imageryItem.institution}
                                 deleteImagery={() => this.deleteImagery(imageryItem.id)}
                             />
                         )}
@@ -729,7 +730,7 @@ class UserList extends React.Component {
                   method: "POST",
                   body: JSON.stringify({
                       institutionId: this.props.institutionId,
-                      userId: parseInt(this.props.userId),
+                      userId: this.props.userId,
                   }),
               })
             .then(response => {
@@ -743,9 +744,11 @@ class UserList extends React.Component {
             });
     }
 
-    currentIsInstitutionMember = () => this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
+    currentIsInstitutionMember = () => this.props.userId === 1
+                                        || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
 
-    isInstitutionMember = (userEmail) => this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.email === userEmail);
+    isInstitutionMember = (userEmail) => this.props.userId === 1
+                                            || this.state.institutionUserList.some(iu => iu.email === userEmail);
 
     isActiveUser = (userEmail) => this.state.activeUserList.some(au => au.email === userEmail);
 
@@ -764,7 +767,7 @@ class UserList extends React.Component {
                     updateUserInstitutionRole={this.updateUserInstitutionRole}
                     userId={this.props.userId}
                 />
-                {this.props.userId !== "" &&
+                {this.props.userId > 0 &&
                     this.state.institutionUserList
                         .filter(iu => this.props.isAdmin || iu.institutionRole !== "pending")
                         .sort((a, b) => sortAlphabetically(a.email, b.email))
@@ -844,7 +847,6 @@ class NewUserButtons extends React.Component {
 
     addUser = () => {
         const newUserId = this.props.findUserByEmail(this.state.newUserEmail).id;
-        console.log(newUserId);
         this.props.updateUserInstitutionRole(newUserId, this.state.newUserEmail, "member");
     }
 
@@ -873,7 +875,7 @@ class NewUserButtons extends React.Component {
                     </div>
                 </div>
             }
-            {(this.props.userId !== "" && !this.props.currentIsInstitutionMember) &&
+            {(this.props.userId > 0 && !this.props.currentIsInstitutionMember) &&
             <div>
                 <button
                     type="button"
@@ -893,8 +895,8 @@ export function renderReviewInstitutionPage(args) {
     ReactDOM.render(
         <ReviewInstitution
             documentRoot={args.documentRoot}
-            userId={args.userId}
-            institutionId={args.institutionId}
+            userId={args.userId === "" ? -1 : parseInt(args.userId)}
+            institutionId={args.institutionId === "" ? -1 : parseInt(args.institutionId)}
             of_users_api_url={args.of_users_api_url}
             storage={args.storage}
         />,

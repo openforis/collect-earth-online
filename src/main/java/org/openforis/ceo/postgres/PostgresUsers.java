@@ -345,34 +345,34 @@ public class PostgresUsers implements Users {
 
     public String updateInstitutionRole(Request req, Response res) {
         var jsonInputs =        parseJson(req.body()).getAsJsonObject();
-        var userId =            jsonInputs.get("userId");
-        var institutionId =     jsonInputs.get("institutionId").getAsString();
+        var userId =            jsonInputs.get("userId").getAsInt();
+        var institutionId =     jsonInputs.get("institutionId").getAsInt();
         var role =              jsonInputs.get("role").getAsString();
 
         try (var conn = connect()) {
             if (role.equals("not-member")) {
                 try(var pstmt = conn.prepareStatement("SELECT * FROM remove_institution_user_role(?,?)")){
-                    pstmt.setInt(1,Integer.parseInt(institutionId));
-                    pstmt.setInt(2,Integer.parseInt(userId.toString()));
+                    pstmt.setInt(1,institutionId);
+                    pstmt.setInt(2,userId);
                     pstmt.execute();
                 }
             } else {
                 try(var pstmt = conn.prepareStatement("SELECT * FROM update_institution_user_role(?,?,?)")) {
-                    pstmt.setInt(1,Integer.parseInt(institutionId));
-                    pstmt.setInt(2,Integer.parseInt(userId.toString()));
+                    pstmt.setInt(1,institutionId);
+                    pstmt.setInt(2,userId);
                     pstmt.setString(3,role);
                     try(var rs = pstmt.executeQuery()){
                         if(rs.next() && rs.getInt("update_institution_user_role") == 0) {
                             var addPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)");
-                            addPstmt.setInt(1,Integer.parseInt(institutionId));
-                            addPstmt.setInt(2,Integer.parseInt(userId.toString()));
+                            addPstmt.setInt(1,institutionId);
+                            addPstmt.setInt(2,userId);
                             addPstmt.setString(3,role);
                             addPstmt.execute();
                         } 
                     }
                 }
             }
-            return getInstitutionById(Integer.parseInt(institutionId));
+            return getInstitutionById(institutionId);
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -382,17 +382,17 @@ public class PostgresUsers implements Users {
 
     public String requestInstitutionMembership(Request req, Response res) {
         var jsonInputs =        parseJson(req.body()).getAsJsonObject();
-        var userId =            jsonInputs.get("userId");
-        var institutionId =     jsonInputs.get("institutionId").getAsString();
+        var userId =            jsonInputs.get("userId").getAsInt();
+        var institutionId =     jsonInputs.get("institutionId").getAsInt();
 
         try (var conn = connect(); 
              var pstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")) {
                  
-            pstmt.setInt(1,Integer.parseInt(institutionId));
-            pstmt.setInt(2,Integer.parseInt(userId.toString()));
+            pstmt.setInt(1,institutionId);
+            pstmt.setInt(2,userId);
             pstmt.setInt(3,3);
             pstmt.execute();
-            return getInstitutionById(Integer.parseInt(institutionId)); 
+            return getInstitutionById(institutionId); 
         }
         catch (SQLException e) {
             System.out.println(e.getMessage());

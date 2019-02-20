@@ -69,6 +69,11 @@
 		margin-left:-15px;
 		margin-right:-15px;	
 }
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
 /* Fonts */
 /*************/
 @font-face {
@@ -522,10 +527,6 @@ ul.samplevalue{
 /*********************************************************************/
 /* INSTITUTION PAGE */
 /*********************************************************************/
-.overflow-hidden {
-    overflow: hidden;
-}
-
 #institution .header{margin:1rem 0;}
 #institution .badge-light{
 	color: #31BAB0;

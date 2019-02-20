@@ -187,7 +187,7 @@ public class JsonProjects implements Projects {
             var archived = project.get("archived").getAsBoolean();
             var privacyLevel = project.get("privacyLevel").getAsString();
             var availability = project.get("availability").getAsString();
-            var institutionId = project.get("institution").getAsString();
+            var institutionId = project.get("institution").getAsInt();
             if (archived == true) {
                 // return no users
                 return new String[]{};
@@ -199,21 +199,33 @@ public class JsonProjects implements Projects {
                 var institutions = readJsonFile("institution-list.json").getAsJsonArray();
                 var matchingInstitution = findInJsonArray(institutions,
                         institution ->
-                                institution.get("id").getAsString().equals(institutionId));
+                                institution.get("id").getAsInt() == institutionId);
                 if (matchingInstitution.isPresent()) {
                     var institution = matchingInstitution.get();
                     var admins = institution.getAsJsonArray("admins");
                     var members = institution.getAsJsonArray("members");
                     if (privacyLevel.equals("private")) {
                         // return all institution admins
-                        return toElementStream(admins).map(element -> element.getAsString()).toArray(String[]::new);
+                        return toElementStream(admins).map(element -> 
+                            !element.isJsonNull() && element.isJsonPrimitive() 
+                                ? element.getAsString() 
+                                : ""
+                        ).toArray(String[]::new);
                     } else if (privacyLevel.equals("institution")) {
                         if (availability.equals("published")) {
                             // return all institution members
-                            return toElementStream(members).map(element -> element.getAsString()).toArray(String[]::new);
+                            return toElementStream(members).map(element -> 
+                                !element.isJsonNull() && element.isJsonPrimitive() 
+                                    ? element.getAsString() 
+                                    : ""
+                            ).toArray(String[]::new);
                         } else {
                             // return all institution admins
-                            return toElementStream(admins).map(element -> element.getAsString()).toArray(String[]::new);
+                            return toElementStream(admins).map(element -> 
+                                !element.isJsonNull() && element.isJsonPrimitive() 
+                                    ? element.getAsString() 
+                                    : ""
+                            ).toArray(String[]::new);
                         }
                     } else {
                         // FIXME: Implement this branch when privacyLevel.equals("invitation") is possible

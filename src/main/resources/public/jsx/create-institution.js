@@ -6,11 +6,13 @@ class CreateInstitution extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            name: "",
-            logo: "",
-            base64Image: "",
-            url: "",
-            description: "",
+            newInstitutionDetails: {
+                name: "",
+                logo: "",
+                base64Image: "",
+                url: "",
+                description: "",
+            },
         };
     }
 
@@ -20,11 +22,11 @@ class CreateInstitution extends React.Component {
                 method: "POST",
                 body: JSON.stringify({
                     userId: this.props.userId,
-                    name: this.state.name,
-                    logo: this.state.logo,
-                    base64Image: this.state.base64Image,
-                    url: this.state.url,
-                    description: this.state.description,
+                    name: this.state.newInstitutionDetails.name,
+                    logo: this.state.newInstitutionDetails.logo,
+                    base64Image: this.state.newInstitutionDetails.base64Image,
+                    url: this.state.newInstitutionDetails.url,
+                    description: this.state.newInstitutionDetails.description,
                 }),
         })
         .then(response => {
@@ -41,7 +43,11 @@ class CreateInstitution extends React.Component {
         });
     }
 
-    setInstituionDetails = (key, newValue) => this.setState({ [key]: newValue })
+    setInstituionDetails = (key, newValue) => this.setState({
+        newInstitutionDetails: {
+            ...this.state.newInstitutionDetails, [key]: newValue,
+            },
+        })
 
     reanderButtonGroup = () =>
         <input
@@ -50,17 +56,17 @@ class CreateInstitution extends React.Component {
             type="button"
             value="Create Institution"
             onClick={this.createInstitution}
-            disabled={this.state.name === "" || this.state.description === ""}
+            disabled={this.state.newInstitutionDetails.name === "" || this.state.newInstitutionDetails.description === ""}
         />;
 
     render() {
         return (
             <InstitutionEditor
                 instTitle="Create New Institution"
-                name={this.state.name}
-                logo={this.state.logo}
-                url={this.state.url}
-                description={this.state.description}
+                name={this.state.newInstitutionDetails.name}
+                logo={this.state.newInstitutionDetails.logo}
+                url={this.state.newInstitutionDetails.url}
+                description={this.state.newInstitutionDetails.description}
                 buttonGroup={this.reanderButtonGroup}
                 setInstituionDetails={this.setInstituionDetails}
             />
