@@ -159,7 +159,7 @@ class Widgets extends React.Component {
 class Widget extends React.Component {
     constructor(props) {
         super(props);
-        this.imageCollectionList = ["ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
+        this.imageCollectionList = ["ImageElevation", "ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
         this.graphControlList = ["customTimeSeries", "timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
     };
     render() {
@@ -224,6 +224,7 @@ class Widget extends React.Component {
             return "statswidget";
         }
         else {
+            console.log(wtext);
             return "undefinedwidget";
         }
     };
@@ -325,13 +326,18 @@ class MapWidget extends React.Component {
     };
     static getGatewayUrl(widget, collectionName){
         let url = "";
+        if(collectionName == "Elevation")
+        {
+            console.log(widget.ImageAsset);
+        }
         if(widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
             url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+           // url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+            url = "https://ceodev.servirglobal.net:8888/image";
         }
         else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
         {
@@ -550,7 +556,10 @@ class MapWidget extends React.Component {
             dateFrom = widget.properties[2];
             dateTo = widget.properties[3];
             requestedIndex = widget.properties[0] === "ImageCollectionNDVI" ? "NDVI" : widget.properties[0] === "ImageCollectionEVI" ? "EVI" : widget.properties[0] === "ImageCollectionEVI2" ? "EVI2" : widget.properties[0] === "ImageCollectionNDMI" ? "NDMI" : widget.properties[0] === "ImageCollectionNDWI" ? "NDWI" : "";
-
+            if(widget.properties[0] == "ImageElevation")
+            {
+                widget.ImageAsset = "USGS/SRTMGL1_003";
+            }
             url = MapWidget.getGatewayUrl(widget, collectionName);
             postObject.visParams = MapWidget.getImageParams(widget);
 

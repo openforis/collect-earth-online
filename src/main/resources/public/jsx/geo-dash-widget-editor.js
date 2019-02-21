@@ -526,28 +526,21 @@ class BasicLayout extends React.PureComponent{
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
         }
-        else if(this.state.selectedWidgetType == "imageAsset")
+        else if(this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "ImageElevation")
         {
             widget.properties = ["","","","",""];
             widget.filterType = "";
             widget.visParams = JSON.parse(this.state.imageParams);
             widget.ImageAsset = this.state.imageCollection;
-            this.addCustomImagery(this.buildImageryObject({
+            if(this.state.selectedWidgetType == "imageAsset") {
+                this.addCustomImagery(this.buildImageryObject({
                     ImageAsset: widget.ImageAsset,
                     startDate: "",
                     endDate: "",
                     filterType: "",
                     visParams: widget.visParams
-            }));
-            /*
-            collectionType: img.collectionType,
-                startDate: img.startDate,
-                endDate: img.endDate,
-                filterType: img.filterType,
-                visParams: img.visParams
-            */
-
-            //should add custom imagery here as well i assume
+                }));
+            }
         }
         else if(this.state.selectedWidgetType == "imageCollectionAsset")
         {
@@ -564,7 +557,7 @@ class BasicLayout extends React.PureComponent{
             }));
         }
         else {
-            let wType = this.state.selectedWidgetType == "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType == "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType == "statistics" ? "getStats" : "custom";
+            let wType = this.state.selectedWidgetType == "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType == "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType == "statistics" ? "getStats" : this.state.selectedWidgetType == "ImageElevation" ? "ImageElevation" : "custom";
             let prop1 = "";
             let properties = [];
             let prop4 = this.state.selectedDataType != null ? this.state.selectedDataType : "";
@@ -874,6 +867,7 @@ class BasicLayout extends React.PureComponent{
                                             <option label="Dual Image Collection" value="DualImageCollection">Dual Image Collection</option>
                                             <option label="Image Asset" value="imageAsset">Image Asset</option>
                                             <option label="Image Collection Asset" value="imageCollectionAsset">Image Collection Asset</option>
+                                            <option label="SRTM Digital Elevation Data 30m" value="ImageElevation">SRTM Digital Elevation Data 30m</option>
                                         </select>
                                     </div>
                                     {this.getBaseMapSelector()}
@@ -906,7 +900,7 @@ class BasicLayout extends React.PureComponent{
 
     }
     getBaseMapSelector(){
-        if(this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection" || this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset") {
+        if(this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection" || this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset" || this.state.selectedWidgetType == "ImageElevation") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select name="widgetIndicesSelect" value={this.state.WidgetBaseMap} className="form-control"
@@ -944,7 +938,7 @@ class BasicLayout extends React.PureComponent{
                 </div>
             </React.Fragment>
         }
-        else if(this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset")
+        else if(this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset" || this.state.selectedWidgetType == "ImageElevation")
         {
             if(this.state.FormReady != true){
                 this.setState({
@@ -1034,25 +1028,43 @@ class BasicLayout extends React.PureComponent{
             </React.Fragment>
         }
     }
+    getTitleBlock()
+    {
+        return <div className="form-group">
+            <label htmlFor="widgetTitle">Title</label>
+            <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+                   className="form-control" onChange={this.onWidgetTitleChange}/>
+        </div>
+    }
+    getImageParamsBlock()
+    {
+        return  <div className="form-group">
+            <label htmlFor="imageParams">Image Parameters (json format)</label>
+            <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
+        </div>
+    }
     getDataForm()
     {
+        if(this.state.selectedWidgetType == "ImageElevation")
+        {
+            this.setState({
+                imageCollection: "USGS/SRTMGL1_003"
+            });
+            return <React.Fragment>
+                {this.getTitleBlock()}
+                {this.getImageParamsBlock()}
+            </React.Fragment>
+        }
         if(this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset")
         {
             return <React.Fragment>
-                <div className="form-group">
-                    <label htmlFor="widgetTitle">Title</label>
-                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
-                           className="form-control" onChange={this.onWidgetTitleChange}/>
-                </div>
+                {this.getTitleBlock()}
                 <div className="form-group">
                     <label htmlFor="imageCollection">GEE Image Asset</label>
                     <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
                            className="form-control" onChange={this.onImageCollectionChange}/>
                 </div>
-                <div className="form-group">
-                    <label htmlFor="imageParams">Image Parameters (json format)</label>
-                    <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
-                </div>
+                {getImageParamsBlock()}
             </React.Fragment>
         }
         else if(this.state.selectedDataType == "-1")
