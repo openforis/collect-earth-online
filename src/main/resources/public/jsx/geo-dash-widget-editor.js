@@ -1089,11 +1089,7 @@ class BasicLayout extends React.PureComponent{
             });},250);
             if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep == 1){
                 return <React.Fragment>
-                    <div className="form-group">
-                        <label htmlFor="widgetTitle">Title</label>
-                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
-                               className="form-control" onChange={this.onWidgetTitleChange}/>
-                    </div>
+                    {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
 
@@ -1178,11 +1174,7 @@ class BasicLayout extends React.PureComponent{
             else if(((this.state.selectedDataType == "imageCollectionAsset" || this.state.selectedDataType == "imageAsset") && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 1)
             {
                 return <React.Fragment>
-                <div className="form-group">
-                    <label htmlFor="widgetTitle">Title</label>
-                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
-                           className="form-control" onChange={this.onWidgetTitleChange}/>
-                </div>
+                    {this.getTitleBlock()}
                 <div className="form-group">
                     <label htmlFor="imageCollection">GEE Image Asset</label>
                     <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
@@ -1213,11 +1205,7 @@ class BasicLayout extends React.PureComponent{
             else if((this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection") && this.state.selectedDataType == "Custom"  && this.state.wizardStep == 1)
             {
                 return <React.Fragment>
-                    <div className="form-group">
-                        <label htmlFor="widgetTitle">Title</label>
-                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
-                               className="form-control" onChange={this.onWidgetTitleChange}/>
-                    </div>
+                    {this.getTitleBlock()}
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Collection</label>
                         <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
@@ -1265,11 +1253,7 @@ class BasicLayout extends React.PureComponent{
             else if((this.state.selectedWidgetType == "ImageCollection"|| this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 1)
             {
                 return <React.Fragment>
-                    <div className="form-group">
-                        <label htmlFor="widgetTitle">Title</label>
-                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
-                               className="form-control" onChange={this.onWidgetTitleChange}/>
-                    </div>
+                    {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
 
@@ -1310,11 +1294,7 @@ class BasicLayout extends React.PureComponent{
             else if(this.state.selectedWidgetType == "TimeSeries" && this.state.selectedDataType == "Custom")
             {
               return <React.Fragment>
-                    <div className="form-group">
-                        <label htmlFor="widgetTitle">Title</label>
-                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
-                               className="form-control" onChange={this.onWidgetTitleChange}/>
-                    </div>
+                  {this.getTitleBlock()}
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Collection</label>
                         <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
@@ -1350,11 +1330,7 @@ class BasicLayout extends React.PureComponent{
             else {
                 console.log("nothing doing!");
                 return <React.Fragment>
-                    <div className="form-group">
-                        <label htmlFor="widgetTitle">Title</label>
-                        <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
-                               className="form-control" onChange={this.onWidgetTitleChange}/>
-                    </div>
+                    {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
 
