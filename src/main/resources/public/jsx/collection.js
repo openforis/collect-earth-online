@@ -17,8 +17,8 @@ class Collection extends React.Component {
             imageryAttribution: "",
             imageryYearDG: 2009,
             stackingProfileDG: "Accuracy_Profile",
-            imageryYearPlanet: "2018",
-            imageryMonthPlanet: "03",
+            imageryYearPlanet: 2018,
+            imageryMonthPlanet: 3,
             imageryMonthNamePlanet: "March",
             prevPlotButtonDisabled: false,
             nextPlotButtonDisabled: false,
@@ -277,7 +277,7 @@ class Collection extends React.Component {
     }
 
     updatePlanetLayer() {
-        const { imageryMonthPlanet, imageryYearPlanet} = this.state
+        const { imageryMonthPlanet, imageryYearPlanet} = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
                                    "PlanetGlobalMosaic",
                                    sourceConfig => {
@@ -758,13 +758,13 @@ class Collection extends React.Component {
                                 imageryTitle={this.state.currentImagery.title}
                                 imageryList={this.state.imageryList}
                                 setBaseMapSource={this.setBaseMapSource}
-                                imageryYearDG={this.imageryYearDG}
-                                stackingProfileDG={this.stackingProfileDG}
+                                imageryYearDG={this.state.imageryYearDG}
+                                stackingProfileDG={this.state.stackingProfileDG}
                                 setImageryYearDG={this.setImageryYearDG}
                                 setStackingProfileDG={this.setStackingProfileDG}
-                                imageryYearPlanet={this.imageryYearPlanet}
-                                imageryMonthPlanet={this.imageryMonthPlanet}
-                                imageryMonthNamePlanet={this.imageryMonthNamePlanet}
+                                imageryYearPlanet={this.state.imageryYearPlanet}
+                                imageryMonthPlanet={this.state.imageryMonthPlanet}
+                                imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
                                 setImageryYearPlanet={this.setImageryYearPlanet}
                                 setImageryMonthPlanet={this.setImageryMonthPlanet}
                             />
@@ -1040,7 +1040,7 @@ function DigitalGlobeMenus(props) {
                     max="2018" 
                     value={props.imageryYearDG} 
                     className="slider" 
-                    id="myRange"
+                    id="dgm_slider"
                     onChange={(e) => props.setImageryYearDG(e.target.value)}
                 />
                 <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
@@ -1070,8 +1070,8 @@ function PlanetMenus(props) {
                     max="2018" 
                     value={props.imageryYearPlanet} 
                     className="slider" 
-                    id="myRange"
-                    onChange={(e) => props.setImageryYearPlanet(e.target.event)}
+                    id="planet_slider"
+                    onChange={(e) => props.setImageryYearPlanet(e.target.value)}
                 />
                 <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
             </div>
@@ -1083,7 +1083,7 @@ function PlanetMenus(props) {
                     value={props.imageryMonthPlanet} 
                     className="slider" 
                     id="myRangemonth"
-                    onChange={(e) => props.setImageryMonthPlanet(e.target.event)}
+                    onChange={(e) => props.setImageryMonthPlanet(e.target.value)}
                 />
                 <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
             </div>
