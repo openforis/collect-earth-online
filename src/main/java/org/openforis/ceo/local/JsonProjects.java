@@ -1008,7 +1008,7 @@ public class JsonProjects implements Projects {
                 throw new RuntimeException("SHP file missing FeatureCollection");
             }
         } catch (Exception e) {
-            deleteShapeFileDirectories(projectId);
+            // deleteShapeFileDirectories(projectId);
             throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.", e);
         }
     }
@@ -1185,8 +1185,8 @@ public class JsonProjects implements Projects {
                 newProjectData.addProperty(
                     "samples-csv", 
                     writeFilePartBase64(
-                        fileData.get("plotFileName").getAsString(),
-                        fileData.get("plotFileBase64").getAsString(),
+                        fileData.get("sampleFileName").getAsString(),
+                        fileData.get("sampleFileBase64").getAsString(),
                         expandResourcePath("/csv"),
                         "project-" + newProjectId + "-samples"
                     )
@@ -1215,8 +1215,8 @@ public class JsonProjects implements Projects {
                 newProjectData.addProperty(
                     "samples-shp",
                     writeFilePartBase64(
-                        fileData.get("plotFileName").getAsString(),
-                        fileData.get("plotFileBase64").getAsString(),
+                        fileData.get("sampleFileName").getAsString(),
+                        fileData.get("sampleFileBase64").getAsString(),
                         expandResourcePath("/shp"),
                         "project-" + newProjectId + "-samples"
                     )
@@ -1431,9 +1431,9 @@ public class JsonProjects implements Projects {
             newProject.addProperty("sampleDistribution", jsonInputs.get("sampleDistribution").getAsString());
             newProject.addProperty("samplesPerPlot", getOrZero(jsonInputs,"samplesPerPlot").getAsInt());
             newProject.addProperty("sampleResolution", getOrZero(jsonInputs,"sampleResolution").getAsDouble());
-            newProject.addProperty("sampleValues", jsonInputs.get("sampleValues").getAsString());
-            newProject.addProperty("surveyRules", jsonInputs.get("surveyRules").getAsString());
-            newProject.addProperty("useTemplatePlots", getOrZero(jsonInputs,"useTemplatePlots").getAsDouble());
+            newProject.add("sampleValues", jsonInputs.get("sampleValues").getAsJsonArray());
+            newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
+            newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
             
             // Add constant values
             newProject.addProperty("availability", "unpublished");
@@ -1442,10 +1442,10 @@ public class JsonProjects implements Projects {
             
             // Track file data
             var fileData = new JsonObject();
-            fileData.addProperty("plotFileName", jsonInputs.get("surveyRules").getAsString());
-            fileData.addProperty("plotFileBase64", jsonInputs.get("surveyRules").getAsString());
-            fileData.addProperty("sampleFileName", jsonInputs.get("surveyRules").getAsString());
-            fileData.addProperty("sampleFileBase64", jsonInputs.get("surveyRules").getAsString());
+            fileData.addProperty("plotFileName", getOrEmptyString(jsonInputs, "plotFileName").getAsString());
+            fileData.addProperty("plotFileBase64", getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
+            fileData.addProperty("sampleFileName", getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
+            fileData.addProperty("sampleFileBase64", getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
 
             // Read in the existing project list
             var projects = readJsonFile("project-list.json").getAsJsonArray();

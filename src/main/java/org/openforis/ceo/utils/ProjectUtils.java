@@ -372,7 +372,11 @@ public class ProjectUtils {
     }
 
     public static JsonElement getOrZero(JsonObject obj, String field) {
-        return !obj.has(field) || obj.get(field).isJsonNull() || obj.get(field) == null ? new JsonPrimitive(0) : obj.get(field);
+        return !obj.has(field) 
+                || obj.get(field).isJsonNull() 
+                || obj.get(field) == null 
+                || obj.get(field).getAsString().equals("") 
+                ? new JsonPrimitive(0) : obj.get(field);
     }
 
     public static JsonElement getOrEmptyString(JsonObject obj, String field) {
@@ -382,11 +386,11 @@ public class ProjectUtils {
     public static void runBashScriptForProject(int projectId, String plotsOrSamples, String script, String rpath) {
         try {
             System.out.println("Running " + script);
-            var pb = new ProcessBuilder("/bin/sh", script, "project-" + projectId + "-" + plotsOrSamples);
+            var pb = new ProcessBuilder("/bin/bash", script, "project-" + projectId + "-" + plotsOrSamples);
             pb.directory(new File(expandResourcePath(rpath)));
-            pb.redirectOutput(new File("out.txt"));
+            pb.redirectOutput(); // new File("out.txt")
             var p = pb.start();
-            if (p.waitFor(10L, TimeUnit.SECONDS)) {
+            if (p.waitFor(100L, TimeUnit.SECONDS)) {
                 System.out.println("Linux Conversion complete.");
             } else {
                 p.destroy();

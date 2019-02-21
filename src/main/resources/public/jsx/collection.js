@@ -821,7 +821,7 @@ function SideBar(props) {
                                         && cur.visible
                                         && cur.visible.length === cur.answered.length, true);
     return (
-        <div id="sidebar" className="col-xl-3 border-left" style={{ overflow: "scroll" }}>
+        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "scroll" }}>
             <h2 className="header">{props.projectName || ""}</h2>
 
             {props.children}

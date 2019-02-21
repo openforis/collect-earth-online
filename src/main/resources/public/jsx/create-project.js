@@ -126,8 +126,9 @@ class Project extends React.Component {
                           projectTemplate: this.state.projectDetails.id,
                           sampleDistribution: this.state.projectDetails.sampleDistribution,
                           samplesPerPlot: this.state.projectDetails.samplesPerPlot,
-                          sampleResolution: this.state.projectDetails.sampleDistribution,
+                          sampleResolution: this.state.projectDetails.sampleResolution,
                           sampleValues: this.state.projectDetails.surveyQuestions,
+                          surveyRules: [],
                           plotFileName: this.state.projectDetails.plotFileName,
                           plotFileBase64: this.state.projectDetails.plotFileBase64,
                           sampleFileName: this.state.projectDetails.sampleFileName,
@@ -139,11 +140,15 @@ class Project extends React.Component {
                 .then(response => {
                     utils.hide_element("spinner");
                     if (response.ok) {
-                        window.location = this.props.documentRoot + "/review-project/" + response.json();
+                        return response.json();
                     } else {
-                        console.log(response);
-                        alert("Error creating project. See console for details.");
+                        return Promise.reject(response);
                     }
+                })
+                .then(data => window.location = this.props.documentRoot + "/review-project/" + data)
+                .catch(data => {
+                    console.log(data);
+                    alert("Error creating project. See console for details.");
                 });
         }
     };
@@ -270,12 +275,21 @@ class Project extends React.Component {
                 if (response.ok) {
                     return response.json();
                 } else {
-                    console.log(response);
-                    alert("Error retrieving the imagery list. See console for details.");
+                    return Promise.reject(response);
                 }
             })
             .then(data => {
-                this.setState({ imageryList: data });
+                this.setState({
+                    imageryList: data,
+                    projectDetails: {
+                        ...this.state.projectDetails,
+                        baseMapSource: data[0].title,
+                    },
+                });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
             });
     };
 
@@ -433,16 +447,14 @@ class ProjectTemplateVisibility extends React.Component {
             <SectionBlock title = "Use Project Template (Optional)">
                 <div id="project-template-selector">
                     <div className="form-group">
-                        <label htmlFor="project-filter">
-                            Project Filter
-                            <input
-                                className="form-control"
-                                id="project-filter"
-                                type="text"
-                                value={this.state.projectFilter}
-                                onChange={e => this.setState({ projectFilter: e.target.value })}
-                            />
-                        </label>
+                        <h3 htmlFor="project-filter">Project Filter</h3>
+                        <input
+                            className="form-control form-control-sm"
+                            id="project-filter"
+                            type="text"
+                            value={this.state.projectFilter}
+                            onChange={e => this.setState({ projectFilter: e.target.value })}
+                        />
                         <h3 htmlFor="project-template">Select Project</h3>
                         <select
                             className="form-control form-control-sm"
@@ -586,6 +598,7 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     min="-90.0"
                                     max="90.0"
                                     step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -602,6 +615,7 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     min="-180.0"
                                     max="180.0"
                                     step="any"
+                                    readOnly
                                 />
                             </div>
                             <div className="col-md-6">
@@ -616,6 +630,7 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     min="-180.0"
                                     max="180.0"
                                     step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -632,6 +647,7 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     min="-90.0"
                                     max="90.0"
                                     step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
