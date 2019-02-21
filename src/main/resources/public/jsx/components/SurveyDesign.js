@@ -218,116 +218,139 @@ class NewQuestionDesigner extends React.Component {
 
     render() {
         return (
-            <table className="mt-4">
-                <tbody>
-                {!this.props.inSimpleMode &&
+            <React.Fragment>
+
+                <table className="mt-4">
+                    <tbody>
+                    {!this.props.inSimpleMode &&
+                    <React.Fragment>
+                        <tr>
+                            <td>
+                                <label htmlFor="value-componenttype">Component Type:</label>
+                            </td>
+                            <td>
+                                <select
+                                    id="value-componenttype"
+                                    className="form-control form-control-sm"
+                                    size="1"
+                                    onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
+                                    value={this.state.selectedType}
+                                >
+                                    {componentTypes.map((type, index) =>
+                                        <option
+                                            key={index}
+                                            value={index}
+                                        >
+                                            {`${type.componentType}-${type.dataType}`}
+                                        </option>)
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+
+                    </React.Fragment>
+                    }
                     <tr>
                         <td>
-                            <label htmlFor="value-componenttype">Component Type:</label>
+                            <label htmlFor="value-parent">Parent Question:</label>
                         </td>
                         <td>
-                            <select 
-                                id="value-componenttype" 
-                                className="form-control form-control-sm" 
+                            <select
+                                id="value-parent"
+                                className="form-control form-control-sm"
                                 size="1"
-                                onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
-                                value={this.state.selectedType}
+                                onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
+                                value={this.state.selectedParent}
                             >
-                                {componentTypes.map((type, index) =>
-                                    <option 
-                                        key={index}
-                                        value={index}
-                                    >
-                                        {`${type.componentType}-${type.dataType}`}
-                                    </option>)
-                                }
-                            </select>
-                        </td>
-                    </tr>
-                }
-                <tr>
-                    <td>
-                        <label htmlFor="value-parent">Parent Question:</label>
-                    </td>
-                    <td>
-                        <select
-                            id="value-parent" 
-                            className="form-control form-control-sm" 
-                            size="1"
-                            onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
-                            value={this.state.selectedParent}
-                        >
-                            <option key={-1} value={-1}>None</option>
-                            {this.props.surveyQuestions.length > 0
-                                ? this.props.surveyQuestions
-                                    .filter(question => question.componentType !== "input")
-                                    .map(question =>
-                                            <option 
+                                <option key={-1} value={-1}>None</option>
+                                {this.props.surveyQuestions.length > 0
+                                    ? this.props.surveyQuestions
+                                        .filter(question => question.componentType !== "input")
+                                        .map(question =>
+                                            <option
                                                 key={question.id}
                                                 value={question.id}
                                             >
                                                 {question.question}
                                             </option>)
-                                : "" 
-                            }
-                        </select>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>
-                        <label htmlFor="value-answer">Parent Answer:</label>
-                    </td>
-                    <td>
-                        <select 
-                            id="value-answer" 
-                            className="form-control form-control-sm" 
-                            size="1"
-                            onChange={e => this.setState({ selectedAnswer: parseInt(e.target.value) })}
-                            value={this.state.selectedAnswer}
-                        >
-                            <option key={-1} value={-1}>Any</option>
-                            {this.state.selectedParent > 0 
+                                    : ""
+                                }
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <label htmlFor="value-answer">Parent Answer:</label>
+                        </td>
+                        <td>
+                            <select
+                                id="value-answer"
+                                className="form-control form-control-sm"
+                                size="1"
+                                onChange={e => this.setState({selectedAnswer: parseInt(e.target.value)})}
+                                value={this.state.selectedAnswer}
+                            >
+                                <option key={-1} value={-1}>Any</option>
+                                {this.state.selectedParent > 0
                                 && this.props.surveyQuestions
                                     .find(question => question.id === this.state.selectedParent)
-                                ? this.props.surveyQuestions
-                                    .find(question => question.id === this.state.selectedParent)
-                                    .answers
-                                    .map(answer => 
-                                        <option key={answer.id} value={answer.id}>
-                                            {answer.answer}
-                                        </option>)
-                                    : "" 
-                            }
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td><label htmlFor="value-SQ">New Question:</label></td>
-                    <td>
-                        <div id="add-sample-value-group">
-                            <input 
-                                type="text" 
-                                autoComplete="off"
-                                value={this.state.newQuestionText}
-                                onChange={e => this.setState({newQuestionText: e.target.value})}
+                                    ? this.props.surveyQuestions
+                                        .find(question => question.id === this.state.selectedParent)
+                                        .answers
+                                        .map(answer =>
+                                            <option key={answer.id} value={answer.id}>
+                                                {answer.answer}
+                                            </option>)
+                                    : ""
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label htmlFor="value-SQ">New Question:</label></td>
+                        <td>
+                            <div id="add-sample-value-group">
+                                <input
+                                    type="text"
+                                    autoComplete="off"
+                                    value={this.state.newQuestionText}
+                                    onChange={e => this.setState({newQuestionText: e.target.value})}
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input
+                                type="button"
+                                className="button"
+                                value="Add Survey Question"
+                                onClick={this.addSurveyQuestion}
                             />
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input 
-                            type="button" 
-                            className="button" 
-                            value="Add Survey Question"
-                            onClick={this.addSurveyQuestion}
-                        />
-                    </td>
-                    <td></td>
-                </tr>
-                </tbody>
-            </table>
+                        </td>
+                        <td></td>
+                    </tr>
+
+                    </tbody>
+                </table>
+                {/*{!this.props.inSimpleMode && <SectionBlock title="Survey Rules Design">*/}
+                    {/*<table>*/}
+                        {/*<tbody>*/}
+
+                    {/*<SurveyRules surveyQuestions={this.props.surveyQuestions}/>*/}
+                        {/*<tr>  <td></td><td><input*/}
+                            {/*type="button"*/}
+                            {/*className="button"*/}
+                            {/*value="Add Survey Rule"*/}
+                            {/*onClick={this.addSurveyQuestion}*/}
+                        {/*/></td>*/}
+                      {/*</tr>*/}
+                        {/*</tbody>*/}
+                    {/*</table>*/}
+                {/*</SectionBlock>*/}
+                {/*}*/}
+            </React.Fragment>
         )
     }
 }
@@ -391,5 +414,150 @@ class NewAnswerDesigner extends React.Component {
     }
 }
 
+class SurveyRules extends React.Component {
+    constructor(props) {
+        super(props);
 
+        this.state = {
+            currentRules: [],
+            selectedRuleType:"",
+        };
+    };
 
+    setNewRule(ruleType) {
+        this.setState({selectedRuleType:ruleType})
+    }
+    render() {
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label htmlFor="ruletype">Rule Type:</label>
+                    </td>
+                <td>
+                <select className="form-control form-control-sm" size="1" onChange={e => this.setNewRule(e.target.value)}>
+                    <option value="select">Select</option>
+                    <option value="text-match">Text Match</option>
+                    <option value="numeric-range">Numeric Range</option>
+                    <option value="sum-of-answers">Sum of Answers</option>
+                </select>
+                </td></tr>
+                {
+                    this.state.selectedRuleType == "text-match" ?
+                        <TextMatch surveyQuestions={this.props.surveyQuestions} /> : (this.state.selectedRuleType == "numeric-range" ? <NumericRange surveyQuestions={this.props.surveyQuestions}/> :
+                        (this.state.selectedRuleType == "sum-of-answers"?<SumOfAnswers surveyQuestions={this.props.surveyQuestions}/>:"nothing is selected"))
+                }
+            </React.Fragment>
+        );
+    }
+}
+
+class TextMatch extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            currentRules: [],
+        };
+    };
+
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text");
+        console.log("from text natch");
+        console.log(surveyQuestions);
+        return (
+            <React.Fragment>
+                <tr>
+                <td>
+                    <label>Survey Question: </label></td><td><select>
+                    {
+                        surveyQuestions && surveyQuestions.map((question, uid) =>
+                            <option key={uid}>{question.question}</option>)
+                    }
+                </select>
+                </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                    <input id="text-match" type="text" placeholder="Regular expression"/>
+                </td>
+
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+class NumericRange extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state ={
+            currentRules: [],
+        };
+    };
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+
+        return (
+            <React.Fragment>
+                <tr>
+                <td>
+                    <label>Survey Question: </label>
+                </td><td><select>
+                    {
+                        surveyQuestions && surveyQuestions.map((question, uid) =>
+                            <option key={uid}>{question.question}</option>)
+                    }
+                </select>
+                </td>
+                </tr>
+                <tr>
+                <td>
+                    <label>Enter min and max values: </label></td><td>
+                    <input id="min-val" type="number" placeholder="Minimum value"/>
+                    <input id="max-val" type="number" placeholder="Maximum value"/>
+                </td>
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+class SumOfAnswers extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state ={
+            currentRules: [],
+        };
+    };
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+
+        return (
+            <React.Fragment>
+                <tr>
+                <td>
+                    <label>Survey Question(Hold ctrl/cmd and select multiple questions):</label></td><td>
+                    <select multiple="true">
+                        {
+                            surveyQuestions && surveyQuestions.map((question, uid) =>
+                                <option key={uid}>{question.question}</option>)
+                        }
+                    </select>
+                </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="expected-sum" type="number" placeholder="Expected sum"/>
+                    </td>
+
+                </tr>
+
+            </React.Fragment>
+        );
+    }
+}

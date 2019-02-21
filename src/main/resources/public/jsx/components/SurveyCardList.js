@@ -1,6 +1,7 @@
 import React, { Fragment }  from "react";
 
 import { removeEnumerator } from "../utils/SurveyUtils"
+import {SectionBlock} from "./FormComponents";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
@@ -44,6 +45,35 @@ class SurveyCard extends React.Component {
                                                             : sq.id}));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
+    }
+
+    addSurveyRule=()=> {
+        if (this.state.newQuestionText !== "") {
+            const {surveyQuestions} = this.props;
+            const {dataType, componentType} = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
+            const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
+
+            if (repeatedQuestions === 0
+                || confirm("Warning: this is a duplicate name.  This will save as "
+                    + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode")) {
+
+                const newQuestion = {
+                    id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
+                    question: repeatedQuestions > 0
+                        ? this.state.newQuestionText + ` (${repeatedQuestions})`
+                        : this.state.newQuestionText,
+                    answers: [],
+                    parentQuestion: this.state.selectedParent,
+                    parentAnswer: this.state.selectedAnswer,
+                    dataType: dataType,
+                    componentType: componentType,
+                };
+                this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
+                this.setState({selectedAnswer: -1, newQuestionText: ""});
+            }
+        } else {
+            alert("Please enter a survey question first.");
+        }
     }
 
     render() {
@@ -107,6 +137,22 @@ class SurveyCard extends React.Component {
                         </div>
                     }
                 </div>
+                {!this.props.inSimpleMode && <SectionBlock title="Survey Rules Design:">
+                    <table>
+                        <tbody>
+
+                        <SurveyRules surveyQuestions={this.props.surveyQuestions}/>
+                        <tr> <td><input
+                            type="button"
+                            className="button"
+                            value="Add Survey Rule"
+                            onClick={this.addSurveyRule}
+                        /></td> <td></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </SectionBlock>
+                }
             </div>
 
         )
@@ -232,4 +278,154 @@ function ExistingAnswer({ answer, color, removeAnswer }) {
             </div>
         </div>
     );
+}
+
+class SurveyRules extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            currentRules: [],
+            selectedRuleType:"",
+        };
+    };
+
+    setNewRule(ruleType) {
+        this.setState({selectedRuleType:ruleType})
+    }
+    render() {
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label htmlFor="ruletype">Rule Type:</label>
+                    </td>
+                    <td>
+                        <select className="form-control form-control-sm" size="1" onChange={e => this.setNewRule(e.target.value)}>
+                            <option value="select">Select</option>
+                            <option value="text-match">Text Match</option>
+                            <option value="numeric-range">Numeric Range</option>
+                            <option value="sum-of-answers">Sum of Answers</option>
+                        </select>
+                    </td></tr>
+                {
+                    this.state.selectedRuleType == "text-match" ?
+                        <TextMatch surveyQuestions={this.props.surveyQuestions} /> : (this.state.selectedRuleType == "numeric-range" ? <NumericRange surveyQuestions={this.props.surveyQuestions}/> :
+                        (this.state.selectedRuleType == "sum-of-answers"?<SumOfAnswers surveyQuestions={this.props.surveyQuestions}/>:"nothing is selected"))
+                }
+            </React.Fragment>
+        );
+    }
+}
+
+class TextMatch extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            currentRules: [],
+        };
+    };
+
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text");
+        console.log("from text natch");
+        console.log(surveyQuestions);
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label>Survey Question: </label></td><td><select>
+                    {
+                        surveyQuestions && surveyQuestions.map((question, uid) =>
+                            <option key={uid}>{question.question}</option>)
+                    }
+                </select>
+                </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="text-match" type="text" placeholder="Regular expression"/>
+                    </td>
+
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+class NumericRange extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state ={
+            currentRules: [],
+        };
+    };
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label>Survey Question: </label>
+                    </td><td><select>
+                    {
+                        surveyQuestions && surveyQuestions.map((question, uid) =>
+                            <option key={uid}>{question.question}</option>)
+                    }
+                </select>
+                </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Enter min and max values: </label></td><td>
+                    <input id="min-val" type="number" placeholder="Minimum value"/>
+                    <input id="max-val" type="number" placeholder="Maximum value"/>
+                </td>
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+class SumOfAnswers extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            currentRules: [],
+        };
+    };
+
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label>Survey Question(Hold ctrl/cmd and select multiple questions):</label></td>
+                    <td>
+                        <select multiple="true">
+                            {
+                                surveyQuestions && surveyQuestions.map((question, uid) =>
+                                    <option key={uid}>{question.question}</option>)
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="expected-sum" type="number" placeholder="Expected sum"/>
+                    </td>
+
+                </tr>
+
+            </React.Fragment>
+        );
+    }
 }
