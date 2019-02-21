@@ -159,7 +159,7 @@ class Project extends React.Component {
             alert("A project must contain a name and description");
             return false;
 
-        } else if (coordinates.latMax === "") {
+        } else if (["random", "gridded"].includes(projectDetails.plotDistribution) && coordinates.latMax === "") {
             alert("Please select a boundary");
             return false;
 
@@ -447,7 +447,7 @@ class ProjectTemplateVisibility extends React.Component {
             <SectionBlock title = "Use Project Template (Optional)">
                 <div id="project-template-selector">
                     <div className="form-group">
-                        <h3 htmlFor="project-filter">Project Filter</h3>
+                        <h3 htmlFor="project-filter">Template Filter</h3>
                         <input
                             className="form-control form-control-sm"
                             id="project-filter"
