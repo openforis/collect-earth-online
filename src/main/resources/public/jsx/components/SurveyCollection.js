@@ -24,6 +24,11 @@ export class SurveyCollection extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.state.currentNodeIndex !== prevState.currentNodeIndex) {
             this.props.setSelectedQuestion(this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex]));
+
+        } else if (this.props.selectedQuestion.id !== prevProps.selectedQuestion.id
+            && this.props.selectedQuestion.parentQuestion === -1) {
+
+            this.setState({ currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestion.id) });
         }
     }
 
