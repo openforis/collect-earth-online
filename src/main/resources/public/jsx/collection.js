@@ -1043,7 +1043,7 @@ function DigitalGlobeMenus(props) {
                     max="2018"
                     value={props.imageryYearDG}
                     className="slider"
-                    id="dgm_slider"
+                    id="dg_slider"
                     onChange={(e) => props.setImageryYearDG(e.target.value)}
                 />
                 <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
@@ -1085,7 +1085,7 @@ function PlanetMenus(props) {
                     max="12"
                     value={props.imageryMonthPlanet}
                     className="slider"
-                    id="myRangemonth"
+                    id="planet_month_slider"
                     onChange={(e) => props.setImageryMonthPlanet(e.target.value)}
                 />
                 <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
