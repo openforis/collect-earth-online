@@ -1,5 +1,4 @@
 import React, { Fragment }  from "react";
-
 import { removeEnumerator } from "../utils/SurveyUtils"
 import {SectionBlock} from "./FormComponents";
 
@@ -45,7 +44,7 @@ class SurveyCard extends React.Component {
                                                             : sq.id}));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
-    }
+    };
 
     addSurveyRule=()=> {
         if (this.state.newQuestionText !== "") {
@@ -217,6 +216,7 @@ function SurveyQuestionTree({
                                                 : parentQuestion.answers
                                                     .find(ans => ans.id === surveyQuestion.parentAnswer).answer
                                             }
+
                                         </li>
                                     </Fragment>
                                 }

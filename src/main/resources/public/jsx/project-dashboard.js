@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils"
+import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
 
 class ProjectDashboard extends React.Component {
     constructor(props) {
@@ -35,10 +35,10 @@ class ProjectDashboard extends React.Component {
 
     componentDidUpdate(){
         if (this.state.imageryList.length > 0 && this.state.projectDetails.id && !this.state.isMapShown) {
-            let detailsNew = this.state.projectDetails;
-            detailsNew.baseMapSource = this.state.projectDetails.baseMapSource || this.state.imageryList[0].title;
-            this.setState({projectDetails: detailsNew,
-                           isMapShown: true});
+            this.setState({ projectDetails: { ...this.state.projectDetails, 
+                                                baseMapSource:  this.state.projectDetails.baseMapSource 
+                                                                || this.state.imageryList[0].title},
+                           isMapShown: true });
             this.showProjectMap();
         }
         if (this.state.isMapShown && this.state.plotList.length > 0) {

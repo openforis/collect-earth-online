@@ -17,8 +17,7 @@
      review_project.renderReviewProjectPage({
          documentRoot:                "${root}",
          userId:                      "${userid}",
-         projectId:                   "${project_id}",
-         institutionId:               "${institution_id}"
+         projectId:                   "${project_id}"
      });
  };
 </script>
