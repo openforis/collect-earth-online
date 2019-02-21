@@ -530,7 +530,8 @@ class BasicLayout extends React.PureComponent{
         {
             widget.properties = ["","","","",""];
             widget.filterType = "";
-            widget.visParams = JSON.parse(this.state.imageParams);
+            let imageParams = this.state.imageParams == ""? {} : JSON.parse(this.state.imageParams);
+            widget.visParams = imageParams;
             widget.ImageAsset = this.state.imageCollection;
             if(this.state.selectedWidgetType == "imageAsset") {
                 this.addCustomImagery(this.buildImageryObject({
