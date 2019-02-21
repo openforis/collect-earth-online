@@ -731,7 +731,6 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     projectName={this.state.currentProject.name}
                 >
-<<<<<<< HEAD
                     {this.state.plotList.length > 0
                         ?
                             <PlotNavigation 
@@ -786,54 +785,6 @@ class Collection extends React.Component {
                             <p>Please go to a plot to see survey questions</p>
                         </fieldset>
                     }
-=======
-                <PlotNavigation 
-                    plotId={plotId}
-                    navButtonsShown={this.state.currentPlot != null}
-                    nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                    prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
-                    sampleOutlineBlack={this.state.sampleOutlineBlack}
-                    reviewPlots={this.state.reviewPlots}
-                    flagPlotInDB={this.flagPlotInDB}
-                    goToFirstPlot={this.goToFirstPlot}
-                    goToPlot={this.goToPlot}
-                    nextPlot={this.nextPlot}
-                    prevPlot={this.prevPlot}
-                    setReviewPlots={this.setReviewPlots}
-                    toggleSampleBW={this.toggleSampleBW}
-                    loadingPlots={this.state.plotList.length === 0}
-                />
-                <ImageryOptions 
-                    baseMapSource={this.state.currentImagery.id}
-                    imageryTitle={this.state.currentImagery.title}
-                    imageryList={this.state.imageryList}
-                    setBaseMapSource={this.setBaseMapSource}
-                    imageryYearDG={this.imageryYearDG}
-                    stackingProfileDG={this.stackingProfileDG}
-                    setImageryYearDG={this.setImageryYearDG}
-                    setStackingProfileDG={this.setStackingProfileDG}
-                    imageryYearPlanet={this.imageryYearPlanet}
-                    imageryMonthPlanet={this.imageryMonthPlanet}
-                    imageryMonthNamePlanet={this.imageryMonthNamePlanet}
-                    setImageryYearPlanet={this.setImageryYearPlanet}
-                    setImageryMonthPlanet={this.setImageryMonthPlanet}
-                    loadingImages={this.state.imageryList.length === 0}
-                />
-                {this.state.currentPlot 
-                ? 
-                    <SurveyCollection
-                        selectedQuestion={this.state.selectedQuestion}
-                        surveyQuestions={this.state.currentProject.surveyQuestions}
-                        setCurrentValue={this.setCurrentValue}
-                        setSelectedQuestion={this.setSelectedQuestion}
-                    />
-                :
-                    <fieldset className="mb-3 justify-content-center text-center">
-                        <h3>Survey Questions</h3>
-                        <p>Please go to a plot to see survey questions</p>
-                    </fieldset>
-                }
->>>>>>> 7d92e5d4ecf2ac400f118f67011b5a9949df615a
                 </SideBar>
                 <QuitMenu documentRoot={this.props.documentRoot}/>
                 {this.state.plotList.length === 0 && 
