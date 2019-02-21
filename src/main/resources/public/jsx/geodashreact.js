@@ -352,6 +352,7 @@ class MapWidget extends React.Component {
         }
         else{
             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
+            url = "https://ceodev.servirglobal.net:8888/ImageCollectionbyIndex";
         }
         return url;
     }
