@@ -336,8 +336,7 @@ class MapWidget extends React.Component {
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
-           // url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
-            url = "https://ceodev.servirglobal.net:8888/image";
+           url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
         }
         else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
         {
