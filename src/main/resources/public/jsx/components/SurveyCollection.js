@@ -13,9 +13,9 @@ export class SurveyCollection extends React.Component {
 
     componentDidMount() {
         const topLevelNodeIds = this.props.surveyQuestions
-                                .filter(sq => sq.parentQuestion === -1)
-                                .sort((a, b) => a.id - b.id)
-                                .map(sq => sq.id);
+            .filter(sq => sq.parentQuestion === -1)
+            .sort((a, b) => a.id - b.id)
+            .map(sq => sq.id);
         this.setState({
             topLevelNodeIds: topLevelNodeIds,
         });
@@ -307,10 +307,10 @@ class AnswerInput extends React.Component{
     resetInputText = () => {
         this.setState({
             newInput: this.props.surveyNode.answered
-                        .some(a => a.answerId === this.props.surveyNode.answers[0].id
-                                    && a.sampleId === this.props.selectedSampleId)
+                .some(a => a.answerId === this.props.surveyNode.answers[0].id
+                            && a.sampleId === this.props.selectedSampleId)
                       ? this.props.surveyNode.answered
-                        .find(a => a.answerId === this.props.surveyNode.answers[0].id
+                          .find(a => a.answerId === this.props.surveyNode.answers[0].id
                                   && a.sampleId === this.props.selectedSampleId).answerText
                       : "",
         });

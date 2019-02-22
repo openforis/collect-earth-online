@@ -69,6 +69,7 @@ module.exports = {
         "computed-property-spacing": 1,
         "eol-last": 2,
         "eqeqeq": [2, "smart"],
+        "keyword-spacing": 2,
         "no-trailing-spaces" : 2,
         "no-console": 0,
         "no-multi-spaces": 2,

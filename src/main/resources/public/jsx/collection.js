@@ -626,7 +626,7 @@ class Collection extends React.Component {
             });
 
             return true;
-        } else if(selectedFeatures && selectedFeatures.getLength() === 0 ) {
+        } else if (selectedFeatures && selectedFeatures.getLength() === 0 ) {
             alert("No samples selected. Please click some first.");
             return false;
         } else {
