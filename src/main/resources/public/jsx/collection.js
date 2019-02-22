@@ -193,9 +193,9 @@ class Collection extends React.Component {
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                             :  newImagery.attribution;
         this.setState({
-                        currentImagery: newImagery,
-                        imageryAttribution: newImageryAttribution,
-                    });
+            currentImagery: newImagery,
+            imageryAttribution: newImageryAttribution,
+        });
     };
 
     setImageryYearDG = (newImageryYearDG) => {
@@ -391,17 +391,17 @@ class Collection extends React.Component {
                 ? newPlot.samples.reduce((obj, s) => {
                     obj[s.id] = s.value || {};
                     return obj;
-                    }, {})
+                }, {})
                 : {},
             userImages: newPlot.samples
                 ? newPlot.samples.reduce((obj, s) => {
                     obj[s.id] = s.userImage || {};
                     return obj;
-                    }, {})
+                }, {})
                 : {},
             selectedQuestion: this.state.currentProject.surveyQuestions
-                                .sort((a, b) => a.id - b.id)
-                                .find(surveyNode => surveyNode.parentQuestion === -1),
+                .sort((a, b) => a.id - b.id)
+                .find(surveyNode => surveyNode.parentQuestion === -1),
             collectionStart: Date.now(),
             sampleOutlineBlack: true,
         };
@@ -481,10 +481,10 @@ class Collection extends React.Component {
     };
 
     setReviewPlots = () => this.setState({
-                                reviewPlots: !this.state.reviewPlots,
-                                prevPlotButtonDisabled: false,
-                                nextPlotButtonDisabled: false,
-                            });
+        reviewPlots: !this.state.reviewPlots,
+        prevPlotButtonDisabled: false,
+        nextPlotButtonDisabled: false,
+    });
 
     flagPlotInDB = () => {
         if (this.state.currentPlot != null) {
@@ -554,8 +554,8 @@ class Collection extends React.Component {
         const visibleSamples = this.getVisibleSamples(questionId);
 
         return selectedFeatures.getArray()
-                .map(sf => sf.get("sampleId"))
-                .every(sid => visibleSamples.some(vs => vs.id === sid));
+            .map(sf => sf.get("sampleId"))
+            .every(sid => visibleSamples.some(vs => vs.id === sid));
     };
 
     getChildQuestions(currentQuestionId) {
@@ -567,8 +567,8 @@ class Collection extends React.Component {
             return [question];
         } else {
             return childQuestions.reduce((prev, acc) => (
-                                            [...prev, ...this.getChildQuestions(acc.id)]
-                                        ), [question]);
+                [...prev, ...this.getChildQuestions(acc.id)]
+            ), [question]);
         }
     }
 
@@ -585,15 +585,15 @@ class Collection extends React.Component {
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
-                            questionId: questionToSet.id,
-                            answer: answerText,
-                            answerId: answerId,
-                        };
+                    questionId: questionToSet.id,
+                    answer: answerText,
+                    answerId: answerId,
+                };
                 const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
-                                            .reduce((acc, questionText) => {
-                                                const { [questionText]: value, ...rest } = acc;
-                                                return { ...rest };
-                                            }, { ...this.state.userSamples[sampleId] });
+                    .reduce((acc, questionText) => {
+                        const { [questionText]: value, ...rest } = acc;
+                        return { ...rest };
+                    }, { ...this.state.userSamples[sampleId] });
 
                 return {
                     ...acc,
@@ -606,20 +606,20 @@ class Collection extends React.Component {
             }, {});
 
             const newUserImages = sampleIds.reduce((acc, sampleId) => ({
-                                        ...acc,
-                                        [sampleId]: {
-                                            id: this.state.currentImagery.id,
-                                            attributes: this.getImageryAttributes(),
-                                        },
-                                   }), {});
+                ...acc,
+                [sampleId]: {
+                    id: this.state.currentImagery.id,
+                    attributes: this.getImageryAttributes(),
+                },
+            }), {});
 
             this.setState({
-                            userSamples: { ...this.state.userSamples, ...newSamples },
-                            userImages: { ...this.state.userImages, ...newUserImages },
-                            selectedQuestion: questionToSet,
-                          });
+                userSamples: { ...this.state.userSamples, ...newSamples },
+                userImages: { ...this.state.userImages, ...newUserImages },
+                selectedQuestion: questionToSet,
+            });
             return true;
-        } else if(selectedFeatures && selectedFeatures.getLength() === 0 ) {
+        } else if (selectedFeatures && selectedFeatures.getLength() === 0 ) {
             alert("No samples selected. Please click some first.");
             return false;
         } else {
@@ -659,7 +659,7 @@ class Collection extends React.Component {
                 const sampleId = feature.get("sampleId");
                 const userAnswer = this.state.userSamples[sampleId][question].answer;
                 const matchingAnswer = this.state.selectedQuestion.answers
-                                        .find(ans => ans.answer === userAnswer);
+                    .find(ans => ans.answer === userAnswer);
 
                 const color = this.state.selectedQuestion.componentType === "input"
                                 ? userAnswer.length > 0
@@ -686,15 +686,15 @@ class Collection extends React.Component {
             return this.state.currentPlot.samples;
         } else {
             const correctAnswerText = surveyQuestions
-                                    .find(sq => sq.id === parentQuestion).answers
-                                    .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
+                .find(sq => sq.id === parentQuestion).answers
+                .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
             return this.getVisibleSamples(parentQuestion)
-                    .filter(sample => {
-                        const sampleAnswer = userSamples[sample.id][parentQuestionText]
+                .filter(sample => {
+                    const sampleAnswer = userSamples[sample.id][parentQuestionText]
                                              && userSamples[sample.id][parentQuestionText].answer;
-                        return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
-                    });
+                    return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
+                });
         }
     }
 
@@ -707,16 +707,16 @@ class Collection extends React.Component {
             return this.state.currentPlot.samples.filter(s => userSamples[s.id][question]);
         } else {
             const correctAnswerText = surveyQuestions
-                                    .find(sq => sq.id === parentQuestion).answers
-                                    .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
+                .find(sq => sq.id === parentQuestion).answers
+                .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
             return this.getVisibleSamples(parentQuestion)
-                    .filter(sample => {
-                        const sampleAnswer = userSamples[sample.id][parentQuestionText]
+                .filter(sample => {
+                    const sampleAnswer = userSamples[sample.id][parentQuestionText]
                                                 && userSamples[sample.id][parentQuestionText].answer;
-                        return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
-                    })
-                    .filter(s => userSamples[s.id][question]);
+                    return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
+                })
+                .filter(s => userSamples[s.id][question]);
         }
     }
 
@@ -724,10 +724,10 @@ class Collection extends React.Component {
         const { currentProject: { surveyQuestions }} = this.state;
 
         const newSampleValues = surveyQuestions.map(value => ({
-                                    ...value,
-                                    visible: this.getVisibleSamples(value.id).length,
-                                    answered: this.getAnsweredSamples(value.id).length,
-                                }));
+            ...value,
+            visible: this.getVisibleSamples(value.id).length,
+            answered: this.getAnsweredSamples(value.id).length,
+        }));
 
         this.setState({ currentProject: { ...this.state.currentProject, surveyQuestions: newSampleValues }});
     }
@@ -823,7 +823,7 @@ function ImageAnalysisPane(props) {
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled = props.surveyQuestions.reduce((prev, cur) => prev && cur.visible === cur.answered, true);
+    const saveValuesButtonEnabled = props.surveyQuestions.every(sq => sq.visible === sq.answered);
     return (
         <div id="sidebar" className="col-xl-3 border-left" style={{ overflow: "scroll" }}>
             <h2 className="header">{props.projectName || ""}</h2>
