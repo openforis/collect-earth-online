@@ -84,6 +84,7 @@ module.exports = {
         "react/jsx-first-prop-new-line": [2, "multiline"],
         "react/no-unused-state": 1,
         "space-infix-ops": 2,
+        "space-before-blocks": 2,
         // From Gary
         "consistent-return": [0],
         "key-spacing": [0],
