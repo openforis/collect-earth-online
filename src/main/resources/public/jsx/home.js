@@ -222,7 +222,7 @@ class SideBar extends React.Component {
 
 
         return this.props.showSidePanel
-            ? (<div id="lPanel" className="col-lg-3 pr-0 pl-0" style={{ height:"-webkit-fill-available", overflow:"hidden" }}>
+            ? (<div id="lPanel" className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column">
                 <div className="bg-darkgreen">
                     <h1 className="tree_label" id="panelTitle">Institutions</h1>
                 </div>
@@ -245,7 +245,7 @@ class SideBar extends React.Component {
                 />
                 {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
-                        ? <ul className="tree" style={{ height: "calc(100vh - 260px)", overflow: "scroll" }}>
+                        ? <ul className="tree" style={{ overflow: "hidden scroll" }}>
                             {filteredInstitutions.map((institution, uid) =>
                                 <Institution
                                     key={uid}

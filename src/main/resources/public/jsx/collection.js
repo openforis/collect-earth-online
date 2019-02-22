@@ -394,17 +394,17 @@ class Collection extends React.Component {
                 ? newPlot.samples.reduce((obj, s) => {
                     obj[s.id] = s.value || {};
                     return obj;
-                    }, {})
+                }, {})
                 : {},
             userImages: newPlot.samples
                 ? newPlot.samples.reduce((obj, s) => {
                     obj[s.id] = s.userImage || {};
                     return obj;
-                    }, {})
+                }, {})
                 : {},
             selectedQuestion: this.state.currentProject.surveyQuestions
-                                .sort((a, b) => a.id - b.id)
-                                .find(surveyNode => surveyNode.parentQuestion === -1),
+                .sort((a, b) => a.id - b.id)
+                .find(surveyNode => surveyNode.parentQuestion === -1),
             collectionStart: Date.now(),
             sampleOutlineBlack: true,
         };
@@ -558,8 +558,8 @@ class Collection extends React.Component {
         const visibleSamples = this.getVisibleSamples(questionId);
 
         return selectedFeatures.getArray()
-                .map(sf => sf.get("sampleId"))
-                .every(sid => visibleSamples.some(vs => vs.id === sid));
+            .map(sf => sf.get("sampleId"))
+            .every(sid => visibleSamples.some(vs => vs.id === sid));
     };
 
     getChildQuestions(currentQuestionId) {
@@ -570,9 +570,10 @@ class Collection extends React.Component {
         if (childQuestions.length === 0) {
             return [question];
         } else {
-            return childQuestions.reduce((prev, acc) => (
-                                            [...prev, ...this.getChildQuestions(acc.id)]
-                                        ), [question]);
+            return childQuestions
+                .reduce((prev, acc) => (
+                    [...prev, ...this.getChildQuestions(acc.id)]
+                ), [question]);
         }
     }
 
@@ -594,10 +595,10 @@ class Collection extends React.Component {
                     answerId: answerId,
                 };
                 const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
-                                            .reduce((acc, questionText) => {
-                                                const { [questionText]: value, ...rest } = acc;
-                                                return { ...rest };
-                                            }, { ...this.state.userSamples[sampleId] });
+                    .reduce((acc, questionText) => {
+                        const { [questionText]: value, ...rest } = acc;
+                        return { ...rest };
+                    }, { ...this.state.userSamples[sampleId] });
 
                 return {
                     ...acc,
@@ -609,13 +610,14 @@ class Collection extends React.Component {
 
             }, {});
 
-            const newUserImages = sampleIds.reduce((acc, sampleId) => ({
-                                        ...acc,
-                                        [sampleId]: {
-                                            id: this.state.currentImagery.id,
-                                            attributes: this.getImageryAttributes(),
-                                        },
-                                   }), {});
+            const newUserImages = sampleIds
+                .reduce((acc, sampleId) => ({
+                    ...acc,
+                    [sampleId]: {
+                        id: this.state.currentImagery.id,
+                        attributes: this.getImageryAttributes(),
+                    },
+                }), {});
 
             this.setState({
                 userSamples: { ...this.state.userSamples, ...newSamples },
@@ -664,7 +666,7 @@ class Collection extends React.Component {
                 const sampleId = feature.get("sampleId");
                 const userAnswer = this.state.userSamples[sampleId][question].answer;
                 const matchingAnswer = this.state.selectedQuestion.answers
-                                        .find(ans => ans.answer === userAnswer);
+                    .find(ans => ans.answer === userAnswer);
 
                 const color = this.state.selectedQuestion.componentType === "input"
                                 ? userAnswer.length > 0
@@ -691,15 +693,15 @@ class Collection extends React.Component {
             return this.state.currentPlot.samples;
         } else {
             const correctAnswerText = surveyQuestions
-                                    .find(sq => sq.id === parentQuestion).answers
-                                    .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
+                .find(sq => sq.id === parentQuestion).answers
+                .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
 
             return this.getVisibleSamples(parentQuestion)
-                    .filter(sample => {
-                        const sampleAnswer = userSamples[sample.id][parentQuestionText]
-                                             && userSamples[sample.id][parentQuestionText].answer;
-                        return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
-                    });
+                .filter(sample => {
+                    const sampleAnswer = userSamples[sample.id][parentQuestionText]
+                                            && userSamples[sample.id][parentQuestionText].answer;
+                    return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
+                });
         }
     }
 
@@ -743,8 +745,10 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                 >
-                    {this.state.plotList.length === 0 ? <h3>Loading project data...</h3>
-                        : <PlotNavigation
+                    {this.state.plotList.length === 0
+                        ? <h3>Loading project data...</h3>
+                        :
+                        <PlotNavigation
                             navButtonsShown={this.state.currentPlot != null}
                             nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
                             prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
@@ -758,10 +762,12 @@ class Collection extends React.Component {
                             prevPlot={this.prevPlot}
                             setReviewPlots={this.setReviewPlots}
                             toggleSampleBW={this.toggleSampleBW}
-                          />
+                        />
                     }
-                    {this.state.imageryList.length === 0 ? <h3>Loading imagery data...</h3>
-                        : <ImageryOptions
+                    {this.state.imageryList.length === 0
+                        ? <h3>Loading imagery data...</h3>
+                        :
+                        <ImageryOptions
                             baseMapSource={this.state.currentImagery.id}
                             imageryTitle={this.state.currentImagery.title}
                             imageryList={this.state.imageryList}
@@ -775,7 +781,7 @@ class Collection extends React.Component {
                             setImageryYearDG={this.setImageryYearDG}
                             setImageryYearPlanet={this.setImageryYearPlanet}
                             setImageryMonthPlanet={this.setImageryMonthPlanet}
-                          />
+                        />
                     }
                     {this.state.currentPlot
                         ?
@@ -817,9 +823,9 @@ function ImageAnalysisPane(props) {
 
 function SideBar(props) {
     const saveValuesButtonEnabled = props.surveyQuestions
-                                    .reduce((prev, cur) => prev
-                                        && cur.visible
-                                        && cur.visible.length === cur.answered.length, true);
+        .reduce((prev, cur) => prev
+            && cur.visible
+            && cur.visible.length === cur.answered.length, true);
     return (
         <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "scroll" }}>
             <h2 className="header">{props.projectName || ""}</h2>
