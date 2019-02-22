@@ -82,10 +82,12 @@ public class PostgresGeoDash implements GeoDash {
 
     // Creates a dashboard widget for a specific project
     public String createDashBoardWidgetById(Request req, Response res) {
-        var projectId               = req.queryParams("pID");
-        var dashboardId             = req.queryParams("dashID");
-        var widgetJsonString        = req.queryParams("widgetJSON");
-        var callback                = req.queryParams("callback");
+        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+        var projectId =jsonInputs.get("pID").getAsString();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
+        var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
+        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
+
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM add_project_widget(?, ?, ?::JSONB)")) {
@@ -109,10 +111,11 @@ public class PostgresGeoDash implements GeoDash {
 
     // Updates a dashboard widget by widget_id
     public String updateDashBoardWidgetById(Request req, Response res) {
-        var widgetId                = req.params(":id");
-        var widgetJsonString        = req.queryParams("widgetJSON");
-        var dashboardId             = req.queryParams("dashID");
-        var callback                = req.queryParams("callback");
+        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
+        var widgetId = req.params(":id");
+        var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
+        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement(
@@ -137,8 +140,9 @@ public class PostgresGeoDash implements GeoDash {
 
     // Deletes a dashboard widget by widget_id
     public String deleteDashBoardWidgetById(Request req, Response res) {
+        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
         var widgetId = req.params(":id");
-        var callback = req.queryParams("callback");
+        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM delete_project_widget_by_widget_id(?)")) {

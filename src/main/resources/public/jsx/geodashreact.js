@@ -6,11 +6,11 @@ class Geodash extends React.Component {
     constructor(props) {
         super(props);
         this.state = { widgets: [ ],
-                       callbackComplete: false,
-                       left: 0,
-                       ptop: 0,
-                       projAOI: getParameterByName("aoi"),
-                       projPairAOI: ""
+            callbackComplete: false,
+            left: 0,
+            ptop: 0,
+            projAOI: getParameterByName("aoi"),
+            projPairAOI: ""
         };
         let theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
         this.state.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
@@ -58,7 +58,7 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-                      function() { this.updateSize(widget, type);}
+            function() { this.updateSize(widget, type);}
         );
     };
     handleOpacityChange = (widget, id, evt) => {
@@ -132,16 +132,16 @@ class Widgets extends React.Component {
             return ( <div className="row placeholders">
                 {this.props.widgets.map(widget => (
                     <Widget
-                    key={widget.id}
-                    id={widget.id}
-                    widget={widget}
-                    projAOI={this.props.projAOI}
-                    projPairAOI={this.props.projPairAOI}
-                    onFullScreen ={this.props.onFullScreen}
-                    onOpacityChanged = {this.props.onOpacityChanged}
-                    opacityValue = {this.props.opacityValue}
-                    onSliderChange = {this.props.onSliderChange}
-                    onSwipeChange = {this.props.onSwipeChange}
+                        key={widget.id}
+                        id={widget.id}
+                        widget={widget}
+                        projAOI={this.props.projAOI}
+                        projPairAOI={this.props.projPairAOI}
+                        onFullScreen ={this.props.onFullScreen}
+                        onOpacityChanged = {this.props.onOpacityChanged}
+                        opacityValue = {this.props.opacityValue}
+                        onSliderChange = {this.props.onSliderChange}
+                        onSwipeChange = {this.props.onSwipeChange}
                     />
                 ))}
             </div> );
@@ -751,10 +751,10 @@ class MapWidget extends React.Component {
                 const bufferPolygon = new ol.geom.Polygon(
                     [
                         [[bufferedExtent[0],bufferedExtent[1]],
-                         [bufferedExtent[0],bufferedExtent[3]],
-                         [bufferedExtent[2],bufferedExtent[3]],
-                         [bufferedExtent[2],bufferedExtent[1]],
-                         [bufferedExtent[0],bufferedExtent[1]]]
+                            [bufferedExtent[0],bufferedExtent[3]],
+                            [bufferedExtent[2],bufferedExtent[3]],
+                            [bufferedExtent[2],bufferedExtent[1]],
+                            [bufferedExtent[0],bufferedExtent[1]]]
                     ]
                 );
                 const bufferedFeature = new ol.Feature(bufferPolygon);
@@ -835,8 +835,8 @@ class GraphWidget extends React.Component {
             let dd = this.getDate();
 
             return [this.getFullYear(),
-                    (mm>9 ? "" : "0") + mm,
-                    (dd>9 ? "" : "0") + dd
+                (mm>9 ? "" : "0") + mm,
+                (dd>9 ? "" : "0") + dd
             ].join("-");
         };
     }

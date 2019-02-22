@@ -153,11 +153,11 @@ public class Server implements SparkApplication {
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                       geoDash::geodashId);
         get("/geo-dash/update/id/:id",                geoDash::updateDashBoardById);
-        // FIXME: should these be POST?
-        get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetById);
-        get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
-        get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);
         get("/geo-dash/geodashhelp",                  Views.geodashhelp(freemarker));
+        post("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetById);
+        post("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
+        post("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);
+
 
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));

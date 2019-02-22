@@ -6,334 +6,338 @@ const ReactGridLayout = WidthProvider(RGL);
 
 
 class BasicLayout extends React.PureComponent{
-    static defaultProps = {
-        theURI: window.location.origin + "/geo-dash",
-        isDraggable: true,
-        isResizable: true,
-        className: "layout",
-        items: 0,
-        rowHeight: 300,
-        onLayoutChange: function() {},
-        cols: 12,
-        graphReducer: "Min"
-    };
-    static getParameterByName (name, url) {
-        "use strict";
-        if (!url) {
-            url = window.location.href;
-        }
-        url = decodeURIComponent(url);
-        name = name.replace(/[\[\]]/g, "\\$&");
-        const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(url);
-        if (!results) {
-            return null;
-        }
-        if (!results[2]) {
-            return "";
-        }
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    }
-    constructor(props) {
-        super(props);
-        this.state = {
-            layout: [],
-            widgets: [],
-            imagery: [],
-            isEditing: false,
-            selectedWidgetType: -1,
-            selectedDataType: -1,
-            WidgetTitle: "",
-            imageCollection: "",
-            graphBand: "",
-            graphReducer: "Min",
-            imageParams: "",
-            dualLayer: false,
-            WidgetBaseMap: "osm",
-            startDate: "",
-            endDate: "",
-            startDate2: "",
-            endDate2: "",
-            widgetBands: "",
-            widgetMin: "",
-            widgetMax: "",
-            widgetCloudScore: "",
-            imageCollectionDual: "",
-            selectedDataTypeDual: "-1",
-            imageParamsDual: "",
-            startDateDual: "",
-            endDateDual: "",
-            widgetBandsDual: "",
-            widgetMinDual: "",
-            widgetMaxDual: "",
-            widgetCloudScoreDual: "",
-            FormReady: false,
-            wizardStep: 1,
-            pid: BasicLayout.getParameterByName("pid"),
-            institutionID: BasicLayout.getParameterByName("institutionId") != null? BasicLayout.getParameterByName("institutionId"): "1"
+     static defaultProps = {
+         theURI: window.location.origin + "/geo-dash",
+         isDraggable: true,
+         isResizable: true,
+         className: "layout",
+         items: 0,
+         rowHeight: 300,
+         onLayoutChange: function () {
+         },
+         cols: 12,
+         graphReducer: "Min"
+     };
+     static getParameterByName (name, url) {
+         if (!url) {
+             url = window.location.href;
+         }
+         url = decodeURIComponent(url);
+         name = name.replace(/[\[\]]/g, "\\$&");
+         const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+         const results = regex.exec(url);
+         if (!results) {
+             return null;
+         }
+         if (!results[2]) {
+             return "";
+         }
+         return decodeURIComponent(results[2].replace(/\+/g, " "));
+     }
+     static getGatewayUrl(widget, collectionName){
+         let url = "";
+         if(widget.filterType != null && widget.filterType.length > 0){
+             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
+             url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
+         }
+         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
+         {
+             url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+         }
+         else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+         {
+             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
+         }
+         else if(widget.properties && "ImageCollectionCustom" === widget.properties[0]){
+             url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
+         }
+         else if(collectionName.trim().length > 0)
+         {
+             url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
+         }
+         else{
+             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
+         }
+         return url;
+     }
+     static getImageByType(which) {
+         let theImage = "";
+         if (which === "getStats") {
+             theImage = "/img/statssample.gif";
+         }
+         else if (which.toLowerCase().includes("image") || which === "") {
+             theImage = "/img/mapsample.gif";
+         }
+         else {
+             theImage = "/img/graphsample.gif";
+         }
+         return theImage;
+     }
+     constructor(props) {
+         super(props);
+         this.state = {
+             layout: [],
+             widgets: [],
+             imagery: [],
+             isEditing: false,
+             selectedWidgetType: "-1",
+             selectedDataType: "-1",
+             WidgetTitle: "",
+             imageCollection: "",
+             graphBand: "",
+             graphReducer: "Min",
+             imageParams: "",
+             dualLayer: false,
+             WidgetBaseMap: "osm",
+             startDate: "",
+             endDate: "",
+             startDate2: "",
+             endDate2: "",
+             widgetBands: "",
+             widgetMin: "",
+             widgetMax: "",
+             widgetCloudScore: "",
+             imageCollectionDual: "",
+             selectedDataTypeDual: "-1",
+             imageParamsDual: "",
+             startDateDual: "",
+             endDateDual: "",
+             widgetBandsDual: "",
+             widgetMinDual: "",
+             widgetMaxDual: "",
+             widgetCloudScoreDual: "",
+             FormReady: false,
+             wizardStep: 1,
+             pid: BasicLayout.getParameterByName("pid"),
+             institutionID: BasicLayout.getParameterByName("institutionId") != null? BasicLayout.getParameterByName("institutionId"): "1"
 
-        };
-    }
+         };
+     }
+     componentDidMount() {
+         console.log("the institutionID is now set to: " + this.state.institutionID);
+         const ref = this;
+         fetch(this.props.theURI + "/id/" + this.state.pid,)
+             .then(response => response.json())
+             .then(function(response){ref.setState({ dashboardID: response.dashboardID});  return response;})
+             .then(function(response){
+                 let theWidgets = response.widgets;
+                 if(Array.isArray(theWidgets))
+                 {
+                     return response;
+                 }
+                 else if(Array.isArray(eval(theWidgets))){
+                     response.widgets = eval(theWidgets);
+                 }
+                 else{
+                     response.widgets = [];
+                 }
+                 return response;
+             })
+             .then(data => data.widgets.map(function(widget){
+                 if(widget.layout) {
+                     if (widget.layout.y == null) {
+                         widget.layout.y = 0;
+                     }
+                 }
+                 return widget;}))
+             .then(data => this.setState({ widgets: data}))
+             .then(function(data){ ref.setState({haveWidgets : true}); return data;})
+             .then(() => this.checkWidgetStructure())
+             .then(() => this.setState({layout: this.generateLayout()}))
+         ;
+         fetch(window.location.origin + "/get-all-imagery?institutionId=" + this.state.institutionID )
+             .then(response => response.json())
+             .then(function(data){data.unshift({title: "Open Street Maps", id: "osm"}); return data;})
+             .then(data => this.setState({ imagery: data, WidgetBaseMap: data[0].id}));
 
+     }
+     checkWidgetStructure(){
+         let changed = false;
+         let row = 0;
+         let column = 0;
+         let sWidgets = _.orderBy(this.state.widgets, "id", "asc");
+         let widgets = _.map(sWidgets, function(widget, i) {
+             if(widget.layout)
+             {
+                 if(widget["gridcolumn"]){
+                     delete widget["gridcolumn"];
+                 }
+                 if(widget["gridrow"]){
+                     delete widget["gridrow"];
+                 }
+                 widget.layout.i = i.toString();
+                 return widget;
+             }
+             else if(widget.gridcolumn){
+                 changed = true;
+                 let x;
+                 let w;
+                 let y;
+                 let h;
+                 //let layout;
+                 //do the x and w
+                 x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
+                 w = parseInt(widget.gridcolumn.split(" ")[3]);
+                 if(widget.gridrow){
+                     //do the y and h
+                     y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
+                     h = widget.gridrow.trim().split(" ")[3] != null? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
+                 }
+                 // create .layout
+                 widget.layout = {x : x, y: y, w: w, h: h};
+                 delete widget["gridcolumn"];
+                 delete widget["gridrow"];
+             }
+             else if(widget.position){
 
-    componentDidMount() {
-        console.log("the institutionID is now set to: " + this.state.institutionID);
-        const ref = this;
-        fetch(this.props.theURI + "/id/" + this.state.pid,)
-            .then(response => response.json())
-            .then(function(response){ref.setState({ dashboardID: response.dashboardID});  return response;})
-            .then(function(response){
-                let theWidgets = response.widgets;
-                if(Array.isArray(theWidgets))
-                {
-                    return response;
-                }
-                else if(Array.isArray(eval(theWidgets))){
-                    response.widgets = eval(theWidgets);
-                }
-                else{
-                    response.widgets = [];
-                }
-                return response;
-            })
-            .then(data => data.widgets.map(function(widget){
-                if(widget.layout) {
-                    if (widget.layout.y == null) {
-                        widget.layout.y = 0;
-                    }
-                }
-                return widget;}))
-            .then(data => this.setState({ widgets: data}))
-            .then(function(data){ ref.setState({haveWidgets : true}); return data;})
-            .then(this.checkWidgetStructure())
-            .then(this.setState({layout: this.generateLayout()}))
-        ;
-        fetch(window.location.origin + "/get-all-imagery?institutionId=" + this.state.institutionID )
-            .then(response => response.json())
-            .then(function(data){data.unshift({title: "Open Street Maps", id: "osm"}); return data;})
-            .then(data => this.setState({ imagery: data, WidgetBaseMap: data[0].id}));
+                 changed = true;
+                 let x;
+                 //let w;
+                 //let y;
+                 let h = 1;
+                 //let layout;
+                 if(column + parseInt(widget.width) <= 12)
+                 {
+                     x = column;
+                     column = column + parseInt(widget.width);
+                 }
+                 else{
+                     x = 0;
+                     column = parseInt(widget.width);
+                     row +=1;
+                 }
+                 widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
+                 // Create a starter layout based on the i value
+                 // need to add both layout and gridcolumn/gridrow properties
+             }
+             else{
+                 changed = true;
+                 let x;
+                 //let w;
+                 //let y;
+                 let h = 1;
+                 //let layout;
+                 if(column + 3 <= 12)
+                 {
+                     x = column;
+                     column = column + 3;
+                 }
+                 else{
+                     x = 0;
+                     column = parseInt(widget.width);
+                     row +=1;
+                 }
+                 widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
 
-    }
-    checkWidgetStructure(){
-        let widgets = this.state.widgets;
-        let changed = false;
-        let row = 0;
-        let column = 0;
-        let sWidgets = _.orderBy(this.state.widgets, "id", "asc");
-        widgets = _.map(sWidgets, function(widget, i) {
-            if(widget.layout)
-            {
-                if(widget["gridcolumn"]){
-                    delete widget["gridcolumn"];
-                }
-                if(widget["gridrow"]){
-                    delete widget["gridrow"];
-                }
-                widget.layout.i = i.toString();
-                return widget;
-            }
-            else if(widget.gridcolumn){
-                changed = true;
-                let x;
-                let w;
-                let y;
-                let h;
-                //let layout;
-                //do the x and w
-                x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
-                w = parseInt(widget.gridcolumn.split(" ")[3]);
-                if(widget.gridrow){
-                    //do the y and h
-                    y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                    h = widget.gridrow.trim().split(" ")[3] != null? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
-                }
-                // create .layout
-                widget.layout = {x : x, y: y, w: w, h: h};
-                delete widget["gridcolumn"];
-                delete widget["gridrow"];
-            }
-            else if(widget.position){
+             }
+             return widget;
+         });
+         this.setState({ widgets: widgets});
+         if(changed){
+             this.updateServerWidgets();
+         }
+     }
 
-                changed = true;
-                let x;
-                //let w;
-                //let y;
-                let h = 1;
-                //let layout;
-                if(column + parseInt(widget.width) <= 12)
-                {
-                    x = column;
-                    column = column + parseInt(widget.width);
-                }
-                else{
-                    x = 0;
-                    column = parseInt(widget.width);
-                    row +=1;
-                }
-                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
-                // Create a starter layout based on the i value
-                // need to add both layout and gridcolumn/gridrow properties
-            }
-            else{
-                changed = true;
-                let x;
-                //let w;
-                //let y;
-                let h = 1;
-                //let layout;
-                if(column + 3 <= 12)
-                {
-                    x = column;
-                    column = column + 3;
-                }
-                else{
-                    x = 0;
-                    column = parseInt(widget.width);
-                    row +=1;
-                }
-                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
+     updateServerWidgets(){
+         const holdRef = this;
+         this.state.widgets.forEach(function(widget) {
+             let ajaxurl = holdRef.props.theURI + "/updatewidget/widget/" + widget.id;
+             holdRef.serveItUp(ajaxurl, widget);
 
-            }
-            return widget;
-        });
-        this.setState({ widgets: widgets});
-        if(changed){
-            this.updateServerWidgets();
-        }
-    }
-    static generategridcolumn(x, w){
-        return (x + 1) + " / span " + w;
-    }
-    static generategridrow(x, w){
-        return (x + 1) + " / span " + w;
-    }
-    updateServerWidgets(){
-        const holdRef = this;
-        this.state.widgets.forEach(function(widget) {
-            let ajaxurl = holdRef.props.theURI + "/updatewidget/widget/" + widget.id;
-            holdRef.serveItUp(ajaxurl, widget);
+         });
+     }
+     serveItUp(url, widget )
+     {
+         fetch(url,
+               {
+                   method: "post",
+                   headers: {
+                       "Accept": "application/json",
+                       "Content-Type": "application/json"
+                   },
+                   body: JSON.stringify({
+                       dashID: this.state.dashboardID,
+                       widgetJSON: JSON.stringify(widget)
+                   })
+               })
+             .then(response => {
+                 if (!response.ok) {
+                     console.log(response);
+                 }
+             });
+     }
+     deleteWidgetFromServer(widget)
+     {
+         let ajaxurl = this.props.theURI + "/deletewidget/widget/" + widget.id;
+         this.serveItUp(ajaxurl, widget);
+     }
 
-        });
-    }
-    serveItUp(url, widget )
-    {
-        $.ajax({
-            url: url,
-            type: "get",
-            dataType: "jsonp",
-            indexVal: widget.id,
-            data: {
-                dashID: this.state.dashboardID,
-                widgetJSON: JSON.stringify(widget)
-            },
-            success: function () {
-                // no action needed
-            },
-            error: function () {
-                console.log("it failed");
-            }
-        });
-    }
-    deleteWidgetFromServer(widget)
-    {
-        let ajaxurl = this.props.theURI + "/deletewidget/widget/" + widget.id;
-        this.serveItUp(ajaxurl, widget);
-    }
+     generateDOM() {
+         const holdRef = this;
+         const x = "x";
+         return _.map(this.state.widgets, function(widget, i) {
+             return <div onDragStart={holdRef.onDragStart} onDragEnd={holdRef.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + BasicLayout.getImageByType(widget.properties[0]) +")"}} >
+                 <h3 className="widgetEditor title">{widget.name}
+                     <span className="remove" onClick={(e) => {e.stopPropagation(); holdRef.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
+                         {x}
+                     </span>
+                 </h3>
+                 <span className="text text-danger">Sample Image</span></div>;
+         });
+     }
+     addCustomImagery(imagery) {
+         fetch(this.props.theURI.replace("/geo-dash", "") + "/add-geodash-imagery",
+               {
+                   method: "post",
+                   headers: {
+                       "Accept": "application/json",
+                       "Content-Type": "application/json"
+                   },
+                   body: JSON.stringify(imagery)
+               })
+             .then(response => {
+                 if (!response.ok) {
+                     console.log("Error adding custom imagery to institution. See console for details.");
+                 }
+             });
+     }
+     buildImageryObject(img){
+         console.log(img);
+         let gatewayUrl = BasicLayout.getGatewayUrl(img);
+         let title = img.filterType.replace(/\w\S*/g, function (word) {
+             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
+         let ImageAsset = img.ImageAsset ? img.ImageAsset : "";
+         let ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
+         let iObject =  {
+             institutionId: this.state.institutionID,
+             imageryTitle: title,
+             imageryAttribution: "Google Earth Engine",
+             geeUrl: gatewayUrl,
+             geeParams: {
+                 collectionType: img.collectionType,
+                 startDate: img.startDate,
+                 endDate: img.endDate,
+                 filterType: img.filterType,
+                 visParams: img.visParams,
+                 ImageAsset: ImageAsset,
+                 ImageCollectionAsset: ImageCollectionAsset
+             }
+         };
+         if(img.ImageAsset && img.ImageAsset.length > 0)
+         {
+             title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
+             iObject.imageryTitle = title;
+             iObject.ImageAsset = img.ImageAsset;
+         }
+         if(img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0)
+         {
+             title = img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
+             iObject.imageryTitle = title;
+             iObject.ImageCollectionAsset = img.ImageCollectionAsset;
+         }
+         return iObject;
 
-    generateDOM() {
-        const holdRef = this;
-        const x = "x";
-        return _.map(this.state.widgets, function(widget, i) {
-            return <div onDragStart={holdRef.onDragStart} onDragEnd={holdRef.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + holdRef.getImageByType(widget.properties[0]) +")"}} >
-                <h3 className="widgetEditor title">{widget.name}
-                    <span className="remove" onClick={(e) => {e.stopPropagation(); holdRef.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
-                        {x}
-                    </span>
-                </h3>
-                <span className="text text-danger">Sample Image</span></div>;
-        });
-    }
-    addCustomImagery(imagery) {
-        let holdRef = this;
-        $.ajax({
-            url: holdRef.props.theURI.replace("/geo-dash", "") + "/add-geodash-imagery",
-            type: "POST",
-            async: true,
-            crossDomain: true,
-            contentType: "application/json",
-            data: JSON.stringify(imagery)
-        }).fail(function () {
-            console.log("Error adding custom imagery to institution. See console for details.");
-        }).done(function () {
-            console.log("imagery added");
-        }
-        );
-    }
-    getGatewayUrl(widget, collectionName){
-        let url = "";
-
-        if(widget.filterType != null && widget.filterType.length > 0){
-            const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
-        }
-        else if(widget.ImageAsset && widget.ImageAsset.length > 0)
-        {
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
-        }
-        else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-        {
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
-        }
-        else if(widget.properties && "ImageCollectionCustom" == widget.properties[0]){
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
-        }
-        else if(collectionName.trim().length > 0)
-        {
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
-
-        }
-        else{
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
-        }
-        return url;
-    }
-    buildImageryObject(img){
-        console.log(img);
-        let gatewayUrl = this.getGatewayUrl(img);
-        let title = img.filterType.replace(/\w\S*/g, function (word) {
-            return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
-        let ImageAsset = img.ImageAsset ? img.ImageAsset : "";
-        let ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
-        let iObject =  {
-            institutionId: this.state.institutionID,
-            imageryTitle: title,
-            imageryAttribution: "Google Earth Engine",
-            geeUrl: gatewayUrl,
-            geeParams: {
-                collectionType: img.collectionType,
-                startDate: img.startDate,
-                endDate: img.endDate,
-                filterType: img.filterType,
-                visParams: img.visParams,
-                ImageAsset: ImageAsset,
-                ImageCollectionAsset: ImageCollectionAsset
-            }
-        };
-        if(img.ImageAsset && img.ImageAsset.length > 0)
-        {
-            title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-            iObject.imageryTitle = title;
-            iObject.ImageAsset = img.ImageAsset;
-        }
-        if(img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0)
-        {
-            title = img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-            iObject.imageryTitle = title;
-            iObject.ImageCollectionAsset = img.ImageCollectionAsset;
-        }
-        return iObject;
-
-    }
+     }
     onWidgetTypeSelectChanged = (event) => {
         this.setState({
             selectedWidgetType: event.target.value,
@@ -365,18 +369,18 @@ class BasicLayout extends React.PureComponent{
             wizardStep: 1
 
         });
-    }
+    };
     onDragStart = (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.props.onMouseDown(e);
-    }
+    };
 
     onDragEnd = (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.props.onMouseUp(e);
-    }
+    };
 
     onDataTypeSelectChanged = event => {
         this.setState({
@@ -419,10 +423,10 @@ class BasicLayout extends React.PureComponent{
     };
     onNextWizardStep = () =>{
         this.setState({wizardStep: 2});
-    }
+    };
     onPrevWizardStep = () =>{
         this.setState({wizardStep: 1});
-    }
+    };
     onCreateNewWidget = () =>{
         let widget = {};
         let id = this.state.widgets.length > 0?(Math.max.apply(Math, this.state.widgets.map(function(o) { return o.id; }))) + 1: 0;
@@ -443,8 +447,8 @@ class BasicLayout extends React.PureComponent{
             h: 1,
             minW: 3
         };
-        widget.baseMap = (this.state.imagery.filter(imagery => imagery.id == this.state.WidgetBaseMap))[0];
-        if(this.state.selectedWidgetType == "DualImageCollection")
+        widget.baseMap = (this.state.imagery.filter(imagery => imagery.id === this.state.WidgetBaseMap))[0];
+        if(this.state.selectedWidgetType === "DualImageCollection")
         {
             widget.properties = ["","","","",""];
             widget.filterType = "";
@@ -481,7 +485,7 @@ class BasicLayout extends React.PureComponent{
                 this.addCustomImagery(this.buildImageryObject(img2));
             }
             //should add in the custom imagery here as well
-            if(this.state.selectedDataType == "imageAsset")
+            if(this.state.selectedDataType === "imageAsset")
             {
                 //add image asset parameters
                 img1.visParams = JSON.parse(this.state.imageParams);
@@ -495,7 +499,7 @@ class BasicLayout extends React.PureComponent{
                 }));
 
             }
-            if(this.state.selectedDataType == "imageCollectionAsset")
+            if(this.state.selectedDataType === "imageCollectionAsset")
             {
                 //add image asset parameters
                 img1.visParams = JSON.parse(this.state.imageParams);
@@ -509,7 +513,7 @@ class BasicLayout extends React.PureComponent{
                     visParams: JSON.parse(this.state.imageParams)
                 }));
             }
-            if(this.state.selectedDataTypeDual == "imageAsset")
+            if(this.state.selectedDataTypeDual === "imageAsset")
             {
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
@@ -517,11 +521,11 @@ class BasicLayout extends React.PureComponent{
                 let ref = this;
                 setTimeout(function() {
                     ref.addCustomImagery(ref.buildImageryObject({
-                        ImageAsset: this.state.imageCollectionDual,
+                        ImageAsset: ref.state.imageCollectionDual,
                         startDate: "",
                         endDate: "",
                         filterType: "",
-                        visParams: JSON.parse(this.state.imageParamsDual)
+                        visParams: JSON.parse(ref.state.imageParamsDual)
                     }));
                 }, 500);
 
@@ -550,8 +554,7 @@ class BasicLayout extends React.PureComponent{
         {
             widget.properties = ["","","","",""];
             widget.filterType = "";
-            let imageParams = this.state.imageParams === ""? {} : JSON.parse(this.state.imageParams);
-            widget.visParams = imageParams;
+            widget.visParams = this.state.imageParams === ""? {} : JSON.parse(this.state.imageParams);
             widget.ImageAsset = this.state.imageCollection;
             if(this.state.selectedWidgetType === "imageAsset") {
                 this.addCustomImagery(this.buildImageryObject({
@@ -619,48 +622,50 @@ class BasicLayout extends React.PureComponent{
                 widget.dualEnd = this.state.endDate2;
             }
         }
-        const holdRef = this;
 
-        $.ajax({
-            url: holdRef.props.theURI + "/createwidget/widget",
-            type: "get",
-            dataType: "jsonp",
-            widget: JSON.stringify(widget),
-            data: {
-                pID: holdRef.state.pid,
-                dashID: this.state.dashboardID,
-                widgetJSON: JSON.stringify(widget)
-            },
-            success: function () {
-                const myWidget = JSON.parse(this.widget);
-                holdRef.setState({
-                    widgets: holdRef.state.widgets.concat(myWidget),
-                    selectedWidgetType: "-1",
-                    selectedDataTypeDual: "-1",
-                    isEditing: false,
-                    selectedDataType: "-1",
-                    WidgetTitle: "",
-                    imageCollection: "",
-                    graphBand: "",
-                    graphReducer: "Min",
-                    imageParams: "",
-                    WidgetBaseMap: "osm",
-                    dualLayer: false,
-                    startDate:"",
-                    endDate:"",
-                    startDate2:"",
-                    endDate2:"",
-                    widgetBands:"",
-                    widgetMin:"",
-                    widgetMax:"",
-                    widgetCloudScore:"",
-                    FormReady: false
-                });
-            },
-            error: function () {
-            }
-        });
-
+        fetch(this.props.theURI + "/createwidget/widget",
+              {
+                  method: "post",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                      pID: this.state.pid,
+                      dashID: this.state.dashboardID,
+                      widgetJSON: JSON.stringify(widget)
+                  })
+              })
+            .then(response => {
+                if (response.ok){
+                    this.setState({
+                        widgets: this.state.widgets.concat(widget),
+                        selectedWidgetType: "-1",
+                        selectedDataTypeDual: "-1",
+                        isEditing: false,
+                        selectedDataType: "-1",
+                        WidgetTitle: "",
+                        imageCollection: "",
+                        graphBand: "",
+                        graphReducer: "Min",
+                        imageParams: "",
+                        WidgetBaseMap: "osm",
+                        dualLayer: false,
+                        startDate:"",
+                        endDate:"",
+                        startDate2:"",
+                        endDate2:"",
+                        widgetBands:"",
+                        widgetMin:"",
+                        widgetMax:"",
+                        widgetCloudScore:"",
+                        FormReady: false
+                    });
+                }
+                else{
+                    console.log("Error adding custom imagery to institution. See console for details.");
+                }
+            });
     };
     onDataBaseMapSelectChanged = event =>{
         this.setState({WidgetBaseMap: event.target.value});
@@ -908,9 +913,6 @@ class BasicLayout extends React.PureComponent{
                 <div className="modal-backdrop fade show"> </div>
             </React.Fragment>;
         }
-        else{
-            return;
-        }
     }
     getFormButtons(){
         //need to check if form is ready, if not just add the cancel button, or disable the create?
@@ -1058,12 +1060,12 @@ class BasicLayout extends React.PureComponent{
     {
         return  <div className="form-group">
             <label htmlFor="imageParams">Image Parameters (json format)</label>
-            <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
+            <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
         </div>;
     }
     getDataForm()
     {
-        if(this.state.selectedWidgetType == "ImageElevation")
+        if(this.state.selectedWidgetType === "ImageElevation")
         {
             this.setState({
                 imageCollection: "USGS/SRTMGL1_003"
@@ -1073,7 +1075,7 @@ class BasicLayout extends React.PureComponent{
                 {this.getImageParamsBlock()}
             </React.Fragment>;
         }
-        if(this.state.selectedWidgetType == "imageAsset" || this.state.selectedWidgetType == "imageCollectionAsset")
+        if(this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset")
         {
             return <React.Fragment>
                 {this.getTitleBlock()}
@@ -1085,15 +1087,15 @@ class BasicLayout extends React.PureComponent{
                 {this.getImageParamsBlock()}
             </React.Fragment>;
         }
-        else if(this.state.selectedDataType == "-1")
+        else if(this.state.selectedDataType === "-1")
         {
-            return;
+            return "";
         }
         else{
             let gObject = this;
             setTimeout(() => {$(".input-daterange input").each(function () {
                 try {
-                    let bindEvt = this.id == "sDate_new_cookedDual" ? gObject.onStartDateChangedDual : this.id == "eDate_new_cookedDual" ? gObject.onEndDateChangedDual : this.id == "sDate_new_cooked" ? gObject.onStartDateChanged : this.id == "eDate_new_cooked" ? gObject.onEndDateChanged : this.id == "sDate_new_cooked2" ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
+                    let bindEvt = this.id === "sDate_new_cookedDual" ? gObject.onStartDateChangedDual : this.id === "eDate_new_cookedDual" ? gObject.onEndDateChangedDual : this.id === "sDate_new_cooked" ? gObject.onStartDateChanged : this.id === "eDate_new_cooked" ? gObject.onEndDateChanged : this.id === "sDate_new_cooked2" ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
                     console.log("i did this!");
                     $(this).datepicker({
                         changeMonth: true,
@@ -1105,7 +1107,7 @@ class BasicLayout extends React.PureComponent{
                     console.warn(e.message);
                 }
             });},250);
-            if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep == 1){
+            if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1){
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
@@ -1115,12 +1117,12 @@ class BasicLayout extends React.PureComponent{
                         <div className="input-group-addon">to</div>
                         <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
                     </div>
-                    <div className="form-group" style={{display: this.state.selectedWidgetType == "DualImageCollection"? "none": "block"}}>
+                    <div className="form-group" style={{display: this.state.selectedWidgetType === "DualImageCollection"? "none": "block"}}>
                         <label htmlFor="widgetDualLayer">Dual time span</label>
                         <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
                                className="form-control" onChange={this.onWidgetDualLayerChange}/>
                     </div>
-                    <div style={{display : this.state.dualLayer == true? "block": "none"}}>
+                    <div style={{display : this.state.dualLayer === true? "block": "none"}}>
                         <label>Select the Date Range for the top layer</label>
                         <div className="input-group input-daterange" id="range_new_cooked2">
 
@@ -1150,10 +1152,10 @@ class BasicLayout extends React.PureComponent{
                         <input type="text" name="widgetCloudScore" id="widgetCloudScore" value={this.state.widgetCloudScore}
                                className="form-control" onChange={this.onWidgetCloudScoreChange}/>
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType == "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
                 </React.Fragment>;
             }
-            else if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep == 2){
+            else if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep === 2){
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
@@ -1189,7 +1191,7 @@ class BasicLayout extends React.PureComponent{
 
                 </React.Fragment>;
             }
-            else if(((this.state.selectedDataType == "imageCollectionAsset" || this.state.selectedDataType == "imageAsset") && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 1)
+            else if(((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1)
             {
                 return <React.Fragment>
                     {this.getTitleBlock()}
@@ -1200,12 +1202,12 @@ class BasicLayout extends React.PureComponent{
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
+                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType == "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
                 </React.Fragment>;
             }
-            else if(((this.state.selectedDataType == "imageCollectionAsset" || this.state.selectedDataType == "imageAsset") && this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 2)
+            else if(((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
             {
                 return <React.Fragment>
                     <div className="form-group">
@@ -1215,12 +1217,12 @@ class BasicLayout extends React.PureComponent{
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
+                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
                     </div>
                     <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
                 </React.Fragment>;
             }
-            else if((this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection") && this.state.selectedDataType == "Custom"  && this.state.wizardStep == 1)
+            else if((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataType === "Custom"  && this.state.wizardStep === 1)
             {
                 return <React.Fragment>
                     {this.getTitleBlock()}
@@ -1231,9 +1233,8 @@ class BasicLayout extends React.PureComponent{
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
-                        {/*<input type="text" name="imageParams" id="imageParams" value={this.state.imageParams}*/}
-                        {/*className="form-control" onChange={this.onImageParamsChange}/>*/}
+                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
+
                     </div>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
@@ -1242,10 +1243,10 @@ class BasicLayout extends React.PureComponent{
                         <div className="input-group-addon">to</div>
                         <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType == "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
                 </React.Fragment>;
             }
-            else if((this.state.selectedWidgetType == "ImageCollection" || this.state.selectedWidgetType == "DualImageCollection") && this.state.selectedDataTypeDual == "Custom"  && this.state.wizardStep == 2)
+            else if((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataTypeDual === "Custom"  && this.state.wizardStep === 2)
             {
                 return <React.Fragment>
                     <div className="form-group">
@@ -1255,7 +1256,7 @@ class BasicLayout extends React.PureComponent{
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea placeholder="json format" rows="1" className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}></textarea>
+                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
 
                     </div>
                     <label>Select the Date Range you would like</label>
@@ -1268,7 +1269,7 @@ class BasicLayout extends React.PureComponent{
                     <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
                 </React.Fragment>;
             }
-            else if((this.state.selectedWidgetType == "ImageCollection"|| this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 1)
+            else if((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1)
             {
                 return <React.Fragment>
                     {this.getTitleBlock()}
@@ -1279,12 +1280,12 @@ class BasicLayout extends React.PureComponent{
                         <div className="input-group-addon">to</div>
                         <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
                     </div>
-                    <div className="form-group" style={{display: this.state.selectedWidgetType == "DualImageCollection" ? "none": "block"}}>
+                    <div className="form-group" style={{display: this.state.selectedWidgetType === "DualImageCollection" ? "none": "block"}}>
                         <label htmlFor="widgetDualLayer">Dual time span</label>
                         <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
                                className="form-control" onChange={this.onWidgetDualLayerChange}/>
                     </div>
-                    <div style={{display : this.state.dualLayer == true? "block": "none"}}>
+                    <div style={{display : this.state.dualLayer === true? "block": "none"}}>
                         <label>Select the Date Range you would like</label>
                         <div className="input-group input-daterange" id="range_new_cooked2">
 
@@ -1293,10 +1294,10 @@ class BasicLayout extends React.PureComponent{
                             <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
                         </div>
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType == "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
                 </React.Fragment>;
             }
-            else if((this.state.selectedWidgetType == "ImageCollection"|| this.state.selectedWidgetType == "DualImageCollection")  && this.state.wizardStep == 2)
+            else if((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
             {
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
@@ -1309,7 +1310,7 @@ class BasicLayout extends React.PureComponent{
                     <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
                 </React.Fragment>;
             }
-            else if(this.state.selectedWidgetType == "TimeSeries" && this.state.selectedDataType == "Custom")
+            else if(this.state.selectedWidgetType === "TimeSeries" && this.state.selectedDataType === "Custom")
             {
                 return <React.Fragment>
                     {this.getTitleBlock()}
@@ -1340,7 +1341,7 @@ class BasicLayout extends React.PureComponent{
                     </div>
                 </React.Fragment>;
             }
-            else if(this.state.wizardStep == 2){
+            else if(this.state.wizardStep === 2){
                 return <React.Fragment>
                     <p>Secondary data form here</p>
                 </React.Fragment>;
@@ -1364,30 +1365,16 @@ class BasicLayout extends React.PureComponent{
 
     onRemoveItem(i) {
         let removedWidget = _.filter(this.state.widgets, function(w){
-            return w.layout.i == i.toString();
+            return w.layout.i === i.toString();
         });
         this.deleteWidgetFromServer(removedWidget[0]);
         this.setState({ widgets: _.reject(this.state.widgets, function(widget){
-            return widget.layout.i == i.toString(); }),
+            return widget.layout.i === i.toString(); }),
                         layout: _.reject(this.state.layout, function(layout){
-                            return layout.i == i.toString(); })
+                            return layout.i === i.toString(); })
         });
     }
 
-    getImageByType(which){
-        let theImage = "";
-        if (which === "getStats") {
-            theImage = "/img/statssample.gif";
-        }
-        else if (which.toLowerCase().includes("image") || which === "") {
-            theImage = "/img/mapsample.gif";
-        }
-        else {
-            theImage = "/img/graphsample.gif";
-        }
-
-        return theImage;
-    }
     generateLayout() {
         let w = this.state.widgets;
         return _.map(w, function(item, i) {
@@ -1410,10 +1397,10 @@ class BasicLayout extends React.PureComponent{
         else{
             this.setState({layout: layout});
         }
-    }
+    };
     onAddItem = () => {
         this.setState({isEditing : true});
-    }
+    };
     render() {
         const {layout} = this.state;
         return (

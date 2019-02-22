@@ -84,9 +84,10 @@ public class JsonGeoDash implements GeoDash {
 
     
     public synchronized String createDashBoardWidgetById(Request req, Response res) {
-        var dashboardId = req.queryParams("dashID");
-        var widgetJson = req.queryParams("widgetJSON");
-        var callback = req.queryParams("callback");
+        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
+        var widgetJson = jsonInputs.get("widgetJSON").getAsString();
+        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
 
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
@@ -110,11 +111,11 @@ public class JsonGeoDash implements GeoDash {
 
     // FIXME: the new react design is using the body to pass the widget JSON (see PostgresGeoDash for updated form)
     public synchronized String updateDashBoardWidgetById(Request req, Response res) {
-        var dashboardId = req.queryParams("dashID");
+        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetId = req.params(":id");
-        var widgetJson = req.queryParams("widgetJSON");
-        var callback = req.queryParams("callback");
-
+        var widgetJson = jsonInputs.get("widgetJSON").getAsString();
+        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
 
@@ -141,9 +142,10 @@ public class JsonGeoDash implements GeoDash {
     }
 
     public synchronized String deleteDashBoardWidgetById(Request req, Response res) {
-        var dashboardId = req.queryParams("dashID");
+        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetId = req.params(":id");
-        var callback = req.queryParams("callback");
+        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
 
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
