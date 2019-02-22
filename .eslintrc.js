@@ -12,6 +12,11 @@ module.exports = {
         browser: true,
         node: true
     },
+    settings: {
+        react: {
+            version: "16.7.0"
+        }
+      },
     // globals: {
     //     React: false,
     //     ReactDOM: false
@@ -36,7 +41,7 @@ module.exports = {
                 ArrayExpression: "first",
                 ObjectExpression: "first",
                 ImportDeclaration: "first",
-                ignoredNodes: ["JSXAttribute", "JSXSpreadAttribute"]
+                ignoredNodes: ["JSXAttribute", "JSXSpreadAttribute", "ConditionalExpression"]
             }
         ],
         "linebreak-style": [
@@ -54,8 +59,28 @@ module.exports = {
         "no-var": [
             "error"
         ],
+        // From Matt
+        "arrow-body-style": ["error", "as-needed"],
+        "brace-style": 2,
+        "camelcase": 1,
+        "comma-dangle": [1, "always-multiline"],
+        "comma-spacing": 2,
+        "comma-style":1,
+        "computed-property-spacing": 1,
+        "eol-last": 2,
+        "eqeqeq": [2, "smart"],
+        "no-trailing-spaces" : [2],
         "no-console": 0,
         "no-multi-spaces": [0],
+        "no-useless-return": 1,
+        "no-var": 2,
+        "object-curly-newline": [1, { "multiline": true, "consistent": true }],
+        "object-curly-spacing": [1, "always", { "objectsInObjects": false }],
+        "object-property-newline": ["error", { "allowAllPropertiesOnSameLine": true }],
+        "prefer-const": 2,
+        "react/jsx-closing-bracket-location": 2,
+        "react/jsx-first-prop-new-line": [2, "multiline"],
+        // From Gary
         "consistent-return": [0],
         "key-spacing": [0],
         "no-use-before-define": [2, "nofunc"],
@@ -63,13 +88,13 @@ module.exports = {
         "react/display-name": 0,
         "react/forbid-prop-types": 0,
         "react/jsx-boolean-value": 1,
-        "react/jsx-closing-bracket-location": 0,
+        // "react/jsx-closing-bracket-location": 0,
         "react/jsx-curly-spacing": 1,
         "react/jsx-handler-names": 0,
-        "react/jsx-indent-props": [2, "first"],
+        "react/jsx-indent-props": [2, 4],
         "react/jsx-indent": 1,
         "react/jsx-key": 1,
-        "react/jsx-max-props-per-line": 0,
+        "react/jsx-max-props-per-line": [2, { "when": "multiline", "maximum": 1 }],
         "react/jsx-no-bind": 0,
         "react/jsx-no-duplicate-props": 1,
         "react/jsx-no-literals": 0,

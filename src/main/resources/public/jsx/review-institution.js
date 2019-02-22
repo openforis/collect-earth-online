@@ -446,7 +446,7 @@ class Institution extends React.Component {
         const users = this.state.users;
         const isAdmin = this.state.isAdmin;
         var usersLength=0;
-        if(isAdmin){
+        if (isAdmin){
             usersLength=users.length;
         }
         else usersLength=this.state.nonPendingUsers;

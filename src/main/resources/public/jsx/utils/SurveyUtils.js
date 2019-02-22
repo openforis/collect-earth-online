@@ -4,8 +4,8 @@ export function convertSampleValuesToSurveyQuestions(sampleValues) {
         const newAnswers = (sv.answers || sv.values).map(value => ({
             id: value.id,
             answer: value.answer || value.name || "",
-            color: value.color
-          }));
+            color: value.color,
+        }));
 
         return {
             id: sv.id,
