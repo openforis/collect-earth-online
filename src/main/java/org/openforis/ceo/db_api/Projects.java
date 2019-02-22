@@ -8,19 +8,12 @@ public interface Projects {
 
     String getAllProjects(Request req, Response res);
     String getProjectById(Request req, Response res);
-    String getProjectPlots(Request req, Response res);
-    String getProjectPlot(Request req, Response res);
     String getProjectStats(Request req, Response res);
-    String getPlotById(Request req, Response res);
-    String getNextPlot(Request req, Response res);
-    String getPrevPlot(Request req, Response res);
     HttpServletResponse dumpProjectAggregateData(Request req, Response res);
     HttpServletResponse dumpProjectRawData(Request req, Response res);
     String publishProject(Request req, Response res);
     String closeProject(Request req, Response res);
     String archiveProject(Request req, Response res);
-    String addUserSamples(Request req, Response res);
-    String flagPlot(Request req, Response res);
     String createProject(Request req, Response res);
 
 }

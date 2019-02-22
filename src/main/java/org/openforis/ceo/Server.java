@@ -18,20 +18,24 @@ import java.io.File;
 import java.util.List;
 import org.openforis.ceo.collect.CollectImagery;
 import org.openforis.ceo.collect.CollectProjects;
+import org.openforis.ceo.collect.CollectPlots;
 import org.openforis.ceo.db_api.GeoDash;
 import org.openforis.ceo.db_api.Imagery;
 import org.openforis.ceo.db_api.Institutions;
+import org.openforis.ceo.db_api.Plots;
 import org.openforis.ceo.db_api.Projects;
 import org.openforis.ceo.db_api.Users;
 import org.openforis.ceo.env.CeoConfig;
 import org.openforis.ceo.local.JsonGeoDash;
 import org.openforis.ceo.local.JsonImagery;
 import org.openforis.ceo.local.JsonInstitutions;
+import org.openforis.ceo.local.JsonPlots;
 import org.openforis.ceo.local.JsonProjects;
 import org.openforis.ceo.local.JsonUsers;
 import org.openforis.ceo.postgres.PostgresGeoDash;
 import org.openforis.ceo.postgres.PostgresImagery;
 import org.openforis.ceo.postgres.PostgresInstitutions;
+import org.openforis.ceo.postgres.PostgresPlots;
 import org.openforis.ceo.postgres.PostgresProjects;
 import org.openforis.ceo.postgres.PostgresUsers;
 import org.openforis.ceo.users.CeoAuthFilter;
@@ -59,7 +63,8 @@ public class Server implements SparkApplication {
 
     // Sets up Spark's routing table and exception handling rules
     private static void declareRoutes(String databaseType, Projects projects, Imagery imagery,
-                                      Users users, Institutions institutions, GeoDash geoDash) {
+                                      Users users, Institutions institutions, GeoDash geoDash,
+                                      Plots plots) {
         // Create a configured FreeMarker renderer
         var freemarker = new FreeMarkerEngine(getConfiguration());
 
@@ -111,19 +116,23 @@ public class Server implements SparkApplication {
         get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
         get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
         get("/get-all-projects",                      projects::getAllProjects);
-        get("/get-next-plot/:projid/:id",             projects::getNextPlot);
         get("/get-project-by-id/:id",                 projects::getProjectById);
-        get("/get-project-plots/:id/:max",            projects::getProjectPlots);
-        get("/get-project-plot/:project-id/:plot-id", projects::getProjectPlot);
         get("/get-project-stats/:id",                 projects::getProjectStats);
-        get("/get-plot-by-id/:projid/:id",            projects::getPlotById);
-        get("/get-prev-plot/:projid/:id",             projects::getPrevPlot);
-        post("/add-user-samples",                     projects::addUserSamples);
         post("/create-project",                       projects::createProject);
         post("/archive-project/:id",                  projects::archiveProject);
         post("/close-project/:id",                    projects::closeProject);
-        post("/flag-plot",                            projects::flagPlot);
         post("/publish-project/:id",                  projects::publishProject);
+        
+        // Routing Table: Plots (projects)
+        get("/get-next-plot/:projid/:id",             plots::getNextPlot);
+        get("/get-plot-by-id/:projid/:id",            plots::getPlotById);
+        get("/get-project-plots/:id/:max",            plots::getProjectPlots);
+        get("/get-project-plot/:project-id/:plot-id", plots::getProjectPlot);
+        get("/get-prev-plot/:projid/:id",             plots::getPrevPlot);
+        post("/add-user-samples",                     plots::addUserSamples);
+        post("/flag-plot",                            plots::flagPlot);
+        post("/resest-plot-lock/:projid/:id",         plots::resetPlotLock);
+        post("/release-plot-lock/:projid/:id",        plots::releasePlotLock);
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
@@ -203,7 +212,9 @@ public class Server implements SparkApplication {
                           new JsonImagery(),
                           new JsonUsers(),
                           new JsonInstitutions(),
-                          new JsonGeoDash());
+                          new JsonGeoDash(),
+                          new JsonPlots()
+                          );
         } else {
             // Set up the routing table to use the POSTGRES backend
             declareRoutes("POSTGRES",
@@ -211,7 +222,9 @@ public class Server implements SparkApplication {
                           new PostgresImagery(),
                           new PostgresUsers(),
                           new PostgresInstitutions(),
-                          new PostgresGeoDash());
+                          new PostgresGeoDash(),
+                          new PostgresPlots()
+                          );
         }
     }
 
@@ -227,7 +240,8 @@ public class Server implements SparkApplication {
                       new CollectImagery(),
                       new OfUsers(),
                       new OfGroups(),
-                      new JsonGeoDash());
+                      new JsonGeoDash(),
+                      new CollectPlots());
     }
 
 }
