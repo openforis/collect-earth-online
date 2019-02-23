@@ -6,8 +6,8 @@ export class SurveyCollection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            topLevelNodeIds: [],
             currentNodeIndex: 0,
+            topLevelNodeIds: [],
         };
     }
 
@@ -45,21 +45,19 @@ export class SurveyCollection extends React.Component {
 
     setSurveyQuestionTree = (index) => this.setState({ currentNodeIndex: index });
 
-    checkAllSelected = (currentQuestionId) => {
+    checkAllSubAnswers = (currentQuestionId) => {
         const { surveyQuestions } = this.props;
         const { visible, answered } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
-        if (childQuestions.length === 0) {
-            return visible === answered;
-        } else {
-            return visible === answered && childQuestions.every(cq => this.checkAllSelected(cq.id));
-        }
+        return visible.length === answered.length
+                    && (childQuestions.length === 0
+                    || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
-    getTopColor = (node) => this.checkAllSelected(node.id)
+    getTopColor = (node) => this.checkAllSubAnswers(node.id)
                                 ? "0px 0px 15px 4px green inset"
-                                : node.answered > 0
+                                : node.answered.length > 0
                                     ? "0px 0px 15px 4px yellow inset"
                                     : "0px 0px 15px 4px red inset";
 
@@ -111,12 +109,13 @@ export class SurveyCollection extends React.Component {
                         </div>
                         {this.state.topLevelNodeIds.length > 0 &&
                             <SurveyQuestionTree
+                                hierarchyLabel=""
                                 surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
                                 surveyQuestions={this.props.surveyQuestions}
                                 setCurrentValue={this.props.setCurrentValue}
                                 selectedQuestion={this.props.selectedQuestion}
+                                selectedSampleId={this.props.selectedSampleId}
                                 setSelectedQuestion={this.props.setSelectedQuestion}
-                                hierarchyLabel=""
                             />
                         }
                     </div>
@@ -140,9 +139,10 @@ class SurveyQuestionTree extends React.Component  {
 
     render() {
         const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
-        const shadowColor = this.props.surveyNode.answered === 0
+
+        const shadowColor = this.props.surveyNode.answered.length === 0
                             ? "0px 0px 15px 4px red inset"
-                            : this.props.surveyNode.answered === this.props.surveyNode.visible
+                            : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
                                 ? "0px 0px 15px 4px green inset"
                                 : "0px 0px 15px 4px yellow inset";
         return (
@@ -158,11 +158,12 @@ class SurveyQuestionTree extends React.Component  {
                     <button
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm btn-block"
-                        style={{boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
+                        style={{
+                            boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
                                     ? "0px 0px 2px 2px black inset,"
                                     : ""}
-                                    ${shadowColor}
-                                `}}
+                                    ${shadowColor}`
+                        }}
                         onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                     >
                         {this.props.hierarchyLabel + removeEnumerator(this.props.surveyNode.question)}
@@ -171,23 +172,22 @@ class SurveyQuestionTree extends React.Component  {
 
                 {this.state.showAnswers &&
                     <SurveyAnswers
-                        componentType={this.props.surveyNode.componentType}
-                        dataType={this.props.surveyNode.dataType}
                         surveyNode={this.props.surveyNode}
-                        answers={this.props.surveyNode.answers}
+                        selectedSampleId={this.props.selectedSampleId}
                         setCurrentValue={this.props.setCurrentValue}
                     />
                 }
                 {
                     childNodes.map((childNode, uid) =>
                         <Fragment key={uid}>
-                            {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible > 0 &&
+                            {this.props.surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0 &&
                                 <SurveyQuestionTree
                                     key={uid}
                                     surveyNode={childNode}
                                     surveyQuestions={this.props.surveyQuestions}
                                     setCurrentValue={this.props.setCurrentValue}
                                     selectedQuestion={this.props.selectedQuestion}
+                                    selectedSampleId={this.props.selectedSampleId}
                                     setSelectedQuestion={this.props.setSelectedQuestion}
                                     hierarchyLabel={this.props.hierarchyLabel + "- "}
                                 />
@@ -200,21 +200,23 @@ class SurveyQuestionTree extends React.Component  {
     }
 }
 
-function AnswerButton(props){
+function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }){
     return <ul className={"samplevalue justify-content-center"}>
-        {props.answers.map((ans, uid) =>
+        {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
                 <button
                     type="button"
                     className="btn btn-outline-darkgray btn-sm btn-block pl-1"
                     id={ans.answer + "_" + ans.id}
                     name={ans.answer + "_" + ans.id}
-                    // style={{
-                    //     boxShadow: (props.selectedAnswers[props.question] == ans.answer)
-                    //         ? "0px 0px 4px 4px black inset, 0px 0px 4px 4px white inset"
-                    //         : "initial"
-                    // }}
-                    onClick={() => props.setCurrentValue(props.surveyNode, ans.id, ans.answer)}
+                    style={{
+                        boxShadow: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
+                            ? "0px 0px 8px 3px black inset"
+                            : answered.some(a => a.answerId === ans.id)
+                                ? "0px 0px 8px 3px grey inset"
+                                : "initial",
+                    }}
+                    onClick={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
                 >
                     <div
                         className="circle"
@@ -232,24 +234,29 @@ function AnswerButton(props){
     </ul>;
 }
 
-function AnswerRadioButton(props) {
+function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }) {
     return <ul className={"samplevalue justify-content-center"}>
-        {props.answers.map((ans, uid) =>
+        {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
                 <button
                     type="button"
-                    className="btn-outline-darkgray btn-sm btn-block pl-1"
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
                     id={ans.answer + "_" + ans.id}
                     name={ans.answer + "_" + ans.id}
-                    onClick={() => props.setCurrentValue(props.surveyNode, ans.id, ans.answer)}
+                    onClick={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
                 >
                     <div
-                        className="circle"
+                        className="circle ml-1"
                         style={{
-                                border: "1px solid",
+                                border: "1px solid black",
                                 float: "left",
                                 marginTop: "4px",
-                                boxShadow: "0px 0px 2px 0px " + ans.color + " inset",
+                                boxShadow: "0px 0px 0px 3px " + ans.color,
+                                backgroundColor:  answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
+                                                    ? "black"
+                                                    : answered.some(a => a.answerId === ans.id)
+                                                        ? "#e8e8e8"
+                                                        : "white",
                             }}
                     />
                     <span className="small">{ans.answer}</span>
@@ -267,34 +274,50 @@ class AnswerInput extends React.Component{
         };
     }
 
+    componentDidMount() {
+        this.resetInputText();
+    }
+
     componentDidUpdate(prevProps) {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             this.setState({ newInput: "" });
         }
+        if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
+            this.resetInputText();
+        }
+    }
+
+    resetInputText = () => {
+        const matchingNode = this.props.surveyNode.answered
+            .find(a => a.answerId === this.props.surveyNode.answers[0].id
+                  && a.sampleId === this.props.selectedSampleId);
+
+        this.setState({
+            newInput: matchingNode ? matchingNode.answerText : "",
+        });
     }
 
     updateInputValue = (value) => this.setState({ newInput: value });
 
     render() {
-        const { props } = this;
-        // fix me, should not need map
-        return props.answers.map((ans, uid) => (
-            <div key={uid} className="d-inline-flex">
+        const { surveyNode, surveyNode: { answers, dataType }, setCurrentValue } = this.props;
+        return (
+            <div className="d-inline-flex">
                 <div className="pr-2 pt-2">
                     <div
                         className="circle"
                         style={{
-                            backgroundColor: ans.color,
+                            backgroundColor: answers[0].color,
                             border: "1px solid",
                         }}
                     />
                 </div>
                 <input
-                    type={this.props.dataType}
+                    type={dataType}
                     className="form-control mr-2"
-                    placeholder={ans.answer}
-                    id={ans.answer + "_" + ans.id}
-                    name={ans.answer + "_" + ans.id}
+                    placeholder={answers[0].answer}
+                    id={answers[0].answer + "_" + answers[0].id}
+                    name={answers[0].answer + "_" + answers[0].id}
                     value={this.state.newInput}
                     onChange={e => this.updateInputValue(e.target.value)}
                 />
@@ -304,13 +327,10 @@ class AnswerInput extends React.Component{
                     type="button"
                     name="save-input"
                     value="Save"
-                    onClick={() => {
-                        props.setCurrentValue(props.surveyNode, ans.id, this.state.newInput);
-                        this.setState({ newInput: "" });
-                    }}
+                    onClick={() => setCurrentValue(surveyNode, answers[0].id, this.state.newInput)}
                 />
             </div>
-        ));
+        );
     }
 }
 
@@ -331,15 +351,17 @@ class AnswerDropDown extends React.Component {
     toggleDropDown = () => this.setState({ showDropdown: !this.state.showDropdown });
 
     render () {
-        const options = this.props.answers.map((ans, uid) =>
+        const { surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue } = this.props;
+        const options = answers.map((ans, uid) =>
             <div
                 key={uid}
                 onClick={() => {
-                        this.props.setCurrentValue(this.props.surveyNode, ans.id, ans.answer);
+                        setCurrentValue(surveyNode, ans.id, ans.answer);
                         this.setState({ showDropdown: false });
                     }
                 }
                 className="d-inline-flex py-2 border-bottom"
+                style={{ backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1" }}
             >
                 <div className="col-1">
                     <span
@@ -361,20 +383,41 @@ class AnswerDropDown extends React.Component {
 
         return (
             <div className="mb-1 d-flex flex-column align-items-start">
-                <div className="dropdown ml-3" style={{ position: "relative", display: "inline-block" }}>
+                <div className="dropdown-selector ml-3 d-flex pl-0 col-12">
+                    <div className="SelectedItem d-inline-flex border col-8">
+                        {answers.map(ans =>
+                         answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId) &&
+                         <Fragment>
+                             <div className="col-1 mt-2">
+                                 <span
+                                     className="dot"
+                                     style={{
+                                        height: "15px",
+                                        width: "15px",
+                                        backgroundColor: ans.color,
+                                        borderRadius: "50%",
+                                        display: "inline-block",
+                                    }}
+                                 />
+                             </div>
+                             <div className="col-11 text-left mt-1">
+                                 {ans.answer}
+                             </div>
+                         </Fragment>
+                        )}
+                    </div>
                     <button
                         onClick={this.toggleDropDown}
                         className="dropbtn"
                         style={{
                             backgroundColor: "#31BAB0",
                             color: "white",
-                            padding: "12px 24px",
-                            fontSize: "16px",
+                            padding: "8px 16px",
                             border: "none",
                             cursor: "pointer",
                         }}
                     >
-                        -Select-
+                        <i className={"fa fa-caret-down"} />
                     </button>
                 </div>
                 <div
@@ -383,7 +426,7 @@ class AnswerDropDown extends React.Component {
                 >
                     <div
                         id="myDropdown"
-                        className={"dropdown-content flex-column container"}
+                        className="dropdown-content flex-column container"
                         style={{
                             display: this.state.showDropdown ? "flex" : "none",
                             position: "absolute",
@@ -391,6 +434,7 @@ class AnswerDropDown extends React.Component {
                             overflow: "auto",
                             boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
                             zIndex: "10",
+                            cursor: "pointer",
                         }}
                     >
                         {options}
@@ -402,33 +446,13 @@ class AnswerDropDown extends React.Component {
 }
 
 function SurveyAnswers(props) {
-  if (props.componentType && props.componentType.toLowerCase() === "radiobutton") {
-        return (<AnswerRadioButton
-            answers={props.answers}
-            surveyNode={props.surveyNode}
-            dataType={props.dataType}
-            setCurrentValue={props.setCurrentValue}
-                />);
-    } else if (props.componentType && props.componentType.toLowerCase() === "input") {
-        return (<AnswerInput
-            answers={props.answers}
-            surveyNode={props.surveyNode}
-            dataType={props.dataType}
-            setCurrentValue={props.setCurrentValue}
-                />);
-    } else if (props.componentType && props.componentType.toLowerCase() === "dropdown") {
-        return (<AnswerDropDown
-            answers={props.answers}
-            surveyNode={props.surveyNode}
-            childNodes={props.childNodes}
-            setCurrentValue={props.setCurrentValue}
-                />);
+    if (props.surveyNode.componentType.toLowerCase() === "radiobutton") {
+        return (<AnswerRadioButton {...props} />);
+    } else if (props.surveyNode.componentType.toLowerCase() === "input") {
+        return (<AnswerInput {...props} />);
+    } else if (props.surveyNode.componentType.toLowerCase() === "dropdown") {
+        return (<AnswerDropDown {...props} />);
     } else {
-        return (<AnswerButton
-            answers={props.answers}
-            surveyNode={props.surveyNode}
-            dataType={props.dataType}
-            setCurrentValue={props.setCurrentValue}
-                />);
+        return (<AnswerButton {...props} />);
     }
 }

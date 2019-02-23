@@ -9,27 +9,28 @@ class Collection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            collectionStart: 0,
             currentProject: { surveyQuestions: [], institution: "" },
-            plotList: [],
-            imageryList: [],
-            mapConfig: null,
             currentImagery: { id: "" },
-            imageryAttribution: "",
-            imageryYearDG: 2009,
-            stackingProfileDG: "Accuracy_Profile",
-            imageryYearPlanet: "2018",
-            imageryMonthPlanet: "03",
-            imageryMonthNamePlanet: "March",
-            prevPlotButtonDisabled: false,
-            nextPlotButtonDisabled: false,
-            saveValuesButtonEnabled: false,
             currentPlot: null,
+            imageryAttribution: "",
+            imageryList: [],
+            imageryMonthPlanet: 3,
+            imageryMonthNamePlanet: "March",
+            imageryYearDG: 2009,
+            imageryYearPlanet: 2018,
+            mapConfig: null,
+            nextPlotButtonDisabled: false,
+            plotList: [],
+            prevPlotButtonDisabled: false,
+            reviewPlots: false,
+            saveValuesButtonEnabled: false,
+            sampleOutlineBlack: true,
+            selectedQuestion: { id: 0, question: "", answers: [] },
+            selectedSampleId: -1,
+            stackingProfileDG: "Accuracy_Profile",
             userSamples: {},
             userImages: {},
-            collectionStart: 0,
-            reviewPlots: false,
-            selectedQuestion: { id: 0, question: "", answers: [] },
-            sampleOutlineBlack: true,
         };
     }
 
@@ -40,7 +41,7 @@ class Collection extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         //
-        // Initialize after apis return.  This could also be done with Promise.all
+        // Initialize after apis return.
         //
 
         // Wait to get imagery list until project is loaded
@@ -48,7 +49,9 @@ class Collection extends React.Component {
             this.getImageryList();
         }
         // Initialize map when imagery list is returned
-        if (this.state.imageryList.length > 0 && this.state.mapConfig == null) {
+        if (this.state.imageryList.length > 0
+             && this.state.currentProject.boundary
+             && this.state.mapConfig == null) {
             this.initializeProjectMap();
         }
         // Load all project plots initially
@@ -68,7 +71,8 @@ class Collection extends React.Component {
         //
 
         // Update all when plot changes
-        if (this.state.currentPlot && (this.state.currentPlot !== prevState.currentPlot)) {
+        if (this.state.currentPlot && this.state.selectedQuestion.visible
+            && (this.state.currentPlot !== prevState.currentPlot || !prevState.selectedQuestion.visible)) {
             this.showProjectPlot();
             this.showGeoDash();
             this.showPlotSamples();
@@ -190,7 +194,7 @@ class Collection extends React.Component {
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
                         : newImagery.title === "PlanetGlobalMosaic"
-                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
+                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthNamePlanet
                             :  newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
@@ -218,7 +222,7 @@ class Collection extends React.Component {
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
         const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthPlanet;
+        const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthNamePlanet;
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
             imageryAttribution: newImageryAttribution,
@@ -430,21 +434,22 @@ class Collection extends React.Component {
     }
 
     showPlotSamples() {
-        const { mapConfig, selectedQuestion } = this.state;
-        const shownSamples = this.getVisibleSamples(selectedQuestion.id);
+        const { mapConfig, selectedQuestion: { visible }} = this.state;
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
                                 "currentSamples",
-                                mercator.samplesToVectorSource(shownSamples),
+                                mercator.samplesToVectorSource(visible),
                                 this.state.sampleOutlineBlack
-                                    ? shownSamples[0].geom
+                                    ? visible[0].geom
                                         ? ceoMapStyles.blackPolygon
                                         : ceoMapStyles.blackCircle
-                                    : shownSamples[0].geom
+                                    : visible[0].geom
                                         ? ceoMapStyles.whitePolygon
                                         : ceoMapStyles.whiteCircle);
-        mercator.enableSelection(mapConfig, "currentSamples");
+        mercator.enableSelection(mapConfig,
+                                 "currentSamples",
+                                 (sampleId) => this.setState({ selectedSampleId: sampleId }));
     }
 
     showGeoDash() {
@@ -698,38 +703,29 @@ class Collection extends React.Component {
         }
     }
 
-    getAnsweredSamples(currentQuestionId) {
-        const { currentProject : { surveyQuestions }, userSamples } = this.state;
-        const { parentQuestion, parentAnswer, question } = surveyQuestions.find(sq => sq.id === currentQuestionId);
-        const parentQuestionText = parentQuestion === -1 ? "" : surveyQuestions.find(sq => sq.id === parentQuestion).question;
+    updateQuestionStatus = () => {
+        const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
+            const visibleSamples = this.getVisibleSamples(sq.id);
+            return ({
+                ...sq,
+                visible: visibleSamples,
+                answered: visibleSamples
+                    .filter(vs => this.state.userSamples[vs.id][sq.question])
+                    .map(vs => ({
+                        sampleId: vs.id,
+                        answerId: this.state.userSamples[vs.id][sq.question].answerId,
+                        answerText: this.state.userSamples[vs.id][sq.question].answer,
+                    })),
+            });
+        });
 
-        if (parentQuestion === -1) {
-            return this.state.currentPlot.samples.filter(s => userSamples[s.id][question]);
-        } else {
-            const correctAnswerText = surveyQuestions
-                .find(sq => sq.id === parentQuestion).answers
-                .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
-
-            return this.getVisibleSamples(parentQuestion)
-                .filter(sample => {
-                    const sampleAnswer = userSamples[sample.id][parentQuestionText]
-                                                && userSamples[sample.id][parentQuestionText].answer;
-                    return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
-                })
-                .filter(s => userSamples[s.id][question]);
-        }
-    }
-
-    updateQuestionStatus() {
-        const { currentProject: { surveyQuestions }} = this.state;
-
-        const newSampleValues = surveyQuestions.map(value => ({
-            ...value,
-            visible: this.getVisibleSamples(value.id).length,
-            answered: this.getAnsweredSamples(value.id).length,
-        }));
-
-        this.setState({ currentProject: { ...this.state.currentProject, surveyQuestions: newSampleValues }});
+        this.setState({
+            currentProject: {
+                ...this.state.currentProject,
+                surveyQuestions: newSurveyQuestions,
+            },
+            selectedQuestion: newSurveyQuestions.find(sq => sq.id === this.state.selectedQuestion.id),
+        });
     }
 
     render() {
@@ -742,12 +738,11 @@ class Collection extends React.Component {
                     projectId={this.props.projectId}
                     plotId={plotId}
                     documentRoot={this.props.documentRoot}
-                    userName={this.props.userName}
                     postValuesToDB={this.postValuesToDB}
-                    surveyQuestions={this.state.currentProject.surveyQuestions}
                     projectName={this.state.currentProject.name}
+                    surveyQuestions={this.state.currentProject.surveyQuestions}
+                    userName={this.props.userName}
                 >
-
                 <PlotNavigation 
                     plotId={plotId}
                     navButtonsShown={this.state.currentPlot != null}
@@ -794,7 +789,6 @@ class Collection extends React.Component {
                         <p>Please go to a plot to see survey questions</p>
                     </fieldset>
                 }
-          
                 </SideBar>
                 <QuitMenu documentRoot={this.props.documentRoot}/>
                 {this.state.plotList.length === 0 &&
@@ -818,6 +812,7 @@ function ImageAnalysisPane(props) {
 
 function SideBar(props) {
     const saveValuesButtonEnabled = props.surveyQuestions.every(sq => sq.visible === sq.answered);
+
     return (
         <div id="sidebar" className="col-xl-3 border-left" style={{ overflow: "scroll" }}>
             <h2 className="header">{props.projectName || ""}</h2>
@@ -997,7 +992,6 @@ class PlotNavigation extends React.Component{
                         </div>
                     </Fragment>
                 }
-
             </fieldset>
         );
     }
@@ -1059,7 +1053,7 @@ function DigitalGlobeMenus(props) {
                     value={props.imageryYearDG}
                     className="slider"
                     id="myRange"
-                    onChange={(e) => props.setImageryYearDG(e.target.value)}
+                    onChange={e => props.setImageryYearDG(parseInt(e.target.value))}
                 />
                 <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
             </div>
@@ -1069,7 +1063,7 @@ function DigitalGlobeMenus(props) {
                 name="dg-stacking-profile"
                 size="1"
                 value={props.stackingProfileDG}
-                onChange={(e) => props.setStackingProfileDG(e.target.value)}
+                onChange={e => props.setStackingProfileDG(e.target.value)}
             >
                 {
                     ["Accuracy_Profile", "Cloud_Cover_Profile", "Global_Currency_Profile", "MyDG_Color_Consumer_Profile", "MyDG_Consumer_Profile"]
@@ -1091,7 +1085,7 @@ function PlanetMenus(props) {
                     value={props.imageryYearPlanet}
                     className="slider"
                     id="myRange"
-                    onChange={(e) => props.setImageryYearPlanet(e.target.event)}
+                    onChange={e => props.setImageryYearPlanet(parseInt(e.target.value))}
                 />
                 <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
             </div>
@@ -1103,7 +1097,7 @@ function PlanetMenus(props) {
                     value={props.imageryMonthPlanet}
                     className="slider"
                     id="myRangemonth"
-                    onChange={(e) => props.setImageryMonthPlanet(e.target.event)}
+                    onChange={e => props.setImageryMonthPlanet(parseInt(e.target.value))}
                 />
                 <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
             </div>

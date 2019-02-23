@@ -220,10 +220,8 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
-
 
     getProjectList = () => {
         const { userId } = this.props;
@@ -411,7 +409,7 @@ function ProjectTemplateVisibility({ projectId, projectList, setProjectTemplate 
                         name="project-template"
                         size="1"
                         value={projectId}
-                        onChange={e => setProjectTemplate(e.target.value)}
+                        onChange={e => setProjectTemplate(parseInt(e.target.value))}
                     >
                         <option key={0} value={0}>None</option>
                         {

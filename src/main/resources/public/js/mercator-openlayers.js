@@ -506,11 +506,11 @@ const ceoMapStyles = {icon:          mercator.getIconStyle("favicon.ico"),
                     redCircle:     mercator.getCircleStyle(5, null, "red", 2),
                     yellowCircle:  mercator.getCircleStyle(5, null, "yellow", 2),
                     greenCircle:   mercator.getCircleStyle(5, null, "green", 2),
-                    blackCircle:   mercator.getCircleStyle(5, null, "#000000", 2),
-                    whiteCircle:   mercator.getCircleStyle(5, null, "white", 2),
-                    redSquare:     mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "red", 2),
-                    yellowSquare:  mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "yellow", 2),
-                    greenSquare:   mercator.getRegularShapeStyle(5, 4, Math.PI/4, null, "green", 2),
+                    blackCircle:   mercator.getCircleStyle(6, null, "#000000", 2),
+                    whiteCircle:   mercator.getCircleStyle(6, null, "white", 2),
+                    redSquare:     mercator.getRegularShapeStyle(6, 4, Math.PI/4, null, "red", 2),
+                    yellowSquare:  mercator.getRegularShapeStyle(6, 4, Math.PI/4, null, "yellow", 2),
+                    greenSquare:   mercator.getRegularShapeStyle(6, 4, Math.PI/4, null, "green", 2),
                     cluster:       mercator.getCircleStyle(5, "#8b2323", "#ffffff", 1),
                     yellowPolygon: mercator.getPolygonStyle(null, "yellow", 3),
                     blackPolygon:  mercator.getPolygonStyle(null, "#000000", 3),
@@ -649,16 +649,17 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 // a feature is selected, its style is stored in featureStyles and
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
-mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
+mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, setSampleId) {
     let select = new ol.interaction.Select({layers: [layer]});
     select.set("title", interactionTitle);
     const action = function (event) {
+        setSampleId(event.selected.length === 1 ? event.selected[0].get("sampleId") : -1);
         event.selected.forEach(function (feature) {
-            featureStyles[feature.G.sampleId] = feature.getStyle();
+            featureStyles[feature.get("sampleId")] = feature.getStyle();
             feature.setStyle(null);
         });
         event.deselected.forEach(function (feature) {
-            const savedStyle = featureStyles[feature.G.sampleId];
+            const savedStyle = featureStyles[feature.get("sampleId")];
             if (savedStyle != null && feature.getStyle() == null) {
                 feature.setStyle(savedStyle);
             }
@@ -673,7 +674,7 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles) {
 // a feature is selected, its style is stored in featureStyles and
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
-mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures) {
+mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures, setSampleId) {
     let dragBox = new ol.interaction.DragBox({condition: ol.events.condition.platformModifierKeyOnly});
     dragBox.set("title", interactionTitle);
     const boxstartAction = function () {
@@ -683,11 +684,13 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
         const extent = dragBox.getGeometry().getExtent();
         const saveStyle = function (feature) {
             selectedFeatures.push(feature);
-            featureStyles[feature.G.sampleId] = feature.getStyle();
+            featureStyles[feature.get("sampleId")] = feature.getStyle();
             feature.setStyle(null);
             return false;
         };
         layer.getSource().forEachFeatureIntersectingExtent(extent, saveStyle);
+
+        setSampleId(selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1);
     };
     dragBox.on("boxstart", boxstartAction);
     dragBox.on("boxend", boxendAction);
@@ -696,12 +699,12 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
 // [Side Effects] Adds a click select interaction and a dragBox select
 // interaction to mapConfig's map object associated with the layer
 // with title == layerTitle.
-mercator.enableSelection = function (mapConfig, layerTitle) {
+mercator.enableSelection = function (mapConfig, layerTitle, setSampleId) {
     const layer = mercator.getLayerByTitle(mapConfig, layerTitle);
     const featureStyles = {}; // holds saved styles for features selected by either interaction
-    const clickSelect = mercator.makeClickSelect("clickSelect", layer, featureStyles);
+    const clickSelect = mercator.makeClickSelect("clickSelect", layer, featureStyles, setSampleId);
     const selectedFeatures = clickSelect.getFeatures();
-    const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, featureStyles, selectedFeatures);
+    const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, featureStyles, selectedFeatures, setSampleId);
     mapConfig.map.addInteraction(clickSelect);
     mapConfig.map.addInteraction(dragBoxSelect);
     return mapConfig;
@@ -771,7 +774,7 @@ mercator.getAllFeatures = function (mapConfig, layerTitle) {
 // circle will be filled with gray.
 mercator.highlightSampleGeometry = function (sample, color) {
     if (sample.get("shape") == "point") {
-        sample.setStyle(mercator.getCircleStyle(5, color, color, 2));
+        sample.setStyle(mercator.getCircleStyle(6, color, color, 2));
     } else {
         sample.setStyle(mercator.getPolygonStyle(null, color, 6));
     }
