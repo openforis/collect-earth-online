@@ -50,11 +50,9 @@ export class SurveyCollection extends React.Component {
         const { visible, answered } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
-        if (childQuestions.length === 0) {
-            return visible.length === answered.length;
-        } else {
-            return visible.length === answered.length && childQuestions.every(cq => this.checkAllSubAnswers(cq.id));
-        }
+        return visible.length === answered.length
+                    && (childQuestions.length === 0
+                    || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
     getTopColor = (node) => this.checkAllSubAnswers(node.id)
@@ -291,14 +289,12 @@ class AnswerInput extends React.Component{
     }
 
     resetInputText = () => {
+        const matchingNode = this.props.surveyNode.answered
+            .find(a => a.answerId === this.props.surveyNode.answers[0].id
+                  && a.sampleId === this.props.selectedSampleId);
+
         this.setState({
-            newInput: this.props.surveyNode.answered
-                        .some(a => a.answerId === this.props.surveyNode.answers[0].id
-                                    && a.sampleId === this.props.selectedSampleId)
-                      ? this.props.surveyNode.answered
-                        .find(a => a.answerId === this.props.surveyNode.answers[0].id
-                                  && a.sampleId === this.props.selectedSampleId).answerText
-                      : "",
+            newInput: matchingNode ? matchingNode.answerText : "",
         });
     }
 
