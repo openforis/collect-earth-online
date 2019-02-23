@@ -379,15 +379,14 @@ class ProjectStats extends React.Component {
                                                         : "Open")}
                                 </span>
                             </div>
-
-                            <div>
-                                Date Archived
-                                <span className="badge badge-pill bg-lightgreen ml-3">
-                                    {archivedDate || (availability === "archived"
-                                                            ? "Unknown"
-                                                            : "Unarchived")}
-                                </span>
-                            </div>
+                            {availability === "archived" &&
+                                <div>
+                                    Date Archived
+                                    <span className="badge badge-pill bg-lightgreen ml-3">
+                                        {archivedDate || "Unknown"}
+                                    </span>
+                                </div>
+                            }
                         </div>
                     </div>
 

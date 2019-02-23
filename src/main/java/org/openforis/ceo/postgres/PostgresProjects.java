@@ -141,7 +141,7 @@ public class PostgresProjects implements Projects {
 
             pstmt.setInt(1, projectId);
             try(var rs = pstmt.executeQuery()){
-                if(rs.next()) {
+                if (rs.next()) {
                     return buildProjectJson(rs).toString();
                 } else {
                     project.addProperty("id", 0);

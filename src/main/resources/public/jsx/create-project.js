@@ -193,7 +193,7 @@ class Project extends React.Component {
     };
 
     setProjectTemplate = (newTemplateId) => {
-        if (newTemplateId === 0) {
+        if (parseInt(newTemplateId) === 0) {
             this.setState({
                 projectDetails: { ...this.state.projectDetails, id: 0 },
                 plotList: [],
@@ -216,10 +216,8 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
-
 
     getProjectList = () => {
         const { userId } = this.props;
@@ -538,10 +536,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lat-max"
                                     value={latMax}
                                     placeholder="North"
-                                    autoComplete="off"
                                     min="-90.0"
                                     max="90.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -554,10 +551,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lon-min"
                                     value={lonMin}
                                     placeholder="West"
-                                    autoComplete="off"
                                     min="-180.0"
                                     max="180.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                             <div className="col-md-6">
@@ -568,10 +564,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lon-max"
                                     value={lonMax}
                                     placeholder="East"
-                                    autoComplete="off"
                                     min="-180.0"
                                     max="180.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -584,10 +579,9 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lat-min"
                                     value={latMin}
                                     placeholder="South"
-                                    autoComplete="off"
                                     min="-90.0"
                                     max="90.0"
-                                    step="any"
+                                    readOnly
                                 />
                             </div>
                         </div>
@@ -640,128 +634,128 @@ function PlotDesign ({
 }) {
 
     return (
-        <SectionBlock title="Plot Design">
-            <div id="plot-design">
-                <div className="row">
-                    <div id="plot-design-col1" className="col">
-                        {id > 0 &&
-                        <Fragment>
-                            <h3>Template Plots</h3>
-                            <div className="form-check form-check-inline">
-                                <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    id="use-template-plots"
-                                    name="use-template-plots"
-                                    defaultValue={useTemplatePlots}
-                                    onChange={toggleTemplatePlots}
-                                    checked={useTemplatePlots}
-                                />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="use-template-plots"
-                                >
-                                    Copy Template Plots and Samples
-                                </label>
-                            </div>
-                            <hr />
-                        </Fragment>
-                        }
-                        {!useTemplatePlots && (
-                            <Fragment>
-                                <h3 className="mb-3">Spatial Distribution</h3>
-                                <div className="form-check form-check-inline">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="plot-distribution-random"
-                                        name="plot-distribution"
-                                        defaultValue="random"
-                                        onChange={() => setProjectDetail("plotDistribution", "random")}
-                                        checked={plotDistribution === "random"}
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="plot-distribution-random"
-                                    >
-                                        Random
-                                    </label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="plot-distribution-gridded"
-                                        name="plot-distribution"
-                                        defaultValue="gridded"
-                                        onChange={() => setProjectDetail("plotDistribution", "gridded")}
-                                        checked={plotDistribution === "gridded"}
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="plot-distribution-gridded"
-                                    >
-                                        Gridded
-                                    </label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="plot-distribution-csv"
-                                        name="plot-distribution"
-                                        defaultValue="csv"
-                                        onChange={() => setProjectDetail("plotDistribution", "csv")}
-                                        checked={plotDistribution === "csv"}
-                                    />
-                                    <label
-                                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                        id="custom-csv-upload"
-                                        htmlFor="plot-distribution-csv-file"
-                                    >
-                                        Upload CSV
-                                        <input
-                                            type="file"
-                                            accept="text/csv"
-                                            id="plot-distribution-csv-file"
-                                            defaultValue=""
-                                            name="plot-distribution-csv-file"
-                                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
-                                            style={{ display: "none" }}
-                                            disabled={plotDistribution !== "csv"}
-                                        />
-                                    </label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="plot-distribution-shp"
-                                        name="plot-distribution"
-                                        defaultValue="shp"
-                                        onChange={() => setProjectDetail("plotDistribution", "shp")}
-                                        checked={plotDistribution === "shp"}
-                                    />
-                                    <label
-                                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
-                                        id="custom-shp-upload"
-                                        htmlFor="plot-distribution-shp-file"
-                                    >
-                                        Upload SHP
-                                        <input
-                                            type="file"
-                                            accept="application/zip"
-                                            id="plot-distribution-shp-file"
-                                            defaultValue=""
-                                            name="plot-distribution-shp-file"
-                                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
-                                            style={{ display: "none" }}
-                                            disabled={plotDistribution !== "shp"}
-                                        />
-                                    </label>
-                                </div>
-                                {["csv", "shp"].includes(plotDistribution) &&
-                                <div className="PlotDesign__file-display ml-3 d-inline">
+      <SectionBlock title="Plot Design">
+        <div id="plot-design">
+          <div className="row">
+            <div id="plot-design-col1" className="col">
+                {id > 0 &&
+                    <Fragment>
+                    <h3>Template Plots</h3>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="use-template-plots"
+                            name="use-template-plots"
+                            defaultValue={useTemplatePlots}
+                            onChange={toggleTemplatePlots}
+                            checked={useTemplatePlots}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="use-template-plots"
+                        >
+                            Copy Template Plots and Samples
+                        </label>
+                    </div>
+                    </Fragment>
+                }
+                {(id > 0 && !useTemplatePlots) && <hr />}
+                {!useTemplatePlots && (
+                    <Fragment>
+                    <h3 className="mb-3">Spatial Distribution</h3>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-random"
+                            name="plot-distribution"
+                            defaultValue="random"
+                            onChange={() => setProjectDetail("plotDistribution", "random")}
+                            checked={plotDistribution === "random"}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="plot-distribution-random"
+                        >
+                            Random
+                        </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-gridded"
+                            name="plot-distribution"
+                            defaultValue="gridded"
+                            onChange={() => setProjectDetail("plotDistribution", "gridded")}
+                            checked={plotDistribution === "gridded"}
+                        />
+                        <label
+                            className="form-check-label"
+                            htmlFor="plot-distribution-gridded"
+                        >
+                            Gridded
+                        </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-csv"
+                            name="plot-distribution"
+                            defaultValue="csv"
+                            onChange={() => setProjectDetail("plotDistribution", "csv")}
+                            checked={plotDistribution === "csv"}
+                        />
+                        <label
+                            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                            id="custom-csv-upload"
+                            htmlFor="plot-distribution-csv-file"
+                        >
+                        Upload CSV
+                        <input
+                            type="file"
+                            accept="text/csv"
+                            id="plot-distribution-csv-file"
+                            defaultValue=""
+                            name="plot-distribution-csv-file"
+                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
+                            style={{ display: "none" }}
+                            disabled={plotDistribution != "csv"}
+                        />
+                        </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="plot-distribution-shp"
+                            name="plot-distribution"
+                            defaultValue="shp"
+                            onChange={() => setProjectDetail("plotDistribution", "shp")}
+                            checked={plotDistribution === "shp"}
+                        />
+                        <label
+                            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 my-0"
+                            id="custom-shp-upload"
+                            htmlFor="plot-distribution-shp-file"
+                        >
+                        Upload SHP
+                        <input
+                            type="file"
+                            accept="application/zip"
+                            id="plot-distribution-shp-file"
+                            defaultValue=""
+                            name="plot-distribution-shp-file"
+                            onChange={e => setProjectDetail("plotFileName", e.target.files[0].name)}
+                            style={{ display: "none" }}
+                            disabled={plotDistribution != "shp"}
+                        />
+                        </label>
+                    </div>
+                    {["csv", "shp"].includes(plotDistribution) &&
+                        <div className="PlotDesign__file-display ml-3 d-inline">
                             File: {!plotFileName ? <span className="font-italic">None</span> : plotFileName}
                                 </div>
                                 }

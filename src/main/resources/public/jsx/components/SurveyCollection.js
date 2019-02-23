@@ -50,11 +50,9 @@ export class SurveyCollection extends React.Component {
         const { visible, answered } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === currentQuestionId);
 
-        if (childQuestions.length === 0) {
-            return visible.length === answered.length;
-        } else {
-            return visible.length === answered.length && childQuestions.every(cq => this.checkAllSubAnswers(cq.id));
-        }
+        return visible.length === answered.length
+                    && (childQuestions.length === 0
+                    || childQuestions.every(cq => this.checkAllSubAnswers(cq.id)));
     };
 
     getTopColor = (node) => this.checkAllSubAnswers(node.id)
@@ -144,6 +142,7 @@ class SurveyQuestionTree extends React.Component {
 
     render() {
         const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
+
         const shadowColor = this.props.surveyNode.answered.length === 0
                             ? "0px 0px 15px 4px red inset"
                             : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
@@ -151,11 +150,11 @@ class SurveyQuestionTree extends React.Component {
                                 : "0px 0px 15px 4px yellow inset";
         return (
             <fieldset className={"mb-1 justify-content-center text-center"}>
-                <div className="SurveyQuestionTree__question-buttons btn-block my-2">
+                <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm col-2 text-bold"
+                        className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2"
                         onClick={this.toggleShowAnswers}
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
@@ -163,13 +162,12 @@ class SurveyQuestionTree extends React.Component {
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm col-10"
+                        className="text-center btn btn-outline-lightgreen btn-sm btn-block"
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
-                                            ? "0px 0px 2px 2px black inset,"
-                                            : ""}
-                                            ${shadowColor}
-                                        `,
+                                    ? "0px 0px 2px 2px black inset,"
+                                    : ""}
+                                    ${shadowColor}`
                         }}
                         onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                     >
@@ -289,21 +287,18 @@ class AnswerInput extends React.Component{
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
             this.setState({ newInput: "" });
         }
-
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
         }
     }
 
     resetInputText = () => {
+        const matchingNode = this.props.surveyNode.answered
+            .find(a => a.answerId === this.props.surveyNode.answers[0].id
+                  && a.sampleId === this.props.selectedSampleId);
+
         this.setState({
-            newInput: this.props.surveyNode.answered
-                        .some(a => a.answerId === this.props.surveyNode.answers[0].id
-                                    && a.sampleId === this.props.selectedSampleId)
-                      ? this.props.surveyNode.answered
-                        .find(a => a.answerId === this.props.surveyNode.answers[0].id
-                                  && a.sampleId === this.props.selectedSampleId).answerText
-                      : "",
+            newInput: matchingNode ? matchingNode.answerText : "",
         });
     }
 
@@ -457,7 +452,7 @@ class AnswerDropDown extends React.Component {
 }
 
 function SurveyAnswers(props) {
-  if (props.surveyNode.componentType.toLowerCase() === "radiobutton") {
+    if (props.surveyNode.componentType.toLowerCase() === "radiobutton") {
         return (<AnswerRadioButton {...props} />);
     } else if (props.surveyNode.componentType.toLowerCase() === "input") {
         return (<AnswerInput {...props} />);
