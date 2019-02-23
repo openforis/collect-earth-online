@@ -66,7 +66,7 @@ public class PostgresInstitutions implements Institutions {
             pstmt.setInt(1, instId);
             var newInstitution = new JsonObject();
             try(var rs = pstmt.executeQuery()){
-                if(rs.next()) {
+                if (rs.next()) {
                     //create institution json to send back
                     return buildInstitutionJson(rs).toString();
                 } else {

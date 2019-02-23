@@ -35,7 +35,7 @@ public class PostgresUsers implements Users {
 
             pstmt.setString(1, inputEmail);
             try(var rs = pstmt.executeQuery()) {
-                if(rs.next()) {
+                if (rs.next()) {
                     // Check if password matches
                     if (!inputPassword.equals(rs.getString("password"))) {
                         // Authentication failed
@@ -140,7 +140,7 @@ public class PostgresUsers implements Users {
 
                 pstmt_user.setString(1, storedEmail);
                 try(var rs_user = pstmt_user.executeQuery()){
-                    if(rs_user.next()) {
+                    if (rs_user.next()) {
                         var storedPassword = rs_user.getString("password");
                         if (storedPassword.equals(inputCurrentPassword)) {
                             try(var pstmt = conn.prepareStatement("SELECT * FROM set_user_email_and_password(?,?,?)")){
@@ -361,7 +361,7 @@ public class PostgresUsers implements Users {
                     pstmt.setInt(2,Integer.parseInt(userId.toString()));
                     pstmt.setString(3,role);
                     try(var rs = pstmt.executeQuery()){
-                        if(rs.next() && rs.getInt("update_institution_user_role") == 0) {
+                        if (rs.next() && rs.getInt("update_institution_user_role") == 0) {
                             var addPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)");
                             addPstmt.setInt(1,Integer.parseInt(institutionId));
                             addPstmt.setInt(2,Integer.parseInt(userId.toString()));

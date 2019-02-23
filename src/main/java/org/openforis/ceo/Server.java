@@ -6,6 +6,7 @@ import static spark.Spark.after;
 import static spark.Spark.before;
 import static spark.Spark.exception;
 import static spark.Spark.get;
+import static spark.Spark.notFound;
 import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.secure;
@@ -159,7 +160,7 @@ public class Server implements SparkApplication {
         get("/geo-dash/geodashhelp",                  Views.geodashhelp(freemarker));
 
         // Routing Table: Page Not Found
-        get("*",                                      Views.pageNotFound(freemarker));
+        notFound(Views.pageNotFound(freemarker));
 
         // Handle Exceptions
         exception(Exception.class, (e, req, res) -> e.printStackTrace());
