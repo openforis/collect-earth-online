@@ -19,59 +19,48 @@ class BasicLayout extends React.PureComponent{
          graphReducer: "Min"
      };
      static getParameterByName (name, url) {
-         if (!url) {
-             url = window.location.href;
-         }
-         url = decodeURIComponent(url);
-         name = name.replace(/[\[\]]/g, "\\$&");
-         const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-         const results = regex.exec(url);
-         if (!results) {
-             return null;
-         }
-         if (!results[2]) {
-             return "";
-         }
-         return decodeURIComponent(results[2].replace(/\+/g, " "));
+         const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+         const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
+         return results
+             ? results[2]
+                 ? decodeURIComponent(results[2].replace(/\+/g, " "))
+                 : ""
+             : null;
      }
      static getGatewayUrl(widget, collectionName){
-         let url = "";
          if(widget.filterType != null && widget.filterType.length > 0){
              const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-             url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
+             return window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
          }
          else if(widget.ImageAsset && widget.ImageAsset.length > 0)
          {
-             url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+             return window.location.protocol + "//" + window.location.hostname + ":8888/image";
          }
          else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
          {
-             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
+             return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
          }
          else if(widget.properties && "ImageCollectionCustom" === widget.properties[0]){
-             url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
+             return window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
          }
          else if(collectionName.trim().length > 0)
          {
-             url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
+             return window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
          }
          else{
-             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
+             return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
          }
-         return url;
      }
      static getImageByType(which) {
-         let theImage = "";
          if (which === "getStats") {
-             theImage = "/img/statssample.gif";
+             return "/img/statssample.gif";
          }
          else if (which.toLowerCase().includes("image") || which === "") {
-             theImage = "/img/mapsample.gif";
+             return "/img/mapsample.gif";
          }
          else {
-             theImage = "/img/graphsample.gif";
+             return "/img/graphsample.gif";
          }
-         return theImage;
      }
      constructor(props) {
          super(props);
@@ -115,12 +104,12 @@ class BasicLayout extends React.PureComponent{
      }
      componentDidMount() {
          console.log("the institutionID is now set to: " + this.state.institutionID);
-         const ref = this;
-         fetch(this.props.theURI + "/id/" + this.state.pid,)
-             .then(response => response.json())
-             .then(function(response){ref.setState({ dashboardID: response.dashboardID});  return response;})
-             .then(function(response){
-                 let theWidgets = response.widgets;
+         fetch(this.props.theURI + "/id/" + this.state.pid)
+             .then(response => {
+                 if (response.ok){ return response.json();}})
+             .then(response => {this.setState({ dashboardID: response.dashboardID});  return response;})
+             .then(response => {
+                 const theWidgets = response.widgets;
                  if(Array.isArray(theWidgets))
                  {
                      return response;
@@ -134,20 +123,24 @@ class BasicLayout extends React.PureComponent{
                  return response;
              })
              .then(data => data.widgets.map(function(widget){
-                 if(widget.layout) {
-                     if (widget.layout.y == null) {
-                         widget.layout.y = 0;
-                     }
-                 }
-                 return widget;}))
+                 return widget.layout
+                     ? {
+                         ...widget,
+                         layout: {
+                             ...widget.layout,
+                             y: widget.layout.y ? widget.layout .y : 0
+                         }}
+                     : widget;
+             }))
              .then(data => this.setState({ widgets: data}))
-             .then(function(data){ ref.setState({haveWidgets : true}); return data;})
+             .then(data => { this.setState({haveWidgets : true}); return data;})
              .then(() => this.checkWidgetStructure())
              .then(() => this.setState({layout: this.generateLayout()}))
          ;
          fetch(window.location.origin + "/get-all-imagery?institutionId=" + this.state.institutionID )
-             .then(response => response.json())
-             .then(function(data){data.unshift({title: "Open Street Maps", id: "osm"}); return data;})
+             .then(response => {
+                 if (response.ok){ return response.json();}})
+             .then(data => {data.unshift({title: "Open Street Maps", id: "osm"}); return data;})
              .then(data => this.setState({ imagery: data, WidgetBaseMap: data[0].id}));
 
      }
@@ -237,7 +230,6 @@ class BasicLayout extends React.PureComponent{
              this.updateServerWidgets();
          }
      }
-
      updateServerWidgets(){
          const holdRef = this;
          this.state.widgets.forEach(function(widget) {
@@ -271,7 +263,6 @@ class BasicLayout extends React.PureComponent{
          let ajaxurl = this.props.theURI + "/deletewidget/widget/" + widget.id;
          this.serveItUp(ajaxurl, widget);
      }
-
      generateDOM() {
          const holdRef = this;
          const x = "x";
@@ -375,19 +366,16 @@ class BasicLayout extends React.PureComponent{
         e.stopPropagation();
         this.props.onMouseDown(e);
     };
-
     onDragEnd = (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.props.onMouseUp(e);
     };
-
     onDataTypeSelectChanged = event => {
         this.setState({
             selectedDataType: event.target.value
         });
     };
-
     onCancelNewWidget = () =>{
         this.setState({
             selectedWidgetType: "-1",
@@ -554,7 +542,7 @@ class BasicLayout extends React.PureComponent{
         {
             widget.properties = ["","","","",""];
             widget.filterType = "";
-            widget.visParams = this.state.imageParams === ""? {} : JSON.parse(this.state.imageParams);
+            widget.visParams = this.state.imageParams === "" ? {} : JSON.parse(this.state.imageParams);
             widget.ImageAsset = this.state.imageCollection;
             if(this.state.selectedWidgetType === "imageAsset") {
                 this.addCustomImagery(this.buildImageryObject({
@@ -639,7 +627,7 @@ class BasicLayout extends React.PureComponent{
             .then(response => {
                 if (response.ok){
                     this.setState({
-                        widgets: this.state.widgets.concat(widget),
+                        widgets: [...this.state.widgets, widget],  //this.state.widgets.concat(widget),
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
                         isEditing: false,
@@ -774,7 +762,7 @@ class BasicLayout extends React.PureComponent{
         }
         else {
             this.setState({endDateDual: date});
-            this.checkDatesDual();
+            this.checkDates(true);
         }
     };
     onDataTypeSelectChangedDual = event => {
@@ -783,33 +771,22 @@ class BasicLayout extends React.PureComponent{
             FormReady: true
         });
     };
-    checkDatesDual() {
-        let ed = new Date(this.state.endDateDual);
-        let sd = new Date(this.state.startDateDual);
+    checkDates(isDual) {
+        const ed = isDual != null? new Date(this.state.endDateDual) : new Date(this.state.endDate);
+        const sd = isDual != null? new Date(this.state.startDateDual) : new Date(this.state.startDate);
+        let isFormReady = null;
         if(! this.state.dualLayer) {
-            if (ed > sd && this.state.FormReady !== true) {
-                this.setState({FormReady: true});
-            }
-            else if (ed < sd) {
-                if (this.state.FormReady === true) {
-                    this.setState({FormReady: false});
-                }
-            }
+            isFormReady = ed > sd && this.state.FormReady !== true ? true : ed < sd &&  this.state.FormReady === true? false : null;
         }
         else{
-            let ed2 = new Date(this.state.endDate2);
-            let sd2 = new Date(this.state.startDate2);
-
-            if (ed > sd && ed2 > sd2 && this.state.FormReady !== true) {
-                this.setState({FormReady: true});
-            }
-            else if (ed < sd || ed2 < sd2) {
-                if (this.state.FormReady === true) {
-                    this.setState({FormReady: false});
-                }
-            }
+            const ed2 = new Date(this.state.endDate2);
+            const sd2 = new Date(this.state.startDate2);
+            isFormReady = ed > sd && ed2 > sd2 && this.state.FormReady !== true ? true : (ed < sd || ed2 < sd2) && this.state.FormReady === true ? false : null;
         }
-
+        if(isFormReady !== null)
+        {
+            this.setState({FormReady: isFormReady});
+        }
     }
     onStartDate2Changed = date => {
         if(date.target)
@@ -840,34 +817,6 @@ class BasicLayout extends React.PureComponent{
             this.checkDates();
         }
     };
-    checkDates() {
-        let ed = new Date(this.state.endDate);
-        let sd = new Date(this.state.startDate);
-        if(! this.state.dualLayer) {
-            if (ed > sd && this.state.FormReady !== true) {
-                this.setState({FormReady: true});
-            }
-            else if (ed < sd) {
-                if (this.state.FormReady === true) {
-                    this.setState({FormReady: false});
-                }
-            }
-        }
-        else{
-            let ed2 = new Date(this.state.endDate2);
-            let sd2 = new Date(this.state.startDate2);
-
-            if (ed > sd && ed2 > sd2 && this.state.FormReady !== true) {
-                this.setState({FormReady: true});
-            }
-            else if (ed < sd || ed2 < sd2) {
-                if (this.state.FormReady === true) {
-                    this.setState({FormReady: false});
-                }
-            }
-        }
-
-    }
     getNewWidgetForm() {
         if(this.state.isEditing)
         {
@@ -897,7 +846,7 @@ class BasicLayout extends React.PureComponent{
                                         </select>
                                     </div>
                                     {this.getBaseMapSelector()}
-                                    {this.getDataType()}
+                                    {this.getDataTypeSelectionControl()}
                                     {this.getDataForm()}
                                 </form>
                             </div>
@@ -938,7 +887,7 @@ class BasicLayout extends React.PureComponent{
             return <option key={imagery.id} value={imagery.id}> {imagery.title} </option>;
         });
     }
-    getDataType()
+    getDataTypeSelectionControl()
     {
         if(this.state.selectedWidgetType === "-1")
         {
@@ -1063,6 +1012,43 @@ class BasicLayout extends React.PureComponent{
             <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
         </div>;
     }
+    getNextStepButton() {
+        if(this.state.selectedWidgetType === "DualImageCollection") {
+            return <button type="button" className="btn btn-secondary" data-dismiss="modal"
+                           onClick={this.onNextWizardStep}>Step 2 &rArr;</button>;
+        }
+    }
+    getDualImageCollectionTimeSpanOption(){
+        if(this.state.selectedWidgetType === "DualImageCollection") {
+            return <div className="form-group">
+                <label htmlFor="widgetDualLayer">Dual time span</label>
+                <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
+                       className="form-control" onChange={this.onWidgetDualLayerChange}/>
+            </div>;
+        }
+    }
+    getDateRangeControl(){
+        return <div className="input-group input-daterange" id="range_new_cooked">
+            <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
+            <div className="input-group-addon">to</div>
+            <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
+        </div>;
+    }
+    getDualLayerDateRangeControl()
+    {
+        if(this.state.dualLayer === true) {
+            return <div>
+                <label>Select the Date Range for the top layer</label>
+                <div className="input-group input-daterange" id="range_new_cooked2">
+                    <input type="text" className="form-control" onChange={this.onStartDate2Changed}
+                           value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
+                    <div className="input-group-addon">to</div>
+                    <input type="text" className="form-control" onChange={this.onEndDate2Changed}
+                           value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
+                </div>
+            </div>;
+        }
+    }
     getDataForm()
     {
         if(this.state.selectedWidgetType === "ImageElevation")
@@ -1111,26 +1097,9 @@ class BasicLayout extends React.PureComponent{
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
-                        <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
-                    </div>
-                    <div className="form-group" style={{display: this.state.selectedWidgetType === "DualImageCollection"? "none": "block"}}>
-                        <label htmlFor="widgetDualLayer">Dual time span</label>
-                        <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
-                               className="form-control" onChange={this.onWidgetDualLayerChange}/>
-                    </div>
-                    <div style={{display : this.state.dualLayer === true? "block": "none"}}>
-                        <label>Select the Date Range for the top layer</label>
-                        <div className="input-group input-daterange" id="range_new_cooked2">
-
-                            <input type="text" className="form-control"  onChange={this.onStartDate2Changed} value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
-                            <div className="input-group-addon">to</div>
-                            <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
-                        </div>
-                    </div>
+                    {this.getDateRangeControl()}
+                    {this.getDualImageCollectionTimeSpanOption()}
+                    {this.getDualLayerDateRangeControl()}
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
                         <input type="text" name="widgetBands" id="widgetBands" value={this.state.widgetBands}
@@ -1152,7 +1121,7 @@ class BasicLayout extends React.PureComponent{
                         <input type="text" name="widgetCloudScore" id="widgetCloudScore" value={this.state.widgetCloudScore}
                                className="form-control" onChange={this.onWidgetCloudScoreChange}/>
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+                    {this.getNextStepButton()}
                 </React.Fragment>;
             }
             else if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep === 2){
@@ -1204,7 +1173,7 @@ class BasicLayout extends React.PureComponent{
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
                         <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+                    {this.getNextStepButton()}
                 </React.Fragment>;
             }
             else if(((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
@@ -1237,13 +1206,8 @@ class BasicLayout extends React.PureComponent{
 
                     </div>
                     <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange form-group" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
-                        <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
-                    </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
+                    {this.getDateRangeControl()}
+                    {this.getNextStepButton()}
                 </React.Fragment>;
             }
             else if((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataTypeDual === "Custom"  && this.state.wizardStep === 2)
@@ -1271,31 +1235,34 @@ class BasicLayout extends React.PureComponent{
             }
             else if((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1)
             {
-                return <React.Fragment>
-                    {this.getTitleBlock()}
-                    <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange form-group" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
-                        <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
-                    </div>
-                    <div className="form-group" style={{display: this.state.selectedWidgetType === "DualImageCollection" ? "none": "block"}}>
-                        <label htmlFor="widgetDualLayer">Dual time span</label>
-                        <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
-                               className="form-control" onChange={this.onWidgetDualLayerChange}/>
-                    </div>
-                    <div style={{display : this.state.dualLayer === true? "block": "none"}}>
+                if(this.state.dualLayer === true)
+                {
+                    return <React.Fragment>
+                        {this.getTitleBlock()}
                         <label>Select the Date Range you would like</label>
-                        <div className="input-group input-daterange" id="range_new_cooked2">
+                        {this.getDateRangeControl()}
+                        {this.getDualImageCollectionTimeSpanOption()}
+                        <div>
+                            <label>Select the Date Range you would like</label>
+                            <div className="input-group input-daterange" id="range_new_cooked2">
 
-                            <input type="text" className="form-control" onChange={this.onStartDate2Changed} value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
-                            <div className="input-group-addon">to</div>
-                            <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
+                                <input type="text" className="form-control" onChange={this.onStartDate2Changed} value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
+                                <div className="input-group-addon">to</div>
+                                <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
+                            </div>
                         </div>
-                    </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onNextWizardStep} style={{display: this.state.selectedWidgetType === "DualImageCollection"? "block": "none"}}>Step 2 &rArr;</button>
-                </React.Fragment>;
+                        {this.getNextStepButton()}
+                    </React.Fragment>;
+                }
+                else{
+                    return <React.Fragment>
+                        {this.getTitleBlock()}
+                        <label>Select the Date Range you would like</label>
+                        {this.getDateRangeControl()}
+                        {this.getDualImageCollectionTimeSpanOption()}
+                        {this.getNextStepButton()}
+                    </React.Fragment>;
+                }
             }
             else if((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
             {
@@ -1333,12 +1300,7 @@ class BasicLayout extends React.PureComponent{
                         </select>
                     </div>
                     <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
-                        <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
-                    </div>
+                    {this.getDateRangeControl()}
                 </React.Fragment>;
             }
             else if(this.state.wizardStep === 2){
@@ -1351,18 +1313,12 @@ class BasicLayout extends React.PureComponent{
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
-                    <div className="input-group input-daterange" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
-                        <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
-                    </div>
+                    {this.getDateRangeControl()}
                 </React.Fragment>;
             }
         }
 
     }
-
     onRemoveItem(i) {
         let removedWidget = _.filter(this.state.widgets, function(w){
             return w.layout.i === i.toString();
@@ -1374,7 +1330,6 @@ class BasicLayout extends React.PureComponent{
                             return layout.i === i.toString(); })
         });
     }
-
     generateLayout() {
         let w = this.state.widgets;
         return _.map(w, function(item, i) {
@@ -1384,7 +1339,6 @@ class BasicLayout extends React.PureComponent{
             return item.layout;
         });
     }
-
     onLayoutChange = (layout) => {
         if (this.state.haveWidgets) {
             let w = this.state.widgets;
@@ -1392,7 +1346,8 @@ class BasicLayout extends React.PureComponent{
                 w[i].layout = lay;
             });
             this.setState({widgets: w,
-                           layout: layout},this.updateServerWidgets);
+                           layout: layout},
+                          this.updateServerWidgets);
         }
         else{
             this.setState({layout: layout});
@@ -1409,8 +1364,6 @@ class BasicLayout extends React.PureComponent{
                 <ReactGridLayout {...this.props}
                                  layout={layout}
                                  onLayoutChange={this.onLayoutChange}>
-
-
                     {this.generateDOM()}
                 </ReactGridLayout>
                 {this.getNewWidgetForm()}

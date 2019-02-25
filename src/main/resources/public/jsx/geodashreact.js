@@ -3,20 +3,40 @@ import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
 
 class Geodash extends React.Component {
+    static defaultProps = {
+        theURI: window.location.origin + "/geo-dash"
+    }
+    static getParameterByName (name, url) {
+        if (!url) {
+            url = window.location.href;
+        }
+        url = decodeURIComponent(url);
+        name = name.replace(/[\[\]]/g, "\\$&");
+        const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+        const results = regex.exec(url);
+        if (!results) {
+            return null;
+        }
+        if (!results[2]) {
+            return "";
+        }
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
     constructor(props) {
         super(props);
         this.state = { widgets: [ ],
-            callbackComplete: false,
-            left: 0,
-            ptop: 0,
-            projAOI: getParameterByName("aoi"),
-            projPairAOI: ""
+                       callbackComplete: false,
+                       left: 0,
+                       ptop: 0,
+                       projAOI: Geodash.getParameterByName("aoi"),
+                       projPairAOI: "",
+                       pid: Geodash.getParameterByName("pid")
         };
         let theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
         this.state.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
     }
     componentDidMount() {
-        fetch(theURL + "/id/" + pid,)
+        fetch(this.props.theURI + "/id/" + this.state.pid)
             .then(response => response.json())
             .then(data => data.widgets.map(function(widget){
                 widget.isFull = false;
@@ -27,7 +47,7 @@ class Geodash extends React.Component {
             .then(data => this.setState({ widgets: data, callbackComplete: true}));
         window.addEventListener("resize", this.handleResize);
     }
-    handleResize = e => {
+    handleResize = () => {
         this.state.widgets.forEach(function(widget){
             if(graphWidgetArray["widgetgraph_" + widget.id] != null)
             {
@@ -36,6 +56,13 @@ class Geodash extends React.Component {
             }
             else if(mapWidgetArray["widgetgraph_" + widget.id] != null){
                 mapWidgetArray["widgetmap_" + widget.id].updateSize();
+            }
+            //***************hold this thought, we can safe the map and graph in state of the components***********/
+            if(document.getElementById("widgetgraph_" + widget.id))
+            {
+                console.log("thinking about working")
+                console.log(widget.props.graphRef);
+                console.log("look above");
             }
         });
     };
@@ -58,7 +85,7 @@ class Geodash extends React.Component {
         widgets[index] = { ...widget };
         widgets[index].isFull = !widgets[index].isFull;
         this.setState({ widgets },
-            function() { this.updateSize(widget, type);}
+                      function() { this.updateSize(widget, type);}
         );
     };
     handleOpacityChange = (widget, id, evt) => {
@@ -121,7 +148,7 @@ class Geodash extends React.Component {
                 }
             });
         }
-        catch(e){}
+        catch(e){console.log(e.message);}
     }
 }
 
@@ -333,25 +360,31 @@ class MapWidget extends React.Component {
         if(widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
             url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
+            url = "https://ceodev.servirglobal.net:8888/" + fts[widget.filterType];
         }
         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
         {
             url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+            url = "https://ceodev.servirglobal.net:8888/image";
         }
         else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
         {
             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
+            url = "https://ceodev.servirglobal.net:8888/ImageCollectionAsset";
         }
         else if("ImageCollectionCustom" === widget.properties[0]){
             url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
+            url = "https://ceodev.servirglobal.net:8888//meanImageByMosaicCollections";
         }
         else if(collectionName.trim().length > 0)
         {
             url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
+            url = "https://ceodev.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
 
         }
         else{
             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
+            url = "https://ceodev.servirglobal.net:8888/ImageCollectionbyIndex";
         }
         return url;
     }
@@ -717,7 +750,6 @@ class MapWidget extends React.Component {
         });
         mapWidgetArray[mapdiv].addLayer(googleLayer);
         let swipe = document.getElementById("swipeWidget_" + mapdiv.replace("widgetmap_", ""));
-
         googleLayer.on("precompose", function(event) {
             let ctx = event.context;
             const width = ctx.canvas.width * (swipe.value);
@@ -738,11 +770,11 @@ class MapWidget extends React.Component {
         "use strict";
         try {
             //check to see the shape here...
-            const bradius = getParameterByName("bradius");
-            const bcenter = getParameterByName("bcenter");
-            const plotshape = getParameterByName("plotshape");
-            const projectID = getParameterByName("pid");
-            const plotID = getParameterByName("plotid");
+            const bradius = Geodash.getParameterByName("bradius");
+            const bcenter = Geodash.getParameterByName("bcenter");
+            const plotshape = Geodash.getParameterByName("plotshape");
+            const projectID = Geodash.getParameterByName("pid");
+            const plotID = Geodash.getParameterByName("plotid");
             if (plotshape && plotshape === "square") {
                 const centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
                 const pointFeature = new ol.Feature(centerPoint);
@@ -751,10 +783,10 @@ class MapWidget extends React.Component {
                 const bufferPolygon = new ol.geom.Polygon(
                     [
                         [[bufferedExtent[0],bufferedExtent[1]],
-                            [bufferedExtent[0],bufferedExtent[3]],
-                            [bufferedExtent[2],bufferedExtent[3]],
-                            [bufferedExtent[2],bufferedExtent[1]],
-                            [bufferedExtent[0],bufferedExtent[1]]]
+                         [bufferedExtent[0],bufferedExtent[3]],
+                         [bufferedExtent[2],bufferedExtent[3]],
+                         [bufferedExtent[2],bufferedExtent[1]],
+                         [bufferedExtent[0],bufferedExtent[1]]]
                     ]
                 );
                 const bufferedFeature = new ol.Feature(bufferPolygon);
@@ -794,8 +826,7 @@ class MapWidget extends React.Component {
                 whichMap.addLayer(layer);
             }
             else{
-
-                fetch(theURL.replace("/geo-dash", "") + "/get-project-plot/" + projectID + "/" + plotID)
+                fetch(window.location.origin + "/geo-dash" + "/get-project-plot/" + projectID + "/" + plotID)
                     .then(function(res){return res.json();})
                     .then(function(data){
                         const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
@@ -828,6 +859,9 @@ class MapWidget extends React.Component {
 }
 
 class GraphWidget extends React.Component {
+    static defaultProps = {
+        graphRef: null
+    }
     constructor(props){
         super(props);
         Date.prototype.yyyymmdd = function() {
@@ -835,10 +869,11 @@ class GraphWidget extends React.Component {
             let dd = this.getDate();
 
             return [this.getFullYear(),
-                (mm>9 ? "" : "0") + mm,
-                (dd>9 ? "" : "0") + dd
+                    (mm>9 ? "" : "0") + mm,
+                    (dd>9 ? "" : "0") + dd
             ].join("-");
         };
+
     }
     render() {
         const widget = this.props.widget;
@@ -887,9 +922,9 @@ class GraphWidget extends React.Component {
                             }
                         });
                         timeseriesData = timeseriesData.sort(ref.sortData);
-
                         graphWidgetArray["widgetgraph_" + widget.id] = ref.createChart(widget.id, indexName, timeseriesData, indexName);
                         graphWidgetArray["widgetgraph_" + widget.id].id = widget.id;
+                        this.props.graphRef = ref.createChart(widget.id, indexName, timeseriesData, indexName);
                     } else {
                         console.warn("Wrong Data Returned");
                     }
@@ -1027,7 +1062,6 @@ class StatsWidget extends React.Component {
 
     componentDidMount() {
         const ref = this;
-        const widget = this.props.widget;
         const projPairAOI = this.props.projPairAOI;
         fetch(window.location.protocol + "//" + window.location.hostname + ":8888/getStats", {
             method: "POST",
@@ -1087,7 +1121,7 @@ let geeTimeout = {};
 let mapWidgetArray = [];
 let graphWidgetArray = [];
 
-export function renderGeodashPage(args) {
+export function renderGeodashPage() {
     ReactDOM.render(
         <Geodash/>,
         document.getElementById("dashHolder")
