@@ -214,7 +214,7 @@ class SurveyQuestionTree extends React.Component {
     }
 }
 
-function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }){
+function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }) {
     return <ul className={"samplevalue justify-content-center"}>
         {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
@@ -282,7 +282,7 @@ function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, sele
     </ul>;
 }
 
-class AnswerInput extends React.Component{
+class AnswerInput extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -374,10 +374,7 @@ class AnswerDropDown extends React.Component {
         const options = answers.map((ans, uid) =>
             <div
                 key={uid}
-                onClick={() => {
-                    setCurrentValue(surveyNode, ans.id, ans.answer);
-                    this.setState({ showDropdown: false });
-                }}
+                onMouseDown={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
                 className="d-inline-flex py-2 border-bottom"
                 style={{ backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1" }}
             >
@@ -427,6 +424,7 @@ class AnswerDropDown extends React.Component {
                     <button
                         type="button"
                         onClick={this.toggleDropDown}
+                        onBlur={() => this.setState({ showDropdown: false })}
                         className="dropbtn"
                         style={{
                             backgroundColor: "#31BAB0",
