@@ -47,7 +47,7 @@ public class JsonInstitutions implements Institutions {
         }
     }
 
-    public String createInstitution(Request req, Response res) {
+    public synchronized String createInstitution(Request req, Response res) {
         try {
             final var jsonInputs = parseJson(req.body()).getAsJsonObject();
             final var userId = jsonInputs.get("userId").getAsInt();
@@ -63,7 +63,7 @@ public class JsonInstitutions implements Institutions {
             // Generate a new institution id
             final var newInstitutionId = getNextId(institutions);
             // Upload the logo image if one was provided
-            final var logoFileName =!logo.equals("") 
+            final var logoFileName = !logo.equals("") 
                                     ? writeFilePartBase64(
                                             logo,
                                             base64Image,
@@ -135,8 +135,6 @@ public class JsonInstitutions implements Institutions {
                         institution.addProperty("logo", logoFileName != null 
                                                         ? "img/institution-logos/" + logoFileName 
                                                         : institution.get("logo").getAsString());
-                        if (logoFileName != null) {
-                        }
                         return institution;
                     } else {
                         return institution;

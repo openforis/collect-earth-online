@@ -87,7 +87,6 @@ public class PartUtils {
 
     public static String writeFilePartBase64(String inputFileName, String encodedFile, String outputDirectory, String outputFilePrefix) {
         try {
-
             if (inputFileName == null) {
                 return null;
             } else {
@@ -97,9 +96,9 @@ public class PartUtils {
                 
                 byte[] data = Base64.getDecoder().decode(encodedFile.split(",")[1]);
                 // Write the file to outputDirectory and return the filename
-                try(OutputStream stream = new FileOutputStream((new File(outputDirectory, outputFileName)).toPath().toString())) {
+                try (OutputStream stream = new FileOutputStream((new File(outputDirectory, outputFileName)).toPath().toString())) {
                     stream.write(data);
-                    }
+                }
                 return outputFileName;
             }
         } catch (Exception e) {

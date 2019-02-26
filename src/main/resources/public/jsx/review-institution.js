@@ -151,7 +151,7 @@ class InstitutionDescription extends React.Component {
                     }));
                 }
             })
-            .then(data =>{
+            .then(data => {
                 this.setState({
                     institutionDetails: data,
                     newInstitutionDetails: {
@@ -171,13 +171,7 @@ class InstitutionDescription extends React.Component {
         fetch(this.props.documentRoot + "/update-institution/" + this.props.institutionId,
               {
                   method: "POST",
-                  body: JSON.stringify({
-                      name: this.state.newInstitutionDetails.name,
-                      logo: this.state.newInstitutionDetails.logo,
-                      base64Image: this.state.newInstitutionDetails.base64Image,
-                      url: this.state.newInstitutionDetails.url,
-                      description: this.state.newInstitutionDetails.description,
-                  }),
+                  body: JSON.stringify(this.state.newInstitutionDetails.name),
               }
         )
             .then(response => {
@@ -205,10 +199,6 @@ class InstitutionDescription extends React.Component {
             fetch(this.props.documentRoot + "/archive-institution/" + this.props.institutionId,
                   {
                       method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                   }
             )
                 .then(response => {
@@ -230,7 +220,8 @@ class InstitutionDescription extends React.Component {
                 className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                 onClick={this.updateInstitution}
             >
-                <i className="fa fa-save mr-1"/>Save Changes
+                <span className="fa fa-save mr-1"/>
+                Save Changes
             </button>
         </div>
         <div className="col-6">
@@ -239,7 +230,7 @@ class InstitutionDescription extends React.Component {
                 className="btn btn-sm btn-outline-danger btn-block mt-0"
                 onClick={this.toggleEditMode}
             >
-                <i className="fa fa-ban mr-1"/>Cancel Changes
+                <span className="fa fa-ban mr-1"/>Cancel Changes
             </button>
         </div>
     </div>;
@@ -254,7 +245,7 @@ class InstitutionDescription extends React.Component {
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
                 buttonGroup={this.renderEditButtonGroup}
-                setInstituionDetails={this.updateNewInstitutionDetails}
+                setInstitutionDetails={this.updateNewInstitutionDetails}
             />
         :
             <div id="institution-details" className="row justify-content-center">
@@ -292,7 +283,7 @@ class InstitutionDescription extends React.Component {
                                 className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                 onClick={this.toggleEditMode}
                             >
-                                <i className="fa fa-edit mr-1"/>Edit
+                                <span className="fa fa-edit mr-1"/>Edit
                             </button>
                         </div>
                         <div className="col-6">
@@ -302,7 +293,7 @@ class InstitutionDescription extends React.Component {
                                 className="btn btn-sm btn-outline-danger btn-block mt-0"
                                 onClick={this.deleteInstitution}
                             >
-                                <i className="fa fa-trash-alt mr-1"/>Delete
+                                <span className="fa fa-trash-alt mr-1"/>Delete
                             </button>
                         </div>
                     </div>
@@ -362,7 +353,7 @@ class ImageryList extends React.Component {
                         alert("Imagery has been successfully deleted.");
                     } else {
                         console.log(response);
-                        alert("Error updating institution details. See console for details.");
+                        alert("Error deleting imagery. See console for details.");
                     }
                 });
         }
@@ -370,16 +361,12 @@ class ImageryList extends React.Component {
 
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
 
-    updateState = (key, newValue) => this.setState({ [key]: newValue });
-
     render() {
-        const isAdmin = this.props.isAdmin;
         return this.state.imageryList.length === 0
             ? <h3>Loading imagery...</h3>
             : this.state.editMode
                 ?
                     <NewImagery
-                        addCustomImagery={this.addCustomImagery}
                         getImageryList={this.getImageryList}
                         documentRoot={this.props.documentRoot}
                         institutionId={this.props.institutionId}
@@ -396,7 +383,7 @@ class ImageryList extends React.Component {
                                     className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
                                     onClick={this.toggleEditMode}
                                 >
-                                    <i className="fa fa-plus-square mr-1"/>Add New Imagery
+                                    <span className="fa fa-plus-square mr-1"/>Add New Imagery
                                 </button>
 
                             </div>
@@ -406,7 +393,7 @@ class ImageryList extends React.Component {
                             <Imagery
                                 key={uid}
                                 title={imageryItem.title}
-                                isAdmin={isAdmin}
+                                isAdmin={this.props.isAdmin}
                                 isInstitutionImage={this.props.institutionId === imageryItem.institution}
                                 deleteImagery={() => this.deleteImagery(imageryItem.id)}
                             />
@@ -518,14 +505,14 @@ class NewImagery extends React.Component {
                             className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
                             onClick={this.addCustomImagery}
                         >
-                            <i className="fa fa-plus-square mr-1 mt-1"/>Add New Imagery
+                            <span className="fa fa-plus-square mr-1 mt-1"/>Add New Imagery
                         </button>
                         <button
                             type="button"
                             className="btn btn-sm btn-block btn-outline-danger btn-group py-2 font-weight-bold"
                             onClick={this.props.toggleEditMode}
                         >
-                            <i className="fa fa-ban mr-1 mt-1"/>Discard
+                            <span className="fa fa-ban mr-1 mt-1"/>Discard
                         </button>
                     </div>
                 </div>
@@ -552,16 +539,16 @@ function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
                 type="button"
                 onClick={deleteImagery}
             >
-                <i className="fa fa-trash-alt mr-1"/>
+                <span className="fa fa-trash-alt mr-1"/>
             </button>
         </div>
         }
     </div>;
 }
 
-function ProjectList ({ isAdmin, institutionId, projectList, documentRoot }) {
+function ProjectList({ isAdmin, institutionId, projectList, documentRoot }) {
     return <Fragment>
-        {isAdmin === true &&
+        {isAdmin &&
             <div className="row mb-1">
                 <div className="col">
                     <button
@@ -570,7 +557,7 @@ function ProjectList ({ isAdmin, institutionId, projectList, documentRoot }) {
                         className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
                         onClick={() => window.location = documentRoot + "/create-project?institution=" + institutionId}
                     >
-                        <i className="fa fa-plus-square mr-1"/>Create New Project
+                        <span className="fa fa-plus-square mr-1"/>Create New Project
                     </button>
                 </div>
             </div>
@@ -595,10 +582,10 @@ class Project extends React.Component {
     }
 
     componentDidMount() {
-        this.projectHightlight();
+        this.projectHighlight();
     }
 
-    projectHightlight = () => {
+    projectHighlight = () => {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.project.id)
             .then(response => {
                 if (response.ok) {
@@ -636,13 +623,13 @@ class Project extends React.Component {
                     {project.name}
                 </a>
             </div>
-            {isAdmin === true &&
+            {isAdmin &&
             <div className="mr-3">
                 <a
                     className="edit-project btn btn-sm btn-outline-yellow btn-block px-3"
                     href={documentRoot + "/review-project/" + project.id}
                 >
-                    <i className="fa fa-edit"></i>
+                    <span className="fa fa-edit"/>
                 </a>
             </div>
             }
@@ -675,7 +662,6 @@ class UserList extends React.Component {
     }
 
     getInstitutionUserList = () => {
-        //get users
         fetch(this.props.documentRoot + "/get-institution-users/" + this.props.institutionId)
             .then(response => {
                 if (response.ok) {
@@ -792,7 +778,7 @@ class UserList extends React.Component {
     }
 }
 
-function User ({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
+function User({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
     return (
         <div className="row">
             {!isAdmin &&
@@ -814,7 +800,7 @@ function User ({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
                         value={user.institutionRole}
                         className="custom-select custom-select-sm"
                         size="1"
-                        onChange={(e) => updateUserInstitutionRole(user.id, user.email, e.target.value)}
+                        onChange={e => updateUserInstitutionRole(user.id, user.email, e.target.value)}
                     >
                         {user.institutionRole === "pending" && <option value="pending">Pending</option>}
                         <option value="member">Member</option>
@@ -831,7 +817,7 @@ class NewUserButtons extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            newUserEmail:"",
+            newUserEmail: "",
         };
     }
 
@@ -878,7 +864,7 @@ class NewUserButtons extends React.Component {
                             className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
                             onClick={() => this.checkUserEmail() && this.addUser()}
                         >
-                            <i className="fa fa-plus-square mr-1"/>Add User
+                            <span className="fa fa-plus-square mr-1"/>Add User
                         </button>
                     </div>
                 </div>
@@ -891,7 +877,7 @@ class NewUserButtons extends React.Component {
                     id="request-membership-button"
                     onClick={this.props.requestMembership}
                 >
-                    <i className="fa fa-plus- mr-1"/>Request membership
+                    <span className="fa fa-plus- mr-1"/>Request membership
                 </button>
             </div>
             }

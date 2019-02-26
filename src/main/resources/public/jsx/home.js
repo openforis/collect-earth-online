@@ -143,10 +143,10 @@ class MapPanel extends React.Component {
                         <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
                             <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <i className={"fa fa-caret-left"} />
+                                <div className={"fa fa-caret-left"} />
                             </div>
                             <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <i className={"fa fa-caret-right"} />
+                                <div className={"fa fa-caret-right"} />
                             </div>
                         </div>
                     </div>
@@ -367,7 +367,7 @@ function CreateInstitutionButton(props) {
                 style={{ display:"block" }}
                 href={props.documentRoot + "/create-institution"}
             >
-                <i className="fa fa-file" /> Create New Institution
+                <span className="fa fa-file" /> Create New Institution
             </a>
         </div>
     );
@@ -406,7 +406,7 @@ class Institution extends React.Component {
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
                                 href={props.documentRoot + "/review-institution/" + props.id}
                             >
-                                <i className="fa fa-info" style={{ color: "white" }}></i>
+                                <span className="fa fa-info" style={{ color: "white" }} />
                             </a>
                         </div>
                     </div>
@@ -456,7 +456,7 @@ function Project(props) {
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
                         href={props.documentRoot + "/review-project/" + props.id}
                     >
-                        <i className="fa fa-edit"></i>
+                        <span className="fa fa-edit" />
                     </a>
                 </div>
             </div>
@@ -534,7 +534,7 @@ class ProjectPopup extends React.Component {
                         display: this.props.features.length > 1 ? "block" : "none",
                     }}
                 >
-                    <i className="fa fa-search-plus"/>Zoom to cluster
+                    <span className="fa fa-search-plus"/>Zoom to cluster
                 </button>
             </div>
         );

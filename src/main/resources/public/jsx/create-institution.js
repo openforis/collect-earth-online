@@ -43,13 +43,13 @@ class CreateInstitution extends React.Component {
             });
     }
 
-    setInstituionDetails = (key, newValue) => this.setState({
+    setInstitutionDetails = (key, newValue) => this.setState({
         newInstitutionDetails: {
             ...this.state.newInstitutionDetails, [key]: newValue,
         },
-    })
+    });
 
-    reanderButtonGroup = () =>
+    renderButtonGroup = () =>
         <input
             id="create-institution"
             className="btn btn-outline-lightgreen btn-sm btn-block"
@@ -67,8 +67,8 @@ class CreateInstitution extends React.Component {
                 logo={this.state.newInstitutionDetails.logo}
                 url={this.state.newInstitutionDetails.url}
                 description={this.state.newInstitutionDetails.description}
-                buttonGroup={this.reanderButtonGroup}
-                setInstituionDetails={this.setInstituionDetails}
+                buttonGroup={this.renderButtonGroup}
+                setInstitutionDetails={this.setInstitutionDetails}
             />
         );
     }

@@ -56,10 +56,6 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                   }
             )
                 .then(response => {
@@ -80,10 +76,6 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                   }
             )
                 .then(response => {
@@ -104,10 +96,6 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                   }
             )
                 .then(response => {

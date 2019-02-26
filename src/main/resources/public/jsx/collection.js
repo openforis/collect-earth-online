@@ -495,10 +495,6 @@ class Collection extends React.Component {
             fetch(this.props.documentRoot + "/flag-plot",
                   {
                       method: "post",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                       body: JSON.stringify({
                           projectId: this.props.projectId,
                           plotId: this.state.currentPlot.id,

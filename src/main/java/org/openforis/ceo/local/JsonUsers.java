@@ -287,6 +287,7 @@ public class JsonUsers implements Users {
                 .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
                 .map(user -> {
                         user.remove("password");
+                        user.remove("resetKey");
                         return user;
                     })
                 .map(user -> {
