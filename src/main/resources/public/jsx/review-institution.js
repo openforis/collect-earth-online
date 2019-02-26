@@ -591,8 +591,7 @@ class Project extends React.Component {
                 if (response.ok) {
                     return response.json();
                 } else {
-                    console.log(response);
-                    return new Promise(resolve => resolve(""));
+                    return new Promise((resolve, reject) => reject(response));
                 }
             })
             .then(data => this.setState({
@@ -601,7 +600,8 @@ class Project extends React.Component {
                     : (data.flaggedPlots + data.analyzedPlots) > 0
                         ? "0px 0px 8px 1px yellow inset"
                         : "0px 0px 8px 1px red inset",
-            }));
+            }))
+            .catch(response => console.log(response));
     };
 
     render() {
