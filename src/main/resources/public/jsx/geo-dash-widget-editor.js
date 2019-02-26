@@ -13,8 +13,6 @@ class BasicLayout extends React.PureComponent{
          className: "layout",
          items: 0,
          rowHeight: 300,
-         onLayoutChange: function () {
-         },
          cols: 12,
          graphReducer: "Min"
      };
@@ -95,7 +93,7 @@ class BasicLayout extends React.PureComponent{
              widgetMinDual: "",
              widgetMaxDual: "",
              widgetCloudScoreDual: "",
-             FormReady: false,
+             formReady: false,
              wizardStep: 1,
              pid: BasicLayout.getParameterByName("pid"),
              institutionID: BasicLayout.getParameterByName("institutionId") != null? BasicLayout.getParameterByName("institutionId"): "1"
@@ -356,7 +354,7 @@ class BasicLayout extends React.PureComponent{
             widgetMinDual:"",
             widgetMaxDual:"",
             widgetCloudScoreDual:"",
-            FormReady: false,
+            formReady: false,
             wizardStep: 1
 
         });
@@ -405,7 +403,7 @@ class BasicLayout extends React.PureComponent{
             widgetMinDual:"",
             widgetMaxDual:"",
             widgetCloudScoreDual:"",
-            FormReady: false,
+            formReady: false,
             wizardStep: 1
         });
     };
@@ -647,7 +645,7 @@ class BasicLayout extends React.PureComponent{
                         widgetMin:"",
                         widgetMax:"",
                         widgetCloudScore:"",
-                        FormReady: false
+                        formReady: false
                     });
                 }
                 else{
@@ -711,7 +709,7 @@ class BasicLayout extends React.PureComponent{
         }
         else {
             this.setState({endDate: date});
-            this.checkDates();
+            this.setFormStateByDates();
         }
     };
 
@@ -762,30 +760,30 @@ class BasicLayout extends React.PureComponent{
         }
         else {
             this.setState({endDateDual: date});
-            this.checkDates(true);
+            this.setFormStateByDates(true);
         }
     };
     onDataTypeSelectChangedDual = event => {
         this.setState({
             selectedDataTypeDual: event.target.value.trim(),
-            FormReady: true
+            formReady: true
         });
     };
-    checkDates(isDual) {
+    setFormStateByDates(isDual) {
         const ed = isDual != null? new Date(this.state.endDateDual) : new Date(this.state.endDate);
         const sd = isDual != null? new Date(this.state.startDateDual) : new Date(this.state.startDate);
         let isFormReady = null;
         if(! this.state.dualLayer) {
-            isFormReady = ed > sd && this.state.FormReady !== true ? true : ed < sd &&  this.state.FormReady === true? false : null;
+            isFormReady = ed > sd && this.state.formReady !== true ? true : ed < sd &&  this.state.formReady === true? false : null;
         }
         else{
             const ed2 = new Date(this.state.endDate2);
             const sd2 = new Date(this.state.startDate2);
-            isFormReady = ed > sd && ed2 > sd2 && this.state.FormReady !== true ? true : (ed < sd || ed2 < sd2) && this.state.FormReady === true ? false : null;
+            isFormReady = ed > sd && ed2 > sd2 && this.state.formReady !== true ? true : (ed < sd || ed2 < sd2) && this.state.formReady === true ? false : null;
         }
         if(isFormReady !== null)
         {
-            this.setState({FormReady: isFormReady});
+            this.setState({formReady: isFormReady});
         }
     }
     onStartDate2Changed = date => {
@@ -814,7 +812,7 @@ class BasicLayout extends React.PureComponent{
         }
         else {
             this.setState({endDate2: date});
-            this.checkDates();
+            this.setFormStateByDates();
         }
     };
     getNewWidgetForm() {
@@ -867,7 +865,7 @@ class BasicLayout extends React.PureComponent{
         //need to check if form is ready, if not just add the cancel button, or disable the create?
         return <React.Fragment>
             <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Cancel</button>
-            <button type="button" className="btn btn-primary" onClick={this.onCreateNewWidget} disabled={!this.state.FormReady}>Create</button>
+            <button type="button" className="btn btn-primary" onClick={this.onCreateNewWidget} disabled={!this.state.formReady}>Create</button>
         </React.Fragment>;
 
     }
@@ -895,9 +893,9 @@ class BasicLayout extends React.PureComponent{
         }
         else if(this.state.selectedWidgetType === "statistics")
         {
-            if(this.state.FormReady !== true){
+            if(this.state.formReady !== true){
                 this.setState({
-                    FormReady: true
+                    formReady: true
                 });
             }
             return <React.Fragment>
@@ -909,9 +907,9 @@ class BasicLayout extends React.PureComponent{
         }
         else if(this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation")
         {
-            if(this.state.FormReady !== true){
+            if(this.state.formReady !== true){
                 this.setState({
-                    FormReady: true
+                    formReady: true
                 });
             }
             return <br/>;
