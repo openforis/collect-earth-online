@@ -38,22 +38,13 @@ class Geodash extends React.Component {
                 widget.swipeValue = "1.0";
                 return widget;}))
             .then(data => this.setState({ widgets: data, callbackComplete: true}));
-        window.addEventListener("resize", this.handleResize);
     }
-    handleResize = () => {
-        this.state.widgets.forEach(function(widget){
-            if(mapWidgetArray["widgetgraph_" + widget.id] != null){
-                mapWidgetArray["widgetmap_" + widget.id].updateSize();
-            }
-        });
-    };
     render() {
         return ( <React.Fragment>
             <Widgets widgets={this.state.widgets}
                      projAOI={this.state.projAOI}
                      projPairAOI={this.state.projPairAOI}
                      onFullScreen={this.handleFullScreen}
-                     onOpacityChanged={this.handleOpacityChange}
                      onSliderChange={this.handleSliderChange}
                      onSwipeChange={this.handleSwipeChange}
                      callbackComplete={this.state.callbackComplete}
@@ -112,20 +103,9 @@ class Geodash extends React.Component {
             this.state.ptop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
             window.scrollTo(0,0);
         }
-        if(type === "mapwidget"){
-            mapWidgetArray["widgetmap_" + which.id].updateSize();
-        }
-    }
-    setOpacity (value, layerID) {
-        try{
-            const id = layerID;
-            mapWidgetArray[layerID].getLayers().forEach(function (lyr) {
-                if (id === lyr.get("id") || id + "_dual" === lyr.get("id")) {
-                    lyr.setOpacity(value);
-                }
-            });
-        }
-        catch(e){console.log(e.message);}
+        // if(type === "mapwidget"){
+        //     mapWidgetArray["widgetmap_" + which.id].updateSize();
+        // }
     }
 }
 
@@ -142,8 +122,6 @@ class Widgets extends React.Component {
                         projAOI={this.props.projAOI}
                         projPairAOI={this.props.projPairAOI}
                         onFullScreen ={this.props.onFullScreen}
-                        onOpacityChanged = {this.props.onOpacityChanged}
-                        opacityValue = {this.props.opacityValue}
                         onSliderChange = {this.props.onSliderChange}
                         onSwipeChange = {this.props.onSwipeChange}
                     />
@@ -179,9 +157,9 @@ class Widget extends React.Component {
     }
     render() {
         const {widget} = this.props;
-        return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onOpacityChanged, this.props.opacityValue, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
+        return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
     }
-    getWidgetHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
+    getWidgetHtml(widget, onSliderChange, onSwipeChange){
         if(widget.gridcolumn || widget.layout)
         {
             return (<div className={Widget.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: "", widget.gridrow != null? widget.gridrow: widget.layout != null? "span " + widget.layout.h: "")}
@@ -195,7 +173,7 @@ class Widget extends React.Component {
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
-                        {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
+                        {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
                     </div>
                 </div>
             </div>);
@@ -211,7 +189,7 @@ class Widget extends React.Component {
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
-                        {this.getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange)}
+                        {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
                     </div>
                 </div>
             </div>);
@@ -256,11 +234,11 @@ class Widget extends React.Component {
         }
         return classnames;
     }
-    getWidgetInnerHtml(widget, onOpacityChanged, opacityValue, onSliderChange, onSwipeChange){
+    getWidgetInnerHtml(widget, onSliderChange, onSwipeChange){
         let wtext = widget.properties[0];
         if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0))
         {
-            return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onOpacityChange={onOpacityChanged} opacityValue={opacityValue} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
+            return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
 
             </div>;
         }else if (this.graphControlList.includes(wtext)) {
@@ -275,6 +253,13 @@ class Widget extends React.Component {
 }
 
 class MapWidget extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            mapRef: null,
+            opacity: 90
+        };
+    }
     render() {
         const widget = this.props.widget;
 
@@ -284,9 +269,11 @@ class MapWidget extends React.Component {
             {this.getSliderControl()}
         </React.Fragment>;
     }
+    componentDidUpdate(){
+        this.state.mapRef.updateSize();
+    }
     getSliderControl(){
         let widget = this.props.widget;
-        const onOpacityChange = this.props.onOpacityChange;
         const onSliderChange = this.props.onSliderChange;
         const onSwipeChange = this.props.onSwipeChange;
 
@@ -296,12 +283,12 @@ class MapWidget extends React.Component {
             return <div>
                 <input type="button" value={this.props.widget.sliderType === "opacity"? "swipe": "opacity"} style={{width: "80px", float: "left", margin: "8px 0 0 5px"}} onClick={() => onSliderChange(widget)}/>
                 <input type = "range" className = "mapRange dual" id = {"rangeWidget_" + widget.id}
-                       value = {this.props.widget.opacity}
+                       value = {this.state.opacity}
                        min = "0"
                        max = "1"
                        step = ".01"
-                       onChange = {(evt) => onOpacityChange(widget, widget.id, evt )}
-                       onInput = {(evt) => onOpacityChange(widget, widget.id, evt )}
+                       onChange = {(evt) => this.onOpacityChange( evt )}
+                       onInput = {(evt) => this.onOpacityChange( evt )}
                        style={oStyle}
                 />
                 <input type="range" className="mapRange dual" id={"swipeWidget_" + widget.id} min="0" max="1" step=".01" value={this.props.widget.swipeValue}
@@ -313,14 +300,26 @@ class MapWidget extends React.Component {
         }
         else{
             return <input type = "range" className = "mapRange" id = {"rangeWidget_" + widget.id}
-                          value = {this.props.widget.opacity}
+                          value = {this.state.opacity}
                           min = "0"
                           max = "1"
                           step = ".01"
-                          onChange = {(evt) => onOpacityChange(widget, widget.id, evt )}
-                          onInput = {(evt) => onOpacityChange(widget, widget.id, evt )}
+                          onChange = {(evt) => this.onOpacityChange( evt )}
+                          onInput = {(evt) => this.onOpacityChange( evt )}
             />;
         }
+    }
+    onOpacityChange(evt)
+    {
+        try{
+            this.setState({opacity: evt.target.value});
+            this.state.mapRef.getLayers().forEach(lyr => {
+                if ("widgetmap_" + this.props.widget.id === lyr.get("id") || "widgetmap_" + this.props.widget.id + "_dual" === lyr.get("id")) {
+                    lyr.setOpacity(evt.target.value);
+                }
+            });
+        }
+        catch(e){console.log(e.message);}
     }
     static getRasterByBasemapConfig(basemap)
     {
@@ -442,6 +441,7 @@ class MapWidget extends React.Component {
 
         map.on("movestart", MapWidget.pauseGeeLayer);
         map.on("moveend", this.resumeGeeLayer);
+        this.setState({mapRef: map});
         mapWidgetArray[mapdiv] = map;
 
         if (projAOI === "") {
@@ -452,14 +452,14 @@ class MapWidget extends React.Component {
             }
         }
         if (projAOI) {
-            mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+            map.getView().fit(
                 ol.proj.transform([projAOI[0], projAOI[1]], "EPSG:4326", "EPSG:3857").concat(ol.proj.transform([projAOI[2], projAOI[3]], "EPSG:4326", "EPSG:3857")),
-                mapWidgetArray["widgetmap_" + widget.id].getSize()
+                map.getSize()
             );
         } else {
-            mapWidgetArray["widgetmap_" + widget.id].getView().fit(
+            map.getView().fit(
                 projAOI,
-                mapWidgetArray["widgetmap_" + widget.id].getSize()
+                map.getSize()
             );
         }
 
@@ -683,7 +683,13 @@ class MapWidget extends React.Component {
                     }
                 }
             });
-
+        window.addEventListener("resize", () => this.handleResize());
+    }
+    handleResize(){
+        try {
+            this.state.mapRef.updateSize();
+        }
+        catch(e){console.log("resize issue");}
     }
     static pauseGeeLayer(e)
     {
@@ -717,10 +723,10 @@ class MapWidget extends React.Component {
             id: mapdiv
         });
         window.setTimeout(() => {
-            mapWidgetArray[mapdiv].addLayer(googleLayer);
+            this.state.mapRef.addLayer(googleLayer);
             if(!isDual)
             {
-                this.addBuffer(mapWidgetArray[mapdiv]);
+                this.addBuffer(this.state.mapRef);
             }
         }, 250);
     }
@@ -731,7 +737,7 @@ class MapWidget extends React.Component {
             }),
             id: mapdiv + "_dual"
         });
-        mapWidgetArray[mapdiv].addLayer(googleLayer);
+        this.state.mapRef.addLayer(googleLayer);
         let swipe = document.getElementById("swipeWidget_" + mapdiv.replace("widgetmap_", ""));
         googleLayer.on("precompose", function(event) {
             let ctx = event.context;
@@ -746,8 +752,8 @@ class MapWidget extends React.Component {
             let ctx = event.context;
             ctx.restore();
         });
-        swipe.addEventListener("input", function() {mapWidgetArray[mapdiv].render();}, false);
-        this.addBuffer(mapWidgetArray[mapdiv]);
+        swipe.addEventListener("input", function() {this.state.mapRef.render();}, false);
+        this.addBuffer(this.state.mapRef);
     }
     addBuffer (whichMap) {
         "use strict";
