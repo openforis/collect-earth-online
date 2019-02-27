@@ -266,7 +266,7 @@ function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, sele
                             float: "left",
                             marginTop: "4px",
                             boxShadow: "0px 0px 0px 3px " + ans.color,
-                            backgroundColor:  answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
+                            backgroundColor: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
                                                 ? "black"
                                                 : answered.some(a => a.answerId === ans.id)
                                                     ? "#e8e8e8"
