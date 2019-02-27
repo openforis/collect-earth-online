@@ -32,11 +32,11 @@ public class PostgresInstitutions implements Institutions {
             newInstitution.add("members", parseJson(rs.getString("members")).getAsJsonArray());
             newInstitution.add("admins", parseJson(rs.getString("admins")).getAsJsonArray());
             newInstitution.add("pending", parseJson(rs.getString("pending")).getAsJsonArray());
+            return newInstitution;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return newInstitution;
         }
-        return newInstitution;
     }
 
 

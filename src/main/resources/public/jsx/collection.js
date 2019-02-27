@@ -194,7 +194,7 @@ class Collection extends React.Component {
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
                         : newImagery.title === "PlanetGlobalMosaic"
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthNamePlanet
-                            :  newImagery.attribution;
+                            : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -738,42 +738,43 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                 >
-                <PlotNavigation 
-                    plotId={plotId}
-                    navButtonsShown={this.state.currentPlot != null}
-                    nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                    prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
-                    sampleOutlineBlack={this.state.sampleOutlineBlack}
-                    reviewPlots={this.state.reviewPlots}
-                    flagPlotInDB={this.flagPlotInDB}
-                    goToFirstPlot={this.goToFirstPlot}
-                    goToPlot={this.goToPlot}
-                    nextPlot={this.nextPlot}
-                    prevPlot={this.prevPlot}
-                    setReviewPlots={this.setReviewPlots}
-                    toggleSampleBW={this.toggleSampleBW}
-                    loadingPlots={this.state.plotList.length === 0}
-                />
-                <ImageryOptions 
-                    baseMapSource={this.state.currentImagery.id}
-                    imageryTitle={this.state.currentImagery.title}
-                    imageryList={this.state.imageryList}
-                    setBaseMapSource={this.setBaseMapSource}
-                    imageryYearDG={this.imageryYearDG}
-                    stackingProfileDG={this.stackingProfileDG}
-                    setImageryYearDG={this.setImageryYearDG}
-                    setStackingProfileDG={this.setStackingProfileDG}
-                    imageryYearPlanet={this.imageryYearPlanet}
-                    imageryMonthPlanet={this.imageryMonthPlanet}
-                    imageryMonthNamePlanet={this.imageryMonthNamePlanet}
-                    setImageryYearPlanet={this.setImageryYearPlanet}
-                    setImageryMonthPlanet={this.setImageryMonthPlanet}
-                    loadingImages={this.state.imageryList.length === 0}
-                />
-                {this.state.currentPlot 
-                ? 
+                    <PlotNavigation
+                        plotId={plotId}
+                        navButtonsShown={this.state.currentPlot != null}
+                        nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
+                        prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
+                        sampleOutlineBlack={this.state.sampleOutlineBlack}
+                        reviewPlots={this.state.reviewPlots}
+                        flagPlotInDB={this.flagPlotInDB}
+                        goToFirstPlot={this.goToFirstPlot}
+                        goToPlot={this.goToPlot}
+                        nextPlot={this.nextPlot}
+                        prevPlot={this.prevPlot}
+                        setReviewPlots={this.setReviewPlots}
+                        toggleSampleBW={this.toggleSampleBW}
+                        loadingPlots={this.state.plotList.length === 0}
+                    />
+                    <ImageryOptions
+                        baseMapSource={this.state.currentImagery.id}
+                        imageryTitle={this.state.currentImagery.title}
+                        imageryList={this.state.imageryList}
+                        setBaseMapSource={this.setBaseMapSource}
+                        imageryYearDG={this.imageryYearDG}
+                        stackingProfileDG={this.stackingProfileDG}
+                        setImageryYearDG={this.setImageryYearDG}
+                        setStackingProfileDG={this.setStackingProfileDG}
+                        imageryYearPlanet={this.imageryYearPlanet}
+                        imageryMonthPlanet={this.imageryMonthPlanet}
+                        imageryMonthNamePlanet={this.imageryMonthNamePlanet}
+                        setImageryYearPlanet={this.setImageryYearPlanet}
+                        setImageryMonthPlanet={this.setImageryMonthPlanet}
+                        loadingImages={this.state.imageryList.length === 0}
+                    />
+                    {this.state.currentPlot
+                ?
                     <SurveyCollection
                         selectedQuestion={this.state.selectedQuestion}
+                        selectedSampleId={this.state.selectedSampleId}
                         surveyQuestions={this.state.currentProject.surveyQuestions}
                         setCurrentValue={this.setCurrentValue}
                         setSelectedQuestion={this.setSelectedQuestion}
@@ -783,7 +784,7 @@ class Collection extends React.Component {
                         <h3>Survey Questions</h3>
                         <p>Please go to a plot to see survey questions</p>
                     </fieldset>
-                }
+                    }
                 </SideBar>
                 <QuitMenu documentRoot={this.props.documentRoot}/>
                 {this.state.plotList.length === 0 &&
@@ -869,7 +870,7 @@ class PlotNavigation extends React.Component{
         return (
             <fieldset className="mb-3 text-center">
                 <h3 className="mb-2">Plot Navigation</h3>
-                {props.loadingPlots 
+                {props.loadingPlots
                     ? <h3>Loading plot data...</h3>
                     : <Fragment>
                         {props.plotId &&
@@ -890,20 +891,20 @@ class PlotNavigation extends React.Component{
                                     name="goto-plot"
                                     value="Go to plot"
                                     onClick={() => props.goToPlot(this.state.newPlotInput)}
-                                />               
+                                />
                             </div>
                         }
 
-                        {!props.navButtonsShown 
+                        {!props.navButtonsShown
                         ?
                             <div className="row" id="go-to-first-plot">
                                 <div className="col">
-                                    <input 
-                                        id="go-to-first-plot-button" 
+                                    <input
+                                        id="go-to-first-plot-button"
                                         className="btn btn-outline-lightgreen btn-sm btn-block"
-                                        type="button" 
-                                        name="new-plot" 
-                                        value="Go to first plot" 
+                                        type="button"
+                                        name="new-plot"
+                                        value="Go to first plot"
                                         onClick={props.goToFirstPlot}
                                     />
                                 </div>
@@ -911,36 +912,36 @@ class PlotNavigation extends React.Component{
                         :
                             <div className="row justify-content-center py-2" id="plot-nav">
                                 <div className="px-1">
-                                    <input 
-                                        id="prev-plot-button" 
+                                    <input
+                                        id="prev-plot-button"
                                         className="btn btn-outline-lightgreen"
-                                        type="button" 
-                                        name="new-plot" 
-                                        value="Prev" 
+                                        type="button"
+                                        name="new-plot"
+                                        value="Prev"
                                         onClick={props.prevPlot}
-                                        style={{opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
+                                        style={{ opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0" }}
                                         disabled={props.prevPlotButtonDisabled}
                                     />
                                 </div>
                                 <div className="px-1">
-                                    <input 
-                                        id="new-plot-button" 
+                                    <input
+                                        id="new-plot-button"
                                         className="btn btn-outline-lightgreen"
-                                        type="button" 
-                                        name="new-plot" 
-                                        value="Next" 
+                                        type="button"
+                                        name="new-plot"
+                                        value="Next"
                                         onClick={props.nextPlot}
-                                        style={{opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
+                                        style={{ opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0" }}
                                         disabled={props.nextPlotButtonDisabled}
                                     />
                                 </div>
                                 <div className="px-1">
-                                    <input 
-                                        id="flag-plot-button" 
+                                    <input
+                                        id="flag-plot-button"
                                         className="btn btn-outline-lightgreen"
-                                        type="button" 
-                                        name="flag-plot" 
-                                        value="Flag" 
+                                        type="button"
+                                        name="flag-plot"
+                                        value="Flag"
                                         onClick={props.flagPlotInDB}
                                     />
                                 </div>
@@ -949,7 +950,7 @@ class PlotNavigation extends React.Component{
 
                         <div className="PlotNavigation__review-option row justify-content-center">
                             <div className="form-check">
-                                <input 
+                                <input
                                     className="form-check-input"
                                     checked={props.reviewPlots}
                                     id="reviewCheck"
@@ -963,7 +964,7 @@ class PlotNavigation extends React.Component{
                         <div className="PlotNavigation__change-color row justify-content-center">
                             Unanswered Color
                             <div className="form-check form-check-inline">
-                                <input 
+                                <input
                                     className="form-check-input ml-2"
                                     checked={props.sampleOutlineBlack}
                                     id="radio1"
@@ -972,9 +973,9 @@ class PlotNavigation extends React.Component{
                                     name="color-radios"
                                 />
                                 <label htmlFor="radio1" className="form-check-label">Black</label>
-                            </div>                
+                            </div>
                             <div className="form-check form-check-inline">
-                                <input 
+                                <input
                                     className="form-check-input"
                                     checked={!props.sampleOutlineBlack}
                                     id="radio2"
@@ -996,14 +997,14 @@ function ImageryOptions(props) {
     return (
         <fieldset className="mb-3 justify-content-center text-center">
             <h3 className="mb-2">Imagery Options</h3>
-            {props.loadingImages 
+            {props.loadingImages
                 ? <h3>Loading imagery data...</h3>
                 : <Fragment>
-                    <select 
-                        className="form-control form-control-sm" 
-                        id="base-map-source" 
+                    <select
+                        className="form-control form-control-sm"
+                        id="base-map-source"
                         name="base-map-source"
-                        size="1" 
+                        size="1"
                         value={props.baseMapSource || ""}
                         onChange={(e) => props.setBaseMapSource(e.target.value)}
                     >
@@ -1015,15 +1016,15 @@ function ImageryOptions(props) {
                         }
                     </select>
                     {props.imageryTitle === "DigitalGlobeWMSImagery" &&
-                        <DigitalGlobeMenus 
+                        <DigitalGlobeMenus
                             imageryYearDG={props.imageryYearDG}
                             stackingProfileDG={props.stackingProfileDG}
                             setImageryYearDG={props.setImageryYearDG}
                             setStackingProfileDG={props.setStackingProfileDG}
                         />
                     }
-                    {props.imageryTitle === "PlanetGlobalMosaic" && 
-                        <PlanetMenus 
+                    {props.imageryTitle === "PlanetGlobalMosaic" &&
+                        <PlanetMenus
                             imageryYearPlanet={props.imageryYearPlanet}
                             imageryMonthPlanet={props.imageryMonthPlanet}
                             imageryMonthNamePlanet={props.imageryMonthNamePlanet}

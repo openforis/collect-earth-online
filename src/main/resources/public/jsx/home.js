@@ -187,7 +187,7 @@ class SideBar extends React.Component {
                 this.setState({ institutions: data });
             });
     }
-    toggleShowFilters = () => this.setState({showFilters: !this.state.showFilters});
+    toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
 
@@ -231,37 +231,48 @@ class SideBar extends React.Component {
                 {this.props.userName &&
                     <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
-                <InstitutionFilter 
-                        documentRoot={this.props.documentRoot} 
-                        filteredInstitutions={this.state.institutions}
-                        updateFilterText={this.updateFilterText}
-                        filterText={this.state.filterText} 
-                        toggleUseFirst={this.toggleUseFirst} 
-                        useFirstLetter={this.state.useFirstLetter}
-                        filterInstitution={this.state.filterInstitution}
-                        toggleFilterInstitution={this.toggleFilterInstitution}
-                        sortByNumber={this.state.sortByNumber}
-                        toggleSortByNumber={this.toggleSortByNumber}
-                        containsProjects={this.state.containsProjects}
-                        toggleContainsProjects={this.toggleContainsProjects}
-                        showFilters={this.state.showFilters}
-                        toggleShowFilters={this.toggleShowFilters}
-                    />
-                {this.state.institutions.length > 0 
+                <InstitutionFilter
+                    documentRoot={this.props.documentRoot}
+                    filteredInstitutions={this.state.institutions}
+                    updateFilterText={this.updateFilterText}
+                    filterText={this.state.filterText}
+                    toggleUseFirst={this.toggleUseFirst}
+                    useFirstLetter={this.state.useFirstLetter}
+                    filterInstitution={this.state.filterInstitution}
+                    toggleFilterInstitution={this.toggleFilterInstitution}
+                    sortByNumber={this.state.sortByNumber}
+                    toggleSortByNumber={this.toggleSortByNumber}
+                    containsProjects={this.state.containsProjects}
+                    toggleContainsProjects={this.toggleContainsProjects}
+                    showFilters={this.state.showFilters}
+                    toggleShowFilters={this.toggleShowFilters}
+                />
+                {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
-                        ? <ul className="tree"  style={{height:(this.props.userName)?(this.state.showFilters?"calc(100vh - 272px)":"calc(100vh - 225px)"):(this.state.showFilters?"calc(100vh - 232px)":"calc(100vh - 185px)"),
-                                                        overflowY: "scroll",overflowX:"hidden"}}>
-                                {filteredInstitutions.map((institution, uid) => 
-                                        <Institution key={uid}
-                                            id={institution.id}
-                                            name={institution.name}
-                                            documentRoot={this.props.documentRoot}
-                                            projects={filteredProjects
-                                                        .filter(project => project.institution === institution.id)}
-                                            forceInstitutionExpand={!this.state.filterInstitution 
+                        ? <ul
+                            className="tree"
+                            style={{
+                                overflowY: "scroll",
+                                overflowX: "hidden",
+                                height:(this.props.userName)
+                                        ? (this.state.showFilters
+                                            ? "calc(100vh - 272px)" : "calc(100vh - 225px)")
+                                            : (this.state.showFilters ? "calc(100vh - 232px)"
+                                        : "calc(100vh - 185px)"),
+                            }}
+                        >
+                            {filteredInstitutions.map((institution, uid) =>
+                                <Institution
+                                    key={uid}
+                                    id={institution.id}
+                                    name={institution.name}
+                                    documentRoot={this.props.documentRoot}
+                                    projects={filteredProjects
+                                        .filter(project => project.institution === institution.id)}
+                                    forceInstitutionExpand={!this.state.filterInstitution
                                                                     && this.state.filterText.length > 0}
-                                        />
-                                )}
+                                />
+                            )}
                         </ul>
                         : <h3 className="p-3">No Institutions Found...</h3>
                     : <h3 className="p-3">Loading data...</h3> }
@@ -276,18 +287,25 @@ function InstitutionFilter(props) {
     return (
         (props.showFilters) ?
             <div className="InstitutionFilter form-control">
-                <div id="filter-institution" style={{display: "inline-flex", width: "100%"}}>
-                    <input type="text"
-                           id="filterInstitution"
-                           autoComplete="off"
-                           placeholder="Enter text to filter"
-                           className="form-control"
-                           value={props.filterText}
-                           onChange={e => props.updateFilterText(e.target.value)}
+                <div id="filter-institution" style={{ display: "inline-flex", width: "100%" }}>
+                    <input
+                        type="text"
+                        id="filterInstitution"
+                        autoComplete="off"
+                        placeholder="Enter text to filter"
+                        className="form-control"
+                        value={props.filterText}
+                        onChange={e => props.updateFilterText(e.target.value)}
                     />
                     <a href="#" onClick={props.toggleShowFilters}>
-                        <img src={props.documentRoot+"/img/hidefilter.png"} width="40" height="40"
-                        style={{padding: "5px"}} alt="Show/Hide Filters" title="show/hide filters"/></a>
+                        <img
+                            src={props.documentRoot + "/img/hidefilter.png"}
+                            width="40"
+                            height="40"
+                            style={{ padding: "5px" }}
+                            alt="Show/Hide Filters"
+                            title="show/hide filters"
+                        /></a>
                 </div>
                 <div className="d-inlineflex">
                     <div className="form-check form-check-inline">
@@ -363,18 +381,26 @@ function InstitutionFilter(props) {
             </div>
             :
             <div className="InstitutionFilter form-control">
-                <div id="filter-institution" style={{display: "inline-flex", width: "100%"}}>
-                    <input type="text"
-                           id="filterInstitution"
-                           autoComplete="off"
-                           placeholder="Enter text to filter"
-                           className="form-control"
-                           value={props.filterText}
-                           onChange={e => props.updateFilterText(e.target.value)}
+                <div id="filter-institution" style={{ display: "inline-flex", width: "100%" }}>
+                    <input
+                        type="text"
+                        id="filterInstitution"
+                        autoComplete="off"
+                        placeholder="Enter text to filter"
+                        className="form-control"
+                        value={props.filterText}
+                        onChange={e => props.updateFilterText(e.target.value)}
                     />
                     <a href="#" onClick={props.toggleShowFilters}>
-                        <img src={props.documentRoot+"/img/showfilter.png"} width="40" height="40"
-                        style={{padding: "5px"}} alt="Show/Hide Filters" title="show/hide filters"/></a>
+                        <img
+                            src={props.documentRoot + "/img/showfilter.png"}
+                            width="40"
+                            height="40"
+                            style={{ padding: "5px" }}
+                            alt="Show/Hide Filters"
+                            title="show/hide filters"
+                        />
+                    </a>
                 </div>
             </div>
     );

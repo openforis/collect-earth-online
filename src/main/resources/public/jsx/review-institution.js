@@ -171,7 +171,7 @@ class InstitutionDescription extends React.Component {
         fetch(this.props.documentRoot + "/update-institution/" + this.props.institutionId,
               {
                   method: "POST",
-                  body: JSON.stringify(this.state.newInstitutionDetails.name),
+                  body: JSON.stringify(this.state.newInstitutionDetails),
               }
         )
             .then(response => {
@@ -738,8 +738,7 @@ class UserList extends React.Component {
     currentIsInstitutionMember = () =>
         this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
 
-    isInstitutionMember = (userEmail) =>
-        this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.email === userEmail);
+    isInstitutionMember = (userEmail) => this.state.institutionUserList.some(iu => iu.email === userEmail);
 
     isActiveUser = (userEmail) => this.state.activeUserList.some(au => au.email === userEmail);
 

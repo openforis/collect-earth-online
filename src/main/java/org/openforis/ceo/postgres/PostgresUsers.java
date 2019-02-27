@@ -348,7 +348,7 @@ public class PostgresUsers implements Users {
 
         try (var conn = connect()) {
             if (role.equals("not-member")) {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM remove_institution_user_role(?,?)")){
+                try (var pstmt = conn.prepareStatement("SELECT * FROM remove_institution_user_role(?,?)")) {
                     pstmt.setInt(1,institutionId);
                     pstmt.setInt(2,userId);
                     pstmt.execute();
@@ -390,8 +390,7 @@ public class PostgresUsers implements Users {
             pstmt.setInt(3,3);
             pstmt.execute();
             return getInstitutionById(institutionId); 
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
         }
