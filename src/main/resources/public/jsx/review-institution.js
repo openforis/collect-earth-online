@@ -334,7 +334,7 @@ class ImageryList extends React.Component {
                 }
             })
             .then(data => this.setState({ imageryList: data }));
-    }
+    };
 
     deleteImagery = (imageryId) => {
         if (confirm("Do you REALLY want to delete this imagery?")) {
@@ -357,7 +357,7 @@ class ImageryList extends React.Component {
                     }
                 });
         }
-    }
+    };
 
     toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
 
@@ -677,7 +677,7 @@ class UserList extends React.Component {
                     institutionUserList: data,
                 });
             });
-    }
+    };
 
     getActiveUserList = () => {
         fetch(this.props.documentRoot + "/get-all-users")
@@ -691,7 +691,7 @@ class UserList extends React.Component {
                 }
             })
             .then(data => this.setState({ activeUserList: data }));
-    }
+    };
 
     updateUserInstitutionRole = (newUserId, email, role) => {
         fetch(this.props.documentRoot + "/update-user-institution-role",
@@ -713,7 +713,7 @@ class UserList extends React.Component {
                 }
             });
 
-    }
+    };
 
     requestMembership = () => {
         fetch(this.props.documentRoot + "/request-institution-membership",
@@ -733,7 +733,7 @@ class UserList extends React.Component {
                     alert("Error requesting institution membership. See console for details.");
                 }
             });
-    }
+    };
 
     currentIsInstitutionMember = () =>
         this.props.userId === 1 || this.state.institutionUserList.some(iu => iu.id === this.props.userId);
@@ -833,7 +833,7 @@ class NewUserButtons extends React.Component {
         } else {
             return true;
         }
-    }
+    };
 
     addUser = () => {
         this.props.updateUserInstitutionRole(
@@ -841,7 +841,7 @@ class NewUserButtons extends React.Component {
             this.state.newUserEmail,
             "member"
         );
-    }
+    };
 
     render() {
         return <Fragment>

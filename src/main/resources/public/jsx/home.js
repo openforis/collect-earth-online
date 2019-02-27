@@ -254,11 +254,10 @@ class SideBar extends React.Component {
                             style={{
                                 overflowY: "scroll",
                                 overflowX: "hidden",
-                                height:(this.props.userName)
-                                        ? (this.state.showFilters
-                                            ? "calc(100vh - 272px)" : "calc(100vh - 225px)")
-                                            : (this.state.showFilters ? "calc(100vh - 232px)"
-                                        : "calc(100vh - 185px)"),
+                                height: "calc(100vh - 185px"
+                                        + (this.props.userName ? " - 40px" : "")
+                                        + (this.state.showFilters ? " - 47px" : "")
+                                        + ")",
                             }}
                         >
                             {filteredInstitutions.map((institution, uid) =>
