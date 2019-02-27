@@ -222,7 +222,7 @@ class Project extends React.Component {
     };
 
     setProjectTemplate = (newTemplateId) => {
-        if (newTemplateId === 0) {
+        if (parseInt(newTemplateId) === 0) {
             this.setState({
                 projectDetails: { ...this.state.projectDetails, id: 0 },
                 plotList: [],
@@ -245,10 +245,8 @@ class Project extends React.Component {
     setProjectDetail = (key, newValue) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-
     setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
-
 
     getProjectList = () => {
         const { userId } = this.props;
@@ -594,10 +592,8 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lat-max"
                                     value={latMax}
                                     placeholder="North"
-                                    autoComplete="off"
                                     min="-90.0"
                                     max="90.0"
-                                    step="any"
                                     readOnly
                                 />
                             </div>
@@ -611,10 +607,8 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lon-min"
                                     value={lonMin}
                                     placeholder="West"
-                                    autoComplete="off"
                                     min="-180.0"
                                     max="180.0"
-                                    step="any"
                                     readOnly
                                 />
                             </div>
@@ -626,10 +620,8 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lon-max"
                                     value={lonMax}
                                     placeholder="East"
-                                    autoComplete="off"
                                     min="-180.0"
                                     max="180.0"
-                                    step="any"
                                     readOnly
                                 />
                             </div>
@@ -643,10 +635,8 @@ function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }}) {
                                     name="lat-min"
                                     value={latMin}
                                     placeholder="South"
-                                    autoComplete="off"
                                     min="-90.0"
                                     max="90.0"
-                                    step="any"
                                     readOnly
                                 />
                             </div>
@@ -705,28 +695,28 @@ function PlotDesign ({
                 <div className="row">
                     <div id="plot-design-col1" className="col">
                         {id > 0 &&
-                        <Fragment>
-                            <h3>Template Plots</h3>
-                            <div className="form-check form-check-inline">
-                                <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    id="use-template-plots"
-                                    name="use-template-plots"
-                                    defaultValue={useTemplatePlots}
-                                    onChange={toggleTemplatePlots}
-                                    checked={useTemplatePlots}
-                                />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="use-template-plots"
-                                >
-                                    Copy Template Plots and Samples
-                                </label>
-                            </div>
-                            <hr />
-                        </Fragment>
+                            <Fragment>
+                                <h3>Template Plots</h3>
+                                <div className="form-check form-check-inline">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="use-template-plots"
+                                        name="use-template-plots"
+                                        defaultValue={useTemplatePlots}
+                                        onChange={toggleTemplatePlots}
+                                        checked={useTemplatePlots}
+                                    />
+                                    <label
+                                        className="form-check-label"
+                                        htmlFor="use-template-plots"
+                                    >
+                                        Copy Template Plots and Samples
+                                    </label>
+                                </div>
+                            </Fragment>
                         }
+                        {(id > 0 && !useTemplatePlots) && <hr />}
                         {!useTemplatePlots && (
                             <Fragment>
                                 <h3 className="mb-3">Spatial Distribution</h3>
@@ -828,18 +818,18 @@ function PlotDesign ({
                                 </div>
                                 {["csv", "shp"].includes(plotDistribution) &&
                                 <div className="PlotDesign__file-display ml-3 d-inline">
-                            File: {!plotFileName ? <span className="font-italic">None</span> : plotFileName}
+                                    File: {!plotFileName ? <span className="font-italic">None</span> : plotFileName}
                                 </div>
                                 }
                                 <p id="plot-design-text" className="font-italic ml-2 small">-
                                     {plotDistribution === "random" &&
-                                        "Plot centers will be randomly distributed within the AOI."}
+                                    "Plot centers will be randomly distributed within the AOI."}
                                     {plotDistribution === "gridded" &&
-                                        "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below."}
+                                    "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below."}
                                     {plotDistribution === "csv" &&
-                                        "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID."}
+                                    "Specify your own plot centers by uploading a CSV with these fields: LONGITUDE,LATITUDE,PLOTID."}
                                     {plotDistribution === "shp" &&
-                                        "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field."}
+                                    "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field."}
                                 </p>
 
                                 <div className="form-group mb-3">

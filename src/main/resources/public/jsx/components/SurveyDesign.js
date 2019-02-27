@@ -245,7 +245,7 @@ class NewQuestionDesigner extends React.Component {
                                             key={index}
                                             value={index}
                                         >
-                                            {`${type.componentType}-${type.dataType}`}
+                                            {`${type.componentType} - ${type.dataType}`}
                                         </option>)
                                     }
                                 </select>

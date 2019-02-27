@@ -16,7 +16,7 @@ In order to build and run Collect Earth Online, you will need:
 ** Running with an Embedded Jetty Webserver
 
 This is the simplest solution to get up and running quickly. The
-application will be available at http://localhost:8080.
+application will be available at https://localhost:8080.
 
 *** With Maven
 

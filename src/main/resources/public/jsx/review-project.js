@@ -44,7 +44,7 @@ class Project extends React.Component {
         }
 
         if (this.state.mapConfig && this.state.plotList.length > 0
-                && (!prevState.mapConfig || prevState.plotList.length === 0)){
+                && (!prevState.mapConfig || prevState.plotList.length === 0)) {
             mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList, this.state.projectDetails.plotShape);
         }
 
@@ -56,10 +56,6 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                   }
             )
                 .then(response => {
@@ -80,10 +76,6 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                   }
             )
                 .then(response => {
@@ -104,10 +96,6 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                      headers: {
-                          "Accept": "application/json",
-                          "Content-Type": "application/json",
-                      },
                   }
             )
                 .then(response => {
@@ -272,7 +260,7 @@ class Project extends React.Component {
     }
 }
 
-function ProjectNotFount({ projectId }){
+function ProjectNotFount({ projectId }) {
     return (
         <SectionBlock title="Project Information">
             <h3>Project {projectId} not found.</h3>
@@ -386,15 +374,14 @@ class ProjectStats extends React.Component {
                                                         : "Open")}
                                 </span>
                             </div>
-
-                            <div>
-                                Date Archived
-                                <span className="badge badge-pill bg-lightgreen ml-3">
-                                    {archivedDate || (availability === "archived"
-                                                            ? "Unknown"
-                                                            : "Unarchived")}
-                                </span>
-                            </div>
+                            {availability === "archived" &&
+                                <div>
+                                    Date Archived
+                                    <span className="badge badge-pill bg-lightgreen ml-3">
+                                        {archivedDate || "Unknown"}
+                                    </span>
+                                </div>
+                            }
                         </div>
                     </div>
 

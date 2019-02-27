@@ -7,7 +7,7 @@ export default function InstitutionEditor({
     description,
     url,
     buttonGroup,
-    setInstituionDetails,
+    setInstitutionDetails,
 }) {
 
     return (
@@ -23,7 +23,7 @@ export default function InstitutionEditor({
                         className="form-control mb-1 mr-sm-2"
                         type="text"
                         value={name}
-                        onChange={e => setInstituionDetails("name", e.target.value)}
+                        onChange={e => setInstitutionDetails("name", e.target.value)}
                     />
                 </div>
                 <div className="mb-3">
@@ -33,7 +33,7 @@ export default function InstitutionEditor({
                         type="text"
                         className="form-control mb-1 mr-sm-2"
                         value={url}
-                        onChange={e => setInstituionDetails("url", e.target.value)}
+                        onChange={e => setInstitutionDetails("url", e.target.value)}
                     />
                 </div>
                 <div className="mb-3">
@@ -44,8 +44,8 @@ export default function InstitutionEditor({
                         type="file"
                         accept="image/*"
                         onChange={e => {
-                            setInstituionDetails("logo", e.target.files[0].name);
-                            encodeFileAsBase64(e.target.files[0], r => setInstituionDetails("base64Image", r));
+                            setInstitutionDetails("logo", e.target.files[0].name);
+                            encodeFileAsBase64(e.target.files[0], r => setInstitutionDetails("base64Image", r));
                         }}
                     />
                 </div>
@@ -56,7 +56,7 @@ export default function InstitutionEditor({
                         className="form-control"
                         rows="4"
                         value={description}
-                        onChange={e => setInstituionDetails("description", e.target.value)}
+                        onChange={e => setInstitutionDetails("description", e.target.value)}
                     />
                 </div>
                 {buttonGroup()}

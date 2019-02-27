@@ -133,7 +133,7 @@ public class JsonProjects implements Projects {
         }
     }
 
-    private static JsonObject singleProjectJson(String projectId){
+    private static JsonObject singleProjectJson(String projectId) {
         var projects = readJsonFile("project-list.json").getAsJsonArray();
         var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
@@ -513,7 +513,7 @@ public class JsonProjects implements Projects {
 
     private static HashMap<String, HashMap<String, String>>  getDataHashMap(JsonObject project, String plotOrSample) {
         if (plotOrSample.equals("plots")) {
-            if (project.has("csv") && project.get("plotDistribution").getAsString().equals("csv")){
+            if (project.has("csv") && project.get("plotDistribution").getAsString().equals("csv")) {
                 return loadCsvPlotAllColumnsOld(project.get("csv").getAsString());
             } else if (project.has("plots-csv") && project.get("plotDistribution").getAsString().equals("csv")) {
                 return loadCsvPlotAllColumnsNew(project.get("plots-csv").getAsString());
@@ -538,7 +538,7 @@ public class JsonProjects implements Projects {
 
     private static List<String> getHeadersList(JsonObject project, String plotOrSample) {
         if (plotOrSample.equals("plots")) {
-            if (project.has("csv") && project.get("plotDistribution").getAsString().equals("csv")){
+            if (project.has("csv") && project.get("plotDistribution").getAsString().equals("csv")) {
                 return getCsvHeaders(project.get("csv").getAsString());
             } else if (project.has("plots-csv") && project.get("plotDistribution").getAsString().equals("csv")) {
                 return getCsvHeaders(project.get("plots-csv").getAsString());
@@ -586,7 +586,7 @@ public class JsonProjects implements Projects {
                         final var confidence = getOrZero(plot, "confidence").getAsInt();
                         var analysisDuration = 0.0;
                         // Wait until these fields is found to add the column header
-                        if (collectionTime > 0L){
+                        if (collectionTime > 0L) {
                             if (!optionalHeaders.contains("collection_time")) optionalHeaders.add("collection_time");
                                 if (collectionStart > 0L) {
                                     analysisDuration = Math.round((collectionTime - collectionStart) / 100.0) / 10.0;
@@ -594,7 +594,7 @@ public class JsonProjects implements Projects {
                                 }
                         }
                         final var finalAnalysisDuration = analysisDuration;
-                        if (confidence > 0){
+                        if (confidence > 0) {
                             if (!optionalHeaders.contains("confidence")) optionalHeaders.add("confidence");
                         }
 
@@ -672,7 +672,7 @@ public class JsonProjects implements Projects {
                         final var confidence = getOrZero(plot, "confidence").getAsInt();
                         var analysisDuration = 0.0;
                         // Wait until these fields is found to add the column header
-                        if (collectionTime > 0L){
+                        if (collectionTime > 0L) {
                             if (!optionalHeaders.contains("collection_time")) optionalHeaders.add("collection_time");
                                 if (collectionStart > 0L) {
                                     analysisDuration = Math.round((collectionTime - collectionStart) / 100.0) / 10.0;
@@ -680,7 +680,7 @@ public class JsonProjects implements Projects {
                                 }
                         }
                         final var finalAnalysisDuration = analysisDuration;
-                        if (confidence > 0){
+                        if (confidence > 0) {
                             if (!optionalHeaders.contains("confidence")) optionalHeaders.add("confidence");
                         }
 
@@ -723,7 +723,7 @@ public class JsonProjects implements Projects {
                                     plot.has("plotId") 
                                     ? plot.get("plotId").getAsString() 
                                     : plot.get("id").getAsString())
-                                ){
+                                ) {
                                 plotHeaders.forEach(head ->
                                     sampleSummary.addProperty("pl_" + head, plotData.get(
                                         plot.has("plotId") 
@@ -737,7 +737,7 @@ public class JsonProjects implements Projects {
                                     sample.has("sampleId") 
                                     ? sample.get("sampleId").getAsString() 
                                     : "")
-                                ){
+                                ) {
                                 sampleHeaders.forEach(head ->
                                     sampleSummary.addProperty("smpl_" + head, sampleData.get(
                                                         sample.get("sampleId").getAsString() )
