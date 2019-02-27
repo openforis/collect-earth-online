@@ -257,47 +257,51 @@ public class JsonUsers implements Users {
     }
 
     public String getAllUsers(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
         var users = readJsonFile("user-list.json").getAsJsonArray();
+        return toStream(users)
+            .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
+            .map(user -> {
+                    user.remove("password");
+                    user.remove("resetKey");
+                    return user;
+                })
+            .collect(intoJsonArray)
+            .toString();
+    }
 
-        if (institutionId == null || institutionId.isEmpty()) {
+    public String getInstitutionUsers(Request req, Response res) {
+        var institutionId = req.params(":id");
+
+        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+
+        var matchingInstitution = findInJsonArray(institutions,
+            institution -> institution.get("id").getAsString().equals(institutionId));
+        if (matchingInstitution.isPresent()) {
+            var institution = matchingInstitution.get();
+            var members = institution.getAsJsonArray("members");
+            var admins = institution.getAsJsonArray("admins");
+            var pending = institution.getAsJsonArray("pending");
             return toStream(users)
                 .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
+                .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
                 .map(user -> {
                         user.remove("password");
+                        user.remove("resetKey");
+                        return user;
+                    })
+                .map(user -> {
+                        user.addProperty("institutionRole",
+                                            admins.contains(user.get("id")) ? "admin"
+                                            : members.contains(user.get("id")) ? "member"
+                                            : pending.contains(user.get("id")) ? "pending"
+                                            : "not-member");
                         return user;
                     })
                 .collect(intoJsonArray)
                 .toString();
         } else {
-            var institutions = readJsonFile("institution-list.json").getAsJsonArray();
-            var matchingInstitution = findInJsonArray(institutions,
-                institution -> institution.get("id").getAsString().equals(institutionId));
-            if (matchingInstitution.isPresent()) {
-                var institution = matchingInstitution.get();
-                var members = institution.getAsJsonArray("members");
-                var admins = institution.getAsJsonArray("admins");
-                var pending = institution.getAsJsonArray("pending");
-                return toStream(users)
-                    .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
-                    .filter(user -> members.contains(user.get("id")) || pending.contains(user.get("id")))
-                    .map(user -> {
-                            user.remove("password");
-                            return user;
-                        })
-                    .map(user -> {
-                            user.addProperty("institutionRole",
-                                             admins.contains(user.get("id")) ? "admin"
-                                             : members.contains(user.get("id")) ? "member"
-                                             : pending.contains(user.get("id")) ? "pending"
-                                             : "not-member");
-                            return user;
-                        })
-                    .collect(intoJsonArray)
-                    .toString();
-            } else {
-                return (new JsonArray()).toString();
-            }
+            return (new JsonArray()).toString();
         }
     }
 
@@ -455,12 +459,12 @@ public class JsonUsers implements Users {
     public synchronized String updateInstitutionRole(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var userId = jsonInputs.get("userId");
-        var institutionId = jsonInputs.get("institutionId").getAsString();
+        var institutionId = jsonInputs.get("institutionId").getAsInt();
         var role = jsonInputs.get("role").getAsString();
 
         mapJsonFile("institution-list.json",
                     institution -> {
-                        if (institution.get("id").getAsString().equals(institutionId)) {
+                        if (institution.get("id").getAsInt() == institutionId) {
                             var members = institution.getAsJsonArray("members");
                             var admins = institution.getAsJsonArray("admins");
                             var pending = institution.getAsJsonArray("pending");
@@ -504,11 +508,11 @@ public class JsonUsers implements Users {
     public synchronized String requestInstitutionMembership(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var userId = jsonInputs.get("userId");
-        var institutionId = jsonInputs.get("institutionId").getAsString();
+        var institutionId = jsonInputs.get("institutionId").getAsInt();
 
         mapJsonFile("institution-list.json",
                     institution -> {
-                        if (institution.get("id").getAsString().equals(institutionId)) {
+                        if (institution.get("id").getAsInt() == institutionId) {
                             var members = institution.getAsJsonArray("members");
                             var pending = institution.getAsJsonArray("pending");
                             if (!members.contains(userId) && !pending.contains(userId)) {
@@ -520,7 +524,6 @@ public class JsonUsers implements Users {
                             return institution;
                         }
                     });
-
         return "";
     }
 

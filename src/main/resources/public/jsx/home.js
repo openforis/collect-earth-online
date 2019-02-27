@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
+import { sortAlphabetically } from "./utils/textUtils.js";
 
 class Home extends React.Component {
     constructor(props) {
@@ -9,8 +10,6 @@ class Home extends React.Component {
             projects: [],
             showSidePanel: true,
         };
-        this.toggleSidebar=this.toggleSidebar.bind(this);
-
     }
 
     componentDidMount() {
@@ -20,9 +19,7 @@ class Home extends React.Component {
             .then(data => this.setState({ projects: data }));
     }
 
-    toggleSidebar() {
-        this.setState({ showSidePanel: !this.state.showSidePanel });
-    }
+    toggleSidebar = () => this.setState({ showSidePanel: !this.state.showSidePanel });
 
     render() {
         return (
@@ -146,10 +143,10 @@ class MapPanel extends React.Component {
                         <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
                             <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <i className={"fa fa-caret-left"} />
+                                <div className={"fa fa-caret-left"} />
                             </div>
                             <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <i className={"fa fa-caret-right"} />
+                                <div className={"fa fa-caret-right"} />
                             </div>
                         </div>
                     </div>
@@ -190,7 +187,7 @@ class SideBar extends React.Component {
                 this.setState({ institutions: data });
             });
     }
-    toggleShowFilters = () => this.setState({showFilters: !this.state.showFilters});
+    toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
 
@@ -202,36 +199,28 @@ class SideBar extends React.Component {
 
     updateFilterText = (newText) => this.setState({ filterText: newText });
 
-    sortedName(a, b) {
-        const nameA = a.name.toLowerCase();
-        const nameB = b.name.toLowerCase();
-        return nameA < nameB ? -1
-                : nameA > nameB ? 1
-                    : 0;
-    }
-
     render() {
         const filterTextLower = this.state.filterText.toLocaleLowerCase();
 
         const filteredProjects = this.props.projects
-                .filter(proj => this.state.filterInstitution
+            .filter(proj => this.state.filterInstitution
                                     || (this.state.useFirstLetter
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : proj.name.toLocaleLowerCase().includes(filterTextLower)));
 
         const filteredInstitutions = this.state.institutions
-                .filter(inst => !this.state.filterInstitution
+            .filter(inst => !this.state.filterInstitution
                                     || (this.state.useFirstLetter
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : inst.name.toLocaleLowerCase().includes(filterTextLower)))
-                .filter(inst => this.state.filterInstitution
+            .filter(inst => this.state.filterInstitution
                                     || filteredProjects.some(proj => inst.id === proj.institution))
-                .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
-                                    ||  this.props.projects.some(proj => inst.id === proj.institution))
-                .sort((a, b) => this.state.sortByNumber
+            .filter(inst => !(this.state.filterInstitution && this.state.containsProjects)
+                                    || this.props.projects.some(proj => inst.id === proj.institution))
+            .sort((a, b) => this.state.sortByNumber
                                     ? this.props.projects.filter(proj => b.id === proj.institution).length
                                         - this.props.projects.filter(proj => a.id === proj.institution).length
-                                    : this.sortedName(a, b));
+                                    : sortAlphabetically(a.name, b.name));
 
 
         return this.props.showSidePanel
@@ -242,37 +231,47 @@ class SideBar extends React.Component {
                 {this.props.userName &&
                     <CreateInstitutionButton documentRoot={this.props.documentRoot}/>
                 }
-                <InstitutionFilter 
-                        documentRoot={this.props.documentRoot} 
-                        filteredInstitutions={this.state.institutions}
-                        updateFilterText={this.updateFilterText}
-                        filterText={this.state.filterText} 
-                        toggleUseFirst={this.toggleUseFirst} 
-                        useFirstLetter={this.state.useFirstLetter}
-                        filterInstitution={this.state.filterInstitution}
-                        toggleFilterInstitution={this.toggleFilterInstitution}
-                        sortByNumber={this.state.sortByNumber}
-                        toggleSortByNumber={this.toggleSortByNumber}
-                        containsProjects={this.state.containsProjects}
-                        toggleContainsProjects={this.toggleContainsProjects}
-                        showFilters={this.state.showFilters}
-                        toggleShowFilters={this.toggleShowFilters}
-                    />
-                {this.state.institutions.length > 0 
+                <InstitutionFilter
+                    documentRoot={this.props.documentRoot}
+                    filteredInstitutions={this.state.institutions}
+                    updateFilterText={this.updateFilterText}
+                    filterText={this.state.filterText}
+                    toggleUseFirst={this.toggleUseFirst}
+                    useFirstLetter={this.state.useFirstLetter}
+                    filterInstitution={this.state.filterInstitution}
+                    toggleFilterInstitution={this.toggleFilterInstitution}
+                    sortByNumber={this.state.sortByNumber}
+                    toggleSortByNumber={this.toggleSortByNumber}
+                    containsProjects={this.state.containsProjects}
+                    toggleContainsProjects={this.toggleContainsProjects}
+                    showFilters={this.state.showFilters}
+                    toggleShowFilters={this.toggleShowFilters}
+                />
+                {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
-                        ? <ul className="tree"  style={{height:(this.props.userName)?(this.state.showFilters?"calc(100vh - 272px)":"calc(100vh - 225px)"):(this.state.showFilters?"calc(100vh - 232px)":"calc(100vh - 185px)"),
-                                                        overflowY: "scroll",overflowX:"hidden"}}>
-                                {filteredInstitutions.map((institution, uid) => 
-                                        <Institution key={uid}
-                                            id={institution.id}
-                                            name={institution.name}
-                                            documentRoot={this.props.documentRoot}
-                                            projects={filteredProjects
-                                                        .filter(project => project.institution === institution.id)}
-                                            forceInstitutionExpand={!this.state.filterInstitution 
+                        ? <ul
+                            className="tree"
+                            style={{
+                                overflowY: "scroll",
+                                overflowX: "hidden",
+                                height: "calc(100vh - 185px"
+                                        + (this.props.userName ? " - 40px" : "")
+                                        + (this.state.showFilters ? " - 47px" : "")
+                                        + ")",
+                            }}
+                        >
+                            {filteredInstitutions.map((institution, uid) =>
+                                <Institution
+                                    key={uid}
+                                    id={institution.id}
+                                    name={institution.name}
+                                    documentRoot={this.props.documentRoot}
+                                    projects={filteredProjects
+                                        .filter(project => project.institution === institution.id)}
+                                    forceInstitutionExpand={!this.state.filterInstitution
                                                                     && this.state.filterText.length > 0}
-                                        />
-                                )}
+                                />
+                            )}
                         </ul>
                         : <h3 className="p-3">No Institutions Found...</h3>
                     : <h3 className="p-3">Loading data...</h3> }
@@ -287,18 +286,25 @@ function InstitutionFilter(props) {
     return (
         (props.showFilters) ?
             <div className="InstitutionFilter form-control">
-                <div id="filter-institution" style={{display: "inline-flex", width: "100%"}}>
-                    <input type="text"
-                           id="filterInstitution"
-                           autoComplete="off"
-                           placeholder="Enter text to filter"
-                           className="form-control"
-                           value={props.filterText}
-                           onChange={e => props.updateFilterText(e.target.value)}
+                <div id="filter-institution" style={{ display: "inline-flex", width: "100%" }}>
+                    <input
+                        type="text"
+                        id="filterInstitution"
+                        autoComplete="off"
+                        placeholder="Enter text to filter"
+                        className="form-control"
+                        value={props.filterText}
+                        onChange={e => props.updateFilterText(e.target.value)}
                     />
                     <a href="#" onClick={props.toggleShowFilters}>
-                        <img src={props.documentRoot+"/img/hidefilter.png"} width="40" height="40"
-                        style={{padding: "5px"}} alt="Show/Hide Filters" title="show/hide filters"/></a>
+                        <img
+                            src={props.documentRoot + "/img/hidefilter.png"}
+                            width="40"
+                            height="40"
+                            style={{ padding: "5px" }}
+                            alt="Show/Hide Filters"
+                            title="show/hide filters"
+                        /></a>
                 </div>
                 <div className="d-inlineflex">
                     <div className="form-check form-check-inline">
@@ -374,18 +380,26 @@ function InstitutionFilter(props) {
             </div>
             :
             <div className="InstitutionFilter form-control">
-                <div id="filter-institution" style={{display: "inline-flex", width: "100%"}}>
-                    <input type="text"
-                           id="filterInstitution"
-                           autoComplete="off"
-                           placeholder="Enter text to filter"
-                           className="form-control"
-                           value={props.filterText}
-                           onChange={e => props.updateFilterText(e.target.value)}
+                <div id="filter-institution" style={{ display: "inline-flex", width: "100%" }}>
+                    <input
+                        type="text"
+                        id="filterInstitution"
+                        autoComplete="off"
+                        placeholder="Enter text to filter"
+                        className="form-control"
+                        value={props.filterText}
+                        onChange={e => props.updateFilterText(e.target.value)}
                     />
                     <a href="#" onClick={props.toggleShowFilters}>
-                        <img src={props.documentRoot+"/img/showfilter.png"} width="40" height="40"
-                        style={{padding: "5px"}} alt="Show/Hide Filters" title="show/hide filters"/></a>
+                        <img
+                            src={props.documentRoot + "/img/showfilter.png"}
+                            width="40"
+                            height="40"
+                            style={{ padding: "5px" }}
+                            alt="Show/Hide Filters"
+                            title="show/hide filters"
+                        />
+                    </a>
                 </div>
             </div>
     );
@@ -397,9 +411,9 @@ function CreateInstitutionButton(props) {
             <a
                 className="create-institution"
                 style={{ display:"block" }}
-                href={props.documentRoot + "/create-institution/0"}
+                href={props.documentRoot + "/create-institution"}
             >
-                <i className="fa fa-file" /> Create New Institution
+                <span className="fa fa-file" /> Create New Institution
             </a>
         </div>
     );
@@ -438,7 +452,7 @@ class Institution extends React.Component {
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
                                 href={props.documentRoot + "/review-institution/" + props.id}
                             >
-                                <i className="fa fa-info" style={{ color: "white" }}></i>
+                                <span className="fa fa-info" style={{ color: "white" }} />
                             </a>
                         </div>
                     </div>
@@ -488,7 +502,7 @@ function Project(props) {
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
                         href={props.documentRoot + "/review-project/" + props.id}
                     >
-                        <i className="fa fa-edit"></i>
+                        <span className="fa fa-edit" />
                     </a>
                 </div>
             </div>
@@ -533,10 +547,10 @@ class ProjectPopup extends React.Component {
                                                     href={this.props.documentRoot + "/collection/" + feature.get("projectId")}
                                                     className="btn btn-sm btn-block btn-outline-lightgreen"
                                                     style={{
-                                                       whiteSpace: "nowrap",
-                                                       overflow: "hidden",
-                                                       textOverflow: "ellipsis",
-                                                   }}
+                                                        whiteSpace: "nowrap",
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                    }}
                                                 >
                                                     {feature.get("name")}
                                                 </a>
@@ -557,6 +571,7 @@ class ProjectPopup extends React.Component {
                     </table>
                 </div>
                 <button
+                    type="button"
                     id="zoomToCluster"
                     className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
                     style={{
@@ -565,7 +580,7 @@ class ProjectPopup extends React.Component {
                         display: this.props.features.length > 1 ? "block" : "none",
                     }}
                 >
-                    <i className="fa fa-search-plus"></i> Zoom to cluster
+                    <span className="fa fa-search-plus"/>Zoom to cluster
                 </button>
             </div>
         );

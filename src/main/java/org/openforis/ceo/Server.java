@@ -83,7 +83,7 @@ public class Server implements SparkApplication {
         get("/about",                                 Views.about(freemarker));
         get("/support",                               Views.support(freemarker));
         get("/account/:id",                           Views.account(freemarker));
-        get("/create-institution/:id",                Views.createInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/create-institution",                    Views.createInstitution(freemarker));
         get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
         get("/collection/:id",                        Views.collection(freemarker));
         get("/geo-dash",                              Views.geodash(freemarker));
@@ -97,6 +97,7 @@ public class Server implements SparkApplication {
         get("/password",                              Views.password(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
         get("/card-test",                             Views.cardTest(freemarker));
+        get("/geo-dash/geodashhelp",                  Views.geodashhelp(freemarker));
 
         // Routing Table: HTML pages (with side effects)
         post("/account/:id",                          (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
@@ -107,23 +108,16 @@ public class Server implements SparkApplication {
         get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
 
         // Routing Table: Projects API
+        get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
+        get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
         get("/get-all-projects",                      projects::getAllProjects);
+        get("/get-next-plot/:projid/:id",             projects::getNextPlot);
         get("/get-project-by-id/:id",                 projects::getProjectById);
         get("/get-project-plots/:id/:max",            projects::getProjectPlots);
         get("/get-project-plot/:project-id/:plot-id", projects::getProjectPlot);
         get("/get-project-stats/:id",                 projects::getProjectStats);
-        
-        // FIXME: remove api routes for legacy
-        get("/get-unanalyzed-plot-by-id/:projid/:id", projects::getPlotById);
-        get("/get-next-unanalyzed-plot/:projid/:id",  projects::getNextPlot);
-        get("/get-prev-unanalyzed-plot/:projid/:id",  projects::getPrevPlot);        
-        // FIXME: Update to these api calls
         get("/get-plot-by-id/:projid/:id",            projects::getPlotById);
-        get("/get-next-plot/:projid/:id",             projects::getNextPlot);
         get("/get-prev-plot/:projid/:id",             projects::getPrevPlot);
-
-        get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
-        get("/dump-project-raw-data/:id",             projects::dumpProjectRawData);
         post("/add-user-samples",                     projects::addUserSamples);
         post("/create-project",                       projects::createProject);
         post("/archive-project/:id",                  projects::archiveProject);
@@ -133,6 +127,7 @@ public class Server implements SparkApplication {
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
+        get("/get-institution-users/:id",             users::getInstitutionUsers);
         get("/get-user-stats/:userid",                users::getUserStats);
         get("/update-project-user-stats",             users::updateProjectUserStats);
         post("/update-user-institution-role",         users::updateInstitutionRole);
@@ -141,6 +136,7 @@ public class Server implements SparkApplication {
         // Routing Table: Institutions API
         get("/get-all-institutions",                  institutions::getAllInstitutions);
         get("/get-institution-details/:id",           institutions::getInstitutionDetails);
+        post("/create-institution",                   institutions::createInstitution);
         post("/update-institution/:id",               institutions::updateInstitution);
         post("/archive-institution/:id",              institutions::archiveInstitution);
 
@@ -157,7 +153,6 @@ public class Server implements SparkApplication {
         get("/geo-dash/createwidget/widget",          geoDash::createDashBoardWidgetById);
         get("/geo-dash/updatewidget/widget/:id",      geoDash::updateDashBoardWidgetById);
         get("/geo-dash/deletewidget/widget/:id",      geoDash::deleteDashBoardWidgetById);
-        get("/geo-dash/geodashhelp",                  Views.geodashhelp(freemarker));
 
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));

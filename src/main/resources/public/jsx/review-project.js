@@ -1,9 +1,9 @@
-import React, { Fragment }  from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
 import SurveyCardList from "./components/SurveyCardList";
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
+import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
@@ -54,22 +54,19 @@ class Project extends React.Component {
         if (confirm("Do you REALLY want to publish this project?")) {
             utils.show_element("spinner");
             fetch(this.props.documentRoot + "/publish-project/" + this.state.projectDetails.id,
-                {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                    },
-              })
-            .then(response => {
-                utils.hide_element("spinner");
-                if (response.ok) {
-                    this.setState({ projectDetails: { ...this.state.projectDetails, availability: "published" }});
-                } else {
-                    console.log(response);
-                    alert("Error publishing project. See console for details.");
-                }
-            });
+                  {
+                      method: "POST",
+                  }
+            )
+                .then(response => {
+                    utils.hide_element("spinner");
+                    if (response.ok) {
+                        this.setState({ projectDetails: { ...this.state.projectDetails, availability: "published" }});
+                    } else {
+                        console.log(response);
+                        alert("Error publishing project. See console for details.");
+                    }
+                });
         }
     };
 
@@ -77,22 +74,19 @@ class Project extends React.Component {
         if (confirm("Do you REALLY want to close this project?")) {
             utils.show_element("spinner");
             fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
-                {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                    },
-            })
-            .then(response => {
-                utils.hide_element("spinner");
-                if (response.ok) {
-                    this.setState({ projectDetails: { ...this.state.projectDetails, availability: "closed" }});
-                } else {
-                    console.log(response);
-                    alert("Error closing project. See console for details.");
-                }
-            });
+                  {
+                      method: "POST",
+                  }
+            )
+                .then(response => {
+                    utils.hide_element("spinner");
+                    if (response.ok) {
+                        this.setState({ projectDetails: { ...this.state.projectDetails, availability: "closed" }});
+                    } else {
+                        console.log(response);
+                        alert("Error closing project. See console for details.");
+                    }
+                });
         }
     };
 
@@ -100,24 +94,21 @@ class Project extends React.Component {
         if (confirm("Do you REALLY want to archive this project?!")) {
             utils.show_element("spinner");
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
-                {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json",
-                    },
-            })
-            .then(response => {
-                utils.hide_element("spinner");
-                if (response.ok) {
-                    this.setState({ projectDetails: { ...this.state.projectDetails, availability: "archived" }});
-                    alert("Project " + this.state.projectDetails.id + " has been archived.");
-                    window.location = this.props.documentRoot + "/home";
-                } else {
-                    console.log(response);
-                    alert("Error archiving project. See console for details.");
-                }
-            });
+                  {
+                      method: "POST",
+                  }
+            )
+                .then(response => {
+                    utils.hide_element("spinner");
+                    if (response.ok) {
+                        this.setState({ projectDetails: { ...this.state.projectDetails, availability: "archived" }});
+                        alert("Project " + this.state.projectDetails.id + " has been archived.");
+                        window.location = this.props.documentRoot + "/home";
+                    } else {
+                        console.log(response);
+                        alert("Error archiving project. See console for details.");
+                    }
+                });
         }
     };
 
@@ -133,9 +124,12 @@ class Project extends React.Component {
 
     configureGeoDash = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
-            window.open(this.props.documentRoot + "/widget-layout-editor?editable=true&"
-                + encodeURIComponent("institutionId=" + this.state.projectDetails.institution
-                    + "&pid=" + this.state.projectDetails.id),
+            window.open(
+                this.props.documentRoot + "/widget-layout-editor?editable=true&"
+                + encodeURIComponent(
+                    "institutionId=" + this.state.projectDetails.institution
+                    + "&pid=" + this.state.projectDetails.id
+                ),
                 "_geo-dash");
         }
     };
@@ -218,7 +212,8 @@ class Project extends React.Component {
 
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-        mercator.addVectorLayer(this.state.mapConfig,
+        mercator.addVectorLayer(
+            this.state.mapConfig,
             "currentAOI",
             mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
             ceoMapStyles.yellowPolygon);
@@ -227,13 +222,13 @@ class Project extends React.Component {
 
     gotoProjectDashboard = () => {
         if (this.state.plotList != null && this.state.projectDetails != null) {
-            window.open(this.props.documentRoot + "/project-dashboard/"+this.state.projectDetails.id);
+            window.open(this.props.documentRoot + "/project-dashboard/" + this.state.projectDetails.id);
         }
     };
 
     render() {
         return (
-            <FormLayout id="project-design"  title="Review Project">
+            <FormLayout id="project-design" title="Review Project">
                 {this.state.projectDetails && parseInt(this.state.projectDetails.id) > 0
                 ?
                     <Fragment>
@@ -287,6 +282,7 @@ class ProjectStatsGroup extends React.Component {
         return (
             <div className="ProjectStatsGroup">
                 <button
+                    type="button"
                     className="btn btn-outline-lightgreen btn-sm btn-block my-2"
                     onClick={this.updateShown}
                 >
@@ -335,19 +331,19 @@ class ProjectStats extends React.Component {
 
     render() {
         const {
-                stats : {
-                    analyzedPlots,
-                    archivedDate,
-                    closedDate,
-                    contributors,
-                    createdDate,
-                    flaggedPlots,
-                    members,
-                    publishedDate,
-                    unanalyzedPlots,
-                    userStats,
-                },
-            } = this.state;
+            stats : {
+                analyzedPlots,
+                archivedDate,
+                closedDate,
+                contributors,
+                createdDate,
+                flaggedPlots,
+                members,
+                publishedDate,
+                unanalyzedPlots,
+                userStats,
+            },
+        } = this.state;
         const { availability } = this.props;
         const numPlots = flaggedPlots + analyzedPlots + unanalyzedPlots;
         return (
@@ -364,7 +360,7 @@ class ProjectStats extends React.Component {
                             <div className="pr-5">
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
-                                    {publishedDate ||  (availability === "unpublished"
+                                    {publishedDate || (availability === "unpublished"
                                                             ? "Unpublished"
                                                             : "Unknown" )}
                                 </span>
@@ -413,23 +409,26 @@ class ProjectStats extends React.Component {
                             <StatsRow
                                 title="Total"
                                 plots={userStats.reduce((p, c) => p + c.plots, 0)}
-                                analysisTime={userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
-                                                ? (userStats.reduce((p, c) => p + c.seconds, 0)
-                                                    / userStats.reduce((p, c) => p + c.timedPlots, 0)
-                                                    / 1.0).toFixed(2)
-                                                : 0
-                                                }
+                                analysisTime={
+                                    userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
+                                        ? (userStats.reduce((p, c) => p + c.seconds, 0)
+                                            / userStats.reduce((p, c) => p + c.timedPlots, 0)
+                                            / 1.0).toFixed(2)
+                                        : 0
+                                }
                             />
                             {userStats.map((user, uid) => (
                                 <StatsRow
                                     key={uid}
                                     title={user.user}
                                     plots={user.plots}
-                                    analysisTime={user.timedPlots > 0
-                                                    ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
-                                                    : 0
-                                                  }
-                                />))}
+                                    analysisTime={
+                                        user.timedPlots > 0
+                                            ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
+                                            : 0
+                                    }
+                                />
+                            ))}
                         </div>
                     }
                 </div>
@@ -641,29 +640,29 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
                                     </td>
                                 </tr>
                                 {plotDistribution === "gridded" &&
-                                <tr>
-                                    <td className="w-80">Plot spacing</td>
-                                    <td className="w-20 text-center">
-                                        <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
-                                    </td>
-                                </tr>
-                            }
+                                    <tr>
+                                        <td className="w-80">Plot spacing</td>
+                                        <td className="w-20 text-center">
+                                            <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
+                                        </td>
+                                    </tr>
+                                }
                                 {plotDistribution !== "shp" &&
-                                <Fragment>
-                                    <tr>
-                                        <td className="w-80">Plot shape</td>
-                                        <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="w-80">Plot size</td>
-                                        <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
-                                        </td>
-                                    </tr>
-                                </Fragment>
-                            }
+                                    <Fragment>
+                                        <tr>
+                                            <td className="w-80">Plot shape</td>
+                                            <td className="w-20 text-center">
+                                                <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="w-80">Plot size</td>
+                                            <td className="w-20 text-center">
+                                                <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
+                                            </td>
+                                        </tr>
+                                    </Fragment>
+                                }
                             </tbody>
                         </table>
                     </div>

@@ -14,7 +14,7 @@ export function convertSampleValuesToSurveyQuestions(sampleValues) {
             parentQuestion: parseInt(sv.parentQuestion || sv.parent_question || -1),
             parentAnswer: parseInt(sv.parentAnswer || sv.parent_answer || -1),
             componentType: (sv.componentType || "button").toLocaleLowerCase(),
-            dataType: (sv.dataType || "text").toLocaleLowerCase()
+            dataType: (sv.dataType || "text").toLocaleLowerCase(),
         };
     });
 }

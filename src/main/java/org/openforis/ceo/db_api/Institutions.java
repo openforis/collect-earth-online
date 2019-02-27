@@ -7,6 +7,7 @@ public interface Institutions {
 
     String getAllInstitutions(Request req, Response res);
     String getInstitutionDetails(Request req, Response res);
+    String createInstitution(Request req, Response res);
     String updateInstitution(Request req, Response res);
     String archiveInstitution(Request req, Response res);
 

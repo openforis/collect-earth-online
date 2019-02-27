@@ -1083,8 +1083,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_id integer)
         p.samples_per_plot,p.sample_resolution,p.survey_questions, p.survey_rules,
         p.classification_times,false AS editable
     FROM project_roles as p
-    WHERE (role NOT IN ('admin','member') OR role IS NULL)
-      AND p.privacy_level IN ('public','institution')
+    WHERE p.privacy_level IN ('public')
       AND p.availability  =  'published'
     ORDER BY id
 

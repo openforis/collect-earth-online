@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { utils } from "../js/utils.js";
 
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
+import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 
 class ProjectDashboard extends React.Component {
     constructor(props) {

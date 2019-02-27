@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import { FormLayout, SectionBlock } from "./components/FormComponents";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
-import { convertSampleValuesToSurveyQuestions } from "./utils/SurveyUtils";
+import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { utils } from "../js/utils.js";
 
 class Project extends React.Component {
@@ -56,12 +56,12 @@ class Project extends React.Component {
 
         if (this.state.mapConfig
                 && (this.state.mapConfig !== prevState.mapConfig
-                || this.state.projectDetails.id !== prevState.projectDetails.id))  {
+                || this.state.projectDetails.id !== prevState.projectDetails.id)) {
             this.updateProjectBoundary();
         }
 
         if (this.state.mapConfig && this.state.projectDetails.id > 0
-            && this.state.projectDetails.id !== prevState.projectDetails.id)  {
+            && this.state.projectDetails.id !== prevState.projectDetails.id) {
             this.getProjectPlots();
         }
 
@@ -111,19 +111,16 @@ class Project extends React.Component {
                   {
                       method: "POST",
                       body: formData,
-                  })
+                  }
+            )
                 .then(response => {
                     utils.hide_element("spinner");
                     if (response.ok) {
-                        return response.json();
+                        window.location = this.props.documentRoot + "/review-project/" + response.json();
                     } else {
                         console.log(response);
                         alert("Error creating project. See console for details.");
-                        return new Promise.reject("Error creating project");
                     }
-                })
-                .then(projectId => {
-                    window.location = this.props.documentRoot + "/review-project/" + projectId;
                 });
         }
     };
@@ -305,7 +302,7 @@ class Project extends React.Component {
             const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
             // FIXME like above, these values are stored in the state but never used.
             this.setState({
-                 coordinates: {
+                coordinates: {
                     lonMin: boundaryExtent[0],
                     latMin: boundaryExtent[1],
                     lonMax: boundaryExtent[2],

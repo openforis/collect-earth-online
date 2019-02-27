@@ -13,6 +13,7 @@ public interface Users {
     Request getPasswordResetKey(Request req, Response res);
     Request resetPassword(Request req, Response res);
     String getAllUsers(Request req, Response res);
+    String getInstitutionUsers(Request req, Response res);
     String getUserStats(Request req, Response res);
     String updateProjectUserStats(Request req, Response res);
     Map<Integer, String> getInstitutionRoles(int userId);

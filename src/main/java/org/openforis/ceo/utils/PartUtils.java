@@ -9,6 +9,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.stream.Collectors;
 import javax.servlet.http.Part;
 import spark.Request;
@@ -76,6 +77,27 @@ public class PartUtils {
                 // Write the file to outputDirectory and return the filename
                 try (var input = part.getInputStream()) {
                     Files.copy(input, (new File(outputDirectory, outputFileName)).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+                return outputFileName;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String writeFilePartBase64(String inputFileName, String encodedFile, String outputDirectory, String outputFilePrefix) {
+        try {
+            if (inputFileName == null) {
+                return null;
+            } else {
+                // Append the uploaded file extension to outputFilePrefix
+                var inputFileType = inputFileName.substring(inputFileName.lastIndexOf(".") + 1);
+                var outputFileName = outputFilePrefix + "." + inputFileType;
+                
+                byte[] data = Base64.getDecoder().decode(encodedFile.split(",")[1]);
+                // Write the file to outputDirectory and return the filename
+                try (OutputStream stream = new FileOutputStream((new File(outputDirectory, outputFileName)).toPath().toString())) {
+                    stream.write(data);
                 }
                 return outputFileName;
             }
