@@ -402,9 +402,12 @@ class Collection extends React.Component {
                     return obj;
                 }, {})
                 : {},
-            selectedQuestion: this.state.currentProject.surveyQuestions
-                .sort((a, b) => a.id - b.id)
-                .find(surveyNode => surveyNode.parentQuestion === -1),
+            selectedQuestion: {
+                ...this.state.currentProject.surveyQuestions
+                    .sort((a, b) => a.id - b.id)
+                    .find(surveyNode => surveyNode.parentQuestion === -1),
+                visible: null,
+            },
             collectionStart: Date.now(),
             sampleOutlineBlack: true,
         };
