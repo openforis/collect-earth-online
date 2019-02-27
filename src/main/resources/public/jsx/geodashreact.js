@@ -7,20 +7,13 @@ class Geodash extends React.Component {
         theURI: window.location.origin + "/geo-dash"
     }
     static getParameterByName (name, url) {
-        if (!url) {
-            url = window.location.href;
-        }
-        url = decodeURIComponent(url);
-        name = name.replace(/[\[\]]/g, "\\$&");
-        const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(url);
-        if (!results) {
-            return null;
-        }
-        if (!results[2]) {
-            return "";
-        }
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
+        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
+        return results
+            ? results[2]
+                ? decodeURIComponent(results[2].replace(/\+/g, " "))
+                : ""
+            : null;
     }
     constructor(props) {
         super(props);
@@ -49,20 +42,8 @@ class Geodash extends React.Component {
     }
     handleResize = () => {
         this.state.widgets.forEach(function(widget){
-            if(graphWidgetArray["widgetgraph_" + widget.id] != null)
-            {
-                const gwidget = document.getElementById("widgetgraph_" + widget.id);
-                graphWidgetArray["widgetgraph_" + widget.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
-            }
-            else if(mapWidgetArray["widgetgraph_" + widget.id] != null){
+            if(mapWidgetArray["widgetgraph_" + widget.id] != null){
                 mapWidgetArray["widgetmap_" + widget.id].updateSize();
-            }
-            //***************hold this thought, we can safe the map and graph in state of the components***********/
-            if(document.getElementById("widgetgraph_" + widget.id))
-            {
-                console.log("thinking about working")
-                console.log(widget.props.graphRef);
-                console.log("look above");
             }
         });
     };
@@ -134,10 +115,6 @@ class Geodash extends React.Component {
         if(type === "mapwidget"){
             mapWidgetArray["widgetmap_" + which.id].updateSize();
         }
-        else if(type === "graphwidget"){
-            const gwidget = document.getElementById("widgetgraph_"+ which.id);
-            graphWidgetArray["widgetgraph_"+ which.id].setSize(gwidget.clientWidth, gwidget.clientHeight, true);
-        }
     }
     setOpacity (value, layerID) {
         try{
@@ -174,11 +151,22 @@ class Widgets extends React.Component {
             </div> );
         }
         else{
-            return ( <div className="row placeholders">
-                <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
-                    <h1 id="noWidgetMessage" style={{display: this.props.callbackComplete === false? "none" : "block" }}>The Administrator has not configured any Geo-Dash Widgets for this project</h1>
-                </div>
-            </div> );
+            if(this.props.callbackComplete === true) {
+                return (<div className="row placeholders">
+                    <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
+                        <h1 id="noWidgetMessage">The
+                            Administrator has not configured any Geo-Dash Widgets for this project</h1>
+                    </div>
+                </div>);
+            }
+            else{
+                return (<div className="row placeholders">
+                    <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
+                        <h1 id="noWidgetMessage">The
+                            Retrieving Geo-Dash configuration for this project</h1>
+                    </div>
+                </div>);
+            }
         }
     }
 }
@@ -483,7 +471,6 @@ class MapWidget extends React.Component {
         let url = "";
         let dualImageObject = null;
         let bands = "";
-        const ref = this;
         if (widget.properties.length === 5) {
             bands = widget.properties[4];
         }
@@ -625,21 +612,18 @@ class MapWidget extends React.Component {
             },
             body: JSON.stringify(postObject)
         })
-            .then(function(res){ return res.json(); })
-            .then(function(data) {
+            .then(res => { return res.json(); })
+            .then(data => {
 
                 if (data.hasOwnProperty("mapid")) {
-                    let mapId = data.mapid;
-                    let token = data.token;
-                    let dualImage = JSON.stringify(dualImageObject);
-                    ref.addTileServer(mapId, token, "widgetmap_" + widget.id);
+                    this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
                     return true;
                 } else {
                     console.warn("Wrong Data Returned");
                     return false;
                 }
             })
-            .then(function(isValid){
+            .then(isValid =>{
                 if(isValid) {
                     // let secondObject;
                     if (widget.dualLayer) {
@@ -655,13 +639,13 @@ class MapWidget extends React.Component {
                             },
                             body: JSON.stringify(postObject)
                         })
-                            .then(function(res){return res.json();})
-                            .then(function(data){
+                            .then(res =>{return res.json();})
+                            .then(data => {
                                 if (data.hasOwnProperty("mapid")) {
                                     let mapId = data.mapid;
                                     let token = data.token;
 
-                                    ref.addDualLayer(mapId, token, "widgetmap_" + widget.id);
+                                    this.addDualLayer(mapId, token, "widgetmap_" + widget.id);
                                 } else {
                                     console.warn("Wrong Data Returned");
                                 }
@@ -684,13 +668,13 @@ class MapWidget extends React.Component {
                                 },
                                 body: JSON.stringify(workingObject)
                             })
-                                .then(function(res){return res.json();})
-                                .then(function(data){
+                                .then(res => {return res.json();})
+                                .then(data =>{
                                     if (data.hasOwnProperty("mapid")) {
                                         let mapId = data.mapid;
                                         let token = data.token;
 
-                                        ref.addDualLayer(mapId, token, "widgetmap_" + widget.id);
+                                        this.addDualLayer(mapId, token, "widgetmap_" + widget.id);
                                     } else {
                                         console.warn("Wrong Data Returned");
                                     }
@@ -732,12 +716,11 @@ class MapWidget extends React.Component {
             }),
             id: mapdiv
         });
-        let ref = this;
-        window.setTimeout(function () {
+        window.setTimeout(() => {
             mapWidgetArray[mapdiv].addLayer(googleLayer);
             if(!isDual)
             {
-                ref.addBuffer(mapWidgetArray[mapdiv]);
+                this.addBuffer(mapWidgetArray[mapdiv]);
             }
         }, 250);
     }
@@ -859,11 +842,11 @@ class MapWidget extends React.Component {
 }
 
 class GraphWidget extends React.Component {
-    static defaultProps = {
-        graphRef: null
-    }
     constructor(props){
         super(props);
+        this.state ={graphRef: null,
+                     isFull:this.props.widget.isFull
+        };
         Date.prototype.yyyymmdd = function() {
             let mm = this.getMonth() + 1; // getMonth() is zero-based
             let dd = this.getDate();
@@ -877,6 +860,7 @@ class GraphWidget extends React.Component {
     }
     render() {
         const widget = this.props.widget;
+
         return <div id={"widgetgraph_" + widget.id} className="minmapwidget">
             <div id={"graphcontainer_" + widget.id} className="minmapwidget graphwidget normal">
             </div>
@@ -889,8 +873,8 @@ class GraphWidget extends React.Component {
         let collectionName = widget.properties[1];
         let indexName = widget.properties[4];
         let date = new Date();
-        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex":  window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex2";
-        const ref = this;
+        //let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex":  window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex2";
+        let url = collectionName.trim().length > 0 ? "https://ceodev.servirglobal.net:8888/timeSeriesIndex":  "https://ceodev.servirglobal.net:8888/timeSeriesIndex2";
         fetch(url, {
             method: "POST",
             headers: {
@@ -907,8 +891,8 @@ class GraphWidget extends React.Component {
                 scale: 200
             })
         })
-            .then(function(res){return res.json();})
-            .then(function(data)
+            .then(res =>{return res.json();})
+            .then(data =>
             {
                 if (data.errMsg) {
                     console.warn(data.errMsg);
@@ -921,15 +905,26 @@ class GraphWidget extends React.Component {
                                 timeseriesData.push([value[0], value[1]]);
                             }
                         });
-                        timeseriesData = timeseriesData.sort(ref.sortData);
-                        graphWidgetArray["widgetgraph_" + widget.id] = ref.createChart(widget.id, indexName, timeseriesData, indexName);
-                        graphWidgetArray["widgetgraph_" + widget.id].id = widget.id;
-                        this.props.graphRef = ref.createChart(widget.id, indexName, timeseriesData, indexName);
+                        timeseriesData = timeseriesData.sort(this.sortData);
+                        this.state.graphRef = this.createChart(widget.id, indexName, timeseriesData, indexName);
                     } else {
                         console.warn("Wrong Data Returned");
                     }
                 }
             });
+        window.addEventListener("resize", () => this.handleResize());
+    }
+    componentDidUpdate(){
+        this.handleResize();
+    }
+    handleResize() {
+        try {
+            const gwidget = document.getElementById("widgetgraph_" + this.props.widget.id);
+            this.state.graphRef.setSize(gwidget.clientWidth, gwidget.clientHeight, true);
+        }
+        catch(e){
+            console.log(e.message);
+        }
     }
     sortData(a, b){
         if (a[0] < b[0]) return -1;
@@ -1061,7 +1056,6 @@ class StatsWidget extends React.Component {
     }
 
     componentDidMount() {
-        const ref = this;
         const projPairAOI = this.props.projPairAOI;
         fetch(window.location.protocol + "//" + window.location.hostname + ":8888/getStats", {
             method: "POST",
@@ -1073,12 +1067,12 @@ class StatsWidget extends React.Component {
                 paramValue: JSON.parse(projPairAOI)
             })
         })
-            .then(function(res){return res.json();})
-            .then(function(data) {
+            .then(res =>{return res.json();})
+            .then(data => {
                 if (data.errMsg) {
                     console.warn(data.errMsg);
                 } else {
-                    ref.setState({ totalPop: ref.numberWithCommas(data.pop), area: ref.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: ref.numberWithCommas(data.minElev) + " - " + ref.numberWithCommas(data.maxElev) + " m"});
+                    this.setState({ totalPop: this.numberWithCommas(data.pop), area: this.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m"});
                 }
             });
     }
@@ -1104,22 +1098,11 @@ class StatsWidget extends React.Component {
         }
         return "N/A";
     }
-    calculateArea (poly) {
-        const sphere = new ol.Sphere(6378137);
-        const area_m = sphere.geodesicArea(poly);
-        let area_ha = area_m / 10000;
-        if (area_ha < 0) {
-            area_ha = area_ha * -1;
-        }
-        area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
-        return this.numberWithCommas(area_ha);
-    }
 }
 
 /* Todo: move these variables into the component */
 let geeTimeout = {};
 let mapWidgetArray = [];
-let graphWidgetArray = [];
 
 export function renderGeodashPage() {
     ReactDOM.render(
