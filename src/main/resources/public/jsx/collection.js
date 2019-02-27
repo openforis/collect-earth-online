@@ -814,7 +814,8 @@ function ImageAnalysisPane(props) {
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled = props.surveyQuestions.every(sq => sq.visible === sq.answered);
+    const saveValuesButtonEnabled = props.surveyQuestions
+        .every(sq => sq.visible && sq.visible.length === sq.answered.length);
 
     return (
         <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "hidden scroll" }}>
