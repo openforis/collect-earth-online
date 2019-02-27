@@ -1008,7 +1008,7 @@ public class JsonProjects implements Projects {
                 throw new RuntimeException("SHP file missing FeatureCollection");
             }
         } catch (Exception e) {
-            // deleteShapeFileDirectories(projectId);
+            deleteShapeFileDirectories(projectId);
             throw new RuntimeException("Malformed sample Shapefile. All features must be of type polygon and include PLOTID and SAMPLEID fields.", e);
         }
     }
@@ -1084,7 +1084,8 @@ public class JsonProjects implements Projects {
         }
     }
 
-    public static JsonObject newProjectObject(JsonObject newProjectData, JsonObject fileData, Request req, Integer newProjectId) {
+    public static JsonObject newProjectObject(JsonObject newProjectData, JsonObject fileData, Request req) {
+        final var newProjectId = newProjectData.get("id").getAsString();
         if (getOrZero(newProjectData, "useTemplatePlots").getAsBoolean() 
                 && getOrZero(newProjectData, "projectTemplate").getAsInt() > 0) {
                     var templateID = newProjectData.get("projectTemplate").getAsString();
@@ -1411,16 +1412,14 @@ public class JsonProjects implements Projects {
 
             var newProject = new JsonObject();
 
-            newProject.addProperty("institution", getOrZero(jsonInputs,"institution").getAsInt());
-
+            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
+            newProject.addProperty("description", jsonInputs.get("description").getAsString());
+            newProject.addProperty("institution", jsonInputs.get("institution").getAsInt());
             newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
             newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
             newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());
             newProject.addProperty("latMax", getOrZero(jsonInputs,"latMax").getAsDouble());
-
-            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
             newProject.addProperty("name", jsonInputs.get("name").getAsString());
-            newProject.addProperty("description", jsonInputs.get("description").getAsString());
             newProject.addProperty("numPlots", getOrZero(jsonInputs,"numPlots").getAsInt());
             newProject.addProperty("plotDistribution", jsonInputs.get("plotDistribution").getAsString());
             newProject.addProperty("plotShape", getOrEmptyString(jsonInputs,"plotShape").getAsString());
@@ -1455,7 +1454,7 @@ public class JsonProjects implements Projects {
             newProject.addProperty("id", newProjectId);
 
             // Write the new entry to project-list.json
-            projects.add(newProjectObject(newProject, fileData, req, newProjectId));
+            projects.add(newProjectObject(newProject, fileData, req));
             writeJsonFile("project-list.json", projects);
 
             // Indicate that the project was created successfully

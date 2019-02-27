@@ -17,6 +17,7 @@ package-lock.json
 /src/main/resources/public/js/*.bundle.js
 /src/main/resources/public/js/*.bundle.js.map
 out.txt
+out-win.txt
 
 # MacOS X Backups
 .DS_Store

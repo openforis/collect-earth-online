@@ -386,11 +386,11 @@ public class ProjectUtils {
     public static void runBashScriptForProject(int projectId, String plotsOrSamples, String script, String rpath) {
         try {
             System.out.println("Running " + script);
-            var pb = new ProcessBuilder("/bin/bash", script, "project-" + projectId + "-" + plotsOrSamples);
+            var pb = new ProcessBuilder("/bin/sh", script, "project-" + projectId + "-" + plotsOrSamples);
             pb.directory(new File(expandResourcePath(rpath)));
-            pb.redirectOutput(); // new File("out.txt")
+            pb.redirectOutput(new File("out.txt")); // 
             var p = pb.start();
-            if (p.waitFor(100L, TimeUnit.SECONDS)) {
+            if (p.waitFor(10L, TimeUnit.SECONDS)) {
                 System.out.println("Linux Conversion complete.");
             } else {
                 p.destroy();
@@ -403,7 +403,7 @@ public class ProjectUtils {
                 var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", script, "project-" + projectId + "-" + plotsOrSamples);
                 pb.directory(new File(expandResourcePath(rpath)));
                 // For some reason shp2pgsql needs this to work
-                pb.redirectOutput(new File("out.txt"));
+                pb.redirectOutput(new File("out-win.txt"));
                 var p = pb.start();
                 if (p.waitFor(10L, TimeUnit.SECONDS)) {
                     System.out.println("Git bash Conversion complete.");

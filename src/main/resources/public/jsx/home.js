@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { sortAlphabetically } from "./utils/textUtils.js";
@@ -143,10 +143,10 @@ class MapPanel extends React.Component {
                         <div className="empty-div" style={{ height: "50vh" }}/>
                         <div className="my-auto no-gutters text-center">
                             <div className={this.props.showSidePanel ? "" : "d-none"}>
-                                <i className={"fa fa-caret-left"} />
+                                <div className={"fa fa-caret-left"} />
                             </div>
                             <div className={this.props.showSidePanel ? "d-none" : ""}>
-                                <i className={"fa fa-caret-right"} />
+                                <div className={"fa fa-caret-right"} />
                             </div>
                         </div>
                     </div>
@@ -175,6 +175,7 @@ class SideBar extends React.Component {
             useFirstLetter: false,
             sortByNumber: true,
             containsProjects: false,
+            showFilters: false,
         };
     }
 
@@ -186,6 +187,7 @@ class SideBar extends React.Component {
                 this.setState({ institutions: data });
             });
     }
+    toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
 
@@ -242,6 +244,8 @@ class SideBar extends React.Component {
                     toggleSortByNumber={this.toggleSortByNumber}
                     containsProjects={this.state.containsProjects}
                     toggleContainsProjects={this.toggleContainsProjects}
+                    showFilters={this.state.showFilters}
+                    toggleShowFilters={this.toggleShowFilters}
                 />
                 {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
@@ -271,7 +275,7 @@ class SideBar extends React.Component {
 function InstitutionFilter(props) {
     return (
         <div className="InstitutionFilter form-control">
-            <div id="filter-institution">
+            <div id="filter-institution" style={{ display: "inline-flex", width: "100%" }}>
                 <input
                     type="text"
                     id="filterInstitution"
@@ -281,80 +285,92 @@ function InstitutionFilter(props) {
                     value={props.filterText}
                     onChange={e => props.updateFilterText(e.target.value)}
                 />
+                <a href="#" onClick={props.toggleShowFilters}>
+                    <img
+                        src={props.documentRoot + (props.showFilters ? "/img/hidefilter.png" : "/img/showfilter.png")}
+                        width="40"
+                        height="40"
+                        style={{ padding: "5px" }}
+                        alt="Show/Hide Filters"
+                        title="show/hide filters"
+                    />
+                </a>
             </div>
-
-            <div className="d-inlineflex">
-                <div className="form-check form-check-inline">
-                    Filter By:
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="radio"
-                        id="filter-by-word"
-                        name="filter-institution"
-                        checked={props.filterInstitution}
-                        onChange={props.toggleFilterInstitution}
-                    />
-                    Institution
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="radio"
-                        id="filter-by-letter"
-                        name="filter-institution"
-                        checked={!props.filterInstitution}
-                        onChange={props.toggleFilterInstitution}
-                    />
-                    Project
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="filter-by-first-letter"
-                        onChange={props.toggleUseFirst}
-                        checked={props.useFirstLetter}
-                    />
-                    Match from beginning
-                </div>
-            </div>
-
-            <div className="d-inlineflex">
-                <div className="form-check form-check-inline">
-                    Sort By:
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="radio"
-                        name="sort-institution"
-                        checked={props.sortByNumber}
-                        onChange={props.toggleSortByNumber}
-                    />
-                    # of Projects
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="radio"
-                        name="sort-institution"
-                        checked={!props.sortByNumber}
-                        onChange={props.toggleSortByNumber}
-                    />
-                    ABC..
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={props.containsProjects}
-                        onChange={props.toggleContainsProjects}
-                    />
-                    Contains projects
-                </div>
-            </div>
+            {props.showFilters &&
+                <Fragment>
+                    <div className="d-inlineflex">
+                        <div className="form-check form-check-inline">
+                            Filter By:
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                id="filter-by-word"
+                                name="filter-institution"
+                                checked={props.filterInstitution}
+                                onChange={props.toggleFilterInstitution}
+                            />
+                            Institution
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                id="filter-by-letter"
+                                name="filter-institution"
+                                checked={!props.filterInstitution}
+                                onChange={props.toggleFilterInstitution}
+                            />
+                            Project
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="filter-by-first-letter"
+                                onChange={props.toggleUseFirst}
+                                checked={props.useFirstLetter}
+                            />
+                            Match from beginning
+                        </div>
+                    </div>
+                    <div className="d-inlineflex">
+                        <div className="form-check form-check-inline">
+                            Sort By:
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="sort-institution"
+                                checked={props.sortByNumber}
+                                onChange={props.toggleSortByNumber}
+                            />
+                            # of Projects
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="sort-institution"
+                                checked={!props.sortByNumber}
+                                onChange={props.toggleSortByNumber}
+                            />
+                            ABC..
+                        </div>
+                        <div className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={props.containsProjects}
+                                onChange={props.toggleContainsProjects}
+                            />
+                            Contains projects
+                        </div>
+                    </div>
+                </Fragment>
+            }
         </div>
     );
 }
@@ -367,7 +383,7 @@ function CreateInstitutionButton(props) {
                 style={{ display:"block" }}
                 href={props.documentRoot + "/create-institution"}
             >
-                <i className="fa fa-file" /> Create New Institution
+                <span className="fa fa-file" /> Create New Institution
             </a>
         </div>
     );
@@ -406,7 +422,7 @@ class Institution extends React.Component {
                                 className="institution_info btn btn-sm btn-outline-lightgreen"
                                 href={props.documentRoot + "/review-institution/" + props.id}
                             >
-                                <i className="fa fa-info" style={{ color: "white" }}></i>
+                                <span className="fa fa-info" style={{ color: "white" }} />
                             </a>
                         </div>
                     </div>
@@ -456,7 +472,7 @@ function Project(props) {
                         className="edit-project btn btn-sm btn-outline-yellow btn-block"
                         href={props.documentRoot + "/review-project/" + props.id}
                     >
-                        <i className="fa fa-edit"></i>
+                        <span className="fa fa-edit" />
                     </a>
                 </div>
             </div>
@@ -534,7 +550,7 @@ class ProjectPopup extends React.Component {
                         display: this.props.features.length > 1 ? "block" : "none",
                     }}
                 >
-                    <i className="fa fa-search-plus"/>Zoom to cluster
+                    <span className="fa fa-search-plus"/>Zoom to cluster
                 </button>
             </div>
         );

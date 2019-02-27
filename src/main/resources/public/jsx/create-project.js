@@ -778,7 +778,7 @@ function PlotDesign ({
                                             name="plot-distribution-csv-file"
                                             onChange={e => {
                                                 setProjectDetail("plotFileName", e.target.files[0].name);
-                                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("plotFileBase64", base64));
+                                                encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("plotFileBase64", base64));
                                             }}
                                             style={{ display: "none" }}
                                             disabled={plotDistribution !== "csv"}
@@ -809,7 +809,7 @@ function PlotDesign ({
                                             name="plot-distribution-shp-file"
                                             onChange={e => {
                                                 setProjectDetail("plotFileName", e.target.files[0].name);
-                                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("plotFileBase64", base64));
+                                                encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("plotFileBase64", base64));
                                             }}
                                             style={{ display: "none" }}
                                             disabled={plotDistribution !== "shp"}
@@ -1002,7 +1002,7 @@ function SampleDesign ({
                             defaultValue=""
                             onChange={e => {
                                 setProjectDetail("sampleFileName", e.target.files[0].name);
-                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("sampleFileBase64", base64));
+                                encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("sampleFileBase64", base64));
                             }}
                             style={{ display: "none" }}
                             disabled={sampleDistribution !== "csv"}
@@ -1035,7 +1035,7 @@ function SampleDesign ({
                             defaultValue=""
                             onChange={e => {
                                 setProjectDetail("sampleFileName", e.target.files[0].name);
-                                encodeFileAsBase64(e.target.files[0], (base64) => setProjectDetail("sampleFileBase64", base64));
+                                encodeFileAsBase64(e.target.files[0], base64 => setProjectDetail("sampleFileBase64", base64));
                             }}
                             style={{ display: "none" }}
                             disabled={sampleDistribution !== "shp"}
