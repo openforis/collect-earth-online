@@ -36,6 +36,9 @@ class Collection extends React.Component {
     componentDidMount() {
         this.getProjectById();
         this.getProjectPlots();
+        setInterval(() => {
+
+        }, 3 * 60 * 1000);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -114,22 +117,15 @@ class Collection extends React.Component {
 
     getProjectById = () => {
         fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the project info. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then((project) => {
+                if (project.id === 0) alert("No project found with ID " + this.props.projectId + ".");
+                const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
+                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
             })
-            .then(project => {
-                if (project == null || project.id === 0) {
-                    alert("No project found with ID " + this.props.projectId + ".");
-                } else {
-                    const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                    this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
-                }
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
             });
     };
 
@@ -141,7 +137,7 @@ class Collection extends React.Component {
                 } else {
                     console.log(response);
                     alert("Error loading plot data. See console for details.");
-                    return new Promise(resolve => resolve([]));
+                    return Promise.resolve([]);
                 }
             })
             .then(data => {
@@ -296,18 +292,23 @@ class Collection extends React.Component {
                                    this);
     }
 
+    getQueryString(params) {
+        return "?" + Object.keys(params)
+            .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
+            .join("&");
+    }
+
     getPlotData(plotId) {
-        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
-        fetch(this.props.documentRoot + "/get-plot-by-id/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
-            })
+        fetch(this.props.documentRoot + "/get-plot-by-id"
+                + this.getQueryString({
+                    getUserPlots: this.state.reviewPlots,
+                    plotId: plotId,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                })
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     alert(this.state.reviewPlots
@@ -322,21 +323,24 @@ class Collection extends React.Component {
                         nextPlotButtonDisabled: false,
                     });
                 }
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
             });
     }
 
     getNextPlotData(plotId) {
-        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
-        fetch(this.props.documentRoot + "/get-next-plot/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
-            })
+        fetch(this.props.documentRoot + "/get-next-plot"
+                + this.getQueryString({
+                    getUserPlots: this.state.reviewPlots,
+                    plotId: plotId,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                })
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     if (plotId === -1) {
@@ -355,21 +359,24 @@ class Collection extends React.Component {
                         prevPlotButtonDisabled: plotId === -1,
                     });
                 }
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
             });
     }
 
     getPrevPlotData(plotId) {
-        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
-        fetch(this.props.documentRoot + "/get-prev-plot/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
-            })
+        fetch(this.props.documentRoot + "/get-prev-plot"
+                + this.getQueryString({
+                    getUserPlots: this.state.reviewPlots,
+                    plotId: plotId,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                })
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     this.setState({ prevPlotButtonDisabled: true });
@@ -384,6 +391,42 @@ class Collection extends React.Component {
                         nextPlotButtonDisabled: false,
                     });
                 }
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
+            });
+    }
+
+    lockPlot(plotId) {
+        fetch(this.props.documentRoot + "/get-prev-plot"
+                + this.getQueryString({
+                    getUserPlots: this.state.reviewPlots,
+                    plotId: plotId,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                })
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response))
+            .then(data => {
+                if (data === "done") {
+                    this.setState({ prevPlotButtonDisabled: true });
+                    alert(this.state.reviewPlots
+                            ? "No previous plots were analyzed by you."
+                            : "All previous plots have been analyzed.");
+                } else {
+                    const newPlot = JSON.parse(data);
+                    this.setState({
+                        currentPlot: newPlot,
+                        ...this.resetPlotValues(newPlot),
+                        nextPlotButtonDisabled: false,
+                    });
+                }
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
             });
     }
 
@@ -437,6 +480,7 @@ class Collection extends React.Component {
 
     showPlotSamples() {
         const { mapConfig, selectedQuestion: { visible }} = this.state;
+        console.log(visible)
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
@@ -526,7 +570,8 @@ class Collection extends React.Component {
                   body: JSON.stringify({
                       projectId: this.props.projectId,
                       plotId: this.state.currentPlot.id,
-                      userId: this.props.userName,
+                      userName: this.props.userName,
+                      userId: this.props.userId,
                       confidence: -1,
                       collectionStart: this.state.collectionStart,
                       userSamples: this.state.userSamples,
@@ -1168,17 +1213,13 @@ class ProjectStats extends React.Component {
 
     getProjectStats() {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error getting project stats. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({ stats: data });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error getting project stats. See console for details.");
             });
     }
 
@@ -1298,7 +1339,12 @@ function QuitMenu(props) {
 
 export function renderCollectionPage(args) {
     ReactDOM.render(
-        <Collection documentRoot={args.documentRoot} userName={args.userName} projectId={args.projectId}/>,
+        <Collection
+            documentRoot={args.documentRoot}
+            userId={args.userId === "" ? -1 : parseInt(args.userId)}
+            userName={args.userName}
+            projectId={args.projectId}
+        />,
         document.getElementById("collection")
     );
 }

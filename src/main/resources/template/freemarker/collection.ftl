@@ -12,6 +12,7 @@
  window.onload = function () {
      collection.renderCollectionPage({
          documentRoot: "${root}",
+         userId:       "${userid}",
          userName:     "${username}",
          projectId:    "${project_id}"
      });

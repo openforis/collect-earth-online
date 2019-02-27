@@ -1374,9 +1374,19 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_id integer)
 
 $$ LANGUAGE SQL;
 
--- Select plots
--- FIXME when multiple users can be assigned to plots, returning a single username does not make sense
-CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum integer) 
+CREATE OR REPLACE FUNCTION select_all_unlocked_project_plots(_project_id integer)
+ RETURNS setOf plots_return AS $$
+
+ 	SELECT ap.*
+	FROM select_all_project_plots(_project_id) ap
+	LEFT JOIN plot_locks pl 
+		ON ap.id = pl.plot_id
+	WHERE pl.lock_end IS NULL OR localtimestamp > pl.lock_end
+
+$$ LANGUAGE SQL;
+
+-- Select plots but only return a maximum number
+CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer) 
     RETURNS setOf plots_return AS $$
 
 	SELECT all_plots.id, all_plots.project_id, all_plots.center, all_plots.flagged, all_plots.assigned, all_plots.username,
@@ -1385,7 +1395,7 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 		SELECT *,
 			row_number() OVER(ORDER BY id) AS rows,
 			count(*) OVER() as total_plots
-		FROM select_all_project_plots(_project_id)
+		FROM select_all_unlocked_project_plots(_project_id)
 		WHERE project_id = _project_id
 	) as all_plots
 	WHERE all_plots.rows % 
@@ -1394,11 +1404,20 @@ CREATE OR REPLACE FUNCTION select_project_plots(_project_id integer, _maximum in
 
 $$ LANGUAGE SQL;
 
+-- Returns next plot by id
+CREATE OR REPLACE FUNCTION select_plot_by_id(_project_id integer, _plot_id integer) 
+    RETURNS setOf plots_return AS $$
+
+    SELECT * from select_all_project_plots(_project_id) as spp
+    WHERE spp.plotId = _plot_id
+
+$$ LANGUAGE SQL;
+
 -- Returns next unanalyzed plot
 CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS setOf plots_return AS $$
 
-    SELECT * from select_all_project_plots(_project_id) as spp
+    SELECT * from select_all_unlocked_project_plots(_project_id) as spp
     WHERE spp.plotId > _plot_id
     AND flagged = 0
     AND assigned = 0
@@ -1424,7 +1443,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _plot_id integer) 
     RETURNS setOf plots_return AS $$
 
-    SELECT * from select_all_project_plots(_project_id) as spp
+    SELECT * from select_all_unlocked_project_plots(_project_id) as spp
     WHERE spp.plotId < _plot_id
     AND flagged = 0
     AND assigned = 0
@@ -1449,7 +1468,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_id integer,_plot_id integer) 
     RETURNS setOf plots_return AS $$
 
-    SELECT * from select_all_project_plots(_project_id) as spp
+    SELECT * from select_all_unlocked_project_plots(_project_id) as spp
     WHERE spp.id = _plot_id
     AND flagged = 0
     AND assigned = 0
@@ -1463,6 +1482,35 @@ CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_id integer,_plot_id i
     SELECT * from select_all_project_plots(_project_id) as spp
     WHERE spp.id = _plot_id
     AND spp.username = _username
+
+$$ LANGUAGE SQL;
+
+-- Lock plot to user
+CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp) 
+    RETURNS VOID AS $$
+
+    INSERT INTO plot_locks (user_id, plot_id, lock_end)
+	SELECT _user_id, _plot_id, _lock_end
+
+$$ LANGUAGE SQL;
+
+-- Reset time on lock
+CREATE OR REPLACE FUNCTION lock_plot_reset(_plot_id integer, _user_id integer, _lock_end timestamp) 
+    RETURNS VOID AS $$
+
+    UPDATE plot_locks pl
+	SET lock_end = _lock_end
+	WHERE pl.plot_id = _plot_id
+	AND pl.user_id = _user_id
+
+$$ LANGUAGE SQL;
+
+-- Remove all locks from user
+CREATE OR REPLACE FUNCTION unlock_plot(_user_id integer) 
+    RETURNS VOID AS $$
+
+    DELETE FROM plot_locks pl
+    WHERE pl.user_id = _user_id
 
 $$ LANGUAGE SQL;
 
@@ -1587,7 +1635,7 @@ CREATE OR REPLACE FUNCTION update_user_samples(
 		UPDATE user_plots
 			SET confidence = _confidence, 
 				collection_start = _collection_start, 
-				collection_time =Now()
+				collection_time = localtimestamp
 		WHERE user_plots.id = _user_plots_id
 		RETURNING id
 	),

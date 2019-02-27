@@ -61,8 +61,8 @@ public class JsonPlots implements Plots {
     }
 
     public String getProjectPlot(Request req, Response res) {
-        var projectId = req.params(":project-id");
-        var plotId = req.params(":plot-id");
+        var projectId = req.params(":projid");
+        var plotId = req.params(":plotid");
         var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
         var matchingPlot = findInJsonArray(plots, plot -> plot.get("id").getAsString().equals(plotId));
         if (matchingPlot.isPresent()) {

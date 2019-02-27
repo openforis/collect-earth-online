@@ -1,8 +1,6 @@
 package org.openforis.ceo.postgres;
 
-import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
-import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 
@@ -23,7 +21,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Plots;
 import spark.Request;
 import spark.Response;
@@ -57,7 +54,7 @@ public class PostgresPlots implements Plots {
         var maxPlots =      Integer.parseInt(req.params(":max"));
         
         try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_project_plots(?,?)")) {
+             var pstmt = conn.prepareStatement("SELECT * FROM select_limited_project_plots(?,?)")) {
 
             var plots = new JsonArray();
             pstmt.setInt(1,Integer.parseInt(projectId));
@@ -75,10 +72,25 @@ public class PostgresPlots implements Plots {
     }
 
     public String getProjectPlot(Request req, Response res) {
-        var projectId = req.params(":project-id");
-        var plotId = req.params(":plot-id");
+        final var projectId =   Integer.parseInt(req.params(":projid"));
+        final var plotId =      Integer.parseInt(req.params(":plotid"));
 
-        return "";
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM select_plot_by_id(?,?)")) {
+
+            pstmt.setInt(1,projectId);
+            pstmt.setInt(2,plotId);
+            try(var rs = pstmt.executeQuery()){
+                if (rs.next()) {
+                    return buildPlotJson(rs).toString();
+                } else {
+                    return "";
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
     }
 
     private static JsonArray getSampleJsonArray(Integer plot_id, Integer proj_id) {
@@ -106,38 +118,42 @@ public class PostgresPlots implements Plots {
         }
     }
 
-    private String queryPlot(PreparedStatement pstmt, Integer projectId) {
+    private String queryPlot(PreparedStatement pstmt, Integer projectId, Integer userId) {
         var plotData = new JsonObject();
         try (var rs = pstmt.executeQuery()) {
-            while (rs.next()) {
+            if (rs.next()) {
                 plotData = buildPlotJson(rs);
                 plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
+                unlockPlot(userId);
+                lockPlot(plotData.get("id").getAsInt(), userId);
             }
+            return plotData.size() > 0 ? plotData.toString() : "done";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
         }
-        return plotData.size() > 0 ? plotData.toString() : "done";
     }
 
     public String getPlotById(Request req, Response res) {
-        final var projectId = Integer.parseInt(req.params(":projid"));
-        final var plotId = Integer.parseInt(req.params(":id"));
-        final var userName = req.queryParamOrDefault("userName", "");
+        final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
+        final var projectId =          Integer.parseInt(req.queryParams("projectId"));
+        final var plotId =             Integer.parseInt(req.queryParams("plotId"));
+        final var userId =             Integer.parseInt(req.queryParams("userId"));
+        final var userName =           req.queryParams("userName");
 
         try (var conn = connect()) {
-            if (userName.length() > 0) {
+            if (getUserPlots) {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_user_plot_by_id(?,?,?)")) {
                     pstmt.setInt(1, projectId);
                     pstmt.setInt(2, plotId);
                     pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId);
+                    return queryPlot(pstmt, projectId, userId);
                 }
             } else {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_unassigned_plot_by_id(?,?)")) {
                     pstmt.setInt(1, projectId);
                     pstmt.setInt(2, plotId);
-                    return queryPlot(pstmt, projectId);
+                    return queryPlot(pstmt, projectId, userId);
                 }
             }
         } catch (SQLException e) {
@@ -147,23 +163,25 @@ public class PostgresPlots implements Plots {
     }
 
     public String getNextPlot(Request req, Response res) {
-        final var projectId =     Integer.parseInt(req.params(":projid"));
-        final var plotId =        Integer.parseInt(req.params(":id"));
-        final var userName =    req.queryParamOrDefault("userName", "");
+        final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
+        final var projectId =          Integer.parseInt(req.queryParams("projectId"));
+        final var plotId =             Integer.parseInt(req.queryParams("plotId"));
+        final var userId =             Integer.parseInt(req.queryParams("userId"));
+        final var userName =           req.queryParams("userName");
 
         try (var conn = connect()) {
-            if (userName.length() > 0) {
+            if (getUserPlots) {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot(?,?,?)")) {
                     pstmt.setInt(1, projectId);
                     pstmt.setInt(2, plotId);
                     pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId);
+                    return queryPlot(pstmt, projectId, userId);
                 }
             } else {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_unassigned_plot(?,?)")) {
                     pstmt.setInt(1, projectId);
                     pstmt.setInt(2, plotId);
-                    return queryPlot(pstmt, projectId);
+                    return queryPlot(pstmt, projectId, userId);
                 }
             }
         } catch (SQLException e) {
@@ -173,23 +191,25 @@ public class PostgresPlots implements Plots {
     }
 
     public String getPrevPlot(Request req, Response res) {
-        final var projectId =     Integer.parseInt(req.params(":projid"));
-        final var plotId =        Integer.parseInt(req.params(":id"));
-        final var userName =    req.queryParamOrDefault("userName", "");
+        final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
+        final var projectId =          Integer.parseInt(req.queryParams("projectId"));
+        final var plotId =             Integer.parseInt(req.queryParams("plotId"));
+        final var userId =             Integer.parseInt(req.queryParams("userId"));
+        final var userName =           req.queryParams("userName");
 
         try (var conn = connect()) {
-            if (userName.length() > 0) {
+            if (getUserPlots) {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot(?,?,?)")) {
                     pstmt.setInt(1, projectId);
                     pstmt.setInt(2, plotId);
                     pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId);
+                    return queryPlot(pstmt, projectId, userId);
                 }
             } else {
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_unassigned_plot(?,?)")) {
                     pstmt.setInt(1, projectId);
                     pstmt.setInt(2, plotId);
-                    return queryPlot(pstmt, projectId);
+                    return queryPlot(pstmt, projectId, userId);
                 }
             }
         } catch (SQLException e) {
@@ -198,15 +218,55 @@ public class PostgresPlots implements Plots {
         }
     }
 
-    public String resetPlotLock(Request req, Response res) {return "";}
-    public String releasePlotLock(Request req, Response res) {return "";}
+    public String resetPlotLock(Request req, Response res) {
+        final var projectId =          Integer.parseInt(req.queryParams("projectId"));
+        final var plotId =             Integer.parseInt(req.queryParams("plotId"));
+        final var userId =             Integer.parseInt(req.queryParams("userId"));
 
-    private static String unlockPlot(Integer plotId, Integer userId) {return "";}
-    private static String lockPlot(Integer plotId, Integer userId, Integer seconds) {return "";}
+        try (var conn = connect();
+             var lockPstmt = conn.prepareStatement("SELECT * FROM reset_lock_plot(?,?,?)")) {
+            
+            lockPstmt.setInt(1, plotId);
+            lockPstmt.setInt(2, userId);
+            lockPstmt.setTimestamp(3, new Timestamp(System.currentTimeMillis() + (5 * 60 * 1000)));
+            lockPstmt.execute();
+            return "";
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
 
-    private static String valueOrBlank(String input) {
+    public String releasePlotLock(Request req, Response res) {
+        final var userId =          Integer.parseInt(req.params(":userid"));
+        return unlockPlot(userId);
+    }
 
-        return input == null || input.equals("null") ? "" : input;
+    private static String unlockPlot(Integer userId) {
+        try (var conn = connect();
+             var lockPstmt = conn.prepareStatement("SELECT * FROM unlock_plot(?)")) {
+            lockPstmt.setInt(1, userId);
+            lockPstmt.execute();
+            return "";
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
+    private static String lockPlot(Integer plotId, Integer userId) {
+        try (var conn = connect();
+             var lockPstmt = conn.prepareStatement("SELECT * FROM lock_plot(?,?,?)")) {
+            
+            lockPstmt.setInt(1, plotId);
+            lockPstmt.setInt(2, userId);
+            lockPstmt.setTimestamp(3, new Timestamp(System.currentTimeMillis() + (5 * 60 * 1000)));
+            lockPstmt.execute();
+            return "";
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
     }
 
     public String addUserSamples(Request req, Response res) {
@@ -264,6 +324,7 @@ public class PostgresPlots implements Plots {
                             }
                         }
                     }
+                    // remove user lock
                 }
                 return "";
             }

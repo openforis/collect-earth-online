@@ -25,16 +25,12 @@ class ReviewInstitution extends React.Component {
         fetch(this.props.documentRoot + "/get-all-projects?userId="
                 + this.props.userId + "&institutionId=" + this.props.institutionId
         )
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the project info. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => this.setState({ projectList: data }));
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ projectList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
+            });
     }
 
     setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
@@ -588,13 +584,7 @@ class Project extends React.Component {
 
     projectHighlight = () => {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.project.id)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    return new Promise((resolve, reject) => reject(response));
-                }
-            })
+            .then(response => response.ok ? response.json() : Promise.reject())
             .then(data => this.setState({
                 boxShadow: data.unanalyzedPlots === 0
                     ? "0px 0px 8px 1px green inset"
@@ -675,12 +665,8 @@ class UserList extends React.Component {
                     return new Promise(resolve => resolve([]));
                 }
             })
-            .then(data => {
-                this.setState({
-                    institutionUserList: data,
-                });
-            });
-    };
+            .then(data => this.setState({ institutionUserList: data }));
+    }
 
     getActiveUserList = () => {
         fetch(this.props.documentRoot + "/get-all-users")
