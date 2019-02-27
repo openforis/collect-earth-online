@@ -697,7 +697,7 @@ class Collection extends React.Component {
             return this.getVisibleSamples(parentQuestion)
                 .filter(sample => {
                     const sampleAnswer = userSamples[sample.id][parentQuestionText]
-                                            && userSamples[sample.id][parentQuestionText].answer;
+                                             && userSamples[sample.id][parentQuestionText].answer;
                     return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
                 });
         }
@@ -817,7 +817,7 @@ function SideBar(props) {
     const saveValuesButtonEnabled = props.surveyQuestions.every(sq => sq.visible === sq.answered);
 
     return (
-        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "scroll" }}>
+        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "hidden scroll" }}>
             <h2 className="header">{props.projectName || ""}</h2>
 
             {props.children}

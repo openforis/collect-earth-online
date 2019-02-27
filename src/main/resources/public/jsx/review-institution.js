@@ -592,7 +592,7 @@ class Project extends React.Component {
                 if (response.ok) {
                     return response.json();
                 } else {
-                    return Promise.reject(response);
+                    return new Promise((resolve, reject) => reject(response));
                 }
             })
             .then(data => this.setState({
