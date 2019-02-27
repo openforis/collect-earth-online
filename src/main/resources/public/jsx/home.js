@@ -249,17 +249,7 @@ class SideBar extends React.Component {
                 />
                 {this.state.institutions.length > 0
                     ? filteredInstitutions.length > 0
-                        ? <ul
-                            className="tree"
-                            style={{
-                                overflowY: "scroll",
-                                overflowX: "hidden",
-                                height: "calc(100vh - 185px"
-                                        + (this.props.userName ? " - 40px" : "")
-                                        + (this.state.showFilters ? " - 47px" : "")
-                                        + ")",
-                            }}
-                        >
+                        ? <ul className="tree" style={{ overflow: "hidden scroll" }}>
                             {filteredInstitutions.map((institution, uid) =>
                                 <Institution
                                     key={uid}
