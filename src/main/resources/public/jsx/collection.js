@@ -776,21 +776,21 @@ class Collection extends React.Component {
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot
-                ?
-                    <SurveyCollection
-                        selectedQuestion={this.state.selectedQuestion}
-                        surveyQuestions={this.state.currentProject.surveyQuestions}
-                        setCurrentValue={this.setCurrentValue}
-                        setSelectedQuestion={this.setSelectedQuestion}
-                        selectedSampleId={Object.keys(this.state.userSamples).length === 1
-                            ? parseInt(Object.keys(this.state.userSamples)[0])
-                            : this.state.selectedSampleId}
-                    />
-                :
-                    <fieldset className="mb-3 justify-content-center text-center">
-                        <h3>Survey Questions</h3>
-                        <p>Please go to a plot to see survey questions</p>
-                    </fieldset>
+                        ?
+                            <SurveyCollection
+                                selectedQuestion={this.state.selectedQuestion}
+                                surveyQuestions={this.state.currentProject.surveyQuestions}
+                                setCurrentValue={this.setCurrentValue}
+                                setSelectedQuestion={this.setSelectedQuestion}
+                                selectedSampleId={Object.keys(this.state.userSamples).length === 1
+                                    ? parseInt(Object.keys(this.state.userSamples)[0])
+                                    : this.state.selectedSampleId}
+                            />
+                        :
+                            <fieldset className="mb-3 justify-content-center text-center">
+                                <h3>Survey Questions</h3>
+                                <p>Please go to a plot to see survey questions</p>
+                            </fieldset>
                     }
                 </SideBar>
                 <QuitMenu documentRoot={this.props.documentRoot}/>

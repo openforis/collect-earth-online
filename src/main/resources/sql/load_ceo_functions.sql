@@ -707,7 +707,7 @@ CREATE OR REPLACE FUNCTION create_project(
         _sample_resolution          float,
         _survey_questions           jsonb,
         _survey_rules               jsonb,
-		_created_date				date,
+        _created_date				date,
         _classification_times       jsonb
 	) RETURNS integer AS $$
 
