@@ -124,17 +124,15 @@ public class Server implements SparkApplication {
         post("/publish-project/:id",                  projects::publishProject);
         
         // Routing Table: Plots (projects)
-        get("/get-next-plot",                             plots::getNextPlot);
-        get("/get-plot-by-id",                            plots::getPlotById);
-        get("/get-project-plots/:id/:max",                plots::getProjectPlots);
-        // get unlocked plot, used in geodash
-        get("/get-unlocked-plot-by-id/:projid/:plotid",   plots::getProjectPlot);
-        get("/get-prev-plot",                             plots::getPrevPlot);
-        post("/add-user-samples",                         plots::addUserSamples);
-        post("/flag-plot",                                plots::flagPlot);
-        post("/resest-plot-lock",                         plots::resetPlotLock);
-        post("/add-plot-lock",                            plots::resetPlotLock);
-        post("/release-plot-lock/:userid",                plots::releasePlotLock);
+        get("/get-next-plot",                         plots::getNextPlot);
+        get("/get-plot-by-id",                        plots::getPlotById);
+        get("/get-project-plots/:id/:max",            plots::getProjectPlots);
+        get("/get-unlocked-plot/:projid/:plotid",     plots::getProjectPlot);
+        get("/get-prev-plot",                         plots::getPrevPlot);
+        post("/add-user-samples",                     plots::addUserSamples);
+        post("/flag-plot",                            plots::flagPlot);
+        post("/resest-plot-lock",                     plots::resetPlotLock);
+        post("/release-plot-lock/:userid/:projid",    plots::releasePlotLocks);
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);

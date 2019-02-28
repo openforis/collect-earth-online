@@ -13,6 +13,6 @@ public interface Plots {
     String addUserSamples(Request req, Response res);
     String flagPlot(Request req, Response res);
     String resetPlotLock(Request req, Response res);
-    String releasePlotLock(Request req, Response res);
+    String releasePlotLocks(Request req, Response res);
 
 }

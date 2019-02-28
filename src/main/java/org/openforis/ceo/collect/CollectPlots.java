@@ -374,5 +374,5 @@ public class CollectPlots implements Plots {
     }
 
     public String resetPlotLock(Request req, Response res) {return "";}
-    public String releasePlotLock(Request req, Response res) {return "";}
+    public String releasePlotLocks(Request req, Response res) {return "";}
 }

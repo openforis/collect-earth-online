@@ -3,24 +3,13 @@ package org.openforis.ceo.postgres;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import java.io.StringWriter;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.PreparedStatement;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.openforis.ceo.db_api.Plots;
 import spark.Request;
 import spark.Response;
@@ -219,12 +208,13 @@ public class PostgresPlots implements Plots {
     }
 
     public String resetPlotLock(Request req, Response res) {
-        final var projectId =          Integer.parseInt(req.queryParams("projectId"));
-        final var plotId =             Integer.parseInt(req.queryParams("plotId"));
-        final var userId =             Integer.parseInt(req.queryParams("userId"));
-
+        final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
+        final var projectId =             jsonInputs.get("projectId").getAsInt();
+        final var plotId =                jsonInputs.get("plotId").getAsInt();
+        final var userId =                jsonInputs.get("userId").getAsInt();
+        
         try (var conn = connect();
-             var lockPstmt = conn.prepareStatement("SELECT * FROM reset_lock_plot(?,?,?)")) {
+             var lockPstmt = conn.prepareStatement("SELECT * FROM lock_plot_reset(?,?,?)")) {
             
             lockPstmt.setInt(1, plotId);
             lockPstmt.setInt(2, userId);
@@ -237,8 +227,9 @@ public class PostgresPlots implements Plots {
         }
     }
 
-    public String releasePlotLock(Request req, Response res) {
+    public String releasePlotLocks(Request req, Response res) {
         final var userId =          Integer.parseInt(req.params(":userid"));
+        final var projId =          Integer.parseInt(req.params(":projid"));
         return unlockPlot(userId);
     }
 
@@ -273,60 +264,49 @@ public class PostgresPlots implements Plots {
         final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
         final var projectId =             jsonInputs.get("projectId").getAsString();
         final var plotId =                jsonInputs.get("plotId").getAsString();
-        final var userName =              jsonInputs.get("userId").getAsString();
+        final var userId =                jsonInputs.get("userId").getAsInt();
+        final var userName =              jsonInputs.get("userName").getAsString();
         final var confidence =            jsonInputs.get("confidence").getAsInt();
         final var collectionStart =       jsonInputs.get("collectionStart").getAsString();
         final var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
         final var userImages =            jsonInputs.get("userImages").getAsJsonObject();
 
-        // check if valid user before adding (should be from UI, but its one less join and partial spam security)
         try (var conn = connect();
-            final var userPstmt = conn.prepareStatement("SELECT * FROM get_user(?)")) {
-            
-            userPstmt.setString(1, userName);
-            try(var userRs = userPstmt.executeQuery()){
-                if (userRs.next()){
-                    final var userId = userRs.getInt("id");
-                    // check if user has already saved
-                    try(var usPstmt = conn.prepareStatement("SELECT * FROM check_user_plots(?,?,?)")) {
-                        usPstmt.setInt(1, Integer.parseInt(projectId));
-                        usPstmt.setInt(2, Integer.parseInt(plotId));
-                        usPstmt.setInt(3, userId);
-                        try(var usRs = usPstmt.executeQuery()) {
-                            // update existing
-                            if (usRs.next()) {
-                                final var userPlotId = usRs.getInt("user_plots_id");
-                                final var SQL = "SELECT * FROM update_user_samples(?,?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
-                                final var pstmt = conn.prepareStatement(SQL) ;
-                                pstmt.setInt(1, userPlotId);
-                                pstmt.setInt(2, Integer.parseInt(projectId));
-                                pstmt.setInt(3, Integer.parseInt(plotId));
-                                pstmt.setInt(4, userId);
-                                pstmt.setString(5, confidence == -1 ? null : Integer.toString(confidence));
-                                pstmt.setTimestamp(6, new Timestamp(Long.parseLong(collectionStart)));
-                                pstmt.setString(7, userSamples.toString());
-                                pstmt.setString(8, userImages.toString());
-                                pstmt.execute();                                
-                                return plotId;
-                            // add new
-                            } else {
-                                final var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
-                                final var pstmt = conn.prepareStatement(SQL) ;
-                                pstmt.setInt(1, Integer.parseInt(projectId));
-                                pstmt.setInt(2, Integer.parseInt(plotId));
-                                pstmt.setInt(3, userId);
-                                pstmt.setString(4, confidence == -1 ? null : Integer.toString(confidence));
-                                pstmt.setTimestamp(5, new Timestamp(Long.parseLong(collectionStart)));
-                                pstmt.setString(6, userSamples.toString());
-                                pstmt.setString(7, userImages.toString());
-                                pstmt.execute();
-                                return plotId;
-                            }
-                        }
-                    }
-                    // remove user lock
+            final var usPstmt = conn.prepareStatement("SELECT * FROM check_user_plots(?,?,?)")) {
+            usPstmt.setInt(1, Integer.parseInt(projectId));
+            usPstmt.setInt(2, Integer.parseInt(plotId));
+            usPstmt.setInt(3, userId);
+            try(var usRs = usPstmt.executeQuery()) {
+                unlockPlot(userId);
+                // update existing
+                if (usRs.next()) {
+                    final var userPlotId = usRs.getInt("user_plots_id");
+                    final var SQL = "SELECT * FROM update_user_samples(?,?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
+                    final var pstmt = conn.prepareStatement(SQL) ;
+                    pstmt.setInt(1, userPlotId);
+                    pstmt.setInt(2, Integer.parseInt(projectId));
+                    pstmt.setInt(3, Integer.parseInt(plotId));
+                    pstmt.setInt(4, userId);
+                    pstmt.setString(5, confidence == -1 ? null : Integer.toString(confidence));
+                    pstmt.setTimestamp(6, new Timestamp(Long.parseLong(collectionStart)));
+                    pstmt.setString(7, userSamples.toString());
+                    pstmt.setString(8, userImages.toString());
+                    pstmt.execute();                                
+                    return plotId;
+                // add new
+                } else {
+                    final var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
+                    final var pstmt = conn.prepareStatement(SQL) ;
+                    pstmt.setInt(1, Integer.parseInt(projectId));
+                    pstmt.setInt(2, Integer.parseInt(plotId));
+                    pstmt.setInt(3, userId);
+                    pstmt.setString(4, confidence == -1 ? null : Integer.toString(confidence));
+                    pstmt.setTimestamp(5, new Timestamp(Long.parseLong(collectionStart)));
+                    pstmt.setString(6, userSamples.toString());
+                    pstmt.setString(7, userImages.toString());
+                    pstmt.execute();
+                    return plotId;
                 }
-                return "";
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
