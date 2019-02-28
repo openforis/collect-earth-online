@@ -33,7 +33,7 @@ def insert_users():
             cur.execute("select * from add_user_migration(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
             user_id = cur.fetchone()[0]
             conn.commit()
-        cur.execute("select * from add_user_migration(%s,%s::text,%s::text)", (user_id + 1, "guest","dkh*&jlkjadfjk&^58342bmdjkjhf(*&0984"))
+        cur.execute("select * from add_user_migration(%s,%s::text,%s::text)", (-1, "guest","dkh*&jlkjadfjk&^58342bmdjkjhf(*&0984"))
         cur.execute("SELECT * FROM set_admin()")
         conn.commit()
         cur.close()

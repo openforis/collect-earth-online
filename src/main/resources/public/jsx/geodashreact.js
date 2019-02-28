@@ -787,7 +787,7 @@ class MapWidget extends React.Component {
             }
             else{
 
-                fetch(theURL.replace("/geo-dash", "") + "/get-unlocked-plot-by-id/" + projectID + "/" + plotID)
+                fetch(theURL.replace("/geo-dash", "") + "/get-unlocked-plot/" + projectID + "/" + plotID)
                     .then(function(res){return res.json();})
                     .then(function(data){
                         const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;

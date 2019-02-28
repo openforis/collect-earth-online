@@ -108,7 +108,7 @@ CREATE TABLE sample_values(
 );
 
 CREATE TABLE plot_locks(
-  user_id       integer not null references user_plots(id),
+  user_id       integer not null references users(id),
   plot_id       integer not null references plots(id),
   lock_end      timestamp,
   PRIMARY KEY(user_id, plot_id)

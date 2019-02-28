@@ -164,7 +164,7 @@ public class JsonPlots implements Plots {
                             lock -> {
                                 final var lockUserId = lock.get("userId").getAsInt();
                                 if (lockUserId == userId) {
-                                    lock.addProperty(Integer.toString(userId), System.currentTimeMillis() +  5 * 60 * 1000);
+                                    lock.addProperty("lockEnd", System.currentTimeMillis() +  5 * 60 * 1000);
                                     return lock;
                                 } else {
                                     return lock;
@@ -209,7 +209,8 @@ public class JsonPlots implements Plots {
             final var updatedLocks = filterJsonArray(plot.get("locks").getAsJsonArray(),
                 lock -> {
                     final var lockUserId = lock.get("userId").getAsInt();
-                    return lockUserId != userId;
+                    final var lockEnd = lock.get("lockEnd").getAsLong();
+                    return lockUserId != userId && lockEnd > System.currentTimeMillis();
                 });
             plot.add("locks", updatedLocks);
             return plot;
@@ -285,7 +286,7 @@ public class JsonPlots implements Plots {
         var projectId =         jsonInputs.get("projectId").getAsString();
         var plotId =            jsonInputs.get("plotId").getAsString();
         var userId =            jsonInputs.get("userId").getAsInt();
-        var userName =          jsonInputs.get("userId").getAsString();
+        var userName =          jsonInputs.get("userName").getAsString();
 
         mapJsonFile("plot-data-" + projectId + ".json",
                 plot -> {

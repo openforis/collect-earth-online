@@ -352,12 +352,12 @@ class ProjectStats extends React.Component {
                     <div className="ProjectStats__dates-table  mb-4">
                         <h3>Project Dates:</h3>
                         <div className="container row pl-4">
-                            <div className="pr-5">
+                            <div className="pr-4">
                                 Date Created
                                 <span className="badge badge-pill bg-lightgreen ml-3">{createdDate || "Unknown"}</span>
                             </div>
 
-                            <div className="pr-5">
+                            <div className="pr-4">
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {publishedDate || (availability === "unpublished"
@@ -366,7 +366,7 @@ class ProjectStats extends React.Component {
                                 </span>
                             </div>
 
-                            <div className="pr-5">
+                            <div className="pr-4">
                                 Date Closed
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {closedDate || (["archived", "closed"].includes(availability)
@@ -672,7 +672,7 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
     );
 }
 
-function SampleReview({ project: { projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }}}){
+function SampleReview({ project: { projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }}}) {
 
     return (
         <SectionBlock title="Sample Design">
@@ -707,7 +707,7 @@ function SampleReview({ project: { projectDetails: { sampleDistribution, samples
     );
 }
 
-function SurveyReview({ surveyQuestions }){
+function SurveyReview({ surveyQuestions }) {
     return (
         <SectionBlock title="Survey Review">
             <div id="survey-design">
