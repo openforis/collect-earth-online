@@ -30,15 +30,12 @@ class Collection extends React.Component {
             stackingProfileDG: "Accuracy_Profile",
             userSamples: {},
             userImages: {},
+            storedInterval: null,
         };
     }
 
     componentDidMount() {
-        this.getProjectById();
-        this.getProjectPlots();
-        setInterval(() => {
-
-        }, 3 * 60 * 1000);
+        this.getProjectData();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -76,6 +73,9 @@ class Collection extends React.Component {
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
             this.showGeoDash();
+
+            clearInterval(this.state.storedInterval);
+            this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
 
         // Update Samples
@@ -115,35 +115,36 @@ class Collection extends React.Component {
         }
     }
 
-    getProjectById = () => {
-        fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
-            .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then((project) => {
-                if (project.id === 0) alert("No project found with ID " + this.props.projectId + ".");
-                const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
-            })
+    getProjectData = () => {
+        Promise.all([this.getProjectById(), this.getProjectPlots()])
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
             });
     };
 
-    getProjectPlots = () => {
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error loading plot data. See console for details.");
-                    return Promise.resolve([]);
-                }
-            })
-            .then(data => {
+    getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then((project) => {
+            if (project.id > 0) {
+                const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
+                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
+                return Promise.resolve("resolved");
+            } else {
+                return Promise.reject("No project found with ID " + this.props.projectId + ".");
+            }
+        });
+
+    getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            if (data.length > 0) {
                 this.setState({ plotList: data });
-            });
-    };
+                return Promise.resolve("resolved");
+            } else {
+                return Promise.reject("No plot information found");
+            }
+        });
 
     getImageryList = () => {
         const { institution } = this.state.currentProject;
@@ -398,35 +399,22 @@ class Collection extends React.Component {
             });
     }
 
-    lockPlot(plotId) {
-        fetch(this.props.documentRoot + "/get-prev-plot"
-                + this.getQueryString({
-                    getUserPlots: this.state.reviewPlots,
-                    plotId: plotId,
-                    projectId: this.props.projectId,
-                    userId: this.props.userId,
-                    userName: this.props.userName,
-                })
-        )
-            .then(response => response.ok ? response.text() : Promise.reject(response))
-            .then(data => {
-                if (data === "done") {
-                    this.setState({ prevPlotButtonDisabled: true });
-                    alert(this.state.reviewPlots
-                            ? "No previous plots were analyzed by you."
-                            : "All previous plots have been analyzed.");
-                } else {
-                    const newPlot = JSON.parse(data);
-                    this.setState({
-                        currentPlot: newPlot,
-                        ...this.resetPlotValues(newPlot),
-                        nextPlotButtonDisabled: false,
-                    });
+    resetPlotLock() {
+        fetch(this.props.documentRoot + "/resest-plot-lock",
+              {
+                  method: "POST",
+                  body: JSON.stringify({
+                      plotId: this.state.currentPlot.id,
+                      projectId: this.props.projectId,
+                      userId: this.props.userId,
+                      userName: this.props.userName,
+                  }),
+              })
+            .then(response => {
+                if (!response.ok) {
+                    console.log(response);
+                    alert("Error maintaining plot lock, your work may get overwritten.  See console for details.");
                 }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
             });
     }
 
@@ -480,7 +468,6 @@ class Collection extends React.Component {
 
     showPlotSamples() {
         const { mapConfig, selectedQuestion: { visible }} = this.state;
-        console.log(visible)
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
@@ -638,11 +625,11 @@ class Collection extends React.Component {
                     answer: answerText,
                     answerId: answerId,
                 };
-                const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
-                    .reduce((acc, questionText) => {
-                        const { [questionText]: value, ...rest } = acc;
-                        return { ...rest };
-                    }, { ...this.state.userSamples[sampleId] });
+
+                const childQuestionArray = this.getChildQuestions(questionToSet.id);
+                const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
+                    .filter(entry => !childQuestionArray.includes(entry[0]))
+                    .reduce((acc, cur) => ({ ...acc, [cur[0]]: cur[1] }), {});
 
                 return {
                     ...acc,
@@ -838,7 +825,11 @@ class Collection extends React.Component {
                             </fieldset>
                     }
                 </SideBar>
-                <QuitMenu documentRoot={this.props.documentRoot}/>
+                <QuitMenu
+                    documentRoot={this.props.documentRoot}
+                    userId={this.props.userId}
+                    projectId={this.props.projectId}
+                />
                 {this.state.plotList.length === 0 &&
                     <div id="spinner" style={{ top: "45%", left: "38%" }}></div>
                 }
@@ -1299,7 +1290,8 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu(props) {
+function QuitMenu({ userId, projectId, documentRoot }) {
+
     return (
         <div
             className="modal fade"
@@ -1326,7 +1318,10 @@ function QuitMenu(props) {
                             type="button"
                             className="btn bg-lightgreen btn-sm"
                             id="quit-button"
-                            onClick={() => window.location = props.documentRoot + "/home"}
+                            onClick={() =>
+                                fetch(documentRoot + "/release-plot-lock/" + userId + "/" + projectId, { method: "POST" })
+                                    .then(() => window.location = documentRoot + "/home")
+                            }
                         >
                             OK
                         </button>
