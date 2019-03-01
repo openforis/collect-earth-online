@@ -526,6 +526,7 @@ function Imagery({ isAdmin, title, deleteImagery, isInstitutionImage }) {
         <div className="col overflow-hidden">
             <button
                 type="button"
+                title={title}
                 className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
             >
                 {title}
@@ -613,15 +614,17 @@ class Project extends React.Component {
                 </div>
             </div>
             <div className="col overflow-hidden">
-                <a
+                <button
+                    type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    href={documentRoot + "/collection/" + project.id}
+                    title={project.name}
+                    onClick={() => window.location = documentRoot + "/collection/" + project.id}
                     style={{
                         boxShadow: this.state.boxShadow,
                     }}
                 >
                     {project.name}
-                </a>
+                </button>
             </div>
             {isAdmin &&
             <div className="mr-3">
@@ -788,10 +791,14 @@ function User({ user, documentRoot, isAdmin, updateUserInstitutionRole }) {
                 </div>
             }
             <div className="col mb-1 overflow-hidden">
-                <a
+                <button
+                    type="button"
                     className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    href={documentRoot + "/account/" + user.id}
-                >{user.email}</a>
+                    title={user.email}
+                    onClick={() => window.location = documentRoot + "/account/" + user.id}
+                >
+                    {user.email}
+                </button>
             </div>
             {isAdmin &&
                 <div className="col-lg-3 mb-1 pl-0">

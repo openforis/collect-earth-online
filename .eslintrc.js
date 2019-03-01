@@ -69,6 +69,7 @@ module.exports = {
         "computed-property-spacing": 1,
         "eol-last": 2,
         "eqeqeq": [2, "smart"],
+        "keyword-spacing": 2,
         "no-trailing-spaces" : 2,
         "no-console": 0,
         "no-multi-spaces": 2,
@@ -83,6 +84,7 @@ module.exports = {
         "react/jsx-first-prop-new-line": [2, "multiline"],
         "react/no-unused-state": 1,
         "space-infix-ops": 2,
+        "space-before-blocks": 2,
         // From Gary
         "consistent-return": [0],
         "key-spacing": [0],

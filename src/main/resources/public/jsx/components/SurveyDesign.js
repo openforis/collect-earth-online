@@ -34,7 +34,7 @@ export class SurveyDesign extends React.Component {
     };
 
     convertToSimple = () => {
-         const newSurveyQuestions = this.props.surveyQuestions
+        const newSurveyQuestions = this.props.surveyQuestions
             .map(question => ({ ...question, componentType: "button", dataType: "text" }));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
@@ -55,8 +55,8 @@ export class SurveyDesign extends React.Component {
             return [questionId];
         } else {
             return childQuestions.reduce((acc, cur) => (
-                                            [...acc, ...this.getChildQuestionIds(cur.id)]
-                                        ), [questionId]);
+                [...acc, ...this.getChildQuestionIds(cur.id)]
+            ), [questionId]);
         }
     };
 
@@ -64,21 +64,30 @@ export class SurveyDesign extends React.Component {
         const questionsToRemove = this.getChildQuestionIds(questionId);
 
         const newSurveyQuestions = this.props.surveyQuestions
-                .filter(sq => !questionsToRemove.includes(sq.id));
+            .filter(sq => !questionsToRemove.includes(sq.id));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     };
 
     removeAnswer = (questionId, answerId) => {
-        const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
-        const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
+        const matchingQuestion = this.props.surveyQuestions
+            .find(sq => sq.parentQuestion === questionId && sq.parentAnswer === answerId);
 
-        const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
+        if (matchingQuestion) {
+            alert("You cannot remove this answer because a sub question (" +
+                matchingQuestion.question
+                + ") is referencing it.");
+        } else {
+            const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
+            const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
 
-        const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
+            const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
 
-        this.props.setSurveyQuestions(newSurveyQuestions);
+            const newSurveyQuestions = this.props.surveyQuestions
+                .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
+
+            this.props.setSurveyQuestions(newSurveyQuestions);
+        }
     };
 
     maxAnswers(componentType, dataType) {
@@ -101,11 +110,12 @@ export class SurveyDesign extends React.Component {
                         removeQuestion={this.removeQuestion}
                         newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length
                                 < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType)
-                                && <NewAnswerDesigner
+                                &&
+                                <NewAnswerDesigner
                                     setSurveyQuestions={this.props.setSurveyQuestions}
                                     surveyQuestions={this.props.surveyQuestions}
                                     surveyQuestion={surveyQuestion}
-                                   />
+                                />
                         }
                     />
 
@@ -198,16 +208,16 @@ class NewQuestionDesigner extends React.Component {
                             + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
 
                 const newQuestion = {
-                                        id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
-                                        question: repeatedQuestions > 0
-                                                        ? this.state.newQuestionText + ` (${repeatedQuestions})`
-                                                        : this.state.newQuestionText,
-                                        answers: [],
-                                        parentQuestion: this.state.selectedParent,
-                                        parentAnswer: this.state.selectedAnswer,
-                                        dataType: dataType,
-                                        componentType: componentType,
-                                    };
+                    id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
+                    question: repeatedQuestions > 0
+                                    ? this.state.newQuestionText + ` (${repeatedQuestions})`
+                                    : this.state.newQuestionText,
+                    answers: [],
+                    parentQuestion: this.state.selectedParent,
+                    parentAnswer: this.state.selectedAnswer,
+                    dataType: dataType,
+                    componentType: componentType,
+                };
                 this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
                 this.setState({ selectedAnswer: -1, newQuestionText: "" });
             }
@@ -221,30 +231,30 @@ class NewQuestionDesigner extends React.Component {
             <table className="mt-4">
                 <tbody>
                     {!this.props.inSimpleMode &&
-                    <tr>
-                        <td>
-                            <label htmlFor="value-componenttype">Component Type:</label>
-                        </td>
-                        <td>
-                            <select
-                                id="value-componenttype"
-                                className="form-control form-control-sm"
-                                size="1"
-                                onChange={e => this.setState({ selectedType: parseInt(e.target.value) })}
-                                value={this.state.selectedType}
-                            >
-                                {componentTypes.map((type, index) =>
-                                    <option
-                                        key={index}
-                                        value={index}
-                                    >
-                                        {`${type.componentType} - ${type.dataType}`}
-                                    </option>)
-                                }
-                            </select>
-                        </td>
-                    </tr>
-                }
+                        <tr>
+                            <td>
+                                <label htmlFor="value-componenttype">Component Type:</label>
+                            </td>
+                            <td>
+                                <select
+                                    id="value-componenttype"
+                                    className="form-control form-control-sm"
+                                    size="1"
+                                    onChange={e => this.setState({ selectedType: parseInt(e.target.value) })}
+                                    value={this.state.selectedType}
+                                >
+                                    {componentTypes.map((type, index) =>
+                                        <option
+                                            key={index}
+                                            value={index}
+                                        >
+                                            {`${type.componentType} - ${type.dataType}`}
+                                        </option>)
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
                     <tr>
                         <td>
                             <label htmlFor="value-parent">Parent Question:</label>
@@ -298,7 +308,7 @@ class NewQuestionDesigner extends React.Component {
                                             {answer.answer}
                                         </option>)
                                     : ""
-                            }
+                                }
                             </select>
                         </td>
                     </tr>
@@ -353,7 +363,7 @@ class NewAnswerDesigner extends React.Component {
             const updatedAnswers = [...surveyQuestion.answers, newAnswer];
             const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
             const newSurveyQuestions = this.props.surveyQuestions
-                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
+                .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
             this.props.setSurveyQuestions(newSurveyQuestions);
             this.setState({ selectedColor: "#1527F6", newAnswerText: "" });

@@ -13,9 +13,9 @@ export class SurveyCollection extends React.Component {
 
     componentDidMount() {
         const topLevelNodeIds = this.props.surveyQuestions
-                                .filter(sq => sq.parentQuestion === -1)
-                                .sort((a, b) => a.id - b.id)
-                                .map(sq => sq.id);
+            .filter(sq => sq.parentQuestion === -1)
+            .sort((a, b) => a.id - b.id)
+            .map(sq => sq.id);
         this.setState({
             topLevelNodeIds: topLevelNodeIds,
         });
@@ -24,6 +24,11 @@ export class SurveyCollection extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.state.currentNodeIndex !== prevState.currentNodeIndex) {
             this.props.setSelectedQuestion(this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex]));
+
+        } else if (this.props.selectedQuestion.id !== prevProps.selectedQuestion.id
+            && this.props.selectedQuestion.parentQuestion === -1) {
+
+            this.setState({ currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestion.id) });
         }
     }
 
@@ -87,6 +92,7 @@ export class SurveyCollection extends React.Component {
                                     id="top-select"
                                     key={i}
                                     className="btn btn-outline-lightgreen m-2"
+                                    title={removeEnumerator(this.getNodeById(node).question)}
                                     onClick={() => this.setSurveyQuestionTree(i)}
                                     style={{
                                         boxShadow: `${(i === this.state.currentNodeIndex)
@@ -162,12 +168,13 @@ class SurveyQuestionTree extends React.Component {
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm btn-block"
+                        className="text-center btn btn-outline-lightgreen btn-sm col-10 overflow-hidden text-truncate"
+                        title={removeEnumerator(this.props.surveyNode.question)}
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
                                     ? "0px 0px 2px 2px black inset,"
                                     : ""}
-                                    ${shadowColor}`
+                                    ${shadowColor}`,
                         }}
                         onClick={() => this.props.setSelectedQuestion(this.props.surveyNode)}
                     >
@@ -205,13 +212,14 @@ class SurveyQuestionTree extends React.Component {
     }
 }
 
-function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }){
+function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedSampleId, setCurrentValue }) {
     return <ul className={"samplevalue justify-content-center"}>
         {answers.map((ans, uid) =>
             <li key={uid} className="mb-1">
                 <button
                     type="button"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
+                    title={ans.answer}
                     id={ans.answer + "_" + ans.id}
                     name={ans.answer + "_" + ans.id}
                     style={{
@@ -224,18 +232,18 @@ function AnswerButton({ surveyNode, surveyNode: { answers, answered }, selectedS
                     onClick={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
                 >
                     <div
-                        className="circle"
+                        className="circle mr-2"
                         style={{
-                                backgroundColor: ans.color,
-                                border: "1px solid",
-                                float: "left",
-                                marginTop: "4px",
-                            }}
+                            backgroundColor: ans.color,
+                            border: "1px solid",
+                            float: "left",
+                            marginTop: "4px",
+                        }}
                     />
                     <span className="small">{ans.answer}</span>
                 </button>
             </li>
-                )}
+        )}
     </ul>;
 }
 
@@ -245,7 +253,8 @@ function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, sele
             <li key={uid} className="mb-1">
                 <button
                     type="button"
-                    className="btn btn-outline-darkgray btn-sm btn-block pl-1"
+                    className="btn btn-outline-darkgray btn-sm btn-block pl-1 overflow-hidden text-truncate"
+                    title={ans.answer}
                     id={ans.answer + "_" + ans.id}
                     name={ans.answer + "_" + ans.id}
                     onClick={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
@@ -253,16 +262,16 @@ function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, sele
                     <div
                         className="circle ml-1"
                         style={{
-                                border: "1px solid black",
-                                float: "left",
-                                marginTop: "4px",
-                                boxShadow: "0px 0px 0px 3px " + ans.color,
-                                backgroundColor:  answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
-                                                    ? "black"
-                                                    : answered.some(a => a.answerId === ans.id)
-                                                        ? "#e8e8e8"
-                                                        : "white",
-                            }}
+                            border: "1px solid black",
+                            float: "left",
+                            marginTop: "4px",
+                            boxShadow: "0px 0px 0px 3px " + ans.color,
+                            backgroundColor: answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId)
+                                                ? "black"
+                                                : answered.some(a => a.answerId === ans.id)
+                                                    ? "#e8e8e8"
+                                                    : "white",
+                        }}
                     />
                     <span className="small">{ans.answer}</span>
                 </button>
@@ -271,7 +280,7 @@ function AnswerRadioButton({ surveyNode, surveyNode: { answers, answered }, sele
     </ul>;
 }
 
-class AnswerInput extends React.Component{
+class AnswerInput extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -360,11 +369,7 @@ class AnswerDropDown extends React.Component {
         const options = answers.map((ans, uid) =>
             <div
                 key={uid}
-                onClick={() => {
-                        setCurrentValue(surveyNode, ans.id, ans.answer);
-                        this.setState({ showDropdown: false });
-                    }
-                }
+                onMouseDown={() => setCurrentValue(surveyNode, ans.id, ans.answer)}
                 className="d-inline-flex py-2 border-bottom"
                 style={{ backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1" }}
             >
@@ -391,29 +396,30 @@ class AnswerDropDown extends React.Component {
                 <div className="dropdown-selector ml-3 d-flex pl-0 col-12">
                     <div className="SelectedItem d-inline-flex border col-8">
                         {answers.map(ans =>
-                         answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId) &&
-                         <Fragment>
-                             <div className="col-1 mt-2">
-                                 <span
-                                     className="dot"
-                                     style={{
-                                        height: "15px",
-                                        width: "15px",
-                                        backgroundColor: ans.color,
-                                        borderRadius: "50%",
-                                        display: "inline-block",
-                                    }}
-                                 />
-                             </div>
-                             <div className="col-11 text-left mt-1">
-                                 {ans.answer}
-                             </div>
-                         </Fragment>
+                            answered.some(a => a.answerId === ans.id && a.sampleId === selectedSampleId) &&
+                            <Fragment>
+                                <div className="col-1 mt-2">
+                                    <span
+                                        className="dot"
+                                        style={{
+                                            height: "15px",
+                                            width: "15px",
+                                            backgroundColor: ans.color,
+                                            borderRadius: "50%",
+                                            display: "inline-block",
+                                        }}
+                                    />
+                                </div>
+                                <div className="col-11 text-left mt-1">
+                                    {ans.answer}
+                                </div>
+                            </Fragment>
                         )}
                     </div>
                     <button
                         type="button"
                         onClick={this.toggleDropDown}
+                        onBlur={() => this.setState({ showDropdown: false })}
                         className="dropbtn"
                         style={{
                             backgroundColor: "#31BAB0",

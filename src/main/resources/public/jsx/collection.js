@@ -69,26 +69,26 @@ class Collection extends React.Component {
         // Update map when state changes
         //
 
-        // Update all when plot changes
-        if (this.state.currentPlot && this.state.selectedQuestion.visible
-            && (this.state.currentPlot !== prevState.currentPlot || !prevState.selectedQuestion.visible)) {
+        // Inititialize on new plot
+        if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
             this.showGeoDash();
-            this.showPlotSamples();
-            this.highlightSamplesByQuestion();
         }
 
-        // Selective sample updates when not a new plot
+        // Update Samples
         if (this.state.currentPlot && this.state.currentPlot === prevState.currentPlot) {
             // Changing questions shows different set of samples
             if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
-                        || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
-                        || this.state.userSamples !== prevState.userSamples) {
+                || this.state.sampleOutlineBlack !== prevState.sampleOutlineBlack
+                || this.state.userSamples !== prevState.userSamples
+                || !prevState.selectedQuestion.visible) {
+
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
             }
         }
 
+        // Update user samples calculations for display
         if (this.state.currentProject.surveyQuestions.length > 0
             && this.state.userSamples !== prevState.userSamples) {
             this.updateQuestionStatus();
@@ -402,9 +402,12 @@ class Collection extends React.Component {
                     return obj;
                 }, {})
                 : {},
-            selectedQuestion: this.state.currentProject.surveyQuestions
-                .sort((a, b) => a.id - b.id)
-                .find(surveyNode => surveyNode.parentQuestion === -1),
+            selectedQuestion: {
+                ...this.state.currentProject.surveyQuestions
+                    .sort((a, b) => a.id - b.id)
+                    .find(surveyNode => surveyNode.parentQuestion === -1),
+                visible: null,
+            },
             collectionStart: Date.now(),
             sampleOutlineBlack: true,
         };
@@ -494,7 +497,7 @@ class Collection extends React.Component {
         if (this.state.currentPlot != null) {
             fetch(this.props.documentRoot + "/flag-plot",
                   {
-                      method: "post",
+                      method: "POST",
                       body: JSON.stringify({
                           projectId: this.props.projectId,
                           plotId: this.state.currentPlot.id,
@@ -566,9 +569,10 @@ class Collection extends React.Component {
         if (childQuestions.length === 0) {
             return [question];
         } else {
-            return childQuestions.reduce((prev, acc) => (
-                [...prev, ...this.getChildQuestions(acc.id)]
-            ), [question]);
+            return childQuestions
+                .reduce((prev, acc) => (
+                    [...prev, ...this.getChildQuestions(acc.id)]
+                ), [question]);
         }
     }
 
@@ -605,13 +609,14 @@ class Collection extends React.Component {
 
             }, {});
 
-            const newUserImages = sampleIds.reduce((acc, sampleId) => ({
-                ...acc,
-                [sampleId]: {
-                    id: this.state.currentImagery.id,
-                    attributes: this.getImageryAttributes(),
-                },
-            }), {});
+            const newUserImages = sampleIds
+                .reduce((acc, sampleId) => ({
+                    ...acc,
+                    [sampleId]: {
+                        id: this.state.currentImagery.id,
+                        attributes: this.getImageryAttributes(),
+                    },
+                }), {});
 
             this.setState({
                 userSamples: { ...this.state.userSamples, ...newSamples },
@@ -758,32 +763,34 @@ class Collection extends React.Component {
                         baseMapSource={this.state.currentImagery.id}
                         imageryTitle={this.state.currentImagery.title}
                         imageryList={this.state.imageryList}
+                        imageryYearDG={this.state.imageryYearDG}
+                        imageryYearPlanet={this.state.imageryYearPlanet}
+                        imageryMonthPlanet={this.state.imageryMonthPlanet}
+                        imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
+                        stackingProfileDG={this.state.stackingProfileDG}
                         setBaseMapSource={this.setBaseMapSource}
-                        imageryYearDG={this.imageryYearDG}
-                        stackingProfileDG={this.stackingProfileDG}
                         setImageryYearDG={this.setImageryYearDG}
-                        setStackingProfileDG={this.setStackingProfileDG}
-                        imageryYearPlanet={this.imageryYearPlanet}
-                        imageryMonthPlanet={this.imageryMonthPlanet}
-                        imageryMonthNamePlanet={this.imageryMonthNamePlanet}
                         setImageryYearPlanet={this.setImageryYearPlanet}
                         setImageryMonthPlanet={this.setImageryMonthPlanet}
+                        setStackingProfileDG={this.setStackingProfileDG}
                         loadingImages={this.state.imageryList.length === 0}
                     />
                     {this.state.currentPlot
-                ?
-                    <SurveyCollection
-                        selectedQuestion={this.state.selectedQuestion}
-                        selectedSampleId={this.state.selectedSampleId}
-                        surveyQuestions={this.state.currentProject.surveyQuestions}
-                        setCurrentValue={this.setCurrentValue}
-                        setSelectedQuestion={this.setSelectedQuestion}
-                    />
-                :
-                    <fieldset className="mb-3 justify-content-center text-center">
-                        <h3>Survey Questions</h3>
-                        <p>Please go to a plot to see survey questions</p>
-                    </fieldset>
+                        ?
+                            <SurveyCollection
+                                selectedQuestion={this.state.selectedQuestion}
+                                surveyQuestions={this.state.currentProject.surveyQuestions}
+                                setCurrentValue={this.setCurrentValue}
+                                setSelectedQuestion={this.setSelectedQuestion}
+                                selectedSampleId={Object.keys(this.state.userSamples).length === 1
+                                    ? parseInt(Object.keys(this.state.userSamples)[0])
+                                    : this.state.selectedSampleId}
+                            />
+                        :
+                            <fieldset className="mb-3 justify-content-center text-center">
+                                <h3>Survey Questions</h3>
+                                <p>Please go to a plot to see survey questions</p>
+                            </fieldset>
                     }
                 </SideBar>
                 <QuitMenu documentRoot={this.props.documentRoot}/>
@@ -807,10 +814,11 @@ function ImageAnalysisPane(props) {
 }
 
 function SideBar(props) {
-    const saveValuesButtonEnabled = props.surveyQuestions.every(sq => sq.visible === sq.answered);
+    const saveValuesButtonEnabled = props.surveyQuestions
+        .every(sq => sq.visible && sq.visible.length === sq.answered.length);
 
     return (
-        <div id="sidebar" className="col-xl-3 border-left" style={{ overflow: "scroll" }}>
+        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "hidden scroll" }}>
             <h2 className="header">{props.projectName || ""}</h2>
 
             {props.children}
@@ -849,7 +857,7 @@ function SideBar(props) {
     );
 }
 
-class PlotNavigation extends React.Component{
+class PlotNavigation extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -1006,7 +1014,7 @@ function ImageryOptions(props) {
                         name="base-map-source"
                         size="1"
                         value={props.baseMapSource || ""}
-                        onChange={(e) => props.setBaseMapSource(e.target.value)}
+                        onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
                     >
                         {
                             props.imageryList.map(
