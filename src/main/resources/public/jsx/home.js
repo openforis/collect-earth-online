@@ -15,8 +15,9 @@ class Home extends React.Component {
     componentDidMount() {
         // Fetch projects
         fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
-            .then(response => response.ok ? response.json() : Promise.reject([]))
-            .then(data => this.setState({ projects: data }));
+            .then(response => response.ok ? response.json() : Promise.reject())
+            .then(data => this.setState({ projects: data }))
+            .catch(() => this.setState({ projects: [] }));
     }
 
     toggleSidebar = () => this.setState({ showSidePanel: !this.state.showSidePanel });
@@ -62,8 +63,9 @@ class MapPanel extends React.Component {
     componentDidMount() {
         // Fetch imagery
         fetch(this.props.documentRoot + "/get-all-imagery")
-            .then(response => response.ok ? response.json() : Promise.reject([]))
-            .then(data => this.setState({ imagery: data }));
+            .then(response => response.ok ? response.json() : Promise.reject())
+            .then(data => this.setState({ imagery: data }))
+            .catch(() => this.setState({ imagery: [] }));
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -182,9 +184,11 @@ class SideBar extends React.Component {
     componentDidMount() {
         // Fetch institutions
         fetch(this.props.documentRoot + "/get-all-institutions")
-            .then(response => response.ok ? response.json() : Promise.reject([]))
-            .then(data => this.setState({ institutions: data }));
+            .then(response => response.ok ? response.json() : Promise.reject())
+            .then(data => this.setState({ institutions: data }))
+            .catch(() => this.setState({ institutions: [] }));
     }
+
     toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });

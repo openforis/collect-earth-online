@@ -1395,7 +1395,7 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
 		SELECT *,
 			row_number() OVER(ORDER BY id) AS rows,
 			count(*) OVER() as total_plots
-		FROM select_all_unlocked_project_plots(_project_id)
+		FROM select_all_project_plots(_project_id)
 		WHERE project_id = _project_id
 	) as all_plots
 	WHERE all_plots.rows % 
@@ -1505,12 +1505,13 @@ CREATE OR REPLACE FUNCTION lock_plot_reset(_plot_id integer, _user_id integer, _
 
 $$ LANGUAGE SQL;
 
--- Remove all locks from user
+-- Remove all locks from user and old locks
 CREATE OR REPLACE FUNCTION unlock_plot(_user_id integer) 
     RETURNS VOID AS $$
 
     DELETE FROM plot_locks pl
     WHERE pl.user_id = _user_id
+	OR pl.lock_end < localtimestamp
 
 $$ LANGUAGE SQL;
 

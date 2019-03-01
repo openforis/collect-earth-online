@@ -306,8 +306,8 @@ public class JsonUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        final var userName =     req.params(":userid");
-        final var projects = readJsonFile("project-list.json").getAsJsonArray();
+        final var userName =        req.params(":userid");
+        final var projects =        readJsonFile("project-list.json").getAsJsonArray();
                
         // Pull out usefull data
         final var projectData = toStream(projects)

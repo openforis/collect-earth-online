@@ -281,16 +281,13 @@ class Project extends React.Component {
     getProjectPlots() {
         const maxPlots = 300;
         fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot list. See console for details.");
-                    return Promise.resolve([]);
-                }
-            })
-            .then(data => this.setState({ plotList: data }));
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ plotList: data }))
+            .catch(response => {
+                this.setState({ plotList: [] });
+                console.log(response);
+                alert("Error retrieving plot list. See console for details.");
+            });
     }
 
     updateProjectBoundary() {
