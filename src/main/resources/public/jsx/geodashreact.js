@@ -518,7 +518,7 @@ class MapWidget extends React.Component {
             },
             body: JSON.stringify(postObject)
         })
-            .then(res => { return res.json(); })
+            .then(res => res.json())
             .then(data => {
 
                 if (data.hasOwnProperty("mapid")) {
@@ -545,7 +545,7 @@ class MapWidget extends React.Component {
                             },
                             body: JSON.stringify(postObject)
                         })
-                            .then(res =>{return res.json();})
+                            .then(res => res.json())
                             .then(data => {
                                 if (data.hasOwnProperty("mapid")) {
                                     let mapId = data.mapid;
@@ -574,7 +574,7 @@ class MapWidget extends React.Component {
                                 },
                                 body: JSON.stringify(workingObject)
                             })
-                                .then(res => {return res.json();})
+                                .then(res => res.json())
                                 .then(data =>{
                                     if (data.hasOwnProperty("mapid")) {
                                         let mapId = data.mapid;
@@ -769,7 +769,7 @@ class MapWidget extends React.Component {
             }
             else{
                 fetch(window.location.origin + "/geo-dash" + "/get-project-plot/" + projectID + "/" + plotID)
-                    .then(res => { res.json();})
+                    .then(res => res.json())
                     .then(data => {
                         const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
                         const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(_geojson_object.geom, true));
@@ -854,16 +854,16 @@ class GraphWidget extends React.Component {
                 scale: 200
             })
         })
-            .then(res =>{ res.json();})
-            .then(data =>
+            .then(res => res.json())
+            .then(res =>
             {
-                if (data.errMsg) {
-                    console.warn(data.errMsg);
+                if (res.errMsg) {
+                    console.warn(res.errMsg);
                 } else {
-                    if (data.hasOwnProperty("timeseries")) {
+                    if (res.hasOwnProperty("timeseries")) {
 
                         let timeseriesData = [];
-                        data.timeseries.forEach(function (value) {
+                        res.timeseries.forEach(function (value) {
                             if (value[0] !== null) {
                                 timeseriesData.push([value[0], value[1]]);
                             }
@@ -1008,7 +1008,7 @@ class StatsWidget extends React.Component {
                 paramValue: JSON.parse(projPairAOI)
             })
         })
-            .then(res =>{ res.json();})
+            .then(res => res.json())
             .then(data => {
                 if (data.errMsg) {
                     console.warn(data.errMsg);
