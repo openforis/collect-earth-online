@@ -70,9 +70,12 @@ export class SurveyDesign extends React.Component {
     };
 
     removeAnswer = (questionId, answerId) => {
-        if (this.props.surveyQuestions.some(sq => sq.parentQuestion === questionId && sq.parentAnswer === answerId)) {
+        const matchingQuestion = this.props.surveyQuestions
+            .some(sq => sq.parentQuestion === questionId && sq.parentAnswer === answerId);
+
+        if (matchingQuestion) {
             alert("You cannot remove this answer because a sub question (" +
-                this.props.surveyQuestions.find(sq => sq.parentQuestion === questionId && sq.parentAnswer === answerId).question
+                matchingQuestion.question
                 + ") is referencing it.");
         } else {
             const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);

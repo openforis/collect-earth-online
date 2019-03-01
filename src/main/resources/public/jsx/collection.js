@@ -88,7 +88,7 @@ class Collection extends React.Component {
             }
         }
 
-        // Update user samples calulations for display
+        // Update user samples calculations for display
         if (this.state.currentProject.surveyQuestions.length > 0
             && this.state.userSamples !== prevState.userSamples) {
             this.updateQuestionStatus();

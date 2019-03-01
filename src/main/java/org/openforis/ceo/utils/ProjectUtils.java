@@ -388,7 +388,7 @@ public class ProjectUtils {
             System.out.println("Running " + script);
             var pb = new ProcessBuilder("/bin/sh", script, "project-" + projectId + "-" + plotsOrSamples);
             pb.directory(new File(expandResourcePath(rpath)));
-            pb.redirectOutput(new File("out.txt")); // 
+            pb.redirectOutput(new File("out.txt"));
             var p = pb.start();
             if (p.waitFor(10L, TimeUnit.SECONDS)) {
                 System.out.println("Linux Conversion complete.");
