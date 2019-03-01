@@ -13,12 +13,6 @@ module.exports = {
         geodashreact:       path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
         widgetlayouteditor: path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
     },
-    output: {
-        path: path.resolve(__dirname, "src/main/resources/public/js"),
-        filename: "[name].bundle.js",
-        library: "[name]",
-        libraryTarget: "var"
-    },
     module: {
         rules: [
             {
