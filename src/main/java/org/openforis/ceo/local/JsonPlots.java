@@ -54,10 +54,8 @@ public class JsonPlots implements Plots {
     }
 
     private static Boolean hasUserLock(JsonObject plot, Integer userId) {
-        return !plot.has("locks")
-                || (plot.has("locks") 
-                    && !toStream(plot.get("locks").getAsJsonArray())
-                        .anyMatch(l -> l.get("lockEnd").getAsLong() > System.currentTimeMillis()));
+        return plot.has("locks") && toStream(plot.get("locks").getAsJsonArray())
+                                    .anyMatch(l -> l.get("lockEnd").getAsLong() > System.currentTimeMillis());
     }
 
     private static Integer whichPlotId(JsonObject plot) {
@@ -81,14 +79,14 @@ public class JsonPlots implements Plots {
                                         ?  getOrEmptyString(pl, "user").getAsString().equals(userName)
                                         :  pl.get("analyses").getAsInt() == 0 
                                             && pl.get("flagged").getAsBoolean() == false 
-                                            && hasUserLock(pl, userId)
+                                            && !hasUserLock(pl, userId)
                                     )
                                     .filter(filterPredicate)
                                     .sorted(sortComparator)
                                     .findFirst();
 
         if (matchingPlot.isPresent()) {
-            lockUnlockPlots(projectId, matchingPlot.get().get("id").getAsInt(), userId);
+            unlockLockPlots(projectId, matchingPlot.get().get("id").getAsInt(), userId);
             return matchingPlot.get().toString();
         } else {
             return "done";
@@ -180,25 +178,26 @@ public class JsonPlots implements Plots {
     }
 
     public String releasePlotLocks(Request req, Response res) {
-        final var userId =             Integer.parseInt(req.params(":userId"));
+        final var userId =                Integer.parseInt(req.params(":userId"));
         final var projectId =             Integer.parseInt(req.params(":projid"));
 
-        return lockUnlockPlots(projectId, -1, userId);
+        return unlockLockPlots(projectId, -1, userId);
     }
 
-    private static String lockUnlockPlots(Integer projectId, Integer plotIdToLock, Integer userId) {
+    private static String unlockLockPlots(Integer projectId, Integer plotIdToLock, Integer userId) {
         mapJsonFile("plot-data-" + projectId + ".json",
         plot -> {
-            if (plot.get("id").getAsInt() == plotIdToLock) {
-                var updatedLocks = plot.has("locks") ? plot.get("locks").getAsJsonArray() : new JsonArray();
+            var unlockedPlot = unlockPlot(plot, userId);
+            if (unlockedPlot.get("id").getAsInt() == plotIdToLock) {
+                var updatedLocks = unlockedPlot.has("locks") ? unlockedPlot.get("locks").getAsJsonArray() : new JsonArray();
                 var userLock = new JsonObject();
                 userLock.addProperty("userId",Integer.toString(userId));
                 userLock.addProperty("lockEnd", System.currentTimeMillis() +  5 * 60 * 1000);
                 updatedLocks.add(userLock);
-                plot.add("locks", updatedLocks);
-                return plot;
+                unlockedPlot.add("locks", updatedLocks);
+                return unlockedPlot;
             } else {
-                return unlockPlot(plot, userId);
+                return unlockedPlot;
             }
         });
         return "";

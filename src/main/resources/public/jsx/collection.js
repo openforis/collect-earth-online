@@ -520,7 +520,8 @@ class Collection extends React.Component {
                       body: JSON.stringify({
                           projectId: this.props.projectId,
                           plotId: this.state.currentPlot.id,
-                          userId: this.props.userName,
+                          userId: this.props.userId,
+                          userName: this.props.userName,
                       }),
                   })
                 .then(response => {

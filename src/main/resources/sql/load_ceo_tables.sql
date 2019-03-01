@@ -99,11 +99,11 @@ CREATE TABLE user_plots(
 
 CREATE TABLE sample_values(
   id                  serial primary key,
-	user_plot_id        integer not null references user_plots (id) on delete cascade on update cascade,
+  user_plot_id        integer not null references user_plots (id) on delete cascade on update cascade,
   sample_id           integer not null references samples (id) on delete cascade on update cascade,     
-	imagery_id          integer references imagery (id) on delete cascade on update cascade,
+  imagery_id          integer references imagery (id) on delete cascade on update cascade,
   imagery_attributes  jsonb,
-	value               jsonb,
+  value               jsonb,
   CONSTRAINT per_sample_per_user UNIQUE(sample_id, user_plot_id)
 );
 

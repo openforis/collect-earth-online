@@ -1308,15 +1308,11 @@ CREATE OR REPLACE FUNCTION create_project_plot(_project_id integer, _center geom
 $$ LANGUAGE SQL;
 
 -- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _username text, _confidence integer) 
+CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _confidence integer) 
     RETURNS integer AS $$
 
-    with user_id as (
-		SELECT id FROM users WHERE email = _username
-	)
 	INSERT INTO user_plots (user_id, plot_id, flagged, confidence, collection_time)
-	SELECT user_id.id, _plot_id, true, _confidence, Now()
-	FROM user_id
+	VALUES (_user_id, _plot_id, true, _confidence, Now())
 	RETURNING _plot_id
 
 $$ LANGUAGE SQL;

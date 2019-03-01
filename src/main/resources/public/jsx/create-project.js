@@ -441,10 +441,12 @@ class ProjectTemplateVisibility extends React.Component {
                             <option key={0} value={0}>None</option>
                             {
                                 projectList
-                                    .filter(proj => proj && proj.id > 0 && proj.name.includes(this.state.projectFilter))
-                                    .map((proj, uid) =>
-                                        <option key={uid} value={proj.id}>{proj.name}</option>
+                                    .filter(proj => proj
+                                                    && proj.id > 0
+                                                    && proj.name.toLocaleLowerCase()
+                                                        .includes(this.state.projectFilter.toLocalLowerCase())
                                     )
+                                    .map((proj, uid) => <option key={uid} value={proj.id}>{proj.name}</option>)
                             }
                         </select>
                     </div>
