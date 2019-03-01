@@ -13,20 +13,11 @@ import spark.Response;
 
 public class PostgresGeoDash implements GeoDash {
 
-    // Returns the appended callback string or ""
-    private static String returnBlank(String callback) {
-        if (callback != null) {
-            return callback + "()";
-        } else {
-            return "";
-        }
-    }
 
     // Returns either the dashboard for a project or an empty dashboard if it has not been configured
     public String geodashId(Request req, Response res) {
         var projectId =     req.params(":id");
         var projectTitle =  req.queryParams("title");
-        var callback =      req.queryParams("callback");
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
@@ -45,12 +36,8 @@ public class PostgresGeoDash implements GeoDash {
                     } while (rs.next());
 
                     dashboard.add("widgets", widgetsJson);
-                    
-                    if (callback != null) {
-                        return callback + "(" + dashboard.toString() + ")";
-                    } else {
-                        return dashboard.toString();
-                    }
+
+                    return dashboard.toString();
                 }
                 else{
                     //No widgets return empty dashboard
@@ -60,18 +47,16 @@ public class PostgresGeoDash implements GeoDash {
                     newDashboard.addProperty("projectTitle", projectTitle);
                     newDashboard.addProperty("dashboardID", newDashboardId);
                     newDashboard.add("widgets", new JsonArray());
-                    if (callback != null) {
-                        return callback + "(" + newDashboard.toString() + ")";
-                    } else {
-                        return newDashboard.toString();
-                    }
+
+                    return newDashboard.toString();
+
                 }
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
-        return returnBlank(callback);
+        return "";
     }
 
     // Will be removed once confirmed it is abandoned and not needed
@@ -86,7 +71,6 @@ public class PostgresGeoDash implements GeoDash {
         var projectId =jsonInputs.get("pID").getAsString();
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
-        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
 
 
         try (var conn = connect();
@@ -97,16 +81,13 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setString(3, widgetJsonString);
             pstmt.execute();
 
-            if (callback != null) {
-                return callback + "()";
-            } else {
-                return "";
-            }
+             return "";
+
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
-        return returnBlank(callback);
+        return "";
     }
 
     // Updates a dashboard widget by widget_id
@@ -115,7 +96,6 @@ public class PostgresGeoDash implements GeoDash {
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetId = req.params(":id");
         var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
-        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement(
@@ -126,40 +106,31 @@ public class PostgresGeoDash implements GeoDash {
             pstmt.setString(3, widgetJsonString);
             pstmt.execute();
 
-            if (callback != null) {
-                return callback + "()";
-            } else {
-                return "";
-            }
+            return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
-        return returnBlank(callback);
+        return "";
     }
 
     // Deletes a dashboard widget by widget_id
     public String deleteDashBoardWidgetById(Request req, Response res) {
         var jsonInputs            = parseJson(req.body()).getAsJsonObject();
         var widgetId = req.params(":id");
-        var callback = jsonInputs.get("callback") == null? null: jsonInputs.get("callback").getAsString();
 
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM delete_project_widget_by_widget_id(?)")) {
 
             pstmt.setInt(1, Integer.parseInt(widgetId));
             pstmt.execute();
-            
-            if (callback != null) {
-                return callback + "()";
-            } else {
-                return "";
-            }
+
+            return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
-        return returnBlank(callback);
+        return "";
     }
 
 }

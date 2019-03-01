@@ -26,7 +26,7 @@ class BasicLayout extends React.PureComponent{
              : null;
      }
      static getGatewayUrl(widget, collectionName){
-         if(widget.filterType != null && widget.filterType.length > 0){
+         if(widget.filterType !== null && widget.filterType.length > 0){
              const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
              return window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
          }
@@ -96,7 +96,7 @@ class BasicLayout extends React.PureComponent{
              formReady: false,
              wizardStep: 1,
              pid: BasicLayout.getParameterByName("pid"),
-             institutionID: BasicLayout.getParameterByName("institutionId") != null? BasicLayout.getParameterByName("institutionId"): "1"
+             institutionID: BasicLayout.getParameterByName("institutionId") !== null? BasicLayout.getParameterByName("institutionId"): "1"
 
          };
      }
@@ -172,7 +172,7 @@ class BasicLayout extends React.PureComponent{
                  if(widget.gridrow){
                      //do the y and h
                      y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                     h = widget.gridrow.trim().split(" ")[3] != null? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
+                     h = widget.gridrow.trim().split(" ")[3] !== null? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
                  }
                  // create .layout
                  widget.layout = {x : x, y: y, w: w, h: h};
@@ -229,10 +229,9 @@ class BasicLayout extends React.PureComponent{
          }
      }
      updateServerWidgets(){
-         const holdRef = this;
-         this.state.widgets.forEach(function(widget) {
-             let ajaxurl = holdRef.props.theURI + "/updatewidget/widget/" + widget.id;
-             holdRef.serveItUp(ajaxurl, widget);
+         this.state.widgets.forEach( widget =>  {
+             let ajaxurl = this.props.theURI + "/updatewidget/widget/" + widget.id;
+             this.serveItUp(ajaxurl, widget);
 
          });
      }
@@ -262,12 +261,11 @@ class BasicLayout extends React.PureComponent{
          this.serveItUp(ajaxurl, widget);
      }
      generateDOM() {
-         const holdRef = this;
          const x = "x";
-         return _.map(this.state.widgets, function(widget, i) {
-             return <div onDragStart={holdRef.onDragStart} onDragEnd={holdRef.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + BasicLayout.getImageByType(widget.properties[0]) +")"}} >
+         return _.map(this.state.widgets, (widget, i) => {
+             return <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + BasicLayout.getImageByType(widget.properties[0]) +")"}} >
                  <h3 className="widgetEditor title">{widget.name}
-                     <span className="remove" onClick={(e) => {e.stopPropagation(); holdRef.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
+                     <span className="remove" onClick={(e) => {e.stopPropagation(); this.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
                          {x}
                      </span>
                  </h3>
@@ -374,7 +372,7 @@ class BasicLayout extends React.PureComponent{
             selectedDataType: event.target.value
         });
     };
-    onCancelNewWidget = () =>{
+    onCancelNewWidget = () => {
         this.setState({
             selectedWidgetType: "-1",
             selectedDataTypeDual: "-1",
@@ -407,22 +405,22 @@ class BasicLayout extends React.PureComponent{
             wizardStep: 1
         });
     };
-    onNextWizardStep = () =>{
+    onNextWizardStep = () => {
         this.setState({wizardStep: 2});
     };
-    onPrevWizardStep = () =>{
+    onPrevWizardStep = () => {
         this.setState({wizardStep: 1});
     };
-    onCreateNewWidget = () =>{
+    onCreateNewWidget = () => {
         let widget = {};
         let id = this.state.widgets.length > 0?(Math.max.apply(Math, this.state.widgets.map(function(o) { return o.id; }))) + 1: 0;
         let name = this.state.WidgetTitle;
         widget.id = id;
         widget.name = name;
         let yval = ((Math.max.apply(Math, this.state.widgets.map(function (o) {
-            return o.layout.y != null ? o.layout.y : 0;
+            return o.layout.y !== null ? o.layout.y : 0;
         }))) + 1) > -1 ? (Math.max.apply(Math, this.state.widgets.map(function (o) {
-                return o.layout.y != null ? o.layout.y : 0;
+                return o.layout.y !== null ? o.layout.y : 0;
             }))) + 1 : 0;
 
         widget.layout = {
@@ -449,7 +447,7 @@ class BasicLayout extends React.PureComponent{
             img2.startDate = this.state.startDateDual;
             img2.endDate = this.state.endDateDual;
             if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType)) {
-                img1.filterType = this.state.selectedDataType != null ? this.state.selectedDataType : "";
+                img1.filterType = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
                 img1.visParams = {
                     bands: this.state.widgetBands,
                     min: this.state.widgetMin,
@@ -461,7 +459,7 @@ class BasicLayout extends React.PureComponent{
             }
 
             if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual)) {
-                img2.filterType = this.state.selectedDataTypeDual != null ? this.state.selectedDataTypeDual : "";
+                img2.filterType = this.state.selectedDataTypeDual !== null ? this.state.selectedDataTypeDual : "";
                 img2.visParams = {
                     bands: this.state.widgetBandsDual,
                     min: this.state.widgetMinDual,
@@ -504,14 +502,13 @@ class BasicLayout extends React.PureComponent{
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
                 img2.imageAsset = this.state.imageCollectionDual;
-                let ref = this;
-                setTimeout(function() {
-                    ref.addCustomImagery(ref.buildImageryObject({
-                        ImageAsset: ref.state.imageCollectionDual,
+                setTimeout( () => {
+                    this.addCustomImagery(this.buildImageryObject({
+                        ImageAsset: this.state.imageCollectionDual,
                         startDate: "",
                         endDate: "",
                         filterType: "",
-                        visParams: JSON.parse(ref.state.imageParamsDual)
+                        visParams: JSON.parse(this.state.imageParamsDual)
                     }));
                 }, 500);
 
@@ -521,9 +518,8 @@ class BasicLayout extends React.PureComponent{
                 //add dual image asset parameters
                 img2.visParams = JSON.parse(this.state.imageParamsDual);
                 img2.ImageCollectionAsset = this.state.imageCollectionDual;
-                let ref = this;
-                setTimeout(function() {
-                    ref.addCustomImagery(ref.buildImageryObject({
+                setTimeout(() => {
+                    this.addCustomImagery(this.buildImageryObject({
                         ImageCollectionAsset: img2.ImageCollectionAsset,
                         startDate: "",
                         endDate: "",
@@ -570,7 +566,7 @@ class BasicLayout extends React.PureComponent{
             let wType = this.state.selectedWidgetType === "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType === "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType === "statistics" ? "getStats" : this.state.selectedWidgetType === "ImageElevation" ? "ImageElevation" : "custom";
             let prop1 = "";
             let properties = [];
-            let prop4 = this.state.selectedDataType != null ? this.state.selectedDataType : "";
+            let prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
             if (this.state.selectedDataType === "Custom") {
                 //more work to do to label the type and add
                 prop1 = this.state.imageCollection;
@@ -653,7 +649,7 @@ class BasicLayout extends React.PureComponent{
                 }
             });
     };
-    onDataBaseMapSelectChanged = event =>{
+    onDataBaseMapSelectChanged = event => {
         this.setState({WidgetBaseMap: event.target.value});
     };
     onWidgetTitleChange = event => {
@@ -731,7 +727,7 @@ class BasicLayout extends React.PureComponent{
     onWidgetMaxChangeDual = event => {
         this.setState({widgetMaxDual: event.target.value});
     };
-    onWidgetCloudScoreChangeDual = event =>{
+    onWidgetCloudScoreChangeDual = event => {
         this.setState({widgetCloudScoreDual: event.target.value});
     };
     onStartDateChangedDual = date => {
@@ -770,10 +766,10 @@ class BasicLayout extends React.PureComponent{
         });
     };
     setFormStateByDates(isDual) {
-        const ed = isDual != null? new Date(this.state.endDateDual) : new Date(this.state.endDate);
-        const sd = isDual != null? new Date(this.state.startDateDual) : new Date(this.state.startDate);
+        const ed = isDual !== null? new Date(this.state.endDateDual) : new Date(this.state.endDate);
+        const sd = isDual !== null? new Date(this.state.startDateDual) : new Date(this.state.startDate);
         let isFormReady = null;
-        if(! this.state.dualLayer) {
+        if (! this.state.dualLayer) {
             isFormReady = ed > sd && this.state.formReady !== true ? true : ed < sd &&  this.state.formReady === true? false : null;
         }
         else{
@@ -781,15 +777,15 @@ class BasicLayout extends React.PureComponent{
             const sd2 = new Date(this.state.startDate2);
             isFormReady = ed > sd && ed2 > sd2 && this.state.formReady !== true ? true : (ed < sd || ed2 < sd2) && this.state.formReady === true ? false : null;
         }
-        if(isFormReady !== null)
+        if (isFormReady !== null)
         {
             this.setState({formReady: isFormReady});
         }
     }
     onStartDate2Changed = date => {
-        if(date.target)
+        if (date.target)
         {
-            if(date.target.value) {
+            if (date.target.value) {
                 this.setState({startDate2: date.target.value});
             }
             else{
@@ -801,9 +797,9 @@ class BasicLayout extends React.PureComponent{
         }
     };
     onEndDate2Changed = date => {
-        if(date.target)
+        if (date.target)
         {
-            if(date.target.value) {
+            if (date.target.value) {
                 this.setState({endDate2: date.target.value});
             }
             else{
@@ -816,7 +812,7 @@ class BasicLayout extends React.PureComponent{
         }
     };
     getNewWidgetForm() {
-        if(this.state.isEditing)
+        if (this.state.isEditing)
         {
             return  <React.Fragment>
                 <div className="modal fade show" style={{display: "block"}}>
@@ -870,7 +866,7 @@ class BasicLayout extends React.PureComponent{
 
     }
     getBaseMapSelector(){
-        if(this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection" || this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation") {
+        if (this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection" || this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select name="widgetIndicesSelect" value={this.state.WidgetBaseMap} className="form-control"
@@ -887,13 +883,13 @@ class BasicLayout extends React.PureComponent{
     }
     getDataTypeSelectionControl()
     {
-        if(this.state.selectedWidgetType === "-1")
+        if (this.state.selectedWidgetType === "-1")
         {
             return <br/>;
         }
-        else if(this.state.selectedWidgetType === "statistics")
+        else if (this.state.selectedWidgetType === "statistics")
         {
-            if(this.state.formReady !== true){
+            if (this.state.formReady !== true){
                 this.setState({
                     formReady: true
                 });
@@ -905,16 +901,16 @@ class BasicLayout extends React.PureComponent{
                 </div>
             </React.Fragment>;
         }
-        else if(this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation")
+        else if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation")
         {
-            if(this.state.formReady !== true){
+            if (this.state.formReady !== true){
                 this.setState({
                     formReady: true
                 });
             }
             return <br/>;
         }
-        else if(this.state.selectedWidgetType === "ImageCollection")
+        else if (this.state.selectedWidgetType === "ImageCollection")
         {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
@@ -933,9 +929,9 @@ class BasicLayout extends React.PureComponent{
                 </select>
             </React.Fragment>;
         }
-        else if(this.state.selectedWidgetType === "DualImageCollection")
+        else if (this.state.selectedWidgetType === "DualImageCollection")
         {
-            if(this.state.wizardStep === 1) {
+            if (this.state.wizardStep === 1) {
                 return <React.Fragment>
                     <h3 className={"mt-4 text-center text-info"}>Dual imageCollection Step 1</h3>
                     <label htmlFor="widgetIndicesSelect">Data</label>
@@ -1011,13 +1007,13 @@ class BasicLayout extends React.PureComponent{
         </div>;
     }
     getNextStepButton() {
-        if(this.state.selectedWidgetType === "DualImageCollection") {
+        if (this.state.selectedWidgetType === "DualImageCollection") {
             return <button type="button" className="btn btn-secondary" data-dismiss="modal"
                            onClick={this.onNextWizardStep}>Step 2 &rArr;</button>;
         }
     }
     getDualImageCollectionTimeSpanOption(){
-        if(this.state.selectedWidgetType === "DualImageCollection") {
+        if (this.state.selectedWidgetType === "DualImageCollection") {
             return <div className="form-group">
                 <label htmlFor="widgetDualLayer">Dual time span</label>
                 <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
@@ -1034,7 +1030,7 @@ class BasicLayout extends React.PureComponent{
     }
     getDualLayerDateRangeControl()
     {
-        if(this.state.dualLayer === true) {
+        if (this.state.dualLayer === true) {
             return <div>
                 <label>Select the Date Range for the top layer</label>
                 <div className="input-group input-daterange" id="range_new_cooked2">
@@ -1049,7 +1045,7 @@ class BasicLayout extends React.PureComponent{
     }
     getDataForm()
     {
-        if(this.state.selectedWidgetType === "ImageElevation")
+        if (this.state.selectedWidgetType === "ImageElevation")
         {
             this.setState({
                 imageCollection: "USGS/SRTMGL1_003"
@@ -1059,7 +1055,7 @@ class BasicLayout extends React.PureComponent{
                 {this.getImageParamsBlock()}
             </React.Fragment>;
         }
-        if(this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset")
+        if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset")
         {
             return <React.Fragment>
                 {this.getTitleBlock()}
@@ -1071,7 +1067,7 @@ class BasicLayout extends React.PureComponent{
                 {this.getImageParamsBlock()}
             </React.Fragment>;
         }
-        else if(this.state.selectedDataType === "-1")
+        else if (this.state.selectedDataType === "-1")
         {
             return "";
         }
@@ -1091,7 +1087,7 @@ class BasicLayout extends React.PureComponent{
                     console.warn(e.message);
                 }
             });},250);
-            if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1){
+            if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1){
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
@@ -1122,7 +1118,7 @@ class BasicLayout extends React.PureComponent{
                     {this.getNextStepButton()}
                 </React.Fragment>;
             }
-            else if(["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep === 2){
+            else if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep === 2){
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
@@ -1158,7 +1154,7 @@ class BasicLayout extends React.PureComponent{
 
                 </React.Fragment>;
             }
-            else if(((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1)
+            else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1)
             {
                 return <React.Fragment>
                     {this.getTitleBlock()}
@@ -1174,7 +1170,7 @@ class BasicLayout extends React.PureComponent{
                     {this.getNextStepButton()}
                 </React.Fragment>;
             }
-            else if(((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
+            else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
             {
                 return <React.Fragment>
                     <div className="form-group">
@@ -1189,7 +1185,7 @@ class BasicLayout extends React.PureComponent{
                     <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
                 </React.Fragment>;
             }
-            else if((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataType === "Custom"  && this.state.wizardStep === 1)
+            else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataType === "Custom"  && this.state.wizardStep === 1)
             {
                 return <React.Fragment>
                     {this.getTitleBlock()}
@@ -1208,7 +1204,7 @@ class BasicLayout extends React.PureComponent{
                     {this.getNextStepButton()}
                 </React.Fragment>;
             }
-            else if((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataTypeDual === "Custom"  && this.state.wizardStep === 2)
+            else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataTypeDual === "Custom"  && this.state.wizardStep === 2)
             {
                 return <React.Fragment>
                     <div className="form-group">
@@ -1231,9 +1227,9 @@ class BasicLayout extends React.PureComponent{
                     <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
                 </React.Fragment>;
             }
-            else if((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1)
+            else if ((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1)
             {
-                if(this.state.dualLayer === true)
+                if (this.state.dualLayer === true)
                 {
                     return <React.Fragment>
                         {this.getTitleBlock()}
@@ -1262,7 +1258,7 @@ class BasicLayout extends React.PureComponent{
                     </React.Fragment>;
                 }
             }
-            else if((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
+            else if ((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2)
             {
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
@@ -1275,7 +1271,7 @@ class BasicLayout extends React.PureComponent{
                     <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
                 </React.Fragment>;
             }
-            else if(this.state.selectedWidgetType === "TimeSeries" && this.state.selectedDataType === "Custom")
+            else if (this.state.selectedWidgetType === "TimeSeries" && this.state.selectedDataType === "Custom")
             {
                 return <React.Fragment>
                     {this.getTitleBlock()}
@@ -1301,7 +1297,7 @@ class BasicLayout extends React.PureComponent{
                     {this.getDateRangeControl()}
                 </React.Fragment>;
             }
-            else if(this.state.wizardStep === 2){
+            else if (this.state.wizardStep === 2){
                 return <React.Fragment>
                     <p>Secondary data form here</p>
                 </React.Fragment>;
