@@ -48,7 +48,7 @@ public class PostgresPlots implements Plots {
             var plots = new JsonArray();
             pstmt.setInt(1,Integer.parseInt(projectId));
             pstmt.setInt(2,maxPlots);
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     plots.add(buildPlotJson(rs));
                 }
@@ -69,7 +69,7 @@ public class PostgresPlots implements Plots {
 
             pstmt.setInt(1,projectId);
             pstmt.setInt(2,plotId);
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     return buildPlotJson(rs).toString();
                 } else {
@@ -89,7 +89,7 @@ public class PostgresPlots implements Plots {
             samplePstmt.setInt(1, plot_id);
             samplePstmt.setInt(2, proj_id);
             var samples = new JsonArray();
-            try(var sampleRs = samplePstmt.executeQuery()){
+            try (var sampleRs = samplePstmt.executeQuery()) {
                 while (sampleRs.next()) {
                     var sample = new JsonObject();
                     sample.addProperty("id", sampleRs.getString("id"));
@@ -276,7 +276,7 @@ public class PostgresPlots implements Plots {
             usPstmt.setInt(1, Integer.parseInt(projectId));
             usPstmt.setInt(2, Integer.parseInt(plotId));
             usPstmt.setInt(3, userId);
-            try(var usRs = usPstmt.executeQuery()) {
+            try (var usRs = usPstmt.executeQuery()) {
                 unlockPlot(userId);
                 // update existing
                 if (usRs.next()) {
@@ -325,7 +325,7 @@ public class PostgresPlots implements Plots {
             pstmt.setInt(1,Integer.parseInt(plotId));
             pstmt.setString(2,userName);
             pstmt.setString(3,null); //confidence
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 var idReturn = 0;
                 if (rs.next()) {
                     idReturn = rs.getInt("flag_plot");

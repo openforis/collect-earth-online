@@ -578,7 +578,7 @@ public class PostgresProjects implements Projects {
             if (List.of("csv", "shp").contains(plotDistribution)) {
                 // check if data is also correct after being loaded
                 final var plots_table = loadExternalData(conn, plotDistribution, projectId, plotsFile, "plots", List.of("plotId"));
-                try(var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")){
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")) {
                     pstmt.setString(1, plots_table);
                     pstmt.execute();
                 } catch (SQLException s) {
@@ -601,7 +601,7 @@ public class PostgresProjects implements Projects {
     private static String checkLoadSamples(Connection conn, String sampleDistribution, Integer projectId, String samplesFile) {
         try {
             final var samples_table = loadExternalData(conn, sampleDistribution, projectId, samplesFile, "samples", List.of("plotId", "sampleId"));
-            if (List.of("csv", "shp").contains(sampleDistribution)){
+            if (List.of("csv", "shp").contains(sampleDistribution)) {
                 // check if data is also correct after being loaded
                 try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")) {
                     pstmt.setString(1,samples_table);
