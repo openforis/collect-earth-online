@@ -575,7 +575,7 @@ class Project extends React.Component {
 
     projectHighlight = () => {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.project.id)
-            .then(response => response.ok ? response.json() : Promise.reject())
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({
                 boxShadow: data.unanalyzedPlots === 0
                     ? "0px 0px 8px 1px green inset"

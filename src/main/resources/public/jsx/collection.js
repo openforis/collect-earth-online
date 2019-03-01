@@ -149,17 +149,11 @@ class Collection extends React.Component {
     getImageryList = () => {
         const { institution } = this.state.currentProject;
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the imagery list. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => {
-                this.setState({ imageryList: data });
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ imageryList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
             });
     };
 
@@ -1199,9 +1193,7 @@ class ProjectStats extends React.Component {
     getProjectStats() {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
-            .then(data => {
-                this.setState({ stats: data });
-            })
+            .then(data => this.setState({ stats: data }))
             .catch(response => {
                 console.log(response);
                 alert("Error getting project stats. See console for details.");
