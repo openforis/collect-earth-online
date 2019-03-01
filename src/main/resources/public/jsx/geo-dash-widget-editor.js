@@ -6,325 +6,325 @@ const ReactGridLayout = WidthProvider(RGL);
 
 
 class BasicLayout extends React.PureComponent{
-     static defaultProps = {
-         theURI: window.location.origin + "/geo-dash",
-         isDraggable: true,
-         isResizable: true,
-         className: "layout",
-         items: 0,
-         rowHeight: 300,
-         cols: 12,
-         graphReducer: "Min"
-     };
-     static getParameterByName (name, url) {
-         const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
-         const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
-         return results
-             ? results[2]
-                 ? decodeURIComponent(results[2].replace(/\+/g, " "))
-                 : ""
-             : null;
-     }
-     static getGatewayUrl(widget, collectionName){
-         if(widget.filterType !== null && widget.filterType.length > 0){
-             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-             return window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
-         }
-         else if(widget.ImageAsset && widget.ImageAsset.length > 0)
-         {
-             return window.location.protocol + "//" + window.location.hostname + ":8888/image";
-         }
-         else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-         {
-             return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
-         }
-         else if(widget.properties && "ImageCollectionCustom" === widget.properties[0]){
-             return window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
-         }
-         else if(collectionName.trim().length > 0)
-         {
-             return window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
-         }
-         else{
-             return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
-         }
-     }
-     static getImageByType(which) {
-         if (which === "getStats") {
-             return "/img/statssample.gif";
-         }
-         else if (which.toLowerCase().includes("image") || which === "") {
-             return "/img/mapsample.gif";
-         }
-         else {
-             return "/img/graphsample.gif";
-         }
-     }
-     constructor(props) {
-         super(props);
-         this.state = {
-             layout: [],
-             widgets: [],
-             imagery: [],
-             isEditing: false,
-             selectedWidgetType: "-1",
-             selectedDataType: "-1",
-             WidgetTitle: "",
-             imageCollection: "",
-             graphBand: "",
-             graphReducer: "Min",
-             imageParams: "",
-             dualLayer: false,
-             WidgetBaseMap: "osm",
-             startDate: "",
-             endDate: "",
-             startDate2: "",
-             endDate2: "",
-             widgetBands: "",
-             widgetMin: "",
-             widgetMax: "",
-             widgetCloudScore: "",
-             imageCollectionDual: "",
-             selectedDataTypeDual: "-1",
-             imageParamsDual: "",
-             startDateDual: "",
-             endDateDual: "",
-             widgetBandsDual: "",
-             widgetMinDual: "",
-             widgetMaxDual: "",
-             widgetCloudScoreDual: "",
-             formReady: false,
-             wizardStep: 1,
-             pid: BasicLayout.getParameterByName("pid"),
-             institutionID: BasicLayout.getParameterByName("institutionId") !== null? BasicLayout.getParameterByName("institutionId"): "1"
+    constructor(props) {
+        super(props);
+        this.state = {
+            layout: [],
+            widgets: [],
+            imagery: [],
+            isEditing: false,
+            selectedWidgetType: "-1",
+            selectedDataType: "-1",
+            WidgetTitle: "",
+            imageCollection: "",
+            graphBand: "",
+            graphReducer: "Min",
+            imageParams: "",
+            dualLayer: false,
+            WidgetBaseMap: "osm",
+            startDate: "",
+            endDate: "",
+            startDate2: "",
+            endDate2: "",
+            widgetBands: "",
+            widgetMin: "",
+            widgetMax: "",
+            widgetCloudScore: "",
+            imageCollectionDual: "",
+            selectedDataTypeDual: "-1",
+            imageParamsDual: "",
+            startDateDual: "",
+            endDateDual: "",
+            widgetBandsDual: "",
+            widgetMinDual: "",
+            widgetMaxDual: "",
+            widgetCloudScoreDual: "",
+            formReady: false,
+            wizardStep: 1,
+            pid: BasicLayout.getParameterByName("pid"),
+            institutionID: BasicLayout.getParameterByName("institutionId") !== null? BasicLayout.getParameterByName("institutionId"): "1"
 
-         };
-     }
-     componentDidMount() {
-         console.log("the institutionID is now set to: " + this.state.institutionID);
-         fetch(this.props.theURI + "/id/" + this.state.pid)
-             .then(response => {
-                 if (response.ok){ return response.json();}})
-             .then(response => {this.setState({ dashboardID: response.dashboardID});  return response;})
-             .then(response => {
-                 const theWidgets = response.widgets;
-                 if(Array.isArray(theWidgets))
-                 {
-                     return response;
-                 }
-                 else if(Array.isArray(eval(theWidgets))){
-                     response.widgets = eval(theWidgets);
-                 }
-                 else{
-                     response.widgets = [];
-                 }
-                 return response;
-             })
-             .then(data => data.widgets.map(function(widget){
-                 return widget.layout
-                     ? {
-                         ...widget,
-                         layout: {
-                             ...widget.layout,
-                             y: widget.layout.y ? widget.layout .y : 0
-                         }}
-                     : widget;
-             }))
-             .then(data => this.setState({ widgets: data}))
-             .then(data => { this.setState({haveWidgets : true}); return data;})
-             .then(() => this.checkWidgetStructure())
-             .then(() => this.setState({layout: this.generateLayout()}))
-         ;
-         fetch(window.location.origin + "/get-all-imagery?institutionId=" + this.state.institutionID )
-             .then(response => {
-                 if (response.ok){ return response.json();}})
-             .then(data => {data.unshift({title: "Open Street Maps", id: "osm"}); return data;})
-             .then(data => this.setState({ imagery: data, WidgetBaseMap: data[0].id}));
+        };
+    }
+    static defaultProps = {
+        theURI: window.location.origin + "/geo-dash",
+        isDraggable: true,
+        isResizable: true,
+        className: "layout",
+        items: 0,
+        rowHeight: 300,
+        cols: 12,
+        graphReducer: "Min"
+    };
+    static getParameterByName (name, url) {
+        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
+        return results
+            ? results[2]
+                ? decodeURIComponent(results[2].replace(/\+/g, " "))
+                : ""
+            : null;
+    }
+    static getGatewayUrl(widget, collectionName){
+        if(widget.filterType !== null && widget.filterType.length > 0){
+            const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
+            return window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
+        }
+        else if(widget.ImageAsset && widget.ImageAsset.length > 0)
+        {
+            return window.location.protocol + "//" + window.location.hostname + ":8888/image";
+        }
+        else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+        {
+            return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
+        }
+        else if(widget.properties && "ImageCollectionCustom" === widget.properties[0]){
+            return window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
+        }
+        else if(collectionName.trim().length > 0)
+        {
+            return window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
+        }
+        else{
+            return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
+        }
+    }
+    static getImageByType(which) {
+        if (which === "getStats") {
+            return "/img/statssample.gif";
+        }
+        else if (which.toLowerCase().includes("image") || which === "") {
+            return "/img/mapsample.gif";
+        }
+        else {
+            return "/img/graphsample.gif";
+        }
+    }
+    componentDidMount() {
+        console.log("the institutionID is now set to: " + this.state.institutionID);
+        fetch(this.props.theURI + "/id/" + this.state.pid)
+            .then(response => {
+                if (response.ok){ return response.json();}})
+            .then(response => {this.setState({ dashboardID: response.dashboardID});  return response;})
+            .then(response => {
+                const theWidgets = response.widgets;
+                if(Array.isArray(theWidgets))
+                {
+                    return response;
+                }
+                else if(Array.isArray(eval(theWidgets))){
+                    response.widgets = eval(theWidgets);
+                }
+                else{
+                    response.widgets = [];
+                }
+                return response;
+            })
+            .then(data => data.widgets.map(function(widget){
+                return widget.layout
+                    ? {
+                        ...widget,
+                        layout: {
+                            ...widget.layout,
+                            y: widget.layout.y ? widget.layout .y : 0
+                        }}
+                    : widget;
+            }))
+            .then(data => this.setState({ widgets: data}))
+            .then(data => { this.setState({haveWidgets : true}); return data;})
+            .then(() => this.checkWidgetStructure())
+            .then(() => this.setState({layout: this.generateLayout()}))
+        ;
+        fetch(window.location.origin + "/get-all-imagery?institutionId=" + this.state.institutionID )
+            .then(response => {
+                if (response.ok){ return response.json();}})
+            .then(data => {data.unshift({title: "Open Street Maps", id: "osm"}); return data;})
+            .then(data => this.setState({ imagery: data, WidgetBaseMap: data[0].id}));
 
-     }
-     checkWidgetStructure(){
-         let changed = false;
-         let row = 0;
-         let column = 0;
-         let sWidgets = _.orderBy(this.state.widgets, "id", "asc");
-         let widgets = _.map(sWidgets, function(widget, i) {
-             if(widget.layout)
-             {
-                 if(widget["gridcolumn"]){
-                     delete widget["gridcolumn"];
-                 }
-                 if(widget["gridrow"]){
-                     delete widget["gridrow"];
-                 }
-                 widget.layout.i = i.toString();
-                 return widget;
-             }
-             else if(widget.gridcolumn){
-                 changed = true;
-                 let x;
-                 let w;
-                 let y;
-                 let h;
-                 //let layout;
-                 //do the x and w
-                 x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
-                 w = parseInt(widget.gridcolumn.split(" ")[3]);
-                 if(widget.gridrow){
-                     //do the y and h
-                     y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                     h = widget.gridrow.trim().split(" ")[3] !== null? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
-                 }
-                 // create .layout
-                 widget.layout = {x : x, y: y, w: w, h: h};
-                 delete widget["gridcolumn"];
-                 delete widget["gridrow"];
-             }
-             else if(widget.position){
+    }
+    checkWidgetStructure(){
+        let changed = false;
+        let row = 0;
+        let column = 0;
+        let sWidgets = _.orderBy(this.state.widgets, "id", "asc");
+        let widgets = _.map(sWidgets, function(widget, i) {
+            if(widget.layout)
+            {
+                if(widget["gridcolumn"]){
+                    delete widget["gridcolumn"];
+                }
+                if(widget["gridrow"]){
+                    delete widget["gridrow"];
+                }
+                widget.layout.i = i.toString();
+                return widget;
+            }
+            else if(widget.gridcolumn){
+                changed = true;
+                let x;
+                let w;
+                let y;
+                let h;
+                //let layout;
+                //do the x and w
+                x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
+                w = parseInt(widget.gridcolumn.split(" ")[3]);
+                if(widget.gridrow){
+                    //do the y and h
+                    y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
+                    h = widget.gridrow.trim().split(" ")[3] !== null? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
+                }
+                // create .layout
+                widget.layout = {x : x, y: y, w: w, h: h};
+                delete widget["gridcolumn"];
+                delete widget["gridrow"];
+            }
+            else if(widget.position){
 
-                 changed = true;
-                 let x;
-                 //let w;
-                 //let y;
-                 let h = 1;
-                 //let layout;
-                 if(column + parseInt(widget.width) <= 12)
-                 {
-                     x = column;
-                     column = column + parseInt(widget.width);
-                 }
-                 else{
-                     x = 0;
-                     column = parseInt(widget.width);
-                     row +=1;
-                 }
-                 widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
-                 // Create a starter layout based on the i value
-                 // need to add both layout and gridcolumn/gridrow properties
-             }
-             else{
-                 changed = true;
-                 let x;
-                 //let w;
-                 //let y;
-                 let h = 1;
-                 //let layout;
-                 if(column + 3 <= 12)
-                 {
-                     x = column;
-                     column = column + 3;
-                 }
-                 else{
-                     x = 0;
-                     column = parseInt(widget.width);
-                     row +=1;
-                 }
-                 widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
+                changed = true;
+                let x;
+                //let w;
+                //let y;
+                let h = 1;
+                //let layout;
+                if(column + parseInt(widget.width) <= 12)
+                {
+                    x = column;
+                    column = column + parseInt(widget.width);
+                }
+                else{
+                    x = 0;
+                    column = parseInt(widget.width);
+                    row +=1;
+                }
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
+                // Create a starter layout based on the i value
+                // need to add both layout and gridcolumn/gridrow properties
+            }
+            else{
+                changed = true;
+                let x;
+                //let w;
+                //let y;
+                let h = 1;
+                //let layout;
+                if(column + 3 <= 12)
+                {
+                    x = column;
+                    column = column + 3;
+                }
+                else{
+                    x = 0;
+                    column = parseInt(widget.width);
+                    row +=1;
+                }
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
 
-             }
-             return widget;
-         });
-         this.setState({ widgets: widgets});
-         if(changed){
-             this.updateServerWidgets();
-         }
-     }
-     updateServerWidgets(){
-         this.state.widgets.forEach( widget =>  {
-             let ajaxurl = this.props.theURI + "/updatewidget/widget/" + widget.id;
-             this.serveItUp(ajaxurl, widget);
+            }
+            return widget;
+        });
+        this.setState({ widgets: widgets});
+        if(changed){
+            this.updateServerWidgets();
+        }
+    }
+    updateServerWidgets(){
+        this.state.widgets.forEach( widget =>  {
+            let ajaxurl = this.props.theURI + "/updatewidget/widget/" + widget.id;
+            this.serveItUp(ajaxurl, widget);
 
-         });
-     }
-     serveItUp(url, widget )
-     {
-         fetch(url,
-               {
-                   method: "post",
-                   headers: {
-                       "Accept": "application/json",
-                       "Content-Type": "application/json"
-                   },
-                   body: JSON.stringify({
-                       dashID: this.state.dashboardID,
-                       widgetJSON: JSON.stringify(widget)
-                   })
-               })
-             .then(response => {
-                 if (!response.ok) {
-                     console.log(response);
-                 }
-             });
-     }
-     deleteWidgetFromServer(widget)
-     {
-         let ajaxurl = this.props.theURI + "/deletewidget/widget/" + widget.id;
-         this.serveItUp(ajaxurl, widget);
-     }
-     generateDOM() {
-         const x = "x";
-         return _.map(this.state.widgets, (widget, i) => {
-             return <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + BasicLayout.getImageByType(widget.properties[0]) +")"}} >
-                 <h3 className="widgetEditor title">{widget.name}
-                     <span className="remove" onClick={(e) => {e.stopPropagation(); this.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
-                         {x}
-                     </span>
-                 </h3>
-                 <span className="text text-danger">Sample Image</span></div>;
-         });
-     }
-     addCustomImagery(imagery) {
-         fetch(this.props.theURI.replace("/geo-dash", "") + "/add-geodash-imagery",
-               {
-                   method: "post",
-                   headers: {
-                       "Accept": "application/json",
-                       "Content-Type": "application/json"
-                   },
-                   body: JSON.stringify(imagery)
-               })
-             .then(response => {
-                 if (!response.ok) {
-                     console.log("Error adding custom imagery to institution. See console for details.");
-                 }
-             });
-     }
-     buildImageryObject(img){
-         console.log(img);
-         let gatewayUrl = BasicLayout.getGatewayUrl(img);
-         let title = img.filterType.replace(/\w\S*/g, function (word) {
-             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
-         let ImageAsset = img.ImageAsset ? img.ImageAsset : "";
-         let ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
-         let iObject =  {
-             institutionId: this.state.institutionID,
-             imageryTitle: title,
-             imageryAttribution: "Google Earth Engine",
-             geeUrl: gatewayUrl,
-             geeParams: {
-                 collectionType: img.collectionType,
-                 startDate: img.startDate,
-                 endDate: img.endDate,
-                 filterType: img.filterType,
-                 visParams: img.visParams,
-                 ImageAsset: ImageAsset,
-                 ImageCollectionAsset: ImageCollectionAsset
-             }
-         };
-         if(img.ImageAsset && img.ImageAsset.length > 0)
-         {
-             title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-             iObject.imageryTitle = title;
-             iObject.ImageAsset = img.ImageAsset;
-         }
-         if(img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0)
-         {
-             title = img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
-             iObject.imageryTitle = title;
-             iObject.ImageCollectionAsset = img.ImageCollectionAsset;
-         }
-         return iObject;
+        });
+    }
+    serveItUp(url, widget )
+    {
+        fetch(url,
+              {
+                  method: "post",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                      dashID: this.state.dashboardID,
+                      widgetJSON: JSON.stringify(widget)
+                  })
+              })
+            .then(response => {
+                if (!response.ok) {
+                    console.log(response);
+                }
+            });
+    }
+    deleteWidgetFromServer(widget)
+    {
+        let ajaxurl = this.props.theURI + "/deletewidget/widget/" + widget.id;
+        this.serveItUp(ajaxurl, widget);
+    }
+    generateDOM() {
+        const x = "x";
+        return _.map(this.state.widgets, (widget, i) => {
+            return <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + BasicLayout.getImageByType(widget.properties[0]) +")"}} >
+                <h3 className="widgetEditor title">{widget.name}
+                    <span className="remove" onClick={(e) => {e.stopPropagation(); this.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
+                        {x}
+                    </span>
+                </h3>
+                <span className="text text-danger">Sample Image</span></div>;
+        });
+    }
+    addCustomImagery(imagery) {
+        fetch(this.props.theURI.replace("/geo-dash", "") + "/add-geodash-imagery",
+              {
+                  method: "post",
+                  headers: {
+                      "Accept": "application/json",
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify(imagery)
+              })
+            .then(response => {
+                if (!response.ok) {
+                    console.log("Error adding custom imagery to institution. See console for details.");
+                }
+            });
+    }
+    buildImageryObject(img){
+        console.log(img);
+        let gatewayUrl = BasicLayout.getGatewayUrl(img);
+        let title = img.filterType.replace(/\w\S*/g, function (word) {
+            return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
+        let ImageAsset = img.ImageAsset ? img.ImageAsset : "";
+        let ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
+        let iObject =  {
+            institutionId: this.state.institutionID,
+            imageryTitle: title,
+            imageryAttribution: "Google Earth Engine",
+            geeUrl: gatewayUrl,
+            geeParams: {
+                collectionType: img.collectionType,
+                startDate: img.startDate,
+                endDate: img.endDate,
+                filterType: img.filterType,
+                visParams: img.visParams,
+                ImageAsset: ImageAsset,
+                ImageCollectionAsset: ImageCollectionAsset
+            }
+        };
+        if(img.ImageAsset && img.ImageAsset.length > 0)
+        {
+            title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
+            iObject.imageryTitle = title;
+            iObject.ImageAsset = img.ImageAsset;
+        }
+        if(img.ImageCollectionAsset && img.ImageCollectionAsset.length > 0)
+        {
+            title = img.ImageCollectionAsset.substr(img.ImageCollectionAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
+            iObject.imageryTitle = title;
+            iObject.ImageCollectionAsset = img.ImageCollectionAsset;
+        }
+        return iObject;
 
-     }
+    }
     onWidgetTypeSelectChanged = (event) => {
         this.setState({
             selectedWidgetType: event.target.value,

@@ -3,18 +3,6 @@ import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
 
 class Geodash extends React.Component {
-    static defaultProps = {
-        theURI: window.location.origin + "/geo-dash"
-    };
-    static getParameterByName (name, url) {
-        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(decodeURIComponent(url || window.location.href));
-        return results
-            ? results[2]
-                ? decodeURIComponent(results[2].replace(/\+/g, " "))
-                : ""
-            : null;
-    }
     constructor(props) {
         super(props);
         this.state = { widgets: [ ],
@@ -27,6 +15,18 @@ class Geodash extends React.Component {
         };
         let theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
         this.state.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
+    }
+    static defaultProps = {
+        theURI: window.location.origin + "/geo-dash"
+    };
+    static getParameterByName (name, url) {
+        const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
+        const results = regex.exec(decodeURIComponent(url || window.location.href));
+        return results
+            ? results[2]
+                ? decodeURIComponent(results[2].replace(/\+/g, " "))
+                : ""
+            : null;
     }
     componentDidMount() {
         fetch(this.props.theURI + "/id/" + this.state.pid)
@@ -137,6 +137,11 @@ class Widgets extends React.Component {
 }
 
 class Widget extends React.Component {
+    constructor(props) {
+        super(props);
+        this.imageCollectionList = ["ImageElevation", "ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
+        this.graphControlList = ["customTimeSeries", "timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
+    }
     static generategridcolumn(x, w){
         return (x + 1) + " / span " + w;
     }
@@ -155,11 +160,6 @@ class Widget extends React.Component {
             classnames += r.includes("span 2")? " rowSpan2": r.includes("span 3")? " rowSpan3": " rowSpan1";
         }
         return classnames;
-    }
-    constructor(props) {
-        super(props);
-        this.imageCollectionList = ["ImageElevation", "ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
-        this.graphControlList = ["customTimeSeries", "timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
     }
     getWidgetHtml(widget, onSliderChange, onSwipeChange){
         if(widget.gridcolumn || widget.layout)
@@ -220,6 +220,14 @@ class Widget extends React.Component {
 }
 
 class MapWidget extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            mapRef: null,
+            opacity: 90,
+            geeTimeOut: null
+        };
+    }
     static getRasterByBasemapConfig(basemap)
     {
         let raster;
@@ -308,14 +316,6 @@ class MapWidget extends React.Component {
                 lyr.setVisible(false);
             }
         });
-    }
-    constructor(props) {
-        super(props);
-        this.state = {
-            mapRef: null,
-            opacity: 90,
-            geeTimeOut: null
-        };
     }
     componentDidMount()
     {
@@ -810,11 +810,6 @@ class MapWidget extends React.Component {
 }
 
 class GraphWidget extends React.Component {
-    static sortData(a, b){
-        if (a[0] < b[0]) return -1;
-        if (a[0] > b[0]) return 1;
-        return 0;
-    }
     constructor(props){
         super(props);
         this.state = {graphRef: null,
@@ -830,6 +825,11 @@ class GraphWidget extends React.Component {
             ].join("-");
         };
 
+    }
+    static sortData(a, b){
+        if (a[0] < b[0]) return -1;
+        if (a[0] > b[0]) return 1;
+        return 0;
     }
     componentDidMount()
     {
@@ -970,6 +970,10 @@ class GraphWidget extends React.Component {
     }
 }
 class StatsWidget extends React.Component {
+    constructor(props){
+        super(props);
+        this.state = {totalPop:"", area:"", elevation:""};
+    }
     static numberWithCommas(x) {
         if (typeof x === "number") {
             try {
@@ -991,10 +995,6 @@ class StatsWidget extends React.Component {
         }
         area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
         return StatsWidget.numberWithCommas(area_ha);
-    }
-    constructor(props){
-        super(props);
-        this.state = {totalPop:"", area:"", elevation:""};
     }
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
