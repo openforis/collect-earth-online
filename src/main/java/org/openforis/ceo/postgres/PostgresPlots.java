@@ -324,7 +324,7 @@ public class PostgresPlots implements Plots {
             var pstmt = conn.prepareStatement("SELECT * FROM flag_plot(?,?,?::int)")) {
             
             pstmt.setInt(1,Integer.parseInt(plotId));
-            pstmt.setString(2,userName);
+            pstmt.setInt(2,userId);
             pstmt.setString(3,null); //confidence
             try (var rs = pstmt.executeQuery()) {
                 var idReturn = 0;
