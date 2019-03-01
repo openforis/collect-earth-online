@@ -39,7 +39,7 @@ class Geodash extends React.Component {
                 return widget;}))
             .then(data => this.setState({ widgets: data, callbackComplete: true}));
     }
-    handleFullScreen = (widget) => {
+    handleFullScreen = widget => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
@@ -48,7 +48,7 @@ class Geodash extends React.Component {
                       () => { this.updateSize(widget);}
         );
     };
-    handleSliderChange = (widget) => {
+    handleSliderChange = widget => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
         widgets[index] = { ...widget };
@@ -253,25 +253,31 @@ class MapWidget extends React.Component {
         if (widget.filterType != null && widget.filterType.length > 0){
             const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
             url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
+            url = "https://ceodev.servirglobal.net:8888/" + fts[widget.filterType];
         }
         else if (widget.ImageAsset && widget.ImageAsset.length > 0)
         {
             url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
+            url = "https://ceodev.servirglobal.net:8888/image";
         }
         else if (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
         {
             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
+            url = "https://ceodev.servirglobal.net:8888/ImageCollectionAsset";
         }
         else if ("ImageCollectionCustom" === widget.properties[0]){
             url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
+            url = "https://ceodev.servirglobal.net:8888/meanImageByMosaicCollections";
         }
         else if (collectionName.trim().length > 0)
         {
             url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
+            url = "https://ceodev.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
 
         }
         else{
             url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
+            url = "https://ceodev.servirglobal.net:8888/ImageCollectionbyIndex";
         }
         return url;
     }
@@ -609,13 +615,13 @@ class MapWidget extends React.Component {
                        min = "0"
                        max = "1"
                        step = ".01"
-                       onChange = {(evt) => this.onOpacityChange( evt )}
-                       onInput = {(evt) => this.onOpacityChange( evt )}
+                       onChange = {evt => this.onOpacityChange( evt )}
+                       onInput = {evt => this.onOpacityChange( evt )}
                        style={oStyle}
                 />
                 <input type="range" className="mapRange dual" id={"swipeWidget_" + widget.id} min="0" max="1" step=".01" value={this.props.widget.swipeValue}
-                       onChange = {(evt) => onSwipeChange(widget, widget.id, evt )}
-                       onInput = {(evt) => onSwipeChange(widget, widget.id, evt )}
+                       onChange = {evt => onSwipeChange(widget, widget.id, evt )}
+                       onInput = {evt => onSwipeChange(widget, widget.id, evt )}
                        style={sStyle}
                 />
             </div>;
@@ -626,8 +632,8 @@ class MapWidget extends React.Component {
                           min = "0"
                           max = "1"
                           step = ".01"
-                          onChange = {(evt) => this.onOpacityChange( evt )}
-                          onInput = {(evt) => this.onOpacityChange( evt )}
+                          onChange = {evt => this.onOpacityChange( evt )}
+                          onInput = {evt => this.onOpacityChange( evt )}
             />;
         }
     }
@@ -838,6 +844,8 @@ class GraphWidget extends React.Component {
         let indexName = widget.properties[4];
         let date = new Date();
         let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex":  window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex2";
+        url = collectionName.trim().length > 0 ? "https://ceodev.servirglobal.net:8888/timeSeriesIndex":  "https://ceodev.servirglobal.net:8888/timeSeriesIndex2";
+
         fetch(url, {
             method: "POST",
             headers: {
@@ -886,7 +894,6 @@ class GraphWidget extends React.Component {
                 const gwidget = document.getElementById("widgetgraph_" + this.props.widget.id);
                 this.state.graphRef.setSize(gwidget.clientWidth, gwidget.clientHeight, true);
             }
-
         }
         catch(e){
             console.log(e.message);

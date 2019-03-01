@@ -265,7 +265,7 @@ class BasicLayout extends React.PureComponent{
         return _.map(this.state.widgets, (widget, i) => {
             return <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + BasicLayout.getImageByType(widget.properties[0]) +")"}} >
                 <h3 className="widgetEditor title">{widget.name}
-                    <span className="remove" onClick={(e) => {e.stopPropagation(); this.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
+                    <span className="remove" onClick={e => {e.stopPropagation(); this.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
                         {x}
                     </span>
                 </h3>
@@ -325,7 +325,7 @@ class BasicLayout extends React.PureComponent{
         return iObject;
 
     }
-    onWidgetTypeSelectChanged = (event) => {
+    onWidgetTypeSelectChanged = event => {
         this.setState({
             selectedWidgetType: event.target.value,
             selectedDataType: "-1",
@@ -357,12 +357,12 @@ class BasicLayout extends React.PureComponent{
 
         });
     };
-    onDragStart = (e) => {
+    onDragStart = e => {
         e.preventDefault();
         e.stopPropagation();
         this.props.onMouseDown(e);
     };
-    onDragEnd = (e) => {
+    onDragEnd = e => {
         e.preventDefault();
         e.stopPropagation();
         this.props.onMouseUp(e);
@@ -828,7 +828,7 @@ class BasicLayout extends React.PureComponent{
                                 <form>
                                     <div className="form-group">
                                         <label htmlFor="widgetTypeSelect">Type</label>
-                                        <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={(e) => this.onWidgetTypeSelectChanged(e, "i am anything")}>
+                                        <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}>
                                             <option value="-1">Please select type</option>
                                             <option label="Image Collection" value="ImageCollection">Image Collection</option>
                                             <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
@@ -1333,7 +1333,7 @@ class BasicLayout extends React.PureComponent{
             return item.layout;
         });
     }
-    onLayoutChange = (layout) => {
+    onLayoutChange = layout => {
         if (this.state.haveWidgets) {
             let w = this.state.widgets;
             layout.forEach(function (lay, i) {
