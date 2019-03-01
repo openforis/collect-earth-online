@@ -14,9 +14,11 @@ export default function SurveyCardList(props) {
                         cardNumber={index + 1}
                         inDesignMode={props.inDesignMode}
                         inSimpleMode={props.inSimpleMode}
-                        setSurveyQuestions={props.setSurveyQuestions} 
+                        setSurveyQuestions={props.setSurveyQuestions}
+                        setSurveyRules={props.setSurveyRules}
                         surveyQuestion={sq}
                         surveyQuestions={props.surveyQuestions}
+                        surveyRules={props.surveyRules}
                         removeAnswer={props.removeAnswer}
                         removeQuestion={props.removeQuestion}
                         newAnswerComponent={props.newAnswerComponent}
@@ -28,8 +30,11 @@ class SurveyCard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showQuestions: true
+            showQuestions: true,
+            surveyRules:[],
+            currentRules: [],
         }
+        this.setRules=this.setRules.bind(this);
     }  
 
     swapQuestionIds = (upOrDown) => {
@@ -45,115 +50,86 @@ class SurveyCard extends React.Component {
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     };
-
-    addSurveyRule=()=> {
-        if (this.state.newQuestionText !== "") {
-            const {surveyQuestions} = this.props;
-            const {dataType, componentType} = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
-            const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
-
-            if (repeatedQuestions === 0
-                || confirm("Warning: this is a duplicate name.  This will save as "
-                    + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode")) {
-
-                const newQuestion = {
-                    id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
-                    question: repeatedQuestions > 0
-                        ? this.state.newQuestionText + ` (${repeatedQuestions})`
-                        : this.state.newQuestionText,
-                    answers: [],
-                    parentQuestion: this.state.selectedParent,
-                    parentAnswer: this.state.selectedAnswer,
-                    dataType: dataType,
-                    componentType: componentType,
-                };
-                this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
-                this.setState({selectedAnswer: -1, newQuestionText: ""});
-            }
-        } else {
-            alert("Please enter a survey question first.");
-        }
+    setRules = (rules) => {
+        console.log("from set");
+        console.log(rules);
+        this.props.setSurveyRules(rules);
     }
 
+
     render() {
-        const { cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds } = this.props;
+        const {cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds} = this.props;
         return (
             <div className="SurveyCard border rounded border-dark">
                 <div className="container">
                     <div className="SurveyCard__card-description row">
                         <div className="col-10 d-flex pl-1">
-                            <button 
+                            <button
                                 type="button"
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                onClick={() => this.setState({showQuestions: !this.state.showQuestions})}
-                            >
-                                <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
+                                onClick={() => this.setState({showQuestions: !this.state.showQuestions})}>
+                                <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+" }</span>
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
                                 {!this.state.showQuestions && `-- ${inDesignMode ? surveyQuestion.question
-                                                                                : removeEnumerator(surveyQuestion.question)}`
+                                    : removeEnumerator(surveyQuestion.question)}`
                                 }
                             </h3>
                         </div>
-                        {inDesignMode && 
-                            <div className="col-2 d-flex pr-1 justify-content-end">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                    onClick={() => this.swapQuestionIds(-1)}
-                                    disabled={surveyQuestion.id === topLevelNodeIds[0]}
-                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}
-                                >
-                                    <i className={"fa fa-caret-up"} />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                    onClick={() => this.swapQuestionIds(1)}
-                                    disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1]}
-                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length -1] 
-                                                                                ? "0.25" : "1.0"}}
-                                >
-                                    <i className={"fa fa-caret-down"} />
-                                </button>
-                            </div>
+                        {inDesignMode &&
+                        <div className="col-2 d-flex pr-1 justify-content-end">
+                            <button
+                                type="button"
+                                className="btn btn-outline-lightgreen my-1 px-3 py-0"
+                                onClick={() => this.swapQuestionIds(-1)}
+                                disabled={surveyQuestion.id === topLevelNodeIds[0]}
+                                style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}
+                            >
+                                <i className={"fa fa-caret-up"}/>
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-lightgreen my-1 px-3 py-0"
+                                onClick={() => this.swapQuestionIds(1)}
+                                disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]}
+                                style={{
+                                    opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]
+                                        ? "0.25" : "1.0"
+                                }}
+                            >
+                                <i className={"fa fa-caret-down"}/>
+                            </button>
+                        </div>
                         }
                     </div>
                     {this.state.showQuestions &&
-                        <div className="SurveyCard__question-tree row d-block">
-                            <SurveyQuestionTree
-                                indentLevel={0}
-                                inDesignMode={this.props.inDesignMode}
-                                inSimpleMode={this.props.inSimpleMode}
-                                newAnswerComponent={this.props.newAnswerComponent}
-                                removeAnswer={this.props.removeAnswer}
-                                removeQuestion={this.props.removeQuestion}
-                                surveyQuestion={this.props.surveyQuestion}
-                                surveyQuestions={this.props.surveyQuestions}
-                                setSurveyQuestions={this.props.setSurveyQuestions} 
-                            />
-                        </div>
+                    <div className="SurveyCard__question-tree row d-block">
+                        <SurveyQuestionTree
+                            indentLevel={0}
+                            inDesignMode={this.props.inDesignMode}
+                            inSimpleMode={this.props.inSimpleMode}
+                            newAnswerComponent={this.props.newAnswerComponent}
+                            removeAnswer={this.props.removeAnswer}
+                            removeQuestion={this.props.removeQuestion}
+                            surveyQuestion={this.props.surveyQuestion}
+                            surveyQuestions={this.props.surveyQuestions}
+                            surveyRules={this.props.surveyRules}
+                            setSurveyQuestions={this.props.setSurveyQuestions}
+                        />
+                    </div>
                     }
                 </div>
                 {!this.props.inSimpleMode && <SectionBlock title="Survey Rules Design:">
                     <table>
                         <tbody>
+                        <SurveyRules surveyQuestions={this.props.surveyQuestions} surveyQuestion={this.props.surveyQuestion} setSurveyQuestions={this.props.setSurveyQuestions} setSurveyRules={this.props.setSurveyRules} surveyRules={this.props.surveyRules} setRules={this.setRules}/>
 
-                        <SurveyRules surveyQuestions={this.props.surveyQuestions}/>
-                        <tr> <td><input
-                            type="button"
-                            className="button"
-                            value="Add Survey Rule"
-                            onClick={this.addSurveyRule}
-                        /></td> <td></td>
-                        </tr>
                         </tbody>
                     </table>
                 </SectionBlock>
                 }
             </div>
-
         )
     }
 }
@@ -167,6 +143,7 @@ function SurveyQuestionTree({
     removeQuestion,
     surveyQuestion,
     surveyQuestions,
+    surveyRules,
     setSurveyQuestions }) {
 
     const childNodes = surveyQuestions.filter(sq => sq.parentQuestion == surveyQuestion.id);
@@ -202,6 +179,22 @@ function SurveyQuestionTree({
                                         <span className="font-weight-bold">Component Type:  </span> 
                                         {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                                     </li>
+                                }
+                                {(surveyRules.length>0 && !inSimpleMode) &&
+                                <li>
+                                    <span className="font-weight-bold">Rules:  </span>
+                                    <div>
+
+                                        {
+                                            surveyRules.map(rule =>{ let question= rule.questions.find(ques => ques === surveyQuestion.id);
+                                               if(surveyQuestion.id === question)
+                                              return   <p>{rule.ruleType} <button>Delete</button>
+                                              </p>;
+                                            })
+                                        }
+
+                                    </div>
+                                </li>
                                 }
                                 {surveyQuestion.parentQuestion > -1 &&
                                     <Fragment>
@@ -248,6 +241,7 @@ function SurveyQuestionTree({
                         setSurveyQuestions={setSurveyQuestions} 
                         surveyQuestion={surveyQuestion}
                         surveyQuestions={surveyQuestions}
+                        surveyRules={surveyRules}
                     />
             )}
         </Fragment>
@@ -285,14 +279,89 @@ class SurveyRules extends React.Component {
         super(props);
 
         this.state = {
-            currentRules: [],
-            selectedRuleType:"",
+            selectedRuleType:"none",
+            regex:"",
+            min:0,
+            max:0,
+            maximumSum:0,
+            questionIds:[],
+            questionId:0,
+            surveyRules:[]
         };
+        this.updateQuestionId=this.updateQuestionId.bind(this);
+        this.updateMax=this.updateMax.bind(this);
+        this.updateMin=this.updateMin.bind(this);
+        this.updateRegex=this.updateRegex.bind(this);
+        this.updateMaxSum=this.updateMaxSum.bind(this);
+        this.updateOptions=this.updateOptions.bind(this);
+        this.addSurveyRuleSOA=this.addSurveyRuleSOA.bind(this);
     };
 
     setNewRule(ruleType) {
         this.setState({selectedRuleType:ruleType})
     }
+    updateMin(min){
+        this.setState({min:min});
+    }
+    updateMax(max){
+        this.setState({max:max});
+    }
+    updateQuestionId(e){
+        console.log(e.target.options[e.target.selectedIndex].value);
+        this.setState({questionIds:[parseInt(e.target.options[e.target.selectedIndex].value)]});
+    }
+    updateRegex(expression){
+        this.setState({regex:expression});
+    }
+    updateMaxSum(sum){
+        this.setState({maximumSum:sum});
+    }
+    updateOptions(options){
+        let questionIds = [];
+        let selection=Array.from(options);
+        selection.map(option => {
+            if(option.selected){questionIds.push(parseInt(option.value));}
+        });
+        this.setState({questionIds:questionIds});
+    }
+    addSurveyRule(qid,ruleType) {
+        let rules = this.props.surveyRules;
+        if (ruleType === "numeric-range") {
+            console.log("from numeric");
+            rules.push({
+                id: rules.length + 1,
+                    ruleType: ruleType,
+                    questions: this.state.questionIds,
+                    min: this.state.min,
+                    max: this.state.max
+            });
+            console.log(rules);
+        }
+        if (ruleType === "text-match") {
+            console.log("from text match");
+            rules.push({
+                    id: rules.length + 1,
+                    ruleType: ruleType,
+                    questions: this.state.questionIds,
+                    regex: this.state.regex
+                });
+        }
+        this.props.setRules(rules);
+    }
+    addSurveyRuleSOA(ruleType){
+        let rules = this.props.surveyRules;
+            console.log("from sum of answers");
+            rules.push({
+                    id: rules.length + 1,
+                    ruleType: ruleType,
+                    questions: this.state.questionIds,
+                    maximumSum: this.state.maximumSum
+                });
+        this.props.setRules(rules);
+        this.setState({surveyRules:rules});
+        console.log(this.state.surveyRules);
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -310,9 +379,18 @@ class SurveyRules extends React.Component {
                     </td></tr>
                 {
                     this.state.selectedRuleType == "text-match" ?
-                        <TextMatch surveyQuestions={this.props.surveyQuestions} /> : (this.state.selectedRuleType == "numeric-range" ? <NumericRange surveyQuestions={this.props.surveyQuestions}/> :
-                        (this.state.selectedRuleType == "sum-of-answers"?<SumOfAnswers surveyQuestions={this.props.surveyQuestions}/>:"nothing is selected"))
+                        <TextMatch surveyQuestions={this.props.surveyQuestions} surveyQuestion={this.props.surveyQuestion} updateRegex={this.updateRegex} updateQuestionId={this.updateQuestionId} updateOptions={this.updateOptions}/> : (this.state.selectedRuleType == "numeric-range" ?
+                        <NumericRange surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} updateMin={this.updateMin} updateMax={this.updateMax} updateQuestionId={this.updateQuestionId} surveyQuestion={this.props.surveyQuestion} updateOptions={this.updateOptions}/> :
+                        (this.state.selectedRuleType == "sum-of-answers"?<SumOfAnswers surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} surveyQuestion={this.props.surveyQuestion} updateMaxSum={this.updateMaxSum} updateOptions={this.updateOptions} addSurveyRuleSOA={this.addSurveyRuleSOA}/>:<tr><td></td><td></td></tr>))
                 }
+                <tr>
+                    <td><input
+                        type="button"
+                        className="button"
+                        value="Add Survey Rule"
+                        onClick={this.state.selectedRuleType === "sum-of-answers"?()=>this.addSurveyRuleSOA(this.state.selectedRuleType):()=>this.addSurveyRule(this.props.surveyQuestion.id,this.state.selectedRuleType)}/></td>
+                    <td></td>
+                </tr>
             </React.Fragment>
         );
     }
@@ -321,24 +399,19 @@ class SurveyRules extends React.Component {
 class TextMatch extends React.Component {
     constructor(props) {
         super(props);
-
-        this.state = {
-            currentRules: [],
-        };
     };
 
     render() {
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text");
-        console.log("from text natch");
-        console.log(surveyQuestions);
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text" && this.props.surveyQuestion.id == question.parentQuestion);
         return (
             <React.Fragment>
                 <tr>
                     <td>
-                        <label>Survey Question: </label></td><td><select>
+                        <label>Survey Question: </label></td><td><select onChange={e => this.props.updateOptions(e.target.options)}>
+                    <option value="-1">-select-</option>
                     {
                         surveyQuestions && surveyQuestions.map((question, uid) =>
-                            <option key={uid}>{question.question}</option>)
+                            <option key={uid} value={question.id}>{question.question}</option>)
                     }
                 </select>
                 </td>
@@ -346,7 +419,7 @@ class TextMatch extends React.Component {
                 <tr>
                     <td></td>
                     <td>
-                        <input id="text-match" type="text" placeholder="Regular expression"/>
+                        <input id="text-match" type="text" placeholder="Regular expression" onChange={e => this.props.updateRegex(e.target.value)}/>
                     </td>
 
                 </tr>
@@ -358,23 +431,20 @@ class TextMatch extends React.Component {
 class NumericRange extends React.Component {
     constructor(props) {
         super(props);
-
-        this.state ={
-            currentRules: [],
-        };
     };
-    render() {
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
 
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number" && this.props.surveyQuestion.id == question.parentQuestion);
         return (
             <React.Fragment>
                 <tr>
                     <td>
                         <label>Survey Question: </label>
-                    </td><td><select>
+                    </td><td><select onChange={e => this.props.updateOptions(e.target.options)}>
+                    <option value="-1">-select-</option>
                     {
                         surveyQuestions && surveyQuestions.map((question, uid) =>
-                            <option key={uid}>{question.question}</option>)
+                            <option key={uid} value={question.id}>{question.question}</option>)
                     }
                 </select>
                 </td>
@@ -382,8 +452,8 @@ class NumericRange extends React.Component {
                 <tr>
                     <td>
                         <label>Enter min and max values: </label></td><td>
-                    <input id="min-val" type="number" placeholder="Minimum value"/>
-                    <input id="max-val" type="number" placeholder="Maximum value"/>
+                    <input id="min-val" type="number" placeholder="Minimum value" onChange={e => this.props.updateMin(e.target.value)}/>
+                    <input id="max-val" type="number" placeholder="Maximum value" onChange={e => this.props.updateMax(e.target.value)}/>
                 </td>
                 </tr>
             </React.Fragment>
@@ -394,14 +464,12 @@ class NumericRange extends React.Component {
 class SumOfAnswers extends React.Component {
     constructor(props) {
         super(props);
-
-        this.state = {
-            currentRules: [],
-        };
     };
 
     render() {
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+        console.log(this.props.surveyQuestions);
+        console.log(this.props.surveyQuestion.id);
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number" && this.props.surveyQuestion.id == question.parentQuestion)
 
         return (
             <React.Fragment>
@@ -409,10 +477,10 @@ class SumOfAnswers extends React.Component {
                     <td>
                         <label>Survey Question(Hold ctrl/cmd and select multiple questions):</label></td>
                     <td>
-                        <select multiple="true">
+                        <select multiple="multiple" onChange={e => this.props.updateOptions(e.target.options)}>
                             {
                                 surveyQuestions && surveyQuestions.map((question, uid) =>
-                                    <option key={uid}>{question.question}</option>)
+                                    <option key={uid} value={question.id}>{question.question}</option>)
                             }
                         </select>
                     </td>
@@ -420,7 +488,7 @@ class SumOfAnswers extends React.Component {
                 <tr>
                     <td></td>
                     <td>
-                        <input id="expected-sum" type="number" placeholder="Expected sum"/>
+                        <input id="expected-sum" type="number" placeholder="Expected sum" onChange={e => this.props.updateMaxSum(e.target.value)}/>
                     </td>
 
                 </tr>

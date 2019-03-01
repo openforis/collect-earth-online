@@ -96,7 +96,9 @@ export class SurveyDesign extends React.Component {
                         inSimpleMode={this.state.inSimpleMode}
                         inDesignMode={true}
                         setSurveyQuestions={this.props.setSurveyQuestions}
+                        setSurveyRules={this.props.setSurveyRules}
                         surveyQuestions={this.props.surveyQuestions}
+                        surveyRules={this.props.surveyRules}
                         removeAnswer={this.removeAnswer}
                         removeQuestion={this.removeQuestion}
                         newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length 
@@ -207,7 +209,7 @@ class NewQuestionDesigner extends React.Component {
                                         parentAnswer: this.state.selectedAnswer,
                                         dataType: dataType,
                                         componentType: componentType,
-                                    }; 
+                                    };
                 this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
                 this.setState({ selectedAnswer: -1, newQuestionText: "" });
             }
@@ -411,153 +413,5 @@ class NewAnswerDesigner extends React.Component {
                         />
                     </div>
                 </div>
-    }
-}
-
-class SurveyRules extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            currentRules: [],
-            selectedRuleType:"",
-        };
-    };
-
-    setNewRule(ruleType) {
-        this.setState({selectedRuleType:ruleType})
-    }
-    render() {
-        return (
-            <React.Fragment>
-                <tr>
-                    <td>
-                        <label htmlFor="ruletype">Rule Type:</label>
-                    </td>
-                <td>
-                <select className="form-control form-control-sm" size="1" onChange={e => this.setNewRule(e.target.value)}>
-                    <option value="select">Select</option>
-                    <option value="text-match">Text Match</option>
-                    <option value="numeric-range">Numeric Range</option>
-                    <option value="sum-of-answers">Sum of Answers</option>
-                </select>
-                </td></tr>
-                {
-                    this.state.selectedRuleType == "text-match" ?
-                        <TextMatch surveyQuestions={this.props.surveyQuestions} /> : (this.state.selectedRuleType == "numeric-range" ? <NumericRange surveyQuestions={this.props.surveyQuestions}/> :
-                        (this.state.selectedRuleType == "sum-of-answers"?<SumOfAnswers surveyQuestions={this.props.surveyQuestions}/>:"nothing is selected"))
-                }
-            </React.Fragment>
-        );
-    }
-}
-
-class TextMatch extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            currentRules: [],
-        };
-    };
-
-    render() {
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text");
-        console.log("from text natch");
-        console.log(surveyQuestions);
-        return (
-            <React.Fragment>
-                <tr>
-                <td>
-                    <label>Survey Question: </label></td><td><select>
-                    {
-                        surveyQuestions && surveyQuestions.map((question, uid) =>
-                            <option key={uid}>{question.question}</option>)
-                    }
-                </select>
-                </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                    <input id="text-match" type="text" placeholder="Regular expression"/>
-                </td>
-
-                </tr>
-            </React.Fragment>
-        );
-    }
-}
-
-class NumericRange extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state ={
-            currentRules: [],
-        };
-    };
-    render() {
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
-
-        return (
-            <React.Fragment>
-                <tr>
-                <td>
-                    <label>Survey Question: </label>
-                </td><td><select>
-                    {
-                        surveyQuestions && surveyQuestions.map((question, uid) =>
-                            <option key={uid}>{question.question}</option>)
-                    }
-                </select>
-                </td>
-                </tr>
-                <tr>
-                <td>
-                    <label>Enter min and max values: </label></td><td>
-                    <input id="min-val" type="number" placeholder="Minimum value"/>
-                    <input id="max-val" type="number" placeholder="Maximum value"/>
-                </td>
-                </tr>
-            </React.Fragment>
-        );
-    }
-}
-
-class SumOfAnswers extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state ={
-            currentRules: [],
-        };
-    };
-    render() {
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
-
-        return (
-            <React.Fragment>
-                <tr>
-                <td>
-                    <label>Survey Question(Hold ctrl/cmd and select multiple questions):</label></td><td>
-                    <select multiple="true">
-                        {
-                            surveyQuestions && surveyQuestions.map((question, uid) =>
-                                <option key={uid}>{question.question}</option>)
-                        }
-                    </select>
-                </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <input id="expected-sum" type="number" placeholder="Expected sum"/>
-                    </td>
-
-                </tr>
-
-            </React.Fragment>
-        );
     }
 }

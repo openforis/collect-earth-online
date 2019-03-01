@@ -183,9 +183,9 @@ class Collection extends React.Component {
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
         
-        const newImageryAttribution = newImagery.title == "DigitalGlobeWMSImagery" 
+        const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-                        : newImagery.title == "PlanetGlobalMosaic" 
+                        : newImagery.title === "PlanetGlobalMosaic"
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                             :  newImagery.attribution;
         this.setState({
@@ -250,19 +250,19 @@ class Collection extends React.Component {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
 
-        if (this.state.currentImagery.title == "DigitalGlobeWMSImagery") {
+        if (this.state.currentImagery.title === "DigitalGlobeWMSImagery") {
             this.updateDGWMSLayer();
-        } else if (this.state.currentImagery.title == "PlanetGlobalMosaic") {
+        } else if (this.state.currentImagery.title === "PlanetGlobalMosaic") {
             this.updatePlanetLayer();
         }
     }
 
     getImageryByTitle(imageryTitle) {
-        return this.state.imageryList.find(imagery => imagery.title == imageryTitle);
+        return this.state.imageryList.find(imagery => imagery.title === imageryTitle);
     }
 
     getImageryById(imageryId) {
-        return this.state.imageryList.find(imagery => imagery.id == imageryId);
+        return this.state.imageryList.find(imagery => imagery.id === imageryId);
     }
 
     updateDGWMSLayer() {

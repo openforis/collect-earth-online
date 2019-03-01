@@ -28,7 +28,8 @@ class Project extends React.Component {
                 sampleDistribution: "random",
                 sampleResolution: "",
                 samplesPerPlot: "",
-                surveyQuestions: []
+                surveyQuestions: [],
+                surveyRules:[]
             },
             useTemplatePlots: false,
             imageryList: [],
@@ -214,11 +215,16 @@ class Project extends React.Component {
 
     setProjectDetail = (key, newValue) => 
             this.setState({projectDetails: { ...this.state.projectDetails, [key]: newValue}});
-  
-                                                                                          
+
     setSurveyQuestions = (newSurveyQuestions) => 
             this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
 
+    setSurveyRules = (newSurveyRules) => {
+        console.log(newSurveyRules);
+        this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }})
+        console.log("after setstate");
+        console.log(this.state.projectDetails);
+    };
 
     getProjectList = () => {
         const { userId } = this.props;
@@ -326,6 +332,7 @@ class Project extends React.Component {
                             setProjectDetail={this.setProjectDetail}
                             setProjectTemplate={this.setProjectTemplate} 
                             setSurveyQuestions={this.setSurveyQuestions}
+                            setSurveyRules={this.setSurveyRules}
                             toggleTemplatePlots={this.toggleTemplatePlots}
                             useTemplatePlots={this.state.useTemplatePlots}
                         />
@@ -376,10 +383,9 @@ function ProjectDesignForm(props) {
                     <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
                 }
                 <SurveyDesign 
-                    surveyQuestions={props.projectDetails.surveyQuestions} 
-                    setSurveyQuestions={props.setSurveyQuestions} 
+                    surveyQuestions={props.projectDetails.surveyQuestions} surveyRules={props.projectDetails.surveyRules}
+                    setSurveyQuestions={props.setSurveyQuestions} setSurveyRules={props.setSurveyRules}
                 />
-
         </form>
     );
 }
@@ -400,8 +406,7 @@ function ProjectTemplateVisibility({ projectId, projectList, setProjectTemplate 
                     >
                         <option key={0} value={0}>None</option>
                         {
-                            projectList
-                                .filter(proj => proj && proj.id > 0)
+                            projectList.filter(proj => proj && proj.id > 0)
                                 .map((proj,uid) =>
                                     <option key={uid} value={proj.id}>{proj.name}</option>
                                 )
