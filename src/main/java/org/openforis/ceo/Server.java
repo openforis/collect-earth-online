@@ -17,8 +17,8 @@ import freemarker.template.TemplateExceptionHandler;
 import java.io.File;
 import java.util.List;
 import org.openforis.ceo.collect.CollectImagery;
-import org.openforis.ceo.collect.CollectProjects;
 import org.openforis.ceo.collect.CollectPlots;
+import org.openforis.ceo.collect.CollectProjects;
 import org.openforis.ceo.db_api.GeoDash;
 import org.openforis.ceo.db_api.Imagery;
 import org.openforis.ceo.db_api.Institutions;
@@ -131,8 +131,8 @@ public class Server implements SparkApplication {
         get("/get-unlocked-plot/:projid/:plotid",     plots::getProjectPlot);
         post("/add-user-samples",                     plots::addUserSamples);
         post("/flag-plot",                            plots::flagPlot);
-        post("/resest-plot-lock",                     plots::resetPlotLock);
-        post("/release-plot-lock/:userid/:projid",    plots::releasePlotLocks);
+        post("/reset-plot-lock",                      plots::resetPlotLock);
+        post("/release-plot-locks/:userid/:projid",   plots::releasePlotLocks);
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
@@ -213,8 +213,7 @@ public class Server implements SparkApplication {
                           new JsonUsers(),
                           new JsonInstitutions(),
                           new JsonGeoDash(),
-                          new JsonPlots()
-                          );
+                          new JsonPlots());
         } else {
             // Set up the routing table to use the POSTGRES backend
             declareRoutes("POSTGRES",
@@ -223,8 +222,7 @@ public class Server implements SparkApplication {
                           new PostgresUsers(),
                           new PostgresInstitutions(),
                           new PostgresGeoDash(),
-                          new PostgresPlots()
-                          );
+                          new PostgresPlots());
         }
     }
 

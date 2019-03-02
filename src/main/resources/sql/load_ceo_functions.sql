@@ -1502,7 +1502,7 @@ CREATE OR REPLACE FUNCTION lock_plot_reset(_plot_id integer, _user_id integer, _
 $$ LANGUAGE SQL;
 
 -- Remove all locks from user and old locks
-CREATE OR REPLACE FUNCTION unlock_plot(_user_id integer) 
+CREATE OR REPLACE FUNCTION unlock_plots(_user_id integer) 
     RETURNS VOID AS $$
 
     DELETE FROM plot_locks pl

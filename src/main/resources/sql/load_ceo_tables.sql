@@ -83,7 +83,7 @@ CREATE TABLE institution_users (
   institution_id  integer not null references institutions (id),
   user_id         integer not null references users (id),
   role_id         integer not null references roles (id),
-  CONSTRAINT per_institution_per_plot UNIQUI(institution_id, user_id)
+  CONSTRAINT per_institution_per_plot UNIQUE(institution_id, user_id)
 );
 
 CREATE TABLE user_plots(
@@ -115,7 +115,7 @@ CREATE TABLE plot_locks(
 );
 
 CREATE TABLE project_widgets(
-    id  serial      primary key,
+    id              serial primary key,
     project_id      integer not null references projects (id) on delete cascade on update cascade,
     dashboard_id    uuid,
     widget          jsonb

@@ -45,6 +45,14 @@ class Collection extends React.Component {
 
         // Wait to get imagery list until project is loaded
         if (this.state.currentProject.institution !== prevState.currentProject.institution) {
+            // release any locks in case of user hitting refresh
+            fetch(
+                this.props.documentRoot
+                + "/release-plot-locks/"
+                + this.props.userId + "/"
+                + this.state.currentProject.id,
+                { method: "POST" }
+            );
             this.getImageryList();
         }
         // Initialize map when imagery list is returned
@@ -125,7 +133,7 @@ class Collection extends React.Component {
 
     getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
         .then(response => response.ok ? response.json() : Promise.reject(response))
-        .then((project) => {
+        .then(project => {
             if (project.id > 0) {
                 const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
                 this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
@@ -283,11 +291,9 @@ class Collection extends React.Component {
                                    this);
     };
 
-    getQueryString(params) {
-        return "?" + Object.keys(params)
-            .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
-            .join("&");
-    }
+    getQueryString = (params) => "?" + Object.keys(params)
+        .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
+        .join("&");
 
     getPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-plot-by-id"
@@ -390,7 +396,7 @@ class Collection extends React.Component {
     };
 
     resetPlotLock = () => {
-        fetch(this.props.documentRoot + "/resest-plot-lock",
+        fetch(this.props.documentRoot + "/reset-plot-lock",
               {
                   method: "POST",
                   body: JSON.stringify({
@@ -403,7 +409,7 @@ class Collection extends React.Component {
             .then(response => {
                 if (!response.ok) {
                     console.log(response);
-                    alert("Error maintaining plot lock, your work may get overwritten.  See console for details.");
+                    alert("Error maintaining plot lock. Your work may get overwritten. See console for details.");
                 }
             });
     };
@@ -1306,7 +1312,7 @@ function QuitMenu({ userId, projectId, documentRoot }) {
                             className="btn bg-lightgreen btn-sm"
                             id="quit-button"
                             onClick={() =>
-                                fetch(documentRoot + "/release-plot-lock/" + userId + "/" + projectId, { method: "POST" })
+                                fetch(documentRoot + "/release-plot-locks/" + userId + "/" + projectId, { method: "POST" })
                                     .then(() => window.location = documentRoot + "/home")
                             }
                         >

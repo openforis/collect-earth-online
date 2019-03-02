@@ -444,7 +444,7 @@ class ProjectTemplateVisibility extends React.Component {
                                     .filter(proj => proj
                                                     && proj.id > 0
                                                     && proj.name.toLocaleLowerCase()
-                                                        .includes(this.state.projectFilter.toLocalLowerCase())
+                                                        .includes(this.state.projectFilter.toLocaleLowerCase())
                                     )
                                     .map((proj, uid) => <option key={uid} value={proj.id}>{proj.name}</option>)
                             }

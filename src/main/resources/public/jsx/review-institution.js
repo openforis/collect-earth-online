@@ -654,7 +654,7 @@ class UserList extends React.Component {
                 console.log(response);
                 alert("Error retrieving the user list. See console for details.");
             });
-    }
+    };
 
     getActiveUserList = () => {
         fetch(this.props.documentRoot + "/get-all-users")

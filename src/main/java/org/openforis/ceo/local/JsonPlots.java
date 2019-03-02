@@ -53,12 +53,12 @@ public class JsonPlots implements Plots {
         }
     }
 
-    private static Boolean hasUserLock(JsonObject plot, Integer userId) {
+    private static Boolean isLocked(JsonObject plot) {
         return plot.has("locks") && toStream(plot.get("locks").getAsJsonArray())
                                     .anyMatch(l -> l.get("lockEnd").getAsLong() > System.currentTimeMillis());
     }
 
-    private static Integer whichPlotId(JsonObject plot) {
+    private static Integer getBestPlotId(JsonObject plot) {
         return plot.has("plotId") ? plot.get("plotId").getAsInt() : plot.get("id").getAsInt();
     }
 
@@ -68,8 +68,7 @@ public class JsonPlots implements Plots {
                             Integer projectId, 
                             Boolean getUserPlots, 
                             String userName, 
-                            Integer userId, 
-                            Integer plotId
+                            Integer userId
     ) {
 
         final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
@@ -79,7 +78,7 @@ public class JsonPlots implements Plots {
                                         ?  getOrEmptyString(pl, "user").getAsString().equals(userName)
                                         :  pl.get("analyses").getAsInt() == 0 
                                             && pl.get("flagged").getAsBoolean() == false 
-                                            && !hasUserLock(pl, userId)
+                                            && !isLocked(pl)
                                     )
                                     .filter(filterPredicate)
                                     .sorted(sortComparator)
@@ -102,12 +101,11 @@ public class JsonPlots implements Plots {
 
         return singlePlotReturn(
                 (a,b) -> 0,
-                pl -> whichPlotId(pl) == plotId,
+                pl -> getBestPlotId(pl) == plotId,
                 projectId,
                 getUserPlots,
                 userName,
-                userId,
-                plotId
+                userId
         );
     }
 
@@ -119,13 +117,12 @@ public class JsonPlots implements Plots {
         final var userName =           req.queryParams("userName");
 
         return singlePlotReturn(
-                (a, b) -> whichPlotId(a) - whichPlotId(b),
-                pl -> whichPlotId(pl) > plotId, 
+                (a, b) -> getBestPlotId(a) - getBestPlotId(b),
+                pl -> getBestPlotId(pl) > plotId, 
                 projectId,
                 getUserPlots,
                 userName,
-                userId,
-                plotId
+                userId
         );
 
     }
@@ -138,18 +135,17 @@ public class JsonPlots implements Plots {
         final var userName =           req.queryParams("userName");
 
         return singlePlotReturn(
-                (a, b) -> whichPlotId(b) - whichPlotId(a),
-                pl -> whichPlotId(pl) < plotId,
+                (a, b) -> getBestPlotId(b) - getBestPlotId(a),
+                pl -> getBestPlotId(pl) < plotId,
                 projectId,
                 getUserPlots,
                 userName,
-                userId,
-                plotId
+                userId
         );
 
     }
 
-    public String resetPlotLock(Request req, Response res) {
+    public synchronized String resetPlotLock(Request req, Response res) {
         final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
         final var projectId =             jsonInputs.get("projectId").getAsInt();
         final var plotId =                jsonInputs.get("plotId").getAsInt();
@@ -184,20 +180,20 @@ public class JsonPlots implements Plots {
         return unlockLockPlots(projectId, -1, userId);
     }
 
-    private static String unlockLockPlots(Integer projectId, Integer plotIdToLock, Integer userId) {
+    private synchronized static String unlockLockPlots(Integer projectId, Integer plotIdToLock, Integer userId) {
         mapJsonFile("plot-data-" + projectId + ".json",
-        plot -> {
-            var unlockedPlot = unlockPlot(plot, userId);
-            if (unlockedPlot.get("id").getAsInt() == plotIdToLock) {
-                var updatedLocks = unlockedPlot.has("locks") ? unlockedPlot.get("locks").getAsJsonArray() : new JsonArray();
-                var userLock = new JsonObject();
-                userLock.addProperty("userId",Integer.toString(userId));
-                userLock.addProperty("lockEnd", System.currentTimeMillis() +  5 * 60 * 1000);
-                updatedLocks.add(userLock);
-                unlockedPlot.add("locks", updatedLocks);
-                return unlockedPlot;
-            } else {
-                return unlockedPlot;
+            plot -> {
+                var unlockedPlot = unlockPlot(plot, userId);
+                if (unlockedPlot.get("id").getAsInt() == plotIdToLock) {
+                    var updatedLocks = unlockedPlot.has("locks") ? unlockedPlot.get("locks").getAsJsonArray() : new JsonArray();
+                    var userLock = new JsonObject();
+                    userLock.addProperty("userId", Integer.toString(userId));
+                    userLock.addProperty("lockEnd", System.currentTimeMillis() +  5 * 60 * 1000);
+                    updatedLocks.add(userLock);
+                    unlockedPlot.add("locks", updatedLocks);
+                    return unlockedPlot;
+                } else {
+                    return unlockedPlot;
             }
         });
         return "";
