@@ -137,19 +137,13 @@ class Project extends React.Component {
                       }),
                   }
             )
-                .then(response => {
-                    utils.hide_element("spinner");
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        return Promise.reject(response);
-                    }
-                })
+                .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => window.location = this.props.documentRoot + "/review-project/" + data)
-                .catch(data => {
-                    console.log(data);
+                .catch(response => {
+                    console.log(response);
                     alert("Error creating project. See console for details.");
-                });
+                })
+                .finally(utils.hide_element("spinner"));
         }
     };
 
@@ -251,31 +245,18 @@ class Project extends React.Component {
     getProjectList = () => {
         const { userId } = this.props;
         fetch(this.props.documentRoot + "/get-all-projects?userId=" + userId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the project list. See console for details.");
-                }
-            })
-            .then(data => {
-                const projList = data;
-                projList.unshift(JSON.parse(JSON.stringify(this.state.projectDetails)));
-                this.setState({ projectList: projList });
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ projectList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project list. See console for details.");
             });
     };
 
     getImageryList = () => {
         const { institutionId } = this.props;
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institutionId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    return Promise.reject(response);
-                }
-            })
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
                     imageryList: data,
@@ -300,18 +281,13 @@ class Project extends React.Component {
     getProjectPlots() {
         const maxPlots = 300;
         fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot list. See console for details.");
-                }
-            })
-            .then(data => {
-                this.setState({ plotList: data });
-            })
-            .catch(() => this.setState({ plotList: [] }));
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ plotList: data }))
+            .catch(response => {
+                this.setState({ plotList: [] });
+                console.log(response);
+                alert("Error retrieving plot list. See console for details.");
+            });
     }
 
     updateProjectBoundary() {
@@ -420,7 +396,7 @@ function ProjectDesignForm(props) {
                 toggleTemplatePlots={props.toggleTemplatePlots}
             />
             {!props.useTemplatePlots &&
-            <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
+                <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
             }
             <SurveyDesign
                 surveyQuestions={props.projectDetails.surveyQuestions}
@@ -465,10 +441,12 @@ class ProjectTemplateVisibility extends React.Component {
                             <option key={0} value={0}>None</option>
                             {
                                 projectList
-                                    .filter(proj => proj && proj.id > 0 && proj.name.includes(this.state.projectFilter))
-                                    .map((proj, uid) =>
-                                        <option key={uid} value={proj.id}>{proj.name}</option>
+                                    .filter(proj => proj
+                                                    && proj.id > 0
+                                                    && proj.name.toLocaleLowerCase()
+                                                        .includes(this.state.projectFilter.toLocaleLowerCase())
                                     )
+                                    .map((proj, uid) => <option key={uid} value={proj.id}>{proj.name}</option>)
                             }
                         </select>
                     </div>

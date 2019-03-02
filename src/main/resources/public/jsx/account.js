@@ -36,22 +36,12 @@ class UserStats extends React.Component {
 
     getUserStats() {
         fetch(this.props.documentRoot + "/get-user-stats/" + this.props.userName)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the user stat info. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(stats => {
-                if (stats == null) {
-                    alert("No user found with ID " + this.props.userName + ".");
-                    window.location = this.props.documentRoot + "/home";
-                } else {
-                    this.setState({ stats: stats });
-                }
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(stats => this.setState({ stats: stats }))
+            .catch(response => {
+                console.log(response);
+                alert("No user found with ID " + this.props.userName + ". See console for details.");
+                window.location = this.props.documentRoot + "/home";
             });
     }
 

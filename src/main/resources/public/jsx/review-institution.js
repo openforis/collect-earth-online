@@ -25,16 +25,12 @@ class ReviewInstitution extends React.Component {
         fetch(this.props.documentRoot + "/get-all-projects?userId="
                 + this.props.userId + "&institutionId=" + this.props.institutionId
         )
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the project info. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => this.setState({ projectList: data }));
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ projectList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
+            });
     }
 
     setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
@@ -135,22 +131,7 @@ class InstitutionDescription extends React.Component {
 
     getInstitutionDetails = () => {
         fetch(this.props.documentRoot + "/get-institution-details/" + this.props.institutionId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the institution details. See console for details.");
-                    return new Promise(resolve => resolve({
-                        id: "-1",
-                        name: "",
-                        logo: "",
-                        url: "",
-                        description: "",
-                        admins: [],
-                    }));
-                }
-            })
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({
                     institutionDetails: data,
@@ -164,6 +145,15 @@ class InstitutionDescription extends React.Component {
                     },
                 });
                 this.props.setIsAdmin(this.props.userId > 0 && data.admins.includes(this.props.userId));
+            })
+            .catch(response => {
+                this.setState({
+                    institutionDetails: { id: "-1", name: "", logo: "", url: "", description: "", admins: [] },
+                    newInstitutionDetails: { id: "-1", name: "", logo: "", url: "", description: "", base64Image: "" },
+                });
+                this.props.setIsAdmin(false);
+                console.log(response);
+                alert("Error retrieving the institution details. See console for details.");
             });
     };
 
@@ -324,16 +314,13 @@ class ImageryList extends React.Component {
 
     getImageryList = () => {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.props.institutionId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the imagery list. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => this.setState({ imageryList: data }));
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ imageryList: data }))
+            .catch(response => {
+                this.setState({ imageryList: [] });
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
+            });
     };
 
     deleteImagery = (imageryId) => {
@@ -588,13 +575,7 @@ class Project extends React.Component {
 
     projectHighlight = () => {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.project.id)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    return new Promise((resolve, reject) => reject(response));
-                }
-            })
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({
                 boxShadow: data.unanalyzedPlots === 0
                     ? "0px 0px 8px 1px green inset"
@@ -666,34 +647,24 @@ class UserList extends React.Component {
 
     getInstitutionUserList = () => {
         fetch(this.props.documentRoot + "/get-institution-users/" + this.props.institutionId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the user list. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => {
-                this.setState({
-                    institutionUserList: data,
-                });
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ institutionUserList: data }))
+            .catch(response => {
+                this.setState({ institutionUserList: [] });
+                console.log(response);
+                alert("Error retrieving the user list. See console for details.");
             });
     };
 
     getActiveUserList = () => {
         fetch(this.props.documentRoot + "/get-all-users")
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the complete user list. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => this.setState({ activeUserList: data }));
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ activeUserList: data }))
+            .catch(response => {
+                this.setState({ activeUserList: [] });
+                console.log(response);
+                alert("Error retrieving the complete user list. See console for details.");
+            });
     };
 
     updateUserInstitutionRole = (newUserId, email, role) => {

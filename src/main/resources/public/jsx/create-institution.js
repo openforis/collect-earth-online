@@ -29,13 +29,7 @@ class CreateInstitution extends React.Component {
                       description: this.state.newInstitutionDetails.description,
                   }),
               })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    return new Promise((resolve, reject) => reject(response));
-                }
-            })
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => window.location = this.props.documentRoot + "/review-institution/" + data.id)
             .catch(response => {
                 console.log(response);

@@ -299,11 +299,11 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        var userId =     req.params(":userid");
+        var userName =     req.params(":userid");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
                  
-            pstmt.setString(1, userId);
+            pstmt.setString(1, userName);
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
                 if (rs.next()) {

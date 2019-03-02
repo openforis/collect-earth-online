@@ -101,7 +101,6 @@ class Project extends React.Component {
                 .then(response => {
                     utils.hide_element("spinner");
                     if (response.ok) {
-                        this.setState({ projectDetails: { ...this.state.projectDetails, availability: "archived" }});
                         alert("Project " + this.state.projectDetails.id + " has been archived.");
                         window.location = this.props.documentRoot + "/home";
                     } else {
@@ -145,14 +144,7 @@ class Project extends React.Component {
     getProjectById = () => {
         const { projectId } = this.props;
         fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the project info. See console for details.");
-                }
-            })
+            .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 if (data === "") {
                     alert("No project found with ID " + projectId + ".");
@@ -161,38 +153,31 @@ class Project extends React.Component {
                     const newSurveyQuestions = convertSampleValuesToSurveyQuestions(data.sampleValues);
                     this.setState({ projectDetails: { ...data, surveyQuestions: newSurveyQuestions }});
                 }
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
             });
     };
 
     getImageryList = () => {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.projectDetails.institution)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the imagery list. See console for details.");
-                }
-            })
-            .then(data => {
-                this.setState({ imageryList: data });
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ imageryList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
             });
     };
 
     getProjectPlots = () => {
         fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/300")
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot list. See console for details.");
-                }
-            })
-            .then(data => {
-                this.setState({ plotList: data });
-            })
-            .catch(() => this.setState({ plotList: [] }));
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ plotList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot list. See console for details.");
+            });
     };
 
     initProjectMap = () => {
@@ -315,17 +300,11 @@ class ProjectStats extends React.Component {
 
     getProjectStats = () => {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error getting project stats. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(data => {
-                this.setState({ stats: data });
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ stats: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error getting project stats. See console for details.");
             });
     }
 
@@ -352,12 +331,12 @@ class ProjectStats extends React.Component {
                     <div className="ProjectStats__dates-table  mb-4">
                         <h3>Project Dates:</h3>
                         <div className="container row pl-4">
-                            <div className="pr-5">
+                            <div className="pr-4">
                                 Date Created
                                 <span className="badge badge-pill bg-lightgreen ml-3">{createdDate || "Unknown"}</span>
                             </div>
 
-                            <div className="pr-5">
+                            <div className="pr-4">
                                 Date Published
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {publishedDate || (availability === "unpublished"
@@ -366,7 +345,7 @@ class ProjectStats extends React.Component {
                                 </span>
                             </div>
 
-                            <div className="pr-5">
+                            <div className="pr-4">
                                 Date Closed
                                 <span className="badge badge-pill bg-lightgreen ml-3">
                                     {closedDate || (["archived", "closed"].includes(availability)
@@ -672,7 +651,7 @@ function PlotReview({ project: { projectDetails: { plotDistribution, numPlots, p
     );
 }
 
-function SampleReview({ project: { projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }}}){
+function SampleReview({ project: { projectDetails: { sampleDistribution, samplesPerPlot, sampleResolution }}}) {
 
     return (
         <SectionBlock title="Sample Design">
@@ -707,7 +686,7 @@ function SampleReview({ project: { projectDetails: { sampleDistribution, samples
     );
 }
 
-function SurveyReview({ surveyQuestions }){
+function SurveyReview({ surveyQuestions }) {
     return (
         <SectionBlock title="Survey Review">
             <div id="survey-design">
@@ -786,7 +765,6 @@ function ProjectManagement(props) {
 
 export function renderReviewProjectPage(args) {
     ReactDOM.render(
-        // FIXME get institution from project data.
         <Project documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId}/>,
         document.getElementById("project")
     );

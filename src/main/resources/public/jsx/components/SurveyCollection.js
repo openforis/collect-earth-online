@@ -160,7 +160,7 @@ class SurveyQuestionTree extends React.Component {
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2"
+                        className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
                         onClick={this.toggleShowAnswers}
                     >
                         {this.state.showAnswers ? <span>-</span> : <span>+</span>}
@@ -168,7 +168,7 @@ class SurveyQuestionTree extends React.Component {
                     <button
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
-                        className="text-center btn btn-outline-lightgreen btn-sm col-10 overflow-hidden text-truncate"
+                        className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
                         title={removeEnumerator(this.props.surveyNode.question)}
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)

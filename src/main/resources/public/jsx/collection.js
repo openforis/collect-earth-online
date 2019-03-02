@@ -30,12 +30,12 @@ class Collection extends React.Component {
             stackingProfileDG: "Accuracy_Profile",
             userSamples: {},
             userImages: {},
+            storedInterval: null,
         };
     }
 
     componentDidMount() {
-        this.getProjectById();
-        this.getProjectPlots();
+        this.getProjectData();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -45,6 +45,14 @@ class Collection extends React.Component {
 
         // Wait to get imagery list until project is loaded
         if (this.state.currentProject.institution !== prevState.currentProject.institution) {
+            // release any locks in case of user hitting refresh
+            fetch(
+                this.props.documentRoot
+                + "/release-plot-locks/"
+                + this.props.userId + "/"
+                + this.state.currentProject.id,
+                { method: "POST" }
+            );
             this.getImageryList();
         }
         // Initialize map when imagery list is returned
@@ -73,6 +81,9 @@ class Collection extends React.Component {
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
             this.showGeoDash();
+
+            clearInterval(this.state.storedInterval);
+            this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
 
         // Update Samples
@@ -112,57 +123,45 @@ class Collection extends React.Component {
         }
     }
 
-    getProjectById = () => {
-        fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the project info. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(project => {
-                if (project == null || project.id === 0) {
-                    alert("No project found with ID " + this.props.projectId + ".");
-                } else {
-                    const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
-                    this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
-                }
+    getProjectData = () => {
+        Promise.all([this.getProjectById(), this.getProjectPlots()])
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the project info. See console for details.");
             });
     };
 
-    getProjectPlots = () => {
-        fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error loading plot data. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => {
+    getProjectById = () => fetch(this.props.documentRoot + "/get-project-by-id/" + this.props.projectId)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(project => {
+            if (project.id > 0) {
+                const surveyQuestions = convertSampleValuesToSurveyQuestions(project.sampleValues);
+                this.setState({ currentProject: { ...project, surveyQuestions: surveyQuestions }});
+                return Promise.resolve("resolved");
+            } else {
+                return Promise.reject("No project found with ID " + this.props.projectId + ".");
+            }
+        });
+
+    getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            if (data.length > 0) {
                 this.setState({ plotList: data });
-            });
-    };
+                return Promise.resolve("resolved");
+            } else {
+                return Promise.reject("No plot information found");
+            }
+        });
 
     getImageryList = () => {
         const { institution } = this.state.currentProject;
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + institution)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving the imagery list. See console for details.");
-                    return new Promise(resolve => resolve([]));
-                }
-            })
-            .then(data => {
-                this.setState({ imageryList: data });
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ imageryList: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the imagery list. See console for details.");
             });
     };
 
@@ -265,15 +264,11 @@ class Collection extends React.Component {
         }
     }
 
-    getImageryByTitle(imageryTitle) {
-        return this.state.imageryList.find(imagery => imagery.title === imageryTitle);
-    }
+    getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
-    getImageryById(imageryId) {
-        return this.state.imageryList.find(imagery => imagery.id === imageryId);
-    }
+    getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
 
-    updateDGWMSLayer() {
+    updateDGWMSLayer = () => {
         const { imageryYearDG, stackingProfileDG } = this.state;
         mercator.updateLayerWmsParams(this.state.mapConfig,
                                       "DigitalGlobeWMSImagery",
@@ -282,9 +277,9 @@ class Collection extends React.Component {
                                               + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
                                           FEATUREPROFILE: stackingProfileDG,
                                       });
-    }
+    };
 
-    updatePlanetLayer() {
+    updatePlanetLayer = () => {
         const { imageryMonthPlanet, imageryYearPlanet } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
                                    "PlanetGlobalMosaic",
@@ -294,20 +289,23 @@ class Collection extends React.Component {
                                        return sourceConfig;
                                    },
                                    this);
-    }
+    };
 
-    getPlotData(plotId) {
-        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
-        fetch(this.props.documentRoot + "/get-plot-by-id/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
-            })
+    getQueryString = (params) => "?" + Object.keys(params)
+        .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
+        .join("&");
+
+    getPlotData = (plotId) => {
+        fetch(this.props.documentRoot + "/get-plot-by-id"
+                + this.getQueryString({
+                    getUserPlots: this.state.reviewPlots,
+                    plotId: plotId,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                })
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     alert(this.state.reviewPlots
@@ -322,21 +320,24 @@ class Collection extends React.Component {
                         nextPlotButtonDisabled: false,
                     });
                 }
-            });
-    }
-
-    getNextPlotData(plotId) {
-        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
-        fetch(this.props.documentRoot + "/get-next-plot/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
             })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
+            });
+    };
+
+    getNextPlotData = (plotId) => {
+        fetch(this.props.documentRoot + "/get-next-plot"
+                + this.getQueryString({
+                    getUserPlots: this.state.reviewPlots,
+                    plotId: plotId,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                })
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     if (plotId === -1) {
@@ -355,21 +356,24 @@ class Collection extends React.Component {
                         prevPlotButtonDisabled: plotId === -1,
                     });
                 }
-            });
-    }
-
-    getPrevPlotData(plotId) {
-        const userParam = this.state.reviewPlots ? "?userName=" + this.props.userName : "";
-        fetch(this.props.documentRoot + "/get-prev-plot/" + this.props.projectId + "/" + plotId + userParam)
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    console.log(response);
-                    alert("Error retrieving plot data. See console for details.");
-                    return new Promise(resolve => resolve("error"));
-                }
             })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
+            });
+    };
+
+    getPrevPlotData = (plotId) => {
+        fetch(this.props.documentRoot + "/get-prev-plot"
+                + this.getQueryString({
+                    getUserPlots: this.state.reviewPlots,
+                    plotId: plotId,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                })
+        )
+            .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     this.setState({ prevPlotButtonDisabled: true });
@@ -384,36 +388,57 @@ class Collection extends React.Component {
                         nextPlotButtonDisabled: false,
                     });
                 }
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving plot data. See console for details.");
             });
-    }
+    };
 
-    resetPlotValues(newPlot) {
-        return {
-            newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
-            userSamples: newPlot.samples
-                ? newPlot.samples.reduce((obj, s) => {
-                    obj[s.id] = s.value || {};
-                    return obj;
-                }, {})
-                : {},
-            userImages: newPlot.samples
-                ? newPlot.samples.reduce((obj, s) => {
-                    obj[s.id] = s.userImage || {};
-                    return obj;
-                }, {})
-                : {},
-            selectedQuestion: {
-                ...this.state.currentProject.surveyQuestions
-                    .sort((a, b) => a.id - b.id)
-                    .find(surveyNode => surveyNode.parentQuestion === -1),
-                visible: null,
-            },
-            collectionStart: Date.now(),
-            sampleOutlineBlack: true,
-        };
-    }
+    resetPlotLock = () => {
+        fetch(this.props.documentRoot + "/reset-plot-lock",
+              {
+                  method: "POST",
+                  body: JSON.stringify({
+                      plotId: this.state.currentPlot.id,
+                      projectId: this.props.projectId,
+                      userId: this.props.userId,
+                      userName: this.props.userName,
+                  }),
+              })
+            .then(response => {
+                if (!response.ok) {
+                    console.log(response);
+                    alert("Error maintaining plot lock. Your work may get overwritten. See console for details.");
+                }
+            });
+    };
 
-    showProjectPlot() {
+    resetPlotValues = (newPlot) => ({
+        newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
+        userSamples: newPlot.samples
+            ? newPlot.samples.reduce((obj, s) => {
+                obj[s.id] = s.value || {};
+                return obj;
+            }, {})
+            : {},
+        userImages: newPlot.samples
+            ? newPlot.samples.reduce((obj, s) => {
+                obj[s.id] = s.userImage || {};
+                return obj;
+            }, {})
+            : {},
+        selectedQuestion: {
+            ...this.state.currentProject.surveyQuestions
+                .sort((a, b) => a.id - b.id)
+                .find(surveyNode => surveyNode.parentQuestion === -1),
+            visible: null,
+        },
+        collectionStart: Date.now(),
+        sampleOutlineBlack: true,
+    });
+
+    showProjectPlot = () => {
         const { currentPlot, mapConfig, currentProject } = this.state;
 
         mercator.disableSelection(mapConfig);
@@ -433,9 +458,9 @@ class Collection extends React.Component {
                                 ceoMapStyles.yellowPolygon);
 
         mercator.zoomMapToLayer(mapConfig, "currentPlot");
-    }
+    };
 
-    showPlotSamples() {
+    showPlotSamples = () => {
         const { mapConfig, selectedQuestion: { visible }} = this.state;
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
@@ -452,9 +477,9 @@ class Collection extends React.Component {
         mercator.enableSelection(mapConfig,
                                  "currentSamples",
                                  (sampleId) => this.setState({ selectedSampleId: sampleId }));
-    }
+    };
 
-    showGeoDash() {
+    showGeoDash = () => {
         const { currentPlot, mapConfig, currentProject } = this.state;
         const plotRadius = currentProject.plotSize
                            ? currentProject.plotSize / 2.0
@@ -467,7 +492,7 @@ class Collection extends React.Component {
                     + "&daterange=&bcenter=" + currentPlot.center
                     + "&bradius=" + plotRadius,
                     "_geo-dash");
-    }
+    };
 
     goToFirstPlot = () => this.getNextPlotData(-1);
 
@@ -501,7 +526,8 @@ class Collection extends React.Component {
                       body: JSON.stringify({
                           projectId: this.props.projectId,
                           plotId: this.state.currentPlot.id,
-                          userId: this.props.userName,
+                          userId: this.props.userId,
+                          userName: this.props.userName,
                       }),
                   })
                 .then(response => {
@@ -526,7 +552,8 @@ class Collection extends React.Component {
                   body: JSON.stringify({
                       projectId: this.props.projectId,
                       plotId: this.state.currentPlot.id,
-                      userId: this.props.userName,
+                      userName: this.props.userName,
+                      userId: this.props.userId,
                       confidence: -1,
                       collectionStart: this.state.collectionStart,
                       userSamples: this.state.userSamples,
@@ -561,7 +588,7 @@ class Collection extends React.Component {
             .every(sid => visibleSamples.some(vs => vs.id === sid));
     };
 
-    getChildQuestions(currentQuestionId) {
+    getChildQuestions = (currentQuestionId) => {
         const { surveyQuestions } = this.state.currentProject;
         const { question, id } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === id);
@@ -574,7 +601,7 @@ class Collection extends React.Component {
                     [...prev, ...this.getChildQuestions(acc.id)]
                 ), [question]);
         }
-    }
+    };
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
@@ -593,11 +620,11 @@ class Collection extends React.Component {
                     answer: answerText,
                     answerId: answerId,
                 };
-                const clearedSubQuestions = this.getChildQuestions(questionToSet.id)
-                    .reduce((acc, questionText) => {
-                        const { [questionText]: value, ...rest } = acc;
-                        return { ...rest };
-                    }, { ...this.state.userSamples[sampleId] });
+
+                const childQuestionArray = this.getChildQuestions(questionToSet.id);
+                const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
+                    .filter(entry => !childQuestionArray.includes(entry[0]))
+                    .reduce((acc, cur) => ({ ...acc, [cur[0]]: cur[1] }), {});
 
                 return {
                     ...acc,
@@ -650,7 +677,7 @@ class Collection extends React.Component {
         return "#" + padZero(r) + padZero(g) + padZero(b);
     }
 
-    highlightSamplesByQuestion() {
+    highlightSamplesByQuestion = () => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
 
         const { question } = this.state.selectedQuestion;
@@ -676,11 +703,11 @@ class Collection extends React.Component {
 
                 mercator.highlightSampleGeometry(feature, color);
             });
-    }
+    };
 
     toggleSampleBW = () => this.setState({ sampleOutlineBlack: !this.state.sampleOutlineBlack });
 
-    getVisibleSamples(currentQuestionId) {
+    getVisibleSamples = (currentQuestionId) => {
         const { currentProject : { surveyQuestions }, userSamples } = this.state;
         const { parentQuestion, parentAnswer } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1
@@ -701,7 +728,7 @@ class Collection extends React.Component {
                     return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
                 });
         }
-    }
+    };
 
     updateQuestionStatus = () => {
         const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
@@ -726,7 +753,7 @@ class Collection extends React.Component {
             },
             selectedQuestion: newSurveyQuestions.find(sq => sq.id === this.state.selectedQuestion.id),
         });
-    }
+    };
 
     render() {
         const plotId = this.state.currentPlot
@@ -793,7 +820,11 @@ class Collection extends React.Component {
                             </fieldset>
                     }
                 </SideBar>
-                <QuitMenu documentRoot={this.props.documentRoot}/>
+                <QuitMenu
+                    documentRoot={this.props.documentRoot}
+                    userId={this.props.userId}
+                    projectId={this.props.projectId}
+                />
                 {this.state.plotList.length === 0 &&
                     <div id="spinner" style={{ top: "45%", left: "38%" }}></div>
                 }
@@ -1168,17 +1199,11 @@ class ProjectStats extends React.Component {
 
     getProjectStats() {
         fetch(this.props.documentRoot + "/get-project-stats/" + this.props.projectId)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    console.log(response);
-                    alert("Error getting project stats. See console for details.");
-                    return new Promise(resolve => resolve(null));
-                }
-            })
-            .then(data => {
-                this.setState({ stats: data });
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => this.setState({ stats: data }))
+            .catch(response => {
+                console.log(response);
+                alert("Error getting project stats. See console for details.");
             });
     }
 
@@ -1258,7 +1283,8 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu(props) {
+function QuitMenu({ userId, projectId, documentRoot }) {
+
     return (
         <div
             className="modal fade"
@@ -1285,7 +1311,10 @@ function QuitMenu(props) {
                             type="button"
                             className="btn bg-lightgreen btn-sm"
                             id="quit-button"
-                            onClick={() => window.location = props.documentRoot + "/home"}
+                            onClick={() =>
+                                fetch(documentRoot + "/release-plot-locks/" + userId + "/" + projectId, { method: "POST" })
+                                    .then(() => window.location = documentRoot + "/home")
+                            }
                         >
                             OK
                         </button>
@@ -1298,7 +1327,12 @@ function QuitMenu(props) {
 
 export function renderCollectionPage(args) {
     ReactDOM.render(
-        <Collection documentRoot={args.documentRoot} userName={args.userName} projectId={args.projectId}/>,
+        <Collection
+            documentRoot={args.documentRoot}
+            userId={args.userId === "" ? -1 : parseInt(args.userId)}
+            userName={args.userName}
+            projectId={args.projectId}
+        />,
         document.getElementById("collection")
     );
 }

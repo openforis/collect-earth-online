@@ -8,16 +8,53 @@ class Home extends React.Component {
         super(props);
         this.state = {
             projects: [],
+            imagery: [],
+            institutions: [],
             showSidePanel: true,
         };
     }
 
     componentDidMount() {
         // Fetch projects
-        fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
-            .then(response => response.json())
-            .then(data => this.setState({ projects: data }));
+        Promise.all([this.getProjects(), this.getImagery(), this.getInstitutions()])
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the collection data. See console for details.");
+            });
     }
+
+    getProjects = () => fetch(this.props.documentRoot + "/get-all-projects?userId=" + this.props.userId)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            if (data.length > 0) {
+                this.setState({ projects: data });
+                return Promise.resolve();
+            } else {
+                return Promise.reject("No projects found");
+            }
+        });
+
+    getImagery = () => fetch(this.props.documentRoot + "/get-all-imagery")
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            if (data.length > 0) {
+                this.setState({ imagery: data });
+                return Promise.resolve();
+            } else {
+                return Promise.reject("No imagery found");
+            }
+        });
+
+    getInstitutions = () => fetch(this.props.documentRoot + "/get-all-institutions")
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            if (data.length > 0) {
+                this.setState({ institutions: data });
+                return Promise.resolve();
+            } else {
+                return Promise.reject("No institutions found");
+            }
+        });
 
     toggleSidebar = () => this.setState({ showSidePanel: !this.state.showSidePanel });
 
@@ -29,17 +66,19 @@ class Home extends React.Component {
                     <div className="row tog-effect">
                         <SideBar
                             documentRoot={this.props.documentRoot}
-                            userName={this.props.userName}
+                            institutions={this.state.institutions}
                             projects={this.state.projects}
-                            userId={this.props.userId}
                             showSidePanel={this.state.showSidePanel}
+                            userId={this.props.userId}
+                            userName={this.props.userName}
                         />
                         <MapPanel
                             documentRoot={this.props.documentRoot}
-                            userId={this.props.userId}
+                            imagery={this.state.imagery}
                             projects={this.state.projects}
                             showSidePanel={this.state.showSidePanel}
                             toggleSidebar={this.toggleSidebar}
+                            userId={this.props.userId}
                         />
                     </div>
                 </div>
@@ -52,24 +91,16 @@ class MapPanel extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            imagery: [],
             mapConfig: null,
             clusterExtent: [],
             clickedFeatures: [],
         };
     }
 
-    componentDidMount() {
-        // Fetch imagery
-        fetch(this.props.documentRoot + "/get-all-imagery")
-            .then(response => response.json())
-            .then(data => this.setState({ imagery: data }));
-    }
-
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.mapConfig == null && this.state.imagery.length > 0 && prevState.imagery.length === 0) {
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.state.imagery.slice(0, 1));
-            mercator.setVisibleLayer(mapConfig, this.state.imagery[0].title);
+        if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
+            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.props.imagery.slice(0, 1));
+            mercator.setVisibleLayer(mapConfig, this.props.imagery[0].title);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
@@ -169,7 +200,6 @@ class SideBar extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            institutions: [],
             filterText: "",
             filterInstitution: true,
             useFirstLetter: false,
@@ -179,14 +209,6 @@ class SideBar extends React.Component {
         };
     }
 
-    componentDidMount() {
-        // Fetch institutions
-        fetch(this.props.documentRoot + "/get-all-institutions")
-            .then(response => response.json())
-            .then(data => {
-                this.setState({ institutions: data });
-            });
-    }
     toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
     toggleFilterInstitution = () => this.setState({ filterInstitution: !this.state.filterInstitution });
@@ -208,7 +230,7 @@ class SideBar extends React.Component {
                                         ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
                                         : proj.name.toLocaleLowerCase().includes(filterTextLower)));
 
-        const filteredInstitutions = this.state.institutions
+        const filteredInstitutions = this.props.institutions
             .filter(inst => !this.state.filterInstitution
                                     || (this.state.useFirstLetter
                                         ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
@@ -233,7 +255,7 @@ class SideBar extends React.Component {
                 }
                 <InstitutionFilter
                     documentRoot={this.props.documentRoot}
-                    filteredInstitutions={this.state.institutions}
+                    filteredInstitutions={this.props.institutions}
                     updateFilterText={this.updateFilterText}
                     filterText={this.state.filterText}
                     toggleUseFirst={this.toggleUseFirst}
@@ -247,7 +269,7 @@ class SideBar extends React.Component {
                     showFilters={this.state.showFilters}
                     toggleShowFilters={this.toggleShowFilters}
                 />
-                {this.state.institutions.length > 0
+                {this.props.institutions.length > 0
                     ? filteredInstitutions.length > 0
                         ? <ul className="tree" style={{ overflow: "hidden scroll" }}>
                             {filteredInstitutions.map((institution, uid) =>
