@@ -32,7 +32,7 @@ class Home extends React.Component {
             } else {
                 return Promise.reject("No projects found");
             }
-        })
+        });
 
     getImagery = () => fetch(this.props.documentRoot + "/get-all-imagery")
         .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -43,7 +43,7 @@ class Home extends React.Component {
             } else {
                 return Promise.reject("No imagery found");
             }
-        })
+        });
 
     getInstitutions = () => fetch(this.props.documentRoot + "/get-all-institutions")
         .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -54,7 +54,7 @@ class Home extends React.Component {
             } else {
                 return Promise.reject("No institutions found");
             }
-        })
+        });
 
     toggleSidebar = () => this.setState({ showSidePanel: !this.state.showSidePanel });
 
