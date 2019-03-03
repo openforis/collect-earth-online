@@ -650,19 +650,16 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, setSampleId) {
-    let select = new ol.interaction.Select({layers: [layer]});
+    const select = new ol.interaction.Select({layers: [layer]});
     select.set("title", interactionTitle);
     const action = function (event) {
         setSampleId(event.selected.length === 1 ? event.selected[0].get("sampleId") : -1);
         event.selected.forEach(function (feature) {
-            featureStyles[feature.get("sampleId")] = feature.getStyle();
+            featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
             feature.setStyle(null);
         });
         event.deselected.forEach(function (feature) {
-            const savedStyle = featureStyles[feature.get("sampleId")];
-            if (savedStyle != null && feature.getStyle() == null) {
-                feature.setStyle(savedStyle);
-            }
+            feature.setStyle(featureStyles[feature.get("sampleId")]);
         });
     };
     select.on("select", action);
@@ -675,16 +672,23 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, set
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures, setSampleId) {
-    let dragBox = new ol.interaction.DragBox({condition: ol.events.condition.platformModifierKeyOnly});
+    const dragBox = new ol.interaction.DragBox({condition: ol.events.condition.platformModifierKeyOnly});
     dragBox.set("title", interactionTitle);
     const boxstartAction = function () {
+        selectedFeatures.forEach(function (feature) {
+            feature.setStyle(featureStyles[feature.get("sampleId")]);
+        });
         selectedFeatures.clear();
     };
+
     const boxendAction = function () {
         const extent = dragBox.getGeometry().getExtent();
+        console.log("box ", featureStyles);
+        console.log("box ", selectedFeatures);
         const saveStyle = function (feature) {
             selectedFeatures.push(feature);
-            featureStyles[feature.get("sampleId")] = feature.getStyle();
+            featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
+            console.log("box selected ", feature.get("sampleId"));
             feature.setStyle(null);
             return false;
         };
