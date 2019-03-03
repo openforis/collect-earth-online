@@ -55,12 +55,6 @@ class Project extends React.Component {
             this.initProjectMap();
         }
 
-        if (this.state.mapConfig
-                && (this.state.mapConfig !== prevState.mapConfig
-                || this.state.projectDetails.id !== prevState.projectDetails.id)) {
-            this.updateProjectBoundary();
-        }
-
         if (this.state.mapConfig && this.state.projectDetails.id > 0
             && this.state.projectDetails.id !== prevState.projectDetails.id) {
             this.getProjectPlots();
@@ -73,21 +67,22 @@ class Project extends React.Component {
         }
 
         if (this.state.mapConfig
-            && (!this.state.useTemplatePlots || this.state.plotList.length === 0)
-            && (prevState.useTemplatePlots || prevState.plotList.length > 0)) {
+            && (this.state.mapConfig !== prevState.mapConfig
+                || this.state.projectDetails.id !== prevState.projectDetails.id
+                || this.state.useTemplatePlots !== prevState.useTemplatePlots)) {
 
-            mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
+            if (this.state.projectDetails.id > 0 && this.state.useTemplatePlots) {
+                this.showTemplateBounds();
+            } else {
+                mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
+                this.showDragBoxDraw();
+            }
         }
 
+        // Wait to draw plots until the plot list is loaded.
         if (this.state.mapConfig && this.state.plotList.length > 0 && this.state.useTemplatePlots
             && (prevState.plotList.length === 0 || !prevState.useTemplatePlots)) {
-
-            mercator.addVectorLayer(this.state.mapConfig,
-                                    "projectPlots",
-                                    mercator.plotsToVectorSource(this.state.plotList),
-                                    this.state.projectDetails.plotShape === "circle"
-                                        ? ceoMapStyles.yellowCircle
-                                        : ceoMapStyles.yellowSquare);
+            this.showTemplatePlots();
         }
 
         // Set sample distribution to a valid choice based on plot selection
@@ -278,7 +273,7 @@ class Project extends React.Component {
         this.setState({ mapConfig: newMapConfig });
     };
 
-    getProjectPlots() {
+    getProjectPlots = () => {
         const maxPlots = 300;
         fetch(this.props.documentRoot + "/get-project-plots/" + this.state.projectDetails.id + "/" + maxPlots)
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -288,49 +283,54 @@ class Project extends React.Component {
                 console.log(response);
                 alert("Error retrieving plot list. See console for details.");
             });
-    }
+    };
 
-    updateProjectBoundary() {
-        mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-
-        if (this.state.projectDetails.id === 0) {
-            // Enable dragbox interaction if we are creating a new project
-            const displayDragBoxBounds = (dragBox) => {
-                const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-                // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
-                this.setState({
-                    coordinates: {
-                        lonMin: extent[0],
-                        latMin: extent[1],
-                        lonMax: extent[2],
-                        latMax: extent[3],
-                    },
-                });
-            };
-
-            mercator.disableDragBoxDraw(this.state.mapConfig);
-            mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
-        } else {
-            // Extract bounding box coordinates from the project boundary and show on the map
-            const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
-            // FIXME like above, these values are stored in the state but never used.
+    showDragBoxDraw = () => {
+        const displayDragBoxBounds = (dragBox) => {
+            const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
             this.setState({
                 coordinates: {
-                    lonMin: boundaryExtent[0],
-                    latMin: boundaryExtent[1],
-                    lonMax: boundaryExtent[2],
-                    latMax: boundaryExtent[3],
+                    lonMin: extent[0],
+                    latMin: extent[1],
+                    lonMax: extent[2],
+                    latMax: extent[3],
                 },
             });
+        };
+        mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
+    };
 
-            // Display a bounding box with the project's AOI on the map and zoom to it
-            mercator.addVectorLayer(this.state.mapConfig,
-                                    "currentAOI",
-                                    mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
-                                    ceoMapStyles.yellowPolygon);
-            mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
-        }
-    }
+    showTemplateBounds = () => {
+        mercator.disableDragBoxDraw(this.state.mapConfig);
+        mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+        // Extract bounding box coordinates from the project boundary and show on the map
+        const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
+        this.setState({
+            coordinates: {
+                lonMin: boundaryExtent[0],
+                latMin: boundaryExtent[1],
+                lonMax: boundaryExtent[2],
+                latMax: boundaryExtent[3],
+            },
+        });
+
+        // Display a bounding box with the project's AOI on the map and zoom to it
+        mercator.addVectorLayer(this.state.mapConfig,
+                                "currentAOI",
+                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.projectDetails.boundary, true)),
+                                ceoMapStyles.yellowPolygon);
+        mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+    };
+
+    showTemplatePlots = () => {
+        mercator.addVectorLayer(this.state.mapConfig,
+                                "projectPlots",
+                                mercator.plotsToVectorSource(this.state.plotList),
+                                this.state.projectDetails.plotShape === "circle"
+                                    ? ceoMapStyles.yellowCircle
+                                    : ceoMapStyles.yellowSquare);
+    };
 
     render() {
         return (

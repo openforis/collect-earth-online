@@ -96,7 +96,7 @@ mercator.createSource = function (sourceConfig) {
         return new ol.source.TileWMS({serverType: "geoserver",
                                       url: sourceConfig.geoserverUrl,
                                       params: sourceConfig.geoserverParams});
-    }else if (sourceConfig.type == "GeeGateway") {
+    } else if (sourceConfig.type == "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
         //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
@@ -104,11 +104,9 @@ mercator.createSource = function (sourceConfig) {
         const url = sourceConfig.geeUrl;
         const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): "";
         let visParams;
-        try{
+        try {
             visParams = JSON.parse(sourceConfig.geeParams.visParams);
-        }
-        catch(e)
-        {
+        } catch (e) {
             visParams = sourceConfig.geeParams.visParams;
         }
         console.log(visParams);
@@ -121,12 +119,9 @@ mercator.createSource = function (sourceConfig) {
             cloudLessThan: cloudVar,
             visParams: visParams
         };
-        if(sourceConfig.geeParams.ImageAsset)
-        {
+        if (sourceConfig.geeParams.ImageAsset) {
             theJson.imageName = sourceConfig.geeParams.ImageAsset;
-        }
-        else if(sourceConfig.geeParams.ImageCollectionAsset)
-        {
+        } else if (sourceConfig.geeParams.ImageCollectionAsset) {
             theJson.imageName = sourceConfig.geeParams.ImageCollectionAsset;
         }
         const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
@@ -629,7 +624,7 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
 mercator.getInteractionByTitle = function (mapConfig, interactionTitle) {
     return mapConfig.map.getInteractions().getArray().find(
         function (interaction) {
-            return interaction.get("title") == interactionTitle;
+            return interaction.get("title") === interactionTitle;
         }
     );
 };
@@ -650,19 +645,16 @@ mercator.removeInteractionByTitle = function (mapConfig, interactionTitle) {
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, setSampleId) {
-    let select = new ol.interaction.Select({layers: [layer]});
+    const select = new ol.interaction.Select({layers: [layer]});
     select.set("title", interactionTitle);
     const action = function (event) {
         setSampleId(event.selected.length === 1 ? event.selected[0].get("sampleId") : -1);
         event.selected.forEach(function (feature) {
-            featureStyles[feature.get("sampleId")] = feature.getStyle();
+            featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
             feature.setStyle(null);
         });
         event.deselected.forEach(function (feature) {
-            const savedStyle = featureStyles[feature.get("sampleId")];
-            if (savedStyle != null && feature.getStyle() == null) {
-                feature.setStyle(savedStyle);
-            }
+            feature.setStyle(featureStyles[feature.get("sampleId")]);
         });
     };
     select.on("select", action);
@@ -675,16 +667,20 @@ mercator.makeClickSelect = function (interactionTitle, layer, featureStyles, set
 // then cleared on the map. When a feature is deselected, its saved
 // style is restored on the map.
 mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, selectedFeatures, setSampleId) {
-    let dragBox = new ol.interaction.DragBox({condition: ol.events.condition.platformModifierKeyOnly});
+    const dragBox = new ol.interaction.DragBox({condition: ol.events.condition.platformModifierKeyOnly});
     dragBox.set("title", interactionTitle);
     const boxstartAction = function () {
+        selectedFeatures.forEach(function (feature) {
+            feature.setStyle(featureStyles[feature.get("sampleId")]);
+        });
         selectedFeatures.clear();
     };
+
     const boxendAction = function () {
         const extent = dragBox.getGeometry().getExtent();
         const saveStyle = function (feature) {
             selectedFeatures.push(feature);
-            featureStyles[feature.get("sampleId")] = feature.getStyle();
+            featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
             feature.setStyle(null);
             return false;
         };
@@ -803,6 +799,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
             callBack.call(null, dragBox);
         }
     };
+    dragBox.set("title", interactionTitle);
     dragBox.on("boxend", boxendAction);
     return dragBox;
 };
