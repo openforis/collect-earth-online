@@ -285,29 +285,11 @@ class Project extends React.Component {
             });
     };
 
-    showDragBoxDraw = () => {
-        const displayDragBoxBounds = (dragBox) => {
-            const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-            // FIXME: Can we just set this.lonMin/lonMax/latMin/latMax instead?
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-            this.setState({
-                coordinates: {
-                    lonMin: extent[0],
-                    latMin: extent[1],
-                    lonMax: extent[2],
-                    latMax: extent[3],
-                },
-            });
-        };
-        mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
-    };
-
     showTemplateBounds = () => {
         mercator.disableDragBoxDraw(this.state.mapConfig);
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
         // Extract bounding box coordinates from the project boundary and show on the map
         const boundaryExtent = mercator.parseGeoJson(this.state.projectDetails.boundary, false).getExtent();
-        // FIXME like above, these values are stored in the state but never used.
         this.setState({
             coordinates: {
                 lonMin: boundaryExtent[0],
@@ -332,6 +314,22 @@ class Project extends React.Component {
                                 this.state.projectDetails.plotShape === "circle"
                                     ? ceoMapStyles.yellowCircle
                                     : ceoMapStyles.yellowSquare);
+    };
+
+    showDragBoxDraw = () => {
+        const displayDragBoxBounds = (dragBox) => {
+            const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+            this.setState({
+                coordinates: {
+                    lonMin: extent[0],
+                    latMin: extent[1],
+                    lonMax: extent[2],
+                    latMax: extent[3],
+                },
+            });
+        };
+        mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
 
     render() {

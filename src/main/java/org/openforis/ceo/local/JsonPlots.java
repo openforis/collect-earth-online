@@ -229,7 +229,7 @@ public class JsonPlots implements Plots {
         mapJsonFile("plot-data-" + projectId + ".json",
                 plot -> {
                     if (plot.get("id").getAsString().equals(plotId)) {
-                        var lastUser = plot.get("user").getAsString();
+                        var lastUser = getOrEmptyString(plot, "user").getAsString();
                         var samples = plot.get("samples").getAsJsonArray();
                         var updatedSamples = mapJsonArray(samples,
                                 sample -> {
