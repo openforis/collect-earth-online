@@ -96,7 +96,7 @@ mercator.createSource = function (sourceConfig) {
         return new ol.source.TileWMS({serverType: "geoserver",
                                       url: sourceConfig.geoserverUrl,
                                       params: sourceConfig.geoserverParams});
-    }else if (sourceConfig.type == "GeeGateway") {
+    } else if (sourceConfig.type == "GeeGateway") {
         //get variables and make ajax call to get mapid and token
         //then add xyz layer
         //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
@@ -104,11 +104,9 @@ mercator.createSource = function (sourceConfig) {
         const url = sourceConfig.geeUrl;
         const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): "";
         let visParams;
-        try{
+        try {
             visParams = JSON.parse(sourceConfig.geeParams.visParams);
-        }
-        catch(e)
-        {
+        } catch (e) {
             visParams = sourceConfig.geeParams.visParams;
         }
         console.log(visParams);
@@ -121,12 +119,9 @@ mercator.createSource = function (sourceConfig) {
             cloudLessThan: cloudVar,
             visParams: visParams
         };
-        if(sourceConfig.geeParams.ImageAsset)
-        {
+        if (sourceConfig.geeParams.ImageAsset) {
             theJson.imageName = sourceConfig.geeParams.ImageAsset;
-        }
-        else if(sourceConfig.geeParams.ImageCollectionAsset)
-        {
+        } else if (sourceConfig.geeParams.ImageCollectionAsset) {
             theJson.imageName = sourceConfig.geeParams.ImageCollectionAsset;
         }
         const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
@@ -629,7 +624,7 @@ mercator.addPlotOverviewLayers = function (mapConfig, plots, shape) {
 mercator.getInteractionByTitle = function (mapConfig, interactionTitle) {
     return mapConfig.map.getInteractions().getArray().find(
         function (interaction) {
-            return interaction.get("title") == interactionTitle;
+            return interaction.get("title") === interactionTitle;
         }
     );
 };
@@ -683,12 +678,9 @@ mercator.makeDragBoxSelect = function (interactionTitle, layer, featureStyles, s
 
     const boxendAction = function () {
         const extent = dragBox.getGeometry().getExtent();
-        console.log("box ", featureStyles);
-        console.log("box ", selectedFeatures);
         const saveStyle = function (feature) {
             selectedFeatures.push(feature);
             featureStyles[feature.get("sampleId")] = feature.getStyle() !== null ? feature.getStyle() : featureStyles[feature.get("sampleId")];
-            console.log("box selected ", feature.get("sampleId"));
             feature.setStyle(null);
             return false;
         };
@@ -807,6 +799,7 @@ mercator.makeDragBoxDraw = function (interactionTitle, layer, callBack) {
             callBack.call(null, dragBox);
         }
     };
+    dragBox.set("title", interactionTitle);
     dragBox.on("boxend", boxendAction);
     return dragBox;
 };
