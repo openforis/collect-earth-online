@@ -285,6 +285,22 @@ class Project extends React.Component {
             });
     };
 
+    showDragBoxDraw = () => {
+        const displayDragBoxBounds = (dragBox) => {
+            const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+            this.setState({
+                coordinates: {
+                    lonMin: extent[0],
+                    latMin: extent[1],
+                    lonMax: extent[2],
+                    latMax: extent[3],
+                },
+            });
+        };
+        mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
+    };
+
     showTemplateBounds = () => {
         mercator.disableDragBoxDraw(this.state.mapConfig);
         mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
@@ -314,22 +330,6 @@ class Project extends React.Component {
                                 this.state.projectDetails.plotShape === "circle"
                                     ? ceoMapStyles.yellowCircle
                                     : ceoMapStyles.yellowSquare);
-    };
-
-    showDragBoxDraw = () => {
-        const displayDragBoxBounds = (dragBox) => {
-            const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
-            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
-            this.setState({
-                coordinates: {
-                    lonMin: extent[0],
-                    latMin: extent[1],
-                    lonMax: extent[2],
-                    latMax: extent[3],
-                },
-            });
-        };
-        mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
 
     render() {
