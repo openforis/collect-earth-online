@@ -122,7 +122,7 @@ public class PostgresPlots implements Plots {
         }
     }
 
-    public String getPlotById(Request req, Response res) {
+    public synchronized String getPlotById(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));
@@ -150,7 +150,7 @@ public class PostgresPlots implements Plots {
         }
     }
 
-    public String getNextPlot(Request req, Response res) {
+    public synchronized String getNextPlot(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));
@@ -178,7 +178,7 @@ public class PostgresPlots implements Plots {
         }
     }
 
-    public String getPrevPlot(Request req, Response res) {
+    public synchronized String getPrevPlot(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));

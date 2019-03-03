@@ -92,7 +92,7 @@ public class JsonPlots implements Plots {
         }
     }
 
-    public String getPlotById(Request req, Response res) {
+    public synchronized String getPlotById(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));
@@ -109,7 +109,7 @@ public class JsonPlots implements Plots {
         );
     }
 
-    public String getNextPlot(Request req, Response res) {
+    public synchronized String getNextPlot(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));
@@ -127,7 +127,7 @@ public class JsonPlots implements Plots {
 
     }
 
-    public String getPrevPlot(Request req, Response res) {
+    public synchronized String getPrevPlot(Request req, Response res) {
         final var getUserPlots =       Boolean.parseBoolean(req.queryParams("getUserPlots"));
         final var projectId =          Integer.parseInt(req.queryParams("projectId"));
         final var plotId =             Integer.parseInt(req.queryParams("plotId"));
@@ -229,9 +229,7 @@ public class JsonPlots implements Plots {
         mapJsonFile("plot-data-" + projectId + ".json",
                 plot -> {
                     if (plot.get("id").getAsString().equals(plotId)) {
-                        var currentAnalyses = plot.get("analyses").getAsInt();
-                        plot.addProperty("analyses", currentAnalyses + 1);
-                        plot.addProperty("user", userName);
+                        var lastUser = plot.get("user").getAsString();
                         var samples = plot.get("samples").getAsJsonArray();
                         var updatedSamples = mapJsonArray(samples,
                                 sample -> {
@@ -240,39 +238,51 @@ public class JsonPlots implements Plots {
                                     sample.add("userImage", userImages.get(sampleId));
                                     return sample;
                                 });
-                        plot.add("samples", updatedSamples);
-                        plot.addProperty("collectionTime", collectionTime);
-                        plot.addProperty("confidence", confidence == -1 ? null : Integer.toString(confidence));
-                        plot.addProperty("collectionStart", collectionStart);
-
-                        return unlockPlot(plot, userId);
+                        if (lastUser.equals("")) {
+                            var currentAnalyses = plot.get("analyses").getAsInt();
+                            plot.addProperty("analyses", currentAnalyses + 1);
+                            plot.addProperty("user", userName);
+                            plot.addProperty("collectionTime", collectionTime);
+                            plot.addProperty("confidence", confidence == -1 ? null : Integer.toString(confidence));
+                            plot.addProperty("collectionStart", collectionStart);
+                            plot.add("samples", updatedSamples);
+                            updateUserStats(projectId, collectionStart, collectionTime, userName);
+                            return unlockPlot(plot, userId);
+                        } else if (lastUser.equals(userName)) {
+                            plot.add("samples", updatedSamples);
+                            return unlockPlot(plot, userId); 
+                        } else {
+                            return unlockPlot(plot, userId);
+                        }
                     } else {
                         return plot;
                     }
                 });
-        // add new stats to project summary for speed in retreiving
+        return "";
+    }
+
+    private synchronized static String updateUserStats(String projectId, Long collectionStart, Long collectionTime, String userName) {
         mapJsonFile("project-list.json",
-                project -> {
-                    if (project.get("id").getAsString().equals(projectId)) {
+            project -> {
+                if (project.get("id").getAsString().equals(projectId)) {
 
-                        var newUserStats = new JsonObject();
-                        newUserStats.addProperty("milliSecs", (int) (collectionTime - collectionStart));
-                        newUserStats.addProperty("plots", 1);
-                        newUserStats.addProperty("timedPlots", 1);
-                        newUserStats.addProperty("user", userName);
+                    var newUserStats = new JsonObject();
+                    newUserStats.addProperty("milliSecs", (int) (collectionTime - collectionStart));
+                    newUserStats.addProperty("plots", 1);
+                    newUserStats.addProperty("timedPlots", 1);
+                    newUserStats.addProperty("user", userName);
 
-                        project.add("userStats", 
-                                    sumUserInfo(project.has("userStats") 
-                                                    ? project.get("userStats").getAsJsonArray()
-                                                    : new JsonArray()
-                                                , newUserStats)
-                                    );
-                        return project;
-                    } else {
-                        return project;
-                    }
-                });
-
+                    project.add("userStats", 
+                                sumUserInfo(project.has("userStats") 
+                                                ? project.get("userStats").getAsJsonArray()
+                                                : new JsonArray()
+                                            , newUserStats)
+                                );
+                    return project;
+                } else {
+                    return project;
+                }
+            });
         return "";
     }
 
