@@ -9,17 +9,15 @@ class Geodash extends React.Component {
                        callbackComplete: false,
                        left: 0,
                        ptop: 0,
-                       projAOI: Geodash.getParameterByName("aoi"),
+                       projAOI: this.getParameterByName("aoi"),
                        projPairAOI: "",
-                       pid: Geodash.getParameterByName("pid")
+                       pid: this.getParameterByName("pid")
         };
         let theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
         this.state.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
     }
-    static defaultProps = {
-        theURI: window.location.origin + "/geo-dash"
-    };
-    static getParameterByName (name, url) {
+
+    getParameterByName = (name, url) => {
         const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
         const results = regex.exec(decodeURIComponent(url || window.location.href));
         return results
@@ -27,9 +25,10 @@ class Geodash extends React.Component {
                 ? decodeURIComponent(results[2].replace(/\+/g, " "))
                 : ""
             : null;
-    }
+    };
+
     componentDidMount() {
-        fetch(this.props.theURI + "/id/" + this.state.pid)
+        fetch(this.props.documentRoot + "/geo-dash/id/" + this.state.pid)
             .then(response => response.json())
             .then(data => data.widgets.map(function(widget){
                 widget.isFull = false;
@@ -39,6 +38,7 @@ class Geodash extends React.Component {
                 return widget;}))
             .then(data => this.setState({ widgets: data, callbackComplete: true}));
     }
+
     handleFullScreen = widget => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
@@ -48,6 +48,7 @@ class Geodash extends React.Component {
                       () => { this.updateSize(widget);}
         );
     };
+
     handleSliderChange = widget => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
@@ -55,6 +56,7 @@ class Geodash extends React.Component {
         widgets[index].sliderType = widgets[index].sliderType === "opacity"? "swipe": "opacity";
         this.setState({ widgets });
     };
+
     handleSwipeChange = (widget, id, evt) => {
         const widgets = [...this.state.widgets];
         const index = widgets.indexOf(widget);
@@ -62,15 +64,9 @@ class Geodash extends React.Component {
         widgets[index].swipeValue = evt.target.value;
         this.setState({ widgets });
     };
-    updateSize(which)
-    {
-        if(which.isFull)
-        {
-            document.body.classList.remove("bodyfull");
-        }
-        else{
-            document.body.classList.add("bodyfull");
-        }
+
+    updateSize = which => {
+        which.isFull ? document.body.classList.remove("bodyfull") : document.body.classList.add("bodyfull");
         const doc = document.documentElement;
         if((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0) === 0)
         {
@@ -81,7 +77,8 @@ class Geodash extends React.Component {
             this.setState({left: (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0), ptop: (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0)});
             window.scrollTo(0,0);
         }
-    }
+    };
+
     render() {
         return ( <React.Fragment>
             <Widgets widgets={this.state.widgets}
@@ -91,6 +88,8 @@ class Geodash extends React.Component {
                      onSliderChange={this.handleSliderChange}
                      onSwipeChange={this.handleSwipeChange}
                      callbackComplete={this.state.callbackComplete}
+                     getParameterByName={this.getParameterByName}
+                     documentRoot={this.props.documentRoot}
             />
         </React.Fragment> );
     }
@@ -111,6 +110,8 @@ class Widgets extends React.Component {
                         onFullScreen ={this.props.onFullScreen}
                         onSliderChange = {this.props.onSliderChange}
                         onSwipeChange = {this.props.onSwipeChange}
+                        getParameterByName={this.props.getParameterByName}
+                        documentRoot={this.props.documentRoot}
                     />
                 ))}
             </div> );
@@ -139,33 +140,65 @@ class Widgets extends React.Component {
 class Widget extends React.Component {
     constructor(props) {
         super(props);
-        this.imageCollectionList = ["ImageElevation", "ImageCollectionCustom", "addImageCollection", "ndviImageCollection", "ImageCollectionNDVI", "ImageCollectionEVI", "ImageCollectionEVI2", "ImageCollectionNDWI", "ImageCollectionNDMI", "ImageCollectionLANDSAT5", "ImageCollectionLANDSAT7", "ImageCollectionLANDSAT8", "ImageCollectionSentinel2"];
-        this.graphControlList = ["customTimeSeries", "timeSeriesGraph", "ndviTimeSeries", "ndwiTimeSeries", "eviTimeSeries", "evi2TimeSeries", "ndmiTimeSeries"];
+        this.imageCollectionList = ["ImageElevation",
+                                    "ImageCollectionCustom",
+                                    "addImageCollection",
+                                    "ndviImageCollection",
+                                    "ImageCollectionNDVI",
+                                    "ImageCollectionEVI",
+                                    "ImageCollectionEVI2",
+                                    "ImageCollectionNDWI",
+                                    "ImageCollectionNDMI",
+                                    "ImageCollectionLANDSAT5",
+                                    "ImageCollectionLANDSAT7",
+                                    "ImageCollectionLANDSAT8",
+                                    "ImageCollectionSentinel2"];
+        this.graphControlList = ["customTimeSeries",
+                                 "timeSeriesGraph",
+                                 "ndviTimeSeries",
+                                 "ndwiTimeSeries",
+                                 "eviTimeSeries",
+                                 "evi2TimeSeries",
+                                 "ndmiTimeSeries"];
     }
-    static generategridcolumn(x, w){
+
+    generategridcolumn = (x, w) => {
         return (x + 1) + " / span " + w;
-    }
-    static generategridrow(y, h){
+    };
+
+    generategridrow = (y, h)=> {
         return (y + 1) + " / span " + h;
-    }
-    static getClassNames(fullState, c, r)
-    {
-        let classnames = "placeholder";
-        if(fullState)
-        {
-            classnames += " fullwidget";
-        }
-        else{
-            classnames += c.includes("span 12")? " fullcolumnspan": c.includes("span 9")? " columnSpan9": c.includes("span 6")? " columnSpan6": " columnSpan3";
-            classnames += r.includes("span 2")? " rowSpan2": r.includes("span 3")? " rowSpan3": " rowSpan1";
-        }
-        return classnames;
-    }
-    getWidgetHtml(widget, onSliderChange, onSwipeChange){
+    };
+
+    getColumnClass = c => {
+        return c.includes("span 12")? " fullcolumnspan": c.includes("span 9")? " columnSpan9": c.includes("span 6")? " columnSpan6": " columnSpan3";
+    };
+
+    getRowClass = r =>{
+        return r.includes("span 2")? " rowSpan2": r.includes("span 3")? " rowSpan3": " rowSpan1";
+    };
+
+    getClassNames = (fullState, c, r) => {
+        return fullState ? "placeholder fullwidget" : "placeholder" + this.getColumnClass(c) + this.getRowClass(r);
+    };
+
+    getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
         if(widget.gridcolumn || widget.layout)
         {
-            return (<div className={Widget.getClassNames(widget.isFull, widget.gridcolumn != null? widget.gridcolumn: "", widget.gridrow != null? widget.gridrow: widget.layout != null? "span " + widget.layout.h: "")}
-                         style={{gridColumn:widget.gridcolumn != null? widget.gridcolumn: Widget.generategridcolumn(widget.layout.x, widget.layout.w), gridRow:widget.gridrow != null? widget.gridrow: Widget.generategridrow(widget.layout.y, widget.layout.h)}}>
+            return (<div className={this.getClassNames(widget.isFull,
+                                                       widget.gridcolumn != null
+                                                           ? widget.gridcolumn
+                                                           : "",
+                                                       widget.gridrow != null
+                                                           ? widget.gridrow
+                                                           : widget.layout != null
+                                                               ? "span " + widget.layout.h: "")}
+                         style={{gridColumn:widget.gridcolumn != null
+                             ? widget.gridcolumn
+                             : this.generategridcolumn(widget.layout.x, widget.layout.w),
+                                 gridRow:widget.gridrow != null
+                                     ? widget.gridrow
+                                     : this.generategridrow(widget.layout.y, widget.layout.h)}}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
@@ -181,7 +214,9 @@ class Widget extends React.Component {
             </div>);
         }
         else{
-            return (<div className={widget.isFull? "fullwidget columnSpan3 rowSpan1 placeholder": "columnSpan3 rowSpan1 placeholder"}>
+            return (<div className={widget.isFull
+                ? "fullwidget columnSpan3 rowSpan1 placeholder"
+                : "columnSpan3 rowSpan1 placeholder"}>
                 <div className="panel panel-default" id={"widget_" + widget.id}>
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
@@ -196,12 +231,13 @@ class Widget extends React.Component {
                 </div>
             </div>);
         }
-    }
-    getWidgetInnerHtml(widget, onSliderChange, onSwipeChange){
+    };
+
+    getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         let wtext = widget.properties[0];
         if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0))
         {
-            return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange}/>
+            return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange} getParameterByName={this.props.getParameterByName}  documentRoot={this.props.documentRoot}/>
 
             </div>;
         }else if (this.graphControlList.includes(wtext)) {
@@ -212,7 +248,8 @@ class Widget extends React.Component {
         else {
             return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" />;
         }
-    }
+    };
+
     render() {
         const {widget} = this.props;
         return (    <React.Fragment>{ this.getWidgetHtml(widget, this.props.onSliderChange, this.props.onSwipeChange) }</React.Fragment>);
@@ -228,8 +265,8 @@ class MapWidget extends React.Component {
             geeTimeOut: null
         };
     }
-    static getRasterByBasemapConfig(basemap)
-    {
+
+    getRasterByBasemapConfig = basemap => {
         let raster;
         if(basemap == null || basemap.id === "osm")
         {
@@ -244,51 +281,39 @@ class MapWidget extends React.Component {
             });
         }
         return raster;
-    }
-    static getGatewayUrl(widget, collectionName){
-        let url = "";
-        if (collectionName === "Elevation"){
-            console.log(widget.ImageAsset);
-        }
-        if (widget.filterType != null && widget.filterType.length > 0){
-            const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
-            url = "https://ceodev.servirglobal.net:8888/" + fts[widget.filterType];
-        }
-        else if (widget.ImageAsset && widget.ImageAsset.length > 0)
-        {
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/image";
-            url = "https://ceodev.servirglobal.net:8888/image";
-        }
-        else if (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-        {
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
-            url = "https://ceodev.servirglobal.net:8888/ImageCollectionAsset";
-        }
-        else if ("ImageCollectionCustom" === widget.properties[0]){
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
-            url = "https://ceodev.servirglobal.net:8888/meanImageByMosaicCollections";
-        }
-        else if (collectionName.trim().length > 0)
-        {
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
-            url = "https://ceodev.servirglobal.net:8888/cloudMaskImageByMosaicCollection";
+    };
 
-        }
-        else{
-            url = window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
-            url = "https://ceodev.servirglobal.net:8888/ImageCollectionbyIndex";
-        }
-        return url;
-    }
-    static getImageParams(widget){
+    getGatewayUrl = (widget, collectionName) => {
+        const fts = {"LANDSAT5": "Landsat5Filtered",
+                     "LANDSAT7": "Landsat7Filtered",
+                     "LANDSAT8": "Landsat8Filtered",
+                     "Sentinel2": "FilteredSentinel"};
+        const resourcePath = (widget.filterType && widget.filterType.length > 0)
+            ? fts[widget.filterType]
+            : (widget.ImageAsset && widget.ImageAsset.length > 0)
+                ? "image"
+                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+                    ? "ImageCollectionAsset"
+                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
+                        ? "meanImageByMosaicCollections"
+                        : (collectionName.trim().length > 0)
+                            ? "cloudMaskImageByMosaicCollection"
+                            : "ImageCollectionbyIndex";
+        return window.location.protocol + "//" + window.location.hostname + ":8888/" + resourcePath;
+    };
+
+    getImageParams = widget => {
         let visParams;
         if (widget.visParams) {
-            try {
-                visParams = JSON.parse(widget.visParams);
+            if(typeof widget.visParams === "string") {
+                try {
+                    visParams = JSON.parse(widget.visParams);
+                }
+                catch (e) {
+                    visParams = widget.visParams;
+                }
             }
-            catch (e) {
-                console.log("parse issue");
+            else{
                 visParams = widget.visParams;
             }
         }
@@ -305,7 +330,7 @@ class MapWidget extends React.Component {
                 }
             }
             catch (e) {
-                //alert(0);
+                console.log(e.message);
             }
             visParams = {
                 min: min,
@@ -314,20 +339,50 @@ class MapWidget extends React.Component {
             };
         }
         return visParams;
-    }
-    static pauseGeeLayer(e) {
+    };
+
+    pauseGeeLayer = e => {
         let layers = e.target.getLayers().getArray();
         layers.forEach(function(lyr){
             if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0){
                 lyr.setVisible(false);
             }
         });
-    }
+    };
+
+    getRequestedIndex = collectionName => {
+        return collectionName === "ImageCollectionNDVI"
+            ? "NDVI"
+            : collectionName === "ImageCollectionEVI"
+                ? "EVI"
+                : collectionName === "ImageCollectionEVI2"
+                    ? "EVI2"
+                    : collectionName === "ImageCollectionNDMI"
+                        ? "NDMI"
+                        : collectionName === "ImageCollectionNDWI"
+                            ? "NDWI"
+                            : "";
+    };
+
+    convertCollectionName = collectionName => {
+        return collectionName === "ImageCollectionNDVI"
+            ? ""
+            : collectionName === "ImageCollectionEVI"
+                ? ""
+                : collectionName === "ImageCollectionEVI2"
+                    ? ""
+                    : collectionName === "ImageCollectionNDMI"
+                        ? ""
+                        : collectionName === "ImageCollectionNDWI"
+                            ? ""
+                            : collectionName;
+    };
+
     componentDidMount()
     {
         const widget = this.props.widget;
         const basemap = widget.baseMap;
-        const raster =  MapWidget.getRasterByBasemapConfig(basemap);
+        const raster =  this.getRasterByBasemapConfig(basemap);
         let projAOI = this.props.projAOI;
         let projPairAOI= this.props.projPairAOI;
 
@@ -353,7 +408,7 @@ class MapWidget extends React.Component {
             });
         }
 
-        map.on("movestart", MapWidget.pauseGeeLayer);
+        map.on("movestart", this.pauseGeeLayer);
         map.on("moveend", e => this.resumeGeeLayer(e));
         this.setState({mapRef: map});
 
@@ -388,24 +443,14 @@ class MapWidget extends React.Component {
             bands = widget.properties[4];
         }
         widget.bands = bands;
-        // let min = "";
-        // let max = "0.3";
-        // let visParams;
 
         /*********************Check here if widget is dualImageCollection *********************/
         if (widget.dualImageCollection  && widget.dualImageCollection != null){
-
-            //still have to make the same postObject, but set a different callback to recall for second layer
-            // might be best to rewrite the other at the same time.
-            //hmmmm, maybe i can handle all of this logic in the callback instead by setting a different variable
-
-            // work on image asset here there will be a variable imageAsset in the dualImageCollection in which case we should call the gateway /image with imageParams
-
             let firstImage = widget.dualImageCollection[0];
             let secondImage = widget.dualImageCollection[1];
             collectionName = firstImage.collectionType;
-            requestedIndex = collectionName === "ImageCollectionNDVI" ? "NDVI" : collectionName === "ImageCollectionEVI" ? "EVI" : collectionName === "ImageCollectionEVI2" ? "EVI2" : collectionName === "ImageCollectionNDMI" ? "NDMI" : collectionName === "ImageCollectionNDWI" ? "NDWI" : "";
-            collectionName = collectionName === "ImageCollectionNDVI" ? "" : collectionName === "ImageCollectionEVI" ? "" : collectionName === "ImageCollectionEVI2" ? "" : collectionName === "ImageCollectionNDMI" ? "" : collectionName === "ImageCollectionNDWI" ? "" : collectionName;
+            requestedIndex = this.getRequestedIndex(collectionName);
+            collectionName = this.convertCollectionName(collectionName);
             dateFrom = firstImage.startDate;
             dateTo = firstImage.endDate;
 
@@ -415,12 +460,12 @@ class MapWidget extends React.Component {
             shortWidget.properties.push(collectionName);
             shortWidget.ImageAsset = firstImage.imageAsset;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            url = MapWidget.getGatewayUrl(shortWidget, collectionName);
+            url = this.getGatewayUrl(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null? firstImage.min: "";
             shortWidget.max = firstImage.max != null? firstImage.max: "";
             shortWidget.band = firstImage.band != null? firstImage.band: "";
-            postObject.visParams = MapWidget.getImageParams(shortWidget);
+            postObject.visParams = this.getImageParams(shortWidget);
 
             if (postObject.visParams.cloudLessThan) {
                 postObject.bands = postObject.visParams.bands;
@@ -428,14 +473,11 @@ class MapWidget extends React.Component {
                 postObject.max = postObject.visParams.max;
                 postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
             }
-
-
-
             //Create the fetch object for the second call here
             dualImageObject = {};
             dualImageObject.collectionName = secondImage.collectionType;
-            dualImageObject.index = dualImageObject.collectionName === "ImageCollectionNDVI" ? "NDVI" : dualImageObject.collectionName === "ImageCollectionEVI" ? "EVI" : dualImageObject.collectionName === "ImageCollectionEVI2" ? "EVI2" : dualImageObject.collectionName === "ImageCollectionNDMI" ? "NDMI" : dualImageObject.collectionName === "ImageCollectionNDWI" ? "NDWI" : "";
-            dualImageObject.collectionName = dualImageObject.collectionName === "ImageCollectionNDVI" ? "" : dualImageObject.collectionName === "ImageCollectionEVI" ? "" : dualImageObject.collectionName === "ImageCollectionEVI2" ? "" : dualImageObject.collectionName === "ImageCollectionNDMI" ? "" : dualImageObject.collectionName === "ImageCollectionNDWI" ? "" : dualImageObject.collectionName;
+            dualImageObject.index = this.getRequestedIndex(dualImageObject.collectionName);
+            dualImageObject.collectionName = this.convertCollectionName(dualImageObject.collectionName);
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
             let shortWidget2 = {};
@@ -444,7 +486,7 @@ class MapWidget extends React.Component {
             shortWidget2.properties.push(dualImageObject.collectionName);
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.url = MapWidget.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
+            dualImageObject.url = this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
 
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null? secondImage.min: "";
@@ -457,9 +499,7 @@ class MapWidget extends React.Component {
                 dualImageObject.cloudLessThan = parseInt(shortWidget2.visParams.cloudLessThan);
             }
 
-
-
-            dualImageObject.visParams = MapWidget.getImageParams(shortWidget2);
+            dualImageObject.visParams = this.getImageParams(shortWidget2);
             // work on image asset here there will be a variable imageAsset in the dualImageCollection in which case we should call the gateway /image with imageParams
             if (firstImage.imageAsset){
                 postObject.imageName = firstImage.imageAsset;
@@ -478,21 +518,17 @@ class MapWidget extends React.Component {
                 dualImageObject.imageName = secondImage.ImageCollectionAsset;
                 dualImageObject.visParams = secondImage.visParams;
             }
-
         }
         else {
-
-            /***************This is what happens if not***********************/
-
             collectionName = widget.properties[1];
             dateFrom = widget.properties[2];
             dateTo = widget.properties[3];
-            requestedIndex = widget.properties[0] === "ImageCollectionNDVI" ? "NDVI" : widget.properties[0] === "ImageCollectionEVI" ? "EVI" : widget.properties[0] === "ImageCollectionEVI2" ? "EVI2" : widget.properties[0] === "ImageCollectionNDMI" ? "NDMI" : widget.properties[0] === "ImageCollectionNDWI" ? "NDWI" : "";
+            requestedIndex = this.getRequestedIndex(widget.properties[0]);
             if (widget.properties[0] === "ImageElevation"){
                 widget.ImageAsset = "USGS/SRTMGL1_003";
             }
-            url = MapWidget.getGatewayUrl(widget, collectionName);
-            postObject.visParams = MapWidget.getImageParams(widget);
+            url = this.getGatewayUrl(widget, collectionName);
+            postObject.visParams = this.getImageParams(widget);
 
             if (postObject.visParams.cloudLessThan) {
                 postObject.bands = postObject.visParams.bands;
@@ -537,9 +573,7 @@ class MapWidget extends React.Component {
             })
             .then(isValid =>{
                 if (isValid) {
-                    // let secondObject;
                     if (widget.dualLayer) {
-                        // secondObject = postObject;
                         postObject.dateFrom = widget.dualStart;
                         postObject.dateTo = widget.dualEnd;
 
@@ -554,10 +588,7 @@ class MapWidget extends React.Component {
                             .then(res => res.json())
                             .then(data => {
                                 if (data.hasOwnProperty("mapid")) {
-                                    let mapId = data.mapid;
-                                    let token = data.token;
-
-                                    this.addDualLayer(mapId, token, "widgetmap_" + widget.id);
+                                    this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
                                 } else {
                                     console.warn("Wrong Data Returned");
                                 }
@@ -583,10 +614,7 @@ class MapWidget extends React.Component {
                                 .then(res => res.json())
                                 .then(data =>{
                                     if (data.hasOwnProperty("mapid")) {
-                                        let mapId = data.mapid;
-                                        let token = data.token;
-
-                                        this.addDualLayer(mapId, token, "widgetmap_" + widget.id);
+                                        this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
                                     } else {
                                         console.warn("Wrong Data Returned");
                                     }
@@ -597,10 +625,12 @@ class MapWidget extends React.Component {
             });
         window.addEventListener("resize", () => this.handleResize());
     }
+
     componentDidUpdate(){
         this.state.mapRef.updateSize();
     }
-    getSliderControl(){
+
+    getSliderControl = () => {
         let widget = this.props.widget;
         const onSliderChange = this.props.onSliderChange;
         const onSwipeChange = this.props.onSwipeChange;
@@ -636,9 +666,9 @@ class MapWidget extends React.Component {
                           onInput = {evt => this.onOpacityChange( evt )}
             />;
         }
-    }
-    onOpacityChange(evt)
-    {
+    };
+
+    onOpacityChange = evt => {
         try{
             this.setState({opacity: evt.target.value});
             this.state.mapRef.getLayers().forEach(lyr => {
@@ -648,15 +678,16 @@ class MapWidget extends React.Component {
             });
         }
         catch(e){console.log(e.message);}
-    }
-    handleResize(){
+    };
+
+    handleResize = () => {
         try {
             this.state.mapRef.updateSize();
         }
         catch(e){console.log("resize issue");}
-    }
-    resumeGeeLayer(e)
-    {
+    };
+
+    resumeGeeLayer = e => {
         try {
             if (this.state && this.state.geeTimeOut) {
                 window.clearTimeout(this.state.geeTimeOut);
@@ -674,22 +705,23 @@ class MapWidget extends React.Component {
             });
         }
         catch(e){console.log(e.message);}
-    }
-    addTileServer (imageid, token, mapdiv, isDual) {
-        let googleLayer = new ol.layer.Tile({
-            source: new ol.source.XYZ({
-                url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
-            }),
-            id: mapdiv
-        });
+    };
+
+    addTileServer = (imageid, token, mapdiv, isDual) => {
         window.setTimeout(() => {
-            this.state.mapRef.addLayer(googleLayer);
+            this.state.mapRef.addLayer(new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
+                }),
+                id: mapdiv
+            }));
             if (!isDual) {
                 this.addBuffer(this.state.mapRef);
             }
         }, 250);
-    }
-    addDualLayer (imageid, token, mapdiv) {
+    };
+
+    addDualLayer = (imageid, token, mapdiv) => {
         let googleLayer = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token
@@ -713,16 +745,15 @@ class MapWidget extends React.Component {
         });
         swipe.addEventListener("input", function() {this.state.mapRef.render();}, false);
         this.addBuffer(this.state.mapRef);
-    }
-    addBuffer (whichMap) {
-        "use strict";
+    };
+
+    addBuffer = whichMap => {
         try {
-            //check to see the shape here...
-            const bradius = Geodash.getParameterByName("bradius");
-            const bcenter = Geodash.getParameterByName("bcenter");
-            const plotshape = Geodash.getParameterByName("plotshape");
-            const projectID = Geodash.getParameterByName("pid");
-            const plotID = Geodash.getParameterByName("plotid");
+            const bradius = this.props.getParameterByName("bradius");
+            const bcenter = this.props.getParameterByName("bcenter");
+            const plotshape = this.props.getParameterByName("plotshape");
+            const projectID = this.props.getParameterByName("pid");
+            const plotID = this.props.getParameterByName("plotid");
             if (plotshape && plotshape === "square") {
                 const centerPoint = new ol.geom.Point(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"));
                 const pointFeature = new ol.Feature(centerPoint);
@@ -774,7 +805,7 @@ class MapWidget extends React.Component {
                 whichMap.addLayer(layer);
             }
             else{
-                fetch(window.location.origin + "/geo-dash" + "/get-project-plot/" + projectID + "/" + plotID)
+                fetch(this.props.documentRoot + "/geo-dash" + "/get-project-plot/" + projectID + "/" + plotID)
                     .then(res => res.json())
                     .then(data => {
                         const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
@@ -803,12 +834,11 @@ class MapWidget extends React.Component {
         } catch (e) {
             console.warn("buffer failed: " + e.message);
         }
-    }
-    render() {
-        const widget = this.props.widget;
+    };
 
+    render() {
         return  <React.Fragment>
-            <div id={"widgetmap_" + widget.id} className="minmapwidget" style={{width:"100%", minHeight:"200px" }}>
+            <div id={"widgetmap_" + this.props.widget.id} className="minmapwidget" style={{width:"100%", minHeight:"200px" }}>
             </div>
             {this.getSliderControl()}
         </React.Fragment>;
@@ -830,13 +860,14 @@ class GraphWidget extends React.Component {
                     (dd>9 ? "" : "0") + dd
             ].join("-");
         };
-
     }
-    static sortData(a, b){
+
+    sortData = (a, b) => {
         if (a[0] < b[0]) return -1;
         if (a[0] > b[0]) return 1;
         return 0;
-    }
+    };
+
     componentDidMount()
     {
         const widget = this.props.widget;
@@ -844,7 +875,6 @@ class GraphWidget extends React.Component {
         let indexName = widget.properties[4];
         let date = new Date();
         let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex":  window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex2";
-        url = collectionName.trim().length > 0 ? "https://ceodev.servirglobal.net:8888/timeSeriesIndex":  "https://ceodev.servirglobal.net:8888/timeSeriesIndex2";
 
         fetch(url, {
             method: "POST",
@@ -876,7 +906,7 @@ class GraphWidget extends React.Component {
                                 timeseriesData.push([value[0], value[1]]);
                             }
                         });
-                        timeseriesData = timeseriesData.sort(GraphWidget.sortData);
+                        timeseriesData = timeseriesData.sort(this.sortData);
                         this.setState({graphRef: this.createChart(widget.id, indexName, timeseriesData, indexName)});
                     } else {
                         console.warn("Wrong Data Returned");
@@ -885,10 +915,12 @@ class GraphWidget extends React.Component {
             });
         window.addEventListener("resize", () => this.handleResize());
     }
+
     componentDidUpdate(){
         this.handleResize();
     }
-    handleResize() {
+
+    handleResize = () => {
         try {
             if (this.state.graphRef) {
                 const gwidget = document.getElementById("widgetgraph_" + this.props.widget.id);
@@ -898,9 +930,9 @@ class GraphWidget extends React.Component {
         catch(e){
             console.log(e.message);
         }
-    }
+    };
 
-    createChart (wIndex, wText, wTimeseriesData, indexName) {
+    createChart = (wIndex, wText, wTimeseriesData, indexName) => {
         "use strict";
         return Highcharts.chart("graphcontainer_" + wIndex, {
             chart: {
@@ -965,7 +997,8 @@ class GraphWidget extends React.Component {
             document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
             document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
         });
-    }
+    };
+
     render() {
         const widget = this.props.widget;
 
@@ -981,7 +1014,8 @@ class StatsWidget extends React.Component {
         super(props);
         this.state = {totalPop:"", area:"", elevation:""};
     }
-    static numberWithCommas(x) {
+
+    numberWithCommas = x => {
         if (typeof x === "number") {
             try {
                 const parts = x.toString().split(".");
@@ -992,8 +1026,9 @@ class StatsWidget extends React.Component {
             }
         }
         return "N/A";
-    }
-    static calculateArea (poly) {
+    };
+
+    calculateArea = poly => {
         const sphere = new ol.Sphere(6378137);
         const area_m = sphere.geodesicArea(poly);
         let area_ha = area_m / 10000;
@@ -1001,8 +1036,9 @@ class StatsWidget extends React.Component {
             area_ha = area_ha * -1;
         }
         area_ha = Math.round(area_ha * Math.pow(10, 4)) / Math.pow(10, 4);
-        return StatsWidget.numberWithCommas(area_ha);
-    }
+        return this.numberWithCommas(area_ha);
+    };
+
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
         fetch(window.location.protocol + "//" + window.location.hostname + ":8888/getStats", {
@@ -1020,10 +1056,11 @@ class StatsWidget extends React.Component {
                 if (data.errMsg) {
                     console.warn(data.errMsg);
                 } else {
-                    this.setState({ totalPop: StatsWidget.numberWithCommas(data.pop), area: StatsWidget.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: StatsWidget.numberWithCommas(data.minElev) + " - " + StatsWidget.numberWithCommas(data.maxElev) + " m"});
+                    this.setState({ totalPop: this.numberWithCommas(data.pop), area: this.calculateArea(JSON.parse(projPairAOI)) + " ha", elevation: this.numberWithCommas(data.minElev) + " - " + this.numberWithCommas(data.maxElev) + " m"});
                 }
             });
     }
+
     render() {
         const widget = this.props.widget;
         const stats = this.state.totalPop;
@@ -1076,9 +1113,9 @@ class StatsWidget extends React.Component {
     }
 }
 
-export function renderGeodashPage() {
+export function renderGeodashPage(documentRoot) {
     ReactDOM.render(
-        <Geodash/>,
+        <Geodash  documentRoot={documentRoot}/>,
         document.getElementById("dashHolder")
     );
 }

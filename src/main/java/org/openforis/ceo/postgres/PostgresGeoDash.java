@@ -16,7 +16,7 @@ public class PostgresGeoDash implements GeoDash {
 
     // Returns either the dashboard for a project or an empty dashboard if it has not been configured
     public String geodashId(Request req, Response res) {
-        var projectId =     req.params(":id");
+        var projectId = req.params(":id");
         var projectTitle =  req.queryParams("title");
 
         try (var conn = connect();
@@ -38,8 +38,7 @@ public class PostgresGeoDash implements GeoDash {
                     dashboard.add("widgets", widgetsJson);
 
                     return dashboard.toString();
-                }
-                else{
+                } else {
                     //No widgets return empty dashboard
                     var newDashboardId = UUID.randomUUID().toString();
                     var newDashboard = new JsonObject();
@@ -54,9 +53,8 @@ public class PostgresGeoDash implements GeoDash {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return "";
         }
-
-        return "";
     }
 
     // Will be removed once confirmed it is abandoned and not needed
@@ -67,7 +65,7 @@ public class PostgresGeoDash implements GeoDash {
 
     // Creates a dashboard widget for a specific project
     public String createDashBoardWidgetById(Request req, Response res) {
-        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var projectId =jsonInputs.get("pID").getAsString();
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
@@ -85,16 +83,15 @@ public class PostgresGeoDash implements GeoDash {
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return "";
         }
-
-        return "";
     }
 
     // Updates a dashboard widget by widget_id
     public String updateDashBoardWidgetById(Request req, Response res) {
-        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
-        var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetId = req.params(":id");
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
 
         try (var conn = connect();
@@ -109,14 +106,12 @@ public class PostgresGeoDash implements GeoDash {
             return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return "";
         }
-
-        return "";
     }
 
     // Deletes a dashboard widget by widget_id
     public String deleteDashBoardWidgetById(Request req, Response res) {
-        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
         var widgetId = req.params(":id");
 
         try (var conn = connect();
@@ -128,9 +123,8 @@ public class PostgresGeoDash implements GeoDash {
             return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return "";
         }
-
-        return "";
     }
 
 }

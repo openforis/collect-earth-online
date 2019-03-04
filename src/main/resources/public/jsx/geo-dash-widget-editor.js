@@ -4,7 +4,6 @@ import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
 const ReactGridLayout = WidthProvider(RGL);
 
-
 class BasicLayout extends React.PureComponent{
     constructor(props) {
         super(props);
@@ -21,7 +20,7 @@ class BasicLayout extends React.PureComponent{
             graphReducer: "Min",
             imageParams: "",
             dualLayer: false,
-            WidgetBaseMap: "osm",
+            widgetBaseMap: "osm",
             startDate: "",
             endDate: "",
             startDate2: "",
@@ -41,13 +40,13 @@ class BasicLayout extends React.PureComponent{
             widgetCloudScoreDual: "",
             formReady: false,
             wizardStep: 1,
-            pid: BasicLayout.getParameterByName("pid"),
-            institutionID: BasicLayout.getParameterByName("institutionId") !== null? BasicLayout.getParameterByName("institutionId"): "1"
-
+            pid: this.getParameterByName("pid"),
+            institutionID: this.getParameterByName("institutionId") !== null ? this.getParameterByName("institutionId") : "1",
+            theURI: this.props.documentRoot + "/geo-dash"
         };
     }
+
     static defaultProps = {
-        theURI: window.location.origin + "/geo-dash",
         isDraggable: true,
         isResizable: true,
         className: "layout",
@@ -56,7 +55,8 @@ class BasicLayout extends React.PureComponent{
         cols: 12,
         graphReducer: "Min"
     };
-    static getParameterByName (name, url) {
+
+    getParameterByName = (name, url) => {
         const regex = new RegExp("[?&]" + name.replace(/[\[\]]/g, "\\$&") + "(=([^&#]*)|&|#|$)");
         const results = regex.exec(decodeURIComponent(url || window.location.href)); //regex.exec(url);
         return results
@@ -64,89 +64,82 @@ class BasicLayout extends React.PureComponent{
                 ? decodeURIComponent(results[2].replace(/\+/g, " "))
                 : ""
             : null;
-    }
-    static getGatewayUrl(widget, collectionName){
-        if(widget.filterType !== null && widget.filterType.length > 0){
-            const fts = {"LANDSAT5": "Landsat5Filtered", "LANDSAT7": "Landsat7Filtered", "LANDSAT8":"Landsat8Filtered", "Sentinel2": "FilteredSentinel"};
-            return window.location.protocol + "//" + window.location.hostname + ":8888/" + fts[widget.filterType];
-        }
-        else if(widget.ImageAsset && widget.ImageAsset.length > 0)
-        {
-            return window.location.protocol + "//" + window.location.hostname + ":8888/image";
-        }
-        else if(widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
-        {
-            return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionAsset";
-        }
-        else if(widget.properties && "ImageCollectionCustom" === widget.properties[0]){
-            return window.location.protocol + "//" + window.location.hostname + ":8888/meanImageByMosaicCollections";
-        }
-        else if(collectionName.trim().length > 0)
-        {
-            return window.location.protocol + "//" + window.location.hostname + ":8888/cloudMaskImageByMosaicCollection";
-        }
-        else{
-            return window.location.protocol + "//" + window.location.hostname + ":8888/ImageCollectionbyIndex";
-        }
-    }
-    static getImageByType(which) {
-        if (which === "getStats") {
-            return "/img/statssample.gif";
-        }
-        else if (which.toLowerCase().includes("image") || which === "") {
-            return "/img/mapsample.gif";
-        }
-        else {
-            return "/img/graphsample.gif";
-        }
-    }
+    };
+
+    getGatewayUrl = (widget, collectionName) => {
+        const fts = {"LANDSAT5": "Landsat5Filtered",
+                     "LANDSAT7": "Landsat7Filtered",
+                     "LANDSAT8": "Landsat8Filtered",
+                     "Sentinel2": "FilteredSentinel"};
+        const resourcePath = (widget.filterType && widget.filterType.length > 0)
+            ? fts[widget.filterType]
+            : (widget.ImageAsset && widget.ImageAsset.length > 0)
+                ? "image"
+                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+                    ? "ImageCollectionAsset"
+                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
+                        ? "meanImageByMosaicCollections"
+                        : (collectionName.trim().length > 0)
+                            ? "cloudMaskImageByMosaicCollection"
+                            : "ImageCollectionbyIndex";
+        return window.location.protocol + "//" + window.location.hostname + ":8888/" + resourcePath;
+    };
+
+    getImageByType = (which) => {
+        return (which === "getStats")
+            ? "/img/statssample.gif"
+            : (which.toLowerCase().includes("image") || which === "")
+                ? "/img/mapsample.gif"
+                : "/img/graphsample.gif";
+    };
     componentDidMount() {
-        console.log("the institutionID is now set to: " + this.state.institutionID);
-        fetch(this.props.theURI + "/id/" + this.state.pid)
-            .then(response => {
-                if (response.ok){ return response.json();}})
-            .then(response => {this.setState({ dashboardID: response.dashboardID});  return response;})
-            .then(response => {
-                const theWidgets = response.widgets;
-                if(Array.isArray(theWidgets))
-                {
-                    return response;
-                }
-                else if(Array.isArray(eval(theWidgets))){
-                    response.widgets = eval(theWidgets);
-                }
-                else{
-                    response.widgets = [];
-                }
-                return response;
-            })
-            .then(data => data.widgets.map(function(widget){
-                return widget.layout
+        fetch(this.state.theURI + "/id/" + this.state.pid)
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                const widgets = Array.isArray(data.widgets)
+                    ? data.widgets
+                    : Array.isArray(eval(data.widgets))
+                        ? eval(data.widgets)
+                        : [];
+
+                const updatedWidgets = widgets.map(widget => widget.layout
                     ? {
                         ...widget,
                         layout: {
                             ...widget.layout,
-                            y: widget.layout.y ? widget.layout .y : 0
-                        }}
-                    : widget;
-            }))
-            .then(data => this.setState({ widgets: data}))
-            .then(data => { this.setState({haveWidgets : true}); return data;})
-            .then(() => this.checkWidgetStructure())
-            .then(() => this.setState({layout: this.generateLayout()}))
-        ;
-        fetch(window.location.origin + "/get-all-imagery?institutionId=" + this.state.institutionID )
-            .then(response => {
-                if (response.ok){ return response.json();}})
-            .then(data => {data.unshift({title: "Open Street Maps", id: "osm"}); return data;})
-            .then(data => this.setState({ imagery: data, WidgetBaseMap: data[0].id}));
+                            y: widget.layout.y ? widget.layout.y : 0
+                        }
+                    }
+                    : widget);
 
+                this.checkWidgetStructure(updatedWidgets);
+
+                this.setState({ dashboardID: data.dashboardID,
+                                widgets:     updatedWidgets,
+                                haveWidgets: true,
+                                layout:      this.generateLayout() });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the widget list. See console for details.");
+            });
+        fetch(this.state.theURI.replace("/geo-dash", "/get-all-imagery?institutionId=" + this.state.institutionID) )
+            .then(response => response.ok ? response.json() : Promise.reject(response))
+            .then(data => {
+                this.setState({ imagery: [{ title: "Open Street Maps", id: "osm" }, ...data],
+                                widgetBaseMap: "osm" });
+            })
+            .catch(response => {
+                console.log(response);
+                alert("Error downloading the imagery list. See console for details.");
+            });
     }
-    checkWidgetStructure(){
+
+    checkWidgetStructure = (updatedWidgets) => {
         let changed = false;
         let row = 0;
         let column = 0;
-        let sWidgets = _.orderBy(this.state.widgets, "id", "asc");
+        let sWidgets = _.orderBy(updatedWidgets, "id", "asc");
         let widgets = _.map(sWidgets, function(widget, i) {
             if(widget.layout)
             {
@@ -172,7 +165,7 @@ class BasicLayout extends React.PureComponent{
                 if(widget.gridrow){
                     //do the y and h
                     y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                    h = widget.gridrow.trim().split(" ")[3] !== null? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
+                    h = widget.gridrow.trim().split(" ")[3] !== null ? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
                 }
                 // create .layout
                 widget.layout = {x : x, y: y, w: w, h: h};
@@ -183,10 +176,7 @@ class BasicLayout extends React.PureComponent{
 
                 changed = true;
                 let x;
-                //let w;
-                //let y;
                 let h = 1;
-                //let layout;
                 if(column + parseInt(widget.width) <= 12)
                 {
                     x = column;
@@ -198,16 +188,11 @@ class BasicLayout extends React.PureComponent{
                     row +=1;
                 }
                 widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
-                // Create a starter layout based on the i value
-                // need to add both layout and gridcolumn/gridrow properties
             }
             else{
                 changed = true;
                 let x;
-                //let w;
-                //let y;
                 let h = 1;
-                //let layout;
                 if(column + 3 <= 12)
                 {
                     x = column;
@@ -219,7 +204,6 @@ class BasicLayout extends React.PureComponent{
                     row +=1;
                 }
                 widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
-
             }
             return widget;
         });
@@ -227,15 +211,16 @@ class BasicLayout extends React.PureComponent{
         if(changed){
             this.updateServerWidgets();
         }
-    }
-    updateServerWidgets(){
-        this.state.widgets.forEach( widget =>  {
-            let ajaxurl = this.props.theURI + "/updatewidget/widget/" + widget.id;
-            this.serveItUp(ajaxurl, widget);
+    };
 
+    updateServerWidgets = () => {
+        this.state.widgets.forEach( widget =>  {
+            let ajaxurl = this.state.theURI + "/updatewidget/widget/" + widget.id;
+            this.serveItUp(ajaxurl, widget);
         });
-    }
-    serveItUp(url, widget )
+    };
+
+    serveItUp = (url, widget) =>
     {
         fetch(url,
               {
@@ -254,16 +239,18 @@ class BasicLayout extends React.PureComponent{
                     console.log(response);
                 }
             });
-    }
-    deleteWidgetFromServer(widget)
+    };
+
+    deleteWidgetFromServer = widget =>
     {
-        let ajaxurl = this.props.theURI + "/deletewidget/widget/" + widget.id;
+        let ajaxurl = this.state.theURI + "/deletewidget/widget/" + widget.id;
         this.serveItUp(ajaxurl, widget);
-    }
-    generateDOM() {
+    };
+
+    generateDOM = () => {
         const x = "x";
         return _.map(this.state.widgets, (widget, i) => {
-            return <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + BasicLayout.getImageByType(widget.properties[0]) +")"}} >
+            return <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) +")"}} >
                 <h3 className="widgetEditor title">{widget.name}
                     <span className="remove" onClick={e => {e.stopPropagation(); this.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
                         {x}
@@ -271,9 +258,10 @@ class BasicLayout extends React.PureComponent{
                 </h3>
                 <span className="text text-danger">Sample Image</span></div>;
         });
-    }
-    addCustomImagery(imagery) {
-        fetch(this.props.theURI.replace("/geo-dash", "") + "/add-geodash-imagery",
+    };
+
+    addCustomImagery = imagery => {
+        fetch(this.state.theURI.replace("/geo-dash", "") + "/add-geodash-imagery",
               {
                   method: "post",
                   headers: {
@@ -287,10 +275,11 @@ class BasicLayout extends React.PureComponent{
                     console.log("Error adding custom imagery to institution. See console for details.");
                 }
             });
-    }
-    buildImageryObject(img){
+    };
+
+    buildImageryObject = img => {
         console.log(img);
-        let gatewayUrl = BasicLayout.getGatewayUrl(img);
+        let gatewayUrl = this.getGatewayUrl(img);
         let title = img.filterType.replace(/\w\S*/g, function (word) {
             return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
         let ImageAsset = img.ImageAsset ? img.ImageAsset : "";
@@ -324,7 +313,8 @@ class BasicLayout extends React.PureComponent{
         }
         return iObject;
 
-    }
+    };
+
     onWidgetTypeSelectChanged = event => {
         this.setState({
             selectedWidgetType: event.target.value,
@@ -334,7 +324,7 @@ class BasicLayout extends React.PureComponent{
             graphBand: "",
             graphReducer: "Min",
             imageParams: "",
-            WidgetBaseMap: "osm",
+            widgetBaseMap: "osm",
             dualLayer: false,
             startDate:"",
             endDate:"",
@@ -357,21 +347,25 @@ class BasicLayout extends React.PureComponent{
 
         });
     };
+
     onDragStart = e => {
         e.preventDefault();
         e.stopPropagation();
         this.props.onMouseDown(e);
     };
+
     onDragEnd = e => {
         e.preventDefault();
         e.stopPropagation();
         this.props.onMouseUp(e);
     };
+
     onDataTypeSelectChanged = event => {
         this.setState({
             selectedDataType: event.target.value
         });
     };
+
     onCancelNewWidget = () => {
         this.setState({
             selectedWidgetType: "-1",
@@ -383,7 +377,7 @@ class BasicLayout extends React.PureComponent{
             graphBand: "",
             graphReducer: "Min",
             imageParams: "",
-            WidgetBaseMap: "osm",
+            widgetBaseMap: "osm",
             dualLayer: false,
             startDate:"",
             endDate:"",
@@ -405,12 +399,15 @@ class BasicLayout extends React.PureComponent{
             wizardStep: 1
         });
     };
+
     onNextWizardStep = () => {
         this.setState({wizardStep: 2});
     };
+
     onPrevWizardStep = () => {
         this.setState({wizardStep: 1});
     };
+
     onCreateNewWidget = () => {
         let widget = {};
         let id = this.state.widgets.length > 0?(Math.max.apply(Math, this.state.widgets.map(function(o) { return o.id; }))) + 1: 0;
@@ -431,7 +428,7 @@ class BasicLayout extends React.PureComponent{
             h: 1,
             minW: 3
         };
-        widget.baseMap = (this.state.imagery.filter(imagery => imagery.id === this.state.WidgetBaseMap))[0];
+        widget.baseMap = (this.state.imagery.filter(imagery => imagery.id === this.state.widgetBaseMap))[0];
         if(this.state.selectedWidgetType === "DualImageCollection")
         {
             widget.properties = ["","","","",""];
@@ -457,7 +454,6 @@ class BasicLayout extends React.PureComponent{
                 this.addCustomImagery(this.buildImageryObject(img1));
 
             }
-
             if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual)) {
                 img2.filterType = this.state.selectedDataTypeDual !== null ? this.state.selectedDataTypeDual : "";
                 img2.visParams = {
@@ -468,7 +464,6 @@ class BasicLayout extends React.PureComponent{
                 };
                 this.addCustomImagery(this.buildImageryObject(img2));
             }
-            //should add in the custom imagery here as well
             if(this.state.selectedDataType === "imageAsset")
             {
                 //add image asset parameters
@@ -605,7 +600,7 @@ class BasicLayout extends React.PureComponent{
             }
         }
 
-        fetch(this.props.theURI + "/createwidget/widget",
+        fetch(this.state.theURI + "/createwidget/widget",
               {
                   method: "post",
                   headers: {
@@ -631,7 +626,7 @@ class BasicLayout extends React.PureComponent{
                         graphBand: "",
                         graphReducer: "Min",
                         imageParams: "",
-                        WidgetBaseMap: "osm",
+                        widgetBaseMap: "osm",
                         dualLayer: false,
                         startDate:"",
                         endDate:"",
@@ -649,36 +644,47 @@ class BasicLayout extends React.PureComponent{
                 }
             });
     };
+
     onDataBaseMapSelectChanged = event => {
-        this.setState({WidgetBaseMap: event.target.value});
+        this.setState({widgetBaseMap: event.target.value});
     };
+
     onWidgetTitleChange = event => {
         this.setState({WidgetTitle: event.target.value});
     };
+
     onImageCollectionChange = event => {
         this.setState({imageCollection: event.target.value});
     };
+
     onGraphBandChange = event => {
         this.setState({graphBand: event.target.value});
     };
+
     onGraphReducerChanged = event => {
         this.setState({graphReducer: event.target.value});
     };
+
     onImageParamsChange = event => {
         this.setState({imageParams: event.target.value.replace(/\s/g,"")});
     };
+
     onWidgetDualLayerChange = event => {
         this.setState({dualLayer: event.target.checked});
     };
+
     onWidgetBandsChange = event => {
         this.setState({widgetBands: event.target.value.replace(/\s/g,"")});
     };
+
     onWidgetMinChange = event => {
         this.setState({widgetMin: event.target.value});
     };
+
     onWidgetMaxChange = event => {
         this.setState({widgetMax: event.target.value});
     };
+
     onStartDateChanged = date => {
         if(date.target)
         {
@@ -693,6 +699,7 @@ class BasicLayout extends React.PureComponent{
             this.setState({startDate: date});
         }
     };
+
     onEndDateChanged = date => {
         if(date.target)
         {
@@ -712,24 +719,31 @@ class BasicLayout extends React.PureComponent{
     onWidgetCloudScoreChange = event => {
         this.setState({widgetCloudScore: event.target.value});
     };
+
     onImageCollectionChangeDual = event => {
         this.setState({imageCollectionDual: event.target.value});
     };
+
     onImageParamsChangeDual = event => {
         this.setState({imageParamsDual: event.target.value.replace(/\s/g,"")});
     };
+
     onWidgetBandsChangeDual = event => {
         this.setState({widgetBandsDual: event.target.value.replace(/\s/g,"")});
     };
+
     onWidgetMinChangeDual = event => {
         this.setState({widgetMinDual: event.target.value});
     };
+
     onWidgetMaxChangeDual = event => {
         this.setState({widgetMaxDual: event.target.value});
     };
+
     onWidgetCloudScoreChangeDual = event => {
         this.setState({widgetCloudScoreDual: event.target.value});
     };
+
     onStartDateChangedDual = date => {
         if(date.target)
         {
@@ -744,6 +758,7 @@ class BasicLayout extends React.PureComponent{
             this.setState({startDateDual: date});
         }
     };
+
     onEndDateChangedDual = date => {
         if(date.target)
         {
@@ -759,15 +774,17 @@ class BasicLayout extends React.PureComponent{
             this.setFormStateByDates(true);
         }
     };
+
     onDataTypeSelectChangedDual = event => {
         this.setState({
             selectedDataTypeDual: event.target.value.trim(),
             formReady: true
         });
     };
-    setFormStateByDates(isDual) {
-        const ed = isDual !== null? new Date(this.state.endDateDual) : new Date(this.state.endDate);
-        const sd = isDual !== null? new Date(this.state.startDateDual) : new Date(this.state.startDate);
+
+    setFormStateByDates = isDual => {
+        const ed = isDual ? new Date(this.state.endDateDual) : new Date(this.state.endDate);
+        const sd = isDual ? new Date(this.state.startDateDual) : new Date(this.state.startDate);
         let isFormReady = null;
         if (! this.state.dualLayer) {
             isFormReady = ed > sd && this.state.formReady !== true ? true : ed < sd &&  this.state.formReady === true? false : null;
@@ -781,7 +798,8 @@ class BasicLayout extends React.PureComponent{
         {
             this.setState({formReady: isFormReady});
         }
-    }
+    };
+
     onStartDate2Changed = date => {
         if (date.target)
         {
@@ -796,6 +814,7 @@ class BasicLayout extends React.PureComponent{
             this.setState({startDate2: date});
         }
     };
+
     onEndDate2Changed = date => {
         if (date.target)
         {
@@ -811,7 +830,8 @@ class BasicLayout extends React.PureComponent{
             this.setFormStateByDates();
         }
     };
-    getNewWidgetForm() {
+
+    getNewWidgetForm = () => {
         if (this.state.isEditing)
         {
             return  <React.Fragment>
@@ -856,33 +876,35 @@ class BasicLayout extends React.PureComponent{
                 <div className="modal-backdrop fade show"> </div>
             </React.Fragment>;
         }
-    }
-    getFormButtons(){
-        //need to check if form is ready, if not just add the cancel button, or disable the create?
+    };
+
+    getFormButtons = () => {
         return <React.Fragment>
             <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Cancel</button>
             <button type="button" className="btn btn-primary" onClick={this.onCreateNewWidget} disabled={!this.state.formReady}>Create</button>
         </React.Fragment>;
 
-    }
-    getBaseMapSelector(){
+    };
+
+    getBaseMapSelector = () => {
         if (this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection" || this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
-                <select name="widgetIndicesSelect" value={this.state.WidgetBaseMap} className="form-control"
+                <select name="widgetIndicesSelect" value={this.state.widgetBaseMap} className="form-control"
                         id="widgetIndicesSelect" onChange={this.onDataBaseMapSelectChanged}>
                     {this.baseMapOptions()}
                 </select>
             </React.Fragment>;
         }
-    }
-    baseMapOptions(){
+    };
+
+    baseMapOptions = () => {
         return _.map(this.state.imagery, function (imagery) {
             return <option key={imagery.id} value={imagery.id}> {imagery.title} </option>;
         });
-    }
-    getDataTypeSelectionControl()
-    {
+    };
+
+    getDataTypeSelectionControl = () => {
         if (this.state.selectedWidgetType === "-1")
         {
             return <br/>;
@@ -990,29 +1012,31 @@ class BasicLayout extends React.PureComponent{
                 </select>
             </React.Fragment>;
         }
-    }
-    getTitleBlock()
-    {
+    };
+
+    getTitleBlock = () => {
         return <div className="form-group">
             <label htmlFor="widgetTitle">Title</label>
             <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
                    className="form-control" onChange={this.onWidgetTitleChange}/>
         </div>;
-    }
-    getImageParamsBlock()
-    {
+    };
+
+    getImageParamsBlock = () => {
         return  <div className="form-group">
             <label htmlFor="imageParams">Image Parameters (json format)</label>
             <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
         </div>;
-    }
-    getNextStepButton() {
+    };
+
+    getNextStepButton = () => {
         if (this.state.selectedWidgetType === "DualImageCollection") {
             return <button type="button" className="btn btn-secondary" data-dismiss="modal"
                            onClick={this.onNextWizardStep}>Step 2 &rArr;</button>;
         }
-    }
-    getDualImageCollectionTimeSpanOption(){
+    };
+
+    getDualImageCollectionTimeSpanOption = () => {
         if (this.state.selectedWidgetType === "DualImageCollection") {
             return <div className="form-group">
                 <label htmlFor="widgetDualLayer">Dual time span</label>
@@ -1020,16 +1044,17 @@ class BasicLayout extends React.PureComponent{
                        className="form-control" onChange={this.onWidgetDualLayerChange}/>
             </div>;
         }
-    }
-    getDateRangeControl(){
+    };
+
+    getDateRangeControl = () => {
         return <div className="input-group input-daterange" id="range_new_cooked">
             <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
             <div className="input-group-addon">to</div>
             <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
         </div>;
-    }
-    getDualLayerDateRangeControl()
-    {
+    };
+
+    getDualLayerDateRangeControl = () => {
         if (this.state.dualLayer === true) {
             return <div>
                 <label>Select the Date Range for the top layer</label>
@@ -1042,9 +1067,9 @@ class BasicLayout extends React.PureComponent{
                 </div>
             </div>;
         }
-    }
-    getDataForm()
-    {
+    };
+
+    getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation")
         {
             this.setState({
@@ -1312,8 +1337,9 @@ class BasicLayout extends React.PureComponent{
             }
         }
 
-    }
-    onRemoveItem(i) {
+    };
+
+    onRemoveItem = i => {
         let removedWidget = _.filter(this.state.widgets, function(w){
             return w.layout.i === i.toString();
         });
@@ -1323,8 +1349,9 @@ class BasicLayout extends React.PureComponent{
                         layout: _.reject(this.state.layout, function(layout){
                             return layout.i === i.toString(); })
         });
-    }
-    generateLayout() {
+    };
+
+    generateLayout = () => {
         let w = this.state.widgets;
         return _.map(w, function(item, i) {
             item.layout.i = i.toString();
@@ -1332,7 +1359,8 @@ class BasicLayout extends React.PureComponent{
             item.layout.w = item.layout.w >= 3? item.layout.w: 3;
             return item.layout;
         });
-    }
+    };
+
     onLayoutChange = layout => {
         if (this.state.haveWidgets) {
             let w = this.state.widgets;
@@ -1347,9 +1375,11 @@ class BasicLayout extends React.PureComponent{
             this.setState({layout: layout});
         }
     };
+
     onAddItem = () => {
         this.setState({isEditing : true});
     };
+
     render() {
         const {layout} = this.state;
         return (
@@ -1365,9 +1395,10 @@ class BasicLayout extends React.PureComponent{
         );
     }
 }
-export function renderWidgetEditorPage() {
+
+export function renderWidgetEditorPage(documentRoot) {
     ReactDOM.render(
-        <BasicLayout/>,
+        <BasicLayout documentRoot={documentRoot}/>,
         document.getElementById("content")
     );
 }

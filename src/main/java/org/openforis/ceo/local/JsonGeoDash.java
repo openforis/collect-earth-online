@@ -60,7 +60,6 @@ public class JsonGeoDash implements GeoDash {
             writeJsonFile("dash-" + newDashboardId + ".json", newDashboard);
 
             return newDashboard.toString();
-
         }
     }
 
@@ -71,7 +70,7 @@ public class JsonGeoDash implements GeoDash {
 
     
     public synchronized String createDashBoardWidgetById(Request req, Response res) {
-        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJson = jsonInputs.get("widgetJSON").getAsString();
 
@@ -93,9 +92,9 @@ public class JsonGeoDash implements GeoDash {
 
     // FIXME: the new react design is using the body to pass the widget JSON (see PostgresGeoDash for updated form)
     public synchronized String updateDashBoardWidgetById(Request req, Response res) {
-        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
-        var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetId = req.params(":id");
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJson = jsonInputs.get("widgetJSON").getAsString();
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
@@ -119,9 +118,9 @@ public class JsonGeoDash implements GeoDash {
     }
 
     public synchronized String deleteDashBoardWidgetById(Request req, Response res) {
-        var jsonInputs            = parseJson(req.body()).getAsJsonObject();
-        var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetId = req.params(":id");
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
 

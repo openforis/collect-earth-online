@@ -54,7 +54,9 @@
     "dependencies": {
         "lodash": "^4.17.11",
         "ogr2ogr": "^1.4.0",
-        "prop-types": "^15.6.2"
+        "prop-types": "^15.6.2",
+        "react": "^16.8.3",
+        "react-dom": "^16.8.3"
     },
     "devDependencies": {
         "@babel/core": "^7.3.3",
@@ -69,8 +71,6 @@
         "eslint": "^5.13.0",
         "eslint-plugin-react": "^7.12.4",
         "file-loader": "^2.0.0",
-        "react": "^16.8.3",
-        "react-dom": "^16.8.3",
         "react-grid-layout": "^0.16.6",
         "style-loader": "^0.23.1",
         "tern": "^0.23.0",

@@ -14,7 +14,7 @@
 <script type="text/javascript" src="${root}/js/widgetlayouteditor.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     widgetlayouteditor.renderWidgetEditorPage();
+     widgetlayouteditor.renderWidgetEditorPage("${root}");
  };
 </script>
 <#include "end-content.ftl">
