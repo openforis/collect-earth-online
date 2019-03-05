@@ -30,7 +30,7 @@ class Geodash extends React.Component {
     componentDidMount() {
         fetch(this.props.documentRoot + "/geo-dash/id/" + this.state.pid)
             .then(response => response.json())
-            .then(data => data.widgets.map(function(widget){
+            .then(data => data.widgets.map(widget =>{
                 widget.isFull = false;
                 widget.opacity = "0.9";
                 widget.sliderType = "opacity";
@@ -299,7 +299,7 @@ class MapWidget extends React.Component {
                         : (collectionName.trim().length > 0)
                             ? "cloudMaskImageByMosaicCollection"
                             : "ImageCollectionbyIndex";
-        return window.location.protocol + "//" + window.location.hostname + ":8888/" + resourcePath;
+        return "https://ceodev.servirglobal.net:8888/" + resourcePath;
     };
 
     getImageParams = widget => {
@@ -343,7 +343,7 @@ class MapWidget extends React.Component {
 
     pauseGeeLayer = e => {
         let layers = e.target.getLayers().getArray();
-        layers.forEach(function(lyr){
+        layers.forEach(lyr => {
             if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0){
                 lyr.setVisible(false);
             }
@@ -403,7 +403,7 @@ class MapWidget extends React.Component {
             map.dispatchEvent("movestart");
             let view = map.getView();
             view.un("propertychange", onpropertychange);
-            map.on("moveend", function() {
+            map.on("moveend", () => {
                 view.on("propertychange", onpropertychange);
             });
         }
@@ -696,7 +696,7 @@ class MapWidget extends React.Component {
             this.setState({
                 geeTimeOut: window.setTimeout(() => {
                     let layers = e.target.getLayers().getArray();
-                    layers.forEach(function (lyr) {
+                    layers.forEach(lyr => {
                         if (lyr.get("id") && lyr.get("id").indexOf("widget") === 0) {
                             lyr.setVisible(true);
                         }
@@ -730,7 +730,7 @@ class MapWidget extends React.Component {
         });
         this.state.mapRef.addLayer(googleLayer);
         let swipe = document.getElementById("swipeWidget_" + mapdiv.replace("widgetmap_", ""));
-        googleLayer.on("precompose", function(event) {
+        googleLayer.on("precompose", event => {
             let ctx = event.context;
             const width = ctx.canvas.width * (swipe.value);
             ctx.save();
@@ -739,11 +739,11 @@ class MapWidget extends React.Component {
             ctx.clip();
         });
 
-        googleLayer.on("postcompose", function(event) {
+        googleLayer.on("postcompose", event => {
             let ctx = event.context;
             ctx.restore();
         });
-        swipe.addEventListener("input", function() {this.state.mapRef.render();}, false);
+        swipe.addEventListener("input", () => {this.state.mapRef.render();}, false);
         this.addBuffer(this.state.mapRef);
     };
 
@@ -824,7 +824,7 @@ class MapWidget extends React.Component {
                         mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
 
                         if (_geojson_object.samples) {
-                            _geojson_object.samples.forEach(function (element) {
+                            _geojson_object.samples.forEach(element => {
                                 const vectorSource = mercator.geometryToVectorSource(mercator.parseGeoJson(element.geom, true));
                                 mercator.addVectorLayer(mapConfig, "geeLayer", vectorSource, style);
                             });
@@ -901,7 +901,7 @@ class GraphWidget extends React.Component {
                     if (res.hasOwnProperty("timeseries")) {
 
                         let timeseriesData = [];
-                        res.timeseries.forEach(function (value) {
+                        res.timeseries.forEach( value => {
                             if (value[0] !== null) {
                                 timeseriesData.push([value[0], value[1]]);
                             }
@@ -993,7 +993,7 @@ class GraphWidget extends React.Component {
                 data: wTimeseriesData,
                 color: "#31bab0"
             }]
-        }, function () {
+        },  () => {
             document.getElementById("widgettitle_" + wIndex).innerHTML = wText;
             document.getElementsByClassName("highcharts-yaxis")[0].firstChild.innerHTML = wText;
         });
