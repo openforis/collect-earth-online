@@ -64,7 +64,6 @@ def insert_institutions():
             conn.commit()
             role_id=-1
             user_id=-1
-
             for member in members:  
                 if member in admins:
                     role_id=1
@@ -144,7 +143,7 @@ def insert_projects():
         print(len(projectArr))
         for project in projectArr:
             try:
-                if project['id'] > 750:
+                if project['id'] > 0:
                     print("inserting project with project id"+str(project['id']))
                     if project['numPlots'] is None: project['numPlots']=0
                     if project['plotSpacing'] is None: project['plotSpacing']=0
