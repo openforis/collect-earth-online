@@ -68,12 +68,10 @@ class Geodash extends React.Component {
     updateSize = which => {
         which.isFull ? document.body.classList.remove("bodyfull") : document.body.classList.add("bodyfull");
         const doc = document.documentElement;
-        if((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0) === 0)
-        {
+        if ((window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0) === 0 && (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0) === 0) {
             window.scrollTo(this.state.left, this.state.ptop);
             this.setState({left: 0, ptop: 0});
-        }
-        else{
+        } else {
             this.setState({left: (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0), ptop: (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0)});
             window.scrollTo(0,0);
         }
@@ -97,8 +95,7 @@ class Geodash extends React.Component {
 
 class Widgets extends React.Component {
     render() {
-        if(this.props.widgets.length > 0)
-        {
+        if (this.props.widgets.length > 0) {
             return ( <div className="row placeholders">
                 {this.props.widgets.map(widget => (
                     <Widget
@@ -115,9 +112,8 @@ class Widgets extends React.Component {
                     />
                 ))}
             </div> );
-        }
-        else{
-            if(this.props.callbackComplete === true) {
+        } else {
+            if (this.props.callbackComplete === true) {
                 return (<div className="row placeholders">
                     <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
                         <h1 id="noWidgetMessage">The
@@ -125,7 +121,7 @@ class Widgets extends React.Component {
                     </div>
                 </div>);
             }
-            else{
+            else {
                 return (<div className="row placeholders">
                     <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
                         <h1 id="noWidgetMessage">The
@@ -183,8 +179,7 @@ class Widget extends React.Component {
     };
 
     getWidgetHtml = (widget, onSliderChange, onSwipeChange) => {
-        if(widget.gridcolumn || widget.layout)
-        {
+        if (widget.gridcolumn || widget.layout) {
             return (<div className={this.getClassNames(widget.isFull,
                                                        widget.gridcolumn != null
                                                            ? widget.gridcolumn
@@ -212,8 +207,7 @@ class Widget extends React.Component {
                     </div>
                 </div>
             </div>);
-        }
-        else{
+        } else {
             return (<div className={widget.isFull
                 ? "fullwidget columnSpan3 rowSpan1 placeholder"
                 : "columnSpan3 rowSpan1 placeholder"}>
@@ -235,17 +229,15 @@ class Widget extends React.Component {
 
     getWidgetInnerHtml = (widget, onSliderChange, onSwipeChange) => {
         let wtext = widget.properties[0];
-        if(this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0))
-        {
+        if (this.imageCollectionList.includes(wtext) || (widget.dualImageCollection && widget.dualImageCollection != null) || (widget.ImageAsset && widget.ImageAsset.length > 0) || (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)) {
             return <div className="front"><MapWidget widget={widget} projAOI={this.props.projAOI} projPairAOI={this.props.projPairAOI} onSliderChange={onSliderChange} onSwipeChange={onSwipeChange} getParameterByName={this.props.getParameterByName}  documentRoot={this.props.documentRoot}/>
 
             </div>;
-        }else if (this.graphControlList.includes(wtext)) {
+        } else if (this.graphControlList.includes(wtext)) {
             return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} /></div>;
-        }else if (wtext === "getStats") {
+        } else if (wtext === "getStats") {
             return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} /></div>;
-        }
-        else {
+        } else {
             return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" />;
         }
     };
@@ -268,13 +260,11 @@ class MapWidget extends React.Component {
 
     getRasterByBasemapConfig = basemap => {
         let raster;
-        if(basemap == null || basemap.id === "osm")
-        {
+        if(basemap == null || basemap.id === "osm") {
             raster = new ol.layer.Tile({
                 source: new ol.source.OSM()
             });
-        }
-        else{
+        } else{
             const source = mercator.createSource(basemap.sourceConfig);
             raster = new ol.layer.Tile({
                 source: source
@@ -316,8 +306,7 @@ class MapWidget extends React.Component {
             else{
                 visParams = widget.visParams;
             }
-        }
-        else {
+        } else {
             let min;
             let max;
             try {
@@ -536,8 +525,7 @@ class MapWidget extends React.Component {
                 postObject.max = postObject.visParams.max;
                 postObject.cloudLessThan = parseInt(postObject.visParams.cloudLessThan);
             }
-            if (widget.ImageAsset)
-            {
+            if (widget.ImageAsset) {
                 postObject.imageName = widget.ImageAsset;
             }
             else if (widget.ImageCollectionAsset)
@@ -655,8 +643,7 @@ class MapWidget extends React.Component {
                        style={sStyle}
                 />
             </div>;
-        }
-        else{
+        } else{
             return <input type = "range" className = "mapRange" id = {"rangeWidget_" + widget.id}
                           value = {this.state.opacity}
                           min = "0"
@@ -784,8 +771,7 @@ class MapWidget extends React.Component {
                     ]
                 });
                 whichMap.addLayer(layer);
-            }
-            else if (plotshape && plotshape === "circle") {
+            } else if (plotshape && plotshape === "circle") {
                 const circle = new ol.geom.Circle(ol.proj.transform(JSON.parse(bcenter).coordinates, "EPSG:4326", "EPSG:3857"), bradius * 1);
                 const CircleFeature = new ol.Feature(circle);
                 let vectorSource = new ol.source.Vector({});
