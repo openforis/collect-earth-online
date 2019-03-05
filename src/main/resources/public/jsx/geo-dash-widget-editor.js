@@ -4,7 +4,7 @@ import _ from "lodash";
 import RGL, { WidthProvider } from "react-grid-layout";
 const ReactGridLayout = WidthProvider(RGL);
 
-class BasicLayout extends React.PureComponent{
+class BasicLayout extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
@@ -14,7 +14,7 @@ class BasicLayout extends React.PureComponent{
             isEditing: false,
             selectedWidgetType: "-1",
             selectedDataType: "-1",
-            WidgetTitle: "",
+            widgetTitle: "",
             imageCollection: "",
             graphBand: "",
             graphReducer: "Min",
@@ -41,7 +41,7 @@ class BasicLayout extends React.PureComponent{
             formReady: false,
             wizardStep: 1,
             pid: this.getParameterByName("pid"),
-            institutionID: this.getParameterByName("institutionId") !== null ? this.getParameterByName("institutionId") : "1",
+            institutionID: this.getParameterByName("institutionId") ? this.getParameterByName("institutionId") : "1",
             theURI: this.props.documentRoot + "/geo-dash"
         };
     }
@@ -92,6 +92,7 @@ class BasicLayout extends React.PureComponent{
                 ? "/img/mapsample.gif"
                 : "/img/graphsample.gif";
     };
+
     componentDidMount() {
         fetch(this.state.theURI + "/id/" + this.state.pid)
             .then(response => response.ok ? response.json() : Promise.reject(response))
@@ -123,7 +124,7 @@ class BasicLayout extends React.PureComponent{
                 console.log(response);
                 alert("Error downloading the widget list. See console for details.");
             });
-        fetch(this.state.theURI.replace("/geo-dash", "/get-all-imagery?institutionId=" + this.state.institutionID) )
+        fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionID)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setState({ imagery: [{ title: "Open Street Maps", id: "osm" }, ...data],
@@ -140,7 +141,7 @@ class BasicLayout extends React.PureComponent{
         let row = 0;
         let column = 0;
         let sWidgets = _.orderBy(updatedWidgets, "id", "asc");
-        let widgets = _.map(sWidgets, function(widget, i) {
+        let widgets = _.map(sWidgets, (widget, i) => {
             if(widget.layout)
             {
                 if(widget["gridcolumn"]){
@@ -261,7 +262,7 @@ class BasicLayout extends React.PureComponent{
     };
 
     addCustomImagery = imagery => {
-        fetch(this.state.theURI.replace("/geo-dash", "") + "/add-geodash-imagery",
+        fetch(this.props.documentRoot + "/add-geodash-imagery",
               {
                   method: "post",
                   headers: {
@@ -319,7 +320,7 @@ class BasicLayout extends React.PureComponent{
         this.setState({
             selectedWidgetType: event.target.value,
             selectedDataType: "-1",
-            WidgetTitle: "",
+            widgetTitle: "",
             imageCollection: "",
             graphBand: "",
             graphReducer: "Min",
@@ -372,7 +373,7 @@ class BasicLayout extends React.PureComponent{
             selectedDataTypeDual: "-1",
             isEditing: false,
             selectedDataType: "-1",
-            WidgetTitle: "",
+            widgetTitle: "",
             imageCollection: "",
             graphBand: "",
             graphReducer: "Min",
@@ -411,7 +412,7 @@ class BasicLayout extends React.PureComponent{
     onCreateNewWidget = () => {
         let widget = {};
         let id = this.state.widgets.length > 0?(Math.max.apply(Math, this.state.widgets.map(function(o) { return o.id; }))) + 1: 0;
-        let name = this.state.WidgetTitle;
+        let name = this.state.widgetTitle;
         widget.id = id;
         widget.name = name;
         let yval = ((Math.max.apply(Math, this.state.widgets.map(function (o) {
@@ -621,7 +622,7 @@ class BasicLayout extends React.PureComponent{
                         selectedDataTypeDual: "-1",
                         isEditing: false,
                         selectedDataType: "-1",
-                        WidgetTitle: "",
+                        widgetTitle: "",
                         imageCollection: "",
                         graphBand: "",
                         graphReducer: "Min",
@@ -650,7 +651,7 @@ class BasicLayout extends React.PureComponent{
     };
 
     onWidgetTitleChange = event => {
-        this.setState({WidgetTitle: event.target.value});
+        this.setState({widgetTitle: event.target.value});
     };
 
     onImageCollectionChange = event => {
@@ -919,7 +920,7 @@ class BasicLayout extends React.PureComponent{
             return <React.Fragment>
                 <div className="form-group">
                     <label htmlFor="widgetTitle">Title</label>
-                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
+                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.widgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
                 </div>
             </React.Fragment>;
         }
@@ -1017,7 +1018,7 @@ class BasicLayout extends React.PureComponent{
     getTitleBlock = () => {
         return <div className="form-group">
             <label htmlFor="widgetTitle">Title</label>
-            <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.WidgetTitle}
+            <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.widgetTitle}
                    className="form-control" onChange={this.onWidgetTitleChange}/>
         </div>;
     };
