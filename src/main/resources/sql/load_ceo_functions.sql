@@ -1149,7 +1149,6 @@ $$ LANGUAGE SQL;
 
 -- Returns project statistics
 -- Overlapping queries, consider condensing. query time is not an issue
-DROP FUNCTION select_project_statistics(integer);
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer) 
     RETURNS TABLE(
         flagged_plots       integer,
