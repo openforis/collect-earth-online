@@ -55,11 +55,11 @@ public class JsonUtils {
     }
 
     public static JsonArray elementToArray(JsonElement json) {
-        return json.isJsonArray() ? json.getAsJsonArray(): new JsonArray();
+        return json.isJsonArray() ? json.getAsJsonArray() : new JsonArray();
     }
 
     public static JsonObject elementToObject(JsonElement json) {
-        return json.isJsonObject() ? json.getAsJsonObject(): new JsonObject();
+        return json.isJsonObject() ? json.getAsJsonObject() : new JsonObject();
     }
 
     public static synchronized void writeJsonFile(String filename, JsonElement data) {
