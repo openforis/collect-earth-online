@@ -218,7 +218,7 @@ class Project extends React.Component {
         } else {
             return true;
         }
-    }
+    };
 
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
