@@ -192,52 +192,39 @@ class NewQuestionDesigner extends React.Component {
     componentDidUpdate = (prevProps, prevState) => {
         if (this.props.surveyQuestions.length !== prevProps.surveyQuestions.length) {
             if (!this.props.surveyQuestions.find(question => question.id === this.state.selectedParent)) {
-                this.setState({ selectedParent: -1 });
+                this.setState({selectedParent: -1});
             }
         }
 
         if (this.state.selectedParent !== prevState.selectedParent) {
-            this.setState({ selectedAnswer: -1 });
+            this.setState({selectedAnswer: -1});
         }
     };
 
     addSurveyQuestion = () => {
 
         if (this.state.newQuestionText !== "") {
-            const { surveyQuestions } = this.props;
-            const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
+            const {surveyQuestions} = this.props;
+            const {dataType, componentType} = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
             const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
 
             if (repeatedQuestions === 0
                 || confirm("Warning: this is a duplicate name.  This will save as "
-                            + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
+                    + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
 
                 const newQuestion = {
-<<<<<<< HEAD
-                                        id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
-                                        question: repeatedQuestions > 0 
-                                                        ? this.state.newQuestionText + ` (${repeatedQuestions})` 
-                                                        : this.state.newQuestionText,
-                                        answers: [],
-                                        parentQuestion: this.state.selectedParent,
-                                        parentAnswer: this.state.selectedAnswer,
-                                        dataType: dataType,
-                                        componentType: componentType,
-                                    };
-=======
                     id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
                     question: repeatedQuestions > 0
-                                    ? this.state.newQuestionText + ` (${repeatedQuestions})`
-                                    : this.state.newQuestionText,
+                        ? this.state.newQuestionText + ` (${repeatedQuestions})`
+                        : this.state.newQuestionText,
                     answers: [],
                     parentQuestion: this.state.selectedParent,
                     parentAnswer: this.state.selectedAnswer,
                     dataType: dataType,
                     componentType: componentType,
                 };
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                 this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
-                this.setState({ selectedAnswer: -1, newQuestionText: "" });
+                this.setState({selectedAnswer: -1, newQuestionText: ""});
             }
         } else {
             alert("Please enter a survey question first.");
@@ -246,18 +233,11 @@ class NewQuestionDesigner extends React.Component {
 
     render() {
         return (
-<<<<<<< HEAD
             <React.Fragment>
-
                 <table className="mt-4">
                     <tbody>
                     {!this.props.inSimpleMode &&
                     <React.Fragment>
-=======
-            <table className="mt-4">
-                <tbody>
-                    {!this.props.inSimpleMode &&
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                         <tr>
                             <td>
                                 <label htmlFor="value-componenttype">Component Type:</label>
@@ -267,11 +247,7 @@ class NewQuestionDesigner extends React.Component {
                                     id="value-componenttype"
                                     className="form-control form-control-sm"
                                     size="1"
-<<<<<<< HEAD
                                     onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
-=======
-                                    onChange={e => this.setState({ selectedType: parseInt(e.target.value) })}
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                                     value={this.state.selectedType}
                                 >
                                     {componentTypes.map((type, index) =>
@@ -279,44 +255,13 @@ class NewQuestionDesigner extends React.Component {
                                             key={index}
                                             value={index}
                                         >
-<<<<<<< HEAD
-                                            {`${type.componentType}-${type.dataType}`}
-=======
                                             {`${type.componentType} - ${type.dataType}`}
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                                         </option>)
                                     }
                                 </select>
                             </td>
                         </tr>
-<<<<<<< HEAD
-
                     </React.Fragment>
-                    }
-                <tr>
-                    <td>
-                        <label htmlFor="value-parent">Parent Question:</label>
-                    </td>
-                    <td>
-                        <select
-                            id="value-parent"
-                            className="form-control form-control-sm"
-                            size="1"
-                            onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
-                            value={this.state.selectedParent}
-                        >
-                            <option key={-1} value={-1}>None</option>
-                            {this.props.surveyQuestions.length > 0
-                                ? this.props.surveyQuestions
-                                    .filter(question => question.componentType !== "input")
-                                    .map(question =>
-                                            <option
-                                                key={question.id}
-                                                value={question.id}
-                                            >
-                                                {question.question}
-                                            </option>)
-=======
                     }
                     <tr>
                         <td>
@@ -327,21 +272,20 @@ class NewQuestionDesigner extends React.Component {
                                 id="value-parent"
                                 className="form-control form-control-sm"
                                 size="1"
-                                onChange={e => this.setState({ selectedParent: parseInt(e.target.value) })}
+                                onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
                                 value={this.state.selectedParent}
                             >
                                 <option key={-1} value={-1}>None</option>
                                 {this.props.surveyQuestions.length > 0
-                                ? this.props.surveyQuestions
-                                    .filter(question => question.componentType !== "input")
-                                    .map(question =>
-                                        <option
-                                            key={question.id}
-                                            value={question.id}
-                                        >
-                                            {question.question}
-                                        </option>)
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
+                                    ? this.props.surveyQuestions
+                                        .filter(question => question.componentType !== "input")
+                                        .map(question =>
+                                            <option
+                                                key={question.id}
+                                                value={question.id}
+                                            >
+                                                {question.question}
+                                            </option>)
                                     : ""
                                 }
                             </select>
@@ -357,18 +301,14 @@ class NewQuestionDesigner extends React.Component {
                                 id="value-answer"
                                 className="form-control form-control-sm"
                                 size="1"
-<<<<<<< HEAD
                                 onChange={e => this.setState({selectedAnswer: parseInt(e.target.value)})}
-=======
-                                onChange={e => this.setState({ selectedAnswer: parseInt(e.target.value) })}
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                                 value={this.state.selectedAnswer}
                             >
                                 <option key={-1} value={-1}>Any</option>
                                 {this.state.selectedParent > 0
                                 && this.props.surveyQuestions
                                     .find(question => question.id === this.state.selectedParent)
-<<<<<<< HEAD
+
                                     ? this.props.surveyQuestions
                                         .find(question => question.id === this.state.selectedParent)
                                         .answers
@@ -376,15 +316,6 @@ class NewQuestionDesigner extends React.Component {
                                             <option key={answer.id} value={answer.id}>
                                                 {answer.answer}
                                             </option>)
-=======
-                                ? this.props.surveyQuestions
-                                    .find(question => question.id === this.state.selectedParent)
-                                    .answers
-                                    .map(answer =>
-                                        <option key={answer.id} value={answer.id}>
-                                            {answer.answer}
-                                        </option>)
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                                     : ""
                                 }
                             </select>
@@ -398,11 +329,7 @@ class NewQuestionDesigner extends React.Component {
                                     type="text"
                                     autoComplete="off"
                                     value={this.state.newQuestionText}
-<<<<<<< HEAD
                                     onChange={e => this.setState({newQuestionText: e.target.value})}
-=======
-                                    onChange={e => this.setState({ newQuestionText: e.target.value })}
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                                 />
                             </div>
                         </td>
@@ -418,58 +345,65 @@ class NewQuestionDesigner extends React.Component {
                         </td>
                         <td></td>
                     </tr>
-<<<<<<< HEAD
-
                     </tbody>
                 </table>
                 {!this.props.inSimpleMode && <SectionBlock title="Survey Rules Design">
                     <table>
                         <tbody>
-                        <SurveyRules surveyQuestions={this.props.surveyQuestions} surveyQuestion={this.props.surveyQuestion} setSurveyQuestions={this.props.setSurveyQuestions} setSurveyRules={this.props.setSurveyRules} surveyRules={this.props.surveyRules} setRules={this.setRules}/>
+                        <SurveyRules surveyQuestions={this.props.surveyQuestions}
+                                     surveyQuestion={this.props.surveyQuestion}
+                                     setSurveyQuestions={this.props.setSurveyQuestions}
+                                     setSurveyRules={this.props.setSurveyRules} surveyRules={this.props.surveyRules}
+                                     setRules={this.setRules}/>
                         <tr>
-                            <td> <span className="font-weight-bold">Rules:  </span></td><td></td></tr>
+                            <td><span className="font-weight-bold">Rules:  </span></td>
+                            <td></td>
+                        </tr>
                         <tr>
                             <td>
                                 <div>
                                     <table id="srd">
                                         <tbody>
                                         {
-                                            this.props.surveyRules.length > 0?
-                                            this.props.surveyRules.map((rule, uid) => {
-                                                if (rule.ruleType === "text-match") {
-                                                    return <tr id={"rule"+rule.id} key={uid}>
-                                                        <td>type:{rule.ruleType}</td>
-                                                        <td>regex:{rule.regex}</td>
-                                                        <td colSpan="2">questions:{rule.questions.toString()}</td>
-                                                    </tr>
-                                                }
-                                                if (rule.ruleType === "numeric-range") {
-                                                    return <tr id={"rule"+rule.id} key={uid}>
-                                                        <td>type:{rule.ruleType}</td>
-                                                        <td>min:{rule.min}</td>
-                                                        <td>max:{rule.max}</td>
-                                                        <td>questions:{rule.questions.toString()}</td>
-                                                    </tr>
-                                                }
-                                                if (rule.ruleType === "sum-of-answers") {
-                                                    return <tr id={"rule"+rule.id} key={uid}>
-                                                        <td>type:{rule.ruleType}</td>
-                                                        <td>validSum:{rule.validSum}</td>
-                                                        <td colSpan="2">questions:{rule.questions.toString()}</td>
-                                                    </tr>
-                                                }
-                                                if (rule.ruleType === "incompatible-types") {
-                                                    return <tr id={"rule"+rule.id} key={uid}>
-                                                        <td>type:{rule.ruleType}</td>
-                                                        <td colSpan="2">questions:{rule.questions.toString()}</td>
-                                                    </tr>
-                                                }
-                                            }):
-                                            <tr><td colspan="4"><span>No rules for this survey yet!</span></td></tr>
+                                            this.props.surveyRules.length > 0 ?
+                                                this.props.surveyRules.map((rule, uid) => {
+                                                    if (rule.ruleType === "text-match") {
+                                                        return <tr id={"rule" + rule.id} key={uid}>
+                                                            <td>type:{rule.ruleType}</td>
+                                                            <td>regex:{rule.regex}</td>
+                                                            <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                        </tr>
+                                                    }
+                                                    if (rule.ruleType === "numeric-range") {
+                                                        return <tr id={"rule" + rule.id} key={uid}>
+                                                            <td>type:{rule.ruleType}</td>
+                                                            <td>min:{rule.min}</td>
+                                                            <td>max:{rule.max}</td>
+                                                            <td>questions:{rule.questions.toString()}</td>
+                                                        </tr>
+                                                    }
+                                                    if (rule.ruleType === "sum-of-answers") {
+                                                        return <tr id={"rule" + rule.id} key={uid}>
+                                                            <td>type:{rule.ruleType}</td>
+                                                            <td>validSum:{rule.validSum}</td>
+                                                            <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                        </tr>
+                                                    }
+                                                    if (rule.ruleType === "incompatible-types") {
+                                                        return <tr id={"rule" + rule.id} key={uid}>
+                                                            <td>type:{rule.ruleType}</td>
+                                                            <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                        </tr>
+                                                    }
+                                                }) :
+                                                <tr>
+                                                    <td colspan="4"><span>No rules for this survey yet!</span></td>
+                                                </tr>
                                         }
                                         </tbody>
                                     </table>
-                                </div></td>
+                                </div>
+                            </td>
                             <td></td>
                         </tr>
                         </tbody>
@@ -478,11 +412,6 @@ class NewQuestionDesigner extends React.Component {
                 }
             </React.Fragment>
         )
-=======
-                </tbody>
-            </table>
-        );
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
     }
 }
 

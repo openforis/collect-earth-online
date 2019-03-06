@@ -30,10 +30,7 @@ class Project extends React.Component {
                 sampleResolution: "",
                 samplesPerPlot: "",
                 surveyQuestions: [],
-<<<<<<< HEAD
-                surveyRules:[]
-=======
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
+                surveyRules:[],
             },
             useTemplatePlots: false,
             imageryList: [],
@@ -234,9 +231,7 @@ class Project extends React.Component {
     };
 
     toggleTemplatePlots = () => this.setState({ useTemplatePlots: !this.state.useTemplatePlots });
-
-<<<<<<< HEAD
-    setProjectDetail = (key, newValue) => 
+    setProjectDetail = (key, newValue) =>
             this.setState({projectDetails: { ...this.state.projectDetails, [key]: newValue}});
 
     setSurveyQuestions = (newSurveyQuestions) => 
@@ -248,13 +243,6 @@ class Project extends React.Component {
         console.log("after setstate");
         console.log(this.state.projectDetails);
     };
-=======
-    setProjectDetail = (key, newValue) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
-
-    setSurveyQuestions = (newSurveyQuestions) =>
-        this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
 
     getProjectList = () => {
         const { userId } = this.props;
@@ -377,92 +365,56 @@ class Project extends React.Component {
 }
 
 function ProjectDesignForm(props) {
-    return (
+        return (
         <form
-            id="project-design-form"
-            className="px-2 pb-2"
-            method="post"
-            action={props.documentRoot + "/create-project"}
-            encType="multipart/form-data"
+        id="project-design-form"
+        className="px-2 pb-2"
+        method="post"
+        action={props.documentRoot + "/create-project"}
+        encType="multipart/form-data"
         >
-            {props.projectList &&
-                <ProjectTemplateVisibility
-                    projectId={props.projectDetails.id}
-                    projectList={props.projectList}
-                    setProjectTemplate={props.setProjectTemplate}
-                />
-            }
-            <ProjectInfo
-                name={props.projectDetails.name}
-                description={props.projectDetails.description}
-                setProjectDetail={props.setProjectDetail}
-            />
-            <ProjectVisibility
-                privacyLevel={props.projectDetails.privacyLevel}
-                setProjectDetail={props.setProjectDetail}
-            />
-            <ProjectAOI coordinates={props.coordinates}/>
-            {props.imageryList &&
-                <ProjectImagery
-                    imageryList={props.imageryList}
-                    baseMapSource={props.projectDetails.baseMapSource}
-                    setProjectDetail={props.setProjectDetail}
-<<<<<<< HEAD
-                    toggleTemplatePlots={props.toggleTemplatePlots}
-                />
-                {!props.useTemplatePlots && 
-                    <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
-                }
-                <SurveyDesign 
-                    surveyQuestions={props.projectDetails.surveyQuestions} surveyRules={props.projectDetails.surveyRules}
-                    setSurveyQuestions={props.setSurveyQuestions} setSurveyRules={props.setSurveyRules}
-                />
-=======
-                />
-            }
-            <PlotDesign
-                projectDetails={props.projectDetails}
-                useTemplatePlots={props.useTemplatePlots}
-                setProjectDetail={props.setProjectDetail}
-                toggleTemplatePlots={props.toggleTemplatePlots}
-            />
-            {!props.useTemplatePlots &&
-                <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
-            }
-            <SurveyDesign
-                surveyQuestions={props.projectDetails.surveyQuestions}
-                setSurveyQuestions={props.setSurveyQuestions}
-            />
-
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
+        {props.projectList &&
+        <ProjectTemplateVisibility
+            projectId={props.projectDetails.id}
+            projectList={props.projectList}
+            setProjectTemplate={props.setProjectTemplate}
+        />
+        }
+        <ProjectInfo
+        name={props.projectDetails.name}
+        description={props.projectDetails.description}
+        setProjectDetail={props.setProjectDetail}
+        />
+        <ProjectVisibility
+        privacyLevel={props.projectDetails.privacyLevel}
+        setProjectDetail={props.setProjectDetail}
+        />
+        <ProjectAOI coordinates={props.coordinates}/>
+        {props.imageryList &&
+        <ProjectImagery
+            imageryList={props.imageryList}
+            baseMapSource={props.projectDetails.baseMapSource}
+            setProjectDetail={props.setProjectDetail}
+            toggleTemplatePlots={props.toggleTemplatePlots}
+        />
+        }
+        <PlotDesign
+        projectDetails={props.projectDetails}
+        useTemplatePlots={props.useTemplatePlots}
+        setProjectDetail={props.setProjectDetail}
+        toggleTemplatePlots={props.toggleTemplatePlots}
+        />
+        {!props.useTemplatePlots &&
+        <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
+        }
+        <SurveyDesign
+        surveyQuestions={props.projectDetails.surveyQuestions} surveyRules={props.projectDetails.surveyRules}
+        setSurveyQuestions={props.setSurveyQuestions} setSurveyRules={props.setSurveyRules}
+        />
         </form>
-    );
-}
+        );
+    }
 
-<<<<<<< HEAD
-function ProjectTemplateVisibility({ projectId, projectList, setProjectTemplate }) {
-    return (
-        <SectionBlock title = "Use Project Template (Optional)">
-            <div id="project-template-selector">
-                <div className="form-group">
-                    <h3 htmlFor="project-template">Select Project</h3>
-                    <select 
-                        className="form-control form-control-sm"
-                        id="project-template"
-                        name="project-template"
-                        size="1"
-                        value={projectId}
-                        onChange={e => setProjectTemplate(e.target.value)}
-                    >
-                        <option key={0} value={0}>None</option>
-                        {
-                            projectList.filter(proj => proj && proj.id > 0)
-                                .map((proj,uid) =>
-                                    <option key={uid} value={proj.id}>{proj.name}</option>
-                                )
-                        }
-                    </select>
-=======
 class ProjectTemplateVisibility extends React.Component {
     constructor(props) {
         super(props);
@@ -506,7 +458,6 @@ class ProjectTemplateVisibility extends React.Component {
                             }
                         </select>
                     </div>
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                 </div>
             </SectionBlock>
         );

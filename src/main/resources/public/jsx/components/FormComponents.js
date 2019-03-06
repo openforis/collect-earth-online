@@ -23,7 +23,6 @@ export function SectionBlock({ title, children }) {
                     {children}
                 </div>
             </div>
-<<<<<<< HEAD
         )
     } else {
         return (
@@ -35,10 +34,6 @@ export function SectionBlock({ title, children }) {
             </div>
         );
     }
-=======
-        </div>
-    );
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
 }
 
 export function StatsCell({ title, children }) {

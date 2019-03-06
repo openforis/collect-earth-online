@@ -14,13 +14,7 @@ class Collection extends React.Component {
             currentImagery: { id: "" },
             currentPlot: null,
             imageryAttribution: "",
-<<<<<<< HEAD
-            imageryYearDG: 2009,
-            stackingProfileDG: "Accuracy_Profile",
-            imageryYearPlanet: 2018,
-=======
             imageryList: [],
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
             imageryMonthPlanet: 3,
             imageryMonthNamePlanet: "March",
             imageryYearDG: 2009,
@@ -194,21 +188,11 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
-<<<<<<< HEAD
-        
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
                         : newImagery.title === "PlanetGlobalMosaic"
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                             :  newImagery.attribution;
-=======
-
-        const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
-                        ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-                        : newImagery.title === "PlanetGlobalMosaic"
-                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthNamePlanet
-                            : newImagery.attribution;
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -278,20 +262,9 @@ class Collection extends React.Component {
             this.updatePlanetLayer();
         }
     }
-
-<<<<<<< HEAD
-    getImageryByTitle(imageryTitle) {
-        return this.state.imageryList.find(imagery => imagery.title === imageryTitle);
-    }
-
-    getImageryById(imageryId) {
-        return this.state.imageryList.find(imagery => imagery.id === imageryId);
-    }
-=======
     getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
 
     updateDGWMSLayer = () => {
         const { imageryYearDG, stackingProfileDG } = this.state;
@@ -304,13 +277,8 @@ class Collection extends React.Component {
                                       });
     };
 
-<<<<<<< HEAD
-    updatePlanetLayer() {
-        const { imageryMonthPlanet, imageryYearPlanet} = this.state;
-=======
     updatePlanetLayer = () => {
         const { imageryMonthPlanet, imageryYearPlanet } = this.state;
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
         mercator.updateLayerSource(this.state.mapConfig,
                                    "PlanetGlobalMosaic",
                                    sourceConfig => {
@@ -800,61 +768,6 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                 >
-<<<<<<< HEAD
-                    {this.state.plotList.length > 0
-                        ?
-                            <PlotNavigation 
-                                plotId={plotId}
-                                navButtonsShown={this.state.currentPlot != null}
-                                nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                                prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
-                                sampleOutlineBlack={this.state.sampleOutlineBlack}
-                                reviewPlots={this.state.reviewPlots}
-                                flagPlotInDB={this.flagPlotInDB}
-                                goToFirstPlot={this.goToFirstPlot}
-                                goToPlot={this.goToPlot}
-                                nextPlot={this.nextPlot}
-                                prevPlot={this.prevPlot}
-                                setReviewPlots={this.setReviewPlots}
-                                toggleSampleBW={this.toggleSampleBW}
-                            />
-                        :
-                        <h3>Loading project data...</h3>
-                    }
-                    {this.state.imageryList.length > 0
-                        ?
-                            <ImageryOptions 
-                                baseMapSource={this.state.currentImagery.id}
-                                imageryTitle={this.state.currentImagery.title}
-                                imageryList={this.state.imageryList}
-                                setBaseMapSource={this.setBaseMapSource}
-                                imageryYearDG={this.state.imageryYearDG}
-                                stackingProfileDG={this.state.stackingProfileDG}
-                                setImageryYearDG={this.setImageryYearDG}
-                                setStackingProfileDG={this.setStackingProfileDG}
-                                imageryYearPlanet={this.state.imageryYearPlanet}
-                                imageryMonthPlanet={this.state.imageryMonthPlanet}
-                                imageryMonthNamePlanet={this.state.imageryMonthNamePlanet}
-                                setImageryYearPlanet={this.setImageryYearPlanet}
-                                setImageryMonthPlanet={this.setImageryMonthPlanet}
-                            />
-                        :
-                            <h3>Loading imagery data...</h3>
-                    }
-                    {this.state.currentPlot 
-                    ? 
-                        <SurveyQuestions 
-                            selectedQuestion={this.state.selectedQuestion}
-                            surveyQuestions={this.state.currentProject.surveyQuestions}
-                            setCurrentValue={this.setCurrentValue}
-                            setSelectedQuestion={this.setSelectedQuestion}
-                        />
-                    :
-                        <fieldset className="mb-3 justify-content-center text-center">
-                            <h3>Survey Questions</h3>
-                            <p>Please go to a plot to see survey questions</p>
-                        </fieldset>
-=======
                     <PlotNavigation
                         plotId={plotId}
                         navButtonsShown={this.state.currentPlot != null}
@@ -903,7 +816,6 @@ class Collection extends React.Component {
                                 <h3>Survey Questions</h3>
                                 <p>Please go to a plot to see survey questions</p>
                             </fieldset>
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                     }
                 </SideBar>
                 <QuitMenu
@@ -1167,16 +1079,6 @@ function DigitalGlobeMenus(props) {
     return (
         <div className="DG-Menu my-2">
             <div className="slidecontainer form-control form-control-sm">
-<<<<<<< HEAD
-                <input 
-                    type="range" 
-                    min="2000" 
-                    max="2018" 
-                    value={props.imageryYearDG} 
-                    className="slider" 
-                    id="dgm_slider"
-                    onChange={(e) => props.setImageryYearDG(e.target.value)}
-=======
                 <input
                     type="range"
                     min="2000"
@@ -1185,7 +1087,6 @@ function DigitalGlobeMenus(props) {
                     className="slider"
                     id="myRange"
                     onChange={e => props.setImageryYearDG(parseInt(e.target.value))}
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                 />
                 <p>Year: <span id="demo">{props.imageryYearDG}</span></p>
             </div>
@@ -1210,16 +1111,7 @@ function PlanetMenus(props) {
     return (
         <div className="PlanetsMenu my-2">
             <div className="slidecontainer form-control form-control-sm">
-<<<<<<< HEAD
-                <input 
-                    type="range" 
-                    min="2016" 
-                    max="2018" 
-                    value={props.imageryYearPlanet} 
-                    className="slider" 
-                    id="planet_slider"
-                    onChange={(e) => props.setImageryYearPlanet(e.target.value)}
-=======
+
                 <input
                     type="range"
                     min="2016"
@@ -1228,7 +1120,6 @@ function PlanetMenus(props) {
                     className="slider"
                     id="myRange"
                     onChange={e => props.setImageryYearPlanet(parseInt(e.target.value))}
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                 />
                 <p>Year: <span id="demo">{props.imageryYearPlanet}</span></p>
             </div>
@@ -1240,11 +1131,7 @@ function PlanetMenus(props) {
                     value={props.imageryMonthPlanet}
                     className="slider"
                     id="myRangemonth"
-<<<<<<< HEAD
-                    onChange={(e) => props.setImageryMonthPlanet(e.target.value)}
-=======
                     onChange={e => props.setImageryMonthPlanet(parseInt(e.target.value))}
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                 />
                 <p>Month: <span id="demo">{props.imageryMonthNamePlanet}</span></p>
             </div>

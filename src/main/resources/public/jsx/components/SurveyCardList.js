@@ -1,11 +1,5 @@
-<<<<<<< HEAD
 import React, { Fragment }  from "react";
 import { removeEnumerator } from "../utils/SurveyUtils"
-=======
-import React, { Fragment } from "react";
-
-import { removeEnumerator } from "../utils/surveyUtils";
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
@@ -13,8 +7,7 @@ export default function SurveyCardList(props) {
                             .sort((a, b) => a.id - b.id);
 
     return topLevelNodes.map((sq, index) =>
-<<<<<<< HEAD
-                    <SurveyCard 
+                    <SurveyCard
                         key={index}
                         topLevelNodeIds={topLevelNodes.map(tln => tln.id)} 
                         cardNumber={index + 1}
@@ -29,22 +22,7 @@ export default function SurveyCardList(props) {
                         newAnswerComponent={props.newAnswerComponent}
                     />
                 );
-=======
-        <SurveyCard
-            key={index}
-            topLevelNodeIds={topLevelNodes.map(tln => tln.id)}
-            cardNumber={index + 1}
-            inDesignMode={props.inDesignMode}
-            inSimpleMode={props.inSimpleMode}
-            setSurveyQuestions={props.setSurveyQuestions}
-            surveyQuestion={sq}
-            surveyQuestions={props.surveyQuestions}
-            removeAnswer={props.removeAnswer}
-            removeQuestion={props.removeQuestion}
-            newAnswerComponent={props.newAnswerComponent}
-        />
-    );
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
+
 }
 
 class SurveyCard extends React.Component {
@@ -52,16 +30,12 @@ class SurveyCard extends React.Component {
         super(props);
         this.state = {
             showQuestions: true,
-<<<<<<< HEAD
             surveyRules:[],
             currentRules: [],
         }
         this.setRules=this.setRules.bind(this);
     }  
-=======
-        };
-    }
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
+
 
     swapQuestionIds = (upOrDown) => {
         const myId = this.props.surveyQuestion.id;
@@ -89,14 +63,8 @@ class SurveyCard extends React.Component {
                             <button
                                 type="button"
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
-<<<<<<< HEAD
                                 onClick={() => this.setState({showQuestions: !this.state.showQuestions})}>
                                 <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+" }</span>
-=======
-                                onClick={() => this.setState({ showQuestions: !this.state.showQuestions })}
-                            >
-                                <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
@@ -106,7 +74,6 @@ class SurveyCard extends React.Component {
                             </h3>
                         </div>
                         {inDesignMode &&
-<<<<<<< HEAD
                         <div className="col-2 d-flex pr-1 justify-content-end">
                             <button
                                 type="button"
@@ -151,52 +118,6 @@ class SurveyCard extends React.Component {
                 </div>
             </div>
         )
-=======
-                            <div className="col-2 d-flex pr-1 justify-content-end">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                    onClick={() => this.swapQuestionIds(-1)}
-                                    disabled={surveyQuestion.id === topLevelNodeIds[0]}
-                                    style={{ opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0" }}
-                                >
-                                    <i className={"fa fa-caret-up"} />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                    onClick={() => this.swapQuestionIds(1)}
-                                    disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]}
-                                    style={{
-                                        opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]
-                                                                        ? "0.25" : "1.0",
-                                    }}
-                                >
-                                    <i className={"fa fa-caret-down"} />
-                                </button>
-                            </div>
-                        }
-                    </div>
-                    {this.state.showQuestions &&
-                        <div className="SurveyCard__question-tree row d-block">
-                            <SurveyQuestionTree
-                                indentLevel={0}
-                                inDesignMode={this.props.inDesignMode}
-                                inSimpleMode={this.props.inSimpleMode}
-                                newAnswerComponent={this.props.newAnswerComponent}
-                                removeAnswer={this.props.removeAnswer}
-                                removeQuestion={this.props.removeQuestion}
-                                surveyQuestion={this.props.surveyQuestion}
-                                surveyQuestions={this.props.surveyQuestions}
-                                setSurveyQuestions={this.props.setSurveyQuestions}
-                            />
-                        </div>
-                    }
-                </div>
-            </div>
-
-        );
->>>>>>> 1e9054fe25f590416cde770c91f62e072281adb3
     }
 }
 
