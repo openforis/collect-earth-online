@@ -289,7 +289,7 @@ class MapWidget extends React.Component {
                         : (collectionName.trim().length > 0)
                             ? "cloudMaskImageByMosaicCollection"
                             : "ImageCollectionbyIndex";
-        return "https://ceodev.servirglobal.net:8888/" + resourcePath;
+        return window.location.protocol + "//" + window.location.hostname + ":8888/" + resourcePath;
     };
 
     getImageParams = widget => {
