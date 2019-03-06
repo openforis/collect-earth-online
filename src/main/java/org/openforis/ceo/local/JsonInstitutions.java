@@ -1,13 +1,20 @@
 package org.openforis.ceo.local;
 
-import static org.openforis.ceo.utils.JsonUtils.*;
+import static org.openforis.ceo.utils.JsonUtils.elementToArray;
+import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
+import static org.openforis.ceo.utils.JsonUtils.getNextId;
+import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
+import static org.openforis.ceo.utils.JsonUtils.mapJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
+import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.Date;
 import java.util.Optional;
-import javax.servlet.MultipartConfigElement;
 import org.openforis.ceo.db_api.Institutions;
 import spark.Request;
 import spark.Response;
@@ -15,12 +22,12 @@ import spark.Response;
 public class JsonInstitutions implements Institutions {
 
     public String getAllInstitutions(Request req, Response res) {
-        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var institutions = elementToArray(readJsonFile("institution-list.json"));
         return filterJsonArray(institutions, institution -> institution.get("archived").getAsBoolean() == false).toString();
     }
 
     private static Optional<JsonObject> getInstitutionById(int institutionId) {
-        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var institutions = elementToArray(readJsonFile("institution-list.json"));
         return findInJsonArray(institutions, institution -> institution.get("id").getAsInt() == institutionId
                                                          && institution.get("archived").getAsBoolean() == false);
     }
@@ -58,7 +65,7 @@ public class JsonInstitutions implements Institutions {
             final var description = jsonInputs.get("description").getAsString();
             
             // Read in the existing institution list
-            var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+            var institutions = elementToArray(readJsonFile("institution-list.json"));
 
             // Generate a new institution id
             final var newInstitutionId = getNextId(institutions);
@@ -106,7 +113,7 @@ public class JsonInstitutions implements Institutions {
         }
     }
 
-    public synchronized String updateInstitution(Request req, Response res) {
+    public String updateInstitution(Request req, Response res) {
         try {
             final var institutionId = req.params(":id");
 
@@ -148,7 +155,7 @@ public class JsonInstitutions implements Institutions {
         }
     }
 
-    public synchronized String archiveInstitution(Request req, Response res) {
+    public String archiveInstitution(Request req, Response res) {
         var institutionId = req.params(":id");
 
         mapJsonFile("institution-list.json",

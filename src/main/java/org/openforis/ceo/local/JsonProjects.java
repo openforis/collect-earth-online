@@ -2,6 +2,8 @@ package org.openforis.ceo.local;
 
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.openforis.ceo.local.JsonImagery.getImageryTitle;
+import static org.openforis.ceo.utils.JsonUtils.elementToArray;
+import static org.openforis.ceo.utils.JsonUtils.elementToObject;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
@@ -68,7 +70,7 @@ public class JsonProjects implements Projects {
     public String getAllProjects(Request req, Response res) {
         var userId = req.queryParams("userId");
         var institutionId = req.queryParams("institutionId");
-        var projects = readJsonFile("project-list.json").getAsJsonArray();
+        var projects = elementToArray(readJsonFile("project-list.json"));
 
         if (userId == null || userId.isEmpty()) {
             // Not logged in
@@ -132,7 +134,7 @@ public class JsonProjects implements Projects {
     }
 
     private static JsonObject singleProjectJson(String projectId) {
-        var projects = readJsonFile("project-list.json").getAsJsonArray();
+        var projects = elementToArray(readJsonFile("project-list.json"));
         var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
             return matchingProject.get();
@@ -147,7 +149,7 @@ public class JsonProjects implements Projects {
     }
 
     private static String[] getProjectUsers(String projectId) {
-        var projects = readJsonFile("project-list.json").getAsJsonArray();
+        var projects = elementToArray(readJsonFile("project-list.json"));
         var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
             var project = matchingProject.get();
@@ -160,10 +162,10 @@ public class JsonProjects implements Projects {
                 return new String[]{};
             } else if (privacyLevel.equals("public")) {
                 // return all users
-                var users = readJsonFile("user-list.json").getAsJsonArray();
+                var users = elementToArray(readJsonFile("user-list.json"));
                 return toStream(users).map(user -> user.get("id").getAsString()).toArray(String[]::new);
             } else {
-                var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+                var institutions = elementToArray(readJsonFile("institution-list.json"));
                 var matchingInstitution = findInJsonArray(institutions,
                         institution ->
                                 institution.get("id").getAsInt() == institutionId);
@@ -212,7 +214,7 @@ public class JsonProjects implements Projects {
 
     public String getProjectStats(Request req, Response res) {
         var projectId = req.params(":id");
-        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         var flaggedPlots = filterJsonArray(plots, plot -> plot.get("flagged").getAsBoolean() == true);
         var analyzedPlots = filterJsonArray(plots, plot -> plot.get("analyses").getAsInt() > 0);
         var members = getProjectUsers(projectId);
@@ -328,8 +330,8 @@ public class JsonProjects implements Projects {
     private static List<String> getGeoJsonHeaders(int projectId, String plotOrSample) {
         var jsonKeys = new ArrayList<String>();
         try {
-            final var geoJson = readJsonFile("../shp/project-" + projectId + "-" + plotOrSample
-                                       + "/project-" + projectId + "-" + plotOrSample + ".json").getAsJsonObject();
+            final var geoJson = elementToObject(readJsonFile("../shp/project-" + projectId + "-" + plotOrSample
+                                       + "/project-" + projectId + "-" + plotOrSample + ".json"));
             if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
                 final var properties = toStream(geoJson.get("features").getAsJsonArray())
                     .filter(feature -> {
@@ -348,8 +350,8 @@ public class JsonProjects implements Projects {
     private static HashMap<String, HashMap<String, String>>  getGeoJsonPlotData(int projectId) {
         var plotGeoms = new HashMap<String, HashMap<String, String>>();
         try {
-            final var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
-                                       + "/project-" + projectId + "-plots.json").getAsJsonObject();
+            final var geoJson = elementToObject(readJsonFile("../shp/project-" + projectId + "-plots"
+                                       + "/project-" + projectId + "-plots.json"));
             if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
                 toStream(geoJson.get("features").getAsJsonArray())
                     .filter(feature -> {
@@ -375,8 +377,8 @@ public class JsonProjects implements Projects {
     private static HashMap<String, HashMap<String, String>>  getGeoJsonSampleData(int projectId) {
         var plotGeoms = new HashMap<String, HashMap<String, String>>();
         try {
-            final var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
-                                       + "/project-" + projectId + "-samples.json").getAsJsonObject();
+            final var geoJson = elementToObject(readJsonFile("../shp/project-" + projectId + "-samples"
+                                       + "/project-" + projectId + "-samples.json"));
             if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
                 toStream(geoJson.get("features").getAsJsonArray())
                     .filter(feature -> {
@@ -450,7 +452,7 @@ public class JsonProjects implements Projects {
 
     public HttpServletResponse dumpProjectAggregateData(Request req, Response res) {
         final var projectId = req.params(":id");
-        final var projects = readJsonFile("project-list.json").getAsJsonArray();
+        final var projects = elementToArray(readJsonFile("project-list.json"));
         final var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
 
@@ -463,7 +465,7 @@ public class JsonProjects implements Projects {
             final var plotHeaders = getHeadersList(project, "plots");
             final var plotData = getDataHashMap(project, "plots");
 
-            final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+            final var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
             var plotSummaries = mapJsonArray(plots,
                     plot -> {
                         final var samples = plot.get("samples").getAsJsonArray();
@@ -532,7 +534,7 @@ public class JsonProjects implements Projects {
 
     public HttpServletResponse dumpProjectRawData(Request req, Response res) {
         final var projectId = req.params(":id");
-        final var projects = readJsonFile("project-list.json").getAsJsonArray();
+        final var projects = elementToArray(readJsonFile("project-list.json"));
         final var matchingProject = findInJsonArray(projects, project -> project.get("id").getAsString().equals(projectId));
         DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
 
@@ -548,7 +550,7 @@ public class JsonProjects implements Projects {
             final var sampleHeaders = getHeadersList(project, "samples");
             final var sampleData = getDataHashMap(project, "samples");
 
-            var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+            var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
             var sampleSummaries = flatMapJsonArray(plots,
                     plot -> {
                         final var plotId = plot.get("id").getAsInt();
@@ -658,7 +660,7 @@ public class JsonProjects implements Projects {
         }
     }
 
-    public synchronized String publishProject(Request req, Response res) {
+    public String publishProject(Request req, Response res) {
         var projectId = req.params(":id");
         mapJsonFile("project-list.json",
                 project -> {
@@ -673,7 +675,7 @@ public class JsonProjects implements Projects {
         return "";
     }
 
-    public synchronized String closeProject(Request req, Response res) {
+    public String closeProject(Request req, Response res) {
         var projectId = req.params(":id");
         mapJsonFile("project-list.json",
                 project -> {
@@ -688,7 +690,7 @@ public class JsonProjects implements Projects {
         return "";
     }
 
-    public synchronized String archiveProject(Request req, Response res) {
+    public String archiveProject(Request req, Response res) {
         var projectId = req.params(":id");
         mapJsonFile("project-list.json",
                 project -> {
@@ -758,8 +760,8 @@ public class JsonProjects implements Projects {
     // The uploaded GeoJson must contain Polygon geometries with PLOTID properties
     private static HashMap<Integer, JsonObject> getGeoJsonPlotGeometries(int projectId) {
         try {
-            final var geoJson = readJsonFile("../shp/project-" + projectId + "-plots"
-                                       + "/project-" + projectId + "-plots.json").getAsJsonObject();
+            final var geoJson = elementToObject(readJsonFile("../shp/project-" + projectId + "-plots"
+                                       + "/project-" + projectId + "-plots.json"));
             if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
                 final var plotGeoms = new HashMap<Integer, JsonObject>();
                 toStream(geoJson.get("features").getAsJsonArray())
@@ -786,8 +788,8 @@ public class JsonProjects implements Projects {
     // The uploaded GeoJson must contain Polygon geometries with PLOTID and SAMPLEID properties
     private static HashMap<Integer, HashMap<Integer, JsonObject>> getGeoJsonSampleGeometries(int projectId) {
         try {
-            final var geoJson = readJsonFile("../shp/project-" + projectId + "-samples"
-                                       + "/project-" + projectId + "-samples.json").getAsJsonObject();
+            final var geoJson = elementToObject(readJsonFile("../shp/project-" + projectId + "-samples"
+                                       + "/project-" + projectId + "-samples.json"));
             if (geoJson.get("type").getAsString().equals("FeatureCollection")) {
                 var sampleGeomsByPlot = new HashMap<Integer, HashMap<Integer, JsonObject>>();
                 toStream(geoJson.get("features").getAsJsonArray())
@@ -897,7 +899,7 @@ public class JsonProjects implements Projects {
                     var templateID = newProjectData.get("projectTemplate").getAsString();
                     var templateProject = singleProjectJson(templateID);
                     // Strip plots and samples of user data
-                    var plots = readJsonFile("plot-data-" + templateID + ".json").getAsJsonArray();
+                    var plots = elementToArray(readJsonFile("plot-data-" + templateID + ".json"));
                     var newPlots = toStream(plots)
                             .map(plot -> {
                                 var newSamples = toStream(plot.get("samples").getAsJsonArray())
@@ -1038,7 +1040,7 @@ public class JsonProjects implements Projects {
         }
     }
 
-    private static synchronized JsonObject createProjectPlots(JsonObject newProject) {
+    private static JsonObject createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         var projectId =          newProject.get("id").getAsInt();
         var lonMin =             newProject.get("lonMin").getAsDouble();
@@ -1253,7 +1255,7 @@ public class JsonProjects implements Projects {
             fileData.addProperty("sampleFileBase64", getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
 
             // Read in the existing project list
-            var projects = readJsonFile("project-list.json").getAsJsonArray();
+            var projects = elementToArray(readJsonFile("project-list.json"));
 
             // Generate a new project id
             var newProjectId = getNextId(projects);
