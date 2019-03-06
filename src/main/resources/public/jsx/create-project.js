@@ -143,12 +143,30 @@ class Project extends React.Component {
     };
 
     validateProject = () => {
-        const { projectDetails, coordinates } = this.state;
+        const { projectDetails } = this.state;
         if (projectDetails.name === "" || projectDetails.description === "") {
             alert("A project must contain a name and description");
             return false;
 
-        } else if (["random", "gridded"].includes(projectDetails.plotDistribution) && coordinates.latMax === "") {
+        } else if (!this.state.useTemplatePlots && !this.validatePlotData()) {
+            return false;
+
+        } else if (projectDetails.surveyQuestions.length === 0) {
+            alert("A survey must include at least one question");
+            return false;
+
+        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
+            alert("All survey questions must contain at least one answer");
+            return false;
+
+        } else {
+            return true;
+        }
+    };
+
+    validatePlotData = () => {
+        const { projectDetails, coordinates } = this.state;
+        if (["random", "gridded"].includes(projectDetails.plotDistribution) && coordinates.latMax === "") {
             alert("Please select a boundary");
             return false;
 
@@ -195,14 +213,6 @@ class Project extends React.Component {
         } else if (projectDetails.sampleDistribution === "shp"
                     && !(projectDetails.sampleFileName && projectDetails.sampleFileName.includes(".zip"))) {
             alert("A sample SHP (.zip) file is required");
-            return false;
-
-        } else if (projectDetails.surveyQuestions.length === 0) {
-            alert("A survey must include at least one question");
-            return false;
-
-        } else if (projectDetails.surveyQuestions.some(sq => sq.answers.length === 0)) {
-            alert("All survey questions must contain at least one answer");
             return false;
 
         } else {
