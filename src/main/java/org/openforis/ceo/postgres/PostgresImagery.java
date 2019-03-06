@@ -24,11 +24,11 @@ public class PostgresImagery implements Imagery {
                 ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
                 : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
 
-            if(hasInstitutionId) {
+            if (hasInstitutionId) {
                 pstmt.setInt(1, Integer.parseInt(institutionId));
             }
             var imageryArray = new JsonArray();
-            try(var rs = pstmt.executeQuery()) {
+            try (var rs = pstmt.executeQuery()) {
                 while(rs.next()) {
                     //create imagery json to send back
                     var newImagery = new JsonObject();
@@ -88,6 +88,7 @@ public class PostgresImagery implements Imagery {
                 pstmt.setString(6, sourceConfig.toString());
                 pstmt.execute();
                 return "";
+
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }

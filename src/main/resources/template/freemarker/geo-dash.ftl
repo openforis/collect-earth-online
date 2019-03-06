@@ -31,7 +31,7 @@
 <script type="text/javascript" src="${root}/js/geodashreact.bundle.js"></script>
 <script type="text/javascript">
  window.onload = function () {
-     geodashreact.renderGeodashPage();
+     geodashreact.renderGeodashPage("${root}");
  };
 </script>
 <#include "end-content.ftl">

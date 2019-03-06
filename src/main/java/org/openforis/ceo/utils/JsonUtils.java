@@ -54,7 +54,7 @@ public class JsonUtils {
         }
     }
 
-    public static void writeJsonFile(String filename, JsonElement data) {
+    public synchronized static void writeJsonFile(String filename, JsonElement data) {
         var jsonDataDir = expandResourcePath("/json/");
         try (var fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
             fileWriter.write(data.toString());
@@ -121,14 +121,14 @@ public class JsonUtils {
 	}
 
     // Note: The JSON file must contain an array of objects.
-    public static void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
+    public synchronized static void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
         var array = readJsonFile(filename).getAsJsonArray();
         var updatedArray = mapJsonArray(array, mapper);
         writeJsonFile(filename, updatedArray);
     }
 
     // Note: The JSON file must contain an array of objects.
-    public static void filterJsonFile(String filename, Predicate<JsonObject> predicate) {
+    public synchronized static void filterJsonFile(String filename, Predicate<JsonObject> predicate) {
         var array = readJsonFile(filename).getAsJsonArray();
         var updatedArray = filterJsonArray(array, predicate);
         writeJsonFile(filename, updatedArray);

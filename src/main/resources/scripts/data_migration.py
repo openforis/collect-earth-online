@@ -33,7 +33,7 @@ def insert_users():
             cur.execute("select * from add_user_migration(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
             user_id = cur.fetchone()[0]
             conn.commit()
-        cur.execute("select * from add_user_migration(%s,%s::text,%s::text)", (user_id + 1, "guest","dkh*&jlkjadfjk&^58342bmdjkjhf(*&0984"))
+        cur.execute("select * from add_user_migration(%s,%s::text,%s::text)", (-1, "guest","dkh*&jlkjadfjk&^58342bmdjkjhf(*&0984"))
         cur.execute("SELECT * FROM set_admin()")
         conn.commit()
         cur.close()
@@ -59,25 +59,25 @@ def insert_institutions():
             members=institution['members']
             admins=institution['admins']
             pendingUsers=institution['pending']             
-            cur.execute("select * from add_institution_migration(%s,%s::text,%s::text,%s::text,%s::text,%s)", (institution['id'],institution['name'],institution['logo'],institution['description'],institution['url'],institution['archived']))
+            cur.execute("select * from add_institution_migration(%s,%s::text,%s::text,%s::text,%s::text,%s)",
+                        (institution['id'],institution['name'],institution['logo'],institution['description'],institution['url'],institution['archived']))
             conn.commit()
             role_id=-1
             user_id=-1
-            for member in members:
-                user_id=member                
+            for member in members:  
                 if member in admins:
                     role_id=1
                 elif member in pendingUsers:
                     role_id=3
                 else:
                     role_id=2
-                cur1.execute("select * from add_institution_user(%s,%s,%s)", (institution['id'],user_id,role_id))
+                if isinstance(member , int):
+                    cur1.execute("select * from add_institution_user(%s,%s,%s)", (institution['id'],member,role_id))
             conn.commit()
             for pending in pendingUsers:
                 if pending not in members and pending not in admins:
-                    user_id=pending
                     role_id=3
-                    cur1.execute("select * from add_institution_user(%s,%s,%s)", (institution['id'],user_id,role_id))
+                    cur1.execute("select * from add_institution_user(%s,%s,%s)", (institution['id'],pending,role_id))
             conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -97,13 +97,15 @@ def insert_imagery():
         imageryArr = demjson.decode(imagery_list_json)
         for imagery in imageryArr:
             if imagery['institution'] > 1: 
-                cur.execute("select * from add_institution_imagery_migration(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", 
-                    (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],
-                    imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
+                try:
+                    cur.execute("select * from add_institution_imagery_migration(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", 
+                        (imagery['id'],imagery['institution'],imagery['visibility'],imagery['title'],
+                        imagery['attribution'],json.dumps(imagery['extent']),json.dumps(imagery['sourceConfig'])))
+                except: pass
                 conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)    
+        print(error)
     finally:
         if conn is not None:
             conn.close() 

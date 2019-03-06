@@ -271,57 +271,72 @@ public class OfUsers implements Users {
 
     public String updateProjectUserStats(Request req, Response res) { return "";}
 
-    public String getAllUsers(Request req, Response res) {
-        var institutionId = req.queryParams("institutionId");
+    public String getInstitutionUsers(Request req, Response res) {
+        var institutionId = req.params(":id");
         try {
-        	return getAllUsers(institutionId).toString();
+        	return getInstitutionUsers(institutionId).toString();
         } catch (Exception e) {
         	req.session().attribute("flash_message", e.getMessage());
         	return new JsonArray().toString();
         }
     }
     
-    public static JsonArray getAllUsers(String institutionId) {
+    private static JsonArray getInstitutionUsers(String institutionId) {
         try {
-            if (institutionId != null) {
-                var url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
-                var response = prepareGetRequest(url).execute(); // get group's users
-                if (response.isSuccessStatusCode()) {
-                    var groupUsers = getResponseAsJson(response).getAsJsonArray();
-                    return toStream(groupUsers)
-                        .map(groupUser -> {
-                                groupUser.getAsJsonObject("user").addProperty("institutionRole",
-                                                                              groupUser.get("roleCode").getAsString().equals("ADM") ? "admin"
-                                                                              : groupUser.get("roleCode").getAsString().equals("OWN") ? "admin"
-                                                                              : groupUser.get("roleCode").getAsString().equals("OPR") ? "member"
-                                                                              : groupUser.get("roleCode").getAsString().equals("VWR") ? "member"
-                                                                              : groupUser.get("statusCode").getAsString().equals("P") ? "pending"
-                                                                              : "not-member");
-                                return groupUser.getAsJsonObject("user");
-                            })
+            var url = String.format(OF_USERS_API_URL + "group/%s/users", institutionId);
+            var response = prepareGetRequest(url).execute(); // get group's users
+            if (response.isSuccessStatusCode()) {
+                var groupUsers = getResponseAsJson(response).getAsJsonArray();
+                return toStream(groupUsers)
+                    .map(groupUser -> {
+                            groupUser.getAsJsonObject("user").addProperty("institutionRole",
+                                                                            groupUser.get("roleCode").getAsString().equals("ADM") ? "admin"
+                                                                            : groupUser.get("roleCode").getAsString().equals("OWN") ? "admin"
+                                                                            : groupUser.get("roleCode").getAsString().equals("OPR") ? "member"
+                                                                            : groupUser.get("roleCode").getAsString().equals("VWR") ? "member"
+                                                                            : groupUser.get("statusCode").getAsString().equals("P") ? "pending"
+                                                                            : "not-member");
+                            return groupUser.getAsJsonObject("user");
+                        })
+                    .map(user -> {
+                            user.addProperty("email", user.get("username").getAsString());
+                            return user;
+                        })
+                    .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
+                    .collect(intoJsonArray);
+            } else {
+                throw new RuntimeException("An error occurred. Please try again later.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); //TODO
+            // FIXME: Raise a red flag that an error just occurred in communicating with the database
+            return new JsonArray();
+        }
+    }
+
+    public String getAllUsers(Request req, Response res) {
+        try {
+        	return getAllUsers().toString();
+        } catch (Exception e) {
+        	req.session().attribute("flash_message", e.getMessage());
+        	return new JsonArray().toString();
+        }
+    }
+    
+    public static JsonArray getAllUsers() {
+        try {
+            var response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
+            if (response.isSuccessStatusCode()) {
+                var users = getResponseAsJson(response).getAsJsonArray();
+                return toStream(users)
                         .map(user -> {
                                 user.addProperty("email", user.get("username").getAsString());
                                 return user;
-                            })
+                        })
                         .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
                         .collect(intoJsonArray);
-                } else {
-                    throw new RuntimeException("An error occurred. Please try again later.");
-                }
             } else {
-                var response = prepareGetRequest(OF_USERS_API_URL + "user").execute(); // get all the users
-                if (response.isSuccessStatusCode()) {
-                    var users = getResponseAsJson(response).getAsJsonArray();
-                    return toStream(users)
-                            .map(user -> {
-                                    user.addProperty("email", user.get("username").getAsString());
-                                    return user;
-                            })
-                            .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
-                            .collect(intoJsonArray);
-                } else {
-                	throw new RuntimeException("An error occurred. Please try again later.");
-                }
+                throw new RuntimeException("An error occurred. Please try again later.");
             }
         } catch (IOException e) {
             e.printStackTrace(); //TODO

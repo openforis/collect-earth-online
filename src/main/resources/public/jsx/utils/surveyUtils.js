@@ -4,8 +4,8 @@ export function convertSampleValuesToSurveyQuestions(sampleValues) {
         const newAnswers = (sv.answers || sv.values).map(value => ({
             id: value.id,
             answer: value.answer || value.name || "",
-            color: value.color
-          }));
+            color: value.color,
+        }));
 
         return {
             id: sv.id,
@@ -14,7 +14,7 @@ export function convertSampleValuesToSurveyQuestions(sampleValues) {
             parentQuestion: parseInt(sv.parentQuestion || sv.parent_question || -1),
             parentAnswer: parseInt(sv.parentAnswer || sv.parent_answer || -1),
             componentType: (sv.componentType || "button").toLocaleLowerCase(),
-            dataType: (sv.dataType || "text").toLocaleLowerCase()
+            dataType: (sv.dataType || "text").toLocaleLowerCase(),
         };
     });
 }

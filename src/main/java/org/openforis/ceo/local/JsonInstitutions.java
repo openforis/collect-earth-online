@@ -1,8 +1,7 @@
 package org.openforis.ceo.local;
 
 import static org.openforis.ceo.utils.JsonUtils.*;
-import static org.openforis.ceo.utils.PartUtils.partToString;
-import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -30,7 +29,9 @@ public class JsonInstitutions implements Institutions {
         var institutionId = Integer.parseInt(req.params(":id"));
         var matchingInstitution = getInstitutionById(institutionId);
         if (matchingInstitution.isPresent()) {
-            return matchingInstitution.get().toString();
+            var institutionObject = matchingInstitution.get();
+            institutionObject.addProperty("logo", institutionObject.get("logo").getAsString() + "?t=" + (new Date().toString()));
+            return institutionObject.toString();
         } else {
             var noInstitutionFound = new JsonObject();
             noInstitutionFound.addProperty("id"         , -1);
@@ -46,89 +47,102 @@ public class JsonInstitutions implements Institutions {
         }
     }
 
+    public synchronized String createInstitution(Request req, Response res) {
+        try {
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
+            final var userId = jsonInputs.get("userId").getAsInt();
+            final var name = jsonInputs.get("name").getAsString();
+            final var url = jsonInputs.get("url").getAsString();
+            final var logo = jsonInputs.get("logo").getAsString();
+            final var base64Image = jsonInputs.get("base64Image").getAsString();
+            final var description = jsonInputs.get("description").getAsString();
+            
+            // Read in the existing institution list
+            var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+
+            // Generate a new institution id
+            final var newInstitutionId = getNextId(institutions);
+            // Upload the logo image if one was provided
+            final var logoFileName = !logo.equals("") 
+                                    ? writeFilePartBase64(
+                                            logo,
+                                            base64Image,
+                                            expandResourcePath("/public/img/institution-logos"),
+                                            "institution-" + newInstitutionId
+                                        )
+                                    : null;
+
+            var members = new JsonArray();
+            var admins = new JsonArray();
+            var pending = new JsonArray();
+
+            // Make the current user and the admin user (id=1) members and admins of the new institution
+            members.add(1);
+            admins.add(1);
+            if (userId != 1) {
+                members.add(userId);
+                admins.add(userId);
+            }
+
+            var newInstitution = new JsonObject();
+            newInstitution.addProperty("id", newInstitutionId);
+            newInstitution.addProperty("name", name);
+            newInstitution.addProperty("logo", logoFileName != null 
+                                                ? "img/institution-logos/" + logoFileName 
+                                                : "");
+            newInstitution.addProperty("description", description);
+            newInstitution.addProperty("url", url);
+            newInstitution.addProperty("archived", false);
+            newInstitution.add("members", members);
+            newInstitution.add("admins", admins);
+            newInstitution.add("pending", pending);
+
+            institutions.add(newInstitution);
+            writeJsonFile("institution-list.json", institutions);
+
+            return newInstitution.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public synchronized String updateInstitution(Request req, Response res) {
         try {
-            var institutionId = req.params(":id");
+            final var institutionId = req.params(":id");
 
-            // Create a new multipart config for the servlet
-            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
-            var userid = Integer.parseInt(partToString(req.raw().getPart("userid")));
-            var name = partToString(req.raw().getPart("institution-name"));
-            var url = partToString(req.raw().getPart("institution-url"));
-            var description = partToString(req.raw().getPart("institution-description"));
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
+            final var name = jsonInputs.get("name").getAsString();
+            final var url = jsonInputs.get("url").getAsString();
+            final var logo = jsonInputs.get("logo").getAsString();
+            final var base64Image = jsonInputs.get("base64Image").getAsString();
+            final var description = jsonInputs.get("description").getAsString();
 
-            if (institutionId.equals("0")) {
-                // NOTE: This branch creates a new institution
+            // Upload the logo image if one was provided
+            final var logoFileName = !logo.equals("") 
+                                    ? writeFilePartBase64(
+                                            logo,
+                                            base64Image,
+                                            expandResourcePath("/public/img/institution-logos"),
+                                            "institution-" + institutionId
+                                        )
+                                    : null;
 
-                // Read in the existing institution list
-                var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+            mapJsonFile("institution-list.json", institution -> {
+                    if (institution.get("id").getAsString().equals(institutionId)) {
+                        institution.addProperty("name", name);
+                        institution.addProperty("url", url);
+                        institution.addProperty("description", description);
+                        institution.addProperty("logo", logoFileName != null 
+                                                        ? "img/institution-logos/" + logoFileName 
+                                                        : institution.get("logo").getAsString());
+                        return institution;
+                    } else {
+                        return institution;
+                    }
+                });
 
-                // Generate a new institution id
-                var newInstitutionId = getNextId(institutions);
-                // Upload the logo image if one was provided
-                var logoFileName = writeFilePart(req,
-                                                "institution-logo",
-                                                expandResourcePath("/public/img/institution-logos"),
-                                                "institution-" + newInstitutionId);
-                var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
+            return institutionId + "";
 
-                var members = new JsonArray();
-                var admins = new JsonArray();
-                var pending = new JsonArray();
-
-                // Make the current user and the admin user (id=1) members and admins of the new institution
-                members.add(1);
-                admins.add(1);
-                if (userid != 1) {
-                    members.add(userid);
-                    admins.add(userid);
-                }
-
-                var newInstitution = new JsonObject();
-                newInstitution.addProperty("id", newInstitutionId);
-                newInstitution.addProperty("name", name);
-                newInstitution.addProperty("logo", logoPath);
-                newInstitution.addProperty("description", description);
-                newInstitution.addProperty("url", url);
-                newInstitution.addProperty("archived", false);
-                newInstitution.add("members", members);
-                newInstitution.add("admins", admins);
-                newInstitution.add("pending", pending);
-
-                institutions.add(newInstitution);
-                writeJsonFile("institution-list.json", institutions);
-
-                return newInstitution.toString();
-            } else {
-                // NOTE: This branch edits an existing institution
-
-                // Upload the logo image if one was provided
-                var logoFileName = writeFilePart(req,
-                                                 "institution-logo",
-                                                 expandResourcePath("/public/img/institution-logos"),
-                                                 "institution-" + institutionId);
-                var logoPath = logoFileName != null ? "img/institution-logos/" + logoFileName : "";
-
-                mapJsonFile("institution-list.json", institution -> {
-                        if (institution.get("id").getAsString().equals(institutionId)) {
-                            institution.addProperty("name", name);
-                            institution.addProperty("url", url);
-                            institution.addProperty("description", description);
-                            if (logoFileName != null) {
-                                institution.addProperty("logo", logoPath);
-                            }
-                            return institution;
-                        } else {
-                            return institution;
-                        }
-                    });
-
-                var updatedInstitution = new JsonObject();
-                updatedInstitution.addProperty("id", institutionId);
-                updatedInstitution.addProperty("logo", logoPath.equals("") ? "" : logoPath + "?t=" + (new Date().toString()));
-                return updatedInstitution.toString();
-            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -20,7 +20,6 @@ public class JsonGeoDash implements GeoDash {
     public synchronized String geodashId(Request req, Response res) {
         var projectId = req.params(":id");
         var projectTitle = req.queryParams("title");
-        var callback = req.queryParams("callback");
 
         var projects = readJsonFile("proj.json").getAsJsonArray();
         var matchingProject = findInJsonArray(projects,
@@ -30,11 +29,7 @@ public class JsonGeoDash implements GeoDash {
             var dashboardId = project.get("dashboard").getAsString();
             try {
                 var dashboardJson = readJsonFile("dash-" + dashboardId + ".json").toString();
-                if (callback != null) {
-                    return callback + "(" + dashboardJson + ")";
-                } else {
-                    return dashboardJson;
-                }
+                return dashboardJson;
             } catch (Exception e) {
                 // The dash-<dashboardId>.json file doesn't exist, so we need to create a blank one.
                 var newDashboard = new JsonObject();
@@ -44,12 +39,7 @@ public class JsonGeoDash implements GeoDash {
                 newDashboard.addProperty("dashboardID", dashboardId);
 
                 writeJsonFile("dash-" + dashboardId + ".json", newDashboard);
-
-                if (callback != null) {
-                    return callback + "(" + newDashboard.toString() + ")";
-                } else {
-                    return newDashboard.toString();
-                }
+                return newDashboard.toString();
             }
         } else {
             var newDashboardId = UUID.randomUUID().toString();
@@ -69,11 +59,7 @@ public class JsonGeoDash implements GeoDash {
 
             writeJsonFile("dash-" + newDashboardId + ".json", newDashboard);
 
-            if (callback != null) {
-                return callback + "(" + newDashboard.toString() + ")";
-            } else {
-                return newDashboard.toString();
-            }
+            return newDashboard.toString();
         }
     }
 
@@ -84,9 +70,9 @@ public class JsonGeoDash implements GeoDash {
 
     
     public synchronized String createDashBoardWidgetById(Request req, Response res) {
-        var dashboardId = req.queryParams("dashID");
-        var widgetJson = req.queryParams("widgetJSON");
-        var callback = req.queryParams("callback");
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
+        var widgetJson = jsonInputs.get("widgetJSON").getAsString();
 
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
@@ -101,20 +87,15 @@ public class JsonGeoDash implements GeoDash {
         dashboard.add("widgets", widgets);
         writeJsonFile("dash-" + dashboardId + ".json", dashboard);
 
-        if (callback != null) {
-            return callback + "()";
-        } else {
-            return "";
-        }
+        return "";
     }
 
     // FIXME: the new react design is using the body to pass the widget JSON (see PostgresGeoDash for updated form)
     public synchronized String updateDashBoardWidgetById(Request req, Response res) {
-        var dashboardId = req.queryParams("dashID");
         var widgetId = req.params(":id");
-        var widgetJson = req.queryParams("widgetJSON");
-        var callback = req.queryParams("callback");
-
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
+        var widgetJson = jsonInputs.get("widgetJSON").getAsString();
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
 
@@ -133,18 +114,13 @@ public class JsonGeoDash implements GeoDash {
         dashboard.add("widgets", updatedWidgets);
         writeJsonFile("dash-" + dashboardId + ".json", dashboard);
 
-        if (callback != null) {
-            return callback + "()";
-        } else {
-            return "";
-        }
+        return "";
     }
 
     public synchronized String deleteDashBoardWidgetById(Request req, Response res) {
-        var dashboardId = req.queryParams("dashID");
         var widgetId = req.params(":id");
-        var callback = req.queryParams("callback");
-
+        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var dashboardId = jsonInputs.get("dashID").getAsString();
         var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
         var widgets = dashboard.getAsJsonArray("widgets");
 
@@ -153,11 +129,7 @@ public class JsonGeoDash implements GeoDash {
         dashboard.add("widgets", updatedWidgets);
         writeJsonFile("dash-" + dashboardId + ".json", dashboard);
 
-        if (callback != null) {
-            return callback + "()";
-        } else {
-            return "";
-        }
+        return "";
     }
 
 }

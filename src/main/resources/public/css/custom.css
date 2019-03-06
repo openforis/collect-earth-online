@@ -77,6 +77,11 @@
 		margin-left:-15px;
 		margin-right:-15px;	
 }
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
 /* Fonts */
 /*************/
 @font-face {
