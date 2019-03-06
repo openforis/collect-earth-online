@@ -45,7 +45,7 @@ public class JsonUtils {
     	return (new Gson()).toJson(obj);
     }
 
-    public static JsonElement readJsonFile(String filename) {
+    public static synchronized JsonElement readJsonFile(String filename) {
         var jsonDataDir = expandResourcePath("/json/");
         try (var fileReader = new FileReader(new File(jsonDataDir, filename))) {
             return (new JsonParser()).parse(fileReader);
@@ -54,7 +54,15 @@ public class JsonUtils {
         }
     }
 
-    public synchronized static void writeJsonFile(String filename, JsonElement data) {
+    public static JsonArray elementToArray(JsonElement json) {
+        return json.isJsonArray() ? json.getAsJsonArray(): new JsonArray();
+    }
+
+    public static JsonObject elementToObject(JsonElement json) {
+        return json.isJsonObject() ? json.getAsJsonObject(): new JsonObject();
+    }
+
+    public static synchronized void writeJsonFile(String filename, JsonElement data) {
         var jsonDataDir = expandResourcePath("/json/");
         try (var fileWriter = new FileWriter(new File(jsonDataDir, filename))) {
             fileWriter.write(data.toString());
@@ -121,14 +129,14 @@ public class JsonUtils {
 	}
 
     // Note: The JSON file must contain an array of objects.
-    public synchronized static void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
+    public static synchronized void mapJsonFile(String filename, Function<JsonObject, JsonObject> mapper) {
         var array = readJsonFile(filename).getAsJsonArray();
         var updatedArray = mapJsonArray(array, mapper);
         writeJsonFile(filename, updatedArray);
     }
 
     // Note: The JSON file must contain an array of objects.
-    public synchronized static void filterJsonFile(String filename, Predicate<JsonObject> predicate) {
+    public static synchronized void filterJsonFile(String filename, Predicate<JsonObject> predicate) {
         var array = readJsonFile(filename).getAsJsonArray();
         var updatedArray = filterJsonArray(array, predicate);
         writeJsonFile(filename, updatedArray);

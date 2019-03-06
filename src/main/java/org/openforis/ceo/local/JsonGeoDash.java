@@ -4,6 +4,8 @@ import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.elementToArray;
+import static org.openforis.ceo.utils.JsonUtils.elementToObject;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
@@ -21,7 +23,7 @@ public class JsonGeoDash implements GeoDash {
         var projectId = req.params(":id");
         var projectTitle = req.queryParams("title");
 
-        var projects = readJsonFile("proj.json").getAsJsonArray();
+        var projects = elementToArray(readJsonFile("proj.json"));
         var matchingProject = findInJsonArray(projects,
             project -> project.get("projectID").getAsString().equals(projectId));
         if (matchingProject.isPresent()) {
@@ -74,11 +76,11 @@ public class JsonGeoDash implements GeoDash {
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJson = jsonInputs.get("widgetJSON").getAsString();
 
-        var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
+        var dashboard = elementToObject(readJsonFile("dash-" + dashboardId + ".json"));
         var widgets = dashboard.getAsJsonArray("widgets");
 
         try {
-            var newWidget = parseJson(URLDecoder.decode(widgetJson, "UTF-8")).getAsJsonObject();
+            var newWidget = elementToObject(parseJson(URLDecoder.decode(widgetJson, "UTF-8")));
             widgets.add(newWidget);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -93,10 +95,10 @@ public class JsonGeoDash implements GeoDash {
     // FIXME: the new react design is using the body to pass the widget JSON (see PostgresGeoDash for updated form)
     public synchronized String updateDashBoardWidgetById(Request req, Response res) {
         var widgetId = req.params(":id");
-        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var jsonInputs = elementToObject(parseJson(req.body()));
         var dashboardId = jsonInputs.get("dashID").getAsString();
         var widgetJson = jsonInputs.get("widgetJSON").getAsString();
-        var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
+        var dashboard = elementToObject(readJsonFile("dash-" + dashboardId + ".json"));
         var widgets = dashboard.getAsJsonArray("widgets");
 
         var updatedWidgets = mapJsonArray(widgets, widget -> {
@@ -119,9 +121,9 @@ public class JsonGeoDash implements GeoDash {
 
     public synchronized String deleteDashBoardWidgetById(Request req, Response res) {
         var widgetId = req.params(":id");
-        var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        var jsonInputs = elementToObject(parseJson(req.body()));
         var dashboardId = jsonInputs.get("dashID").getAsString();
-        var dashboard = readJsonFile("dash-" + dashboardId + ".json").getAsJsonObject();
+        var dashboard = elementToObject(readJsonFile("dash-" + dashboardId + ".json"));
         var widgets = dashboard.getAsJsonArray("widgets");
 
         var updatedWidgets = filterJsonArray(widgets, widget -> !widget.get("id").getAsString().equals(widgetId));
