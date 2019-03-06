@@ -28,5 +28,9 @@ out-win.txt
 # Google Analytics
 /src/main/resources/template/freemarker/googleanalytics.ftl
 
-# Locally compiled python
+# Locally compiled Python code and virtualenv directories
 *.pyc
+src/main/resources/scripts/bin
+src/main/resources/scripts/include
+src/main/resources/scripts/lib
+src/main/resources/scripts/pip-selfcheck.json
