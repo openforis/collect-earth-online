@@ -5,8 +5,7 @@ import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.PartUtils.partToString;
-import static org.openforis.ceo.utils.PartUtils.partsToJsonObject;
-import static org.openforis.ceo.utils.PartUtils.writeFilePart;
+import static org.openforis.ceo.utils.PartUtils.writeFilePartBase64;
 import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.createGriddedPointsInBounds;
@@ -36,12 +35,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
 import spark.Request;
@@ -85,8 +84,8 @@ public class PostgresProjects implements Projects {
 
     private static String queryProjectGet(PreparedStatement pstmt) {
         var allProjects = new JsonArray();
-            try(var rs = pstmt.executeQuery()){
-                while(rs.next()) {
+            try (var rs = pstmt.executeQuery()) {
+                while (rs.next()) {
 
                     allProjects.add(buildProjectJson(rs));
                 }
@@ -105,23 +104,23 @@ public class PostgresProjects implements Projects {
         
             if (userId == null || userId.isEmpty()) {
                 if (institutionId == null || institutionId.isEmpty()) {
-                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_all_projects()")) {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_all_projects()")) {
                         return queryProjectGet(pstmt);
                     }
                 } else {
-                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_all_institution_projects(?)")) {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_all_institution_projects(?)")) {
                         pstmt.setInt(1, Integer.parseInt(institutionId));
                         return queryProjectGet(pstmt);
                     }
                 }
             } else {
                 if (institutionId == null || institutionId.isEmpty()) {
-                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_all_user_projects(?)")) {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_all_user_projects(?)")) {
                         pstmt.setInt(1, Integer.parseInt(userId));
                         return queryProjectGet(pstmt);
                     }
                 } else {
-                    try(var pstmt = conn.prepareStatement("SELECT * FROM select_institution_projects_with_roles(?,?)")) {
+                    try (var pstmt = conn.prepareStatement("SELECT * FROM select_institution_projects_with_roles(?,?)")) {
                         pstmt.setInt(1, Integer.parseInt(userId));
                         pstmt.setInt(2, Integer.parseInt(institutionId));
                         return queryProjectGet(pstmt);
@@ -140,8 +139,8 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
 
             pstmt.setInt(1, projectId);
-            try(var rs = pstmt.executeQuery()){
-                if(rs.next()) {
+            try (var rs = pstmt.executeQuery()) {
+                if (rs.next()) {
                     return buildProjectJson(rs).toString();
                 } else {
                     project.addProperty("id", 0);
@@ -179,81 +178,6 @@ public class PostgresProjects implements Projects {
         
     }
 
-    private static JsonObject buildPlotJson(ResultSet rs) {
-        var singlePlot = new JsonObject();
-        try {
-            singlePlot.addProperty("id",rs.getInt("id"));
-            singlePlot.addProperty("projectId",rs.getInt("project_id"));
-            singlePlot.addProperty("center",rs.getString("center"));
-            singlePlot.addProperty("flagged",rs.getInt("flagged") == 0 ? false : true);
-            singlePlot.addProperty("analyses",rs.getInt("assigned"));
-            singlePlot.addProperty("user",rs.getString("username"));
-            singlePlot.addProperty("confidence",rs.getInt("confidence"));
-            singlePlot.addProperty("collectionTime", rs.getString("collection_time"));
-            singlePlot.addProperty("analysisDuration", rs.getString("analysis_duration"));
-            singlePlot.addProperty("plotId",rs.getString("plotId"));
-            singlePlot.addProperty("geom",rs.getString("geom"));
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return singlePlot;
-    }
-
-    public  String getProjectPlots(Request req, Response res) {
-        var projectId =     req.params(":id");
-        var maxPlots =      Integer.parseInt(req.params(":max"));
-        
-        try (var conn = connect();
-             var pstmt = conn.prepareStatement("SELECT * FROM select_project_plots(?,?)")) {
-
-            var plots = new JsonArray();
-            pstmt.setInt(1,Integer.parseInt(projectId));
-            pstmt.setInt(2,maxPlots);
-            try(var rs = pstmt.executeQuery()){
-                while (rs.next()) {
-                    // singlePlot.add("samples",getSampleJsonArray(singlePlot.get("id").getAsInt()));
-                    plots.add(buildPlotJson(rs));
-                }
-            }
-            return  plots.toString();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String getProjectPlot(Request req, Response res) {
-        var projectId = req.params(":project-id");
-        var plotId = req.params(":plot-id");
-
-        return "";
-    }
-
-    private static JsonArray getSampleJsonArray(Integer plot_id, Integer proj_id) {
-        try (var conn = connect();
-             var samplePstmt = conn.prepareStatement("SELECT * FROM select_plot_samples(?,?)")) {
-            
-            samplePstmt.setInt(1, plot_id);
-            samplePstmt.setInt(2, proj_id);
-            var samples = new JsonArray();
-            try(var sampleRs = samplePstmt.executeQuery()){
-                while (sampleRs.next()) {
-                    var sample = new JsonObject();
-                    sample.addProperty("id", sampleRs.getString("id"));
-                    sample.addProperty("point", sampleRs.getString("point"));
-                    sample.addProperty("sampleId",sampleRs.getString("sampleId"));
-                    sample.addProperty("geom",sampleRs.getString("geom"));
-                    if (sampleRs.getString("value").length() > 2) sample.add("value", parseJson(sampleRs.getString("value")).getAsJsonObject());
-                    samples.add(sample);
-                }
-            }
-            return samples;
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return new JsonArray();
-        }
-    }
-
     public String getProjectStats(Request req, Response res) {
         var projectId = req.params(":id");
         var stats = new JsonObject();
@@ -261,8 +185,8 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM select_project_statistics(?)")) {
             
             pstmt.setInt(1,Integer.parseInt(projectId));
-            try(var rs = pstmt.executeQuery()){
-                if (rs.next()){
+            try (var rs = pstmt.executeQuery()) {
+                if (rs.next()) {
                     stats.addProperty("flaggedPlots",rs.getInt("flagged_plots"));
                     stats.addProperty("analyzedPlots",rs.getInt("assigned_plots"));
                     stats.addProperty("unanalyzedPlots",rs.getInt("unassigned_plots"));
@@ -282,98 +206,6 @@ public class PostgresProjects implements Projects {
         }
     }
 
-    private String queryPlot(PreparedStatement pstmt, Integer projectId) {
-        var plotData = new JsonObject();
-        try (var rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                plotData = buildPlotJson(rs);
-                plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-        return plotData.size() > 0 ? plotData.toString() : "done";
-    }
-
-    public String getPlotById(Request req, Response res) {
-        final var projectId = Integer.parseInt(req.params(":projid"));
-        final var plotId = Integer.parseInt(req.params(":id"));
-        final var userName = req.queryParamOrDefault("userName", "");
-
-        try (var conn = connect()) {
-            if (userName.length() > 0) {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_user_plot_by_id(?,?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId);
-                }
-            } else {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_unassigned_plot_by_id(?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    return queryPlot(pstmt, projectId);
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String getNextPlot(Request req, Response res) {
-        final var projectId =     Integer.parseInt(req.params(":projid"));
-        final var plotId =        Integer.parseInt(req.params(":id"));
-        final var userName =    req.queryParamOrDefault("userName", "");
-
-        try (var conn = connect()) {
-            if (userName.length() > 0) {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_user_plot(?,?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId);
-                }
-            } else {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_next_unassigned_plot(?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    return queryPlot(pstmt, projectId);
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String getPrevPlot(Request req, Response res) {
-        final var projectId =     Integer.parseInt(req.params(":projid"));
-        final var plotId =        Integer.parseInt(req.params(":id"));
-        final var userName =    req.queryParamOrDefault("userName", "");
-
-        try (var conn = connect()) {
-            if (userName.length() > 0) {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_user_plot(?,?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    pstmt.setString(3, userName);
-                    return queryPlot(pstmt, projectId);
-                }
-            } else {
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_prev_unassigned_plot(?,?)")) {
-                    pstmt.setInt(1, projectId);
-                    pstmt.setInt(2, plotId);
-                    return queryPlot(pstmt, projectId);
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
     private static String valueOrBlank(String input) {
 
         return input == null || input.equals("null") ? "" : input;
@@ -381,11 +213,11 @@ public class PostgresProjects implements Projects {
 
     private static ArrayList<String> getPlotHeaders(Connection conn, Integer projectId) {
         var plotHeaders  = new ArrayList<String>();
-        try (var pstmt = conn.prepareStatement("SELECT * FROM get_plot_headers(?)")){
+        try (var pstmt = conn.prepareStatement("SELECT * FROM get_plot_headers(?)")) {
             pstmt.setInt(1, projectId);
-            try (var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    if (!List.of("GID", "GEOM", "PLOT_GEOM", "LAT", "LON").contains(rs.getString("column_names").toUpperCase())){
+                    if (!List.of("GID", "GEOM", "PLOT_GEOM", "LAT", "LON").contains(rs.getString("column_names").toUpperCase())) {
                         plotHeaders.add(rs.getString("column_names"));
                     }
                 }
@@ -421,17 +253,17 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
             // check if project exists
             pstmt.setInt(1,projectId);      
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var plotSummaries = new JsonArray();
                     final var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
                     final var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
                     var plotHeaders = getPlotHeaders(conn, projectId);
 
-                    try(var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_plot_data(?)")){
+                    try (var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_plot_data(?)")) {
                         pstmtDump.setInt(1, projectId);
                         
-                        try(var rsDump = pstmtDump.executeQuery()){
+                        try (var rsDump = pstmtDump.executeQuery()) {
                         
                             while (rsDump.next()) {
                                 var plotSummary = new JsonObject();
@@ -450,7 +282,7 @@ public class PostgresProjects implements Projects {
                                 plotSummary.add("distribution",
                                         getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
                                 
-                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
+                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != "") {
                                     var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();
 
                                     plotHeaders.forEach(head ->
@@ -484,7 +316,7 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM select_project(?)")) {
             // check if project exists
             pstmt.setInt(1,projectId);      
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var sampleSummaries = new JsonArray();
                     final var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
@@ -493,10 +325,10 @@ public class PostgresProjects implements Projects {
                     final var sampleHeaders = getSampleHeaders(conn, projectId);
                     var optionalHeaders = new ArrayList<String>();
 
-                    try(var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_sample_data(?)")){
+                    try (var pstmtDump = conn.prepareStatement("SELECT * FROM dump_project_sample_data(?)")) {
                         pstmtDump.setInt(1, projectId);
 
-                        try(var rsDump = pstmtDump.executeQuery()){
+                        try (var rsDump = pstmtDump.executeQuery()) {
                             while (rsDump.next()) {
                                 var plotSummary = new JsonObject();
                                 plotSummary.addProperty("plot_id", rsDump.getString("plot_id"));
@@ -533,14 +365,14 @@ public class PostgresProjects implements Projects {
                                     }
                                 }
                                 
-                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != ""){
+                                if (valueOrBlank(rsDump.getString("ext_plot_data")) != "") {
                                     var ext_plot_data = parseJson(rsDump.getString("ext_plot_data")).getAsJsonObject();                              
                                     plotHeaders.forEach(head ->
                                         plotSummary.addProperty("pl_" + head, getOrEmptyString(ext_plot_data, head).getAsString())
                                     );
                                 }
                                 
-                                if (valueOrBlank(rsDump.getString("ext_sample_data")) != ""){
+                                if (valueOrBlank(rsDump.getString("ext_sample_data")) != "") {
                                     var ext_sample_data = parseJson(rsDump.getString("ext_sample_data")).getAsJsonObject();
                                     sampleHeaders.forEach(head -> 
                                         plotSummary.addProperty("smpl_" + head, getOrEmptyString(ext_sample_data, head).getAsString())
@@ -577,7 +409,7 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM publish_project(?)")) {
             
             pstmt.setInt(1,Integer.parseInt(projectId));
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 var idReturn = 0;
                 if (rs.next()) {
                     idReturn = rs.getInt("publish_project");
@@ -596,7 +428,7 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM close_project(?)")) {
             
             pstmt.setInt(1,Integer.parseInt(projectId));
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 var idReturn = 0;
                 if (rs.next()) {
                     idReturn = rs.getInt("close_project");
@@ -615,100 +447,12 @@ public class PostgresProjects implements Projects {
              var pstmt = conn.prepareStatement("SELECT * FROM archive_project(?)") ;) {
             
             pstmt.setInt(1,Integer.parseInt(projectId));
-            try(var rs = pstmt.executeQuery()){
+            try (var rs = pstmt.executeQuery()) {
                 var idReturn = 0;
                 if (rs.next()) {
                     idReturn = rs.getInt("archive_project");
                 }
                 return projectById(idReturn);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String addUserSamples(Request req, Response res) {
-        final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
-        final var projectId =             jsonInputs.get("projectId").getAsString();
-        final var plotId =                jsonInputs.get("plotId").getAsString();
-        final var userName =              jsonInputs.get("userId").getAsString();
-        final var confidence =            jsonInputs.get("confidence").getAsInt();
-        final var collectionStart =       jsonInputs.get("collectionStart").getAsString();
-        final var userSamples =           jsonInputs.get("userSamples").getAsJsonObject();
-        final var userImages =            jsonInputs.get("userImages").getAsJsonObject();
-
-        // check if valid user before adding (should be from UI, but its one less join and partial spam security)
-        try (var conn = connect();
-            final var userPstmt = conn.prepareStatement("SELECT * FROM get_user(?)")) {
-            
-            userPstmt.setString(1, userName);
-            try(var userRs = userPstmt.executeQuery()){
-                if (userRs.next()){
-                    final var userId = userRs.getInt("id");
-                    // check if user has already saved
-                    try(var usPstmt = conn.prepareStatement("SELECT * FROM check_user_plots(?,?,?)")) {
-                        usPstmt.setInt(1, Integer.parseInt(projectId));
-                        usPstmt.setInt(2, Integer.parseInt(plotId));
-                        usPstmt.setInt(3, userId);
-                        try(var usRs = usPstmt.executeQuery()) {
-                            // update existing
-                            if (usRs.next()) {
-                                final var userPlotId = usRs.getInt("user_plots_id");
-                                final var SQL = "SELECT * FROM update_user_samples(?,?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
-                                final var pstmt = conn.prepareStatement(SQL) ;
-                                pstmt.setInt(1, userPlotId);
-                                pstmt.setInt(2, Integer.parseInt(projectId));
-                                pstmt.setInt(3, Integer.parseInt(plotId));
-                                pstmt.setInt(4, userId);
-                                pstmt.setString(5, confidence == -1 ? null : Integer.toString(confidence));
-                                pstmt.setTimestamp(6, new Timestamp(Long.parseLong(collectionStart)));
-                                pstmt.setString(7, userSamples.toString());
-                                pstmt.setString(8, userImages.toString());
-                                pstmt.execute();                                
-                                return plotId;
-                            // add new
-                            } else {
-                                final var SQL = "SELECT * FROM add_user_samples(?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
-                                final var pstmt = conn.prepareStatement(SQL) ;
-                                pstmt.setInt(1, Integer.parseInt(projectId));
-                                pstmt.setInt(2, Integer.parseInt(plotId));
-                                pstmt.setInt(3, userId);
-                                pstmt.setString(4, confidence == -1 ? null : Integer.toString(confidence));
-                                pstmt.setTimestamp(5, new Timestamp(Long.parseLong(collectionStart)));
-                                pstmt.setString(6, userSamples.toString());
-                                pstmt.setString(7, userImages.toString());
-                                pstmt.execute();
-                                return plotId;
-                            }
-                        }
-                    }
-                }
-                return "";
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return "";
-        }
-    }
-
-    public String flagPlot(Request req, Response res) {
-        var jsonInputs =        parseJson(req.body()).getAsJsonObject();
-        var plotId =            jsonInputs.get("plotId").getAsString();
-        var userName =          jsonInputs.get("userId").getAsString();
-        
-        try (var conn = connect();
-            var pstmt = conn.prepareStatement("SELECT * FROM flag_plot(?,?,?::int)")) {
-            
-            pstmt.setInt(1,Integer.parseInt(plotId));
-            pstmt.setString(2,userName);
-            pstmt.setString(3,null); //confidence
-            try(var rs = pstmt.executeQuery()){
-                var idReturn = 0;
-                if (rs.next()) {
-                    idReturn = rs.getInt("flag_plot");
-                }
-                return Integer.toString(idReturn);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -787,7 +531,7 @@ public class PostgresProjects implements Projects {
             if (distribution.equals("csv")) {
                 final var table_name = "project_" +  projectId + "_" + plotsOrSamples + "_csv";
                 // add empty table to the database
-                try(var pstmt = conn.prepareStatement("SELECT * FROM create_new_table(?,?)")){
+                try (var pstmt = conn.prepareStatement("SELECT * FROM create_new_table(?,?)")) {
                     pstmt.setString(1, table_name);
                     pstmt.setString(2, loadCsvHeaders(extFile, mustInclude));
                     pstmt.execute();
@@ -796,20 +540,20 @@ public class PostgresProjects implements Projects {
                 runBashScriptForProject(projectId, plotsOrSamples, "csv2postgres.sh", "/csv");
                 var renameFrom = loadCsvHeadersToRename(extFile);
                 // rename columns
-                try(var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")){
+                try (var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.setString(2,renameFrom[0]);
                     pstmt.setString(3,"lon");
                     pstmt.execute();
                 }
-                try(var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")){
+                try (var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.setString(2,renameFrom[1]);
                     pstmt.setString(3,"lat");
                     pstmt.execute();
                 } 
                 // add index for reference
-                try(var pstmt = conn.prepareStatement("SELECT * FROM add_index_col(?)")){
+                try (var pstmt = conn.prepareStatement("SELECT * FROM add_index_col(?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.execute();
                 } 
@@ -831,10 +575,10 @@ public class PostgresProjects implements Projects {
     private static String checkLoadPlots(Connection conn, String plotDistribution, Integer projectId, String plotsFile) {
         try {
           
-            if (List.of("csv", "shp").contains(plotDistribution)){
+            if (List.of("csv", "shp").contains(plotDistribution)) {
                 // check if data is also correct after being loaded
-                final var plots_table = loadExternalData(conn, plotDistribution, projectId, plotsFile, "plot", List.of("plotId"));
-                try(var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")){
+                final var plots_table = loadExternalData(conn, plotDistribution, projectId, plotsFile, "plots", List.of("plotId"));
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")) {
                     pstmt.setString(1, plots_table);
                     pstmt.execute();
                 } catch (SQLException s) {
@@ -856,10 +600,10 @@ public class PostgresProjects implements Projects {
 
     private static String checkLoadSamples(Connection conn, String sampleDistribution, Integer projectId, String samplesFile) {
         try {
-            final var samples_table = loadExternalData(conn, sampleDistribution, projectId, samplesFile, "plot", List.of("plotId", "sampleId"));
-            if (List.of("csv", "shp").contains(sampleDistribution)){
+            final var samples_table = loadExternalData(conn, sampleDistribution, projectId, samplesFile, "samples", List.of("plotId", "sampleId"));
+            if (List.of("csv", "shp").contains(sampleDistribution)) {
                 // check if data is also correct after being loaded
-                try(var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")){
+                try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")) {
                     pstmt.setString(1,samples_table);
                     pstmt.execute();
                 } catch (SQLException s) {
@@ -881,20 +625,21 @@ public class PostgresProjects implements Projects {
     private static void createProjectPlots(JsonObject newProject) {
         // Store the parameters needed for plot generation in local variables with nulls set to 0
         var projectId =          newProject.get("id").getAsInt();
-        var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
-        var latMin =             getOrZero(newProject,"latMin").getAsDouble();
-        var lonMax =             getOrZero(newProject,"lonMax").getAsDouble();
-        var latMax =             getOrZero(newProject,"latMax").getAsDouble();
-        var plotDistribution =   getOrEmptyString(newProject, "plotDistribution").getAsString();
-        var numPlots =           getOrZero(newProject,"numPlots").getAsInt();
-        var plotSpacing =        getOrZero(newProject,"plotSpacing").getAsDouble();
-        var plotShape =          getOrEmptyString(newProject,"plotShape").getAsString();
-        var plotSize =           getOrZero(newProject,"plotSize").getAsDouble();
-        var sampleDistribution = getOrEmptyString(newProject, "sampleDistribution").getAsString();
-        var samplesPerPlot =     getOrZero(newProject,"samplesPerPlot").getAsInt();
-        var sampleResolution =   getOrZero(newProject,"sampleResolution").getAsDouble();
-        var plotsFile =          getOrEmptyString(newProject, "plots_file").getAsString();
-        var samplesFile =        getOrEmptyString(newProject,"samples_file").getAsString();
+        var lonMin =             newProject.get("lonMin").getAsDouble();
+        var latMin =             newProject.get("latMin").getAsDouble();
+        var lonMax =             newProject.get("lonMax").getAsDouble();
+        var latMax =             newProject.get("latMax").getAsDouble();
+        var plotDistribution =   newProject.get("plotDistribution").getAsString();
+        var numPlots =           newProject.get("numPlots").getAsInt();
+        var plotSpacing =        newProject.get("plotSpacing").getAsDouble();
+        var plotShape =          newProject.get("plotShape").getAsString();
+        var plotSize =           newProject.get("plotSize").getAsDouble();
+        var sampleDistribution = newProject.get("sampleDistribution").getAsString();
+        var samplesPerPlot =     newProject.get("samplesPerPlot").getAsInt();
+        var sampleResolution =   newProject.get("sampleResolution").getAsDouble();
+        var plotsFile =          getOrEmptyString(newProject, "plotsFile").getAsString();
+        var samplesFile =        getOrEmptyString(newProject, "samplesFile").getAsString();
+
         try (var conn = connect()) {
             // load files into the database (loadPlot, loadSamples) and update projects
             try (var pstmt = 
@@ -933,7 +678,7 @@ public class PostgresProjects implements Projects {
                     conn.prepareStatement("SELECT * FROM add_file_plots(?)")) {
                     pstmt.setInt(1,projectId); 
                     try (var rs = pstmt.executeQuery()) {
-                        while (rs.next()){
+                        while (rs.next()) {
                             var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
                             createProjectSamples(conn, rs.getInt("id"), sampleDistribution, 
                                 plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, plotDistribution.equals("shp"));
@@ -961,10 +706,10 @@ public class PostgresProjects implements Projects {
                 Arrays.stream(newPlotCenters)
                 .forEach(plotCenter -> {
                         final var SqlPlots = "SELECT * FROM create_project_plot(?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))";
-                        try(var pstmtPlots = conn.prepareStatement(SqlPlots)) {
+                        try (var pstmtPlots = conn.prepareStatement(SqlPlots)) {
                         pstmtPlots.setInt(1, projectId);    
                         pstmtPlots.setString(2, makeGeoJsonPoint(plotCenter[0], plotCenter[1]).toString());       
-                        try(var rsPlots = pstmtPlots.executeQuery()){
+                        try (var rsPlots = pstmtPlots.executeQuery()) {
                             if (rsPlots.next()) {
                                 final var newPlotId = rsPlots.getInt("create_project_plot");
                                 createProjectSamples(conn, newPlotId, sampleDistribution, 
@@ -1015,21 +760,41 @@ public class PostgresProjects implements Projects {
     public String createProject(Request req, Response res) {
         var newProjectId = 0;
         try {
-            // Create a new multipart config for the servlet
-            // NOTE: This is for Jetty. Under Tomcat, this is handled in the webapp/META-INF/context.xml file.
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
-            // Read the input fields into a new JsonObject (NOTE: fields will be camelCased)
-            var newProject = partsToJsonObject(req,
-                                               new String[]{"institution", "privacy-level", "lon-min", "lon-max", "lat-min",
-                                                            "lat-max", "base-map-source", "plot-distribution", "num-plots",
-                                                            "plot-spacing", "plot-shape", "plot-size", "sample-distribution",
-                                                            "samples-per-plot", "sample-resolution", "sample-values", "survey-rules",
-                                                            "classification_times", "project-template", "use-template-plots"});
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
 
-            // Manually add the name and description fields since they may be invalid JSON
-            newProject.addProperty("name", partToString(req.raw().getPart("name")));
-            newProject.addProperty("description", partToString(req.raw().getPart("description")));
+            var newProject = new JsonObject();
+
+            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
+            newProject.addProperty("description", jsonInputs.get("description").getAsString());
+            newProject.addProperty("institution", jsonInputs.get("institution").getAsInt());
+            newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
+            newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
+            newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());
+            newProject.addProperty("latMax", getOrZero(jsonInputs,"latMax").getAsDouble());
+            newProject.addProperty("name", jsonInputs.get("name").getAsString());
+            newProject.addProperty("numPlots", getOrZero(jsonInputs,"numPlots").getAsInt());
+            newProject.addProperty("plotDistribution", jsonInputs.get("plotDistribution").getAsString());
+            newProject.addProperty("plotShape", getOrEmptyString(jsonInputs,"plotShape").getAsString());
+            newProject.addProperty("plotSize", getOrZero(jsonInputs,"plotSize").getAsDouble());
+            newProject.addProperty("plotSpacing", getOrZero(jsonInputs,"plotSpacing").getAsDouble());
+            newProject.addProperty("privacyLevel", jsonInputs.get("privacyLevel").getAsString());
+            newProject.addProperty("projectTemplate", getOrZero(jsonInputs,"projectTemplate").getAsInt());
+            newProject.addProperty("sampleDistribution", jsonInputs.get("sampleDistribution").getAsString());
+            newProject.addProperty("samplesPerPlot", getOrZero(jsonInputs,"samplesPerPlot").getAsInt());
+            newProject.addProperty("sampleResolution", getOrZero(jsonInputs,"sampleResolution").getAsDouble());
+            newProject.add("sampleValues", jsonInputs.get("sampleValues").getAsJsonArray());
+            newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
+            newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
+            
+            // file part properties
+            newProject.addProperty("plotFileName", getOrEmptyString(jsonInputs, "plotFileName").getAsString());
+            newProject.addProperty("plotFileBase64", getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
+            newProject.addProperty("sampleFileName", getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
+            newProject.addProperty("sampleFileBase64", getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
+
+            // Add constant values
             newProject.addProperty("availability", "unpublished");
+            newProject.addProperty("createdDate", LocalDate.now().toString());
 
             final var lonMin =             getOrZero(newProject,"lonMin").getAsDouble();
             final var latMin =             getOrZero(newProject,"latMin").getAsDouble();
@@ -1037,13 +802,13 @@ public class PostgresProjects implements Projects {
             final var latMax =             getOrZero(newProject,"latMax").getAsDouble();
             newProject.addProperty("boundary", makeGeoJsonPolygon(lonMin, latMin, lonMax, latMax).toString());
 
-            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::JSONB)";
+            var SQL = "SELECT * FROM create_project(?,?,?,?,?,ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),?,?,?,?,?,?,?,?,?,?::JSONB,?::JSONB,?::date,?::JSONB)";
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
                 
-                pstmt.setInt(1,newProject.get("institution").getAsInt());
-                pstmt.setString(2 ,newProject.get("availability").getAsString());
-                pstmt.setString(3,newProject.get("name").getAsString());
+                pstmt.setInt(1, newProject.get("institution").getAsInt());
+                pstmt.setString(2, newProject.get("availability").getAsString());
+                pstmt.setString(3, newProject.get("name").getAsString());
                 pstmt.setString(4, newProject.get("description").getAsString());
                 pstmt.setString(5, newProject.get("privacyLevel").getAsString());
                 pstmt.setString(6, newProject.get("boundary").getAsString());
@@ -1058,52 +823,41 @@ public class PostgresProjects implements Projects {
                 pstmt.setDouble(15, getOrZero(newProject, "sampleResolution").getAsDouble());
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
                 pstmt.setString(17, newProject.get("surveyRules").getAsJsonArray().toString());
-                pstmt.setString(18,  null);  //classification times
+                pstmt.setString(18, newProject.get("createdDate").getAsString());
+                pstmt.setString(19,  null);  //classification times
 
 
-                try(var rs = pstmt.executeQuery()){
-                    if (rs.next()){
+                try (var rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
                         if (getOrZero(newProject, "useTemplatePlots").getAsBoolean() 
                                 && getOrZero(newProject, "project-template").getAsInt() > 0) {
-                            try(var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")){
+                            try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
                                 copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
                                 copyPstmt.setInt(2, newProjectId);
                                 copyPstmt.execute();
                             }
                         } else {
-                            // Upload the *-distribution-csv-file if one was provided
-                            // not stored in database
-                            if (newProject.get("plotDistribution").getAsString().equals("csv")) {
-                                final var csvFileName = writeFilePart(req,
-                                        "plot-distribution-csv-file",
-                                        expandResourcePath("/csv"),
-                                        "project-" + newProjectId + "-plots");
-                                newProject.addProperty("plots_file", csvFileName);
-                            } else if (newProject.get("sampleDistribution").getAsString().equals("csv")) {
-                                final var csvFileName = writeFilePart(req,
-                                        "sample-distribution-csv-file",
-                                        expandResourcePath("/csv"),
-                                        "project-" + newProjectId + "-samples");
-                                newProject.addProperty("samples_file", csvFileName);
-                            } 
 
-                            // Upload the *-distribution-shp-file if one was provided (this should be a ZIP file)
-                            if (newProject.get("plotDistribution").getAsString().equals("shp")) {
-                                final var shpFileName = writeFilePart(req,
-                                                                "plot-distribution-shp-file",
-                                                                expandResourcePath("/shp"),
-                                                                "project-" + newProjectId + "-plots");
-                                newProject.addProperty("plots_file", shpFileName);
-                            } else if (newProject.get("sampleDistribution").getAsString().equals("shp")) {
-                                final var shpFileName = writeFilePart(req,
-                                                                "sample-distribution-shp-file",
-                                                                expandResourcePath("/shp"),
-                                                                "project-" + newProjectId + "-samples");
-                                newProject.addProperty("samples_file", shpFileName);
-                            } 
-                            // Create the requested plot set and write it to plot-data-<newProjectId>.json
+                            if (List.of("csv", "shp").contains(newProject.get("plotDistribution").getAsString())) {
+                                newProject.addProperty("plotsFile", writeFilePartBase64(
+                                    newProject.get("plotFileName").getAsString(),
+                                    newProject.get("plotFileBase64").getAsString(),
+                                    expandResourcePath("/" + newProject.get("plotDistribution").getAsString()),
+                                    "project-" + newProjectId + "-plots"
+                                ));
+                            }
+
+                            if (List.of("csv", "shp").contains(newProject.get("sampleDistribution").getAsString())) {
+                                newProject.addProperty("samplesFile", writeFilePartBase64(
+                                    newProject.get("sampleFileName").getAsString(),
+                                    newProject.get("sampleFileBase64").getAsString(),
+                                    expandResourcePath("/" + newProject.get("sampleDistribution").getAsString()),
+                                    "project-" + newProjectId + "-samples"
+                                ));
+                            }
+
                             createProjectPlots(newProject);
 
                             deleteFiles(newProjectId);

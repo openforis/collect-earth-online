@@ -1,17 +1,17 @@
-import React, {Fragment} from "react";
+import React from "react";
 
 import { SectionBlock } from "./FormComponents";
 import SurveyCardList from "./SurveyCardList";
-import { removeEnumerator } from "../utils/SurveyUtils";
+import { removeEnumerator } from "../utils/surveyUtils";
 
 const componentTypes = [
-    {componentType: "button", dataType: "text"},
-    {componentType: "input", dataType: "number"},
-    {componentType: "input", dataType: "text"},
-    {componentType: "radiobutton", dataType: "boolean"},
-    {componentType: "radiobutton", dataType: "text"},
-    {componentType: "dropdown", dataType: "boolean"},
-    {componentType: "dropdown", dataType: "text"},
+    { componentType: "button", dataType: "text" },
+    { componentType: "input", dataType: "number" },
+    { componentType: "input", dataType: "text" },
+    { componentType: "radiobutton", dataType: "boolean" },
+    { componentType: "radiobutton", dataType: "text" },
+    { componentType: "dropdown", dataType: "boolean" },
+    { componentType: "dropdown", dataType: "text" },
     // {component: "point", dataType: "dgitizer"},
     // {component: "linestring", dataType: "dgitizer"},
     // {component: "polygon", dataType: "dgitizer"},
@@ -23,30 +23,30 @@ export class SurveyDesign extends React.Component {
         this.state = {
             inSimpleMode: true,
         };
-    };
+    }
 
     componentDidUpdate = (prevProps, prevState) => {
         if (this.state.inSimpleMode
             && !prevState.inSimpleMode) {
-                
+
             this.convertToSimple();
         }
     };
 
     convertToSimple = () => {
-         const newSurveyQuestions = this.props.surveyQuestions
+        const newSurveyQuestions = this.props.surveyQuestions
             .map(question => ({ ...question, componentType: "button", dataType: "text" }));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     };
 
     toggleSimpleMode = () => {
-        this.setState({ inSimpleMode: 
-                        this.state.inSimpleMode
-                        ? false
-                        : this.props.surveyQuestions.every(q => q.componentType === "button")
-                                || confirm("This action will revert all questions to type button.  Would you like to proceed?")
-                    });
+        this.setState({
+            inSimpleMode: this.state.inSimpleMode
+                            ? false
+                            : this.props.surveyQuestions.every(q => q.componentType === "button")
+                                    || confirm("This action will revert all questions to type button.  Would you like to proceed?"),
+        });
     };
 
     getChildQuestionIds = (questionId) => {
@@ -55,8 +55,8 @@ export class SurveyDesign extends React.Component {
             return [questionId];
         } else {
             return childQuestions.reduce((acc, cur) => (
-                                            [...acc, ...this.getChildQuestionIds(cur.id)]
-                                        ), [questionId]);
+                [...acc, ...this.getChildQuestionIds(cur.id)]
+            ), [questionId]);
         }
     };
 
@@ -64,28 +64,37 @@ export class SurveyDesign extends React.Component {
         const questionsToRemove = this.getChildQuestionIds(questionId);
 
         const newSurveyQuestions = this.props.surveyQuestions
-                .filter(sq => !questionsToRemove.includes(sq.id));
-        
+            .filter(sq => !questionsToRemove.includes(sq.id));
+
         this.props.setSurveyQuestions(newSurveyQuestions);
     };
 
     removeAnswer = (questionId, answerId) => {
-        const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
-        const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
+        const matchingQuestion = this.props.surveyQuestions
+            .find(sq => sq.parentQuestion === questionId && sq.parentAnswer === answerId);
 
-        const updatedQuestion = {...surveyQuestion, answers: updatedAnswers};
+        if (matchingQuestion) {
+            alert("You cannot remove this answer because a sub question (" +
+                matchingQuestion.question
+                + ") is referencing it.");
+        } else {
+            const surveyQuestion = this.props.surveyQuestions.find(sq => sq.id === questionId);
+            const updatedAnswers = surveyQuestion.answers.filter(ans => ans.id !== answerId);
 
-        const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
+            const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
 
-        this.props.setSurveyQuestions(newSurveyQuestions);
+            const newSurveyQuestions = this.props.surveyQuestions
+                .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
+
+            this.props.setSurveyQuestions(newSurveyQuestions);
+        }
     };
 
-    maxAnswers(componentType, dataType) { 
+    maxAnswers(componentType, dataType) {
         return (componentType || "").toLowerCase() === "input"
                     ? 1 : (dataType || "").toLowerCase() === "boolean"
                         ? 2 : 1000;
-    };
+    }
 
     render() {
         return (
@@ -94,18 +103,19 @@ export class SurveyDesign extends React.Component {
                 <div id="survey-design">
                     <SurveyCardList
                         inSimpleMode={this.state.inSimpleMode}
-                        inDesignMode={true}
+                        inDesignMode
                         setSurveyQuestions={this.props.setSurveyQuestions}
                         surveyQuestions={this.props.surveyQuestions}
                         removeAnswer={this.removeAnswer}
                         removeQuestion={this.removeQuestion}
-                        newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length 
-                                < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType) 
-                                 && <NewAnswerDesigner
-                                        setSurveyQuestions={this.props.setSurveyQuestions}
-                                        surveyQuestions={this.props.surveyQuestions}
-                                        surveyQuestion={surveyQuestion}
-                                    />
+                        newAnswerComponent={(surveyQuestion) => surveyQuestion.answers.length
+                                < this.maxAnswers(surveyQuestion.componentType, surveyQuestion.dataType)
+                                &&
+                                <NewAnswerDesigner
+                                    setSurveyQuestions={this.props.setSurveyQuestions}
+                                    surveyQuestions={this.props.surveyQuestions}
+                                    surveyQuestion={surveyQuestion}
+                                />
                         }
                     />
 
@@ -122,39 +132,39 @@ export class SurveyDesign extends React.Component {
 
 function ModeButtons({ inSimpleMode, toggleSimpleMode }) {
     return (
-        <div 
+        <div
             className="my-3"
-            style={{overflow: "hidden", border: "1px solid #31BAB0",backgroundColor: "#f1f1f1"}}
+            style={{ overflow: "hidden", border: "1px solid #31BAB0", backgroundColor: "#f1f1f1" }}
         >
-            <input 
-                type="button" 
-                className="SimpleButton border" 
-                onClick={toggleSimpleMode} 
-                value="Simple" 
+            <input
+                type="button"
+                className="SimpleButton border"
+                onClick={toggleSimpleMode}
+                value="Simple"
                 style={{
                     backgroundColor: inSimpleMode ? "#31BAB0" : "transparent",
-                    float: "left", 
-                    border: "none", 
-                    outline: "none", 
-                    cursor: "pointer", 
-                    padding: "14px 16px", 
+                    float: "left",
+                    border: "none",
+                    outline: "none",
+                    cursor: "pointer",
+                    padding: "14px 16px",
                     transition: "0.3s",
-                    fontSize: "17px"
+                    fontSize: "17px",
                 }}
             />
-            <input 
-                type="button" 
-                className="AdvancedButton border" 
-                onClick={toggleSimpleMode} 
-                value="Advanced" 
+            <input
+                type="button"
+                className="AdvancedButton border"
+                onClick={toggleSimpleMode}
+                value="Advanced"
                 style={{
                     backgroundColor: !inSimpleMode ? "#31BAB0" : "transparent",
-                    float: "left",  
-                    outline: "none", 
-                    cursor: "pointer", 
-                    padding: "14px 16px", 
+                    float: "left",
+                    outline: "none",
+                    cursor: "pointer",
+                    padding: "14px 16px",
                     transition: "0.3s",
-                    fontSize: "17px"
+                    fontSize: "17px",
                 }}
             />
         </div>
@@ -165,14 +175,14 @@ class NewQuestionDesigner extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state ={
+        this.state = {
             selectedAnswer: -1,
             selectedParent: -1,
             selectedType: 0,
             newQuestionText: "",
         };
 
-    };
+    }
 
     componentDidUpdate = (prevProps, prevState) => {
         if (this.props.surveyQuestions.length !== prevProps.surveyQuestions.length) {
@@ -192,22 +202,22 @@ class NewQuestionDesigner extends React.Component {
             const { surveyQuestions } = this.props;
             const { dataType, componentType } = componentTypes[this.props.inSimpleMode ? 0 : this.state.selectedType];
             const repeatedQuestions = surveyQuestions.filter(sq => removeEnumerator(sq.question) === this.state.newQuestionText).length;
-            
-            if (repeatedQuestions === 0 
-                || confirm("Warning: this is a duplicate name.  This will save as " 
+
+            if (repeatedQuestions === 0
+                || confirm("Warning: this is a duplicate name.  This will save as "
                             + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
 
                 const newQuestion = {
-                                        id: surveyQuestions.reduce((p,c) => Math.max(p,c.id), 0) + 1,
-                                        question: repeatedQuestions > 0 
-                                                        ? this.state.newQuestionText + ` (${repeatedQuestions})` 
-                                                        : this.state.newQuestionText,
-                                        answers: [],
-                                        parentQuestion: this.state.selectedParent,
-                                        parentAnswer: this.state.selectedAnswer,
-                                        dataType: dataType,
-                                        componentType: componentType,
-                                    }; 
+                    id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
+                    question: repeatedQuestions > 0
+                                    ? this.state.newQuestionText + ` (${repeatedQuestions})`
+                                    : this.state.newQuestionText,
+                    answers: [],
+                    parentQuestion: this.state.selectedParent,
+                    parentAnswer: this.state.selectedAnswer,
+                    dataType: dataType,
+                    componentType: componentType,
+                };
                 this.props.setSurveyQuestions([...surveyQuestions, newQuestion]);
                 this.setState({ selectedAnswer: -1, newQuestionText: "" });
             }
@@ -220,115 +230,115 @@ class NewQuestionDesigner extends React.Component {
         return (
             <table className="mt-4">
                 <tbody>
-                {!this.props.inSimpleMode &&
+                    {!this.props.inSimpleMode &&
+                        <tr>
+                            <td>
+                                <label htmlFor="value-componenttype">Component Type:</label>
+                            </td>
+                            <td>
+                                <select
+                                    id="value-componenttype"
+                                    className="form-control form-control-sm"
+                                    size="1"
+                                    onChange={e => this.setState({ selectedType: parseInt(e.target.value) })}
+                                    value={this.state.selectedType}
+                                >
+                                    {componentTypes.map((type, index) =>
+                                        <option
+                                            key={index}
+                                            value={index}
+                                        >
+                                            {`${type.componentType} - ${type.dataType}`}
+                                        </option>)
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
                     <tr>
                         <td>
-                            <label htmlFor="value-componenttype">Component Type:</label>
+                            <label htmlFor="value-parent">Parent Question:</label>
                         </td>
                         <td>
-                            <select 
-                                id="value-componenttype" 
-                                className="form-control form-control-sm" 
+                            <select
+                                id="value-parent"
+                                className="form-control form-control-sm"
                                 size="1"
-                                onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
-                                value={this.state.selectedType}
+                                onChange={e => this.setState({ selectedParent: parseInt(e.target.value) })}
+                                value={this.state.selectedParent}
                             >
-                                {componentTypes.map((type, index) =>
-                                    <option 
-                                        key={index}
-                                        value={index}
-                                    >
-                                        {`${type.componentType} - ${type.dataType}`}
-                                    </option>)
+                                <option key={-1} value={-1}>None</option>
+                                {this.props.surveyQuestions.length > 0
+                                ? this.props.surveyQuestions
+                                    .filter(question => question.componentType !== "input")
+                                    .map(question =>
+                                        <option
+                                            key={question.id}
+                                            value={question.id}
+                                        >
+                                            {question.question}
+                                        </option>)
+                                    : ""
                                 }
                             </select>
                         </td>
                     </tr>
-                }
-                <tr>
-                    <td>
-                        <label htmlFor="value-parent">Parent Question:</label>
-                    </td>
-                    <td>
-                        <select
-                            id="value-parent" 
-                            className="form-control form-control-sm" 
-                            size="1"
-                            onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
-                            value={this.state.selectedParent}
-                        >
-                            <option key={-1} value={-1}>None</option>
-                            {this.props.surveyQuestions.length > 0
-                                ? this.props.surveyQuestions
-                                    .filter(question => question.componentType !== "input")
-                                    .map(question =>
-                                            <option 
-                                                key={question.id}
-                                                value={question.id}
-                                            >
-                                                {question.question}
-                                            </option>)
-                                : "" 
-                            }
-                        </select>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>
-                        <label htmlFor="value-answer">Parent Answer:</label>
-                    </td>
-                    <td>
-                        <select 
-                            id="value-answer" 
-                            className="form-control form-control-sm" 
-                            size="1"
-                            onChange={e => this.setState({ selectedAnswer: parseInt(e.target.value) })}
-                            value={this.state.selectedAnswer}
-                        >
-                            <option key={-1} value={-1}>Any</option>
-                            {this.state.selectedParent > 0 
+
+                    <tr>
+                        <td>
+                            <label htmlFor="value-answer">Parent Answer:</label>
+                        </td>
+                        <td>
+                            <select
+                                id="value-answer"
+                                className="form-control form-control-sm"
+                                size="1"
+                                onChange={e => this.setState({ selectedAnswer: parseInt(e.target.value) })}
+                                value={this.state.selectedAnswer}
+                            >
+                                <option key={-1} value={-1}>Any</option>
+                                {this.state.selectedParent > 0
                                 && this.props.surveyQuestions
                                     .find(question => question.id === this.state.selectedParent)
                                 ? this.props.surveyQuestions
                                     .find(question => question.id === this.state.selectedParent)
                                     .answers
-                                    .map(answer => 
+                                    .map(answer =>
                                         <option key={answer.id} value={answer.id}>
                                             {answer.answer}
                                         </option>)
-                                    : "" 
-                            }
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td><label htmlFor="value-SQ">New Question:</label></td>
-                    <td>
-                        <div id="add-sample-value-group">
-                            <input 
-                                type="text" 
-                                autoComplete="off"
-                                value={this.state.newQuestionText}
-                                onChange={e => this.setState({newQuestionText: e.target.value})}
+                                    : ""
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label htmlFor="value-SQ">New Question:</label></td>
+                        <td>
+                            <div id="add-sample-value-group">
+                                <input
+                                    type="text"
+                                    autoComplete="off"
+                                    value={this.state.newQuestionText}
+                                    onChange={e => this.setState({ newQuestionText: e.target.value })}
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input
+                                type="button"
+                                className="button"
+                                value="Add Survey Question"
+                                onClick={this.addSurveyQuestion}
                             />
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input 
-                            type="button" 
-                            className="button" 
-                            value="Add Survey Question"
-                            onClick={this.addSurveyQuestion}
-                        />
-                    </td>
-                    <td></td>
-                </tr>
+                        </td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
-        )
+        );
     }
 }
 
@@ -336,58 +346,58 @@ class NewAnswerDesigner extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state ={
+        this.state = {
             selectedColor: "#1527F6",
             newAnswerText: "",
         };
-    };
-    
+    }
+
     addSurveyAnswer = () => {
-        const { surveyQuestion } = this.props
+        const { surveyQuestion } = this.props;
         if (this.state.newAnswerText.length > 0) {
             const newAnswer = {
-                                id: surveyQuestion.answers.reduce((a,c) => Math.max(a,c.id), 0) + 1,
-                                answer: this.state.newAnswerText,
-                                color: this.state.selectedColor
-                                };
+                id: surveyQuestion.answers.reduce((a, c) => Math.max(a, c.id), 0) + 1,
+                answer: this.state.newAnswerText,
+                color: this.state.selectedColor,
+            };
             const updatedAnswers = [...surveyQuestion.answers, newAnswer];
             const updatedQuestion = { ...surveyQuestion, answers: updatedAnswers };
             const newSurveyQuestions = this.props.surveyQuestions
-                    .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
+                .map(sq => sq.id === updatedQuestion.id ? updatedQuestion : sq);
 
             this.props.setSurveyQuestions(newSurveyQuestions);
-            this.setState({selectedColor: "#1527F6", newAnswerText: ""})
+            this.setState({ selectedColor: "#1527F6", newAnswerText: "" });
         } else {
-            alert("A survey answer must possess both an answer and a color.")
+            alert("A survey answer must possess both an answer and a color.");
         }
     };
 
     render() {
         return <div className="NewAnswerDesigner">
-                    <div className="col d-flex">
-                        <button 
-                            type="button"
-                            className="btn btn-outline-success py-0 px-2 mr-1" 
-                            onClick={this.addSurveyAnswer}
-                        >
-                            <span className="font-weight-bold">+</span>
-                        </button>
-                
-                        <input 
-                            type="color"
-                            className="value-color mx-2 mt-1"
-                            value={this.state.selectedColor}
-                            onChange={e => this.setState({ selectedColor: e.target.value })}
-                        />
-                        <input 
-                            type="text" 
-                            className="value-name" 
-                            autoComplete="off"
-                            value={this.state.newAnswerText} 
-                            onChange={e => this.setState({ newAnswerText: e.target.value })}
-                        />
-                    </div>
-                </div>
+            <div className="col d-flex">
+                <button
+                    type="button"
+                    className="btn btn-outline-success py-0 px-2 mr-1"
+                    onClick={this.addSurveyAnswer}
+                >
+                    <span className="font-weight-bold">+</span>
+                </button>
+
+                <input
+                    type="color"
+                    className="value-color mx-2 mt-1"
+                    value={this.state.selectedColor}
+                    onChange={e => this.setState({ selectedColor: e.target.value })}
+                />
+                <input
+                    type="text"
+                    className="value-name"
+                    autoComplete="off"
+                    value={this.state.newAnswerText}
+                    onChange={e => this.setState({ newAnswerText: e.target.value })}
+                />
+            </div>
+        </div>;
     }
 }
 

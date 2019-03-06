@@ -105,32 +105,16 @@ public class Views {
                                       Map.of("account_id", getAccountId));
     }
 
-    public static Route createInstitution(FreeMarkerEngine freemarker, String storage) {
-        Function<Request, String> getInstitutionId = (req) -> req.params(":id");
-        var baseRoute = makeRoute("Create-Institution", freemarker,
-                                    Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
-                                           "institution_id", getInstitutionId,
-                                           "storage", storage));
-        return (req, res) -> {
-            if (req.params(":id").equals("0")) {
-                authenticateOrRedirect(req, res);
-            }
-            return baseRoute.handle(req, res);
-        };
+    public static Route createInstitution(FreeMarkerEngine freemarker) {
+        return makeAuthenticatedRoute("Create-Institution", freemarker);
     }
 
     public static Route reviewInstitution(FreeMarkerEngine freemarker, String storage) {
         Function<Request, String> getInstitutionId = (req) -> req.params(":id");
-        var baseRoute = makeRoute("Review-Institution", freemarker,
+        return makeRoute("Review-Institution", freemarker,
                 Map.of("of_users_api_url", CeoConfig.ofUsersApiUrl,
                         "institution_id", getInstitutionId,
                         "storage", storage));
-        return (req, res) -> {
-            if (req.params(":id").equals("0")) {
-                authenticateOrRedirect(req, res);
-            }
-            return baseRoute.handle(req, res);
-        };
     }
 
     public static Route collection(FreeMarkerEngine freemarker) {
@@ -145,8 +129,6 @@ public class Views {
                                       Map.of("institution_id", getInstitutionId));
     }
 
-    // FIXME I do not beleive institution is needed unless we want to do some sort of validations with the imagery
-    // We could/should be loading the imagery list based on the project institution.
     public static Route reviewProject(FreeMarkerEngine freemarker) {
         Function<Request, String> getProjectId = (req) -> req.params(":id");
         return makeAuthenticatedRoute("Review-Project", freemarker,

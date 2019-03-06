@@ -789,9 +789,8 @@ class MapWidget extends React.Component {
                     ]
                 });
                 whichMap.addLayer(layer);
-            }
-            else{
-                fetch(this.props.documentRoot + "/geo-dash" + "/get-project-plot/" + projectID + "/" + plotID)
+            } else {
+                fetch(this.props.documentRoot + "/get-unlocked-plot/" + projectID + "/" + plotID)
                     .then(res => res.json())
                     .then(data => {
                         const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;

@@ -24,7 +24,7 @@ public class PostgresGeoDash implements GeoDash {
                  
             pstmt.setInt(1, Integer.parseInt(projectId));
             try(var rs = pstmt.executeQuery()){
-                if(rs.next()) {
+                if (rs.next()) {
                     var dashboard = new JsonObject();
                     dashboard.addProperty("projectID", projectId);
                     dashboard.addProperty("projectTitle", rs.getString("project_title"));

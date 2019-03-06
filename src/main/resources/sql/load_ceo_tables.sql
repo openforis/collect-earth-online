@@ -64,51 +64,61 @@ CREATE TABLE samples (
 );
 
 CREATE TABLE imagery (
-    id              serial primary key,
-    institution_id  integer references institutions (id) on delete cascade on update cascade,
-    visibility      text not null,
-    title           text not null,
-    attribution     text not null,
-    extent          jsonb,
-    source_config   jsonb
+  id              serial primary key,
+  institution_id  integer references institutions (id) on delete cascade on update cascade,
+  visibility      text not null,
+  title           text not null,
+  attribution     text not null,
+  extent          jsonb,
+  source_config   jsonb
 );
 
 CREATE TABLE roles (
-    id      serial primary key,
-    title   text not null
+  id      serial primary key,
+  title   text not null
 );
 
 CREATE TABLE institution_users (
-    id              serial primary key,
-    institution_id  integer not null references institutions (id),
-    user_id         integer not null references users (id),
-    role_id         integer not null references roles (id)
+  id              serial primary key,
+  institution_id  integer not null references institutions (id),
+  user_id         integer not null references users (id),
+  role_id         integer not null references roles (id),
+  CONSTRAINT per_institution_per_plot UNIQUE(institution_id, user_id)
 );
 
 CREATE TABLE user_plots(
 	id                  serial primary key,
 	user_id             integer not null references users (id) on delete cascade on update cascade,
-    plot_id             integer not null references plots (id) on delete cascade on update cascade,
-    flagged             boolean default false,
+  plot_id             integer not null references plots (id) on delete cascade on update cascade,
+  flagged             boolean default false,
 	confidence          integer CHECK (confidence >= 0 AND confidence <= 100),
-    collection_start    timestamp,
-	collection_time     timestamp
+  collection_start    timestamp,
+	collection_time     timestamp,
+  CONSTRAINT per_user_per_plot UNIQUE(user_id, plot_id)
 );
 
 CREATE TABLE sample_values(
-	id                  serial primary key,
-	user_plot_id        integer not null references user_plots (id) on delete cascade on update cascade,
-    sample_id           integer not null references samples (id) on delete cascade on update cascade,     
-	imagery_id          integer references imagery (id) on delete cascade on update cascade,
-    imagery_attributes  jsonb,
-	value               jsonb
+  id                  serial primary key,
+  user_plot_id        integer not null references user_plots (id) on delete cascade on update cascade,
+  sample_id           integer not null references samples (id) on delete cascade on update cascade,     
+  imagery_id          integer references imagery (id) on delete cascade on update cascade,
+  imagery_attributes  jsonb,
+  value               jsonb,
+  CONSTRAINT per_sample_per_user UNIQUE(sample_id, user_plot_id)
+);
+
+CREATE TABLE plot_locks(
+  user_id       integer not null references users(id),
+  plot_id       integer not null references plots(id),
+  lock_end      timestamp,
+  PRIMARY KEY(user_id, plot_id)
 );
 
 CREATE TABLE project_widgets(
-    id  serial primary key,
+    id              serial primary key,
     project_id      integer not null references projects (id) on delete cascade on update cascade,
     dashboard_id    uuid,
-    widget  jsonb
+    widget          jsonb
 );
 
 

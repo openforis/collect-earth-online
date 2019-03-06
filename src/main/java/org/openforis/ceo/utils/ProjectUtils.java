@@ -372,7 +372,11 @@ public class ProjectUtils {
     }
 
     public static JsonElement getOrZero(JsonObject obj, String field) {
-        return !obj.has(field) || obj.get(field).isJsonNull() || obj.get(field) == null ? new JsonPrimitive(0) : obj.get(field);
+        return !obj.has(field) 
+                || obj.get(field).isJsonNull() 
+                || obj.get(field) == null 
+                || obj.get(field).getAsString().equals("") 
+                ? new JsonPrimitive(0) : obj.get(field);
     }
 
     public static JsonElement getOrEmptyString(JsonObject obj, String field) {
@@ -399,7 +403,7 @@ public class ProjectUtils {
                 var pb = new ProcessBuilder("C:\\Program Files\\Git\\bin\\bash.exe", script, "project-" + projectId + "-" + plotsOrSamples);
                 pb.directory(new File(expandResourcePath(rpath)));
                 // For some reason shp2pgsql needs this to work
-                pb.redirectOutput(new File("out.txt"));
+                pb.redirectOutput(new File("out-win.txt"));
                 var p = pb.start();
                 if (p.waitFor(10L, TimeUnit.SECONDS)) {
                     System.out.println("Git bash Conversion complete.");
