@@ -115,7 +115,10 @@ export class SurveyDesign extends React.Component {
                         inSimpleMode={this.state.inSimpleMode}
                         setSurveyQuestions={this.props.setSurveyQuestions}
                         surveyQuestions={this.props.surveyQuestions}
-                    />
+                        surveyRules = {this.props.surveyRules}
+                        setSurveyRules = {this.props.setSurveyRules}
+
+                />
                 </div>
             </SectionBlock>
         );
@@ -336,22 +339,60 @@ class NewQuestionDesigner extends React.Component {
 
                     </tbody>
                 </table>
-                {/*{!this.props.inSimpleMode && <SectionBlock title="Survey Rules Design">*/}
-                    {/*<table>*/}
-                        {/*<tbody>*/}
-
-                    {/*<SurveyRules surveyQuestions={this.props.surveyQuestions}/>*/}
-                        {/*<tr>  <td></td><td><input*/}
-                            {/*type="button"*/}
-                            {/*className="button"*/}
-                            {/*value="Add Survey Rule"*/}
-                            {/*onClick={this.addSurveyQuestion}*/}
-                        {/*/></td>*/}
-                      {/*</tr>*/}
-                        {/*</tbody>*/}
-                    {/*</table>*/}
-                {/*</SectionBlock>*/}
-                {/*}*/}
+                {!this.props.inSimpleMode && <SectionBlock title="Survey Rules Design">
+                    <table>
+                        <tbody>
+                        <SurveyRules surveyQuestions={this.props.surveyQuestions} surveyQuestion={this.props.surveyQuestion} setSurveyQuestions={this.props.setSurveyQuestions} setSurveyRules={this.props.setSurveyRules} surveyRules={this.props.surveyRules} setRules={this.setRules}/>
+                        <tr>
+                            <td> <span className="font-weight-bold">Rules:  </span></td><td></td></tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <table id="srd">
+                                        <tbody>
+                                        {
+                                            this.props.surveyRules.length > 0?
+                                            this.props.surveyRules.map((rule, uid) => {
+                                                if (rule.ruleType === "text-match") {
+                                                    return <tr id={"rule"+rule.id} key={uid}>
+                                                        <td>type:{rule.ruleType}</td>
+                                                        <td>regex:{rule.regex}</td>
+                                                        <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                    </tr>
+                                                }
+                                                if (rule.ruleType === "numeric-range") {
+                                                    return <tr id={"rule"+rule.id} key={uid}>
+                                                        <td>type:{rule.ruleType}</td>
+                                                        <td>min:{rule.min}</td>
+                                                        <td>max:{rule.max}</td>
+                                                        <td>questions:{rule.questions.toString()}</td>
+                                                    </tr>
+                                                }
+                                                if (rule.ruleType === "sum-of-answers") {
+                                                    return <tr id={"rule"+rule.id} key={uid}>
+                                                        <td>type:{rule.ruleType}</td>
+                                                        <td>validSum:{rule.validSum}</td>
+                                                        <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                    </tr>
+                                                }
+                                                if (rule.ruleType === "incompatible-types") {
+                                                    return <tr id={"rule"+rule.id} key={uid}>
+                                                        <td>type:{rule.ruleType}</td>
+                                                        <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                    </tr>
+                                                }
+                                            }):
+                                            <tr><td colspan="4"><span>No rules for this survey yet!</span></td></tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div></td>
+                            <td></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </SectionBlock>
+                }
             </React.Fragment>
         )
     }
@@ -413,5 +454,303 @@ class NewAnswerDesigner extends React.Component {
                         />
                     </div>
                 </div>
+    }
+}
+
+class SurveyRules extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedRuleType:"none",
+            regex:"",
+            min:0,
+            max:0,
+            validSum:0,
+            questionIds:[],
+            questionId:0,
+            surveyRules:[],
+            existingRule:false
+        };
+        this.updateQuestionId=this.updateQuestionId.bind(this);
+        this.updateMax=this.updateMax.bind(this);
+        this.updateMin=this.updateMin.bind(this);
+        this.updateRegex=this.updateRegex.bind(this);
+        this.updateMaxSum=this.updateMaxSum.bind(this);
+        this.updateOptions=this.updateOptions.bind(this);
+    };
+
+    setNewRule(ruleType) {
+        this.setState({selectedRuleType:ruleType})
+    }
+    updateMin(min){
+        this.setState({min:min});
+    }
+    updateMax(max){
+        this.setState({max:max});
+    }
+    updateQuestionId(e){
+        console.log(e.target.options[e.target.selectedIndex].value);
+        this.setState({questionIds:[parseInt(e.target.options[e.target.selectedIndex].value)]});
+    }
+    updateRegex(expression){
+        this.setState({regex:expression});
+    }
+    updateMaxSum(sum){
+        this.setState({validSum:sum});
+    }
+    updateOptions(options){
+        let questionIds = [];
+        let selection=Array.from(options);
+        selection.map(option => {
+            if(option.selected){
+                this.props.surveyRules.map(rule => {if(rule.questions.includes(parseInt(option.value))){
+                    this.setState({existingRule: true});
+                }});
+
+                questionIds.push(parseInt(option.value));}
+        });
+        this.setState({questionIds:questionIds});
+    }
+    addSurveyRule(ruleType) {
+        let numExists = false, textExists = false, sumExists =false;
+        let rules = this.props.surveyRules.map(rule => {
+            console.log("b4");
+            console.log(rule);
+            if (rule.ruleType === "numeric-range" && rule.questions[0] === this.state.questionIds[0]) {
+                rule.min = this.state.min;
+                rule.max = this.state.max;
+                numExists = true;
+            }
+            else if (rule.ruleType === "text-match" && rule.questions[0] === this.state.questionIds[0]) {
+                rule.regex = this.state.regex;
+                rule.validSum=this.state.validSum;
+                rule.questions = this.state.questionIds;
+                textExists = true;
+            }
+            else if (rule.ruleType === "sum-of-answers" && this.state.questionIds.every(el => rule.questions.includes(el))) {
+                rule.regex = this.state.regex;
+                rule.validSum = this.state.validSum;
+                sumExists = true;
+            }
+            return rule;
+        });
+        if (ruleType === "numeric-range" && numExists === false) {
+            rules.push({
+                id: rules.length + 1,
+                ruleType: ruleType,
+                questions: this.state.questionIds,
+                min: this.state.min,
+                max: this.state.max
+            });
+        }
+        if (ruleType === "text-match" && textExists === false) {
+            rules.push({
+                id: rules.length + 1,
+                ruleType: ruleType,
+                questions: this.state.questionIds,
+                regex: this.state.regex
+            });
+        }
+        if (ruleType === "sum-of-answers" && sumExists === false) {
+            rules.push({
+                id: rules.length + 1,
+                ruleType: ruleType,
+                questions: this.state.questionIds,
+                validSum: this.state.validSum
+            });
+        }
+        this.props.setSurveyRules(rules);
+    }
+
+    render() {
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label htmlFor="ruletype">Rule Type:</label>
+                    </td>
+                    <td>
+                        <select className="form-control form-control-sm" size="1" onChange={e => this.setNewRule(e.target.value)}>
+                            <option value="select">Select</option>
+                            <option value="text-match">Text Match</option>
+                            <option value="numeric-range">Numeric Range</option>
+                            <option value="sum-of-answers">Sum of Answers</option>
+                            <option value="incompatible-types">Incompatible Types</option>
+                        </select>
+                    </td></tr>
+                {
+                    this.state.selectedRuleType == "text-match" ?
+                        <TextMatch surveyQuestions={this.props.surveyQuestions} surveyQuestion={this.props.surveyQuestion} updateRegex={this.updateRegex} updateQuestionId={this.updateQuestionId} updateOptions={this.updateOptions}/> :
+                        this.state.selectedRuleType == "numeric-range" ?
+                        <NumericRange surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} updateMin={this.updateMin} updateMax={this.updateMax} updateQuestionId={this.updateQuestionId} surveyQuestion={this.props.surveyQuestion} updateOptions={this.updateOptions}/> :
+                        this.state.selectedRuleType == "sum-of-answers"?<SumOfAnswers surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} surveyQuestion={this.props.surveyQuestion} updateMaxSum={this.updateMaxSum} updateOptions={this.updateOptions}/>:
+                            this.state.selectedRuleType == "incompatible-types"?<IncompatibleTypes surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} surveyQuestion={this.props.surveyQuestion} updateOptions={this.updateOptions}/>:<tr><td></td><td></td></tr>
+                }
+                <tr>
+                    <td><input
+                        type="button"
+                        className="button"
+                        value="Add Survey Rule"
+                        onClick={()=>this.addSurveyRule(this.state.selectedRuleType)}/></td>
+                    <td></td>
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+class TextMatch extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+
+    render() {
+
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text");
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label>Survey Question: </label></td><td><select onChange={e => this.props.updateOptions(e.target.options)}>
+                    <option value="-1">-select-</option>
+                    {
+                        surveyQuestions && surveyQuestions.map((question, uid) =>
+                            <option key={uid} value={question.id}>{question.question}</option>)
+                    }
+                </select>
+                </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="text-match" type="text" placeholder="Regular expression" onChange={e => this.props.updateRegex(e.target.value)}/>
+                    </td>
+
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+class NumericRange extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+
+    render() {
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number");
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label>Survey Question: </label>
+                    </td><td><select onChange={e => this.props.updateOptions(e.target.options)}>
+                    <option value="-1">-select-</option>
+                    {
+                        surveyQuestions && surveyQuestions.map((question, uid) =>
+                            <option key={uid} value={question.id}>{question.question}</option>)
+                    }
+                </select>
+                </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Enter min and max values: </label></td><td>
+                    <input id="min-val" type="number" placeholder="Minimum value" onChange={e => this.props.updateMin(e.target.value)}/>
+                    <input id="max-val" type="number" placeholder="Maximum value" onChange={e => this.props.updateMax(e.target.value)}/>
+                </td>
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+class SumOfAnswers extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+
+    render() {
+        console.log(this.props.surveyQuestions);
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+        return (
+            <React.Fragment>
+                <tr>
+                    <td>
+                        <label>Survey Question(Hold ctrl/cmd and select multiple questions):</label></td>
+                    <td>
+                        <select multiple="multiple" onChange={e => this.props.updateOptions(e.target.options)}>
+                            {
+                                surveyQuestions.length>1 && surveyQuestions.map((question, uid) =>
+                                    <option key={uid} value={question.id}>{question.question}</option>)
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="expected-sum" type="number" placeholder="Valid sum" onChange={e => this.props.updateMaxSum(e.target.value)}/>
+                    </td>
+
+                </tr>
+
+            </React.Fragment>
+        );
+    }
+}
+
+class IncompatibleTypes extends React.Component {
+    constructor(props) {
+        super(props);
+    };
+
+    render() {
+        console.log(this.props.surveyQuestions);
+        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType !== "input")
+        return (
+            <React.Fragment>
+                <tr>
+                    <td colSpan="2">
+                        <label>Select the incompatible questions and answers: </label></td>
+                </tr>
+                <tr>
+                    <td>
+                        <select onChange={e => this.props.updateOptions(e.target.options)}>
+                            <option value="-1">-question1-</option>
+                            {
+                                surveyQuestions.length && surveyQuestions.map((question, uid) =>
+                                    <option key={uid} value={question.id}>{question.question}</option>)
+                            }
+                        </select>
+                        <select onChange={e => this.props.updateOptions(e.target.options)}>
+                            <option value="-1">-answer1-</option>
+                            {
+                                surveyQuestions.length && surveyQuestions.map((question, uid) =>
+                                    <option key={uid} value={question.id}>{question.question}</option>)
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <select onChange={e => this.props.updateOptions(e.target.options)}>
+                            <option value="-1">-question2-</option>
+                            {
+                                surveyQuestions.length && surveyQuestions.map((question, uid) =>
+                                    <option key={uid} value={question.id}>{question.question}</option>)
+                            }
+                        </select>
+                        <select onChange={e => this.props.updateOptions(e.target.options)}>
+                            <option value="-1">-answer2-</option>
+                            {
+                                surveyQuestions.length && surveyQuestions.map((question, uid) =>
+                                    <option key={uid} value={question.id}>{question.question}</option>)
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <div></div>
+            </React.Fragment>
+        );
     }
 }
