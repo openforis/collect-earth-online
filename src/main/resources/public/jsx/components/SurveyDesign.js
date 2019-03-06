@@ -372,6 +372,7 @@ class NewQuestionDesigner extends React.Component {
                                                             <td>type:{rule.ruleType}</td>
                                                             <td>regex:{rule.regex}</td>
                                                             <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                            <td><button> - </button></td>
                                                         </tr>
                                                     }
                                                     if (rule.ruleType === "numeric-range") {
@@ -380,6 +381,7 @@ class NewQuestionDesigner extends React.Component {
                                                             <td>min:{rule.min}</td>
                                                             <td>max:{rule.max}</td>
                                                             <td>questions:{rule.questions.toString()}</td>
+                                                            <td><button> - </button></td>
                                                         </tr>
                                                     }
                                                     if (rule.ruleType === "sum-of-answers") {
@@ -387,12 +389,14 @@ class NewQuestionDesigner extends React.Component {
                                                             <td>type:{rule.ruleType}</td>
                                                             <td>validSum:{rule.validSum}</td>
                                                             <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                            <td><button> - </button></td>
                                                         </tr>
                                                     }
-                                                    if (rule.ruleType === "incompatible-types") {
+                                                    if (rule.ruleType === "incompatible-answers") {
                                                         return <tr id={"rule" + rule.id} key={uid}>
                                                             <td>type:{rule.ruleType}</td>
                                                             <td colSpan="2">questions:{rule.questions.toString()}</td>
+                                                            <td><button> - </button></td>
                                                         </tr>
                                                     }
                                                 }) :
@@ -593,7 +597,7 @@ class SurveyRules extends React.Component {
                             <option value="text-match">Text Match</option>
                             <option value="numeric-range">Numeric Range</option>
                             <option value="sum-of-answers">Sum of Answers</option>
-                            <option value="incompatible-types">Incompatible Types</option>
+                            <option value="incompatible-answers">Incompatible Answers</option>
                         </select>
                     </td></tr>
                 {
@@ -602,7 +606,7 @@ class SurveyRules extends React.Component {
                         this.state.selectedRuleType == "numeric-range" ?
                         <NumericRange surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} updateMin={this.updateMin} updateMax={this.updateMax} updateQuestionId={this.updateQuestionId} surveyQuestion={this.props.surveyQuestion} updateOptions={this.updateOptions}/> :
                         this.state.selectedRuleType == "sum-of-answers"?<SumOfAnswers surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} surveyQuestion={this.props.surveyQuestion} updateMaxSum={this.updateMaxSum} updateOptions={this.updateOptions}/>:
-                            this.state.selectedRuleType == "incompatible-types"?<IncompatibleTypes surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} surveyQuestion={this.props.surveyQuestion} updateOptions={this.updateOptions}/>:<tr><td></td><td></td></tr>
+                            this.state.selectedRuleType == "incompatible-answers"?<IncompatibleAnswers surveyQuestions={this.props.surveyQuestions} surveyRules={this.props.surveyRules} surveyQuestion={this.props.surveyQuestion} updateOptions={this.updateOptions}/>:<tr><td></td><td></td></tr>
                 }
                 <tr>
                     <td><input
@@ -718,7 +722,7 @@ class SumOfAnswers extends React.Component {
     }
 }
 
-class IncompatibleTypes extends React.Component {
+class IncompatibleAnswers extends React.Component {
     constructor(props) {
         super(props);
     };
