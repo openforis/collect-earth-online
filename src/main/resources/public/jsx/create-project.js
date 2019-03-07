@@ -238,10 +238,7 @@ class Project extends React.Component {
             this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
 
     setSurveyRules = (newSurveyRules) => {
-        console.log(newSurveyRules);
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyRules: newSurveyRules }})
-        console.log("after setstate");
-        console.log(this.state.projectDetails);
     };
 
     getProjectList = () => {

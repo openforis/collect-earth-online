@@ -9,6 +9,8 @@
     letter-spacing: 1px;
     font-family: sans-serif;
     font-size: .8rem;
+    padding: 5px;
+    text-align: center;
 }
 
 .slidecontainer {

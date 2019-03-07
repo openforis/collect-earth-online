@@ -1,5 +1,5 @@
 import React, { Fragment }  from "react";
-import { removeEnumerator } from "../utils/SurveyUtils"
+import { removeEnumerator } from "../utils/surveyUtils"
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
@@ -33,9 +33,7 @@ class SurveyCard extends React.Component {
             surveyRules:[],
             currentRules: [],
         }
-        this.setRules=this.setRules.bind(this);
-    }  
-
+    }
 
     swapQuestionIds = (upOrDown) => {
         const myId = this.props.surveyQuestion.id;
@@ -135,6 +133,7 @@ function SurveyQuestionTree({
 }) {
     const childNodes = surveyQuestions.filter(sq => sq.parentQuestion === surveyQuestion.id);
     const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
+    let ruleCounter=0;
     return (
         <Fragment>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
@@ -172,10 +171,30 @@ function SurveyQuestionTree({
                                     <span className="font-weight-bold">Rules:  </span>
                                     <ul>
                                     {
-                                        surveyRules.map((rule,uid) =>{ let question= rule.questions.find(ques => ques === surveyQuestion.id);
-                                           if(surveyQuestion.id === question)
-                                          return  <li key={uid}> <a href={"#rule"+rule.id}>{rule.ruleType}
-                                          </a></li>;
+                                        surveyRules.map((rule,uid) =>{
+                                            if(rule.questions){
+                                                let question=  rule.questions.find(ques => ques === surveyQuestion.id);
+                                                if(surveyQuestion.id === question) {
+                                                    return <li key={uid}><a
+                                                        href={"#rule" + rule.id}>{"Rule " + rule.id + ": " + rule.ruleType}
+                                                    </a></li>;
+                                                }
+                                            }
+                                            if(rule.questionId){
+                                                if(surveyQuestion.id === rule.questionId) {
+                                                    return <li key={uid}><a
+                                                        href={"#rule" + rule.id}>{"Rule " + rule.id + ": " + rule.ruleType}
+                                                    </a></li>;
+                                                }
+                                            }
+                                            if(rule.question1 || rule.question2){
+                                                if(surveyQuestion.id === rule.question1 || surveyQuestion.id === rule.question2) {
+                                                    return <li key={uid}><a
+                                                        href={"#rule" + rule.id}>{"Rule " + rule.id + ": " + rule.ruleType}
+                                                    </a></li>;
+                                                }
+                                            }
+
                                         })
                                     }
                                     </ul>

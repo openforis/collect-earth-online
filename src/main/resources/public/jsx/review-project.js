@@ -273,7 +273,7 @@ class ProjectStatsGroup extends React.Component {
                 >
                     Project Stats
                 </button>
-                {this.state.showStats && <ProjectStats {...this.props} /> }
+                {this.state.showStats && <ProjectStats {...this.props} />}
             </div>
         );
     }
