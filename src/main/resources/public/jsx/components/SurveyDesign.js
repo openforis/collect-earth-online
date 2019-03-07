@@ -367,18 +367,17 @@ class NewQuestionDesigner extends React.Component {
                                     <table id="srd">
                                         <tbody>
                                         {
-                                            this.props.surveyRules.length > 0 ?
+                                            this.props.surveyRules && this.props.surveyRules.length > 0 ?
                                                 this.props.surveyRules.map((rule, uid) => {
                                                     if (rule.ruleType === "text-match") {
-                                                        return <tr id={"rule" + rule.id} key={uid}>
+                                                        return <tr id={"rule" + rule.id} key = {uid}>
                                                             <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1"onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
                                                             <td>{"Rule " + rule.id}</td>
                                                             <td>Type: {rule.ruleType}</td>
                                                             <td>Regex: {rule.regex}</td>
-                                                            <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                                            <td colSpan = "2">Questions: {rule.questionsText.toString()}</td>
                                                         </tr>
-                                                    }
-                                                    else if (rule.ruleType === "numeric-range") {
+                                                    } else if (rule.ruleType === "numeric-range") {
                                                         return <tr id={"rule" + rule.id} key={uid}>
                                                             <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1" onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
                                                             <td>{"Rule " + rule.id}</td>
@@ -387,8 +386,7 @@ class NewQuestionDesigner extends React.Component {
                                                             <td>Max: {rule.max}</td>
                                                             <td>Questions: {rule.questionsText.toString()}</td>
                                                         </tr>
-                                                    }
-                                                    else if (rule.ruleType === "sum-of-answers") {
+                                                    } else if (rule.ruleType === "sum-of-answers") {
                                                         return <tr id={"rule" + rule.id} key={uid}>
                                                             <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1" onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
                                                             <td>{"Rule " + rule.id}</td>
@@ -396,8 +394,7 @@ class NewQuestionDesigner extends React.Component {
                                                             <td>Valid Sum: {rule.validSum}</td>
                                                             <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
                                                         </tr>
-                                                    }
-                                                    else if (rule.ruleType === "incompatible-answers") {
+                                                    } else if (rule.ruleType === "incompatible-answers") {
                                                         return <tr id={"rule" + rule.id} key={uid}>
                                                             <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1" onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
                                                             <td>{"Rule " + rule.id}</td>
@@ -497,7 +494,6 @@ class SurveyRules extends React.Component {
             validSum: 0,
             questionIds: [],
             dropdownQuestions: [],
-
             answers1: [],
             answers2: [],
             question1: 0,
@@ -510,8 +506,6 @@ class SurveyRules extends React.Component {
             answerText2: "",
             questions: [],
             questionId: 0,
-            surveyRules: [],
-            existingRule: false
         };
         this.updateQuestionId = this.updateQuestionId.bind(this);
         this.updateMax = this.updateMax.bind(this);
@@ -534,7 +528,6 @@ class SurveyRules extends React.Component {
     }
 
     updateQuestionId(e) {
-        console.log(e.target.options[e.target.selectedIndex].value);
         this.setState({questionIds: [parseInt(e.target.options[e.target.selectedIndex].value)]});
     }
 
@@ -552,11 +545,6 @@ class SurveyRules extends React.Component {
         if (this.state.selectedRuleType === "incompatible-answers") {
             selection.map(option => {
                 if (option.selected) {
-                    this.props.surveyRules.map(rule => {
-                        if ((rule.question1 === this.state.question1 && rule.answer1 === this.state.answer1) && (rule.question2 === this.state.question2 && rule.answer2 === this.state.answer2)) {
-                            this.setState({existingRule: true});
-                        }
-                    });
                     if (target.id === "question1") {
                         let dropdownQuestions = this.props.surveyQuestions.filter(question => question.id !== parseInt(option.value));
                         let answers = this.props.surveyQuestions.find(ques => ques.id === parseInt(option.value)).answers;
@@ -583,17 +571,10 @@ class SurveyRules extends React.Component {
                     }
                 }
             });
-        }
-        else if ((this.state.selectedRuleType === "sum-of-answers" && selection.length > 1) || (this.state.selectedRuleType !== "sum-of-answers" && selection.length > 0)) {
+        } else if ((this.state.selectedRuleType === "sum-of-answers" && selection.length > 1) || (this.state.selectedRuleType !== "sum-of-answers" && selection.length > 0)) {
             selection.map(option => {
                 if (option.selected) {
-                    this.props.surveyRules.map(rule => {
-                        if (rule.questions ? rule.questions.includes(parseInt(option.value)) : rule.questionId === parseInt(option.value)) {
-                            this.setState({existingRule: true});
-                        }
-                    });
                     questionIds.push(parseInt(option.value));
-
                 }
             });
             questionIds.map(qId => {
@@ -611,16 +592,13 @@ class SurveyRules extends React.Component {
                 rule.min = this.state.min;
                 rule.max = this.state.max;
                 numExists = true;
-            }
-            else if (rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0]) {
+            } else if (rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0]) {
                 rule.regex = this.state.regex;
                 textExists = true;
-            }
-            else if (rule.ruleType === "sum-of-answers" && this.state.questionIds.every(el => rule.questions.includes(el))) {
+            } else if (rule.ruleType === "sum-of-answers" && this.state.questionIds.every(el => rule.questions.includes(el))) {
                 rule.validSum = this.state.validSum;
                 sumExists = true;
-            }
-            else if (rule.ruleType === "incompatible-answers" && this.state.question1 === rule.question1 && this.state.question2 === rule.question2 && this.state.answer1 === rule.answer1 && this.state.answer2 === rule.answer2) {
+            } else if (rule.ruleType === "incompatible-answers" && this.state.question1 === rule.question1 && this.state.question2 === rule.question2 && this.state.answer1 === rule.answer1 && this.state.answer2 === rule.answer2) {
                 incompatibleExists = true;
             }
             return rule;
@@ -634,8 +612,7 @@ class SurveyRules extends React.Component {
                 min: this.state.min,
                 max: this.state.max
             });
-        }
-        if (ruleType === "text-match" && textExists === false && this.state.regex.length > 0) {
+        } else if (ruleType === "text-match" && textExists === false && this.state.regex.length > 0) {
             rules.push({
                 id: rules.length + 1,
                 ruleType: ruleType,
@@ -643,8 +620,7 @@ class SurveyRules extends React.Component {
                 questionsText: this.state.questions,
                 regex: this.state.regex
             });
-        }
-        if (ruleType === "sum-of-answers" && sumExists === false && this.state.questions.length > 1) {
+        } else if (ruleType === "sum-of-answers" && sumExists === false && this.state.questions.length > 1) {
             rules.push({
                 id: rules.length + 1,
                 ruleType: ruleType,
@@ -652,8 +628,7 @@ class SurveyRules extends React.Component {
                 questionsText: this.state.questions,
                 validSum: this.state.validSum
             });
-        }
-        if (ruleType === "incompatible-answers" && incompatibleExists === false && this.state.question1 > 0 && this.state.question2 > 0 && this.state.answer2 > 0 && this.state.answer1 > 0) {
+        } else if (ruleType === "incompatible-answers" && incompatibleExists === false && this.state.question1 > 0 && this.state.question2 > 0 && this.state.answer2 > 0 && this.state.answer1 > 0) {
             rules.push({
                 id: rules.length + 1,
                 ruleType: ruleType,
@@ -682,8 +657,7 @@ class SurveyRules extends React.Component {
                                 <label htmlFor="ruletype">Rule Type:</label>
                             </td>
                             <td>
-                                <select className="form-control form-control-sm" size="1"
-                                        onChange={e => this.setNewRule(e.target.value)}>
+                                <select className="form-control form-control-sm" size="1" onChange={e => this.setNewRule(e.target.value)}>
                                     <option value="select">None</option>
                                     <option value="text-match">Text Match</option>
                                     <option value="numeric-range">Numeric Range</option>
@@ -718,10 +692,7 @@ class SurveyRules extends React.Component {
                                                          surveyQuestions={this.props.surveyQuestions}
                                                          surveyRules={this.props.surveyRules}
                                                          surveyQuestion={this.props.surveyQuestion}
-                                                         updateOptions={this.updateOptions}/> : <tr>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
+                                                         updateOptions={this.updateOptions}/> : <tr><td></td><td></td></tr>
                 }
                 <tr>
                     <td><input
@@ -736,220 +707,194 @@ class SurveyRules extends React.Component {
     }
 }
 
-class TextMatch extends React.Component {
-    constructor(props) {
-        super(props);
-    };
+function TextMatch(props) {
+    const surveyQuestions = props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text");
+    return (
+        <tr>
+            <td colSpan="2">
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <label>Survey Question: </label></td>
+                        <td><select className="form-control form-control-sm"
+                                    onChange={e => props.updateOptions(e.target)}>
+                            <option value="-1">-select-</option>
+                            {
+                                surveyQuestions && surveyQuestions.map((question, uid) =>
+                                    <option key={uid} value={question.id}>{question.question}</option>)
+                            }
+                        </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>Enter regular expression: </label></td>
+                        <td>
+                            <input id="text-match" className="form-control form-control-sm" type="text"
+                                   placeholder="Regular expression"
+                                   onChange={e => props.updateRegex(e.target.value)}/>
+                        </td>
 
-    render() {
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    );
+}
 
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "text");
-        return (
-            <tr>
-                <td colSpan="2">
-                    <table>
-                        <tbody>
-                        <tr>
-                            <td>
-                                <label>Survey Question: </label></td>
-                            <td><select className="form-control form-control-sm"
-                                        onChange={e => this.props.updateOptions(e.target)}>
-                                <option value="-1">-select-</option>
+function NumericRange(props) {
+    const surveyQuestions = props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number");
+    return (
+        <tr>
+            <td colSpan="2">
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <label>Survey Question: </label>
+                        </td>
+                        <td><select className="form-control form-control-sm"
+                                    onChange={e => props.updateOptions(e.target)}>
+                            <option value="-1">-select-</option>
+                            {
+                                surveyQuestions && surveyQuestions.map((question, uid) =>
+                                    <option key={uid} value={question.id}>{question.question}</option>)
+                            }
+                        </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label>Enter minimum: </label></td>
+                        <td><input id="min-val" className="form-control form-control-sm" type="number"
+                                   placeholder="Minimum value"
+                                   onChange={e => props.updateMin(parseInt(e.target.value))}/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label>Enter maxinum: </label></td>
+                        <td>
+                            <input id="max-val" className="form-control form-control-sm" type="number"
+                                   placeholder="Maximum value"
+                                   onChange={e => props.updateMax(parseInt(e.target.value))}/>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    );
+}
+
+function SumOfAnswers(props) {
+    const surveyQuestions = props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+    return (
+        <tr>
+            <td>
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <label><p>Select survey Question:</p><p>(Hold ctrl/cmd and select multiple
+                                questions)</p></label></td>
+                        <td>
+                            <select className="form-control form-control-sm" multiple="multiple"
+                                    onChange={e => props.updateOptions(e.target)}>
+                                {
+                                    surveyQuestions.length > 1 && surveyQuestions.map((question, uid) =>
+                                        <option key={uid} value={question.id}>{question.question}</option>)
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label>Enter valid sum: </label></td>
+                        <td>
+                            <input className="form-control form-control-sm" id="expected-sum" type="number"
+                                   placeholder="Valid sum"
+                                   onChange={e => rops.updateMaxSum(parseInt(e.target.value))}/>
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    );
+}
+
+function IncompatibleAnswers(props) {
+    const surveyQuestions = props.surveyQuestions.filter(question => question.componentType !== "input");
+    const dropdownQuestions = props.dropdownQuestions.filter(question => question.componentType !== "input");
+    return (
+        <tr>
+            <td colSpan="2">
+                <table>
+                    <tbody>
+                    <tr>
+                        <td colSpan="2"><label>Select the incompatible questions and answers: </label></td>
+                    </tr>
+                    <tr>
+                        <td>Question 1:</td>
+                        <td>
+                            <select className="form-control form-control-sm" id="question1"
+                                    onChange={e => props.updateOptions(e.target)}>
+                                <option value="-1">None</option>
                                 {
                                     surveyQuestions && surveyQuestions.map((question, uid) =>
                                         <option key={uid} value={question.id}>{question.question}</option>)
                                 }
                             </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><label>Enter regular expression: </label></td>
-                            <td>
-                                <input id="text-match" className="form-control form-control-sm" type="text"
-                                       placeholder="Regular expression"
-                                       onChange={e => this.props.updateRegex(e.target.value)}/>
-                            </td>
-
-                        </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        );
-    }
-}
-
-class NumericRange extends React.Component {
-    constructor(props) {
-        super(props);
-    };
-
-    render() {
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number");
-        return (
-            <tr>
-                <td colSpan="2">
-                    <table>
-                        <tbody>
-                        <tr>
-                            <td>
-                                <label>Survey Question: </label>
-                            </td>
-                            <td><select className="form-control form-control-sm"
-                                        onChange={e => this.props.updateOptions(e.target)}>
-                                <option value="-1">-select-</option>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Answer 1:</td>
+                        <td>
+                            <select className="form-control form-control-sm" id="answer1"
+                                    onChange={e => props.updateOptions(e.target)}>
+                                <option value="-1">None</option>
                                 {
-                                    surveyQuestions && surveyQuestions.map((question, uid) =>
+                                    props.answers1 && props.answers1.map((answer, uid) =>
+                                        <option key={uid} value={answer.id}>{answer.answer}</option>)
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Question 2:</td>
+
+                        <td>
+                            <select className="form-control form-control-sm" id="question2"
+                                    onChange={e => props.updateOptions(e.target)}>
+                                <option value="-1">None</option>
+                                {
+                                    dropdownQuestions && dropdownQuestions.map((question, uid) =>
                                         <option key={uid} value={question.id}>{question.question}</option>)
                                 }
                             </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Enter minimum: </label></td>
-                            <td><input id="min-val" className="form-control form-control-sm" type="number"
-                                       placeholder="Minimum value"
-                                       onChange={e => this.props.updateMin(parseInt(e.target.value))}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Enter maxinum: </label></td>
-                            <td>
-                                <input id="max-val" className="form-control form-control-sm" type="number"
-                                       placeholder="Maximum value"
-                                       onChange={e => this.props.updateMax(parseInt(e.target.value))}/>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        );
-    }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Answer 2:</td>
+                        <td>
+                            <select className="form-control form-control-sm" id="answer2"
+                                    onChange={e => props.updateOptions(e.target)}>
+                                <option value="-1">None</option>
+                                {
+                                    props.answers2 && props.answers2.map((answer, uid) =>
+                                        <option key={uid} value={answer.id}>{answer.answer}</option>)
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    );
 }
 
-class SumOfAnswers extends React.Component {
-    constructor(props) {
-        super(props);
-    };
-
-    render() {
-        console.log(this.props.surveyQuestions);
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
-        return (
-            <tr>
-                <td>
-                    <table>
-                        <tbody>
-                        <tr>
-                            <td>
-                                <label><p>Select survey Question:</p><p>(Hold ctrl/cmd and select multiple
-                                    questions)</p></label></td>
-                            <td>
-                                <select className="form-control form-control-sm" multiple="multiple"
-                                        onChange={e => this.props.updateOptions(e.target)}>
-                                    {
-                                        surveyQuestions.length > 1 && surveyQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><label>Enter valid sum: </label></td>
-                            <td>
-                                <input className="form-control form-control-sm" id="expected-sum" type="number"
-                                       placeholder="Valid sum"
-                                       onChange={e => this.props.updateMaxSum(parseInt(e.target.value))}/>
-                            </td>
-
-                        </tr>
-
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        );
-    }
-}
-
-class IncompatibleAnswers extends React.Component {
-    constructor(props) {
-        super(props);
-    };
-
-    render() {
-        console.log(this.props.surveyQuestions);
-        const surveyQuestions = this.props.surveyQuestions.filter(question => question.componentType !== "input");
-        const dropdownQuestions = this.props.dropdownQuestions.filter(question => question.componentType !== "input");
-        return (
-            <tr>
-                <td colSpan="2">
-                    <table>
-                        <tbody>
-                        <tr>
-                            <td colSpan="2"><label>Select the incompatible questions and answers: </label></td>
-                        </tr>
-                        <tr>
-                            <td>Question 1:</td>
-                            <td>
-                                <select className="form-control form-control-sm" id="question1"
-                                        onChange={e => this.props.updateOptions(e.target)}>
-                                    <option value="-1">None</option>
-                                    {
-                                        surveyQuestions && surveyQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Answer 1:</td>
-                            <td>
-                                <select className="form-control form-control-sm" id="answer1"
-                                        onChange={e => this.props.updateOptions(e.target)}>
-                                    <option value="-1">None</option>
-                                    {
-                                        this.props.answers1 && this.props.answers1.map((answer, uid) =>
-                                            <option key={uid} value={answer.id}>{answer.answer}</option>)
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Question 2:</td>
-
-                            <td>
-                                <select className="form-control form-control-sm" id="question2"
-                                        onChange={e => this.props.updateOptions(e.target)}>
-                                    <option value="-1">None</option>
-                                    {
-                                        dropdownQuestions && dropdownQuestions.map((question, uid) =>
-                                            <option key={uid} value={question.id}>{question.question}</option>)
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Answer 2:</td>
-                            <td>
-                                <select className="form-control form-control-sm" id="answer2"
-                                        onChange={e => this.props.updateOptions(e.target)}>
-                                    <option value="-1">None</option>
-                                    {
-                                        this.props.answers2 && this.props.answers2.map((answer, uid) =>
-                                            <option key={uid} value={answer.id}>{answer.answer}</option>)
-                                    }
-                                </select>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        );
-    }
-}
 

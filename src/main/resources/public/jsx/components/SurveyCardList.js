@@ -166,12 +166,12 @@ function SurveyQuestionTree({
                                 {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                             </li>
                                 }
-                                {(surveyRules.length>0 && !inSimpleMode) &&
+                                {(surveyRules && surveyRules.length > 0 && !inSimpleMode) &&
                                 <li>
                                     <span className="font-weight-bold">Rules:  </span>
                                     <ul>
                                     {
-                                        surveyRules.map((rule,uid) =>{
+                                        surveyRules.map((rule,uid) => {
                                             if(rule.questions){
                                                 let question=  rule.questions.find(ques => ques === surveyQuestion.id);
                                                 if(surveyQuestion.id === question) {
