@@ -127,7 +127,6 @@ export class SurveyDesign extends React.Component {
                         surveyQuestions={this.props.surveyQuestions}
                         surveyRules = {this.props.surveyRules}
                         setSurveyRules = {this.props.setSurveyRules}
-
                 />
                 </div>
             </SectionBlock>
@@ -179,14 +178,12 @@ function ModeButtons({ inSimpleMode, toggleSimpleMode }) {
 class NewQuestionDesigner extends React.Component {
     constructor(props) {
         super(props);
-
         this.state = {
             selectedAnswer: -1,
             selectedParent: -1,
             selectedType: 0,
             newQuestionText: "",
         };
-
     }
 
     componentDidUpdate = (prevProps, prevState) => {
@@ -209,8 +206,7 @@ class NewQuestionDesigner extends React.Component {
 
             if (repeatedQuestions === 0
                 || confirm("Warning: this is a duplicate name.  This will save as "
-                    + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
-
+                           + this.state.newQuestionText + ` (${repeatedQuestions})` + " in design mode.")) {
                 const newQuestion = {
                     id: surveyQuestions.reduce((p, c) => Math.max(p, c.id), 0) + 1,
                     question: repeatedQuestions > 0
@@ -229,10 +225,11 @@ class NewQuestionDesigner extends React.Component {
             alert("Please enter a survey question first.");
         }
     };
+
     deleteSurveyRule = (event) => {
-       let surveyRules = this.props.surveyRules.filter(rule => rule.id !== parseInt(event.target.id));
+       const surveyRules = this.props.surveyRules.filter(rule => rule.id !== parseInt(event.target.id));
        this.props.setSurveyRules(surveyRules);
-    }
+    };
 
     render() {
         return (
@@ -240,7 +237,6 @@ class NewQuestionDesigner extends React.Component {
                 <table className="mt-4">
                     <tbody>
                     {!this.props.inSimpleMode &&
-                    <React.Fragment>
                         <tr>
                             <td>
                                 <label htmlFor="value-componenttype">Component Type:</label>
@@ -251,20 +247,15 @@ class NewQuestionDesigner extends React.Component {
                                     className="form-control form-control-sm"
                                     size="1"
                                     onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
-                                    value={this.state.selectedType}
-                                >
+                                    value={this.state.selectedType}>
                                     {componentTypes.map((type, index) =>
-                                        <option
-                                            key={index}
-                                            value={index}
-                                        >
+                                        <option key={index} value={index}>
                                             {`${type.componentType} - ${type.dataType}`}
                                         </option>)
                                     }
                                 </select>
                             </td>
                         </tr>
-                    </React.Fragment>
                     }
                     <tr>
                         <td>
@@ -276,17 +267,13 @@ class NewQuestionDesigner extends React.Component {
                                 className="form-control form-control-sm"
                                 size="1"
                                 onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
-                                value={this.state.selectedParent}
-                            >
+                                value={this.state.selectedParent}>
                                 <option key={-1} value={-1}>None</option>
                                 {this.props.surveyQuestions.length > 0
                                     ? this.props.surveyQuestions
                                         .filter(question => question.componentType !== "input")
                                         .map(question =>
-                                            <option
-                                                key={question.id}
-                                                value={question.id}
-                                            >
+                                            <option key={question.id} value={question.id}>
                                                 {question.question}
                                             </option>)
                                     : ""
@@ -311,7 +298,6 @@ class NewQuestionDesigner extends React.Component {
                                 {this.state.selectedParent > 0
                                 && this.props.surveyQuestions
                                     .find(question => question.id === this.state.selectedParent)
-
                                     ? this.props.surveyQuestions
                                         .find(question => question.id === this.state.selectedParent)
                                         .answers
@@ -350,67 +336,92 @@ class NewQuestionDesigner extends React.Component {
                     </tr>
                     </tbody>
                 </table>
-                {!this.props.inSimpleMode && <SectionBlock title="Survey Rules Design">
+                {!this.props.inSimpleMode &&
+                <SectionBlock title="Survey Rules Design">
                     <table>
                         <tbody>
                         <SurveyRules surveyQuestions={this.props.surveyQuestions}
                                      surveyQuestion={this.props.surveyQuestion}
                                      setSurveyQuestions={this.props.setSurveyQuestions}
-                                     setSurveyRules={this.props.setSurveyRules} surveyRules={this.props.surveyRules}/>
+                                     setSurveyRules={this.props.setSurveyRules}
+                                     surveyRules={this.props.surveyRules}/>
                         <tr>
-                            <td><span className="font-weight-bold">Rules:  </span></td>
-                            <td></td>
+                            <td colSpan="2"><span className="font-weight-bold">Rules:  </span></td>
                         </tr>
                         <tr>
                             <td>
-                                <div>
-                                    <table id="srd">
-                                        <tbody>
-                                        {
-                                            this.props.surveyRules && this.props.surveyRules.length > 0 ?
-                                                this.props.surveyRules.map((rule, uid) => {
-                                                    if (rule.ruleType === "text-match") {
-                                                        return <tr id={"rule" + rule.id} key = {uid}>
-                                                            <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1"onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
-                                                            <td>{"Rule " + rule.id}</td>
-                                                            <td>Type: {rule.ruleType}</td>
-                                                            <td>Regex: {rule.regex}</td>
-                                                            <td colSpan = "2">Questions: {rule.questionsText.toString()}</td>
-                                                        </tr>
-                                                    } else if (rule.ruleType === "numeric-range") {
-                                                        return <tr id={"rule" + rule.id} key={uid}>
-                                                            <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1" onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
-                                                            <td>{"Rule " + rule.id}</td>
-                                                            <td>Type: {rule.ruleType}</td>
-                                                            <td>Min: {rule.min}</td>
-                                                            <td>Max: {rule.max}</td>
-                                                            <td>Questions: {rule.questionsText.toString()}</td>
-                                                        </tr>
-                                                    } else if (rule.ruleType === "sum-of-answers") {
-                                                        return <tr id={"rule" + rule.id} key={uid}>
-                                                            <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1" onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
-                                                            <td>{"Rule " + rule.id}</td>
-                                                            <td>Type: {rule.ruleType}</td>
-                                                            <td>Valid Sum: {rule.validSum}</td>
-                                                            <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                                        </tr>
-                                                    } else if (rule.ruleType === "incompatible-answers") {
-                                                        return <tr id={"rule" + rule.id} key={uid}>
-                                                            <td><button type="button" className="btn btn-outline-danger py-0 px-2 mr-1" onClick={e => this.deleteSurveyRule(e)}><span id={rule.id} className="font-weight-bold">X</span></button></td>
-                                                            <td>{"Rule " + rule.id}</td>
-                                                            <td>Type: {rule.ruleType}</td>
-                                                            <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
-                                                            <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
-                                                        </tr>
-                                                    }
-                                                }) :
-                                                <tr>
-                                                    <td colSpan="4"><span>No rules for this survey yet!</span></td>
-                                                </tr>
-                                        }
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <table id="srd">
+                                    <tbody>
+                                    {
+                                        this.props.surveyRules && this.props.surveyRules.length > 0 ?
+                                            this.props.surveyRules.map((rule, uid) => {
+                                                if (rule.ruleType === "text-match") {
+                                                    return <tr id={"rule" + rule.id} key={uid}>
+                                                        <td>
+                                                            <button type="button"
+                                                                    className="btn btn-outline-danger py-0 px-2 mr-1"
+                                                                    onClick={e => this.deleteSurveyRule(e)}><span
+                                                                id={rule.id} className="font-weight-bold">X</span>
+                                                            </button>
+                                                        </td>
+                                                        <td>{"Rule " + rule.id}</td>
+                                                        <td>Type: {rule.ruleType}</td>
+                                                        <td>Regex: {rule.regex}</td>
+                                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                                    </tr>
+                                                } else if (rule.ruleType === "numeric-range") {
+                                                    return <tr id={"rule" + rule.id} key={uid}>
+                                                        <td>
+                                                            <button type="button"
+                                                                    className="btn btn-outline-danger py-0 px-2 mr-1"
+                                                                    onClick={e => this.deleteSurveyRule(e)}><span
+                                                                id={rule.id} className="font-weight-bold">X</span>
+                                                            </button>
+                                                        </td>
+                                                        <td>{"Rule " + rule.id}</td>
+                                                        <td>Type: {rule.ruleType}</td>
+                                                        <td>Min: {rule.min}</td>
+                                                        <td>Max: {rule.max}</td>
+                                                        <td>Questions: {rule.questionsText.toString()}</td>
+                                                    </tr>
+                                                } else if (rule.ruleType === "sum-of-answers") {
+                                                    return <tr id={"rule" + rule.id} key={uid}>
+                                                        <td>
+                                                            <button type="button"
+                                                                    className="btn btn-outline-danger py-0 px-2 mr-1"
+                                                                    onClick={e => this.deleteSurveyRule(e)}><span
+                                                                id={rule.id} className="font-weight-bold">X</span>
+                                                            </button>
+                                                        </td>
+                                                        <td>{"Rule " + rule.id}</td>
+                                                        <td>Type: {rule.ruleType}</td>
+                                                        <td>Valid Sum: {rule.validSum}</td>
+                                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                                    </tr>
+                                                } else if (rule.ruleType === "incompatible-answers") {
+                                                    return <tr id={"rule" + rule.id} key={uid}>
+                                                        <td>
+                                                            <button type="button"
+                                                                    className="btn btn-outline-danger py-0 px-2 mr-1"
+                                                                    onClick={e => this.deleteSurveyRule(e)}><span
+                                                                id={rule.id} className="font-weight-bold">X</span>
+                                                            </button>
+                                                        </td>
+                                                        <td>{"Rule " + rule.id}</td>
+                                                        <td>Type: {rule.ruleType}</td>
+                                                        <td>Question 1: {rule.questionText1}, Answer
+                                                            1: {rule.answerText1}</td>
+                                                        <td colSpan="2">Question 2: {rule.questionText2}, Answer
+                                                            2: {rule.answerText2}</td>
+                                                    </tr>
+                                                }
+                                            }) :
+                                            <tr>
+                                                <td colSpan="8"><span>No rules for this survey yet!</span></td>
+                                            </tr>
+                                    }
+                                    </tbody>
+                                </table>
                             </td>
                             <td></td>
                         </tr>
@@ -419,7 +430,7 @@ class NewQuestionDesigner extends React.Component {
                 </SectionBlock>
                 }
             </React.Fragment>
-        )
+        );
     }
 }
 
@@ -459,11 +470,9 @@ class NewAnswerDesigner extends React.Component {
                 <button
                     type="button"
                     className="btn btn-outline-success py-0 px-2 mr-1"
-                    onClick={this.addSurveyAnswer}
-                >
+                    onClick={this.addSurveyAnswer}>
                     <span className="font-weight-bold">+</span>
                 </button>
-
                 <input
                     type="color"
                     className="value-color mx-2 mt-1"
@@ -507,142 +516,132 @@ class SurveyRules extends React.Component {
             questions: [],
             questionId: 0,
         };
-        this.updateQuestionId = this.updateQuestionId.bind(this);
-        this.updateMax = this.updateMax.bind(this);
-        this.updateMin = this.updateMin.bind(this);
-        this.updateRegex = this.updateRegex.bind(this);
-        this.updateMaxSum = this.updateMaxSum.bind(this);
-        this.updateOptions = this.updateOptions.bind(this);
-    };
-
-    setNewRule(ruleType) {
-        this.setState({selectedRuleType: ruleType})
     }
 
-    updateMin(min) {
+    setNewRule = (ruleType) => {
+        this.setState({selectedRuleType: ruleType});
+    }
+
+    updateMin = (min) => {
         this.setState({min: min});
     }
 
-    updateMax(max) {
+    updateMax = (max) => {
         this.setState({max: max});
     }
 
-    updateQuestionId(e) {
-        this.setState({questionIds: [parseInt(e.target.options[e.target.selectedIndex].value)]});
-    }
-
-    updateRegex(expression) {
+    updateRegex = (expression) => {
         this.setState({regex: expression});
     }
 
-    updateMaxSum(sum) {
+    updateMaxSum = (sum) => {
         this.setState({validSum: sum});
     }
 
-    updateOptions(target) {
-        let questionIds = [], questions = [];
-        let selection = Array.from(target.options);
+    updateOptions = (target) => {
+        const selection = Array.from(target.options).filter(option => option.selected);
         if (this.state.selectedRuleType === "incompatible-answers") {
             selection.map(option => {
-                if (option.selected) {
-                    if (target.id === "question1") {
-                        let dropdownQuestions = this.props.surveyQuestions.filter(question => question.id !== parseInt(option.value));
-                        let answers = this.props.surveyQuestions.find(ques => ques.id === parseInt(option.value)).answers;
-                        this.setState({
-                            question1: parseInt(option.value),
-                            dropdownQuestions: dropdownQuestions,
-                            answers1: answers,
-                            questionText1: this.props.surveyQuestions.find(ques => ques.id === parseInt(option.value)).question,
-                            answers2: [],
-                        });
-                    } else if (target.id === "question2") {
-                        let answers = this.props.surveyQuestions.find(ques => ques.id === parseInt(option.value)) ? this.props.surveyQuestions.find(ques => ques.id === parseInt(option.value)).answers : [];
-                        this.setState({
-                            question2: parseInt(option.value),
-                            questionText2: this.props.surveyQuestions.find(ques => ques.id === parseInt(option.value)).question,
-                            answers2: answers
-                        });
-                    } else if (target.id === "answer1") {
-                        let answer = this.props.surveyQuestions.find(ques => ques.id === this.state.question1).answers.find(ans => ans.id === parseInt(option.value));
-                        this.setState({answer1: parseInt(option.value), answerText1: answer.answer});
-                    } else if (target.id === "answer2") {
-                        let answer = this.props.surveyQuestions.find(ques => ques.id === this.state.question2).answers.find(ans => ans.id === parseInt(option.value));
-                        this.setState({answer2: parseInt(option.value), answerText2: answer.answer});
-                    }
+                const questionId = parseInt(option.value);
+                if (target.id === "question1") {
+                    const dropdownQuestions = this.props.surveyQuestions.filter(question => question.id !== questionId);
+                    const currentQuestion = this.props.surveyQuestions.find(ques => ques.id === questionId);
+                    const answers = currentQuestion.answers;
+                    this.setState({
+                        question1: questionId,
+                        dropdownQuestions: dropdownQuestions,
+                        answers1: answers,
+                        questionText1: currentQuestion.question,
+                        answers2: [],
+                    });
+                } else if (target.id === "question2") {
+                    const currentQuestion = this.props.surveyQuestions.find(ques => ques.id === questionId);
+                    const answers = currentQuestion ? currentQuestion.answers : [];
+                    this.setState({
+                        question2: questionId,
+                        questionText2: currentQuestion.question,
+                        answers2: answers
+                    });
+                } else if (target.id === "answer1") {
+                    const currentQuestion = this.props.surveyQuestions.find(ques => ques.id === this.state.question1);
+                    const answer = currentQuestion.answers.find(ans => ans.id === questionId);
+                    this.setState({answer1: questionId, answerText1: answer.answer});
+                } else if (target.id === "answer2") {
+                    const currentQuestion = this.props.surveyQuestions.find(ques => ques.id === this.state.question2);
+                    const answer = currentQuestion.answers.find(ans => ans.id === questionId);
+                    this.setState({answer2: questionId, answerText2: answer.answer});
                 }
             });
         } else if ((this.state.selectedRuleType === "sum-of-answers" && selection.length > 1) || (this.state.selectedRuleType !== "sum-of-answers" && selection.length > 0)) {
-            selection.map(option => {
-                if (option.selected) {
-                    questionIds.push(parseInt(option.value));
-                }
+            const questions = selection.map(option => {
+                const question = this.props.surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
+                return question.question;
             });
-            questionIds.map(qId => {
-                let question = this.props.surveyQuestions.find(surveyQuestion => surveyQuestion.id === qId);
-                questions.push(question.question);
-            });
-            this.setState({questionIds: questionIds, questions: questions});
+            this.setState({questionIds: selection.map(option => parseInt(option.value)), questions: questions});
         }
     }
 
-    addSurveyRule(ruleType) {
-        let numExists = false, textExists = false, sumExists = false, incompatibleExists = false;
-        let rules = this.props.surveyRules.map(rule => {
-            if (rule.ruleType === "numeric-range" && rule.questionId === this.state.questionIds[0]) {
-                rule.min = this.state.min;
-                rule.max = this.state.max;
-                numExists = true;
-            } else if (rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0]) {
-                rule.regex = this.state.regex;
-                textExists = true;
-            } else if (rule.ruleType === "sum-of-answers" && this.state.questionIds.every(el => rule.questions.includes(el))) {
-                rule.validSum = this.state.validSum;
-                sumExists = true;
-            } else if (rule.ruleType === "incompatible-answers" && this.state.question1 === rule.question1 && this.state.question2 === rule.question2 && this.state.answer1 === rule.answer1 && this.state.answer2 === rule.answer2) {
-                incompatibleExists = true;
-            }
-            return rule;
+    addSurveyRule = (ruleType) => {
+        const rules = this.props.surveyRules.map(rule => {
+            return (rule.ruleType === "numeric-range" && rule.questionId === this.state.questionIds[0])
+                ? {...rule, min: this.state.min, max: this.state.max}
+                : (rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0])
+                    ? {...rule, regex: this.state.regex}
+                    : (rule.ruleType === "sum-of-answers" && this.state.questionIds.every(qId => rule.questions.includes(qId)))
+                        ? {...rule, validSum: this.state.validSum}
+                        : rule;
         });
-        if (ruleType === "numeric-range" && numExists === false && this.state.min >= 0 && this.state.max >= 0) {
-            rules.push({
+        const numExists = this.props.surveyRules.some(rule => rule.ruleType === "numeric-range" && rule.questionId === this.state.questionIds[0]);
+        const textExists = this.props.surveyRules.some(rule => rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0]);
+        const sumExists = this.props.surveyRules.some(rule => rule.ruleType === "sum-of-answers" && this.state.questionIds.every(qId => rule.questions.includes(qId)));
+        const incompatibleExists = this.props.surveyRules.some(rule => rule.ruleType === "incompatible-answers"
+            && rule.question1 === this.state.question1
+            && rule.question2 === this.state.question2
+            && rule.answer1 === this.state.answer1
+            && rule.answer2 === this.state.answer2);
+        const newRule = (ruleType === "numeric-range" && numExists === false && this.state.min >= 0 && this.state.max >= 0)
+            ? {
                 id: rules.length + 1,
                 ruleType: ruleType,
                 questionId: this.state.questionIds[0],
                 questionsText: this.state.questions,
                 min: this.state.min,
                 max: this.state.max
-            });
-        } else if (ruleType === "text-match" && textExists === false && this.state.regex.length > 0) {
-            rules.push({
-                id: rules.length + 1,
-                ruleType: ruleType,
-                questionId: this.state.questionIds[0],
-                questionsText: this.state.questions,
-                regex: this.state.regex
-            });
-        } else if (ruleType === "sum-of-answers" && sumExists === false && this.state.questions.length > 1) {
-            rules.push({
-                id: rules.length + 1,
-                ruleType: ruleType,
-                questions: this.state.questionIds,
-                questionsText: this.state.questions,
-                validSum: this.state.validSum
-            });
-        } else if (ruleType === "incompatible-answers" && incompatibleExists === false && this.state.question1 > 0 && this.state.question2 > 0 && this.state.answer2 > 0 && this.state.answer1 > 0) {
-            rules.push({
-                id: rules.length + 1,
-                ruleType: ruleType,
-                question1: this.state.question1,
-                question2: this.state.question2,
-                answer1: this.state.answer1,
-                answer2: this.state.answer2,
-                questionText1: this.state.questionText1,
-                questionText2: this.state.questionText2,
-                answerText1: this.state.answerText1,
-                answerText2: this.state.answerText2
-            });
-        }
-        this.props.setSurveyRules(rules);
+            }
+            : (ruleType === "text-match" && textExists === false && this.state.regex.length > 0)
+                ? {
+                    id: rules.length + 1,
+                    ruleType: ruleType,
+                    questionId: this.state.questionIds[0],
+                    questionsText: this.state.questions,
+                    regex: this.state.regex
+                }
+                : (ruleType === "sum-of-answers" && sumExists === false && this.state.questions.length > 1)
+                    ? {
+                        id: rules.length + 1,
+                        ruleType: ruleType,
+                        questions: this.state.questionIds,
+                        questionsText: this.state.questions,
+                        validSum: this.state.validSum
+                    }
+                    : (ruleType === "incompatible-answers" && incompatibleExists === false
+                        && this.state.question1 > 0 && this.state.question2 > 0
+                        && this.state.answer1 > 0 && this.state.answer2 > 0)
+                        ? {
+                            id: rules.length + 1,
+                            ruleType: ruleType,
+                            question1: this.state.question1,
+                            question2: this.state.question2,
+                            answer1: this.state.answer1,
+                            answer2: this.state.answer2,
+                            questionText1: this.state.questionText1,
+                            questionText2: this.state.questionText2,
+                            answerText1: this.state.answerText1,
+                            answerText2: this.state.answerText2
+                        }
+                        : null;
+
+        this.props.setSurveyRules(newRule ? [...rules, newRule] : rules);
     }
 
     render() {
@@ -673,26 +672,34 @@ class SurveyRules extends React.Component {
                 {
                     this.state.selectedRuleType == "text-match" ?
                         <TextMatch surveyQuestions={this.props.surveyQuestions}
-                                   surveyQuestion={this.props.surveyQuestion} updateRegex={this.updateRegex}
-                                   updateQuestionId={this.updateQuestionId} updateOptions={this.updateOptions}/> :
+                                   surveyQuestion={this.props.surveyQuestion}
+                                   updateRegex={this.updateRegex}
+                                   updateOptions={this.updateOptions}/> :
                         this.state.selectedRuleType == "numeric-range" ?
                             <NumericRange surveyQuestions={this.props.surveyQuestions}
-                                          surveyRules={this.props.surveyRules} updateMin={this.updateMin}
-                                          updateMax={this.updateMax} updateQuestionId={this.updateQuestionId}
+                                          surveyRules={this.props.surveyRules}
+                                          updateMin={this.updateMin}
+                                          updateMax={this.updateMax}
                                           surveyQuestion={this.props.surveyQuestion}
                                           updateOptions={this.updateOptions}/> :
                             this.state.selectedRuleType == "sum-of-answers" ?
                                 <SumOfAnswers surveyQuestions={this.props.surveyQuestions}
                                               surveyRules={this.props.surveyRules}
                                               surveyQuestion={this.props.surveyQuestion}
-                                              updateMaxSum={this.updateMaxSum} updateOptions={this.updateOptions}/> :
+                                              updateMaxSum={this.updateMaxSum}
+                                              updateOptions={this.updateOptions}/> :
                                 this.state.selectedRuleType == "incompatible-answers" ?
-                                    <IncompatibleAnswers answers1={this.state.answers1} answers2={this.state.answers2}
+                                    <IncompatibleAnswers answers1={this.state.answers1}
+                                                         answers2={this.state.answers2}
                                                          dropdownQuestions={this.state.dropdownQuestions}
                                                          surveyQuestions={this.props.surveyQuestions}
                                                          surveyRules={this.props.surveyRules}
                                                          surveyQuestion={this.props.surveyQuestion}
-                                                         updateOptions={this.updateOptions}/> : <tr><td></td><td></td></tr>
+                                                         updateOptions={this.updateOptions}/> :
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
                 }
                 <tr>
                     <td><input
@@ -716,7 +723,8 @@ function TextMatch(props) {
                     <tbody>
                     <tr>
                         <td>
-                            <label>Survey Question: </label></td>
+                            <label>Survey Question: </label>
+                        </td>
                         <td><select className="form-control form-control-sm"
                                     onChange={e => props.updateOptions(e.target)}>
                             <option value="-1">-select-</option>
@@ -730,11 +738,12 @@ function TextMatch(props) {
                     <tr>
                         <td><label>Enter regular expression: </label></td>
                         <td>
-                            <input id="text-match" className="form-control form-control-sm" type="text"
+                            <input id="text-match"
+                                   className="form-control form-control-sm"
+                                   type="text"
                                    placeholder="Regular expression"
                                    onChange={e => props.updateRegex(e.target.value)}/>
                         </td>
-
                     </tr>
                     </tbody>
                 </table>
@@ -766,17 +775,23 @@ function NumericRange(props) {
                     </tr>
                     <tr>
                         <td>
-                            <label>Enter minimum: </label></td>
-                        <td><input id="min-val" className="form-control form-control-sm" type="number"
+                            <label>Enter minimum: </label>
+                        </td>
+                        <td><input id="min-val"
+                                   className="form-control form-control-sm"
+                                   type="number"
                                    placeholder="Minimum value"
                                    onChange={e => props.updateMin(parseInt(e.target.value))}/>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label>Enter maxinum: </label></td>
+                            <label>Enter maxinum: </label>
+                        </td>
                         <td>
-                            <input id="max-val" className="form-control form-control-sm" type="number"
+                            <input id="max-val"
+                                   className="form-control form-control-sm"
+                                   type="number"
                                    placeholder="Maximum value"
                                    onChange={e => props.updateMax(parseInt(e.target.value))}/>
                         </td>
@@ -789,7 +804,7 @@ function NumericRange(props) {
 }
 
 function SumOfAnswers(props) {
-    const surveyQuestions = props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number")
+    const surveyQuestions = props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number");
     return (
         <tr>
             <td>
@@ -797,7 +812,7 @@ function SumOfAnswers(props) {
                     <tbody>
                     <tr>
                         <td>
-                            <label><p>Select survey Question:</p><p>(Hold ctrl/cmd and select multiple
+                            <label><p>Select survey question:</p><p>(Hold ctrl/cmd and select multiple
                                 questions)</p></label></td>
                         <td>
                             <select className="form-control form-control-sm" multiple="multiple"
@@ -812,13 +827,13 @@ function SumOfAnswers(props) {
                     <tr>
                         <td><label>Enter valid sum: </label></td>
                         <td>
-                            <input className="form-control form-control-sm" id="expected-sum" type="number"
+                            <input className="form-control form-control-sm"
+                                   id="expected-sum"
+                                   type="number"
                                    placeholder="Valid sum"
                                    onChange={e => props.updateMaxSum(parseInt(e.target.value))}/>
                         </td>
-
                     </tr>
-
                     </tbody>
                 </table>
             </td>
@@ -840,7 +855,8 @@ function IncompatibleAnswers(props) {
                     <tr>
                         <td>Question 1:</td>
                         <td>
-                            <select className="form-control form-control-sm" id="question1"
+                            <select className="form-control form-control-sm"
+                                    id="question1"
                                     onChange={e => props.updateOptions(e.target)}>
                                 <option value="-1">None</option>
                                 {
@@ -853,7 +869,8 @@ function IncompatibleAnswers(props) {
                     <tr>
                         <td>Answer 1:</td>
                         <td>
-                            <select className="form-control form-control-sm" id="answer1"
+                            <select className="form-control form-control-sm"
+                                    id="answer1"
                                     onChange={e => props.updateOptions(e.target)}>
                                 <option value="-1">None</option>
                                 {
@@ -865,9 +882,9 @@ function IncompatibleAnswers(props) {
                     </tr>
                     <tr>
                         <td>Question 2:</td>
-
                         <td>
-                            <select className="form-control form-control-sm" id="question2"
+                            <select className="form-control form-control-sm"
+                                    id="question2"
                                     onChange={e => props.updateOptions(e.target)}>
                                 <option value="-1">None</option>
                                 {
@@ -880,7 +897,8 @@ function IncompatibleAnswers(props) {
                     <tr>
                         <td>Answer 2:</td>
                         <td>
-                            <select className="form-control form-control-sm" id="answer2"
+                            <select className="form-control form-control-sm"
+                                    id="answer2"
                                     onChange={e => props.updateOptions(e.target)}>
                                 <option value="-1">None</option>
                                 {

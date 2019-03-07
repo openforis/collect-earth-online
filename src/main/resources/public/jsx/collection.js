@@ -192,7 +192,7 @@ class Collection extends React.Component {
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
                         : newImagery.title === "PlanetGlobalMosaic"
                             ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                            :  newImagery.attribution;
+                            : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -261,7 +261,7 @@ class Collection extends React.Component {
         } else if (this.state.currentImagery.title === "PlanetGlobalMosaic") {
             this.updatePlanetLayer();
         }
-    }
+    };
     getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
@@ -1111,7 +1111,6 @@ function PlanetMenus(props) {
     return (
         <div className="PlanetsMenu my-2">
             <div className="slidecontainer form-control form-control-sm">
-
                 <input
                     type="range"
                     min="2016"

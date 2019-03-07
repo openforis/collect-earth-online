@@ -15,25 +15,14 @@ export function FormLayout({ title, children }) {
 }
 
 export function SectionBlock({ title, children }) {
-    if (title === "Survey Rules Design") {
-        return (
-            <div className={"row m-1"}>
-                <div className="col">
-                    <h2 className="header px-0">{title}</h2>
-                    {children}
-                </div>
+    return (
+        <div className={title === "Survey Rules Design" ? "row m-1" : "row mb-3"}>
+            <div className="col">
+                <h2 className="header px-0">{title}</h2>
+                {children}
             </div>
-        )
-    } else {
-        return (
-            <div className={"row mb-3"}>
-                <div className="col">
-                    <h2 className="header px-0">{title}</h2>
-                    {children}
-                </div>
-            </div>
-        );
-    }
+        </div>
+    );
 }
 
 export function StatsCell({ title, children }) {
