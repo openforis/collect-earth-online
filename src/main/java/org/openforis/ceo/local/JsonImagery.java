@@ -5,6 +5,7 @@ import static org.openforis.ceo.utils.JsonUtils.filterJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
@@ -17,7 +18,7 @@ public class JsonImagery implements Imagery {
 
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
-        var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+        var imageryList = elementToArray(readJsonFile("imagery-list.json"));
         if (institutionId == null || institutionId.isEmpty()) {
             return filterJsonArray(imageryList,
                                    imagery -> imagery.get("visibility").getAsString().equals("public")).toString();
@@ -29,7 +30,7 @@ public class JsonImagery implements Imagery {
     }
 
     public static String getImageryTitle(String id) {
-        var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+        var imageryList = elementToArray(readJsonFile("imagery-list.json"));
 
         var matchingImagery = filterJsonArray(imageryList,
                                 imagery -> imagery.get("id").getAsString().equals(id));
@@ -54,7 +55,7 @@ public class JsonImagery implements Imagery {
             geoserverParams.addProperty("LAYERS", layerName);
 
             // Read in the existing imagery list
-            var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+            var imageryList = elementToArray(readJsonFile("imagery-list.json"));
 
             // Generate a new imagery id
             var newImageryId = getNextId(imageryList);
@@ -96,7 +97,7 @@ public class JsonImagery implements Imagery {
             var geeParams          = jsonInputs.get("geeParams").getAsJsonObject();
 
             // Read in the existing imagery list
-            var imageryList = readJsonFile("imagery-list.json").getAsJsonArray();
+            var imageryList = elementToArray(readJsonFile("imagery-list.json"));
 
             // Check to see if this imagery has already been added to this institution
             var matchingImagery = findInJsonArray(imageryList, imagery -> imagery.get("title").getAsString().equals(imageryTitle));
@@ -165,7 +166,7 @@ public class JsonImagery implements Imagery {
         }
     }
 
-    public synchronized String deleteInstitutionImagery(Request req, Response res) {
+    public String deleteInstitutionImagery(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var imageryId = jsonInputs.get("imageryId").getAsString();
         var institutionId = jsonInputs.get("institutionId").getAsInt();

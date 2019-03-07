@@ -1,5 +1,6 @@
 package org.openforis.ceo.local;
 
+import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.expandResourcePath;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.getNextId;
@@ -46,7 +47,7 @@ public class JsonUsers implements Users {
             : inputReturnURL;
 
         // Check if email exists
-        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var users = elementToArray(readJsonFile("user-list.json"));
         var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
             req.session().attribute("flash_message", "No account with email " + inputEmail + " exists.");
@@ -88,7 +89,7 @@ public class JsonUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (matchingUser.isPresent()) {
                 req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
@@ -130,7 +131,7 @@ public class JsonUsers implements Users {
     }
 
     // FIXME back port postgres checks that allow user to change only one part
-    public synchronized Request updateAccount(Request req, Response res) {
+    public Request updateAccount(Request req, Response res) {
         var userId = (String) req.session().attribute("userid");
         var inputEmail = req.queryParams("email");
         var inputPassword = req.queryParams("password");
@@ -148,7 +149,7 @@ public class JsonUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("id").getAsString().equals(userId));
             if (!matchingUser.isPresent()) {
                 req.session().attribute("flash_message", "The requested user account does not exist.");
@@ -177,9 +178,9 @@ public class JsonUsers implements Users {
         }
     }
 
-    public synchronized Request getPasswordResetKey(Request req, Response res) {
+    public Request getPasswordResetKey(Request req, Response res) {
         var inputEmail = req.queryParams("email");
-        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var users = elementToArray(readJsonFile("user-list.json"));
         var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
         if (!matchingUser.isPresent()) {
             req.session().attribute("flash_message", "There is no user with that email address.");
@@ -214,7 +215,7 @@ public class JsonUsers implements Users {
         }
     }
 
-    public synchronized Request resetPassword(Request req, Response res) {
+    public Request resetPassword(Request req, Response res) {
         var inputEmail = req.queryParams("email");
         var inputResetKey = req.queryParams("password-reset-key");
         var inputPassword = req.queryParams("password");
@@ -228,7 +229,7 @@ public class JsonUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
             return req;
         } else {
-            var users = readJsonFile("user-list.json").getAsJsonArray();
+            var users = elementToArray(readJsonFile("user-list.json"));
             var matchingUser = findInJsonArray(users, user -> user.get("email").getAsString().equals(inputEmail));
             if (!matchingUser.isPresent()) {
                 req.session().attribute("flash_message", "There is no user with that email address.");
@@ -257,7 +258,7 @@ public class JsonUsers implements Users {
     }
 
     public String getAllUsers(Request req, Response res) {
-        var users = readJsonFile("user-list.json").getAsJsonArray();
+        var users = elementToArray(readJsonFile("user-list.json"));
         return toStream(users)
             .filter(user -> !user.get("email").getAsString().equals("admin@openforis.org"))
             .map(user -> {
@@ -272,8 +273,8 @@ public class JsonUsers implements Users {
     public String getInstitutionUsers(Request req, Response res) {
         var institutionId = req.params(":id");
 
-        var users = readJsonFile("user-list.json").getAsJsonArray();
-        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var users = elementToArray(readJsonFile("user-list.json"));
+        var institutions = elementToArray(readJsonFile("institution-list.json"));
 
         var matchingInstitution = findInJsonArray(institutions,
             institution -> institution.get("id").getAsString().equals(institutionId));
@@ -307,7 +308,7 @@ public class JsonUsers implements Users {
 
     public String getUserStats(Request req, Response res) {
         final var userName =        req.params(":userid");
-        final var projects =        readJsonFile("project-list.json").getAsJsonArray();
+        final var projects =        elementToArray(readJsonFile("project-list.json"));
                
         // Pull out usefull data
         final var projectData = toStream(projects)
@@ -400,7 +401,7 @@ public class JsonUsers implements Users {
         mapJsonFile("project-list.json",
                 project -> {
                     if (Paths.get(expandResourcePath("/json"), "plot-data-" + project.get("id").getAsString() + ".json").toFile().exists()) {
-                        var plots = readJsonFile("plot-data-" + project.get("id").getAsString() + ".json").getAsJsonArray();
+                        var plots = elementToArray(readJsonFile("plot-data-" + project.get("id").getAsString() + ".json"));
                         var dataByUsers = toStream(plots)
                             .filter(plot -> getOrEmptyString(plot, "user").getAsString().length() > 0)
                             .map(plot -> {
@@ -438,7 +439,7 @@ public class JsonUsers implements Users {
     }
     
     public Map<Integer, String> getInstitutionRoles(int userId) {
-        var institutions = readJsonFile("institution-list.json").getAsJsonArray();
+        var institutions = elementToArray(readJsonFile("institution-list.json"));
         var userIdJson = new JsonPrimitive(userId);
         return toStream(institutions)
             .collect(Collectors.toMap(institution -> institution.get("id").getAsInt(),
@@ -456,7 +457,7 @@ public class JsonUsers implements Users {
                                       (a, b) -> b));
     }
 
-    public synchronized String updateInstitutionRole(Request req, Response res) {
+    public String updateInstitutionRole(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var userId = jsonInputs.get("userId");
         var institutionId = jsonInputs.get("institutionId").getAsInt();
@@ -505,7 +506,7 @@ public class JsonUsers implements Users {
         return "";
     }
 
-    public synchronized String requestInstitutionMembership(Request req, Response res) {
+    public String requestInstitutionMembership(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
         var userId = jsonInputs.get("userId");
         var institutionId = jsonInputs.get("institutionId").getAsInt();

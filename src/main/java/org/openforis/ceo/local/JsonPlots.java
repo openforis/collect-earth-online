@@ -1,6 +1,7 @@
 package org.openforis.ceo.local;
 
 import static org.openforis.ceo.local.JsonUsers.sumUserInfo;
+import static org.openforis.ceo.utils.JsonUtils.elementToArray;
 import static org.openforis.ceo.utils.JsonUtils.filterJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.findInJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.intoJsonArray;
@@ -27,7 +28,7 @@ public class JsonPlots implements Plots {
     public String getProjectPlots(Request req, Response res) {
         var projectId = req.params(":id");
         var maxPlots = Integer.parseInt(req.params(":max"));
-        var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         var numPlots = plots.size();
         if (numPlots > maxPlots) {
             var stepSize = 1.0 * numPlots / maxPlots;
@@ -44,7 +45,7 @@ public class JsonPlots implements Plots {
     public String getProjectPlot(Request req, Response res) {
         final var projectId = req.params(":projid");
         final var plotId = req.params(":plotid");
-        final var plots = readJsonFile("plot-data-" + projectId + ".json").getAsJsonArray();
+        final var plots = elementToArray(readJsonFile("plot-data-" + projectId + ".json"));
         final var matchingPlot = findInJsonArray(plots, plot -> plot.get("id").getAsString().equals(plotId));
         if (matchingPlot.isPresent()) {
             return matchingPlot.get().toString();
@@ -145,7 +146,7 @@ public class JsonPlots implements Plots {
 
     }
 
-    public synchronized String resetPlotLock(Request req, Response res) {
+    public String resetPlotLock(Request req, Response res) {
         final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
         final var projectId =             jsonInputs.get("projectId").getAsInt();
         final var plotId =                jsonInputs.get("plotId").getAsInt();
@@ -180,7 +181,7 @@ public class JsonPlots implements Plots {
         return unlockLockPlots(projectId, -1, userId);
     }
 
-    private synchronized static String unlockLockPlots(Integer projectId, Integer plotIdToLock, Integer userId) {
+    private static String unlockLockPlots(Integer projectId, Integer plotIdToLock, Integer userId) {
         mapJsonFile("plot-data-" + projectId + ".json",
             plot -> {
                 var unlockedPlot = unlockPlot(plot, userId);
@@ -214,7 +215,7 @@ public class JsonPlots implements Plots {
         }
     }
 
-    public synchronized String addUserSamples(Request req, Response res) {
+    public String addUserSamples(Request req, Response res) {
         var jsonInputs =            parseJson(req.body()).getAsJsonObject();
         var projectId =             jsonInputs.get("projectId").getAsString();
         var plotId =                jsonInputs.get("plotId").getAsString();
@@ -261,7 +262,7 @@ public class JsonPlots implements Plots {
         return "";
     }
 
-    private synchronized static String updateUserStats(String projectId, Long collectionStart, Long collectionTime, String userName) {
+    private static String updateUserStats(String projectId, Long collectionStart, Long collectionTime, String userName) {
         mapJsonFile("project-list.json",
             project -> {
                 if (project.get("id").getAsString().equals(projectId)) {
@@ -286,7 +287,7 @@ public class JsonPlots implements Plots {
         return "";
     }
 
-    public synchronized String flagPlot(Request req, Response res) {
+    public String flagPlot(Request req, Response res) {
         var jsonInputs =        parseJson(req.body()).getAsJsonObject();
         var projectId =         jsonInputs.get("projectId").getAsString();
         var plotId =            jsonInputs.get("plotId").getAsString();
