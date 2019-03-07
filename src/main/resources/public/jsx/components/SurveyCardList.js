@@ -133,7 +133,6 @@ function SurveyQuestionTree({
 }) {
     const childNodes = surveyQuestions.filter(sq => sq.parentQuestion === surveyQuestion.id);
     const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
-    let ruleCounter=0;
     return (
         <Fragment>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">

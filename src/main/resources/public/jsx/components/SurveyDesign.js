@@ -814,7 +814,7 @@ function SumOfAnswers(props) {
                         <td>
                             <input className="form-control form-control-sm" id="expected-sum" type="number"
                                    placeholder="Valid sum"
-                                   onChange={e => rops.updateMaxSum(parseInt(e.target.value))}/>
+                                   onChange={e => props.updateMaxSum(parseInt(e.target.value))}/>
                         </td>
 
                     </tr>

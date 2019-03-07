@@ -124,7 +124,7 @@ class Project extends React.Component {
                           samplesPerPlot: this.state.projectDetails.samplesPerPlot,
                           sampleResolution: this.state.projectDetails.sampleResolution,
                           sampleValues: this.state.projectDetails.surveyQuestions,
-                          surveyRules: [],
+                          surveyRules: this.state.projectDetails.surveyRules,
                           plotFileName: this.state.projectDetails.plotFileName,
                           plotFileBase64: this.state.projectDetails.plotFileBase64,
                           sampleFileName: this.state.projectDetails.sampleFileName,
