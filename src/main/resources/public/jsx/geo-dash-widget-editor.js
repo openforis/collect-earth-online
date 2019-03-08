@@ -420,7 +420,7 @@ class BasicLayout extends React.PureComponent {
             h: 1,
             minW: 3
         };
-        widget.baseMap = (this.state.imagery.filter(imagery => imagery.id === this.state.widgetBaseMap))[0];
+        widget.baseMap = (this.state.imagery.filter(imagery => String(imagery.id) === this.state.widgetBaseMap))[0];
         if (this.state.selectedWidgetType === "DualImageCollection") {
             widget.properties = ["","","","",""];
             widget.filterType = "";
