@@ -849,7 +849,7 @@ function SideBar(props) {
         .every(sq => sq.visible && sq.visible.length === sq.answered.length);
 
     return (
-        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "hidden scroll" }}>
+        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflowY: "scroll", overflowX: "hidden" }}>
             <h2 className="header">{props.projectName || ""}</h2>
 
             {props.children}
