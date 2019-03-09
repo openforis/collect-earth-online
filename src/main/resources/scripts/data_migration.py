@@ -1,4 +1,7 @@
-import demjson
+# useage `python3 data_migration.py [optional 'loop'] [optional project to resume (must include [loop] or [file] for arg 1)]`
+# example `python3 data_migration.py loop`
+# example `python2 data_migration.py file 350`
+import time
 import json
 import psycopg2
 import shutil
@@ -19,16 +22,37 @@ csvScriptPath = r'../csv'
 shppath = r'../../../../target/classes/shp'
 shpScriptPath = r'../shp'
 
+def truncate_all_tables():
+    try:
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        cur.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE institutions RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE institution_users RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE imagery RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE projects RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE project_widgets RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE plots RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE roles RESTART IDENTITY CASCADE")
+        conn.commit()
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)    
+    finally:
+        if conn is not None:
+            conn.close()
+
 def insert_users():
     conn = None
     user_id=-1
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath(__file__))
-        user_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'user-list.json'))), "r").read()
-        users = demjson.decode(user_list_json)
+        user_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'user-list.json'))), "r")
+        users = json.load(user_list_json)
         for user in users:
             cur.execute("select * from add_user_migration(%s,%s::text,%s::text)", (user['id'],user['email'],user['password']))
             user_id = cur.fetchone()[0]
@@ -49,11 +73,9 @@ def insert_institutions():
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur1 = conn.cursor()
-        cur.execute("TRUNCATE TABLE institutions RESTART IDENTITY CASCADE")
-        cur.execute("TRUNCATE TABLE institution_users RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath(__file__))
-        institution_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'institution-list.json'))), "r").read()
-        institutions = demjson.decode(institution_list_json)
+        institution_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'institution-list.json'))), "r")
+        institutions = json.load(institution_list_json)
         print(len(institutions))
         for institution in institutions:
             members=institution['members']
@@ -91,10 +113,9 @@ def insert_imagery():
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("TRUNCATE TABLE imagery RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath(__file__))
-        imagery_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'imagery-list.json'))), "r").read()
-        imageryArr = demjson.decode(imagery_list_json)
+        imagery_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'imagery-list.json'))), "r")
+        imageryArr = json.load(imagery_list_json)
         for imagery in imageryArr:
             if imagery['institution'] > 1: 
                 try:
@@ -114,8 +135,8 @@ def insert_project_widgets(project_id,dash_id,conn):
     try:
         cur = conn.cursor()
         dirname = os.path.dirname(os.path.realpath(__file__))
-        dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'dash-'+dash_id+'.json'))), "r").read() 
-        widget = demjson.decode(dash_json)
+        dash_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'dash-'+dash_id+'.json'))), "r") 
+        widget = json.load(dash_json)
         if widget['projectID'] is not None and int(project_id)==int(widget['projectID']) and len(str(widget['widgets']))>2:
             for awidget in widget['widgets']:
                 cur.execute("select * from add_project_widget(%s,%s::uuid,%s::jsonb)", 
@@ -130,20 +151,15 @@ def insert_projects():
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("TRUNCATE TABLE projects RESTART IDENTITY CASCADE")
-        cur.execute("TRUNCATE TABLE project_widgets RESTART IDENTITY CASCADE")
-        cur.execute("TRUNCATE TABLE plots RESTART IDENTITY CASCADE")
-        cur.execute("TRUNCATE TABLE samples RESTART IDENTITY CASCADE")
-        cur.execute("TRUNCATE TABLE sample_values RESTART IDENTITY CASCADE")
         dirname = os.path.dirname(os.path.realpath(__file__)) 
-        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'project-list.json'))), "r").read()
-        projectArr = demjson.decode(project_list_json)
-        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'proj.json'))), "r").read()
-        dashArr = demjson.decode(project_dash_list_json)
+        project_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'project-list.json'))), "r")
+        projectArr = json.load(project_list_json)
+        project_dash_list_json= open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'proj.json'))), "r")
+        dashArr = json.load(project_dash_list_json)
         print(len(projectArr))
         for project in projectArr:
             try:
-                if project['id'] > 0:
+                if project['id'] > (int(sys.argv[2]) if len(sys.argv) > 2 else 0):
                     print("inserting project with project id"+str(project['id']))
                     if project['numPlots'] is None: project['numPlots']=0
                     if project['plotSpacing'] is None: project['plotSpacing']=0
@@ -163,8 +179,7 @@ def insert_projects():
                     json.dumps(project['surveyRules']),
                     None))
                     
-                    project_id = cur.fetchone()[0]
-                    conn.commit()   
+                    project_id = project['id']
                     for dash in dashArr:
                         dash_id=dash['dashboard']
                         if dash_id.isnumeric() and int(dash['projectID']) == int(project_id):
@@ -176,14 +191,15 @@ def insert_projects():
                         insert_plots(project_id, conn)
                     else:
                         ## insert data the entire json file at a time, much faster but requires permissions
+                        conn.commit()   
                         insert_plots_samples_by_file(project_id, conn)
                     
-                    ## merge in external files
-                    merge_files(project, project_id, conn)
                     conn.commit()
+                    # merge in external files
+                    merge_files(project, project_id, conn)
             except(Exception, psycopg2.DatabaseError) as error:
-                conn.commit()
                 print("project for loop: "+ str(error))
+                conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print("project outer: "+ str(error))
@@ -200,7 +216,8 @@ def insert_plots_samples_by_file(project_id, mainconn):
         dirname = os.path.dirname(os.path.realpath(__file__))
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'plot-data-'+str(project_id)+'.json')))
         if os.path.isfile(filename):
-            cur_plot.execute("select * from add_plots_by_json(%s,%s::text)",(project_id, filename))
+            filedata = open(filename, "r").read()
+            cur_plot.execute("select * from add_plots_by_json(%s,%s::text)",(project_id, filedata))
             conn.commit()
     except (Exception, psycopg2.DatabaseError) as error:
         print("plot file error: "+ str(error))
@@ -218,8 +235,8 @@ def insert_plots(project_id,conn):
     dirname = os.path.dirname(os.path.realpath(__file__))
     filename = os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , 'plot-data-'+str(project_id)+'.json')))
     if os.path.isfile(filename):
-        plot_list_json= open(filename, "r").read()
-        plotArr = demjson.decode(plot_list_json)
+        plot_list_json= open(filename, "r")
+        plotArr = json.load(plot_list_json)
         for plot in plotArr:
             try:
                 boolean_Flagged=plot['flagged']
@@ -255,6 +272,7 @@ def insert_user_plots(plot_id,plot,flagged,conn):
                 (plot_id,plot['user'],flagged,plot['collectionStart'],plot['collectionTime']))
             user_plot_id = cur_up.fetchone()[0]
             conn.commit()
+            user_plot_id = 1
         except (Exception, psycopg2.DatabaseError) as error:
                 print("user plots error: "+ str(error))
     cur_up.close()
@@ -366,6 +384,7 @@ def merge_files(project, project_id, conn):
             if len(csv_headers) > 0:
                 plots_table = tableprefix + '_plots_csv'
                 need_to_update = 1
+                cur.execute("DROP TABLE IF EXISTS " + plots_table)
                 cur.execute("SELECT * FROM create_new_table(%s,%s)", 
                 [plots_table, csvHeaderToCol(csv_headers)])
                 conn.commit()
@@ -409,6 +428,7 @@ def merge_files(project, project_id, conn):
             if len(checkRequiredCols(csv_headers,['plotId'])) > 0:
                 plots_table = tableprefix + '_plots_csv'
                 need_to_update = 2
+                cur.execute("DROP TABLE IF EXISTS " + plots_table)
                 cur.execute("SELECT * FROM create_new_table(%s,%s)", 
                 [plots_table, csvHeaderToCol(csv_headers)])
                 conn.commit()
@@ -441,12 +461,14 @@ def merge_files(project, project_id, conn):
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-plots.zip")))
         if project['plotDistribution'] == 'shp' and os.path.isfile(filename):
             need_to_update = 2
+            plots_table = 'project_' +  str(project_id) + '_plots_shp'
+            cur.execute("DROP TABLE IF EXISTS " + plots_table)
+            conn.commit()
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
             subprocess.run(['bash', 'shp2postgres.sh', fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
         
-            plots_table = 'project_' +  str(project_id) + '_plots_shp'
         
         # ### Samples
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-samples.csv")))
@@ -455,8 +477,9 @@ def merge_files(project, project_id, conn):
             if len(checkRequiredCols(csv_headers, ['plotId', 'sampleId'])) > 0:
                 samples_table = 'project_' +  str(project_id) + '_samples_csv'
                 need_to_update = 3
+                cur.execute("DROP TABLE IF EXISTS " + samples_table)
                 cur.execute("SELECT * FROM create_new_table(%s,%s)", 
-                ['project_' +  str(project_id) + '_samples_csv', csvHeaderToCol(csv_headers)])
+                [samples_table, csvHeaderToCol(csv_headers)])
                 conn.commit()
 
                 # run sh to upload csv to postgres
@@ -483,23 +506,15 @@ def merge_files(project, project_id, conn):
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-samples.zip")))
         if project['sampleDistribution'] == 'shp' and os.path.isfile(filename):
             need_to_update = 3
+
+            samples_table = 'project_' +  str(project_id) + '_samples_shp'
+            cur.execute("DROP TABLE IF EXISTS " + samples_table)
+            conn.commit()
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))
             shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
             subprocess.run(['bash', 'shp2postgres.sh', fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
 
-            samples_table = 'project_' +  str(project_id) + '_samples_shp'
-
-        if need_to_update > 0:
-            # add table names to project
-            cur.execute("SELECT * FROM update_project_tables(%s,%s,%s)" , [project_id, plots_table, samples_table])
-            conn.commit()
-            # clean up project tables
-            cur.execute("SELECT * FROM cleanup_project_tables(%s,%s)" , [project_id, project['plotSize']])
-            conn.commit()
-            # merge files into plots
-            cur.execute("SELECT * FROM merge_plot_and_file(%s)" , [project_id])
-            conn.commit()
 
         # add table names to project
         cur.execute("SELECT * FROM update_project_tables(%s,%s,%s)" , [project_id, plots_table, samples_table])
@@ -532,7 +547,6 @@ def insert_roles():
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("TRUNCATE TABLE roles RESTART IDENTITY CASCADE")
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (1,'admin'))
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (2,'member'))
         cur.execute("INSERT INTO roles VALUES (%s,%s::text)", (3,'pending'))
@@ -554,8 +568,6 @@ def update_sequence():
     cur.execute("select * from update_sequence('sample_values')")
     cur.execute("select * from update_sequence('plots')")
 
-
-
 if __name__ == '__main__':
     csvScripts = os.listdir(csvScriptPath)
     for f in csvScripts:
@@ -566,16 +578,19 @@ if __name__ == '__main__':
     for f in shpScripts:
         if f.endswith(".sh"):
             shutil.copy(shpScriptPath+"/"+f, shppath)
+    if (len(sys.argv) <= 2):
+        print("new stuff")
+        truncate_all_tables()
+        print("inserting users")
+        insert_users()
+        print("inserting roles")
+        insert_roles()
+        print("inserting institutions")
+        insert_institutions()
+        print("inserting imagery")
+        insert_imagery()
+        print("inserting projects")
 
-    print("inserting users")
-    insert_users()
-    print("inserting roles")
-    insert_roles()
-    print("inserting institutions")
-    insert_institutions()
-    print("inserting imagery")
-    insert_imagery()
-    print("inserting projects")
     insert_projects()
     print("Done with projects")
     update_sequence()
