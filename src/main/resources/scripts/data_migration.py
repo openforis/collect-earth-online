@@ -1,7 +1,7 @@
 # useage `python3 data_migration.py [optional 'loop'] [optional project to resume (must include [loop] or [file] for arg 1)]`
 # example `python3 data_migration.py loop`
 # example `python2 data_migration.py file 350`
-import time
+import datetime
 import json
 import psycopg2
 import shutil
@@ -569,6 +569,7 @@ def update_sequence():
     cur.execute("select * from update_sequence('plots')")
 
 if __name__ == '__main__':
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     csvScripts = os.listdir(csvScriptPath)
     for f in csvScripts:
         if f.endswith(".sh"):
@@ -579,7 +580,6 @@ if __name__ == '__main__':
         if f.endswith(".sh"):
             shutil.copy(shpScriptPath+"/"+f, shppath)
     if (len(sys.argv) <= 2):
-        print("new stuff")
         truncate_all_tables()
         print("inserting users")
         insert_users()
@@ -595,3 +595,4 @@ if __name__ == '__main__':
     print("Done with projects")
     update_sequence()
     print("Done migration")
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
