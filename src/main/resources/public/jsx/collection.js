@@ -262,6 +262,7 @@ class Collection extends React.Component {
             this.updatePlanetLayer();
         }
     };
+
     getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
     getImageryById = (imageryId) => this.state.imageryList.find(imagery => imagery.id === imageryId);
@@ -601,82 +602,80 @@ class Collection extends React.Component {
         }
     };
 
-    setCurrentValue = (questionToSet, answerId, answerText) => {
-        let errorMsg = "", validAns = true, validNum =true, validText = true, compatibleAnswer = true;
-        this.state.currentProject.surveyRules.map(surveyRule => {
-            if (surveyRule.regex && surveyRule.questionId === questionToSet.id) {
-                const regex = RegExp(surveyRule.regex);
-                if (regex.test(answerText)) {
-                    validText = true;
+    rulesViolated = (questionToSet, answerId, answerText) => {
+        const errorMessages = this.state.currentProject.surveyRules.map(surveyRule => {
+            if (surveyRule.ruleType === "text-matches" &&
+                surveyRule.questionId === questionToSet.id &&
+                !RegExp(surveyRule.regex).test(answerText)) {
+                return "Please enter a regular expression that matches " + surveyRule.regex;
+            } else if (surveyRule.ruleType === "numeric-range" &&
+                surveyRule.questionId === questionToSet.id &&
+                (parseInt(answerText) < surveyRule.min ||
+                    parseInt(answerText) > surveyRule.max)) {
+                return "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
+            } else if (surveyRule.ruleType === "sum-of-answers" &&
+                surveyRule.questions.includes(questionToSet.id)) {
+                const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id)
+                    && q.answered.length > 0);
+                if (surveyRule.questions.length === answeredQuestions.length + 1) {
+                    const answeredSum = answeredQuestions.reduce((sum, q) => sum + parseInt(q.answered[0].answerText), 0);
+                    if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
+                        return "Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
+                    } else {
+                        return null;
+                    }
                 } else {
-                    validText = false;
-                    errorMsg = "Please enter a regular expression that matches " + surveyRule.regex;
+                    return null;
                 }
-            }
-            if (surveyRule.min && surveyRule.questionId === questionToSet.id) {
-                if (surveyRule.min && parseInt(answerText) >= surveyRule.min && parseInt(answerText) <= surveyRule.max) {
-                    validNum = true;
-                } else {
-                    validNum = false;
-                    errorMsg = "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
-                }
-            }
-            if (surveyRule.validSum && surveyRule.questions.includes(questionToSet.id)) {
-                let sum = 0;
-                const answeredQues = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0);
-                if (surveyRule.questions.length === answeredQues.length + 1) {
-                    answeredQues.map(ques => {
-                            sum = sum + parseInt(ques.answered[0].answerText);
-                        }
-                    );
-                    const eValue = surveyRule.validSum - sum;
-                    sum = sum + parseInt(answerText);
-                    if (sum === surveyRule.validSum) {
-                        validAns = true;
-                    } else {
-                        validAns = false;
-                        sum = sum - parseInt(answerText);
-                        errorMsg = "check your input. Possible value is " + eValue.toString();
-                    }
-                }
-            }
-            if (surveyRule.question2 === questionToSet.id) {
-                const ques1 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question1 === q.id && q.answered.length > 0);
-                if (ques1) {
-                    const ans1 = ques1.answered.find(ans => ans.answerId === surveyRule.answer1);
-                    if (ans1) {
-                        if (surveyRule.answer1 === ans1.answerId && surveyRule.answer2 === answerId) {
-                            compatibleAnswer = true;
+            } else if (surveyRule.ruleType === "incompatible-answers") {
+                if (surveyRule.question2 === questionToSet.id) {
+                    const ques1 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question1 === q.id && q.answered.length > 0);
+                    if (ques1) {
+                        const ans1 = ques1.answered.find(ans => ans.answerId === surveyRule.answer1);
+                        if (ans1) {
+                            if (surveyRule.answer1 === ans1.answerId && surveyRule.answer2 === answerId) {
+                                return null;
+                            } else {
+                                return "Incompatible answer";
+                            }
                         } else {
-                            compatibleAnswer = false;
-                            errorMsg = "Incompatible answer";
+                            return null;
                         }
-                    } else {
-                        compatibleAnswer = true;
                     }
                 }
-            }
-            if (surveyRule.question1 === questionToSet.id) {
-                const ques2 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question2 === q.id && q.answered.length > 0);
-                if (ques2) {
-                    const ans2 = ques2.answered.find(ans => ans.answerId === surveyRule.answer2);
-                    if (ans2) {
-                        if (surveyRule.answer1 === answerId && surveyRule.answer2 === ans2.answerId) {
-                            compatibleAnswer = true;
+                if (surveyRule.question1 === questionToSet.id) {
+                    const ques2 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question2 === q.id && q.answered.length > 0);
+                    if (ques2) {
+                        const ans2 = ques2.answered.find(ans => ans.answerId === surveyRule.answer2);
+                        if (ans2) {
+                            if (surveyRule.answer1 === answerId && surveyRule.answer2 === ans2.answerId) {
+                                return null;
+                            } else {
+                                return "Incompatible answer";
+                            }
                         } else {
-                            compatibleAnswer = false;
-                            errorMsg = "Incompatible answers";
-                        }
-                    } else {
-                            compatibleAnswer = true;
+                            return null;
                         }
                     }
+                }
+            } else {
+                return null;
             }
         });
+
+        return errorMessages.find(msg => msg !== null);
+    };
+
+    setCurrentValue = (questionToSet, answerId, answerText) => {
+        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-        if (Object.keys(this.state.userSamples).length === 1
+
+        if (ruleError) {
+            alert (ruleError);
+            return false;
+        } else if (Object.keys(this.state.userSamples).length === 1
             || (selectedFeatures && selectedFeatures.getLength()
-                && this.validateCurrentSelection(selectedFeatures, questionToSet.id)) && validAns && validNum && validText && compatibleAnswer) {
+                && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
 
             const sampleIds = Object.keys(this.state.userSamples).length === 1
                 ? [Object.keys(this.state.userSamples)[0]]
@@ -721,9 +720,6 @@ class Collection extends React.Component {
             return true;
         } else if (selectedFeatures && selectedFeatures.getLength() === 0) {
             alert("No samples selected. Please click some first.");
-            return false;
-        } else if (!compatibleAnswer || !validAns || !validNum || !validText) {
-            alert(errorMsg);
             return false;
         } else {
             alert("Invalid Selection. Try selecting the question before answering.");

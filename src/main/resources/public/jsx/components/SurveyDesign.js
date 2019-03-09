@@ -417,7 +417,7 @@ class NewQuestionDesigner extends React.Component {
                                                 }
                                             }) :
                                             <tr>
-                                                <td colSpan="8"><span>No rules for this survey yet!</span></td>
+                                                <td colSpan="6"><span>No rules for this survey yet!</span></td>
                                             </tr>
                                     }
                                     </tbody>
