@@ -30,7 +30,7 @@ class Collection extends React.Component {
             stackingProfileDG: "Accuracy_Profile",
             userSamples: {},
             userImages: {},
-            storedInterval: null,
+            storedInterval: null
         };
     }
 
@@ -602,15 +602,85 @@ class Collection extends React.Component {
     };
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
+        let errorMsg = "", validAns = true, validNum =true, validText = true, compatibleAnswer = true;
+        this.state.currentProject.surveyRules.map(surveyRule => {
+            if (surveyRule.regex && surveyRule.questionId === questionToSet.id) {
+                const regex = RegExp(surveyRule.regex);
+                if (regex.test(answerText)) {
+                    validText = true;
+                } else {
+                    validText = false;
+                    errorMsg = "Please enter a regular expression that matches " + surveyRule.regex;
+                }
+            }
+            if (surveyRule.min && surveyRule.questionId === questionToSet.id) {
+                if (surveyRule.min && parseInt(answerText) >= surveyRule.min && parseInt(answerText) <= surveyRule.max) {
+                    validNum = true;
+                } else {
+                    validNum = false;
+                    errorMsg = "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
+                }
+            }
+            if (surveyRule.validSum && surveyRule.questions.includes(questionToSet.id)) {
+                let sum = 0;
+                const answeredQues = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0);
+                if (surveyRule.questions.length === answeredQues.length + 1) {
+                    answeredQues.map(ques => {
+                            sum = sum + parseInt(ques.answered[0].answerText);
+                        }
+                    );
+                    const eValue = surveyRule.validSum - sum;
+                    sum = sum + parseInt(answerText);
+                    if (sum === surveyRule.validSum) {
+                        validAns = true;
+                    } else {
+                        validAns = false;
+                        sum = sum - parseInt(answerText);
+                        errorMsg = "check your input. Possible value is " + eValue.toString();
+                    }
+                }
+            }
+            if (surveyRule.question2 === questionToSet.id) {
+                const ques1 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question1 === q.id && q.answered.length > 0);
+                if (ques1) {
+                    const ans1 = ques1.answered.find(ans => ans.answerId === surveyRule.answer1);
+                    if (ans1) {
+                        if (surveyRule.answer1 === ans1.answerId && surveyRule.answer2 === answerId) {
+                            compatibleAnswer = true;
+                        } else {
+                            compatibleAnswer = false;
+                            errorMsg = "Incompatible answer";
+                        }
+                    } else {
+                        compatibleAnswer = true;
+                    }
+                }
+            }
+            if (surveyRule.question1 === questionToSet.id) {
+                const ques2 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question2 === q.id && q.answered.length > 0);
+                if (ques2) {
+                    const ans2 = ques2.answered.find(ans => ans.answerId === surveyRule.answer2);
+                    if (ans2) {
+                        if (surveyRule.answer1 === answerId && surveyRule.answer2 === ans2.answerId) {
+                            compatibleAnswer = true;
+                        } else {
+                            compatibleAnswer = false;
+                            errorMsg = "Incompatible answers";
+                        }
+                    } else {
+                            compatibleAnswer = true;
+                        }
+                    }
+            }
+        });
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
-
         if (Object.keys(this.state.userSamples).length === 1
             || (selectedFeatures && selectedFeatures.getLength()
-                    && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
+                && this.validateCurrentSelection(selectedFeatures, questionToSet.id)) && validAns && validNum && validText && compatibleAnswer) {
 
             const sampleIds = Object.keys(this.state.userSamples).length === 1
-                                ? [Object.keys(this.state.userSamples)[0]]
-                                : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
+                ? [Object.keys(this.state.userSamples)[0]]
+                : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
@@ -622,7 +692,7 @@ class Collection extends React.Component {
                 const childQuestionArray = this.getChildQuestions(questionToSet.id);
                 const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
                     .filter(entry => !childQuestionArray.includes(entry[0]))
-                    .reduce((acc, cur) => ({ ...acc, [cur[0]]: cur[1] }), {});
+                    .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
 
                 return {
                     ...acc,
@@ -644,13 +714,16 @@ class Collection extends React.Component {
                 }), {});
 
             this.setState({
-                userSamples: { ...this.state.userSamples, ...newSamples },
-                userImages: { ...this.state.userImages, ...newUserImages },
+                userSamples: {...this.state.userSamples, ...newSamples},
+                userImages: {...this.state.userImages, ...newUserImages},
                 selectedQuestion: questionToSet,
             });
             return true;
-        } else if (selectedFeatures && selectedFeatures.getLength() === 0 ) {
+        } else if (selectedFeatures && selectedFeatures.getLength() === 0) {
             alert("No samples selected. Please click some first.");
+            return false;
+        } else if (!compatibleAnswer || !validAns || !validNum || !validText) {
+            alert(errorMsg);
             return false;
         } else {
             alert("Invalid Selection. Try selecting the question before answering.");
@@ -805,6 +878,7 @@ class Collection extends React.Component {
                             <SurveyCollection
                                 selectedQuestion={this.state.selectedQuestion}
                                 surveyQuestions={this.state.currentProject.surveyQuestions}
+                                surveyRules={this.state.currentProject.surveyRules}
                                 setCurrentValue={this.setCurrentValue}
                                 setSelectedQuestion={this.setSelectedQuestion}
                                 selectedSampleId={Object.keys(this.state.userSamples).length === 1

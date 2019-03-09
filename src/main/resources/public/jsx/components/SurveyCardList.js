@@ -66,7 +66,8 @@ class SurveyCard extends React.Component {
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
                                 {
-                                    !this.state.showQuestions && `-- ${inDesignMode ? surveyQuestion.question
+                                    !this.state.showQuestions && `-- ${inDesignMode
+                                        ? surveyQuestion.question
                                         : removeEnumerator(surveyQuestion.question)}`
                                 }
                             </h3>
@@ -165,7 +166,7 @@ function SurveyQuestionTree({
                                     <span className="font-weight-bold">Rules:  </span>
                                     <ul>
                                     {
-                                        surveyRules.map((rule,uid) => {
+                                        surveyRules.map((rule, uid) => {
                                             return [rule.questionId, rule.question1, rule.question2].concat(rule.questions).includes(surveyQuestion.id)
                                                 ? <li key={uid}><a href={"#rule" + rule.id}>{"Rule " + rule.id + ": " + rule.ruleType}</a></li>
                                                 : null;

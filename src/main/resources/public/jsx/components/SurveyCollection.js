@@ -121,6 +121,7 @@ export class SurveyCollection extends React.Component {
                                 hierarchyLabel=""
                                 surveyNode={this.getNodeById(this.state.topLevelNodeIds[this.state.currentNodeIndex])}
                                 surveyQuestions={this.props.surveyQuestions}
+                                surveyRules={this.props.surveyRules}
                                 setCurrentValue={this.props.setCurrentValue}
                                 selectedQuestion={this.props.selectedQuestion}
                                 selectedSampleId={this.props.selectedSampleId}
@@ -187,6 +188,8 @@ class SurveyQuestionTree extends React.Component {
                         surveyNode={this.props.surveyNode}
                         selectedSampleId={this.props.selectedSampleId}
                         setCurrentValue={this.props.setCurrentValue}
+                        surveyRules={this.props.surveyRules}
+                        surveyQuestions={this.props.surveyQuestions}
                     />
                 }
                 {
@@ -311,7 +314,7 @@ class AnswerInput extends React.Component {
         });
     }
 
-    updateInputValue = (value) => this.setState({ newInput: value });
+    updateInputValue = (value) => this.setState({newInput: value});
 
     render() {
         const { surveyNode, surveyNode: { answers, dataType }, setCurrentValue } = this.props;

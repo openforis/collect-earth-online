@@ -349,7 +349,7 @@ class NewQuestionDesigner extends React.Component {
                             <td colSpan="2"><span className="font-weight-bold">Rules:  </span></td>
                         </tr>
                         <tr>
-                            <td>
+                            <td colSpan="2">
                                 <table id="srd">
                                     <tbody>
                                     {
@@ -423,7 +423,6 @@ class NewQuestionDesigner extends React.Component {
                                     </tbody>
                                 </table>
                             </td>
-                            <td></td>
                         </tr>
                         </tbody>
                     </table>
@@ -520,23 +519,23 @@ class SurveyRules extends React.Component {
 
     setNewRule = (ruleType) => {
         this.setState({selectedRuleType: ruleType});
-    }
+    };
 
     updateMin = (min) => {
         this.setState({min: min});
-    }
+    };
 
     updateMax = (max) => {
         this.setState({max: max});
-    }
+    };
 
     updateRegex = (expression) => {
         this.setState({regex: expression});
-    }
+    };
 
     updateMaxSum = (sum) => {
         this.setState({validSum: sum});
-    }
+    };
 
     updateOptions = (target) => {
         const selection = Array.from(target.options).filter(option => option.selected);
@@ -579,7 +578,7 @@ class SurveyRules extends React.Component {
             });
             this.setState({questionIds: selection.map(option => parseInt(option.value)), questions: questions});
         }
-    }
+    };
 
     addSurveyRule = (ruleType) => {
         const rules = this.props.surveyRules.map(rule => {
@@ -642,7 +641,7 @@ class SurveyRules extends React.Component {
                         : null;
 
         this.props.setSurveyRules(newRule ? [...rules, newRule] : rules);
-    }
+    };
 
     render() {
         return (
