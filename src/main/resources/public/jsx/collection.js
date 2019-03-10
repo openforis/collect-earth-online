@@ -628,34 +628,18 @@ class Collection extends React.Component {
                     return null;
                 }
             } else if (surveyRule.ruleType === "incompatible-answers") {
-                if (surveyRule.question1 === questionToSet.id) {
-                    alert("You answered Incompatible Answers question 1.");
+                if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
                     const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
-                    if (ques2.answered.length > 0) {
-                        alert("You have already answered Incompatible Answers question 2, so we must test both answers.");
-                        const ans2Matches = ques2.answered.some(ans => ans.answerId === surveyRule.answer2);
-                        if (ans2Matches && surveyRule.answer1 === answerId) {
-                            return "Incompatible answer";
-                        } else {
-                            return null;
-                        }
+                    if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
+                        return "Incompatible answer";
                     } else {
-                        alert("You have not already answered Incompatible Answers question 2, so we are skipping this rule.");
                         return null;
                     }
-                } else if (surveyRule.question2 === questionToSet.id) {
-                    alert("You answered Incompatible Answers question 2.");
+                } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
                     const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
-                    if (ques1.answered.length > 0) {
-                        alert("You have already answered Incompatible Answers question 1, so we must test both answers.");
-                        const ans1Matches = ques1.answered.some(ans => ans.answerId === surveyRule.answer1);
-                        if (ans1Matches && surveyRule.answer2 === answerId) {
-                            return "Incompatible answer";
-                        } else {
-                            return null;
-                        }
+                    if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
+                        return "Incompatible answer";
                     } else {
-                        alert("You have not already answered Incompatible Answers question 1, so we are skipping this rule.");
                         return null;
                     }
                 } else {
