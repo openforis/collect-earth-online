@@ -604,7 +604,7 @@ class Collection extends React.Component {
 
     rulesViolated = (questionToSet, answerId, answerText) => {
         const errorMessages = this.state.currentProject.surveyRules.map(surveyRule => {
-            if (surveyRule.ruleType === "text-matches" &&
+            if (surveyRule.ruleType === "text-match" &&
                 surveyRule.questionId === questionToSet.id &&
                 !RegExp(surveyRule.regex).test(answerText)) {
                 return "Please enter a regular expression that matches " + surveyRule.regex;
@@ -627,24 +627,35 @@ class Collection extends React.Component {
                 } else {
                     return null;
                 }
-            } else if (surveyRule.ruleType === "incompatible-answers" &&
-                (surveyRule.question1 === questionToSet.id ||
-                    surveyRule.question2 === questionToSet.id)) {
-                const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
-                const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
-                if (ques1 && ques1.answered.length > 0) {
-                    const ans1Matches = ques1.answered.some(ans => ans.answerId === surveyRule.answer1);
-                    if ((ans1Matches && surveyRule.answer2 !== answerId)) {
-                        return "Incompatible answer";
+            } else if (surveyRule.ruleType === "incompatible-answers") {
+                if (surveyRule.question1 === questionToSet.id) {
+                    alert("You answered Incompatible Answers question 1.");
+                    const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
+                    if (ques2.answered.length > 0) {
+                        alert("You have already answered Incompatible Answers question 2, so we must test both answers.");
+                        const ans2Matches = ques2.answered.some(ans => ans.answerId === surveyRule.answer2);
+                        if (ans2Matches && surveyRule.answer1 === answerId) {
+                            return "Incompatible answer";
+                        } else {
+                            return null;
+                        }
                     } else {
+                        alert("You have not already answered Incompatible Answers question 2, so we are skipping this rule.");
                         return null;
                     }
-                }
-                if (ques2 && ques2.answered.length > 0) {
-                    const ans2Matches = ques2.answered.some(ans => ans.answerId === surveyRule.answer2);
-                    if ((ans2Matches && surveyRule.answer1 !== answerId)) {
-                        return "Incompatible answer";
+                } else if (surveyRule.question2 === questionToSet.id) {
+                    alert("You answered Incompatible Answers question 2.");
+                    const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
+                    if (ques1.answered.length > 0) {
+                        alert("You have already answered Incompatible Answers question 1, so we must test both answers.");
+                        const ans1Matches = ques1.answered.some(ans => ans.answerId === surveyRule.answer1);
+                        if (ans1Matches && surveyRule.answer2 === answerId) {
+                            return "Incompatible answer";
+                        } else {
+                            return null;
+                        }
                     } else {
+                        alert("You have not already answered Incompatible Answers question 1, so we are skipping this rule.");
                         return null;
                     }
                 } else {
