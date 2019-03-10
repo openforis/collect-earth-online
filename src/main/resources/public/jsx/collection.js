@@ -617,7 +617,8 @@ class Collection extends React.Component {
                 surveyRule.questions.includes(questionToSet.id)) {
                 const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id)
                     && q.answered.length > 0);
-                if (surveyRule.questions.length === answeredQuestions.length + 1) {
+                const notSameQues = answeredQuestions.find(ques => ques.id !== questionToSet.id);
+                if ((surveyRule.questions.length === answeredQuestions.length + 1) && notSameQues) {
                     const answeredSum = answeredQuestions.reduce((sum, q) => sum + parseInt(q.answered[0].answerText), 0);
                     if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
                         return "Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
