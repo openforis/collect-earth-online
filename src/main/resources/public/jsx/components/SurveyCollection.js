@@ -297,7 +297,10 @@ class AnswerInput extends React.Component {
 
     componentDidUpdate(prevProps) {
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
-            this.setState({ newInput: "" });
+            const matchingNode = this.props.surveyNode.answered
+                .find(a => a.answerId === this.props.surveyNode.answers[0].id
+                    && a.sampleId === this.props.selectedSampleId);
+            this.setState({ newInput: matchingNode ? matchingNode.answerText : ""});
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
