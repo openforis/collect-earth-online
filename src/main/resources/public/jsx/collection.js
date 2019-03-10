@@ -30,7 +30,7 @@ class Collection extends React.Component {
             stackingProfileDG: "Accuracy_Profile",
             userSamples: {},
             userImages: {},
-            storedInterval: null,
+            storedInterval: null
         };
     }
 
@@ -188,11 +188,10 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
-
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
                         ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
                         : newImagery.title === "PlanetGlobalMosaic"
-                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthNamePlanet
+                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
                             : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
@@ -262,7 +261,7 @@ class Collection extends React.Component {
         } else if (this.state.currentImagery.title === "PlanetGlobalMosaic") {
             this.updatePlanetLayer();
         }
-    }
+    };
 
     getImageryByTitle = (imageryTitle) => this.state.imageryList.find(imagery => imagery.title === imageryTitle);
 
@@ -603,16 +602,77 @@ class Collection extends React.Component {
         }
     };
 
+    rulesViolated = (questionToSet, answerId, answerText) => {
+        const errorMessages = this.state.currentProject.surveyRules.map(surveyRule => {
+            if (surveyRule.ruleType === "text-match" &&
+                surveyRule.questionId === questionToSet.id &&
+                !RegExp(surveyRule.regex).test(answerText)) {
+                return "Please enter a regular expression that matches " + surveyRule.regex;
+            } else if (surveyRule.ruleType === "numeric-range" &&
+                       surveyRule.questionId === questionToSet.id &&
+                       (isNaN(parseInt(answerText)) ||
+                        parseInt(answerText) < surveyRule.min ||
+                        parseInt(answerText) > surveyRule.max)) {
+                return "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
+            } else if (surveyRule.ruleType === "sum-of-answers" &&
+                       surveyRule.questions.includes(questionToSet.id)) {
+                const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id)
+                                                                                           && q.answered.length > 0);
+                // FIXME: This won't catch the case in which a valid sum is entered by the user and then changed to an invalid one.
+                if (surveyRule.questions.length === answeredQuestions.length + 1 &&
+                    answeredQuestions.every(ques => ques.id !== questionToSet.id)) {
+                    // FIXME: We need to actually compare the sums for every sample individually across questions.
+                    const answeredSum = answeredQuestions.reduce((sum, q) => sum + parseInt(q.answered[0].answerText), 0);
+                    if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
+                        return "Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            } else if (surveyRule.ruleType === "incompatible-answers") {
+                if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
+                    const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
+                    // FIXME: We need to restrict this test to any samples shared between question1 and question2.
+                    if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
+                        return "Incompatible answer";
+                    } else {
+                        return null;
+                    }
+                } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
+                    const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
+                    // FIXME: We need to restrict this test to any samples shared between question1 and question2.
+                    if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
+                        return "Incompatible answer";
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        });
+
+        return errorMessages.find(msg => msg !== null);
+    };
+
     setCurrentValue = (questionToSet, answerId, answerText) => {
+        const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
 
-        if (Object.keys(this.state.userSamples).length === 1
+        if (ruleError) {
+            alert(ruleError);
+            return false;
+        } else if (Object.keys(this.state.userSamples).length === 1
             || (selectedFeatures && selectedFeatures.getLength()
-                    && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
+                && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
 
             const sampleIds = Object.keys(this.state.userSamples).length === 1
-                                ? [Object.keys(this.state.userSamples)[0]]
-                                : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
+                ? [Object.keys(this.state.userSamples)[0]]
+                : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
@@ -624,7 +684,7 @@ class Collection extends React.Component {
                 const childQuestionArray = this.getChildQuestions(questionToSet.id);
                 const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
                     .filter(entry => !childQuestionArray.includes(entry[0]))
-                    .reduce((acc, cur) => ({ ...acc, [cur[0]]: cur[1] }), {});
+                    .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
 
                 return {
                     ...acc,
@@ -646,12 +706,12 @@ class Collection extends React.Component {
                 }), {});
 
             this.setState({
-                userSamples: { ...this.state.userSamples, ...newSamples },
-                userImages: { ...this.state.userImages, ...newUserImages },
+                userSamples: {...this.state.userSamples, ...newSamples},
+                userImages: {...this.state.userImages, ...newUserImages},
                 selectedQuestion: questionToSet,
             });
             return true;
-        } else if (selectedFeatures && selectedFeatures.getLength() === 0 ) {
+        } else if (selectedFeatures && selectedFeatures.getLength() === 0) {
             alert("No samples selected. Please click some first.");
             return false;
         } else {
@@ -807,6 +867,7 @@ class Collection extends React.Component {
                             <SurveyCollection
                                 selectedQuestion={this.state.selectedQuestion}
                                 surveyQuestions={this.state.currentProject.surveyQuestions}
+                                surveyRules={this.state.currentProject.surveyRules}
                                 setCurrentValue={this.setCurrentValue}
                                 setSelectedQuestion={this.setSelectedQuestion}
                                 selectedSampleId={Object.keys(this.state.userSamples).length === 1

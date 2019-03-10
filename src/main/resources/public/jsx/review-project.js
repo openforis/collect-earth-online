@@ -273,7 +273,7 @@ class ProjectStatsGroup extends React.Component {
                 >
                     Project Stats
                 </button>
-                {this.state.showStats && <ProjectStats {...this.props} /> }
+                {this.state.showStats && <ProjectStats {...this.props} />}
             </div>
         );
     }
@@ -430,7 +430,7 @@ function ProjectDesignReview({ project, projectId }) {
             }
             <PlotReview project={project}/>
             <SampleReview project={project}/>
-            <SurveyReview surveyQuestions={project.projectDetails.surveyQuestions} />
+            <SurveyReview surveyQuestions={project.projectDetails.surveyQuestions} surveyRules={project.projectDetails.surveyRules}/>
         </div>
     );
 }
@@ -686,13 +686,64 @@ function SampleReview({ project: { projectDetails: { sampleDistribution, samples
     );
 }
 
-function SurveyReview({ surveyQuestions }) {
+function SurveyReview(props) {
     return (
         <SectionBlock title="Survey Review">
             <div id="survey-design">
-                <SurveyCardList surveyQuestions={surveyQuestions} />
+                <SurveyCardList surveyQuestions={props.surveyQuestions} surveyRules={props.surveyRules}/>
             </div>
+            <SurveyRules surveyRules={props.surveyRules}/>
         </SectionBlock>
+    );
+}
+
+function SurveyRules(props) {
+    return (
+        <div id="survey-rule-design">
+            <span className="font-weight-bold">Rules:  </span>
+            <table id="srd">
+                <tbody>
+                {
+                    props.surveyRules && props.surveyRules.length > 0 ?
+                        props.surveyRules.map((rule, uid) => {
+                            if (rule.ruleType === "text-match") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Regex: {rule.regex}</td>
+                                    <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                </tr>
+                            } else if (rule.ruleType === "numeric-range") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Min: {rule.min}</td>
+                                    <td>Max: {rule.max}</td>
+                                    <td>Questions: {rule.questionsText.toString()}</td>
+                                </tr>
+                            } else if (rule.ruleType === "sum-of-answers") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Valid Sum: {rule.validSum}</td>
+                                    <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                </tr>
+                            } else if (rule.ruleType === "incompatible-answers") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
+                                    <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
+                                </tr>
+                            }
+                        }) :
+                        <tr>
+                            <td colSpan="4"><span>No rules available for this survey</span></td>
+                        </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     );
 }
 

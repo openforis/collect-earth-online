@@ -1,11 +1,10 @@
 import React, { Fragment } from "react";
-
 import { removeEnumerator } from "../utils/surveyUtils";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
-                            .filter(sq => sq.parentQuestion === -1)
-                            .sort((a, b) => a.id - b.id);
+        .filter(sq => sq.parentQuestion === -1)
+        .sort((a, b) => a.id - b.id);
 
     return topLevelNodes.map((sq, index) =>
         <SurveyCard
@@ -17,6 +16,7 @@ export default function SurveyCardList(props) {
             setSurveyQuestions={props.setSurveyQuestions}
             surveyQuestion={sq}
             surveyQuestions={props.surveyQuestions}
+            surveyRules={props.surveyRules}
             removeAnswer={props.removeAnswer}
             removeQuestion={props.removeQuestion}
             newAnswerComponent={props.newAnswerComponent}
@@ -29,8 +29,10 @@ class SurveyCard extends React.Component {
         super(props);
         this.state = {
             showQuestions: true,
-        };
-    }
+            surveyRules: [],
+            currentRules: [],
+        }
+    };
 
     swapQuestionIds = (upOrDown) => {
         const myId = this.props.surveyQuestion.id;
@@ -38,18 +40,18 @@ class SurveyCard extends React.Component {
         const swapId = this.props.topLevelNodeIds[myIndex + upOrDown];
 
         const newSurveyQuestions = this.props.surveyQuestions
-                                    .map(sq => ({
-                                        ...sq,
-                                        id: sq.id === myId ? swapId
-                                            : sq.id === swapId ? myId
-                                                : sq.id,
-                                    }));
+            .map(sq => ({
+                ...sq,
+                id: sq.id === myId ? swapId
+                    : sq.id === swapId ? myId
+                        : sq.id,
+            }));
 
         this.props.setSurveyQuestions(newSurveyQuestions);
     };
 
     render() {
-        const { cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds } = this.props;
+        const {cardNumber, surveyQuestion, inDesignMode, topLevelNodeIds} = this.props;
         return (
             <div className="SurveyCard border rounded border-dark">
                 <div className="container">
@@ -58,14 +60,15 @@ class SurveyCard extends React.Component {
                             <button
                                 type="button"
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                onClick={() => this.setState({ showQuestions: !this.state.showQuestions })}
-                            >
+                                onClick={() => this.setState({showQuestions: !this.state.showQuestions})}>
                                 <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
-                                {!this.state.showQuestions && `-- ${inDesignMode ? surveyQuestion.question
-                                                                                : removeEnumerator(surveyQuestion.question)}`
+                                {
+                                    !this.state.showQuestions && `-- ${inDesignMode
+                                        ? surveyQuestion.question
+                                        : removeEnumerator(surveyQuestion.question)}`
                                 }
                             </h3>
                         </div>
@@ -76,21 +79,16 @@ class SurveyCard extends React.Component {
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(-1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[0]}
-                                    style={{ opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0" }}
-                                >
-                                    <i className={"fa fa-caret-up"} />
+                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}>
+                                    <i className={"fa fa-caret-up"}/>
                                 </button>
                                 <button
                                     type="button"
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                     onClick={() => this.swapQuestionIds(1)}
                                     disabled={surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]}
-                                    style={{
-                                        opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1]
-                                                                        ? "0.25" : "1.0",
-                                    }}
-                                >
-                                    <i className={"fa fa-caret-down"} />
+                                    style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0"}}>
+                                    <i className={"fa fa-caret-down"}/>
                                 </button>
                             </div>
                         }
@@ -106,13 +104,13 @@ class SurveyCard extends React.Component {
                                 removeQuestion={this.props.removeQuestion}
                                 surveyQuestion={this.props.surveyQuestion}
                                 surveyQuestions={this.props.surveyQuestions}
+                                surveyRules={this.props.surveyRules}
                                 setSurveyQuestions={this.props.setSurveyQuestions}
                             />
                         </div>
                     }
                 </div>
             </div>
-
         );
     }
 }
@@ -126,9 +124,9 @@ function SurveyQuestionTree({
     removeQuestion,
     surveyQuestion,
     surveyQuestions,
-    setSurveyQuestions,
+    surveyRules,
+    setSurveyQuestions
 }) {
-
     const childNodes = surveyQuestions.filter(sq => sq.parentQuestion === surveyQuestion.id);
     const parentQuestion = surveyQuestions.find(sq => sq.id === surveyQuestion.parentQuestion);
     return (
@@ -163,19 +161,32 @@ function SurveyQuestionTree({
                                 {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                             </li>
                                 }
-                            {surveyQuestion.parentQuestion > -1 &&
-                            <Fragment>
+                                {(surveyRules && surveyRules.length > 0 && !inSimpleMode) &&
                                 <li>
-                                    <span className="font-weight-bold">Parent Question:  </span>
-                                    {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
+                                    <span className="font-weight-bold">Rules:  </span>
+                                    <ul>
+                                    {
+                                        surveyRules.map((rule, uid) => {
+                                            return [rule.questionId, rule.question1, rule.question2].concat(rule.questions).includes(surveyQuestion.id)
+                                                ? <li key={uid}><a href={"#rule" + rule.id}>{"Rule " + rule.id + ": " + rule.ruleType}</a></li>
+                                                : null;
+                                        })
+                                    }
+                                    </ul>
                                 </li>
-                                <li>
-                                    <span className="font-weight-bold">Parent Answer:  </span>
-                                    {surveyQuestion.parentAnswer === -1
+                                }
+                                {surveyQuestion.parentQuestion > -1 &&
+                                    <Fragment>
+                                        <li>
+                                            <span className="font-weight-bold">Parent Question:  </span> 
+                                            {inDesignMode ? parentQuestion.question : removeEnumerator(parentQuestion.question)}
+                                        </li>
+                                        <li>
+                                            <span className="font-weight-bold">Parent Answer:  </span>
+                                            {surveyQuestion.parentAnswer === -1 
                                                 ? "Any"
                                                 : parentQuestion.answers
                                                     .find(ans => ans.id === surveyQuestion.parentAnswer).answer
-
                                     }
                                 </li>
                             </Fragment>
@@ -208,6 +219,7 @@ function SurveyQuestionTree({
                     setSurveyQuestions={setSurveyQuestions}
                     surveyQuestion={surveyQuestion}
                     surveyQuestions={surveyQuestions}
+                    surveyRules={surveyRules}
                 />
             )}
         </Fragment>

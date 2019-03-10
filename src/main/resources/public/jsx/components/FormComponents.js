@@ -16,7 +16,7 @@ export function FormLayout({ title, children }) {
 
 export function SectionBlock({ title, children }) {
     return (
-        <div className={"row mb-3"}>
+        <div className={title === "Survey Rules Design" ? "row m-1" : "row mb-3"}>
             <div className="col">
                 <h2 className="header px-0">{title}</h2>
                 {children}
