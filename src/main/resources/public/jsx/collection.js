@@ -609,14 +609,15 @@ class Collection extends React.Component {
                 !RegExp(surveyRule.regex).test(answerText)) {
                 return "Please enter a regular expression that matches " + surveyRule.regex;
             } else if (surveyRule.ruleType === "numeric-range" &&
-                surveyRule.questionId === questionToSet.id &&
-                (parseInt(answerText) < surveyRule.min ||
-                    parseInt(answerText) > surveyRule.max)) {
+                       surveyRule.questionId === questionToSet.id &&
+                       (isNaN(parseInt(answerText)) ||
+                        parseInt(answerText) < surveyRule.min ||
+                        parseInt(answerText) > surveyRule.max)) {
                 return "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
             } else if (surveyRule.ruleType === "sum-of-answers" &&
-                surveyRule.questions.includes(questionToSet.id)) {
+                       surveyRule.questions.includes(questionToSet.id)) {
                 const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id)
-                    && q.answered.length > 0);
+                                                                                           && q.answered.length > 0);
                 if (surveyRule.questions.length === answeredQuestions.length + 1) {
                     const answeredSum = answeredQuestions.reduce((sum, q) => sum + parseInt(q.answered[0].answerText), 0);
                     if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
