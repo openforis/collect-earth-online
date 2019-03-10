@@ -632,30 +632,26 @@ class Collection extends React.Component {
                     const ques1 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question1 === q.id && q.answered.length > 0);
                     if (ques1) {
                         const ans1 = ques1.answered.find(ans => ans.answerId === surveyRule.answer1);
-                        if (ans1) {
-                            if (surveyRule.answer1 === ans1.answerId && surveyRule.answer2 === answerId) {
-                                return null;
-                            } else {
-                                return "Incompatible answer";
-                            }
+                        if (ans1 && surveyRule.answer1 === answerId) {
+                            return "Incompatible answer";
                         } else {
                             return null;
                         }
+                    } else {
+                        return null;
                     }
                 }
                 if (surveyRule.question1 === questionToSet.id) {
                     const ques2 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question2 === q.id && q.answered.length > 0);
                     if (ques2) {
                         const ans2 = ques2.answered.find(ans => ans.answerId === surveyRule.answer2);
-                        if (ans2) {
-                            if (surveyRule.answer1 === answerId && surveyRule.answer2 === ans2.answerId) {
-                                return null;
-                            } else {
-                                return "Incompatible answer";
-                            }
+                        if (ans2 && surveyRule.answer2 === answerId) {
+                            return "Incompatible answer";
                         } else {
                             return null;
                         }
+                    } else {
+                        return null;
                     }
                 }
             } else {
@@ -671,7 +667,7 @@ class Collection extends React.Component {
         const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig);
 
         if (ruleError) {
-            alert (ruleError);
+            alert(ruleError);
             return false;
         } else if (Object.keys(this.state.userSamples).length === 1
             || (selectedFeatures && selectedFeatures.getLength()
