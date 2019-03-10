@@ -603,6 +603,9 @@ class Collection extends React.Component {
     };
 
     rulesViolated = (questionToSet, answerId, answerText) => {
+        if (!this.state.currentProject.surveyRules) {
+            return null;
+        }
         const errorMessages = this.state.currentProject.surveyRules.map(surveyRule => {
             if (surveyRule.ruleType === "text-match" &&
                 surveyRule.questionId === questionToSet.id &&
