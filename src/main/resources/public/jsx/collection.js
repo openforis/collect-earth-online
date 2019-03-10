@@ -618,8 +618,10 @@ class Collection extends React.Component {
                        surveyRule.questions.includes(questionToSet.id)) {
                 const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id)
                                                                                            && q.answered.length > 0);
+                // FIXME: This won't catch the case in which a valid sum is entered by the user and then changed to an invalid one.
                 if (surveyRule.questions.length === answeredQuestions.length + 1 &&
                     answeredQuestions.every(ques => ques.id !== questionToSet.id)) {
+                    // FIXME: We need to actually compare the sums for every sample individually across questions.
                     const answeredSum = answeredQuestions.reduce((sum, q) => sum + parseInt(q.answered[0].answerText), 0);
                     if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
                         return "Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
@@ -632,6 +634,7 @@ class Collection extends React.Component {
             } else if (surveyRule.ruleType === "incompatible-answers") {
                 if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
                     const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
+                    // FIXME: We need to restrict this test to any samples shared between question1 and question2.
                     if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
                         return "Incompatible answer";
                     } else {
@@ -639,6 +642,7 @@ class Collection extends React.Component {
                     }
                 } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
                     const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
+                    // FIXME: We need to restrict this test to any samples shared between question1 and question2.
                     if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
                         return "Incompatible answer";
                     } else {
