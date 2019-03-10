@@ -604,7 +604,7 @@ class Collection extends React.Component {
 
     rulesViolated = (questionToSet, answerId, answerText) => {
         const errorMessages = this.state.currentProject.surveyRules.map(surveyRule => {
-            if (surveyRule.ruleType === "text-matches" &&
+            if (surveyRule.ruleType === "text-match" &&
                 surveyRule.questionId === questionToSet.id &&
                 !RegExp(surveyRule.regex).test(answerText)) {
                 return "Please enter a regular expression that matches " + surveyRule.regex;
@@ -634,7 +634,7 @@ class Collection extends React.Component {
                 const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
                 if (ques1 && ques1.answered.length > 0) {
                     const ans1Matches = ques1.answered.some(ans => ans.answerId === surveyRule.answer1);
-                    if ((ans1Matches && surveyRule.answer2 !== answerId)) {
+                    if ((ans1Matches && surveyRule.answer2 === answerId)) {
                         return "Incompatible answer";
                     } else {
                         return null;
@@ -642,7 +642,7 @@ class Collection extends React.Component {
                 }
                 if (ques2 && ques2.answered.length > 0) {
                     const ans2Matches = ques2.answered.some(ans => ans.answerId === surveyRule.answer2);
-                    if ((ans2Matches && surveyRule.answer1 !== answerId)) {
+                    if ((ans2Matches && surveyRule.answer1 === answerId)) {
                         return "Incompatible answer";
                     } else {
                         return null;
