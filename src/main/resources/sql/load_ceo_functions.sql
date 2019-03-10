@@ -1859,30 +1859,15 @@ $$ LANGUAGE PLPGSQL;
 -- MIGRATION ONLY FUNCTIONS
 --
 
--- Reads json file with dynamic name
-CREATE or replace function read_json_file( _file_name text)
-	RETURNS table (valuestr text) as $$
-	
-	BEGIN
-		create temporary table temp_json (values text) on commit drop;
-		EXECUTE 
-		'copy temp_json from ''' || _file_name ||
-		''' csv quote e''\x01'' delimiter e''\x02''';
-
-		RETURN QUERY SELECT * from temp_json;
-	END
-
-$$ LANGUAGE PLPGSQL;
-
 -- Add then entire json plots file directly
-CREATE OR REPLACE FUNCTION add_plots_by_json(_project_id integer, _file_name text)
+CREATE OR REPLACE FUNCTION add_plots_by_json(_project_id integer, _json_data text)
 	RETURNS integer AS $$
 
-	WITH jvalue as (
+	WITH
+	jvalue as (
 		select * 
 		from (
-            select json_array_elements(valuestr::json) as values
-            from read_json_file(_file_name)
+            select json_array_elements(_json_data::json) as values
         ) a
 	),
 	plotrows as (

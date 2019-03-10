@@ -1,3 +1,2 @@
-demjson
 psycopg2-binary
 configparser
