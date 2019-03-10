@@ -627,32 +627,28 @@ class Collection extends React.Component {
                 } else {
                     return null;
                 }
-            } else if (surveyRule.ruleType === "incompatible-answers") {
-                if (surveyRule.question2 === questionToSet.id) {
-                    const ques1 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question1 === q.id && q.answered.length > 0);
-                    if (ques1) {
-                        const ans1 = ques1.answered.find(ans => ans.answerId === surveyRule.answer1);
-                        if (ans1 && surveyRule.answer1 === answerId) {
-                            return "Incompatible answer";
-                        } else {
-                            return null;
-                        }
+            } else if (surveyRule.ruleType === "incompatible-answers" &&
+                (surveyRule.question1 === questionToSet.id ||
+                    surveyRule.question2 === questionToSet.id)) {
+                const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
+                const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
+                if (ques1 && ques1.answered.length > 0) {
+                    const ans1Matches = ques1.answered.some(ans => ans.answerId === surveyRule.answer1);
+                    if ((ans1Matches && surveyRule.answer2 !== answerId)) {
+                        return "Incompatible answer";
                     } else {
                         return null;
                     }
                 }
-                if (surveyRule.question1 === questionToSet.id) {
-                    const ques2 = this.state.currentProject.surveyQuestions.find(q => surveyRule.question2 === q.id && q.answered.length > 0);
-                    if (ques2) {
-                        const ans2 = ques2.answered.find(ans => ans.answerId === surveyRule.answer2);
-                        if (ans2 && surveyRule.answer2 === answerId) {
-                            return "Incompatible answer";
-                        } else {
-                            return null;
-                        }
+                if (ques2 && ques2.answered.length > 0) {
+                    const ans2Matches = ques2.answered.some(ans => ans.answerId === surveyRule.answer2);
+                    if ((ans2Matches && surveyRule.answer1 !== answerId)) {
+                        return "Incompatible answer";
                     } else {
                         return null;
                     }
+                } else {
+                    return null;
                 }
             } else {
                 return null;
