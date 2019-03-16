@@ -945,7 +945,7 @@ class GraphWidget extends React.Component {
         let collectionName = widget.properties[1];
         let indexName = widget.properties[4];
         let date = new Date();
-        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex" :  window.location.protocol + "//" + window.location.hostname + ":8080/geo-dash/gatewayRequest";
+        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex" :  window.location.protocol + "//" + window.location.hostname + ":8080/geo-dash/timeSeriesIndex2";
 
         fetch(url, {
             method: "POST",
