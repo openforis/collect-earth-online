@@ -289,6 +289,7 @@ class MapWidget extends React.Component {
                         : (collectionName.trim().length > 0)
                             ? "cloudMaskImageByMosaicCollection"
                             : "ImageCollectionbyIndex";
+        //return "https://ceodev.servirglobal.net:8888/" + resourcePath;
         return window.location.protocol + "//" + window.location.hostname + ":8888/" + resourcePath;
     };
 
@@ -366,7 +367,16 @@ class MapWidget extends React.Component {
                             ? ""
                             : collectionName;
     };
-
+    addSecondMapLayer = (mapid, token, widgetid) => {
+        if (this.state.mapRef) {
+            this.addDualLayer(mapid, token, widgetid);
+        }
+        else {
+            setTimeout(() => {
+                this.addDualLayer(mapid, token, widgetid);
+            }, 1000);
+        }
+    }
     componentDidMount()
     {
         const widget = this.props.widget;
@@ -491,19 +501,23 @@ class MapWidget extends React.Component {
             dualImageObject.visParams = this.getImageParams(shortWidget2);
             // work on image asset here there will be a variable imageAsset in the dualImageCollection in which case we should call the gateway /image with imageParams
             if (firstImage.imageAsset){
+                postObject.ImageAsset = firstImage.imageAsset;
                 postObject.imageName = firstImage.imageAsset;
                 postObject.visParams = firstImage.visParams;
             }
             if (secondImage.imageAsset){
+                dualImageObject.ImageAsset = secondImage.imageAsset;
                 dualImageObject.imageName = secondImage.imageAsset;
                 dualImageObject.visParams = secondImage.visParams;
             }
 
             if (firstImage.ImageCollectionAsset){
+                postObject.ImageCollectionAsset = firstImage.ImageCollectionAsset;
                 postObject.imageName = firstImage.ImageCollectionAsset;
                 postObject.visParams = firstImage.visParams;
             }
             if (secondImage.ImageCollectionAsset){
+                dualImageObject.ImageCollectionAsset = secondImage.ImageCollectionAsset;
                 dualImageObject.imageName = secondImage.ImageCollectionAsset;
                 dualImageObject.visParams = secondImage.visParams;
             }
@@ -527,9 +541,11 @@ class MapWidget extends React.Component {
             }
             if (widget.ImageAsset) {
                 postObject.imageName = widget.ImageAsset;
+                postObject.ImageAsset = widget.ImageAsset;
             }
             else if (widget.ImageCollectionAsset)
             {
+                postObject.ImageCollectionAsset = widget.ImageCollectionAsset;
                 postObject.imageName = widget.ImageCollectionAsset;
             }
         }
@@ -539,78 +555,148 @@ class MapWidget extends React.Component {
         postObject.dateTo= dateTo;
         postObject.geometry= JSON.parse(projPairAOI);
         postObject.index= requestedIndex;
+// see if we need to fetch or just add the tile server
+        let needFetch = true;
+        let currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() - 1);
+        if (typeof(Storage) !== "undefined") {
 
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(postObject)
-        })
-            .then(res => res.json())
-            .then(data => {
+            //check if current time is < localStorage.lastGatewayUpdate + 1 day
 
-                if (data.hasOwnProperty("mapid")) {
-                    this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
-                    return true;
-                } else {
-                    console.warn("Wrong Data Returned");
-                    return false;
+            if (localStorage.getItem(postObject.ImageAsset)) {
+                const mapinfo = JSON.parse(localStorage.getItem(postObject.ImageAsset));
+                if (new Date(mapinfo.lastGatewayUpdate)  > currentDate) {
+                    this.addTileServer(mapinfo.mapid, mapinfo.token, "widgetmap_" + widget.id);
+                    needFetch = false;
                 }
-            })
-            .then(isValid =>{
-                if (isValid) {
-                    if (widget.dualLayer) {
-                        postObject.dateFrom = widget.dualStart;
-                        postObject.dateTo = widget.dualEnd;
-
-                        fetch(url, {
-                            method: "POST",
-                            headers: {
-                                "Accept": "application/json",
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify(postObject)
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.hasOwnProperty("mapid")) {
-                                    this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
-                                } else {
-                                    console.warn("Wrong Data Returned");
-                                }
-                            });
+            } if (localStorage.getItem(postObject.ImageCollectionAsset)) {
+                const mapinfo = JSON.parse(localStorage.getItem(postObject.ImageCollectionAsset));
+                if (new Date(mapinfo.lastGatewayUpdate)  > currentDate) {
+                    this.addTileServer(mapinfo.mapid, mapinfo.token, "widgetmap_" + widget.id);
+                    needFetch = false;
+                }
+            }
+            if (widget.dualImageCollection) {
+                console.log("is dual");
+                console.log(dualImageObject);
+                console.log("printed");
+                if (localStorage.getItem(dualImageObject.ImageAsset)) {
+                    const mapinfo = JSON.parse(localStorage.getItem(dualImageObject.ImageAsset));
+                    if (new Date(mapinfo.lastGatewayUpdate)  > currentDate) {
+                        this.addSecondMapLayer(mapinfo.mapid, mapinfo.token, "widgetmap_" + widget.id);
+                        needFetch = false;
                     }
-                    else if (dualImageObject && dualImageObject != null) {
-                        let workingObject;
-                        try {
-                            workingObject = JSON.parse(dualImageObject);
+                } else if (localStorage.getItem(dualImageObject.ImageCollectionAsset)) {
+                    const mapinfo = JSON.parse(localStorage.getItem(dualImageObject.ImageCollectionAsset));
+                    if (new Date(mapinfo.lastGatewayUpdate) > currentDate) {
+                        this.addSecondMapLayer(mapinfo.mapid, mapinfo.token, "widgetmap_" + widget.id);
+                        needFetch = false;
+                    }
+                } else {
+                    needFetch = true;
+                }
+            }
+        }
+        if (needFetch) {
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(postObject)
+            })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.hasOwnProperty("mapid")) {
+                        if (postObject.ImageAsset) {
+                            data.lastGatewayUpdate = new Date();
+                            localStorage.setItem(postObject.ImageAsset, JSON.stringify(data));
+                        } if (postObject.ImageCollectionAsset) {
+                            data.lastGatewayUpdate = new Date();
+                            localStorage.setItem(postObject.ImageCollectionAsset, JSON.stringify(data));
                         }
-                        catch (e) {
-                            workingObject = dualImageObject;
-                        }
-                        if (workingObject != null) {
-                            fetch(workingObject.url, {
+
+
+                        this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
+                        return true;
+                    } else {
+                        console.warn("Wrong Data Returned");
+                        return false;
+                    }
+                })
+                .then(isValid => {
+                    if (isValid) {
+                        if (widget.dualLayer) {
+                            postObject.dateFrom = widget.dualStart;
+                            postObject.dateTo = widget.dualEnd;
+
+                            fetch(url, {
                                 method: "POST",
                                 headers: {
                                     "Accept": "application/json",
                                     "Content-Type": "application/json"
                                 },
-                                body: JSON.stringify(workingObject)
+                                body: JSON.stringify(postObject)
                             })
                                 .then(res => res.json())
-                                .then(data =>{
+                                .then(data => {
                                     if (data.hasOwnProperty("mapid")) {
+                                        console.log("postobject");
+                                        if (postObject.ImageAsset) {
+                                            data.lastGatewayUpdate = new Date();
+                                            localStorage.setItem(postObject.ImageAsset, JSON.stringify(data));
+                                        } if (postObject.ImageCollectionAsset) {
+                                            data.lastGatewayUpdate = new Date();
+                                            localStorage.setItem(postObject.ImageCollectionAsset, JSON.stringify(data));
+                                        }
+
                                         this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
                                     } else {
-                                        console.warn("Wrong Data Returned");
                                     }
                                 });
                         }
+                        else if (dualImageObject) {
+                            let workingObject;
+                            try {
+                                workingObject = JSON.parse(dualImageObject);
+                            }
+                            catch (e) {
+                                workingObject = dualImageObject;
+                            }
+                            if (workingObject != null) {
+                                fetch(workingObject.url, {
+                                    method: "POST",
+                                    headers: {
+                                        "Accept": "application/json",
+                                        "Content-Type": "application/json"
+                                    },
+                                    body: JSON.stringify(workingObject)
+                                })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.hasOwnProperty("mapid")) {
+                                            console.log("dualimageObject");
+                                            console.log(dualImageObject);
+                                            if (dualImageObject.ImageAsset) {
+                                                data.lastGatewayUpdate = new Date();
+                                                localStorage.setItem(dualImageObject.ImageAsset, JSON.stringify(data));
+                                            } if (dualImageObject.ImageCollectionAsset) {
+                                                data.lastGatewayUpdate = new Date();
+                                                localStorage.setItem(dualImageObject.ImageCollectionAsset, JSON.stringify(data));
+                                            }
+
+                                            this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
+                                        } else {
+                                            console.warn("Wrong Data Returned");
+                                        }
+                                    });
+                            }
+                        }
                     }
-                }
-            });
+                });
+        }
         window.addEventListener("resize", () => this.handleResize());
     }
 
@@ -859,7 +945,7 @@ class GraphWidget extends React.Component {
         let collectionName = widget.properties[1];
         let indexName = widget.properties[4];
         let date = new Date();
-        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex":  window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex2";
+        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex" :  window.location.protocol + "//" + window.location.hostname + ":8080/geo-dash/timeSeriesIndex2";
 
         fetch(url, {
             method: "POST",
