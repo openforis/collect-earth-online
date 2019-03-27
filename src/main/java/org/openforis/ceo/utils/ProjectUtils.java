@@ -351,6 +351,9 @@ public class ProjectUtils {
     }
 
     public static Double[][] createGriddedSampleSet(Double[] plotCenter, String plotShape, double plotSize, double sampleResolution) {
+        if (plotSize == sampleResolution) {
+            return new Double[][]{plotCenter};
+        }
         var plotCenterWebMercator = reprojectPoint(plotCenter, 4326, 3857);
         var centerX = plotCenterWebMercator[0];
         var centerY = plotCenterWebMercator[1];
