@@ -162,6 +162,8 @@ public class Server implements SparkApplication {
         post("/geo-dash/updatewidget/widget/:id",     geoDash::updateDashBoardWidgetById);
         post("/geo-dash/deletewidget/widget/:id",     geoDash::deleteDashBoardWidgetById);
 
+        post("/geo-dash/gatewayRequest",              geoDash::gatewayRequest);
+
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));
 

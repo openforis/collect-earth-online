@@ -9,11 +9,43 @@ import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.net.URLDecoder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.*;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.security.GeneralSecurityException;
 import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.HttpsURLConnection;
+
+import org.apache.http.util.EntityUtils;
 import org.openforis.ceo.db_api.GeoDash;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.client.HttpClient;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import spark.Request;
 import spark.Response;
+import spark.utils.IOUtils;
 
 public class JsonGeoDash implements GeoDash {
 
@@ -132,4 +164,60 @@ public class JsonGeoDash implements GeoDash {
         return "";
     }
 
+    public String gatewayRequest(Request req, Response res) {
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[0];
+                        }
+
+                        public void checkClientTrusted(
+                                java.security.cert.X509Certificate[] certs, String authType) {
+                        }
+
+                        public void checkServerTrusted(
+                                java.security.cert.X509Certificate[] certs, String authType) {
+                        }
+                    }
+            };
+
+            var jsonInputs = parseJson(req.body()).getAsJsonObject();
+            var path = jsonInputs.get("path").getAsString();
+            SSLContextBuilder builder = new SSLContextBuilder();
+            builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+
+            SSLConnectionSocketFactory sslsf = null;
+
+            sslsf = new SSLConnectionSocketFactory(builder.build());
+
+            CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+
+            var reqUrl = req.scheme() + "://" + req.host().substring(0, req.host().lastIndexOf(":"));
+            /* this sends localhost calls to the dev server */
+            reqUrl = reqUrl.replace("localhost", "ceodev.servirglobal.net");
+            HttpPost request = new HttpPost(reqUrl + ":8888/" + path);
+            StringEntity params = null;
+
+            params = new StringEntity(jsonInputs.toString());
+
+            params.setContentType("application/json");
+            request.setEntity(params);
+
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            CloseableHttpResponse response = httpclient.execute(request);
+            return EntityUtils.toString(response.getEntity(), "UTF-8");
+        }
+        catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+            return "";
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return "";
+        }
+    }
 }

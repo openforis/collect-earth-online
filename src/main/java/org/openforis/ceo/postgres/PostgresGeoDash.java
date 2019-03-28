@@ -127,4 +127,10 @@ public class PostgresGeoDash implements GeoDash {
         }
     }
 
+    public synchronized String gatewayRequest(Request req, Response res) {
+
+
+        return "";
+    }
+
 }

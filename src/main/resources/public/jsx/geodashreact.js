@@ -234,9 +234,9 @@ class Widget extends React.Component {
 
             </div>;
         } else if (this.graphControlList.includes(wtext)) {
-            return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} /></div>;
+            return <div className="front"><GraphWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
         } else if (wtext === "getStats") {
-            return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} /></div>;
+            return <div className="front"><StatsWidget widget={widget} projPairAOI={this.props.projPairAOI} documentRoot={this.props.documentRoot}/></div>;
         } else {
             return <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width ="200" height ="200" className="img-responsive" />;
         }
@@ -291,6 +291,26 @@ class MapWidget extends React.Component {
                             : "ImageCollectionbyIndex";
         //return "https://ceodev.servirglobal.net:8888/" + resourcePath;
         return window.location.protocol + "//" + window.location.hostname + ":8888/" + resourcePath;
+    };
+
+    getGatewayPath = (widget, collectionName) => {
+        const fts = {"LANDSAT5": "Landsat5Filtered",
+            "LANDSAT7": "Landsat7Filtered",
+            "LANDSAT8": "Landsat8Filtered",
+            "Sentinel2": "FilteredSentinel"};
+        const resourcePath = (widget.filterType && widget.filterType.length > 0)
+            ? fts[widget.filterType]
+            : (widget.ImageAsset && widget.ImageAsset.length > 0)
+                ? "image"
+                : (widget.ImageCollectionAsset && widget.ImageCollectionAsset.length > 0)
+                    ? "ImageCollectionAsset"
+                    : (widget.properties && "ImageCollectionCustom" === widget.properties[0])
+                        ? "meanImageByMosaicCollections"
+                        : (collectionName.trim().length > 0)
+                            ? "cloudMaskImageByMosaicCollection"
+                            : "ImageCollectionbyIndex";
+        //return "https://ceodev.servirglobal.net:8888/" + resourcePath;
+        return resourcePath;
     };
 
     getImageParams = widget => {
@@ -436,6 +456,7 @@ class MapWidget extends React.Component {
         let dateTo = "";
         let requestedIndex = "";
         let url = "";
+        let path = "";
         let dualImageObject = null;
         let bands = "";
         if (widget.properties.length === 5) {
@@ -459,7 +480,8 @@ class MapWidget extends React.Component {
             shortWidget.properties.push(collectionName);
             shortWidget.ImageAsset = firstImage.imageAsset;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            url = this.getGatewayUrl(shortWidget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gatewayRequest"; //this.getGatewayUrl(shortWidget, collectionName);
+            path = this.getGatewayPath(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null? firstImage.min: "";
             shortWidget.max = firstImage.max != null? firstImage.max: "";
@@ -485,7 +507,9 @@ class MapWidget extends React.Component {
             shortWidget2.properties.push(dualImageObject.collectionName);
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.url = this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
+            dualImageObject.url = this.props.documentRoot + "/geo-dash/gatewayRequest"; //this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
+            dualImageObject. path = this.getGatewayPath(shortWidget2, dualImageObject.collectionName);
+
 
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null? secondImage.min: "";
@@ -530,7 +554,10 @@ class MapWidget extends React.Component {
             if (widget.properties[0] === "ImageElevation"){
                 widget.ImageAsset = "USGS/SRTMGL1_003";
             }
-            url = this.getGatewayUrl(widget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gatewayRequest"; //this.getGatewayUrl(widget, collectionName);
+            path = this.getGatewayPath(widget, collectionName);
+
+
             postObject.visParams = this.getImageParams(widget);
 
             if (postObject.visParams.cloudLessThan) {
@@ -555,6 +582,7 @@ class MapWidget extends React.Component {
         postObject.dateTo= dateTo;
         postObject.geometry= JSON.parse(projPairAOI);
         postObject.index= requestedIndex;
+        postObject.path = path;
 // see if we need to fetch or just add the tile server
         let needFetch = true;
         let currentDate = new Date();
@@ -942,12 +970,10 @@ class GraphWidget extends React.Component {
     componentDidMount()
     {
         const widget = this.props.widget;
-        let collectionName = widget.properties[1];
-        let indexName = widget.properties[4];
-        let date = new Date();
-        let url = collectionName.trim().length > 0 ? window.location.protocol + "//" + window.location.hostname + ":8888/timeSeriesIndex" :  window.location.protocol + "//" + window.location.hostname + ":8080/geo-dash/timeSeriesIndex2";
-
-        fetch(url, {
+        const collectionName = widget.properties[1];
+        const indexName = widget.properties[4];
+        const date = new Date();
+        fetch(this.props.documentRoot + "/geo-dash/gatewayRequest", {
             method: "POST",
             headers: {
                 "Accept": "application/json",
@@ -960,7 +986,8 @@ class GraphWidget extends React.Component {
                 dateFromTimeSeries: widget.properties[2].trim().length === 10 ? widget.properties[2].trim() : "2000-01-01",
                 dateToTimeSeries: widget.properties[3].trim().length === 10 ? widget.properties[3].trim() :  date.yyyymmdd(),
                 reducer: widget.graphReducer != null? widget.graphReducer.toLowerCase(): "",
-                scale: 200
+                scale: 200,
+                path: collectionName.trim().length > 0 ? "timeSeriesIndex" : "timeSeriesIndex2"
             })
         })
             .then(res => res.json())
@@ -1112,14 +1139,15 @@ class StatsWidget extends React.Component {
 
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
-        fetch(window.location.protocol + "//" + window.location.hostname + ":8888/getStats", {
+        fetch(this.props.documentRoot + "/geo-dash/gatewayRequest", { //window.location.protocol + "//" + window.location.hostname + ":8888/getStats"
             method: "POST",
             headers: {
                 "Accept": "application/json",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                paramValue: JSON.parse(projPairAOI)
+                paramValue: JSON.parse(projPairAOI),
+                path: "getStats"
             })
         })
             .then(res => res.json())
