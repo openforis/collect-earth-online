@@ -30,7 +30,9 @@ class Collection extends React.Component {
             stackingProfileDG: "Accuracy_Profile",
             userSamples: {},
             userImages: {},
-            storedInterval: null
+            storedInterval: null,
+            sampleIds1:[],
+            sampleIds2:[],
         };
     }
 
@@ -603,7 +605,7 @@ class Collection extends React.Component {
     };
 
     rulesViolated = (questionToSet, answerId, answerText) => {
-        const errorMessages = this.state.currentProject.surveyRules.map(surveyRule => {
+        const errorMessages = this.state.currentProject.surveyRules && this.state.currentProject.surveyRules.map(surveyRule => {
             if (surveyRule.ruleType === "text-match" &&
                 surveyRule.questionId === questionToSet.id &&
                 !RegExp(surveyRule.regex).test(answerText)) {
@@ -615,8 +617,11 @@ class Collection extends React.Component {
                 return "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
             } else if (surveyRule.ruleType === "sum-of-answers" &&
                 surveyRule.questions.includes(questionToSet.id)) {
+                const sampleIds = Object.keys(this.state.userSamples).length === 1
+                    ? [Object.keys(this.state.userSamples)[0]]
+                    : mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
                 const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id)
-                    && q.answered.length > 0);
+                    && q.answered.length > 0 && sampleIds.includes(q.answered[0].sampleId));
                 const notSameQues = answeredQuestions.find(ques => ques.id !== questionToSet.id);
                 if ((surveyRule.questions.length === answeredQuestions.length + 1) && notSameQues) {
                     const answeredSum = answeredQuestions.reduce((sum, q) => sum + parseInt(q.answered[0].answerText), 0);
@@ -629,16 +634,21 @@ class Collection extends React.Component {
                     return null;
                 }
             } else if (surveyRule.ruleType === "incompatible-answers") {
+                const sampleIds = Object.keys(this.state.userSamples).length === 1
+                    ? [Object.keys(this.state.userSamples)[0]]
+                    : mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
                 if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
+                    this.setState({sampleIds1:sampleIds});
                     const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
-                    if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
+                    if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2) && sampleIds.includes(this.state.sampleIds2[0])) {
                         return "Incompatible answer";
                     } else {
                         return null;
                     }
                 } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
+                    this.setState({sampleIds2:sampleIds});
                     const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
-                    if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
+                    if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1) && sampleIds.includes(this.state.sampleIds1[0])) {
                         return "Incompatible answer";
                     } else {
                         return null;
@@ -651,7 +661,7 @@ class Collection extends React.Component {
             }
         });
 
-        return errorMessages.find(msg => msg !== null);
+        return errorMessages ? errorMessages.find(msg => msg !== null): null;
     };
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
