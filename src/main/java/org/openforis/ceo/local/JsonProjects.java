@@ -37,10 +37,10 @@ import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.api.client.json.Json;
+import com.google.api.client.json.JsonParser;
+import com.google.gson.*;
+
 import java.time.LocalDate;
 import java.io.File;
 import java.io.StringWriter;
@@ -50,13 +50,7 @@ import java.text.SimpleDateFormat;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date; 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1260,6 +1254,29 @@ public class JsonProjects implements Projects {
             // Generate a new project id
             var newProjectId = getNextId(projects);
             newProject.addProperty("id", newProjectId);
+
+            if(getOrZero(jsonInputs,"projectTemplate").getAsInt()>0){
+                var currProjId=getOrZero(jsonInputs,"projectTemplate").getAsString();
+                var newDashboardId = UUID.randomUUID().toString();
+                var projectFile = elementToArray(readJsonFile("proj.json"));
+                var matchingProject = findInJsonArray(projectFile,
+                        project -> project.get("projectID").getAsString().equals(currProjId));
+                if (matchingProject.isPresent()) {
+                    var project = matchingProject.get();
+                    var dashboardId = project.get("dashboard").getAsString();
+                    var dashboard = elementToObject(readJsonFile("dash-" + dashboardId + ".json"));
+                    dashboard.remove("projectID");
+                    dashboard.remove("dashboardID");
+                    dashboard.addProperty("projectID", newProjectId);
+                    dashboard.addProperty("dashboardID", newDashboardId);
+                    writeJsonFile("dash-" + newDashboardId + ".json", dashboard);
+                    var projectJSON = new JsonObject();
+                    projectJSON.addProperty("projectID", newProjectId);
+                    projectJSON.addProperty("dashboard", newDashboardId);
+                    projectFile.add(projectJSON);
+                    writeJsonFile("proj.json", projectFile);
+                }
+            }
 
             // Write the new entry to project-list.json
             projects.add(newProjectObject(newProject, fileData, req));
