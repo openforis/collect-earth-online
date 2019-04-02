@@ -461,7 +461,7 @@ class MapWidget extends React.Component {
             shortWidget.properties.push(collectionName);
             shortWidget.ImageAsset = firstImage.imageAsset;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            url = this.props.documentRoot + "/geo-dash/gatewayRequest"; //this.getGatewayUrl(shortWidget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(shortWidget, collectionName);
             path = this.getGatewayPath(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null ? firstImage.min : "";
@@ -488,7 +488,7 @@ class MapWidget extends React.Component {
             shortWidget2.properties.push(dualImageObject.collectionName);
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.url = this.props.documentRoot + "/geo-dash/gatewayRequest"; //this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
+            dualImageObject.url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
             dualImageObject. path = this.getGatewayPath(shortWidget2, dualImageObject.collectionName);
 
 
@@ -534,7 +534,7 @@ class MapWidget extends React.Component {
             if (widget.properties[0] === "ImageElevation") {
                 widget.ImageAsset = "USGS/SRTMGL1_003";
             }
-            url = this.props.documentRoot + "/geo-dash/gatewayRequest"; //this.getGatewayUrl(widget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(widget, collectionName);
             path = this.getGatewayPath(widget, collectionName);
 
 
@@ -992,7 +992,7 @@ class GraphWidget extends React.Component {
         const collectionName = widget.properties[1];
         const indexName = widget.properties[4];
         const date = new Date();
-        fetch(this.props.documentRoot + "/geo-dash/gatewayRequest", {
+        fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
                 "Accept": "application/json",
@@ -1156,7 +1156,7 @@ class StatsWidget extends React.Component {
 
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
-        fetch(this.props.documentRoot + "/geo-dash/gatewayRequest", { //window.location.protocol + "//" + window.location.hostname + ":8888/getStats"
+        fetch(this.props.documentRoot + "/geo-dash/gateway-request", { //window.location.protocol + "//" + window.location.hostname + ":8888/getStats"
             method: "POST",
             headers: {
                 "Accept": "application/json",
