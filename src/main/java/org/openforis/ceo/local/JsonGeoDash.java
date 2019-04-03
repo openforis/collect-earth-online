@@ -6,6 +6,7 @@ import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.net.URLDecoder;
@@ -79,7 +80,6 @@ public class JsonGeoDash implements GeoDash {
         /* Code will go here to update dashboard*/
         return "";
     }
-
     
     public synchronized String createDashBoardWidgetById(Request req, Response res) {
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
@@ -176,8 +176,8 @@ public class JsonGeoDash implements GeoDash {
             var params = new StringEntity(jsonInputs.toString());
             params.setContentType("application/json");
             request.setEntity(params);
-            var sc = SSLContext.getInstance("SSL");
 
+            var sc = SSLContext.getInstance("SSL");
             sc.init(null, trustAllCerts, new SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 
