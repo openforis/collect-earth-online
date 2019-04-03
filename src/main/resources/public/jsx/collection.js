@@ -641,11 +641,11 @@ class Collection extends React.Component {
                 if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
                     this.setState({sampleIds1:sampleIds});
                     const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
-                        if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2) && sampleIds.includes(this.state.sampleIds2[0])) {
-                            return "Incompatible answer";
-                        } else {
-                            return null;
-                        }
+                    if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2) && sampleIds.includes(this.state.sampleIds2[0])) {
+                        return "Incompatible answer";
+                    } else {
+                        return null;
+                    }
                 } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
                     this.setState({sampleIds2:sampleIds});
                     const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
