@@ -611,9 +611,10 @@ class Collection extends React.Component {
                 !RegExp(surveyRule.regex).test(answerText)) {
                 return "Please enter a regular expression that matches " + surveyRule.regex;
             } else if (surveyRule.ruleType === "numeric-range" &&
-                surveyRule.questionId === questionToSet.id &&
-                (parseInt(answerText) < surveyRule.min ||
-                    parseInt(answerText) > surveyRule.max)) {
+                       surveyRule.questionId === questionToSet.id &&
+                       (isNaN(parseInt(answerText)) ||
+                        parseInt(answerText) < surveyRule.min ||
+                        parseInt(answerText) > surveyRule.max)) {
                 return "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
             } else if (surveyRule.ruleType === "sum-of-answers" &&
                 surveyRule.questions.includes(questionToSet.id)) {
@@ -640,11 +641,11 @@ class Collection extends React.Component {
                 if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
                     this.setState({sampleIds1:sampleIds});
                     const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
-                    if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2) && sampleIds.includes(this.state.sampleIds2[0])) {
-                        return "Incompatible answer";
-                    } else {
-                        return null;
-                    }
+                        if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2) && sampleIds.includes(this.state.sampleIds2[0])) {
+                            return "Incompatible answer";
+                        } else {
+                            return null;
+                        }
                 } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
                     this.setState({sampleIds2:sampleIds});
                     const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
@@ -915,7 +916,7 @@ function SideBar(props) {
         .every(sq => sq.visible && sq.visible.length === sq.answered.length);
 
     return (
-        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflow: "hidden scroll" }}>
+        <div id="sidebar" className="col-xl-3 border-left full-height" style={{ overflowY: "scroll", overflowX: "hidden" }}>
             <h2 className="header">{props.projectName || ""}</h2>
 
             {props.children}

@@ -10,5 +10,6 @@ public interface GeoDash {
     String createDashBoardWidgetById(Request req, Response res);
     String updateDashBoardWidgetById(Request req, Response res);
     String deleteDashBoardWidgetById(Request req, Response res);
+    String gatewayRequest(Request req, Response res);
 
 }

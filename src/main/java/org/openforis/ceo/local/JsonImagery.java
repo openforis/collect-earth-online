@@ -34,8 +34,12 @@ public class JsonImagery implements Imagery {
 
         var matchingImagery = filterJsonArray(imageryList,
                                 imagery -> imagery.get("id").getAsString().equals(id));
-        return matchingImagery.get(0).getAsJsonObject().get("title").getAsString();
-        
+
+        if (matchingImagery.size() > 0) {
+            return matchingImagery.get(0).getAsJsonObject().get("title").getAsString();
+        } else {
+            return "";
+        }
     }
 
     public synchronized String addInstitutionImagery(Request req, Response res) {
