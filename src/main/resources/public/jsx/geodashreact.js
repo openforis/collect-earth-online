@@ -568,6 +568,10 @@ class MapWidget extends React.Component {
         currentDate.setDate(currentDate.getDate() - 1);
         if (typeof(Storage) !== "undefined") {
 
+            if (localStorage.getItem("users/fralandcover/L7_2000_India_ALL") && !localStorage.getItem("bug_clear")){
+                localStorage.clear();
+                localStorage.setItem("bug_clear", true);
+            }
             //check if current time is < localStorage.lastGatewayUpdate + 1 day
 
             if (localStorage.getItem(postObject.ImageAsset)) {
