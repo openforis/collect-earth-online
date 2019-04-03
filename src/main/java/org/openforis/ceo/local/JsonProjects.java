@@ -36,11 +36,8 @@ import static org.openforis.ceo.utils.ProjectUtils.padBounds;
 import static org.openforis.ceo.utils.ProjectUtils.reprojectBounds;
 import static org.openforis.ceo.utils.ProjectUtils.runBashScriptForProject;
 
-
-import com.google.api.client.json.Json;
-import com.google.api.client.json.JsonParser;
-import com.google.gson.*;
-
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 import java.time.LocalDate;
 import java.io.File;
 import java.io.StringWriter;
@@ -50,10 +47,17 @@ import java.text.SimpleDateFormat;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Paths;
-import java.util.*;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Date;
+import java.util.UUID;
+import java.util.Map;
+import java.util.Comparator;
+import java.util.ArrayList;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
 import spark.Request;
@@ -1255,8 +1259,8 @@ public class JsonProjects implements Projects {
             var newProjectId = getNextId(projects);
             newProject.addProperty("id", newProjectId);
 
-            if(getOrZero(jsonInputs,"projectTemplate").getAsInt()>0){
-                var currProjId=getOrZero(jsonInputs,"projectTemplate").getAsString();
+            if (getOrZero(jsonInputs,"projectTemplate").getAsInt() > 0) {
+                var currProjId = getOrZero(jsonInputs, "projectTemplate").getAsString();
                 var newDashboardId = UUID.randomUUID().toString();
                 var projectFile = elementToArray(readJsonFile("proj.json"));
                 var matchingProject = findInJsonArray(projectFile,

@@ -31,8 +31,8 @@ class Collection extends React.Component {
             userSamples: {},
             userImages: {},
             storedInterval: null,
-            sampleIds1:[],
-            sampleIds2:[],
+            sampleIds1: [],
+            sampleIds2: [],
         };
     }
 
@@ -617,7 +617,7 @@ class Collection extends React.Component {
                         parseInt(answerText) > surveyRule.max)) {
                 return "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
             } else if (surveyRule.ruleType === "sum-of-answers" &&
-                surveyRule.questions.includes(questionToSet.id)) {
+                       surveyRule.questions.includes(questionToSet.id)) {
                 const sampleIds = Object.keys(this.state.userSamples).length === 1
                     ? [Object.keys(this.state.userSamples)[0]]
                     : mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
@@ -662,7 +662,7 @@ class Collection extends React.Component {
             }
         });
 
-        return errorMessages ? errorMessages.find(msg => msg !== null): null;
+        return errorMessages ? errorMessages.find(msg => msg !== null) : null;
     };
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
