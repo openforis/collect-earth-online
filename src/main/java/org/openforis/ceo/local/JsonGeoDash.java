@@ -6,29 +6,24 @@ import static org.openforis.ceo.utils.JsonUtils.mapJsonArray;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 import static org.openforis.ceo.utils.JsonUtils.readJsonFile;
 import static org.openforis.ceo.utils.JsonUtils.writeJsonFile;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.io.IOException;
-import java.net.*;
+import java.net.URLDecoder;
 import java.security.cert.X509Certificate;
-import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
 import java.util.UUID;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.HttpsURLConnection;
-
 import org.apache.http.util.EntityUtils;
 import org.openforis.ceo.db_api.GeoDash;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import spark.Request;
 import spark.Response;
 
@@ -177,17 +172,18 @@ public class JsonGeoDash implements GeoDash {
             /* this sends localhost calls to the dev server */
             reqUrl = reqUrl.replace("localhost", "ceodev.servirglobal.net");
             var request = new HttpPost(reqUrl + ":8888/" + path);
+
             var params = new StringEntity(jsonInputs.toString());
             params.setContentType("application/json");
             request.setEntity(params);
             var sc = SSLContext.getInstance("SSL");
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+
+            sc.init(null, trustAllCerts, new SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 
             var response = httpclient.execute(request);
             return EntityUtils.toString(response.getEntity(), "UTF-8");
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return "";
         }
