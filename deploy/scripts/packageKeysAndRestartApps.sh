@@ -4,7 +4,7 @@ CERT_DOMAIN="collect.earth"
 CERT_PASSWORD="collect"
 CACERT_PASSWORD="changeit"
 
-sudo openssl pkcs12 -export -in /etc/letsencrypt/live/$CERT_DOMAIN/cert.pem -inkey /etc/letsencrypt/live/$CERT_DOMAIN/privkey.pem -out ceo.p12 -name ceo -passout pass:$CERT_PASSWORD
+sudo openssl pkcs12 -export -in /etc/letsencrypt/live/$CERT_DOMAIN/fullchain.pem -inkey /etc/letsencrypt/live/$CERT_DOMAIN/privkey.pem -out ceo.p12 -name ceo -passout pass:$CERT_PASSWORD
 
 sudo keytool -importkeystore -destkeystore keystore.jks -srckeystore ceo.p12 -srcstoretype PKCS12 -storepass $CERT_PASSWORD -srcstorepass $CERT_PASSWORD -alias ceo -noprompt
 

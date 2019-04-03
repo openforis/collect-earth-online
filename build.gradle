@@ -24,6 +24,7 @@ dependencies {
     compile "com.lowagie:itext:2.1.7"
     compile "javax.mail:mail:1.4"
     compile "org.postgresql:postgresql:42.2.2"
+    compile "org.apache.httpcomponents:httpclient:4.5.1"
     testCompile "junit:junit:4.12"
 }
 

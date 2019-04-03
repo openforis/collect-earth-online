@@ -102,7 +102,7 @@ class BasicLayout extends React.PureComponent {
                     : Array.isArray(eval(data.widgets))
                         ? eval(data.widgets)
                         : [];
-
+                console.log("before updatedWidgets");
                 const updatedWidgets = widgets.map(widget => widget.layout
                     ? {
                         ...widget,
@@ -112,9 +112,9 @@ class BasicLayout extends React.PureComponent {
                         }
                     }
                     : widget);
-
+                console.log("before checkWidgetStructure");
                 this.checkWidgetStructure(updatedWidgets);
-
+                console.log("before setState");
                 this.setState({ dashboardID: data.dashboardID,
                                 widgets:     updatedWidgets,
                                 haveWidgets: true,
@@ -183,7 +183,7 @@ class BasicLayout extends React.PureComponent {
                     column = parseInt(widget.width);
                     row +=1;
                 }
-                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString()};
             }
             else {
                 changed = true;
@@ -197,7 +197,7 @@ class BasicLayout extends React.PureComponent {
                     column = parseInt(widget.width);
                     row +=1;
                 }
-                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i};
+                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString()};
             }
             return widget;
         });
