@@ -167,12 +167,12 @@ public class JsonGeoDash implements GeoDash {
             builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
             var sslsf = new SSLConnectionSocketFactory(builder.build());
             var httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+            
             var endurl = req.host();
-            if(endurl.lastIndexOf(":") > 0) {
+            if (endurl.lastIndexOf(":") > 0) {
                 endurl = endurl.substring(0, endurl.lastIndexOf(":"));
             }
             var reqUrl = req.scheme() + "://" + endurl;
-
             /* this sends localhost calls to the dev server */
             reqUrl = reqUrl.replace("localhost", "ceodev.servirglobal.net");
             var request = new HttpPost(reqUrl + ":8888/" + path);
