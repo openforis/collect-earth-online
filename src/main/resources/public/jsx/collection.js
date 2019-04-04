@@ -607,12 +607,7 @@ class Collection extends React.Component {
     };
 
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
-        console.log(surveyRule);
-        console.log(questionToSet);
-        console.log(answerId);
-        console.log(answerText);
-        if (surveyRule.ruleType === "text-match" &&
-            surveyRule.questionId === questionToSet.id &&
+        if (surveyRule.questionId === questionToSet.id &&
             !RegExp(surveyRule.regex).test(answerText)) {
             return "Please enter a regular expression that matches " + surveyRule.regex;
         } else {
@@ -621,8 +616,7 @@ class Collection extends React.Component {
     };
 
     checkRuleNumericRange = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.ruleType === "numeric-range" &&
-            surveyRule.questionId === questionToSet.id &&
+        if (surveyRule.questionId === questionToSet.id &&
             (isNaN(parseInt(answerText)) ||
                 parseInt(answerText) < surveyRule.min ||
                 parseInt(answerText) > surveyRule.max)) {
@@ -633,8 +627,7 @@ class Collection extends React.Component {
     };
 
     checkRuleSumOfAnswers = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.ruleType === "sum-of-answers" &&
-            surveyRule.questions.includes(questionToSet.id)) {
+        if (surveyRule.questions.includes(questionToSet.id)) {
             const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id != questionToSet.id);
             if (surveyRule.questions.length === answeredQuestions.length + 1) {
                 const sampleIds = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
@@ -664,32 +657,28 @@ class Collection extends React.Component {
     };
 
     checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, answerText) => {
-        if (surveyRule.ruleType === "incompatible-answers") {
-            if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
-                const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
-                if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
-                    const ques1Ids = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
-                    const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
-                    const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
-                    if (commonSampleIds.length > 0) {
-                        return "Incompatible answer";
-                    } else {
-                        return null;
-                    }
+        if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
+            const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
+            if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
+                const ques1Ids = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
+                const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
+                const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
+                if (commonSampleIds.length > 0) {
+                    return "Incompatible answer";
                 } else {
                     return null;
                 }
-            } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
-                const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
-                if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
-                    const ques2Ids = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
-                    const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
-                    const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
-                    if (commonSampleIds.length > 0) {
-                        return "Incompatible answer";
-                    } else {
-                        return null;
-                    }
+            } else {
+                return null;
+            }
+        } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
+            const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
+            if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
+                const ques2Ids = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
+                const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
+                const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
+                if (commonSampleIds.length > 0) {
+                    return "Incompatible answer";
                 } else {
                     return null;
                 }
