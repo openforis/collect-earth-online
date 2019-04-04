@@ -39,6 +39,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
@@ -837,6 +838,27 @@ public class PostgresProjects implements Projects {
                                 copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
                                 copyPstmt.setInt(2, newProjectId);
                                 copyPstmt.execute();
+                            }
+                            try (var pstmt1 = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
+                                pstmt1.setInt(1, getOrZero(newProject, "project-template").getAsInt());
+                                try (var rs1 = pstmt.executeQuery()) {
+                                    if (rs1.next()) {
+                                        try (var preparedStatement = conn.prepareStatement("SELECT * FROM add_project_widget(?, ?, ?::JSONB)")) {
+                                            var newDashboardId = UUID.randomUUID().toString();
+                                            preparedStatement.setInt(1, newProjectId);
+                                            preparedStatement.setObject(2, UUID.fromString(newDashboardId));
+                                            preparedStatement.setString(3, rs1.getString("widget"));
+                                            preparedStatement.execute();
+                                            return "";
+                                        } catch (SQLException e) {
+                                            System.out.println(e.getMessage());
+                                            return "";
+                                        }
+                                    }
+                                }
+                            } catch (SQLException e) {
+                                System.out.println(e.getMessage());
+                                return "";
                             }
                         } else {
 
