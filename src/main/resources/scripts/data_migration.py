@@ -322,11 +322,11 @@ def csvHeaderToCol(csvCols):
         h = h.replace(" ", "")
         if len(h) > 0:
             if i <=1:
-                colsStr += h + " float, "
+                colsStr += h + " float,"
             elif (i == 2 and h.upper() == "PLOTID") or (i == 3 and h.upper() == "SAMPLEID"):
-                colsStr += h + " integer, "
+                colsStr += h + " integer,"
             else:
-                colsStr += h + " text, "
+                colsStr += h + " text,"
     return colsStr[:-1]
 
 def checkRequiredCols(actualCols, reqCols):
@@ -382,15 +382,16 @@ def merge_files(project, project_id, conn):
             if len(csv_headers) > 0:
                 plots_table = tableprefix + "_plots_csv"
                 need_to_update = 1
-                cur.execute("DROP TABLE IF EXISTS " + plots_table)
+                cur.execute("DROP TABLE IF EXISTS ext_tables." + plots_table)
                 cur.execute("SELECT * FROM create_new_table(%s, %s)",
                 [plots_table, csvHeaderToCol(csv_headers)])
                 conn.commit()
 
+
                 # run sh to upload csv to postgres
                 dirname = os.path.dirname(os.path.realpath(__file__))
                 shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath)))
-                subprocess.run(["bash", "csv2postgresOld.sh", fileprefix, fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
+                subprocess.run(["bash", "csv2postgres-alt.sh", fileprefix, fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
 
                 # add index
                 cur.execute("SELECT * FROM add_index_col(%s)" , [plots_table])
@@ -426,7 +427,7 @@ def merge_files(project, project_id, conn):
             if len(checkRequiredCols(csv_headers, ["plotId"])) > 0:
                 plots_table = tableprefix + "_plots_csv"
                 need_to_update = 2
-                cur.execute("DROP TABLE IF EXISTS " + plots_table)
+                cur.execute("DROP TABLE IF EXISTS ext_tables." + plots_table)
                 cur.execute("SELECT * FROM create_new_table(%s, %s)",
                 [plots_table, csvHeaderToCol(csv_headers)])
                 conn.commit()
@@ -460,7 +461,7 @@ def merge_files(project, project_id, conn):
         if project["plotDistribution"] == "shp" and os.path.isfile(filename):
             need_to_update = 2
             plots_table = "project_" +  str(project_id) + "_plots_shp"
-            cur.execute("DROP TABLE IF EXISTS " + plots_table)
+            cur.execute("DROP TABLE IF EXISTS ext_tables." + plots_table)
             conn.commit()
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))
@@ -475,7 +476,7 @@ def merge_files(project, project_id, conn):
             if len(checkRequiredCols(csv_headers, ["plotId", "sampleId"])) > 0:
                 samples_table = "project_" +  str(project_id) + "_samples_csv"
                 need_to_update = 3
-                cur.execute("DROP TABLE IF EXISTS " + samples_table)
+                cur.execute("DROP TABLE IF EXISTS ext_tables." + samples_table)
                 cur.execute("SELECT * FROM create_new_table(%s, %s)",
                 [samples_table, csvHeaderToCol(csv_headers)])
                 conn.commit()
@@ -506,7 +507,7 @@ def merge_files(project, project_id, conn):
             need_to_update = 3
 
             samples_table = "project_" +  str(project_id) + "_samples_shp"
-            cur.execute("DROP TABLE IF EXISTS " + samples_table)
+            cur.execute("DROP TABLE IF EXISTS ext_tables." + samples_table)
             conn.commit()
             # run sh
             dirname = os.path.dirname(os.path.realpath(__file__))

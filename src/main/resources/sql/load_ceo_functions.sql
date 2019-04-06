@@ -20,9 +20,9 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
     GET DIAGNOSTICS i = ROW_COUNT;
     IF i = 0
     THEN
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(null) as geom FROM '|| _table_name;
+        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(null) as geom FROM ext_tables.'|| _table_name;
     ELSE
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM '|| _table_name;
+        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM ext_tables.'|| _table_name;
     END IF;
  END
 
@@ -40,7 +40,7 @@ CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
  BEGIN
     IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
 
-    RETURN QUERY EXECUTE 'SELECT gid, row_to_json(p)::jsonb FROM '|| _table_name || ' as p';
+    RETURN QUERY EXECUTE 'SELECT gid, row_to_json(p)::jsonb FROM ext_tables.'|| _table_name || ' as p';
  END
 
 $$ LANGUAGE PLPGSQL;
@@ -64,9 +64,9 @@ CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
     GET DIAGNOSTICS i = ROW_COUNT;
     IF i = 0
     THEN
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(null) as geom FROM '|| _table_name;
+        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(null) as geom FROM ext_tables.'|| _table_name;
     ELSE
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM '|| _table_name;
+        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM ext_tables.'|| _table_name;
     END IF;
  END
 
@@ -813,11 +813,11 @@ CREATE OR REPLACE FUNCTION create_new_table(_table_name text, _cols text)
  DECLARE
     iter text;
  BEGIN
-    EXECUTE 'CREATE TABLE ' || _table_name || '()';
+    EXECUTE 'CREATE TABLE ext_tables.' || _table_name || '()';
 
-    FOREACH iter IN ARRAY string_to_array(_cols, ', ')
+    FOREACH iter IN ARRAY string_to_array(_cols, ',')
     LOOP
-        EXECUTE format('alter table ' || _table_name || ' add column %s ;', iter);
+        EXECUTE format('ALTER TABLE ext_tables.' || _table_name || ' add column %s;', iter);
     END LOOP;
 
  END
@@ -829,7 +829,7 @@ CREATE OR REPLACE FUNCTION add_index_col(_table_name text)
  RETURNS void AS $$
 
  BEGIN
-    EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN gid serial primary key';
+    EXECUTE 'ALTER TABLE ext_tables.' || _table_name || ' ADD COLUMN gid serial primary key';
  END
 
 $$ LANGUAGE PLPGSQL;
@@ -850,10 +850,10 @@ CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
                     (PARTITION BY
                     ' || _on_cols || '
                     ) AS count
-        FROM ' || _table_name || ') tableWithCount
+        FROM ext_tables.' || _table_name || ') tableWithCount
         WHERE tableWithCount.count > 1
                         )
-        DELETE FROM ' || _table_name || ' WHERE gid IN
+        DELETE FROM ext_tables.' || _table_name || ' WHERE gid IN
         (SELECT DISTINCT ON (' || _on_cols || ') gid FROM duplicates)';
  END
 
@@ -2077,7 +2077,7 @@ CREATE OR REPLACE FUNCTION rename_col(_table_name text, _from text, _to text)
 
  BEGIN
     IF UPPER(_from) <> UPPER(_to) THEN
-        EXECUTE 'ALTER TABLE ' || _table_name || ' RENAME COLUMN ' || _from || ' to ' || _to;
+        EXECUTE 'ALTER TABLE ext_tables.' || _table_name || ' RENAME COLUMN ' || _from || ' to ' || _to;
     END IF;
  END
 
@@ -2088,7 +2088,7 @@ CREATE OR REPLACE FUNCTION add_plotId_col(_table_name text)
  RETURNS void AS $$
 
  BEGIN
-    EXECUTE 'ALTER TABLE ' || _table_name || ' ADD COLUMN plotId integer';
+    EXECUTE 'ALTER TABLE ext_tables.' || _table_name || ' ADD COLUMN plotId integer';
  END
 
 $$ LANGUAGE PLPGSQL;

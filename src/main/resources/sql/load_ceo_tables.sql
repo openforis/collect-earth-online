@@ -147,7 +147,7 @@ CREATE TABLE project_widgets(
 CREATE INDEX project_widgets_project_rid ON project_widgets (project_rid);
 CREATE INDEX project_widgets_dashboard_id ON project_widgets (dashboard_id);
 
---indecies on FK
+-- Indecies on FK
 CREATE INDEX plots_projects_rid ON plots (project_rid);
 CREATE INDEX samples_plot_rid ON samples (plot_rid);
 CREATE INDEX imagery_institution_rid ON imagery (institution_rid);
@@ -158,3 +158,6 @@ CREATE INDEX user_plots_user_rid ON user_plots (user_rid);
 CREATE INDEX sample_values_user_plot_rid ON sample_values (user_plot_rid);
 CREATE INDEX sample_values_sample_rid ON sample_values (sample_rid);
 CREATE INDEX sample_values_imagery_rid ON sample_values (imagery_rid);
+
+-- Schema for external tables
+CREATE SCHEMA ext_tables;
