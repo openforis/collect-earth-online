@@ -2,7 +2,7 @@
 CREATE TABLE users (
     user_uid         SERIAL PRIMARY KEY,
     email            text NOT NULL UNIQUE,
-    password         text NOT NULL,
+    password         varchar(72) NOT NULL,
     administrator    boolean DEFAULT FALSE,
     reset_key        text DEFAULT NULL
 );

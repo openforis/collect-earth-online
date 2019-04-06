@@ -262,7 +262,7 @@ def insert_user_plots(plot_id, plot, flagged, conn):
     user_plot_id = -1
     cur_up = conn.cursor()
     cur_user = conn.cursor()
-    cur_user.execute("select user_id from users where email=%s;", [plot["user"]])
+    cur_user.execute("select user_uid from users where email=%s;", [plot["user"]])
     rows = cur_user.fetchall()
     if len(rows)>0:
         try:

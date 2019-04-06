@@ -117,7 +117,7 @@ CREATE OR REPLACE FUNCTION add_user(_email text, _password text)
  RETURNS integer AS $$
 
     INSERT INTO users (email, password)
-    VALUES (_email, _password)
+    VALUES (_email, crypt(_password, gen_salt('bf')))
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
@@ -127,7 +127,7 @@ CREATE OR REPLACE FUNCTION add_user_migration(_user_uid integer, _email text, _p
  RETURNS integer AS $$
 
     INSERT INTO users (user_uid, email, password)
-    VALUES (_user_uid, _email, _password)
+    VALUES (_user_uid, _email, crypt(_password, gen_salt('bf')))
     RETURNING user_uid
 
 $$ LANGUAGE SQL;
@@ -149,7 +149,7 @@ CREATE OR REPLACE FUNCTION get_all_users()
 $$ LANGUAGE SQL;
 
 -- Get all users by institution ID, includes role
-CREATE OR REPLACE FUNCTION get_all_users_by_institution_rid(_institution_rid integer)
+CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_rid integer)
  RETURNS TABLE(
     institution_id      integer,
     email               text,
@@ -169,18 +169,24 @@ CREATE OR REPLACE FUNCTION get_all_users_by_institution_rid(_institution_rid int
 $$ LANGUAGE SQL;
 
 -- Returns all of the user fields associated with the provided email.
-CREATE OR REPLACE FUNCTION get_user(_email text)
+CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
  RETURNS TABLE(
     user_id          integer,
-    identity         text,
-    password         text,
-    administrator    boolean,
-    reset_key        text
+    administrator    boolean
  ) AS $$
 
-    SELECT user_uid, email, password, administrator, reset_key
+    SELECT user_uid, administrator
     FROM users
     WHERE email = _email
+        AND password = crypt(_password, password)
+
+$$ LANGUAGE SQL;
+
+-- Returns all of the user fields associated with the provided email.
+CREATE OR REPLACE FUNCTION email_taken(_email text)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email)
 
 $$ LANGUAGE SQL;
 
@@ -274,7 +280,7 @@ CREATE OR REPLACE FUNCTION set_user_email_and_password(_user_uid integer, _email
 
     UPDATE users
     SET email = _email,
-        password = _password
+        password = crypt(_password, gen_salt('bf'))
     WHERE user_uid = _user_uid
     RETURNING email
 
@@ -296,7 +302,7 @@ CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
  RETURNS text AS $$
 
     UPDATE users
-    SET password = _password,
+    SET password = crypt(_password, gen_salt('bf')),
         reset_key = null
     WHERE email = _email
     RETURNING email
@@ -310,14 +316,14 @@ $$ LANGUAGE SQL;
 -- Return type for institution data
 CREATE TYPE institution_return AS (
     institution_id    integer,
-    name             text,
-    logo             text,
-    description      text,
-    url              text,
-    archived         boolean,
-    members          jsonb,
-    admins           jsonb,
-    pending          jsonb
+    name              text,
+    logo              text,
+    description       text,
+    url               text,
+    archived          boolean,
+    members           jsonb,
+    admins            jsonb,
+    pending           jsonb
 );
 
 -- Adds a new institution to the database.
@@ -512,7 +518,7 @@ $$ LANGUAGE SQL;
 
 CREATE TYPE imagery_return AS (
     imagery_id         integer,
-    institution_rid    integer,
+    institution_id     integer,
     visibility         text,
     title              text,
     attribution        text,
@@ -1128,28 +1134,16 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
  RETURNS setOf project_return AS $$
 
-    SELECT p.*, TRUE AS editable
+    SELECT p.*, (CASE WHEN role IS NULL THEN FALSE ELSE role = 'admin' END) AS editable
     FROM project_boudary as p
     LEFT JOIN get_institution_user_roles(_user_rid) AS roles
         USING (institution_rid)
     WHERE role = 'admin'
-
-    UNION
-    SELECT p.*, FALSE AS editable
-        FROM project_boudary as p
-    LEFT JOIN get_institution_user_roles(_user_rid) AS roles
-        USING (institution_rid)
-    WHERE role = 'member'
-        AND p.privacy_level IN ('public', 'institution')
-        AND p.availability = 'published'
-
-    UNION
-    SELECT p.*, FALSE AS editable
-        FROM project_boudary as p
-    LEFT JOIN get_institution_user_roles(_user_rid) AS roles
-        USING (institution_rid)
-    WHERE p.privacy_level IN ('public')
-         AND p.availability = 'published'
+        OR (role = 'member'
+            AND p.privacy_level IN ('public', 'institution')
+            AND p.availability = 'published')
+        OR (p.privacy_level IN ('public')
+            AND p.availability = 'published')
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;

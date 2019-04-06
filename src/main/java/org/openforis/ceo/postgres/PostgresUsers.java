@@ -31,16 +31,12 @@ public class PostgresUsers implements Users {
         var inputReturnURL =    req.queryParams("returnurl");
 
         try (var conn = connect();
-             var pstmt = conn.prepareStatement( "SELECT * FROM get_user(?)")) {
+             var pstmt = conn.prepareStatement( "SELECT * FROM check_login(?,?)")) {
 
             pstmt.setString(1, inputEmail);
+            pstmt.setString(2, inputPassword);
             try (var rs = pstmt.executeQuery()) {
                 if(rs.next()) {
-                    // Check if password matches
-                    if (!inputPassword.equals(rs.getString("password"))) {
-                        // Authentication failed
-                        req.session().attribute("flash_message", "Invalid email/password combination.");
-                    } else {
                         // Authentication successful
                         req.session().attribute("userid", rs.getString("user_id"));
                         req.session().attribute("username", inputEmail);
@@ -48,9 +44,8 @@ public class PostgresUsers implements Users {
                         res.redirect((inputReturnURL == null || inputReturnURL.isEmpty())
                                         ? CeoConfig.documentRoot + "/home"
                                         : inputReturnURL);
-                    }
                 } else {
-                    req.session().attribute("flash_message", "No account with email " + inputEmail + " exists.");
+                    req.session().attribute("flash_message", "Invalid email/password combination.");
                 }
             }
 
@@ -78,8 +73,8 @@ public class PostgresUsers implements Users {
                  var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)")) {
 
                 pstmt_user.setString(1, inputEmail);
-                    try (var rs_user = pstmt_user.executeQuery()) {
-                    if (rs_user.next()) {
+                try (var rs_user = pstmt_user.executeQuery()) {
+                    if (rs_user.next() && rs_user.getBoolean("email_taken")) {
                         req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                     } else {
                         try (var pstmt = conn.prepareStatement("SELECT * FROM add_user(?,?)")) {
@@ -283,7 +278,7 @@ public class PostgresUsers implements Users {
             try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     var instUsers = new JsonObject();
-                    instUsers.addProperty("id", rs.getInt("user_id"));
+                    instUsers.addProperty("id", rs.getInt("institution_id"));
                     instUsers.addProperty("email", rs.getString("email"));
                     instUsers.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");
                     instUsers.addProperty("resetKey", rs.getString("reset_key"));
