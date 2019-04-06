@@ -262,7 +262,7 @@ def insert_user_plots(plot_id, plot, flagged, conn):
     user_plot_id = -1
     cur_up = conn.cursor()
     cur_user = conn.cursor()
-    cur_user.execute("select id from users where email=%s;", [plot["user"]])
+    cur_user.execute("select user_id from users where email=%s;", [plot["user"]])
     rows = cur_user.fetchall()
     if len(rows)>0:
         try:
@@ -364,7 +364,7 @@ def merge_files(project, project_id, conn):
     ### Plots
     try:
         # get current values for tables
-        cur.execute("SELECT plots_ext_table, samples_ext_table FROM projects where id = %s" , [project_id])
+        cur.execute("SELECT plots_ext_table, samples_ext_table FROM projects where project_uid = %s" , [project_id])
         row =  cur.fetchone()
         plots_table = row[0]
         samples_table = row[1]

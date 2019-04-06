@@ -18,7 +18,7 @@ public class PostgresPlots implements Plots {
     private static JsonObject buildPlotJson(ResultSet rs) {
         var singlePlot = new JsonObject();
         try {
-            singlePlot.addProperty("id", rs.getInt("id"));
+            singlePlot.addProperty("id", rs.getInt("plot_id"));
             singlePlot.addProperty("projectId", rs.getInt("project_id"));
             singlePlot.addProperty("center", rs.getString("center"));
             singlePlot.addProperty("flagged", rs.getInt("flagged") == 0 ? false : true);
@@ -38,7 +38,7 @@ public class PostgresPlots implements Plots {
     public String getProjectPlots(Request req, Response res) {
         var projectId =     Integer.parseInt(req.params(":id"));
         var maxPlots =      Integer.parseInt(req.params(":max"));
-        
+
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM select_limited_project_plots(?,?)")) {
 
@@ -82,14 +82,14 @@ public class PostgresPlots implements Plots {
     private static JsonArray getSampleJsonArray(Integer plot_id, Integer proj_id) {
         try (var conn = connect();
              var samplePstmt = conn.prepareStatement("SELECT * FROM select_plot_samples(?,?)")) {
-            
+
             samplePstmt.setInt(1, plot_id);
             samplePstmt.setInt(2, proj_id);
             var samples = new JsonArray();
             try (var sampleRs = samplePstmt.executeQuery()) {
                 while (sampleRs.next()) {
                     var sample = new JsonObject();
-                    sample.addProperty("id", sampleRs.getString("id"));
+                    sample.addProperty("id", sampleRs.getString("sample_id"));
                     sample.addProperty("point", sampleRs.getString("point"));
                     sample.addProperty("sampleId",sampleRs.getString("sampleId"));
                     sample.addProperty("geom",sampleRs.getString("geom"));
@@ -210,10 +210,10 @@ public class PostgresPlots implements Plots {
         final var jsonInputs =            parseJson(req.body()).getAsJsonObject();
         final var plotId =                jsonInputs.get("plotId").getAsInt();
         final var userId =                jsonInputs.get("userId").getAsInt();
-        
+
         try (var conn = connect();
              var lockPstmt = conn.prepareStatement("SELECT * FROM lock_plot_reset(?,?,?)")) {
-            
+
             lockPstmt.setInt(1, plotId);
             lockPstmt.setInt(2, userId);
             lockPstmt.setTimestamp(3, new Timestamp(System.currentTimeMillis() + (5 * 60 * 1000)));
@@ -245,7 +245,7 @@ public class PostgresPlots implements Plots {
     private static String lockPlot(Integer plotId, Integer userId) {
         try (var conn = connect();
              var lockPstmt = conn.prepareStatement("SELECT * FROM lock_plot(?,?,?)")) {
-            
+
             lockPstmt.setInt(1, plotId);
             lockPstmt.setInt(2, userId);
             lockPstmt.setTimestamp(3, new Timestamp(System.currentTimeMillis() + (5 * 60 * 1000)));
@@ -276,7 +276,7 @@ public class PostgresPlots implements Plots {
                 unlockPlots(userId);
                 // update existing
                 if (usRs.next()) {
-                    final var userPlotId = usRs.getInt("user_plots_id");
+                    final var userPlotId = usRs.getInt("user_plot_id");
                     final var SQL = "SELECT * FROM update_user_samples(?,?,?,?,?::int,?::timestamp,?::jsonb,?::jsonb)";
                     final var pstmt = conn.prepareStatement(SQL) ;
                     pstmt.setInt(1, userPlotId);
@@ -287,7 +287,7 @@ public class PostgresPlots implements Plots {
                     pstmt.setTimestamp(6, new Timestamp(Long.parseLong(collectionStart)));
                     pstmt.setString(7, userSamples.toString());
                     pstmt.setString(8, userImages.toString());
-                    pstmt.execute();                                
+                    pstmt.execute();
                     return plotId;
                 // add new
                 } else {
@@ -315,10 +315,10 @@ public class PostgresPlots implements Plots {
         var plotId =            jsonInputs.get("plotId").getAsString();
         var userId =            jsonInputs.get("userId").getAsInt();
         var userName =          jsonInputs.get("userName").getAsString();
-        
+
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM flag_plot(?,?,?::int)")) {
-            
+
             pstmt.setInt(1,Integer.parseInt(plotId));
             pstmt.setInt(2,userId);
             pstmt.setString(3,null); //confidence

@@ -18,9 +18,9 @@ public class PostgresImagery implements Imagery {
     public String getAllImagery(Request req, Response res) {
         var institutionId = req.queryParams("institutionId");
         var hasInstitutionId = !(institutionId == null || institutionId.isEmpty());
-        
+
         try (var conn = connect();
-             var pstmt = hasInstitutionId 
+             var pstmt = hasInstitutionId
                 ? conn.prepareStatement("SELECT * FROM select_public_imagery_by_institution(?)")
                 : conn.prepareStatement("SELECT * FROM select_public_imagery()")) {
 
@@ -32,13 +32,13 @@ public class PostgresImagery implements Imagery {
                 while(rs.next()) {
                     //create imagery json to send back
                     var newImagery = new JsonObject();
-                    newImagery.addProperty("id", rs.getInt("id"));
+                    newImagery.addProperty("id", rs.getInt("imagery_id"));
                     newImagery.addProperty("institution", rs.getInt("institution_id"));
                     newImagery.addProperty("visibility", rs.getString("visibility"));
                     newImagery.addProperty("title", rs.getString("title"));
                     newImagery.addProperty("attribution", rs.getString("attribution"));
-                    newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null") 
-                        ? null 
+                    newImagery.add("extent", rs.getString("extent") == null || rs.getString("extent").equals("null")
+                        ? null
                         : parseJson(rs.getString("extent")).getAsJsonArray());
                     newImagery.add("sourceConfig", parseJson(rs.getString("source_config")).getAsJsonObject());
 
@@ -77,7 +77,7 @@ public class PostgresImagery implements Imagery {
             sourceConfig.add("geoserverParams", geoserverParams);
 
             try (var conn = connect();
-                var pstmt = conn.prepareStatement( 
+                var pstmt = conn.prepareStatement(
                     "SELECT * FROM add_institution_imagery(?, ?, ?, ?, ?::JSONB, ?::JSONB)")) {
 
                 pstmt.setInt(1, institutionId);
@@ -112,7 +112,7 @@ public class PostgresImagery implements Imagery {
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM delete_imagery(?)")) {
-                 
+
             pstmt.setInt(1, Integer.parseInt(imageryId));
             pstmt.execute();
         } catch (SQLException e) {
