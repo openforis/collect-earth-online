@@ -832,13 +832,7 @@ public class PostgresProjects implements Projects {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
-                        if (getOrZero(newProject, "useTemplatePlots").getAsBoolean() 
-                                && getOrZero(newProject, "project-template").getAsInt() > 0) {
-                            try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
-                                copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
-                                copyPstmt.setInt(2, newProjectId);
-                                copyPstmt.execute();
-                            }
+                        if(getOrZero(jsonInputs,"projectTemplate").getAsInt() > 0){
                             try (var pstmt1 = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
                                 pstmt1.setInt(1, getOrZero(newProject, "project-template").getAsInt());
                                 try (var rs1 = pstmt.executeQuery()) {
@@ -859,6 +853,14 @@ public class PostgresProjects implements Projects {
                             } catch (SQLException e) {
                                 System.out.println(e.getMessage());
                                 return "";
+                            }
+                        }
+                        if (getOrZero(newProject, "useTemplatePlots").getAsBoolean() 
+                                && getOrZero(newProject, "project-template").getAsInt() > 0) {
+                            try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
+                                copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
+                                copyPstmt.setInt(2, newProjectId);
+                                copyPstmt.execute();
                             }
                         } else {
 
