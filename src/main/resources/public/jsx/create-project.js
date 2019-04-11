@@ -233,7 +233,7 @@ class Project extends React.Component {
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
 
             this.setState({
-                projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions, surveyRules: templateProject.surveyRules || []},
+                projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions },
                 plotList: [],
                 useTemplatePlots: true,
             });
@@ -243,9 +243,9 @@ class Project extends React.Component {
     toggleTemplatePlots = () => this.setState({ useTemplatePlots: !this.state.useTemplatePlots });
 
     setProjectDetail = (key, newValue) =>
-        this.setState({projectDetails: { ...this.state.projectDetails, [key]: newValue }});
+        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-    setSurveyQuestions = (newSurveyQuestions) => 
+    setSurveyQuestions = (newSurveyQuestions) =>
         this.setState({ projectDetails: { ...this.state.projectDetails, surveyQuestions: newSurveyQuestions }});
 
     setSurveyRules = (newSurveyRules) =>
@@ -373,45 +373,48 @@ class Project extends React.Component {
 
 function ProjectDesignForm(props) {
     return (
-        <form
-            id="project-design-form"
-            className="px-2 pb-2"
-            method="post"
-            action={props.documentRoot + "/create-project"}
-            encType="multipart/form-data">
+        <div>
             {props.projectList &&
                 <ProjectTemplateVisibility
                     projectId={props.projectDetails.id}
                     projectList={props.projectList}
-                    setProjectTemplate={props.setProjectTemplate}/>
+                    setProjectTemplate={props.setProjectTemplate}
+                />
             }
             <ProjectInfo
                 name={props.projectDetails.name}
                 description={props.projectDetails.description}
-                setProjectDetail={props.setProjectDetail}/>
+                setProjectDetail={props.setProjectDetail}
+            />
             <ProjectVisibility
                 privacyLevel={props.projectDetails.privacyLevel}
-                setProjectDetail={props.setProjectDetail}/>
+                setProjectDetail={props.setProjectDetail}
+            />
             <ProjectAOI coordinates={props.coordinates}/>
             {props.imageryList &&
                 <ProjectImagery
                     imageryList={props.imageryList}
                     baseMapSource={props.projectDetails.baseMapSource}
                     setProjectDetail={props.setProjectDetail}
-                    toggleTemplatePlots={props.toggleTemplatePlots}/>
+                    toggleTemplatePlots={props.toggleTemplatePlots}
+                />
             }
             <PlotDesign
                 projectDetails={props.projectDetails}
                 useTemplatePlots={props.useTemplatePlots}
                 setProjectDetail={props.setProjectDetail}
-                toggleTemplatePlots={props.toggleTemplatePlots}/>
+                toggleTemplatePlots={props.toggleTemplatePlots}
+            />
             {!props.useTemplatePlots &&
                 <SampleDesign projectDetails={props.projectDetails} setProjectDetail={props.setProjectDetail}/>
             }
             <SurveyDesign
-                surveyQuestions={props.projectDetails.surveyQuestions} surveyRules={props.projectDetails.surveyRules}
-                setSurveyQuestions={props.setSurveyQuestions} setSurveyRules={props.setSurveyRules}/>
-        </form>
+                surveyQuestions={props.projectDetails.surveyQuestions}
+                surveyRules={props.projectDetails.surveyRules}
+                setSurveyQuestions={props.setSurveyQuestions}
+                setSurveyRules={props.setSurveyRules}
+            />
+        </div>
     );
 }
 
