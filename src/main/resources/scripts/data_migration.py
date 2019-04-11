@@ -116,7 +116,7 @@ def insert_imagery():
         imagery_list_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , "imagery-list.json"))), "r")
         imageryArr = json.load(imagery_list_json)
         for imagery in imageryArr:
-            if imagery["institution"] > 1:
+            if imagery["institution"] > 0:
                 try:
                     cur.execute("select * from add_institution_imagery_migration(%s, %s, %s::text, %s::text, %s::text, %s::jsonb, %s::jsonb)",
                         (imagery["id"], imagery["institution"], imagery["visibility"], imagery["title"],
