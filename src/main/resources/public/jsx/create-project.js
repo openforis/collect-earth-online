@@ -233,7 +233,7 @@ class Project extends React.Component {
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
 
             this.setState({
-                projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions, surveyRules: [] },
+                projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions, surveyRules: templateProject.surveyRules },
                 plotList: [],
                 useTemplatePlots: true,
             });
