@@ -203,6 +203,11 @@ class InstitutionDescription extends React.Component {
         }
     };
 
+    gotoInstitutionDashboard = () => {
+            alert("from inst dash");
+            window.open(this.props.documentRoot + "/institution-dashboard/" + this.props.institutionId);
+    };
+
     renderEditButtonGroup = () => <div className="row">
         <div className="col-6">
             <button
@@ -284,6 +289,15 @@ class InstitutionDescription extends React.Component {
                                 onClick={this.deleteInstitution}
                             >
                                 <span className="fa fa-trash-alt mr-1"/>Delete
+                            </button>
+                        </div>
+                        <div className="col-6">
+                            <button
+                                id="institution-dashboard"
+                                type="button"
+                                className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                                onClick={this.gotoInstitutionDashboard}
+                            >Go to Dashboard
                             </button>
                         </div>
                     </div>
