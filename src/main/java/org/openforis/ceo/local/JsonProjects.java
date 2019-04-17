@@ -1259,7 +1259,7 @@ public class JsonProjects implements Projects {
             var newProjectId = getNextId(projects);
             newProject.addProperty("id", newProjectId);
 
-            if (getOrZero(jsonInputs,"projectTemplate").getAsInt() > 0) {
+            if (getOrZero(jsonInputs, "projectTemplate").getAsInt() > 0) {
                 var currProjId = getOrZero(jsonInputs, "projectTemplate").getAsString();
                 var newDashboardId = UUID.randomUUID().toString();
                 var projectFile = elementToArray(readJsonFile("proj.json"));
