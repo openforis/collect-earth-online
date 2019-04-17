@@ -15,6 +15,7 @@ import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
 import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
+import static org.openforis.ceo.utils.ProjectUtils.getOrFalse;
 import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
 import static org.openforis.ceo.utils.ProjectUtils.getValueDistribution;
 import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPoint;
@@ -785,7 +786,7 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("sampleResolution",   getOrZero(jsonInputs, "sampleResolution").getAsDouble());
             newProject.add("sampleValues",               jsonInputs.get("sampleValues").getAsJsonArray());
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
-            newProject.addProperty("useTemplatePlots",   getOrZero(jsonInputs, "useTemplatePlots").getAsBoolean());
+            newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
 
             // file part properties
             newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
