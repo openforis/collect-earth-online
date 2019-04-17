@@ -73,13 +73,13 @@ CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
 $$ LANGUAGE PLPGSQL;
 
 -- Returns all headers without prior knowledge
-CREATE OR REPLACE FUNCTION get_plot_headers(_project_rid integer)
+CREATE OR REPLACE FUNCTION get_plot_headers(_project_uid integer)
  RETURNS TABLE (column_names text) AS $$
 
  DECLARE
     _plots_ext_table text;
  BEGIN
-    SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_rid;
+    SELECT plots_ext_table INTO _plots_ext_table FROM projects WHERE project_uid = _project_uid;
 
     IF _plots_ext_table IS NOT NULL THEN
         RETURN QUERY EXECUTE
@@ -91,13 +91,13 @@ CREATE OR REPLACE FUNCTION get_plot_headers(_project_rid integer)
 $$ LANGUAGE PLPGSQL;
 
 -- Returns all headers without prior knowledge
-CREATE OR REPLACE FUNCTION get_sample_headers(_project_rid integer)
+CREATE OR REPLACE FUNCTION get_sample_headers(_project_uid integer)
  RETURNS TABLE (column_names text) AS $$
 
  DECLARE
     _samples_ext_table text;
  BEGIN
-    SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_rid;
+    SELECT samples_ext_table INTO _samples_ext_table FROM projects WHERE project_uid = _project_uid;
 
     IF _samples_ext_table IS NOT NULL THEN
         RETURN QUERY EXECUTE
@@ -210,11 +210,11 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
         INNER JOIN projects p
             ON pl.project_rid = project_uid
         INNER JOIN users u
-            ON up.user_rid = u.user_uid
+            ON up.user_rid = user_uid
         WHERE u.email = _user_email
     ), user_totals as (
-        SELECT count(DISTINCT project_uid)::int as proj_count,
-            count(DISTINCT plot_uid)::int as plot_count
+        SELECT COUNT(DISTINCT project_uid)::int as proj_count,
+            COUNT(DISTINCT plot_uid)::int as plot_count
         FROM users_plots
     ), average_totals as (
         SELECT round(avg(seconds)::numeric, 1) as sec_avg
@@ -225,7 +225,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
             "name",
             description,
             availability,
-            count(plot_uid)::int as plot_cnt,
+            COUNT(plot_uid)::int as plot_cnt,
             round(avg(seconds)::numeric, 1) as sec_avg
         FROM users_plots
         GROUP BY project_uid, "name", description, availability
@@ -234,8 +234,8 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
         SELECT
             format('[%s]',
                    string_agg(
-                       format('{"id":%s, "name":"%s", "description":"%s", "availability":"%s", "plotCount":%s, "analysisAverage":%s}'
-                              , project_uid, "name", description, availability, plot_cnt, sec_avg), ', ')) as per_project
+                       format('{"id":%s, "name":"%s", "description":"%s", "availability":"%s", "plotCount":%s, "analysisAverage":%s}',
+                              project_uid, "name", description, availability, plot_cnt, sec_avg), ', ')) as per_project
         FROM proj_groups
     )
 
@@ -630,7 +630,7 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid intege
 
 $$ LANGUAGE SQL;
 
--- Gets project_widgets_by_project_rid returns a project_widgets from the database.
+-- Gets project widgets by project id from the database.
 CREATE OR REPLACE FUNCTION get_project_widgets_by_project_rid(_project_rid integer)
  RETURNS TABLE(
     widget_id        integer,
@@ -802,8 +802,8 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_uid integer)
     SET num_plots = plots,
         samples_per_plot = samples
     FROM (
-        SELECT Count(DISTINCT plot_uid) as plots,
-            (CASE WHEN Count(DISTINCT plot_uid) = 0 THEN 0 ELSE Count(sample_uid) / Count(DISTINCT plot_uid) END) as samples
+        SELECT COUNT(DISTINCT plot_uid) as plots,
+            (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN 0 ELSE COUNT(sample_uid) / COUNT(DISTINCT plot_uid) END) as samples
         FROM project_plots
     ) a
     WHERE project_uid = _project_uid
@@ -850,15 +850,14 @@ CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
     IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
 
     EXECUTE
-        'WITH duplicates as (
+        'WITH duplicates AS (
             SELECT * FROM
-                (SELECT *, count(*) OVER
-                    (PARTITION BY
-                    ' || _on_cols || '
-                    ) AS count
-        FROM ext_tables.' || _table_name || ') tableWithCount
-        WHERE tableWithCount.count > 1
-                        )
+                (SELECT *, COUNT(*) OVER
+                    (PARTITION BY ' || _on_cols || ') as count
+            FROM ext_tables.' || _table_name || ') tableWithCount
+            WHERE tableWithCount.count > 1
+        )
+
         DELETE FROM ext_tables.' || _table_name || ' WHERE gid IN
         (SELECT DISTINCT ON (' || _on_cols || ') gid FROM duplicates)';
  END
@@ -1051,7 +1050,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_uid integer, 
         RETURNING sample_uid
     )
 
-    SELECT Count(1)::int FROM inserting_samples
+    SELECT COUNT(1)::int FROM inserting_samples
 
 $$ LANGUAGE SQL;
 
@@ -1165,11 +1164,11 @@ CREATE OR REPLACE FUNCTION select_project_users(_project_uid integer)
     user_uid integer
  ) AS $$
 
-    WITH matching_projects AS(
+    WITH matching_projects AS (
         SELECT *
         FROM projects
         WHERE project_uid = _project_uid
-    ), matching_institutions AS(
+    ), matching_institutions AS (
         SELECT *
         FROM projects p
         INNER JOIN institutions i
@@ -1240,7 +1239,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
     ), user_groups AS (
         SELECT email,
             SUM(seconds)::int as seconds,
-            count(plot_uid) as plots,
+            COUNT(plot_uid) as plots,
             SUM(timed):: int as timedPlots
         FROM project_plots
         GROUP BY email
@@ -1252,30 +1251,30 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
                        format('{"user":"%s", "seconds":%s, "plots":%s, "timedPlots":%s}'
                               , email, seconds, plots, timedPlots), ', ')) as user_stats
         FROM user_groups
-    ), members AS(
-        SELECT count(distinct user_uid) as members
+    ), members AS (
+        SELECT COUNT(distinct user_uid) as members
         FROM select_project_users(_project_uid)
     ), plotsum AS (
         SELECT plot_rid,
-               sum(flagged::int) > 0 as flagged,
-               cast(count(user_rid) as int) > 0 and sum(flagged::int) = 0 as assigned
+               SUM(flagged::int) > 0 as flagged,
+               cast(COUNT(user_rid) as int) > 0 and SUM(flagged::int) = 0 as assigned
         FROM user_plots
         GROUP BY plot_rid
-    ), sums AS(
+    ), sums AS (
         SELECT MAX(prj.created_date) as created_date,
             MAX(prj.published_date) as published_date,
             MAX(prj.closed_date) as closed_date,
             MAX(prj.archived_date) as archived_date,
-            (CASE WHEN sum(ps.flagged::int) IS NULL THEN 0 ELSE sum(ps.flagged::int) END) as flagged,
-            (CASE WHEN sum(ps.assigned::int) IS NULL THEN 0 ELSE sum(ps.assigned::int) END) as assigned,
-            count(distinct plot_uid) as plots
+            (CASE WHEN SUM(ps.flagged::int) IS NULL THEN 0 ELSE SUM(ps.flagged::int) END) as flagged,
+            (CASE WHEN SUM(ps.assigned::int) IS NULL THEN 0 ELSE SUM(ps.assigned::int) END) as assigned,
+            COUNT(distinct plot_uid) as plots
         FROM projects prj
         INNER JOIN plots pl
           ON project_uid = pl.project_rid
         LEFT JOIN plotsum ps
           ON ps.plot_rid = plot_uid
         WHERE project_uid = _project_uid
-    ), users_count as (
+    ), users_count AS (
         SELECT COUNT (DISTINCT user_rid) as users
         FROM projects prj
         INNER JOIN plots pl
@@ -1285,11 +1284,11 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_uid integer)
           ON up.plot_rid = plot_uid
     )
 
-    SELECT CAST(flagged AS int) AS flagged_plots,
-        CAST(assigned AS int) assigned_plots,
-        CAST(GREATEST(0, (plots-flagged-assigned)) as int) AS unassigned_plots,
-        CAST(members AS int) AS members,
-        CAST(users_count.users AS int) AS contributors,
+    SELECT CAST(flagged as int) as flagged_plots,
+        CAST(assigned as int) assigned_plots,
+        CAST(GREATEST(0, (plots-flagged-assigned)) as int) as unassigned_plots,
+        CAST(members as int) as members,
+        CAST(users_count.users as int) as contributors,
         created_date, published_date, closed_date, archived_date,
         user_stats
     FROM members, sums, users_count, user_agg
@@ -1387,8 +1386,8 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_rid integer)
             ON user_uid = user_rid
         GROUP BY plot_rid
     ), plotsum AS (
-        SELECT cast(sum(case when flagged then 1 else 0 end) as int) as flagged,
-            cast(count(1) - sum(case when flagged then 1 else 0 end) as int) as assigned,
+        SELECT cast(SUM(CASE WHEN flagged THEN 1 ELSE 0 END) as int) as flagged,
+            cast(COUNT(1) - SUM(CASE WHEN flagged THEN 1 ELSE 0 END) as int) as assigned,
             MAX(confidence) as confidence,
             MAX(collection_time) as collection_time,
             ROUND(AVG(EXTRACT(EPOCH FROM (collection_time - collection_start)))::numeric, 1) as analysis_duration,
@@ -1406,13 +1405,13 @@ CREATE OR REPLACE FUNCTION select_all_project_plots(_project_rid integer)
     SELECT plot_uid,
         project_rid,
         ST_AsGeoJSON(plots.center) as center,
-        (case when plotsum.flagged is null then 0 else plotsum.flagged end) as flagged,
-        (case when plotsum.assigned is null then 0 else plotsum.assigned end) as assigned,
-        (case when username.email is null then '' else username.email end) as username,
+        (CASE WHEN plotsum.flagged IS NULL THEN 0 ELSE plotsum.flagged END) as flagged,
+        (CASE WHEN plotsum.assigned IS NULL THEN 0 ELSE plotsum.assigned END) as assigned,
+        (CASE WHEN username.email IS NULL THEN '' ELSE username.email END) as username,
         plotsum.confidence,
         plotsum.collection_time,
         fd.ext_id,
-        (case when fd.plotId is null then plot_uid else fd.plotId end) as plotId,
+        (CASE WHEN fd.plotId IS NULL THEN plot_uid ELSE fd.plotId END) as plotId,
         ST_AsGeoJSON(fd.geom) as geom,
         plotsum.analysis_duration
     FROM plots
@@ -1451,7 +1450,7 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_rid integer, _m
      FROM (
         SELECT *,
             row_number() OVER(ORDER BY plot_id) AS rows,
-            count(*) OVER() as total_plots
+            COUNT(*) OVER() as total_plots
         FROM select_all_project_plots(_project_rid)
         WHERE project_id = _project_rid
     ) as all_plots
@@ -1696,7 +1695,7 @@ CREATE OR REPLACE FUNCTION update_user_samples(
     _images              jsonb
  ) RETURNS integer AS $$
 
-    WITH user_plot_table AS(
+    WITH user_plot_table AS (
         UPDATE user_plots
             SET confidence = _confidence,
                 collection_start = _collection_start,
@@ -1762,7 +1761,7 @@ CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username
         _flagged,
         _collection_time,
         _collection_start,
-        (CASE WHEN user_id.user_uid is NULL then guest_id.user_uid ELSE user_id.user_uid END)
+        (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
      FROM user_id, guest_id)
     RETURNING user_plot_uid
 
@@ -1808,8 +1807,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_uid integer)
             center,
             MAX(username) AS email,
             MAX(confidence) as confidence,
-            cast(sum(case when flagged > 0 then 1 else 0 end) as int) as flagged,
-            cast(count(1) - sum(case when flagged > 0 then 1 else 0 end) as int) as assigned,
+            cast(SUM(CASE WHEN flagged > 0 THEN 1 ELSE 0 END) as int) as flagged,
+            cast(COUNT(1) - SUM(CASE WHEN flagged > 0 THEN 1 ELSE 0 END) as int) as assigned,
             MAX(collection_time) as collection_time,
             MAX(analysis_duration) as analysis_duration,
             format('[%s]', string_agg(
@@ -1952,7 +1951,7 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_rid integer, _json_data te
         FROM plotrows as p
 
     ), plot_users as (
-        SELECT (CASE WHEN useremail is NULL or useremail = 'null' THEN NULL
+        SELECT (CASE WHEN useremail IS NULL or useremail = 'null' THEN NULL
                 ELSE add_user_plots_migration(plot_id, useremail, flagged,
                                               to_timestamp(cstart::bigint / 1000.0)::timestamp,
                                               to_timestamp(ctime::bigint / 1000.0)::timestamp)
@@ -2030,7 +2029,7 @@ CREATE OR REPLACE FUNCTION merge_plot_and_file(_project_uid integer)
         RETURNING s.sample_uid
     )
 
-    SELECT count(1)::int FROM update_samples
+    SELECT COUNT(1)::int FROM update_samples
 
 $$ LANGUAGE SQL;
 
