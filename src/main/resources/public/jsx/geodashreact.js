@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
-var atile;
+
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
@@ -201,7 +201,7 @@ class Widget extends React.Component {
                                 onClick={() => this.props.onFullScreen(this.props.widget)}
                                 role="button"
                                 title="Toggle Fullscreen"
-                                                              ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a></li>
+                            ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a></li>
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
@@ -224,7 +224,7 @@ class Widget extends React.Component {
                                 onClick={() => this.props.onFullScreen(this.props.widget)}
                                 role="button"
                                 title="Toggle Fullscreen"
-                                                              ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a></li>
+                            ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a></li>
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
@@ -461,7 +461,7 @@ class MapWidget extends React.Component {
             shortWidget.properties.push(collectionName);
             shortWidget.ImageAsset = firstImage.imageAsset;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(shortWidget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gateway-request";
             path = this.getGatewayPath(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null ? firstImage.min : "";
@@ -482,16 +482,15 @@ class MapWidget extends React.Component {
             dualImageObject.collectionName = this.convertCollectionName(dualImageObject.collectionName);
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
+
             const shortWidget2 = {};
             shortWidget2.filterType = secondImage.filterType;
             shortWidget2.properties = [];
             shortWidget2.properties.push(dualImageObject.collectionName);
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
+            dualImageObject.url = this.props.documentRoot + "/geo-dash/gateway-request";
             dualImageObject. path = this.getGatewayPath(shortWidget2, dualImageObject.collectionName);
-
-
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null ? secondImage.min : "";
             shortWidget2.max = secondImage.max != null ? secondImage.max : "";
@@ -515,7 +514,6 @@ class MapWidget extends React.Component {
                 dualImageObject.imageName = secondImage.imageAsset;
                 dualImageObject.visParams = secondImage.visParams;
             }
-
             if (firstImage.ImageCollectionAsset) {
                 postObject.ImageCollectionAsset = firstImage.ImageCollectionAsset;
                 postObject.imageName = firstImage.ImageCollectionAsset;
@@ -534,10 +532,8 @@ class MapWidget extends React.Component {
             if (widget.properties[0] === "ImageElevation") {
                 widget.ImageAsset = "USGS/SRTMGL1_003";
             }
-            url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(widget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gateway-request";
             path = this.getGatewayPath(widget, collectionName);
-
-
             postObject.visParams = this.getImageParams(widget);
 
             if (postObject.visParams.cloudLessThan) {
@@ -558,7 +554,6 @@ class MapWidget extends React.Component {
         postObject.collectionName = collectionName;
         postObject.dateFrom = dateFrom;
         postObject.dateTo = dateTo;
-
         postObject.geometry = JSON.parse(projPairAOI);
         postObject.index = requestedIndex;
         postObject.path = path;
@@ -567,13 +562,6 @@ class MapWidget extends React.Component {
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
         if (typeof(Storage) !== "undefined") {
-
-            if (localStorage.getItem("users/fralandcover/L7_2000_India_ALL") && !localStorage.getItem("bug_clear")){
-                localStorage.clear();
-                localStorage.setItem("bug_clear", true);
-            }
-            //check if current time is < localStorage.lastGatewayUpdate + 1 day
-
             if (localStorage.getItem(postObject.ImageAsset)) {
                 needFetch = this.createTileServerFromCache(postObject.ImageAsset, widget.id);
             } else if (localStorage.getItem(postObject.ImageCollectionAsset)) {
@@ -583,8 +571,6 @@ class MapWidget extends React.Component {
             } else if (localStorage.getItem(JSON.stringify(postObject))) {
                 needFetch = this.createTileServerFromCache(JSON.stringify(postObject), widget.id);
             }
-
-            // i should also check if the cooked ones are cached - just need to compare date range
             if (widget.dualImageCollection) {
                 if (localStorage.getItem(dualImageObject.ImageAsset)) {
                     needFetch = this.createTileServerFromCache(dualImageObject.ImageAsset, widget.id, true);
@@ -608,10 +594,16 @@ class MapWidget extends React.Component {
                 },
                 body: JSON.stringify(postObject),
             })
-                .then(res => res.json())
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        throw new Error("Fetch Failed");
+                    }
+                })
                 .then(data => {
-
                     if (data.hasOwnProperty("mapid")) {
+                        console.log(data);
                         data.lastGatewayUpdate = new Date();
                         if (postObject.ImageAsset) {
                             localStorage.setItem(postObject.ImageAsset, JSON.stringify(data));
@@ -622,8 +614,6 @@ class MapWidget extends React.Component {
                         } else {
                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                         }
-
-
                         this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
                         return true;
                     } else {
@@ -655,12 +645,10 @@ class MapWidget extends React.Component {
                                             localStorage.setItem(postObject.ImageCollectionAsset, JSON.stringify(data));
                                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                                        } else{
+                                        } else {
                                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                                         }
-
                                         this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
-                                    } else {
                                     }
                                 });
                         } else if (dualImageObject) {
@@ -692,7 +680,6 @@ class MapWidget extends React.Component {
                                             } else {
                                                 localStorage.setItem(JSON.stringify(dualImageObject), JSON.stringify(data));
                                             }
-
                                             this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
                                         } else {
                                             console.warn("Wrong Data Returned");
@@ -701,6 +688,9 @@ class MapWidget extends React.Component {
                             }
                         }
                     }
+                })
+                .catch((error) => {
+                    console.log(error);
                 });
         }
         window.addEventListener("resize", () => this.handleResize());
@@ -771,7 +761,7 @@ class MapWidget extends React.Component {
                 step = ".01"
                 onChange = {evt => this.onOpacityChange( evt )}
                 onInput = {evt => this.onOpacityChange( evt )}
-                   />;
+            />;
         }
     };
 
@@ -822,17 +812,17 @@ class MapWidget extends React.Component {
             const source = new ol.source.XYZ({
                 url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token,
             });
-            // source.on("tileloaderror", function(error) {
-            //     try {
-            //         window.setTimeout(function() {
-            //             console.log("trying to reload the tile: " );
-            //             console.log(error.tile);
-            //             error.tile.load();
-            //         }, 1000);
-            //     } catch (e) {
-            //         console.log(e.message);
-            //     }
-            // });
+            source.on("tileloaderror", function(error) {
+                try {
+                    window.setTimeout(function() {
+                        console.log("trying to reload the tile: " );
+                        console.log(error.tile);
+                        error.tile.load();
+                    }, 1000);
+                } catch (e) {
+                    console.log(e.message);
+                }
+            });
             this.state.mapRef.addLayer(new ol.layer.Tile({
                 source: source,
                 id: mapdiv,
@@ -1160,7 +1150,7 @@ class StatsWidget extends React.Component {
 
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
-        fetch(this.props.documentRoot + "/geo-dash/gateway-request", { //window.location.protocol + "//" + window.location.hostname + ":8888/getStats"
+        fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
                 "Accept": "application/json",

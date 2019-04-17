@@ -101,7 +101,7 @@ mercator.createSource = function (sourceConfig) {
         //then add xyz layer
         //const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered', 'Sentinel2': 'FilteredSentinel'};
         //const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
-        const url = sourceConfig.geeUrl;
+        let url = (sourceConfig.path)? "thegateway" : sourceConfig.geeUrl;
         const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan): "";
         let visParams;
         try {
@@ -117,7 +117,8 @@ mercator.createSource = function (sourceConfig) {
             min: sourceConfig.geeParams.visParams.min,
             max: sourceConfig.geeParams.visParams.max,
             cloudLessThan: cloudVar,
-            visParams: visParams
+            visParams: visParams,
+            path: sourceConfig.geeParams.path
         };
         if (sourceConfig.geeParams.ImageAsset) {
             theJson.imageName = sourceConfig.geeParams.ImageAsset;
@@ -132,40 +133,38 @@ mercator.createSource = function (sourceConfig) {
         geeLayer.setProperties({id: theID});
         let createtype = "test";
         if(sourceConfig.create) {
-
-
-            $.ajax({
-                url: url,
-                type: "POST",
-                async: true,
-                crossDomain: true,
-                contentType: "application/json",
-                mapConfig: sourceConfig,
-                LayerId: theID,
-                data: JSON.stringify(theJson)
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.warn(jqXHR + textStatus + errorThrown);
-            }).done(function (data, _textStatus, _jqXHR) {
-                if (data.errMsg) {
-                    console.info(data.errMsg);
-                } else {
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    mapConfig: sourceConfig,
+                    LayerId: theID,
+                },
+                body: JSON.stringify(theJson),
+            })
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        console.log("what up");
+                        throw new Error("Fetch Failed");
+                    }
+                })
+                .then(data => {
                     if (data.hasOwnProperty("mapid")) {
                         let geeLayer = new ol.source.XYZ({
                             url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token
                         });
-                        let layer;  // FIXME is this variable even needed
-                        const LayerId = this.LayerId;
                         mercator.currentMap.getLayers().forEach(function (lyr) {
-                            if (LayerId && LayerId == lyr.getSource().get("id")) {
-                                layer = lyr;
-                                layer.setSource(geeLayer);
+                            if (theID && theID == lyr.getSource().get("id")) {
+                                lyr.setSource(geeLayer);
                             }
                         });
                     } else {
                         console.warn("Wrong Data Returned");
                     }
-                }
-            });
+                });
         }
         return geeLayer;
 
