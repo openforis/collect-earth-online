@@ -116,8 +116,9 @@ def insert_imagery():
         dirname = os.path.dirname(os.path.realpath(__file__))
         imagery_list_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , "imagery-list.json"))), "r")
         imageryArr = json.load(imagery_list_json)
+        print(len(imageryArr))
         for imagery in imageryArr:
-            if imagery["institution"] > 0: 
+            if imagery["institution"] > 0:
                 try:
                     cur.execute("select * from add_institution_imagery_migration(%s,%s,%s::text,%s::text,%s::text,%s::jsonb,%s::jsonb)", 
                         (imagery["id"],imagery["institution"],imagery["visibility"],imagery["title"],
@@ -182,7 +183,7 @@ def insert_projects():
                     project_id = project["id"]
                     for dash in dashArr:
                         dash_id = dash["dashboard"]
-                        if dash_id.isnumeric() and int(dash["projectID"]) == int(project_id):
+                        if int(dash["projectID"]) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
                             break
 

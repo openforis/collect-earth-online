@@ -375,15 +375,26 @@ public class ProjectUtils {
     }
 
     public static JsonElement getOrZero(JsonObject obj, String field) {
-        return !obj.has(field) 
-                || obj.get(field).isJsonNull() 
-                || obj.get(field) == null 
-                || obj.get(field).getAsString().equals("") 
+        return !obj.has(field)
+                || obj.get(field).isJsonNull()
+                || obj.get(field) == null
+                || obj.get(field).getAsString().equals("")
                 ? new JsonPrimitive(0) : obj.get(field);
     }
 
+    public static JsonElement getOrFalse(JsonObject obj, String field) {
+        return !obj.has(field)
+                || obj.get(field).isJsonNull()
+                || obj.get(field) == null
+                || obj.get(field).getAsString().equals("")
+                ? new JsonPrimitive(false) : obj.get(field);
+    }
+
     public static JsonElement getOrEmptyString(JsonObject obj, String field) {
-        return !obj.has(field) || obj.get(field).isJsonNull() ? new JsonPrimitive("") : obj.get(field);
+        return !obj.has(field)
+               || obj.get(field).isJsonNull()
+               || obj.get(field) == null
+               ? new JsonPrimitive("") : obj.get(field);
     }
 
     public static void runBashScriptForProject(int projectId, String plotsOrSamples, String script, String rpath) {
