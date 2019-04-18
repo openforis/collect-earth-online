@@ -204,8 +204,7 @@ class InstitutionDescription extends React.Component {
     };
 
     gotoInstitutionDashboard = () => {
-            alert("from inst dash");
-            window.open(this.props.documentRoot + "/institution-dashboard/" + this.props.institutionId);
+        window.open(this.props.documentRoot + "/institution-dashboard/" + this.props.institutionId);
     };
 
     renderEditButtonGroup = () => <div className="row">
