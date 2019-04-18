@@ -49,7 +49,7 @@ CREATE TABLE projects (
     ts_plot_size            integer DEFAULT 1
 );
 
-CREATE VIEW project_boudary AS
+CREATE VIEW project_boundary AS
     SELECT
         project_uid,
         institution_rid,
@@ -109,7 +109,7 @@ CREATE TABLE institution_users (
     CONSTRAINT per_institution_per_plot UNIQUE(institution_rid, user_rid)
 );
 
-CREATE TABLE user_plots(
+CREATE TABLE user_plots (
     user_plot_uid       SERIAL PRIMARY KEY,
     user_rid            integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     plot_rid            integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -120,7 +120,7 @@ CREATE TABLE user_plots(
     CONSTRAINT per_user_per_plot UNIQUE(user_rid, plot_rid)
 );
 
-CREATE TABLE sample_values(
+CREATE TABLE sample_values (
     sample_value_uid      SERIAL PRIMARY KEY,
     user_plot_rid         integer NOT NULL REFERENCES user_plots (user_plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_rid            integer NOT NULL REFERENCES samples (sample_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -130,14 +130,14 @@ CREATE TABLE sample_values(
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
 );
 
-CREATE TABLE plot_locks(
+CREATE TABLE plot_locks (
     user_rid    integer NOT NULL REFERENCES users(user_uid),
     plot_rid    integer NOT NULL REFERENCES plots(plot_uid),
     lock_end    timestamp,
     PRIMARY KEY(user_rid, plot_rid)
 );
 
-CREATE TABLE project_widgets(
+CREATE TABLE project_widgets (
     widget_uid      SERIAL PRIMARY KEY,
     project_rid     integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     dashboard_id    uuid,

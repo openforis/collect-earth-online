@@ -16,13 +16,15 @@ CREATE OR REPLACE FUNCTION select_partial_table_by_name(_table_name text)
  BEGIN
     IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
     EXECUTE 'SELECT * FROM information_schema.columns
-                    WHERE table_name = '''|| _table_name ||''' AND column_name = ''geom''';
+                WHERE table_name = ''' || _table_name || ''' AND column_name = ''geom''';
     GET DIAGNOSTICS i = ROW_COUNT;
     IF i = 0
     THEN
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(null) as geom FROM ext_tables.'|| _table_name;
+        RETURN QUERY EXECUTE
+            'SELECT gid, plotid::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(NULL) as geom FROM ext_tables.' || _table_name;
     ELSE
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM ext_tables.'|| _table_name;
+        RETURN QUERY EXECUTE
+            'SELECT gid, plotid::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM ext_tables.' || _table_name;
     END IF;
  END
 
@@ -40,7 +42,7 @@ CREATE OR REPLACE FUNCTION select_json_table_by_name(_table_name text)
  BEGIN
     IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
 
-    RETURN QUERY EXECUTE 'SELECT gid, row_to_json(p)::jsonb FROM ext_tables.'|| _table_name || ' as p';
+    RETURN QUERY EXECUTE 'SELECT gid, row_to_json(p)::jsonb FROM ext_tables.' || _table_name || ' as p';
  END
 
 $$ LANGUAGE PLPGSQL;
@@ -60,13 +62,15 @@ CREATE OR REPLACE FUNCTION select_partial_sample_table_by_name(_table_name text)
  BEGIN
     IF _table_name IS NULL OR _table_name = '' THEN RETURN; END IF;
     EXECUTE 'SELECT * FROM information_schema.columns
-                    WHERE table_name = '''|| _table_name ||''' AND column_name = ''geom''';
+                    WHERE table_name = ''' || _table_name || ''' AND column_name = ''geom''';
     GET DIAGNOSTICS i = ROW_COUNT;
     IF i = 0
     THEN
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(null) as geom FROM ext_tables.'|| _table_name;
+        RETURN QUERY EXECUTE
+            'SELECT gid, plotId::integer, sampleId::integer, ST_SetSRID(ST_MakePoint(lon, lat), 4326), ST_Centroid(NULL) as geom FROM ext_tables.' || _table_name;
     ELSE
-        RETURN QUERY EXECUTE 'SELECT gid, plotid::integer, sampleId::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM ext_tables.'|| _table_name;
+        RETURN QUERY EXECUTE
+            'SELECT gid, plotId::integer, sampleId::integer, ST_Centroid(ST_Force2D(geom)), ST_Force2D(geom) FROM ext_tables.' || _table_name;
     END IF;
  END
 
@@ -84,7 +88,7 @@ CREATE OR REPLACE FUNCTION get_plot_headers(_project_uid integer)
     IF _plots_ext_table IS NOT NULL THEN
         RETURN QUERY EXECUTE
         'SELECT column_name::text FROM information_schema.columns
-            WHERE table_name = '''|| _plots_ext_table || '''';
+            WHERE table_name = ''' || _plots_ext_table || '''';
     END IF;
  END
 
@@ -102,7 +106,7 @@ CREATE OR REPLACE FUNCTION get_sample_headers(_project_uid integer)
     IF _samples_ext_table IS NOT NULL THEN
         RETURN QUERY EXECUTE
         'SELECT column_name::text FROM information_schema.columns
-        WHERE table_name = '''|| _samples_ext_table || '''';
+        WHERE table_name = ''' || _samples_ext_table || '''';
     END IF;
  END
 
@@ -151,7 +155,7 @@ $$ LANGUAGE SQL;
 -- Get all users by institution ID, includes role
 CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_rid integer)
  RETURNS TABLE(
-    institution_id      integer,
+    user_id             integer,
     email               text,
     administrator       boolean,
     reset_key           text,
@@ -219,7 +223,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
     ), average_totals as (
         SELECT round(avg(seconds)::numeric, 1) as sec_avg
         FROM users_plots
-        WHERE seconds IS NOT null
+        WHERE seconds IS NOT NULL
     ), proj_groups as (
         SELECT project_uid,
             "name",
@@ -303,7 +307,7 @@ CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
 
     UPDATE users
     SET password = crypt(_password, gen_salt('bf')),
-        reset_key = null
+        reset_key = NULL
     WHERE email = _email
     RETURNING email
 
@@ -1101,7 +1105,7 @@ CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
  RETURNS setOf project_return AS $$
 
     SELECT *, FALSE as editable
-    FROM project_boudary
+    FROM project_boundary
     WHERE project_uid = _project_uid
 
 $$ LANGUAGE SQL;
@@ -1111,7 +1115,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
  RETURNS setOf project_return AS $$
 
     SELECT *, FALSE AS editable
-    FROM project_boudary
+    FROM project_boundary
     WHERE privacy_level = 'public'
       AND availability = 'published'
     ORDER BY project_uid
@@ -1134,7 +1138,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
  RETURNS setOf project_return AS $$
 
     SELECT p.*, (CASE WHEN role IS NULL THEN FALSE ELSE role = 'admin' END) AS editable
-    FROM project_boudary as p
+    FROM project_boundary as p
     LEFT JOIN get_institution_user_roles(_user_rid) AS roles
         USING (institution_rid)
     WHERE role = 'admin'
@@ -1915,12 +1919,14 @@ CREATE OR REPLACE FUNCTION update_sequence(_table text)
 
  BEGIN
     EXECUTE 'WITH nextval as (
-            SELECT MAX(id)+1 as nextval FROM '
-            || quote_ident(_table) ||
+                SELECT MAX(id)+1 as nextval
+                FROM ' || quote_ident(_table) ||
             ')
+
             SELECT setval(pg_get_serial_sequence('''
-            || quote_ident(_table) ||
-            ''', ''id''), nextval , false) FROM nextval';
+                || quote_ident(_table) ||
+                ''', ''id''), nextval , false
+            ) FROM nextval';
  END
 
 $$ LANGUAGE PLPGSQL;

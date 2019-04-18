@@ -37,13 +37,13 @@ public class PostgresUsers implements Users {
             pstmt.setString(2, inputPassword);
             try (var rs = pstmt.executeQuery()) {
                 if(rs.next()) {
-                        // Authentication successful
-                        req.session().attribute("userid", rs.getString("user_id"));
-                        req.session().attribute("username", inputEmail);
-                        req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
-                        res.redirect((inputReturnURL == null || inputReturnURL.isEmpty())
-                                        ? CeoConfig.documentRoot + "/home"
-                                        : inputReturnURL);
+                    // Authentication successful
+                    req.session().attribute("userid", rs.getString("user_id"));
+                    req.session().attribute("username", inputEmail);
+                    req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
+                    res.redirect((inputReturnURL == null || inputReturnURL.isEmpty())
+                                    ? CeoConfig.documentRoot + "/home"
+                                    : inputReturnURL);
                 } else {
                     req.session().attribute("flash_message", "Invalid email/password combination.");
                 }
