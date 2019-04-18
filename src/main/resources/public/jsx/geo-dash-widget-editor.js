@@ -244,7 +244,13 @@ class BasicLayout extends React.PureComponent {
 
     generateDOM = () => {
         const x = "x";
-        return _.map(this.state.widgets, (widget, i) => <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }} >
+        return _.map(this.state.widgets, (widget, i) => <div
+            onDragStart={this.onDragStart}
+            onDragEnd={this.onDragEnd}
+            key={i}
+            data-grid={widget.layout}
+            className="front widgetEditor-widgetBackground"
+            style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }} >
             <h3 className="widgetEditor title">{widget.name}
                 <span
                     className="remove"
@@ -551,7 +557,14 @@ class BasicLayout extends React.PureComponent {
                 visParams: widget.visParams,
             }));
         } else {
-            const wType = this.state.selectedWidgetType === "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType === "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType === "statistics" ? "getStats" : this.state.selectedWidgetType === "ImageElevation" ? "ImageElevation" : "custom";
+            const wType = this.state.selectedWidgetType === "TimeSeries" ?
+                this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType :
+                this.state.selectedWidgetType === "ImageCollection" ?
+                    this.state.selectedWidgetType + this.state.selectedDataType :
+                    this.state.selectedWidgetType === "statistics" ?
+                        "getStats" :
+                        this.state.selectedWidgetType === "ImageElevation" ?
+                            "ImageElevation" : "custom";
             let prop1 = "";
             const properties = [];
             const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
@@ -609,7 +622,7 @@ class BasicLayout extends React.PureComponent {
             .then(response => {
                 if (response.ok) {
                     this.setState({
-                        widgets: [...this.state.widgets, widget], //this.state.widgets.concat(widget),
+                        widgets: [...this.state.widgets, widget],
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
                         isEditing: false,
@@ -767,11 +780,19 @@ class BasicLayout extends React.PureComponent {
         const sd = isDual ? new Date(this.state.startDateDual) : new Date(this.state.startDate);
         let isFormReady = null;
         if (! this.state.dualLayer) {
-            isFormReady = ed > sd && this.state.formReady !== true ? true : ed < sd && this.state.formReady === true ? false : null;
+            isFormReady = ed > sd && this.state.formReady !== true ?
+                true :
+                ed < sd && this.state.formReady === true ?
+                    false : null;
         } else {
             const ed2 = new Date(this.state.endDate2);
             const sd2 = new Date(this.state.startDate2);
-            isFormReady = ed > sd && ed2 > sd2 && this.state.formReady !== true ? true : (ed < sd || ed2 < sd2) && this.state.formReady === true ? false : null;
+            isFormReady = ed > sd &&
+            ed2 > sd2 &&
+            this.state.formReady !== true ?
+                true : (ed < sd || ed2 < sd2) &&
+                this.state.formReady === true ?
+                    false : null;
         }
         if (isFormReady !== null) {
             this.setState({ formReady: isFormReady });
@@ -819,7 +840,12 @@ class BasicLayout extends React.PureComponent {
                                 <form>
                                     <div className="form-group">
                                         <label htmlFor="widgetTypeSelect">Type</label>
-                                        <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}>
+                                        <select
+                                            name="widgetTypeSelect"
+                                            className="form-control"
+                                            value={this.state.selectedWidgetType}
+                                            id="widgetTypeSelect"
+                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}>
                                             <option value="-1">Please select type</option>
                                             <option label="Image Collection" value="ImageCollection">Image Collection</option>
                                             <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
@@ -855,7 +881,11 @@ class BasicLayout extends React.PureComponent {
     </React.Fragment>;
 
     getBaseMapSelector = () => {
-        if (this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection" || this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation") {
+        if (this.state.selectedWidgetType === "ImageCollection" ||
+            this.state.selectedWidgetType === "DualImageCollection" ||
+            this.state.selectedWidgetType === "imageAsset" ||
+            this.state.selectedWidgetType === "imageCollectionAsset" ||
+            this.state.selectedWidgetType === "ImageElevation") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select
@@ -887,10 +917,18 @@ class BasicLayout extends React.PureComponent {
             return <React.Fragment>
                 <div className="form-group">
                     <label htmlFor="widgetTitle">Title</label>
-                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.widgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
+                    <input
+                        type="text"
+                        name="widgetTitle"
+                        id="widgetTitle"
+                        value={this.state.widgetTitle}
+                        className="form-control"
+                        onChange={this.onWidgetTitleChange}/>
                 </div>
             </React.Fragment>;
-        } else if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation") {
+        } else if (this.state.selectedWidgetType === "imageAsset" ||
+            this.state.selectedWidgetType === "imageCollectionAsset" ||
+            this.state.selectedWidgetType === "ImageElevation") {
             if (this.state.formReady !== true) {
                 this.setState({
                     formReady: true,
@@ -900,7 +938,12 @@ class BasicLayout extends React.PureComponent {
         } else if (this.state.selectedWidgetType === "ImageCollection") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
-                <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                <select
+                    name="widgetIndicesSelect"
+                    value={this.state.selectedDataType}
+                    className="form-control"
+                    id="widgetIndicesSelect"
+                    onChange={this.onDataTypeSelectChanged} >
                     <option value="-1" className="" >Please select type</option>
                     <option label="NDVI" value="NDVI">NDVI</option>
                     <option label="EVI" value="EVI">EVI</option>
@@ -919,7 +962,12 @@ class BasicLayout extends React.PureComponent {
                 return <React.Fragment>
                     <h3 className={"mt-4 text-center text-info"}>Dual imageCollection Step 1</h3>
                     <label htmlFor="widgetIndicesSelect">Data</label>
-                    <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                    <select
+                        name="widgetIndicesSelect"
+                        value={this.state.selectedDataType}
+                        className="form-control"
+                        id="widgetIndicesSelect"
+                        onChange={this.onDataTypeSelectChanged} >
                         <option value="-1" className="" >Please select type</option>
                         <option label="NDVI" value="NDVI">NDVI</option>
                         <option label="EVI" value="EVI">EVI</option>
@@ -940,7 +988,12 @@ class BasicLayout extends React.PureComponent {
 
                     <h3 className={"mt-4 text-center text-info"}>Dual imageCollection Step 2</h3>
                     <label htmlFor="widgetIndicesSelect2">Data 2</label>
-                    <select name="widgetIndicesSelect2" value={this.state.selectedDataTypeDual} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChangedDual} >
+                    <select
+                        name="widgetIndicesSelect2"
+                        value={this.state.selectedDataTypeDual}
+                        className="form-control"
+                        id="widgetIndicesSelect"
+                        onChange={this.onDataTypeSelectChangedDual} >
                         <option value="-1" className="" >Please select type</option>
                         <option label="NDVI" value="NDVI">NDVI 2</option>
                         <option label="EVI" value="EVI">EVI</option>
@@ -961,7 +1014,12 @@ class BasicLayout extends React.PureComponent {
         } else {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
-                <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                <select
+                    name="widgetIndicesSelect"
+                    value={this.state.selectedDataType}
+                    className="form-control"
+                    id="widgetIndicesSelect"
+                    onChange={this.onDataTypeSelectChanged} >
                     <option value="-1" className="" >Please select type</option>
                     <option label="NDVI" value="NDVI">NDVI</option>
                     <option label="EVI" value="EVI">EVI</option>
@@ -988,7 +1046,13 @@ class BasicLayout extends React.PureComponent {
 
     getImageParamsBlock = () => <div className="form-group">
         <label htmlFor="imageParams">Image Parameters (json format)</label>
-        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}/>
+        <textarea
+            className="form-control"
+            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+            onChange={this.onImageParamsChange}
+            rows="4"
+            value={this.state.imageParams}
+            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}/>
     </div>;
 
     getNextStepButton = () => {
@@ -998,7 +1062,9 @@ class BasicLayout extends React.PureComponent {
                 className="btn btn-secondary"
                 data-dismiss="modal"
                 onClick={this.onNextWizardStep}
-            >Step 2 &rArr;</button>;
+            >
+                Step 2 &rArr;
+            </button>;
         }
     };
 
@@ -1019,9 +1085,21 @@ class BasicLayout extends React.PureComponent {
     };
 
     getDateRangeControl = () => <div className="input-group input-daterange" id="range_new_cooked">
-        <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
+        <input
+            type="text"
+            className="form-control"
+            onChange={this.onStartDateChanged}
+            value={this.state.startDate}
+            placeholder={"YYYY-MM-DD"}
+            id="sDate_new_cooked"/>
         <div className="input-group-addon">to</div>
-        <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
+        <input
+            type="text"
+            className="form-control"
+            onChange={this.onEndDateChanged}
+            value={this.state.endDate}
+            placeholder={"YYYY-MM-DD"}
+            id="eDate_new_cooked"/>
     </div>;
 
     getDualLayerDateRangeControl = () => {
@@ -1085,7 +1163,16 @@ class BasicLayout extends React.PureComponent {
             setTimeout(() => {
                 $(".input-daterange input").each(function () {
                     try {
-                        const bindEvt = this.id === "sDate_new_cookedDual" ? gObject.onStartDateChangedDual : this.id === "eDate_new_cookedDual" ? gObject.onEndDateChangedDual : this.id === "sDate_new_cooked" ? gObject.onStartDateChanged : this.id === "eDate_new_cooked" ? gObject.onEndDateChanged : this.id === "sDate_new_cooked2" ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
+                        const bindEvt = this.id === "sDate_new_cookedDual" ?
+                            gObject.onStartDateChangedDual :
+                            this.id === "eDate_new_cookedDual" ?
+                                gObject.onEndDateChangedDual :
+                                this.id === "sDate_new_cooked" ?
+                                    gObject.onStartDateChanged :
+                                    this.id === "eDate_new_cooked" ?
+                                        gObject.onEndDateChanged :
+                                        this.id === "sDate_new_cooked2" ?
+                                            gObject.onStartDate2Changed : gObject.onEndDate2Changed;
                         console.log("i did this!");
                         $(this).datepicker({
                             changeMonth: true,
@@ -1158,12 +1245,24 @@ class BasicLayout extends React.PureComponent {
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChangedDual} value={this.state.startDateDual} placeholder={"YYYY-MM-DD"} id="sDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDateChangedDual}
+                            value={this.state.startDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cookedDual"
+                        />
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChangedDual} value={this.state.endDateDual} placeholder={"YYYY-MM-DD"} id="eDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDateChangedDual}
+                            value={this.state.endDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cookedDual"
+                        />
                     </div>
-
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
                         <input
@@ -1175,7 +1274,6 @@ class BasicLayout extends React.PureComponent {
                             onChange={this.onWidgetBandsChangeDual}
                         />
                     </div>
-
                     <div className="form-group">
                         <label htmlFor="widgetMin">Min</label>
                         <input
@@ -1209,7 +1307,14 @@ class BasicLayout extends React.PureComponent {
                             onChange={this.onWidgetCloudScoreChangeDual}
                         />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
 
 
                 </React.Fragment>;
@@ -1230,7 +1335,14 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChange}
+                            rows="4"
+                            value={this.state.imageParams}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
                     </div>
                     {this.getNextStepButton()}
                 </React.Fragment>;
@@ -1250,9 +1362,23 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChangeDual}
+                            rows="4"
+                            value={this.state.imageParamsDual}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
                 </React.Fragment>;
             } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataType === "Custom" && this.state.wizardStep === 1) {
                 return <React.Fragment>
@@ -1271,7 +1397,14 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChange}
+                            rows="4"
+                            value={this.state.imageParams}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
 
                     </div>
                     <label>Select the Date Range you would like</label>
@@ -1294,17 +1427,44 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChangeDual}
+                            rows="4"
+                            value={this.state.imageParamsDual}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
 
                     </div>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChangedDual} value={this.state.startDateDual} placeholder={"YYYY-MM-DD"} id="sDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDateChangedDual}
+                            value={this.state.startDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cookedDual"
+                        />
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChangedDual} value={this.state.endDateDual} placeholder={"YYYY-MM-DD"} id="eDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDateChangedDual}
+                            value={this.state.endDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cookedDual"
+                        />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
                 </React.Fragment>;
             } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 1) {
                 if (this.state.dualLayer === true) {
@@ -1316,10 +1476,23 @@ class BasicLayout extends React.PureComponent {
                         <div>
                             <label>Select the Date Range you would like</label>
                             <div className="input-group input-daterange" id="range_new_cooked2">
-
-                                <input type="text" className="form-control" onChange={this.onStartDate2Changed} value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    onChange={this.onStartDate2Changed}
+                                    value={this.state.startDate2}
+                                    placeholder={"YYYY-MM-DD"}
+                                    id="sDate_new_cooked2"
+                                />
                                 <div className="input-group-addon">to</div>
-                                <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    onChange={this.onEndDate2Changed}
+                                    value={this.state.endDate2}
+                                    placeholder={"YYYY-MM-DD"}
+                                    id="eDate_new_cooked2"
+                                />
                             </div>
                         </div>
                         {this.getNextStepButton()}
@@ -1337,12 +1510,32 @@ class BasicLayout extends React.PureComponent {
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChangedDual} value={this.state.startDateDual} placeholder={"YYYY-MM-DD"} id="sDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDateChangedDual}
+                            value={this.state.startDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cookedDual"
+                        />
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChangedDual} value={this.state.endDateDual} placeholder={"YYYY-MM-DD"} id="eDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDateChangedDual}
+                            value={this.state.endDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cookedDual"
+                        />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
                 </React.Fragment>;
             } else if (this.state.selectedWidgetType === "TimeSeries" && this.state.selectedDataType === "Custom") {
                 return <React.Fragment>
@@ -1373,7 +1566,13 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <div className="form-group">
                         <label htmlFor="graphReducer">Reducer</label>
-                        <select name="graphReducer" value={this.state.graphReducer} className="form-control" id="widgetIndicesSelect" onChange={this.onGraphReducerChanged} >
+                        <select
+                            name="graphReducer"
+                            value={this.state.graphReducer}
+                            className="form-control"
+                            id="widgetIndicesSelect"
+                            onChange={this.onGraphReducerChanged}
+                        >
                             <option label="Min" value="Min">Min</option>
                             <option label="Max" value="Max">Max</option>
                             <option label="Mean" value="Mean">Mean</option>
@@ -1447,7 +1646,14 @@ class BasicLayout extends React.PureComponent {
         const { layout } = this.state;
         return (
             <React.Fragment>
-                <button id="addWidget" onClick={this.onAddItem} className="btn btn-outline-lightgreen btn-sm" style={{ display: "none" }}>Add Widget</button>
+                <button
+                    id="addWidget"
+                    onClick={this.onAddItem}
+                    className="btn btn-outline-lightgreen btn-sm"
+                    style={{ display: "none" }}
+                >
+                    Add Widget
+                </button>
                 <ReactGridLayout
                     {...this.props}
                     layout={layout}
