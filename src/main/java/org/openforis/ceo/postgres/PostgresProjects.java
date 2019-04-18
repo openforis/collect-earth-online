@@ -15,6 +15,7 @@ import static org.openforis.ceo.utils.ProjectUtils.createRandomSampleSet;
 import static org.openforis.ceo.utils.ProjectUtils.outputAggregateCsv;
 import static org.openforis.ceo.utils.ProjectUtils.outputRawCsv;
 import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
+import static org.openforis.ceo.utils.ProjectUtils.getOrFalse;
 import static org.openforis.ceo.utils.ProjectUtils.getOrZero;
 import static org.openforis.ceo.utils.ProjectUtils.getValueDistribution;
 import static org.openforis.ceo.utils.ProjectUtils.makeGeoJsonPoint;
@@ -41,6 +42,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.openforis.ceo.db_api.Projects;
 import spark.Request;
@@ -764,32 +766,32 @@ public class PostgresProjects implements Projects {
 
             var newProject = new JsonObject();
 
-            newProject.addProperty("baseMapSource", jsonInputs.get("baseMapSource").getAsString());
-            newProject.addProperty("description", jsonInputs.get("description").getAsString());
-            newProject.addProperty("institution", jsonInputs.get("institution").getAsInt());
-            newProject.addProperty("lonMin", getOrZero(jsonInputs,"lonMin").getAsDouble());
-            newProject.addProperty("latMin", getOrZero(jsonInputs,"latMin").getAsDouble());
-            newProject.addProperty("lonMax", getOrZero(jsonInputs,"lonMax").getAsDouble());
-            newProject.addProperty("latMax", getOrZero(jsonInputs,"latMax").getAsDouble());
-            newProject.addProperty("name", jsonInputs.get("name").getAsString());
-            newProject.addProperty("numPlots", getOrZero(jsonInputs,"numPlots").getAsInt());
-            newProject.addProperty("plotDistribution", jsonInputs.get("plotDistribution").getAsString());
-            newProject.addProperty("plotShape", getOrEmptyString(jsonInputs,"plotShape").getAsString());
-            newProject.addProperty("plotSize", getOrZero(jsonInputs,"plotSize").getAsDouble());
-            newProject.addProperty("plotSpacing", getOrZero(jsonInputs,"plotSpacing").getAsDouble());
-            newProject.addProperty("privacyLevel", jsonInputs.get("privacyLevel").getAsString());
-            newProject.addProperty("projectTemplate", getOrZero(jsonInputs,"projectTemplate").getAsInt());
-            newProject.addProperty("sampleDistribution", jsonInputs.get("sampleDistribution").getAsString());
-            newProject.addProperty("samplesPerPlot", getOrZero(jsonInputs,"samplesPerPlot").getAsInt());
-            newProject.addProperty("sampleResolution", getOrZero(jsonInputs,"sampleResolution").getAsDouble());
-            newProject.add("sampleValues", jsonInputs.get("sampleValues").getAsJsonArray());
-            newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
-            newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
+            newProject.addProperty("baseMapSource",      getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+            newProject.addProperty("description",        getOrEmptyString(jsonInputs, "description").getAsString());
+            newProject.addProperty("institution",        getOrZero(jsonInputs, "institution").getAsInt());
+            newProject.addProperty("lonMin",             getOrZero(jsonInputs, "lonMin").getAsDouble());
+            newProject.addProperty("latMin",             getOrZero(jsonInputs, "latMin").getAsDouble());
+            newProject.addProperty("lonMax",             getOrZero(jsonInputs, "lonMax").getAsDouble());
+            newProject.addProperty("latMax",             getOrZero(jsonInputs, "latMax").getAsDouble());
+            newProject.addProperty("name",               getOrEmptyString(jsonInputs, "name").getAsString());
+            newProject.addProperty("numPlots",           getOrZero(jsonInputs, "numPlots").getAsInt());
+            newProject.addProperty("plotDistribution",   getOrEmptyString(jsonInputs, "plotDistribution").getAsString());
+            newProject.addProperty("plotShape",          getOrEmptyString(jsonInputs, "plotShape").getAsString());
+            newProject.addProperty("plotSize",           getOrZero(jsonInputs, "plotSize").getAsDouble());
+            newProject.addProperty("plotSpacing",        getOrZero(jsonInputs, "plotSpacing").getAsDouble());
+            newProject.addProperty("privacyLevel",       getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+            newProject.addProperty("projectTemplate",    getOrZero(jsonInputs, "projectTemplate").getAsInt());
+            newProject.addProperty("sampleDistribution", getOrEmptyString(jsonInputs, "sampleDistribution").getAsString());
+            newProject.addProperty("samplesPerPlot",     getOrZero(jsonInputs, "samplesPerPlot").getAsInt());
+            newProject.addProperty("sampleResolution",   getOrZero(jsonInputs, "sampleResolution").getAsDouble());
+            newProject.add("sampleValues",               jsonInputs.get("sampleValues").getAsJsonArray());
+            newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
+            newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
 
             // file part properties
-            newProject.addProperty("plotFileName", getOrEmptyString(jsonInputs, "plotFileName").getAsString());
-            newProject.addProperty("plotFileBase64", getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
-            newProject.addProperty("sampleFileName", getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
+            newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
+            newProject.addProperty("plotFileBase64",   getOrEmptyString(jsonInputs, "plotFileBase64").getAsString());
+            newProject.addProperty("sampleFileName",   getOrEmptyString(jsonInputs, "sampleFileName").getAsString());
             newProject.addProperty("sampleFileBase64", getOrEmptyString(jsonInputs, "sampleFileBase64").getAsString());
 
             // Add constant values
@@ -806,37 +808,53 @@ public class PostgresProjects implements Projects {
             try (var conn = connect();
                  var pstmt = conn.prepareStatement(SQL)) {
 
-                pstmt.setInt(1, newProject.get("institution").getAsInt());
-                pstmt.setString(2, newProject.get("availability").getAsString());
-                pstmt.setString(3, newProject.get("name").getAsString());
-                pstmt.setString(4, newProject.get("description").getAsString());
-                pstmt.setString(5, newProject.get("privacyLevel").getAsString());
-                pstmt.setString(6, newProject.get("boundary").getAsString());
-                pstmt.setString(7, getOrEmptyString(newProject, "baseMapSource").getAsString());
-                pstmt.setString(8, getOrEmptyString(newProject, "plotDistribution").getAsString());
-                pstmt.setInt(9, getOrZero(newProject, "numPlots").getAsInt());
-                pstmt.setDouble(10, getOrZero(newProject, "plotSpacing").getAsDouble());
-                pstmt.setString(11, getOrEmptyString(newProject, "plotShape").getAsString());
-                pstmt.setDouble(12,  getOrZero(newProject, "plotSize").getAsDouble());
-                pstmt.setString(13, getOrEmptyString(newProject, "sampleDistribution").getAsString());
-                pstmt.setInt(14, getOrZero(newProject, "samplesPerPlot").getAsInt());
-                pstmt.setDouble(15, getOrZero(newProject, "sampleResolution").getAsDouble());
+                pstmt.setInt(1,     newProject.get("institution").getAsInt());
+                pstmt.setString(2,  newProject.get("availability").getAsString());
+                pstmt.setString(3,  newProject.get("name").getAsString());
+                pstmt.setString(4,  newProject.get("description").getAsString());
+                pstmt.setString(5,  newProject.get("privacyLevel").getAsString());
+                pstmt.setString(6,  newProject.get("boundary").getAsString());
+                pstmt.setString(7,  newProject.get("baseMapSource").getAsString());
+                pstmt.setString(8,  newProject.get("plotDistribution").getAsString());
+                pstmt.setInt(9,     newProject.get("numPlots").getAsInt());
+                pstmt.setDouble(10, newProject.get("plotSpacing").getAsDouble());
+                pstmt.setString(11, newProject.get("plotShape").getAsString());
+                pstmt.setDouble(12, newProject.get("plotSize").getAsDouble());
+                pstmt.setString(13, newProject.get("sampleDistribution").getAsString());
+                pstmt.setInt(14,    newProject.get("samplesPerPlot").getAsInt());
+                pstmt.setDouble(15, newProject.get("sampleResolution").getAsDouble());
                 pstmt.setString(16, newProject.get("sampleValues").getAsJsonArray().toString());
                 pstmt.setString(17, newProject.get("surveyRules").getAsJsonArray().toString());
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
-                pstmt.setString(19,  null);  //classification times
+                pstmt.setString(19, null);  //classification times
 
 
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
-                        if (getOrZero(newProject, "useTemplatePlots").getAsBoolean()
-                                && getOrZero(newProject, "project-template").getAsInt() > 0) {
+                        if (newProject.get("useTemplatePlots").getAsBoolean()
+                                && newProject.get("projectTemplate").getAsInt() > 0) {
+                            // Copy existing plots
                             try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
                                 copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
                                 copyPstmt.setInt(2, newProjectId);
                                 copyPstmt.execute();
+                            }
+                            // Copy existing widgets
+                            try (var pstmt1 = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
+                                pstmt1.setInt(1, newProject.get("projectTemplate").getAsInt());
+                                try (var rs1 = pstmt1.executeQuery()) {
+                                    var newUUID = UUID.randomUUID();
+                                    while (rs1.next()) {
+                                        try (var preparedStatement = conn.prepareStatement("SELECT * FROM add_project_widget(?, ?, ?::JSONB)")) {
+                                            preparedStatement.setInt(1, newProjectId);
+                                            preparedStatement.setObject(2, newUUID);
+                                            preparedStatement.setString(3, rs1.getString("widget"));
+                                            preparedStatement.execute();
+                                        }
+                                    }
+                                }
                             }
                         } else {
 
