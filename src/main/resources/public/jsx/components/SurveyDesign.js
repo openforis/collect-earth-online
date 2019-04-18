@@ -6,12 +6,15 @@ import { removeEnumerator } from "../utils/surveyUtils";
 
 const componentTypes = [
     { componentType: "button", dataType: "text" },
+    { componentType: "button", dataType: "number" },
     { componentType: "input", dataType: "number" },
     { componentType: "input", dataType: "text" },
     { componentType: "radiobutton", dataType: "boolean" },
     { componentType: "radiobutton", dataType: "text" },
+    { componentType: "radiobutton", dataType: "number" },
     { componentType: "dropdown", dataType: "boolean" },
     { componentType: "dropdown", dataType: "text" },
+    { componentType: "dropdown", dataType: "number" },
     // {component: "point", dataType: "dgitizer"},
     // {component: "linestring", dataType: "dgitizer"},
     // {component: "polygon", dataType: "dgitizer"},
@@ -803,7 +806,7 @@ function NumericRange(props) {
 }
 
 function SumOfAnswers(props) {
-    const surveyQuestions = props.surveyQuestions.filter(question => question.componentType === "input" && question.dataType === "number");
+    const surveyQuestions = props.surveyQuestions.filter(question => question.dataType === "number");
     return (
         <tr>
             <td>
