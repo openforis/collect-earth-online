@@ -1,148 +1,163 @@
 -- Create tables
 CREATE TABLE users (
-  id            serial primary key,
-  email         text not null UNIQUE,
-  password      text not null,
-  administrator boolean default false,
-  reset_key     text default null
+    user_uid         SERIAL PRIMARY KEY,
+    email            text NOT NULL UNIQUE,
+    password         varchar(72) NOT NULL,
+    administrator    boolean DEFAULT FALSE,
+    reset_key        text DEFAULT NULL
 );
 
 CREATE TABLE institutions (
-  id            serial primary key,
-  name          text not null,
-  logo          text not null,
-  logo_data     bytea,
-  description   text not null,
-  url           text not null,
-  archived      boolean default false
+    institution_uid    SERIAL PRIMARY KEY,
+    name               text NOT NULL,
+    logo               text NOT NULL,
+    logo_data          bytea,
+    description        text NOT NULL,
+    url                text NOT NULL,
+    archived           boolean DEFAULT FALSE
 );
 
 CREATE TABLE projects (
-  id                        serial primary key,
-  institution_id            integer not null references institutions (id) on delete cascade on update cascade,
-  availability              text,
-  name                      text not null,
-  description               text,
-  privacy_level             text,
-  boundary                  geometry(Polygon,4326),
-  base_map_source           text,
-  plot_distribution         text,
-  num_plots                 integer,
-  plot_spacing              float,
-  plot_shape                text,
-  plot_size                 float,
-  sample_distribution       text,
-  samples_per_plot          integer,
-  sample_resolution         float,
-  survey_questions          jsonb,
-  survey_rules              jsonb,
-  plots_ext_table           text,
-  samples_ext_table         text,
-  created_date              date,
-  published_date            date,
-  closed_date               date,
-  archived_date             date,
-  classification_times      jsonb,
-  ts_start_year             integer default 1985,
-  ts_end_year               integer,
-  ts_target_day             integer default 215,
-  ts_plot_size              integer default 1
+    project_uid             SERIAL PRIMARY KEY,
+    institution_rid         integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    availability            text,
+    name                    text NOT NULL,
+    description             text,
+    privacy_level           text,
+    boundary                geometry(Polygon,4326),
+    base_map_source         text,
+    plot_distribution       text,
+    num_plots               integer,
+    plot_spacing            float,
+    plot_shape              text,
+    plot_size               float,
+    sample_distribution     text,
+    samples_per_plot        integer,
+    sample_resolution       float,
+    survey_questions        jsonb,
+    survey_rules            jsonb,
+    plots_ext_table         text,
+    samples_ext_table       text,
+    created_date            date,
+    published_date          date,
+    closed_date             date,
+    archived_date           date,
+    classification_times    jsonb,
+    ts_start_year           integer DEFAULT 1985,
+    ts_end_year             integer,
+    ts_target_day           integer DEFAULT 215,
+    ts_plot_size            integer DEFAULT 1
 );
 
+CREATE VIEW project_boundary AS
+    SELECT
+        project_uid,
+        institution_rid,
+        availability,
+        name,
+        description,
+        privacy_level,
+        ST_AsGeoJSON(boundary),
+        base_map_source,
+        plot_distribution,
+        num_plots,
+        plot_spacing,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        survey_questions,
+        survey_rules,
+        classification_times
+    FROM projects;
+
 CREATE TABLE plots (
-  id            serial primary key,
-  project_id    integer not null references projects (id) on delete cascade on update cascade,
-  center        geometry(Point,4326),
-  ext_id        integer
+    plot_uid       SERIAL PRIMARY KEY,
+    project_rid    integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    center         geometry(Point,4326),
+    ext_id         integer
 );
 
 CREATE TABLE samples (
-  id            serial primary key,
-  plot_id       integer not null references plots (id) on delete cascade on update cascade,
-  point         geometry(Point,4326),
-  ext_id        integer
+    sample_uid    SERIAL PRIMARY KEY,
+    plot_rid      integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    point         geometry(Point,4326),
+    ext_id        integer
 );
 
 CREATE TABLE imagery (
-  id              serial primary key,
-  institution_id  integer references institutions (id) on delete cascade on update cascade,
-  visibility      text not null,
-  title           text not null,
-  attribution     text not null,
-  extent          jsonb,
-  source_config   jsonb
+    imagery_uid        SERIAL PRIMARY KEY,
+    institution_rid    integer REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    visibility         text NOT NULL,
+    title              text NOT NULL,
+    attribution        text NOT NULL,
+    extent             jsonb,
+    source_config      jsonb
 );
 
 CREATE TABLE roles (
-  id      serial primary key,
-  title   text not null
+    role_uid    SERIAL PRIMARY KEY,
+    title       text NOT NULL
 );
 
 CREATE TABLE institution_users (
-  id              serial primary key,
-  institution_id  integer not null references institutions (id),
-  user_id         integer not null references users (id),
-  role_id         integer not null references roles (id),
-  CONSTRAINT per_institution_per_plot UNIQUE(institution_id, user_id)
+    inst_user_uid      SERIAL PRIMARY KEY,
+    institution_rid    integer NOT NULL REFERENCES institutions (institution_uid),
+    user_rid           integer NOT NULL REFERENCES users (user_uid),
+    role_rid           integer NOT NULL REFERENCES roles (role_uid),
+    CONSTRAINT per_institution_per_plot UNIQUE(institution_rid, user_rid)
 );
 
-CREATE TABLE user_plots(
-	id                  serial primary key,
-	user_id             integer not null references users (id) on delete cascade on update cascade,
-  plot_id             integer not null references plots (id) on delete cascade on update cascade,
-  flagged             boolean default false,
-	confidence          integer CHECK (confidence >= 0 AND confidence <= 100),
-  collection_start    timestamp,
-	collection_time     timestamp,
-  CONSTRAINT per_user_per_plot UNIQUE(user_id, plot_id)
+CREATE TABLE user_plots (
+    user_plot_uid       SERIAL PRIMARY KEY,
+    user_rid            integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    plot_rid            integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    flagged             boolean DEFAULT FALSE,
+    confidence          integer CHECK (confidence >= 0 AND confidence <= 100),
+    collection_start    timestamp,
+    collection_time     timestamp,
+    CONSTRAINT per_user_per_plot UNIQUE(user_rid, plot_rid)
 );
 
-CREATE TABLE sample_values(
-  id                  serial primary key,
-  user_plot_id        integer not null references user_plots (id) on delete cascade on update cascade,
-  sample_id           integer not null references samples (id) on delete cascade on update cascade,     
-  imagery_id          integer references imagery (id) on delete cascade on update cascade,
-  imagery_attributes  jsonb,
-  value               jsonb,
-  CONSTRAINT per_sample_per_user UNIQUE(sample_id, user_plot_id)
+CREATE TABLE sample_values (
+    sample_value_uid      SERIAL PRIMARY KEY,
+    user_plot_rid         integer NOT NULL REFERENCES user_plots (user_plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    sample_rid            integer NOT NULL REFERENCES samples (sample_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    imagery_rid           integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    imagery_attributes    jsonb,
+    value                 jsonb,
+    CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
 );
 
-CREATE TABLE plot_locks(
-  user_id       integer not null references users(id),
-  plot_id       integer not null references plots(id),
-  lock_end      timestamp,
-  PRIMARY KEY(user_id, plot_id)
+CREATE TABLE plot_locks (
+    user_rid    integer NOT NULL REFERENCES users(user_uid),
+    plot_rid    integer NOT NULL REFERENCES plots(plot_uid),
+    lock_end    timestamp,
+    PRIMARY KEY(user_rid, plot_rid)
 );
 
-CREATE TABLE project_widgets(
-    id              serial primary key,
-    project_id      integer not null references projects (id) on delete cascade on update cascade,
+CREATE TABLE project_widgets (
+    widget_uid      SERIAL PRIMARY KEY,
+    project_rid     integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     dashboard_id    uuid,
     widget          jsonb
 );
 
-
-CREATE INDEX projects_id ON projects (id);
-CREATE INDEX plots_id ON plots (id);
-CREATE INDEX samples_id ON samples (id);
-CREATE INDEX imagery_id ON imagery (id);
-CREATE INDEX users_id ON users (id);
-CREATE INDEX institutions_id ON institutions (id);
-CREATE INDEX institution_users_id ON institution_users (id);
-CREATE INDEX roles_id ON roles (id);
-CREATE INDEX user_plots_id ON user_plots (id);
-CREATE INDEX sample_values_id ON sample_values (id);
-CREATE INDEX project_widgets_project_id ON project_widgets (project_id);
+CREATE INDEX project_widgets_project_rid ON project_widgets (project_rid);
 CREATE INDEX project_widgets_dashboard_id ON project_widgets (dashboard_id);
 
---indecies on FK
-CREATE INDEX plots_projects_id ON plots (project_id);
-CREATE INDEX samples_plot_id on samples (plot_id);
-CREATE INDEX imagery_institution_id on imagery (institution_id);
-CREATE INDEX institution_users_institution_id on institution_users (institution_id);
-CREATE INDEX institution_users_user_id on institution_users (user_id);
-CREATE INDEX user_plots_plot_id on user_plots (plot_id);
-CREATE INDEX user_plots_user_id on user_plots (user_id);
-CREATE INDEX sample_values_user_plot_id on sample_values (user_plot_id);
-CREATE INDEX sample_values_sample_id on sample_values (sample_id);
-CREATE INDEX sample_values_imagery_id on sample_values (imagery_id);
+-- Indecies on FK
+CREATE INDEX plots_projects_rid ON plots (project_rid);
+CREATE INDEX samples_plot_rid ON samples (plot_rid);
+CREATE INDEX imagery_institution_rid ON imagery (institution_rid);
+CREATE INDEX institution_users_institution_rid ON institution_users (institution_rid);
+CREATE INDEX institution_users_user_rid ON institution_users (user_rid);
+CREATE INDEX user_plots_plot_rid ON user_plots (plot_rid);
+CREATE INDEX user_plots_user_rid ON user_plots (user_rid);
+CREATE INDEX sample_values_user_plot_rid ON sample_values (user_plot_rid);
+CREATE INDEX sample_values_sample_rid ON sample_values (sample_rid);
+CREATE INDEX sample_values_imagery_rid ON sample_values (imagery_rid);
+
+-- Schema for external tables
+CREATE SCHEMA ext_tables;

@@ -55,7 +55,7 @@ public class PostgresProjects implements Projects {
     private static JsonObject buildProjectJson(ResultSet rs) {
         var newProject = new JsonObject();
         try {
-            newProject.addProperty("id",rs.getInt("id"));
+            newProject.addProperty("id",rs.getInt("project_id"));
             newProject.addProperty("institution",rs.getInt("institution_id"));
             newProject.addProperty("availability",rs.getString("availability"));
             newProject.addProperty("name",rs.getString("name"));

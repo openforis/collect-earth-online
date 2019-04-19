@@ -23,7 +23,7 @@ public class PostgresInstitutions implements Institutions {
     private static JsonObject buildInstitutionJson( ResultSet rs) {
         var newInstitution = new JsonObject();
         try {
-            newInstitution.addProperty("id", rs.getInt("id"));
+            newInstitution.addProperty("id", rs.getInt("institution_id"));
             newInstitution.addProperty("name", rs.getString("name"));
             newInstitution.addProperty("logo", rs.getString("logo")+ "?t=" + (new Date().toString()));
             newInstitution.addProperty("description", rs.getString("description"));
@@ -50,7 +50,7 @@ public class PostgresInstitutions implements Institutions {
                 //create institution json to send back
                 institutionArray.add(buildInstitutionJson(rs));
             }
-            
+
             return institutionArray.toString();
 
         } catch (SQLException e) {
@@ -93,7 +93,7 @@ public class PostgresInstitutions implements Institutions {
         var institutionId = Integer.parseInt(req.params(":id"));
         return getInstitutionById(institutionId);
     }
-    
+
     public String createInstitution(Request req, Response res) {
         final var jsonInputs = parseJson(req.body()).getAsJsonObject();
         final var userId = jsonInputs.get("userId").getAsInt();
@@ -114,7 +114,7 @@ public class PostgresInstitutions implements Institutions {
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     final var newInstitutionId = rs.getInt("add_institution");
-                    final var logoFileName =  !logo.equals("") 
+                    final var logoFileName =  !logo.equals("")
                                         ? writeFilePartBase64(
                                                 logo,
                                                 base64Image,
@@ -125,12 +125,12 @@ public class PostgresInstitutions implements Institutions {
 
                     try (var logoPstmt = conn.prepareStatement("SELECT * FROM update_institution_logo(?,?)")) {
                         logoPstmt.setInt(1, newInstitutionId);
-                        logoPstmt.setString(2, logoFileName != null 
-                                                ? "img/institution-logos/" + logoFileName 
+                        logoPstmt.setString(2, logoFileName != null
+                                                ? "img/institution-logos/" + logoFileName
                                                 : "");
                         logoPstmt.executeQuery();
                     }
-                    
+
                     // add user and default admin to group
                     try (var userPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")) {
                         userPstmt.setInt(1,newInstitutionId);
@@ -156,7 +156,7 @@ public class PostgresInstitutions implements Institutions {
             return "";
         }
     }
-    
+
     public String updateInstitution(Request req, Response res) {
         final var institutionId = req.params(":id");
 
@@ -166,14 +166,14 @@ public class PostgresInstitutions implements Institutions {
         final var logo = jsonInputs.get("logo").getAsString();
         final var base64Image = jsonInputs.get("base64Image").getAsString();
         final var description = jsonInputs.get("description").getAsString();
-            
-        try (var conn = connect(); 
+
+        try (var conn = connect();
                 var pstmt = conn.prepareStatement("SELECT * FROM select_institution_by_id(?)")) {
 
             pstmt.setInt(1, Integer.parseInt(institutionId));
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    final var logoFileName = !logo.equals("") 
+                    final var logoFileName = !logo.equals("")
                                                 ? writeFilePartBase64(
                                                         logo,
                                                         base64Image,
@@ -181,13 +181,13 @@ public class PostgresInstitutions implements Institutions {
                                                         "institution-" + institutionId
                                                     )
                                                 : null;
-                    
-                    try (var updatePstmt = 
+
+                    try (var updatePstmt =
                             conn.prepareStatement("SELECT * FROM update_institution(?, ?, ?, ?, ?)")) {
                         updatePstmt.setInt(1, Integer.parseInt(institutionId));
                         updatePstmt.setString(2, name);
-                        updatePstmt.setString(3, logoFileName != null 
-                                                    ? "img/institution-logos/" + logoFileName 
+                        updatePstmt.setString(3, logoFileName != null
+                                                    ? "img/institution-logos/" + logoFileName
                                                     : rs.getString("logo"));
                         updatePstmt.setString(4, description);
                         updatePstmt.setString(5, url);
@@ -209,7 +209,7 @@ public class PostgresInstitutions implements Institutions {
         var institutionId = Integer.parseInt(req.params(":id"));
         try (var conn = connect();
             var pstmt = conn.prepareStatement("SELECT * FROM archive_institution(?)")) {
-                
+
             pstmt.setInt(1, institutionId);
             pstmt.execute();
             return getInstitutionById(institutionId);

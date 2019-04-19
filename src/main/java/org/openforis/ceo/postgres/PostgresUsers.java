@@ -31,26 +31,21 @@ public class PostgresUsers implements Users {
         var inputReturnURL =    req.queryParams("returnurl");
 
         try (var conn = connect();
-             var pstmt = conn.prepareStatement( "SELECT * FROM get_user(?)")) {
+             var pstmt = conn.prepareStatement( "SELECT * FROM check_login(?,?)")) {
 
             pstmt.setString(1, inputEmail);
+            pstmt.setString(2, inputPassword);
             try (var rs = pstmt.executeQuery()) {
                 if(rs.next()) {
-                    // Check if password matches
-                    if (!inputPassword.equals(rs.getString("password"))) {
-                        // Authentication failed
-                        req.session().attribute("flash_message", "Invalid email/password combination.");
-                    } else {
-                        // Authentication successful
-                        req.session().attribute("userid", Integer.toString(rs.getInt("id")));
-                        req.session().attribute("username", inputEmail);
-                        req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
-                        res.redirect((inputReturnURL == null || inputReturnURL.isEmpty())
-                                        ? CeoConfig.documentRoot + "/home"
-                                        : inputReturnURL);
-                    }
+                    // Authentication successful
+                    req.session().attribute("userid", rs.getString("user_id"));
+                    req.session().attribute("username", inputEmail);
+                    req.session().attribute("role", rs.getBoolean("administrator") ? "admin" : "user");
+                    res.redirect((inputReturnURL == null || inputReturnURL.isEmpty())
+                                    ? CeoConfig.documentRoot + "/home"
+                                    : inputReturnURL);
                 } else {
-                    req.session().attribute("flash_message", "No account with email " + inputEmail + " exists.");
+                    req.session().attribute("flash_message", "Invalid email/password combination.");
                 }
             }
 
@@ -78,8 +73,8 @@ public class PostgresUsers implements Users {
                  var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)")) {
 
                 pstmt_user.setString(1, inputEmail);
-                    try (var rs_user = pstmt_user.executeQuery()) {
-                    if (rs_user.next()) {
+                try (var rs_user = pstmt_user.executeQuery()) {
+                    if (rs_user.next() && rs_user.getBoolean("email_taken")) {
                         req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                     } else {
                         try (var pstmt = conn.prepareStatement("SELECT * FROM add_user(?,?)")) {
@@ -144,7 +139,7 @@ public class PostgresUsers implements Users {
                         var storedPassword = rs_user.getString("password");
                         if (storedPassword.equals(inputCurrentPassword)) {
                             try (var pstmt = conn.prepareStatement("SELECT * FROM set_user_email_and_password(?,?,?)")) {
-                                pstmt.setInt(1, rs_user.getInt("id"));
+                                pstmt.setInt(1, rs_user.getInt("user_id"));
                                 pstmt.setString(2, inputEmail.length() == 0 ? storedEmail : inputEmail);
                                 pstmt.setString(3, inputPassword.length() == 0 ? storedPassword : inputPassword);
                                 pstmt.execute();
@@ -252,16 +247,16 @@ public class PostgresUsers implements Users {
     }
 
     public String getAllUsers(Request req, Response res) {
-        try (var conn = connect(); 
+        try (var conn = connect();
                 var pstmt = conn.prepareStatement("SELECT * FROM get_all_users()")) {
 
             var allUsers = new JsonArray();
             try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     var userJson = new JsonObject();
-                    userJson.addProperty("id", rs.getInt("id"));
+                    userJson.addProperty("id", rs.getInt("user_id"));
                     userJson.addProperty("email", rs.getString("email"));
-                    userJson.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");     
+                    userJson.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");
                     allUsers.add(userJson);
                 }
             }
@@ -283,7 +278,7 @@ public class PostgresUsers implements Users {
             try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     var instUsers = new JsonObject();
-                    instUsers.addProperty("id", rs.getInt("id"));
+                    instUsers.addProperty("id", rs.getInt("institution_id"));
                     instUsers.addProperty("email", rs.getString("email"));
                     instUsers.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");
                     instUsers.addProperty("resetKey", rs.getString("reset_key"));
@@ -302,7 +297,7 @@ public class PostgresUsers implements Users {
         var userName =     req.params(":userid");
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
-                 
+
             pstmt.setString(1, userName);
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
@@ -327,7 +322,7 @@ public class PostgresUsers implements Users {
         var inst = new HashMap<Integer,String>();
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_institution_user_roles(?)");) {
-                 
+
             pstmt.setInt(1, userId);
             try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -365,7 +360,7 @@ public class PostgresUsers implements Users {
                             addPstmt.setInt(2,userId);
                             addPstmt.setString(3,role);
                             addPstmt.execute();
-                        } 
+                        }
                     }
                 }
             }
@@ -382,14 +377,14 @@ public class PostgresUsers implements Users {
         var userId =            jsonInputs.get("userId").getAsInt();
         var institutionId =     jsonInputs.get("institutionId").getAsInt();
 
-        try (var conn = connect(); 
+        try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")) {
-                 
+
             pstmt.setInt(1,institutionId);
             pstmt.setInt(2,userId);
             pstmt.setInt(3,3);
             pstmt.execute();
-            return getInstitutionById(institutionId); 
+            return getInstitutionById(institutionId);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return "";
