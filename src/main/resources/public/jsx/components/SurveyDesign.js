@@ -15,9 +15,9 @@ const componentTypes = [
     { componentType: "dropdown", dataType: "boolean" },
     { componentType: "dropdown", dataType: "text" },
     { componentType: "dropdown", dataType: "number" },
-    // {component: "point", dataType: "dgitizer"},
-    // {component: "linestring", dataType: "dgitizer"},
-    // {component: "polygon", dataType: "dgitizer"},
+    // {componentType: "digitizer", dataType: "point"}
+    // {componentType: "digitizer", dataType: "linestring"}
+    // {componentType: "digitizer", dataType: "polygon"}
 ];
 
 export class SurveyDesign extends React.Component {
