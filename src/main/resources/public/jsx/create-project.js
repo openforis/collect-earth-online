@@ -454,6 +454,7 @@ class ProjectTemplateVisibility extends React.Component {
                                 projectList
                                     .filter(proj => proj
                                                     && proj.id > 0
+                                                    && proj.availability !== "archived"
                                                     && proj.name.toLocaleLowerCase()
                                                         .includes(this.state.projectFilter.toLocaleLowerCase())
                                     )
