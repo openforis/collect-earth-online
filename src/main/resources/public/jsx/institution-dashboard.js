@@ -12,6 +12,9 @@ class InstitutionDashboard extends React.Component {
 
     componentDidMount() {
         this.getProjectList();
+
+    }
+    componentDidUpdate(){
         if (this.state.projectList.length>0) {
             this.setDetails();
         }
@@ -53,6 +56,7 @@ class InstitutionDashboard extends React.Component {
 
     getProjectById = (projectId) => {
         alert("hey");
+
         fetch(this.props.documentRoot + "/get-project-by-id/" + projectId)
             .then(response => {
                 if (response.ok) {
@@ -77,8 +81,7 @@ class InstitutionDashboard extends React.Component {
     };
 
     setDetails = () => {
-        let details = this.state.details;
-
+        const details = [];
         this.state.projectList.map( proj => {
             let x = {id:proj.id,projectDetails: {},stats:[]};
             fetch(this.props.documentRoot + "/get-project-by-id/" + proj.id)
@@ -97,19 +100,20 @@ class InstitutionDashboard extends React.Component {
                     } else {
                         x.projectDetails = data;
                     }
+                    fetch(this.props.documentRoot + "/get-project-stats/" + proj.id)
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json()
+                            } else {
+                                console.log(response);
+                                alert("Error retrieving project stats. See console for details.");
+                            }
+                        })
+                        .then(data => {
+                            x.stats = data;
+                        });
                 });
-            fetch(this.props.documentRoot + "/get-project-stats/" + proj.id)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json()
-                    } else {
-                        console.log(response);
-                        alert("Error retrieving project stats. See console for details.");
-                    }
-                })
-                .then(data => {
-                    x.stats = data;
-                });
+
             details.push(x);
         });
         this.setState({details: details});
@@ -142,7 +146,7 @@ function Project(props) {
         <tr key={uid}>
             <td>{p.name}</td>
             <td>
-                <ProjectStats details={props.details}/>
+                {props.details.filter(d => d.id === p.id).length > 0} && <ProjectStats details={props.details.find(d => d.id === p.id)}/>
             </td>
         </tr>
     );
