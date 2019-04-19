@@ -437,7 +437,7 @@ CREATE OR REPLACE FUNCTION update_institution(_institution_uid integer, _name te
 
 $$ LANGUAGE SQL;
 
--- Update only logo. Id is not know on during add_institution
+-- Update only logo. Id is not known during add_institution.
 CREATE OR REPLACE FUNCTION update_institution_logo(_institution_uid integer, _logo text)
  RETURNS integer AS $$
 
@@ -471,7 +471,7 @@ CREATE OR REPLACE FUNCTION add_institution_user(_institution_rid integer, _user_
     INSERT INTO institution_users
         (institution_rid, user_rid, role_rid)
     SELECT _institution_rid, _user_rid, role_uid
-    FROM (SELECT role_uid from roles where title = _role) AS tr
+    FROM (SELECT role_uid FROM roles WHERE title = _role) AS tr
     RETURNING inst_user_uid
 
 $$ LANGUAGE SQL;
