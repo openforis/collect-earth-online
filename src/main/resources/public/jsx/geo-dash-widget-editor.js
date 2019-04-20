@@ -157,14 +157,12 @@ class BasicLayout extends React.PureComponent {
                 return widget;
             } else if (widget.gridcolumn) {
                 changed = true;
-                let x;
-                let w;
                 let y;
                 let h;
                 //let layout;
                 //do the x and w
-                x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
-                w = parseInt(widget.gridcolumn.split(" ")[3]);
+                const x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
+                const w = parseInt(widget.gridcolumn.split(" ")[3]);
                 if (widget.gridrow) {
                     //do the y and h
                     y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
@@ -244,27 +242,30 @@ class BasicLayout extends React.PureComponent {
 
     generateDOM = () => {
         const x = "x";
-        return _.map(this.state.widgets, (widget, i) => <div
-            onDragStart={this.onDragStart}
-            onDragEnd={this.onDragEnd}
-            key={i}
-            data-grid={widget.layout}
-            className="front widgetEditor-widgetBackground"
-            style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }} >
-            <h3 className="widgetEditor title">{widget.name}
-                <span
-                    className="remove"
-                    onClick={e => {
-                        e.stopPropagation(); this.onRemoveItem(i);
-                    }}
-                    onMouseDown={function(e) {
-                        e.stopPropagation();
-                    }}
-                >
-                    {x}
-                </span>
-            </h3>
-            <span className="text text-danger">Sample Image</span></div>);
+        return _.map(this.state.widgets, (widget, i) =>
+            <div
+                onDragStart={this.onDragStart}
+                onDragEnd={this.onDragEnd}
+                key={i}
+                data-grid={widget.layout}
+                className="front widgetEditor-widgetBackground"
+                style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }}
+            >
+                <h3 className="widgetEditor title">{widget.name}
+                    <span
+                        className="remove"
+                        onClick={e => {
+                            e.stopPropagation(); this.onRemoveItem(i);
+                        }}
+                        onMouseDown={function(e) {
+                            e.stopPropagation();
+                        }}
+                    >
+                        {x}
+                    </span>
+                </h3>
+                <span className="text text-danger">Sample Image</span>
+            </div>);
     };
 
     addCustomImagery = imagery => {
@@ -557,14 +558,14 @@ class BasicLayout extends React.PureComponent {
                 visParams: widget.visParams,
             }));
         } else {
-            const wType = this.state.selectedWidgetType === "TimeSeries" ?
-                this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType :
-                this.state.selectedWidgetType === "ImageCollection" ?
-                    this.state.selectedWidgetType + this.state.selectedDataType :
-                    this.state.selectedWidgetType === "statistics" ?
-                        "getStats" :
-                        this.state.selectedWidgetType === "ImageElevation" ?
-                            "ImageElevation" : "custom";
+            const wType = this.state.selectedWidgetType === "TimeSeries"
+                ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
+                : this.state.selectedWidgetType === "ImageCollection"
+                    ? this.state.selectedWidgetType + this.state.selectedDataType
+                    : this.state.selectedWidgetType === "statistics"
+                        ? "getStats"
+                        : this.state.selectedWidgetType === "ImageElevation"
+                            ? "ImageElevation" : "custom";
             let prop1 = "";
             const properties = [];
             const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
@@ -780,19 +781,20 @@ class BasicLayout extends React.PureComponent {
         const sd = isDual ? new Date(this.state.startDateDual) : new Date(this.state.startDate);
         let isFormReady = null;
         if (! this.state.dualLayer) {
-            isFormReady = ed > sd && this.state.formReady !== true ?
-                true :
-                ed < sd && this.state.formReady === true ?
-                    false : null;
+            isFormReady = ed > sd && this.state.formReady !== true
+                ? true
+                : ed < sd && this.state.formReady === true
+                    ? false : null;
         } else {
             const ed2 = new Date(this.state.endDate2);
             const sd2 = new Date(this.state.startDate2);
-            isFormReady = ed > sd &&
-            ed2 > sd2 &&
-            this.state.formReady !== true ?
-                true : (ed < sd || ed2 < sd2) &&
-                this.state.formReady === true ?
-                    false : null;
+            isFormReady = ed > sd
+                && ed2 > sd2
+                && this.state.formReady !== true
+                    ? true
+                    : (ed < sd || ed2 < sd2)
+                        && this.state.formReady === true
+                            ? false : null;
         }
         if (isFormReady !== null) {
             this.setState({ formReady: isFormReady });
@@ -845,7 +847,8 @@ class BasicLayout extends React.PureComponent {
                                             className="form-control"
                                             value={this.state.selectedWidgetType}
                                             id="widgetTypeSelect"
-                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}>
+                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
+                                        >
                                             <option value="-1">Please select type</option>
                                             <option label="Image Collection" value="ImageCollection">Image Collection</option>
                                             <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
@@ -868,7 +871,6 @@ class BasicLayout extends React.PureComponent {
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <div className="modal-backdrop fade show"> </div>
             </React.Fragment>;
@@ -881,11 +883,11 @@ class BasicLayout extends React.PureComponent {
     </React.Fragment>;
 
     getBaseMapSelector = () => {
-        if (this.state.selectedWidgetType === "ImageCollection" ||
-            this.state.selectedWidgetType === "DualImageCollection" ||
-            this.state.selectedWidgetType === "imageAsset" ||
-            this.state.selectedWidgetType === "imageCollectionAsset" ||
-            this.state.selectedWidgetType === "ImageElevation") {
+        if (this.state.selectedWidgetType === "ImageCollection"
+            || this.state.selectedWidgetType === "DualImageCollection"
+            || this.state.selectedWidgetType === "imageAsset"
+            || this.state.selectedWidgetType === "imageCollectionAsset"
+            || this.state.selectedWidgetType === "ImageElevation") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
                 <select
@@ -923,7 +925,8 @@ class BasicLayout extends React.PureComponent {
                         id="widgetTitle"
                         value={this.state.widgetTitle}
                         className="form-control"
-                        onChange={this.onWidgetTitleChange}/>
+                        onChange={this.onWidgetTitleChange}
+                    />
                 </div>
             </React.Fragment>;
         } else if (this.state.selectedWidgetType === "imageAsset" ||
@@ -943,7 +946,8 @@ class BasicLayout extends React.PureComponent {
                     value={this.state.selectedDataType}
                     className="form-control"
                     id="widgetIndicesSelect"
-                    onChange={this.onDataTypeSelectChanged} >
+                    onChange={this.onDataTypeSelectChanged}
+                >
                     <option value="-1" className="" >Please select type</option>
                     <option label="NDVI" value="NDVI">NDVI</option>
                     <option label="EVI" value="EVI">EVI</option>
@@ -967,7 +971,8 @@ class BasicLayout extends React.PureComponent {
                         value={this.state.selectedDataType}
                         className="form-control"
                         id="widgetIndicesSelect"
-                        onChange={this.onDataTypeSelectChanged} >
+                        onChange={this.onDataTypeSelectChanged}
+                    >
                         <option value="-1" className="" >Please select type</option>
                         <option label="NDVI" value="NDVI">NDVI</option>
                         <option label="EVI" value="EVI">EVI</option>
@@ -993,7 +998,8 @@ class BasicLayout extends React.PureComponent {
                         value={this.state.selectedDataTypeDual}
                         className="form-control"
                         id="widgetIndicesSelect"
-                        onChange={this.onDataTypeSelectChangedDual} >
+                        onChange={this.onDataTypeSelectChangedDual}
+                    >
                         <option value="-1" className="" >Please select type</option>
                         <option label="NDVI" value="NDVI">NDVI 2</option>
                         <option label="EVI" value="EVI">EVI</option>
@@ -1019,7 +1025,8 @@ class BasicLayout extends React.PureComponent {
                     value={this.state.selectedDataType}
                     className="form-control"
                     id="widgetIndicesSelect"
-                    onChange={this.onDataTypeSelectChanged} >
+                    onChange={this.onDataTypeSelectChanged}
+                >
                     <option value="-1" className="" >Please select type</option>
                     <option label="NDVI" value="NDVI">NDVI</option>
                     <option label="EVI" value="EVI">EVI</option>
@@ -1052,21 +1059,22 @@ class BasicLayout extends React.PureComponent {
             onChange={this.onImageParamsChange}
             rows="4"
             value={this.state.imageParams}
-            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}/>
+            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+        />
     </div>;
 
-    getNextStepButton = () => {
-        if (this.state.selectedWidgetType === "DualImageCollection") {
-            return <button
+    getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
+        ?
+            <button
                 type="button"
                 className="btn btn-secondary"
                 data-dismiss="modal"
                 onClick={this.onNextWizardStep}
             >
                 Step 2 &rArr;
-            </button>;
-        }
-    };
+            </button>
+        :
+            "";
 
     getDualImageCollectionTimeSpanOption = () => {
         if (this.state.selectedWidgetType === "DualImageCollection") {
@@ -1091,7 +1099,8 @@ class BasicLayout extends React.PureComponent {
             onChange={this.onStartDateChanged}
             value={this.state.startDate}
             placeholder={"YYYY-MM-DD"}
-            id="sDate_new_cooked"/>
+            id="sDate_new_cooked"
+        />
         <div className="input-group-addon">to</div>
         <input
             type="text"
@@ -1163,16 +1172,16 @@ class BasicLayout extends React.PureComponent {
             setTimeout(() => {
                 $(".input-daterange input").each(function () {
                     try {
-                        const bindEvt = this.id === "sDate_new_cookedDual" ?
-                            gObject.onStartDateChangedDual :
-                            this.id === "eDate_new_cookedDual" ?
-                                gObject.onEndDateChangedDual :
-                                this.id === "sDate_new_cooked" ?
-                                    gObject.onStartDateChanged :
-                                    this.id === "eDate_new_cooked" ?
-                                        gObject.onEndDateChanged :
-                                        this.id === "sDate_new_cooked2" ?
-                                            gObject.onStartDate2Changed : gObject.onEndDate2Changed;
+                        const bindEvt = this.id === "sDate_new_cookedDual"
+                            ? gObject.onStartDateChangedDual
+                            : this.id === "eDate_new_cookedDual"
+                                ? gObject.onEndDateChangedDual
+                                : this.id === "sDate_new_cooked"
+                                    ? gObject.onStartDateChanged
+                                    : this.id === "eDate_new_cooked"
+                                        ? gObject.onEndDateChanged
+                                        : this.id === "sDate_new_cooked2"
+                                            ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
                         console.log("i did this!");
                         $(this).datepicker({
                             changeMonth: true,
@@ -1647,6 +1656,7 @@ class BasicLayout extends React.PureComponent {
         return (
             <React.Fragment>
                 <button
+                    type="button"
                     id="addWidget"
                     onClick={this.onAddItem}
                     className="btn btn-outline-lightgreen btn-sm"

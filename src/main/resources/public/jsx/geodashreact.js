@@ -202,7 +202,9 @@ class Widget extends React.Component {
                                     onClick={() => this.props.onFullScreen(this.props.widget)}
                                     role="button"
                                     title="Toggle Fullscreen"
-                                ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a>
+                                >
+                                    <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -212,30 +214,33 @@ class Widget extends React.Component {
                 </div>
             </div>);
         } else {
-            return (<div
-                className={widget.isFull
-                ? "fullwidget columnSpan3 rowSpan1 placeholder"
-                : "columnSpan3 rowSpan1 placeholder"}
-            >
-                <div className="panel panel-default" id={"widget_" + widget.id}>
-                    <div className="panel-heading">
-                        <ul className="list-inline panel-actions pull-right">
-                            <li style={{ display: "inline" }}>{widget.name}</li>
-                            <li style={{ display: "inline" }}>
-                                <a
-                                    className="list-inline panel-actions panel-fullscreen"
-                                    onClick={() => this.props.onFullScreen(this.props.widget)}
-                                    role="button"
-                                    title="Toggle Fullscreen"
-                                ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a>
-                            </li>
-                        </ul>
+            return (
+                <div
+                    className={widget.isFull
+                    ? "fullwidget columnSpan3 rowSpan1 placeholder"
+                    : "columnSpan3 rowSpan1 placeholder"}
+                >
+                    <div className="panel panel-default" id={"widget_" + widget.id}>
+                        <div className="panel-heading">
+                            <ul className="list-inline panel-actions pull-right">
+                                <li style={{ display: "inline" }}>{widget.name}</li>
+                                <li style={{ display: "inline" }}>
+                                    <a
+                                        className="list-inline panel-actions panel-fullscreen"
+                                        onClick={() => this.props.onFullScreen(this.props.widget)}
+                                        role="button"
+                                        title="Toggle Fullscreen"
+                                    >
+                                        <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div id={"widget-container_" + widget.id} className="widget-container">
+                            {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
+                        </div>
                     </div>
-                    <div id={"widget-container_" + widget.id} className="widget-container">
-                        {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-                    </div>
-                </div>
-            </div>);
+                </div>);
         }
     };
 
