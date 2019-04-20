@@ -42,7 +42,7 @@ class BasicLayout extends React.PureComponent {
             wizardStep: 1,
             pid: this.getParameterByName("pid"),
             institutionID: this.getParameterByName("institutionId") ? this.getParameterByName("institutionId") : "1",
-            theURI: this.props.documentRoot + "/geo-dash"
+            theURI: this.props.documentRoot + "/geo-dash",
         };
     }
 
@@ -53,7 +53,7 @@ class BasicLayout extends React.PureComponent {
         items: 0,
         rowHeight: 300,
         cols: 12,
-        graphReducer: "Min"
+        graphReducer: "Min",
     };
 
     getParameterByName = (name, url) => {
@@ -66,11 +66,13 @@ class BasicLayout extends React.PureComponent {
             : null;
     };
 
-    getGatewayUrl = (widget, collectionName) => {
-        const fts = {"LANDSAT5": "Landsat5Filtered",
-                     "LANDSAT7": "Landsat7Filtered",
-                     "LANDSAT8": "Landsat8Filtered",
-                     "Sentinel2": "FilteredSentinel"};
+    getGatewayPath = (widget, collectionName) => {
+        const fts = {
+            "LANDSAT5": "Landsat5Filtered",
+            "LANDSAT7": "Landsat7Filtered",
+            "LANDSAT8": "Landsat8Filtered",
+            "Sentinel2": "FilteredSentinel",
+        };
         const resourcePath = (widget.filterType && widget.filterType.length > 0)
             ? fts[widget.filterType]
             : (widget.ImageAsset && widget.ImageAsset.length > 0)
@@ -82,16 +84,14 @@ class BasicLayout extends React.PureComponent {
                         : (collectionName.trim().length > 0)
                             ? "cloudMaskImageByMosaicCollection"
                             : "ImageCollectionbyIndex";
-        return window.location.protocol + "//" + window.location.hostname + ":8888/" + resourcePath;
+        return resourcePath;
     };
 
-    getImageByType = (which) => {
-        return (which === "getStats")
+    getImageByType = (which) => (which === "getStats")
             ? "/img/statssample.gif"
             : (which.toLowerCase().includes("image") || which === "")
                 ? "/img/mapsample.gif"
                 : "/img/graphsample.gif";
-    };
 
     componentDidMount() {
         fetch(this.state.theURI + "/id/" + this.state.pid)
@@ -108,17 +108,19 @@ class BasicLayout extends React.PureComponent {
                         ...widget,
                         layout: {
                             ...widget.layout,
-                            y: widget.layout.y ? widget.layout.y : 0
-                        }
+                            y: widget.layout.y ? widget.layout.y : 0,
+                        },
                     }
                     : widget);
                 console.log("before checkWidgetStructure");
                 this.checkWidgetStructure(updatedWidgets);
                 console.log("before setState");
-                this.setState({ dashboardID: data.dashboardID,
-                                widgets:     updatedWidgets,
-                                haveWidgets: true,
-                                layout:      this.generateLayout() });
+                this.setState({
+                    dashboardID: data.dashboardID,
+                    widgets:     updatedWidgets,
+                    haveWidgets: true,
+                    layout:      this.generateLayout(),
+                });
             })
             .catch(response => {
                 console.log(response);
@@ -127,8 +129,10 @@ class BasicLayout extends React.PureComponent {
         fetch(this.props.documentRoot + "/get-all-imagery?institutionId=" + this.state.institutionID)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
-                this.setState({ imagery: [{ title: "Open Street Maps", id: "osm" }, ...data],
-                                widgetBaseMap: "osm" });
+                this.setState({
+                    imagery: [{ title: "Open Street Maps", id: "osm" }, ...data],
+                    widgetBaseMap: "osm",
+                });
             })
             .catch(response => {
                 console.log(response);
@@ -140,93 +144,89 @@ class BasicLayout extends React.PureComponent {
         let changed = false;
         let row = 0;
         let column = 0;
-        let sWidgets = _.orderBy(updatedWidgets, "id", "asc");
-        let widgets = _.map(sWidgets, (widget, i) => {
+        const sWidgets = _.orderBy(updatedWidgets, "id", "asc");
+        const widgets = _.map(sWidgets, (widget, i) => {
             if (widget.layout) {
-                if (widget["gridcolumn"]){
+                if (widget["gridcolumn"]) {
                     delete widget["gridcolumn"];
                 }
-                if (widget["gridrow"]){
+                if (widget["gridrow"]) {
                     delete widget["gridrow"];
                 }
                 widget.layout.i = i.toString();
                 return widget;
-            } else if (widget.gridcolumn){
+            } else if (widget.gridcolumn) {
                 changed = true;
-                let x;
-                let w;
                 let y;
                 let h;
                 //let layout;
                 //do the x and w
-                x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
-                w = parseInt(widget.gridcolumn.split(" ")[3]);
-                if (widget.gridrow){
+                const x = parseInt(widget.gridcolumn.split(" ")[0]) - 1;
+                const w = parseInt(widget.gridcolumn.split(" ")[3]);
+                if (widget.gridrow) {
                     //do the y and h
                     y = parseInt(widget.gridrow.trim().split(" ")[0]) - 1;
-                    h = widget.gridrow.trim().split(" ")[3] !== null ? parseInt(widget.gridrow.trim().split(" ")[3]): 1;
+                    h = widget.gridrow.trim().split(" ")[3] !== null ? parseInt(widget.gridrow.trim().split(" ")[3]) : 1;
                 }
                 // create .layout
-                widget.layout = {x : x, y: y, w: w, h: h};
+                widget.layout = { x : x, y: y, w: w, h: h };
                 delete widget["gridcolumn"];
                 delete widget["gridrow"];
-            } else if (widget.position){
+            } else if (widget.position) {
 
                 changed = true;
                 let x;
-                let h = 1;
+                const h = 1;
                 if (column + parseInt(widget.width) <= 12) {
                     x = column;
                     column = column + parseInt(widget.width);
                 } else {
                     x = 0;
                     column = parseInt(widget.width);
-                    row +=1;
+                    row += 1;
                 }
-                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString()};
-            }
-            else {
+                widget.layout = { x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString() };
+            } else {
                 changed = true;
                 let x;
-                let h = 1;
+                const h = 1;
                 if (column + 3 <= 12) {
                     x = column;
                     column = column + 3;
                 } else {
                     x = 0;
                     column = parseInt(widget.width);
-                    row +=1;
+                    row += 1;
                 }
-                widget.layout = {x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString()};
+                widget.layout = { x : x, y: row, w: parseInt(widget.width), h: h, i:i.toString() };
             }
             return widget;
         });
-        this.setState({ widgets: widgets});
-        if (changed){
+        this.setState({ widgets: widgets });
+        if (changed) {
             this.updateServerWidgets();
         }
     };
 
     updateServerWidgets = () => {
-        this.state.widgets.forEach( widget =>  {
-            let ajaxurl = this.state.theURI + "/updatewidget/widget/" + widget.id;
+        this.state.widgets.forEach( widget => {
+            const ajaxurl = this.state.theURI + "/updatewidget/widget/" + widget.id;
             this.serveItUp(ajaxurl, widget);
         });
     };
 
-    serveItUp = (url, widget) =>
-    {
+    serveItUp = (url, widget) => {
         fetch(url,
               {
                   method: "post",
                   headers: {
                       "Accept": "application/json",
-                      "Content-Type": "application/json"
+                      "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
                       dashID: this.state.dashboardID,
-                      widgetJSON: JSON.stringify(widget)
-                  })
+                      widgetJSON: JSON.stringify(widget),
+                  }),
               })
             .then(response => {
                 if (!response.ok) {
@@ -235,23 +235,37 @@ class BasicLayout extends React.PureComponent {
             });
     };
 
-    deleteWidgetFromServer = widget =>
-    {
-        let ajaxurl = this.state.theURI + "/deletewidget/widget/" + widget.id;
+    deleteWidgetFromServer = widget => {
+        const ajaxurl = this.state.theURI + "/deletewidget/widget/" + widget.id;
         this.serveItUp(ajaxurl, widget);
     };
 
     generateDOM = () => {
         const x = "x";
-        return _.map(this.state.widgets, (widget, i) => {
-            return <div onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} key={i} data-grid={widget.layout} className="front widgetEditor-widgetBackground" style={{backgroundImage: "url(" + this.getImageByType(widget.properties[0]) +")"}} >
+        return _.map(this.state.widgets, (widget, i) =>
+            <div
+                onDragStart={this.onDragStart}
+                onDragEnd={this.onDragEnd}
+                key={i}
+                data-grid={widget.layout}
+                className="front widgetEditor-widgetBackground"
+                style={{ backgroundImage: "url(" + this.getImageByType(widget.properties[0]) + ")" }}
+            >
                 <h3 className="widgetEditor title">{widget.name}
-                    <span className="remove" onClick={e => {e.stopPropagation(); this.onRemoveItem(i);}} onMouseDown={function(e){ e.stopPropagation();}} >
+                    <span
+                        className="remove"
+                        onClick={e => {
+                            e.stopPropagation(); this.onRemoveItem(i);
+                        }}
+                        onMouseDown={function(e) {
+                            e.stopPropagation();
+                        }}
+                    >
                         {x}
                     </span>
                 </h3>
-                <span className="text text-danger">Sample Image</span></div>;
-        });
+                <span className="text text-danger">Sample Image</span>
+            </div>);
     };
 
     addCustomImagery = imagery => {
@@ -260,9 +274,9 @@ class BasicLayout extends React.PureComponent {
                   method: "post",
                   headers: {
                       "Accept": "application/json",
-                      "Content-Type": "application/json"
+                      "Content-Type": "application/json",
                   },
-                  body: JSON.stringify(imagery)
+                  body: JSON.stringify(imagery),
               })
             .then(response => {
                 if (!response.ok) {
@@ -273,12 +287,13 @@ class BasicLayout extends React.PureComponent {
 
     buildImageryObject = img => {
         console.log(img);
-        let gatewayUrl = this.getGatewayUrl(img);
+        const gatewayUrl = this.props.documentRoot + "/geo-dash/gateway-request";
         let title = img.filterType.replace(/\w\S*/g, function (word) {
-            return word.charAt(0) + word.slice(1).toLowerCase();}) + ": " + img.startDate + " to " + img.endDate;
-        let ImageAsset = img.ImageAsset ? img.ImageAsset : "";
-        let ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
-        let iObject =  {
+            return word.charAt(0) + word.slice(1).toLowerCase();
+        }) + ": " + img.startDate + " to " + img.endDate;
+        const ImageAsset = img.ImageAsset ? img.ImageAsset : "";
+        const ImageCollectionAsset = img.ImageCollectionAsset ? img.ImageCollectionAsset : "";
+        const iObject = {
             institutionId: this.state.institutionID,
             imageryTitle: title,
             imageryAttribution: "Google Earth Engine",
@@ -290,8 +305,9 @@ class BasicLayout extends React.PureComponent {
                 filterType: img.filterType,
                 visParams: img.visParams,
                 ImageAsset: ImageAsset,
-                ImageCollectionAsset: ImageCollectionAsset
-            }
+                ImageCollectionAsset: ImageCollectionAsset,
+                path:this.getGatewayPath(img),
+            },
         };
         if (img.ImageAsset && img.ImageAsset.length > 0) {
             title = img.ImageAsset.substr(img.ImageAsset.lastIndexOf("/") + 1).replace(new RegExp("_", "g"), " ");
@@ -335,7 +351,7 @@ class BasicLayout extends React.PureComponent {
             widgetMaxDual:"",
             widgetCloudScoreDual:"",
             formReady: false,
-            wizardStep: 1
+            wizardStep: 1,
 
         });
     };
@@ -354,7 +370,7 @@ class BasicLayout extends React.PureComponent {
 
     onDataTypeSelectChanged = event => {
         this.setState({
-            selectedDataType: event.target.value
+            selectedDataType: event.target.value,
         });
     };
 
@@ -388,29 +404,31 @@ class BasicLayout extends React.PureComponent {
             widgetMaxDual:"",
             widgetCloudScoreDual:"",
             formReady: false,
-            wizardStep: 1
+            wizardStep: 1,
         });
     };
 
     onNextWizardStep = () => {
-        this.setState({wizardStep: 2});
+        this.setState({ wizardStep: 2 });
     };
 
     onPrevWizardStep = () => {
-        this.setState({wizardStep: 1});
+        this.setState({ wizardStep: 1 });
     };
 
     onCreateNewWidget = () => {
-        let widget = {};
-        let id = this.state.widgets.length > 0?(Math.max.apply(Math, this.state.widgets.map(function(o) { return o.id; }))) + 1: 0;
-        let name = this.state.widgetTitle;
+        const widget = {};
+        const id = this.state.widgets.length > 0 ? (Math.max.apply(Math, this.state.widgets.map(function(o) {
+            return o.id;
+        }))) + 1 : 0;
+        const name = this.state.widgetTitle;
         widget.id = id;
         widget.name = name;
-        let yval = ((Math.max.apply(Math, this.state.widgets.map(function (o) {
+        const yval = ((Math.max.apply(Math, this.state.widgets.map(function (o) {
             return o.layout.y !== null ? o.layout.y : 0;
         }))) + 1) > -1 ? (Math.max.apply(Math, this.state.widgets.map(function (o) {
-                return o.layout.y !== null ? o.layout.y : 0;
-            }))) + 1 : 0;
+            return o.layout.y !== null ? o.layout.y : 0;
+        }))) + 1 : 0;
 
         widget.layout = {
             i: id.toString(),
@@ -418,16 +436,16 @@ class BasicLayout extends React.PureComponent {
             y: yval, // puts it at the bottom
             w: 3,
             h: 1,
-            minW: 3
+            minW: 3,
         };
         widget.baseMap = (this.state.imagery.filter(imagery => String(imagery.id) === this.state.widgetBaseMap))[0];
         if (this.state.selectedWidgetType === "DualImageCollection") {
-            widget.properties = ["","","","",""];
+            widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = {};
             widget.dualImageCollection = [];
-            let img1 = {};
-            let img2 = {};
+            const img1 = {};
+            const img2 = {};
             img1.collectionType = "ImageCollection" + this.state.selectedDataType;
             img2.collectionType = "ImageCollection" + this.state.selectedDataTypeDual;
             img1.startDate = this.state.startDate;
@@ -440,7 +458,7 @@ class BasicLayout extends React.PureComponent {
                     bands: this.state.widgetBands,
                     min: this.state.widgetMin,
                     max: this.state.widgetMax,
-                    cloudLessThan: this.state.widgetCloudScore
+                    cloudLessThan: this.state.widgetCloudScore,
                 };
                 this.addCustomImagery(this.buildImageryObject(img1));
 
@@ -451,7 +469,7 @@ class BasicLayout extends React.PureComponent {
                     bands: this.state.widgetBandsDual,
                     min: this.state.widgetMinDual,
                     max: this.state.widgetMaxDual,
-                    cloudLessThan: this.state.widgetCloudScoreDual
+                    cloudLessThan: this.state.widgetCloudScoreDual,
                 };
                 this.addCustomImagery(this.buildImageryObject(img2));
             }
@@ -464,7 +482,7 @@ class BasicLayout extends React.PureComponent {
                     startDate: "",
                     endDate: "",
                     filterType: "",
-                    visParams: img1.visParams
+                    visParams: img1.visParams,
                 }));
 
             }
@@ -478,7 +496,7 @@ class BasicLayout extends React.PureComponent {
                     startDate: "",
                     endDate: "",
                     filterType: "",
-                    visParams: JSON.parse(this.state.imageParams)
+                    visParams: JSON.parse(this.state.imageParams),
                 }));
             }
             if (this.state.selectedDataTypeDual === "imageAsset") {
@@ -491,7 +509,7 @@ class BasicLayout extends React.PureComponent {
                         startDate: "",
                         endDate: "",
                         filterType: "",
-                        visParams: JSON.parse(this.state.imageParamsDual)
+                        visParams: JSON.parse(this.state.imageParamsDual),
                     }));
                 }, 500);
 
@@ -506,7 +524,7 @@ class BasicLayout extends React.PureComponent {
                         startDate: "",
                         endDate: "",
                         filterType: "",
-                        visParams: img2.visParams
+                        visParams: img2.visParams,
                     }));
                 }, 500);
 
@@ -514,7 +532,7 @@ class BasicLayout extends React.PureComponent {
             widget.dualImageCollection.push(img1);
             widget.dualImageCollection.push(img2);
         } else if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "ImageElevation") {
-            widget.properties = ["","","","",""];
+            widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = this.state.imageParams === "" ? {} : JSON.parse(this.state.imageParams);
             widget.ImageAsset = this.state.imageCollection;
@@ -524,11 +542,11 @@ class BasicLayout extends React.PureComponent {
                     startDate: "",
                     endDate: "",
                     filterType: "",
-                    visParams: widget.visParams
+                    visParams: widget.visParams,
                 }));
             }
         } else if (this.state.selectedWidgetType === "imageCollectionAsset") {
-            widget.properties = ["","","","",""];
+            widget.properties = ["", "", "", "", ""];
             widget.filterType = "";
             widget.visParams = JSON.parse(this.state.imageParams);
             widget.ImageCollectionAsset = this.state.imageCollection;
@@ -537,13 +555,20 @@ class BasicLayout extends React.PureComponent {
                 startDate: "",
                 endDate: "",
                 filterType: "",
-                visParams: widget.visParams
+                visParams: widget.visParams,
             }));
         } else {
-            let wType = this.state.selectedWidgetType === "TimeSeries" ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType : this.state.selectedWidgetType === "ImageCollection" ? this.state.selectedWidgetType + this.state.selectedDataType : this.state.selectedWidgetType === "statistics" ? "getStats" : this.state.selectedWidgetType === "ImageElevation" ? "ImageElevation" : "custom";
+            const wType = this.state.selectedWidgetType === "TimeSeries"
+                ? this.state.selectedDataType.toLowerCase() + this.state.selectedWidgetType
+                : this.state.selectedWidgetType === "ImageCollection"
+                    ? this.state.selectedWidgetType + this.state.selectedDataType
+                    : this.state.selectedWidgetType === "statistics"
+                        ? "getStats"
+                        : this.state.selectedWidgetType === "ImageElevation"
+                            ? "ImageElevation" : "custom";
             let prop1 = "";
-            let properties = [];
-            let prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
+            const properties = [];
+            const prop4 = this.state.selectedDataType !== null ? this.state.selectedDataType : "";
             if (this.state.selectedDataType === "Custom") {
                 //more work to do to label the type and add
                 prop1 = this.state.imageCollection;
@@ -564,7 +589,7 @@ class BasicLayout extends React.PureComponent {
                     bands: this.state.widgetBands,
                     min: this.state.widgetMin,
                     max: this.state.widgetMax,
-                    cloudLessThan: this.state.widgetCloudScore
+                    cloudLessThan: this.state.widgetCloudScore,
                 };
 
                 this.addCustomImagery(this.buildImageryObject({
@@ -572,7 +597,7 @@ class BasicLayout extends React.PureComponent {
                     startDate: this.state.startDate,
                     endDate: this.state.endDate,
                     filterType: widget.filterType,
-                    visParams: widget.visParams
+                    visParams: widget.visParams,
                 }));
             }
             widget.dualLayer = this.state.dualLayer;
@@ -587,18 +612,18 @@ class BasicLayout extends React.PureComponent {
                   method: "post",
                   headers: {
                       "Accept": "application/json",
-                      "Content-Type": "application/json"
+                      "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
                       pID: this.state.pid,
                       dashID: this.state.dashboardID,
-                      widgetJSON: JSON.stringify(widget)
-                  })
+                      widgetJSON: JSON.stringify(widget),
+                  }),
               })
             .then(response => {
-                if (response.ok){
+                if (response.ok) {
                     this.setState({
-                        widgets: [...this.state.widgets, widget],  //this.state.widgets.concat(widget),
+                        widgets: [...this.state.widgets, widget],
                         selectedWidgetType: "-1",
                         selectedDataTypeDual: "-1",
                         isEditing: false,
@@ -618,7 +643,7 @@ class BasicLayout extends React.PureComponent {
                         widgetMin:"",
                         widgetMax:"",
                         widgetCloudScore:"",
-                        formReady: false
+                        formReady: false,
                     });
                 } else {
                     console.log("Error adding custom imagery to institution. See console for details.");
@@ -627,125 +652,119 @@ class BasicLayout extends React.PureComponent {
     };
 
     onDataBaseMapSelectChanged = event => {
-        this.setState({widgetBaseMap: event.target.value});
+        this.setState({ widgetBaseMap: event.target.value });
     };
 
     onWidgetTitleChange = event => {
-        this.setState({widgetTitle: event.target.value});
+        this.setState({ widgetTitle: event.target.value });
     };
 
     onImageCollectionChange = event => {
-        this.setState({imageCollection: event.target.value});
+        this.setState({ imageCollection: event.target.value });
     };
 
     onGraphBandChange = event => {
-        this.setState({graphBand: event.target.value});
+        this.setState({ graphBand: event.target.value });
     };
 
     onGraphReducerChanged = event => {
-        this.setState({graphReducer: event.target.value});
+        this.setState({ graphReducer: event.target.value });
     };
 
     onImageParamsChange = event => {
-        this.setState({imageParams: event.target.value.replace(/\s/g,"")});
+        this.setState({ imageParams: event.target.value.replace(/\s/g, "") });
     };
 
     onWidgetDualLayerChange = event => {
-        this.setState({dualLayer: event.target.checked});
+        this.setState({ dualLayer: event.target.checked });
     };
 
     onWidgetBandsChange = event => {
-        this.setState({widgetBands: event.target.value.replace(/\s/g,"")});
+        this.setState({ widgetBands: event.target.value.replace(/\s/g, "") });
     };
 
     onWidgetMinChange = event => {
-        this.setState({widgetMin: event.target.value});
+        this.setState({ widgetMin: event.target.value });
     };
 
     onWidgetMaxChange = event => {
-        this.setState({widgetMax: event.target.value});
+        this.setState({ widgetMax: event.target.value });
     };
 
     onStartDateChanged = date => {
-        if (date.target)
-        {
-            if( date.target.value) {
-                this.setState({startDate: date.target.value});
+        if (date.target) {
+            if ( date.target.value) {
+                this.setState({ startDate: date.target.value });
             } else {
-                this.setState({startDate: ""});
+                this.setState({ startDate: "" });
             }
         } else {
-            this.setState({startDate: date});
+            this.setState({ startDate: date });
         }
     };
 
     onEndDateChanged = date => {
-        if (date.target)
-        {
+        if (date.target) {
             if (date.target.value) {
-                this.setState({endDate: date.target.value});
+                this.setState({ endDate: date.target.value });
             } else {
-                this.setState({endDate: ""});
+                this.setState({ endDate: "" });
             }
         } else {
-            this.setState({endDate: date});
+            this.setState({ endDate: date });
             this.setFormStateByDates();
         }
     };
 
     onWidgetCloudScoreChange = event => {
-        this.setState({widgetCloudScore: event.target.value});
+        this.setState({ widgetCloudScore: event.target.value });
     };
 
     onImageCollectionChangeDual = event => {
-        this.setState({imageCollectionDual: event.target.value});
+        this.setState({ imageCollectionDual: event.target.value });
     };
 
     onImageParamsChangeDual = event => {
-        this.setState({imageParamsDual: event.target.value.replace(/\s/g,"")});
+        this.setState({ imageParamsDual: event.target.value.replace(/\s/g, "") });
     };
 
     onWidgetBandsChangeDual = event => {
-        this.setState({widgetBandsDual: event.target.value.replace(/\s/g,"")});
+        this.setState({ widgetBandsDual: event.target.value.replace(/\s/g, "") });
     };
 
     onWidgetMinChangeDual = event => {
-        this.setState({widgetMinDual: event.target.value});
+        this.setState({ widgetMinDual: event.target.value });
     };
 
     onWidgetMaxChangeDual = event => {
-        this.setState({widgetMaxDual: event.target.value});
+        this.setState({ widgetMaxDual: event.target.value });
     };
 
     onWidgetCloudScoreChangeDual = event => {
-        this.setState({widgetCloudScoreDual: event.target.value});
+        this.setState({ widgetCloudScoreDual: event.target.value });
     };
 
     onStartDateChangedDual = date => {
-        if (date.target)
-        {
+        if (date.target) {
             if (date.target.value) {
-                this.setState({startDateDual: date.target.value});
+                this.setState({ startDateDual: date.target.value });
             } else {
-                this.setState({startDateDual: ""});
+                this.setState({ startDateDual: "" });
             }
-        }
-        else {
-            this.setState({startDateDual: date});
+        } else {
+            this.setState({ startDateDual: date });
         }
     };
 
     onEndDateChangedDual = date => {
-        if (date.target)
-        {
+        if (date.target) {
             if (date.target.value) {
-                this.setState({endDateDual: date.target.value});
+                this.setState({ endDateDual: date.target.value });
             } else {
-                this.setState({endDateDual: ""});
+                this.setState({ endDateDual: "" });
             }
-        }
-        else {
-            this.setState({endDateDual: date});
+        } else {
+            this.setState({ endDateDual: date });
             this.setFormStateByDates(true);
         }
     };
@@ -753,7 +772,7 @@ class BasicLayout extends React.PureComponent {
     onDataTypeSelectChangedDual = event => {
         this.setState({
             selectedDataTypeDual: event.target.value.trim(),
-            formReady: true
+            formReady: true,
         });
     };
 
@@ -762,50 +781,55 @@ class BasicLayout extends React.PureComponent {
         const sd = isDual ? new Date(this.state.startDateDual) : new Date(this.state.startDate);
         let isFormReady = null;
         if (! this.state.dualLayer) {
-            isFormReady = ed > sd && this.state.formReady !== true ? true : ed < sd &&  this.state.formReady === true? false : null;
+            isFormReady = ed > sd && this.state.formReady !== true
+                ? true
+                : ed < sd && this.state.formReady === true
+                    ? false : null;
         } else {
             const ed2 = new Date(this.state.endDate2);
             const sd2 = new Date(this.state.startDate2);
-            isFormReady = ed > sd && ed2 > sd2 && this.state.formReady !== true ? true : (ed < sd || ed2 < sd2) && this.state.formReady === true ? false : null;
+            isFormReady = ed > sd
+                && ed2 > sd2
+                && this.state.formReady !== true
+                    ? true
+                    : (ed < sd || ed2 < sd2)
+                        && this.state.formReady === true
+                            ? false : null;
         }
-        if (isFormReady !== null)
-        {
-            this.setState({formReady: isFormReady});
+        if (isFormReady !== null) {
+            this.setState({ formReady: isFormReady });
         }
     };
 
     onStartDate2Changed = date => {
-        if (date.target)
-        {
+        if (date.target) {
             if (date.target.value) {
-                this.setState({startDate2: date.target.value});
+                this.setState({ startDate2: date.target.value });
             } else {
-                this.setState({startDate2: ""});
+                this.setState({ startDate2: "" });
             }
-        }
-        else {
-            this.setState({startDate2: date});
+        } else {
+            this.setState({ startDate2: date });
         }
     };
 
     onEndDate2Changed = date => {
-        if (date.target)
-        {
+        if (date.target) {
             if (date.target.value) {
-                this.setState({endDate2: date.target.value});
+                this.setState({ endDate2: date.target.value });
             } else {
-                this.setState({endDate2: ""});
+                this.setState({ endDate2: "" });
             }
         } else {
-            this.setState({endDate2: date});
+            this.setState({ endDate2: date });
             this.setFormStateByDates();
         }
     };
 
     getNewWidgetForm = () => {
         if (this.state.isEditing) {
-            return  <React.Fragment>
-                <div className="modal fade show" style={{display: "block"}}>
+            return <React.Fragment>
+                <div className="modal fade show" style={{ display: "block" }}>
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
                             <div className="modal-header">
@@ -818,7 +842,13 @@ class BasicLayout extends React.PureComponent {
                                 <form>
                                     <div className="form-group">
                                         <label htmlFor="widgetTypeSelect">Type</label>
-                                        <select name="widgetTypeSelect" className="form-control" value={this.state.selectedWidgetType} id="widgetTypeSelect" onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}>
+                                        <select
+                                            name="widgetTypeSelect"
+                                            className="form-control"
+                                            value={this.state.selectedWidgetType}
+                                            id="widgetTypeSelect"
+                                            onChange={e => this.onWidgetTypeSelectChanged(e, "i am anything")}
+                                        >
                                             <option value="-1">Please select type</option>
                                             <option label="Image Collection" value="ImageCollection">Image Collection</option>
                                             <option label="Time Series Graph" value="TimeSeries">Time Series Graph</option>
@@ -841,66 +871,83 @@ class BasicLayout extends React.PureComponent {
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <div className="modal-backdrop fade show"> </div>
             </React.Fragment>;
         }
     };
 
-    getFormButtons = () => {
-        return <React.Fragment>
-            <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Cancel</button>
-            <button type="button" className="btn btn-primary" onClick={this.onCreateNewWidget} disabled={!this.state.formReady}>Create</button>
-        </React.Fragment>;
-
-    };
+    getFormButtons = () => <React.Fragment>
+        <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onCancelNewWidget}>Cancel</button>
+        <button type="button" className="btn btn-primary" onClick={this.onCreateNewWidget} disabled={!this.state.formReady}>Create</button>
+    </React.Fragment>;
 
     getBaseMapSelector = () => {
-        if (this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection" || this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation") {
+        if (this.state.selectedWidgetType === "ImageCollection"
+            || this.state.selectedWidgetType === "DualImageCollection"
+            || this.state.selectedWidgetType === "imageAsset"
+            || this.state.selectedWidgetType === "imageCollectionAsset"
+            || this.state.selectedWidgetType === "ImageElevation") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Basemap</label>
-                <select name="widgetIndicesSelect" value={this.state.widgetBaseMap} className="form-control"
-                        id="widgetIndicesSelect" onChange={this.onDataBaseMapSelectChanged}>
+                <select
+                    name="widgetIndicesSelect"
+                    value={this.state.widgetBaseMap}
+                    className="form-control"
+                    id="widgetIndicesSelect"
+                    onChange={this.onDataBaseMapSelectChanged}
+                >
                     {this.baseMapOptions()}
                 </select>
             </React.Fragment>;
         }
     };
 
-    baseMapOptions = () => {
-        return _.map(this.state.imagery, function (imagery) {
-            return <option key={imagery.id} value={imagery.id}> {imagery.title} </option>;
-        });
-    };
+    baseMapOptions = () => _.map(this.state.imagery, function (imagery) {
+        return <option key={imagery.id} value={imagery.id}> {imagery.title} </option>;
+    });
 
     getDataTypeSelectionControl = () => {
-        if (this.state.selectedWidgetType === "-1")
-        {
+        if (this.state.selectedWidgetType === "-1") {
             return <br/>;
         } else if (this.state.selectedWidgetType === "statistics") {
-            if (this.state.formReady !== true){
+            if (this.state.formReady !== true) {
                 this.setState({
-                    formReady: true
+                    formReady: true,
                 });
             }
             return <React.Fragment>
                 <div className="form-group">
                     <label htmlFor="widgetTitle">Title</label>
-                    <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.widgetTitle} className="form-control" onChange={this.onWidgetTitleChange}/>
+                    <input
+                        type="text"
+                        name="widgetTitle"
+                        id="widgetTitle"
+                        value={this.state.widgetTitle}
+                        className="form-control"
+                        onChange={this.onWidgetTitleChange}
+                    />
                 </div>
             </React.Fragment>;
-        } else if (this.state.selectedWidgetType === "imageAsset" || this.state.selectedWidgetType === "imageCollectionAsset" || this.state.selectedWidgetType === "ImageElevation") {
-            if (this.state.formReady !== true){
+        } else if (this.state.selectedWidgetType === "imageAsset" ||
+            this.state.selectedWidgetType === "imageCollectionAsset" ||
+            this.state.selectedWidgetType === "ImageElevation") {
+            if (this.state.formReady !== true) {
                 this.setState({
-                    formReady: true
+                    formReady: true,
                 });
             }
             return <br/>;
         } else if (this.state.selectedWidgetType === "ImageCollection") {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
-                <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                <select
+                    name="widgetIndicesSelect"
+                    value={this.state.selectedDataType}
+                    className="form-control"
+                    id="widgetIndicesSelect"
+                    onChange={this.onDataTypeSelectChanged}
+                >
                     <option value="-1" className="" >Please select type</option>
                     <option label="NDVI" value="NDVI">NDVI</option>
                     <option label="EVI" value="EVI">EVI</option>
@@ -919,7 +966,13 @@ class BasicLayout extends React.PureComponent {
                 return <React.Fragment>
                     <h3 className={"mt-4 text-center text-info"}>Dual imageCollection Step 1</h3>
                     <label htmlFor="widgetIndicesSelect">Data</label>
-                    <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                    <select
+                        name="widgetIndicesSelect"
+                        value={this.state.selectedDataType}
+                        className="form-control"
+                        id="widgetIndicesSelect"
+                        onChange={this.onDataTypeSelectChanged}
+                    >
                         <option value="-1" className="" >Please select type</option>
                         <option label="NDVI" value="NDVI">NDVI</option>
                         <option label="EVI" value="EVI">EVI</option>
@@ -940,7 +993,13 @@ class BasicLayout extends React.PureComponent {
 
                     <h3 className={"mt-4 text-center text-info"}>Dual imageCollection Step 2</h3>
                     <label htmlFor="widgetIndicesSelect2">Data 2</label>
-                    <select name="widgetIndicesSelect2" value={this.state.selectedDataTypeDual} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChangedDual} >
+                    <select
+                        name="widgetIndicesSelect2"
+                        value={this.state.selectedDataTypeDual}
+                        className="form-control"
+                        id="widgetIndicesSelect"
+                        onChange={this.onDataTypeSelectChangedDual}
+                    >
                         <option value="-1" className="" >Please select type</option>
                         <option label="NDVI" value="NDVI">NDVI 2</option>
                         <option label="EVI" value="EVI">EVI</option>
@@ -961,7 +1020,13 @@ class BasicLayout extends React.PureComponent {
         } else {
             return <React.Fragment>
                 <label htmlFor="widgetIndicesSelect">Data</label>
-                <select name="widgetIndicesSelect" value={this.state.selectedDataType} className="form-control" id="widgetIndicesSelect" onChange={this.onDataTypeSelectChanged} >
+                <select
+                    name="widgetIndicesSelect"
+                    value={this.state.selectedDataType}
+                    className="form-control"
+                    id="widgetIndicesSelect"
+                    onChange={this.onDataTypeSelectChanged}
+                >
                     <option value="-1" className="" >Please select type</option>
                     <option label="NDVI" value="NDVI">NDVI</option>
                     <option label="EVI" value="EVI">EVI</option>
@@ -974,56 +1039,100 @@ class BasicLayout extends React.PureComponent {
         }
     };
 
-    getTitleBlock = () => {
-        return <div className="form-group">
-            <label htmlFor="widgetTitle">Title</label>
-            <input type="text" name="widgetTitle" id="widgetTitle" value={this.state.widgetTitle}
-                   className="form-control" onChange={this.onWidgetTitleChange}/>
-        </div>;
-    };
+    getTitleBlock = () => <div className="form-group">
+        <label htmlFor="widgetTitle">Title</label>
+        <input
+            type="text"
+            name="widgetTitle"
+            id="widgetTitle"
+            value={this.state.widgetTitle}
+            className="form-control"
+            onChange={this.onWidgetTitleChange}
+        />
+    </div>;
 
-    getImageParamsBlock = () => {
-        return  <div className="form-group">
-            <label htmlFor="imageParams">Image Parameters (json format)</label>
-            <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
-        </div>;
-    };
+    getImageParamsBlock = () => <div className="form-group">
+        <label htmlFor="imageParams">Image Parameters (json format)</label>
+        <textarea
+            className="form-control"
+            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+            onChange={this.onImageParamsChange}
+            rows="4"
+            value={this.state.imageParams}
+            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+        />
+    </div>;
 
-    getNextStepButton = () => {
-        if (this.state.selectedWidgetType === "DualImageCollection") {
-            return <button type="button" className="btn btn-secondary" data-dismiss="modal"
-                           onClick={this.onNextWizardStep}>Step 2 &rArr;</button>;
-        }
-    };
+    getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
+        ?
+            <button
+                type="button"
+                className="btn btn-secondary"
+                data-dismiss="modal"
+                onClick={this.onNextWizardStep}
+            >
+                Step 2 &rArr;
+            </button>
+        :
+            "";
 
     getDualImageCollectionTimeSpanOption = () => {
         if (this.state.selectedWidgetType === "DualImageCollection") {
             return <div className="form-group">
                 <label htmlFor="widgetDualLayer">Dual time span</label>
-                <input type="checkbox" name="widgetDualLayer" id="widgetDualLayer" checked={this.state.dualLayer}
-                       className="form-control" onChange={this.onWidgetDualLayerChange}/>
+                <input
+                    type="checkbox"
+                    name="widgetDualLayer"
+                    id="widgetDualLayer"
+                    checked={this.state.dualLayer}
+                    className="form-control"
+                    onChange={this.onWidgetDualLayerChange}
+                />
             </div>;
         }
     };
 
-    getDateRangeControl = () => {
-        return <div className="input-group input-daterange" id="range_new_cooked">
-            <input type="text" className="form-control" onChange={this.onStartDateChanged} value={this.state.startDate} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked"/>
-            <div className="input-group-addon">to</div>
-            <input type="text" className="form-control" onChange={this.onEndDateChanged} value={this.state.endDate} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked"/>
-        </div>;
-    };
+    getDateRangeControl = () => <div className="input-group input-daterange" id="range_new_cooked">
+        <input
+            type="text"
+            className="form-control"
+            onChange={this.onStartDateChanged}
+            value={this.state.startDate}
+            placeholder={"YYYY-MM-DD"}
+            id="sDate_new_cooked"
+        />
+        <div className="input-group-addon">to</div>
+        <input
+            type="text"
+            className="form-control"
+            onChange={this.onEndDateChanged}
+            value={this.state.endDate}
+            placeholder={"YYYY-MM-DD"}
+            id="eDate_new_cooked"/>
+    </div>;
 
     getDualLayerDateRangeControl = () => {
         if (this.state.dualLayer === true) {
             return <div>
                 <label>Select the Date Range for the top layer</label>
                 <div className="input-group input-daterange" id="range_new_cooked2">
-                    <input type="text" className="form-control" onChange={this.onStartDate2Changed}
-                           value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
+                    <input
+                        type="text"
+                        className="form-control"
+                        onChange={this.onStartDate2Changed}
+                        value={this.state.startDate2}
+                        placeholder={"YYYY-MM-DD"}
+                        id="sDate_new_cooked2"
+                    />
                     <div className="input-group-addon">to</div>
-                    <input type="text" className="form-control" onChange={this.onEndDate2Changed}
-                           value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
+                    <input
+                        type="text"
+                        className="form-control"
+                        onChange={this.onEndDate2Changed}
+                        value={this.state.endDate2}
+                        placeholder={"YYYY-MM-DD"}
+                        id="eDate_new_cooked2"
+                    />
                 </div>
             </div>;
         }
@@ -1032,7 +1141,7 @@ class BasicLayout extends React.PureComponent {
     getDataForm = () => {
         if (this.state.selectedWidgetType === "ImageElevation") {
             this.setState({
-                imageCollection: "USGS/SRTMGL1_003"
+                imageCollection: "USGS/SRTMGL1_003",
             });
             return <React.Fragment>
                 {this.getTitleBlock()}
@@ -1044,30 +1153,50 @@ class BasicLayout extends React.PureComponent {
                 {this.getTitleBlock()}
                 <div className="form-group">
                     <label htmlFor="imageCollection">GEE Image Asset</label>
-                    <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
-                           className="form-control" onChange={this.onImageCollectionChange}/>
+                    <input
+                        type="text"
+                        name="imageCollection"
+                        id="imageCollection"
+                        placeholder={"LANDSAT/LC8_L1T_TOA"}
+                        value={this.state.imageCollection}
+                        className="form-control"
+                        onChange={this.onImageCollectionChange}
+                    />
                 </div>
                 {this.getImageParamsBlock()}
             </React.Fragment>;
         } else if (this.state.selectedDataType === "-1") {
             return "";
         } else {
-            let gObject = this;
-            setTimeout(() => {$(".input-daterange input").each(function () {
-                try {
-                    let bindEvt = this.id === "sDate_new_cookedDual" ? gObject.onStartDateChangedDual : this.id === "eDate_new_cookedDual" ? gObject.onEndDateChangedDual : this.id === "sDate_new_cooked" ? gObject.onStartDateChanged : this.id === "eDate_new_cooked" ? gObject.onEndDateChanged : this.id === "sDate_new_cooked2" ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
-                    console.log("i did this!");
-                    $(this).datepicker({
-                        changeMonth: true,
-                        changeYear: true,
-                        dateFormat: "yy-mm-dd",
-                        onSelect: function(){ bindEvt(this.value);}
-                    });
-                } catch (e) {
-                    console.warn(e.message);
-                }
-            });},250);
-            if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1){
+            const gObject = this;
+            setTimeout(() => {
+                $(".input-daterange input").each(function () {
+                    try {
+                        const bindEvt = this.id === "sDate_new_cookedDual"
+                            ? gObject.onStartDateChangedDual
+                            : this.id === "eDate_new_cookedDual"
+                                ? gObject.onEndDateChangedDual
+                                : this.id === "sDate_new_cooked"
+                                    ? gObject.onStartDateChanged
+                                    : this.id === "eDate_new_cooked"
+                                        ? gObject.onEndDateChanged
+                                        : this.id === "sDate_new_cooked2"
+                                            ? gObject.onStartDate2Changed : gObject.onEndDate2Changed;
+                        console.log("i did this!");
+                        $(this).datepicker({
+                            changeMonth: true,
+                            changeYear: true,
+                            dateFormat: "yy-mm-dd",
+                            onSelect: function() {
+                                bindEvt(this.value);
+                            },
+                        });
+                    } catch (e) {
+                        console.warn(e.message);
+                    }
+                });
+            }, 250);
+            if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataType) && this.state.wizardStep === 1) {
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <label>Select the Date Range you would like</label>
@@ -1076,128 +1205,277 @@ class BasicLayout extends React.PureComponent {
                     {this.getDualLayerDateRangeControl()}
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
-                        <input type="text" name="widgetBands" id="widgetBands" value={this.state.widgetBands}
-                               className="form-control" onChange={this.onWidgetBandsChange}/>
+                        <input
+                            type="text"
+                            name="widgetBands"
+                            id="widgetBands"
+                            value={this.state.widgetBands}
+                            className="form-control"
+                            onChange={this.onWidgetBandsChange}
+                        />
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="widgetMin">Min</label>
-                        <input type="text" name="widgetMin" id="widgetMin" value={this.state.widgetMin}
-                               className="form-control" onChange={this.onWidgetMinChange}/>
+                        <input
+                            type="text"
+                            name="widgetMin"
+                            id="widgetMin"
+                            value={this.state.widgetMin}
+                            className="form-control"
+                            onChange={this.onWidgetMinChange}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="widgetMax">Max</label>
-                        <input type="text" name="widgetMax" id="widgetMax" value={this.state.widgetMax}
-                               className="form-control" onChange={this.onWidgetMaxChange}/>
+                        <input
+                            type="text"
+                            name="widgetMax"
+                            id="widgetMax"
+                            value={this.state.widgetMax}
+                            className="form-control"
+                            onChange={this.onWidgetMaxChange}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="widgetCloudScore">Cloud Score</label>
-                        <input type="text" name="widgetCloudScore" id="widgetCloudScore" value={this.state.widgetCloudScore}
-                               className="form-control" onChange={this.onWidgetCloudScoreChange}/>
+                        <input
+                            type="text"
+                            name="widgetCloudScore"
+                            id="widgetCloudScore"
+                            value={this.state.widgetCloudScore}
+                            className="form-control"
+                            onChange={this.onWidgetCloudScoreChange}
+                        />
                     </div>
                     {this.getNextStepButton()}
                 </React.Fragment>;
-            } else if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep === 2){
+            } else if (["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(this.state.selectedDataTypeDual) && this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChangedDual} value={this.state.startDateDual} placeholder={"YYYY-MM-DD"} id="sDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDateChangedDual}
+                            value={this.state.startDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cookedDual"
+                        />
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChangedDual} value={this.state.endDateDual} placeholder={"YYYY-MM-DD"} id="eDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDateChangedDual}
+                            value={this.state.endDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cookedDual"
+                        />
                     </div>
-
                     <div className="form-group">
                         <label htmlFor="widgetBands">Bands</label>
-                        <input type="text" name="widgetBands" id="widgetBands" value={this.state.widgetBandsDual}
-                               className="form-control" onChange={this.onWidgetBandsChangeDual}/>
+                        <input
+                            type="text"
+                            name="widgetBands"
+                            id="widgetBands"
+                            value={this.state.widgetBandsDual}
+                            className="form-control"
+                            onChange={this.onWidgetBandsChangeDual}
+                        />
                     </div>
-
                     <div className="form-group">
                         <label htmlFor="widgetMin">Min</label>
-                        <input type="text" name="widgetMin" id="widgetMin" value={this.state.widgetMinDual}
-                               className="form-control" onChange={this.onWidgetMinChangeDual}/>
+                        <input
+                            type="text"
+                            name="widgetMin"
+                            id="widgetMin"
+                            value={this.state.widgetMinDual}
+                            className="form-control"
+                            onChange={this.onWidgetMinChangeDual}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="widgetMax">Max</label>
-                        <input type="text" name="widgetMax" id="widgetMax" value={this.state.widgetMaxDual}
-                               className="form-control" onChange={this.onWidgetMaxChangeDual}/>
+                        <input
+                            type="text"
+                            name="widgetMax"
+                            id="widgetMax"
+                            value={this.state.widgetMaxDual}
+                            className="form-control"
+                            onChange={this.onWidgetMaxChangeDual}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="widgetCloudScore">Cloud Score</label>
-                        <input type="text" name="widgetCloudScore" id="widgetCloudScore" value={this.state.widgetCloudScoreDual}
-                               className="form-control" onChange={this.onWidgetCloudScoreChangeDual}/>
+                        <input
+                            type="text"
+                            name="widgetCloudScore"
+                            id="widgetCloudScore"
+                            value={this.state.widgetCloudScoreDual}
+                            className="form-control"
+                            onChange={this.onWidgetCloudScoreChangeDual}
+                        />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
 
 
                 </React.Fragment>;
-            } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1) {
+            } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 1) {
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Asset</label>
-                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
-                               className="form-control" onChange={this.onImageCollectionChange}/>
+                        <input
+                            type="text"
+                            name="imageCollection"
+                            id="imageCollection"
+                            placeholder={"LANDSAT/LC8_L1T_TOA"}
+                            value={this.state.imageCollection}
+                            className="form-control"
+                            onChange={this.onImageCollectionChange}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChange}
+                            rows="4"
+                            value={this.state.imageParams}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
                     </div>
                     {this.getNextStepButton()}
                 </React.Fragment>;
-            } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2) {
+            } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Asset</label>
-                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollectionDual}
-                               className="form-control" onChange={this.onImageCollectionChangeDual}/>
+                        <input
+                            type="text"
+                            name="imageCollection"
+                            id="imageCollection"
+                            placeholder={"LANDSAT/LC8_L1T_TOA"}
+                            value={this.state.imageCollectionDual}
+                            className="form-control"
+                            onChange={this.onImageCollectionChangeDual}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChangeDual}
+                            rows="4"
+                            value={this.state.imageParamsDual}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
                 </React.Fragment>;
-            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataType === "Custom"  && this.state.wizardStep === 1) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataType === "Custom" && this.state.wizardStep === 1) {
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Collection</label>
-                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
-                               className="form-control" onChange={this.onImageCollectionChange}/>
+                        <input
+                            type="text"
+                            name="imageCollection"
+                            id="imageCollection"
+                            placeholder={"LANDSAT/LC8_L1T_TOA"}
+                            value={this.state.imageCollection}
+                            className="form-control"
+                            onChange={this.onImageCollectionChange}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChange} rows="4" value={this.state.imageParams} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChange}
+                            rows="4"
+                            value={this.state.imageParams}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
 
                     </div>
                     <label>Select the Date Range you would like</label>
                     {this.getDateRangeControl()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
-            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataTypeDual === "Custom"  && this.state.wizardStep === 2) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataTypeDual === "Custom" && this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Collection</label>
-                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollectionDual}
-                               className="form-control" onChange={this.onImageCollectionChangeDual}/>
+                        <input
+                            type="text"
+                            name="imageCollection"
+                            id="imageCollection"
+                            placeholder={"LANDSAT/LC8_L1T_TOA"}
+                            value={this.state.imageCollectionDual}
+                            className="form-control"
+                            onChange={this.onImageCollectionChangeDual}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="imageParams">Image Parameters (json format)</label>
-                        <textarea className="form-control" placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"} onChange={this.onImageParamsChangeDual} rows="4" value={this.state.imageParamsDual} style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}/>
+                        <textarea
+                            className="form-control"
+                            placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                            onChange={this.onImageParamsChangeDual}
+                            rows="4"
+                            value={this.state.imageParamsDual}
+                            style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
+                        />
 
                     </div>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChangedDual} value={this.state.startDateDual} placeholder={"YYYY-MM-DD"} id="sDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDateChangedDual}
+                            value={this.state.startDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cookedDual"
+                        />
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChangedDual} value={this.state.endDateDual} placeholder={"YYYY-MM-DD"} id="eDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDateChangedDual}
+                            value={this.state.endDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cookedDual"
+                        />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
                 </React.Fragment>;
-            } else if ((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 1) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 1) {
                 if (this.state.dualLayer === true) {
                     return <React.Fragment>
                         {this.getTitleBlock()}
@@ -1207,10 +1485,23 @@ class BasicLayout extends React.PureComponent {
                         <div>
                             <label>Select the Date Range you would like</label>
                             <div className="input-group input-daterange" id="range_new_cooked2">
-
-                                <input type="text" className="form-control" onChange={this.onStartDate2Changed} value={this.state.startDate2} placeholder={"YYYY-MM-DD"} id="sDate_new_cooked2"/>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    onChange={this.onStartDate2Changed}
+                                    value={this.state.startDate2}
+                                    placeholder={"YYYY-MM-DD"}
+                                    id="sDate_new_cooked2"
+                                />
                                 <div className="input-group-addon">to</div>
-                                <input type="text" className="form-control" onChange={this.onEndDate2Changed} value={this.state.endDate2} placeholder={"YYYY-MM-DD"} id="eDate_new_cooked2"/>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    onChange={this.onEndDate2Changed}
+                                    value={this.state.endDate2}
+                                    placeholder={"YYYY-MM-DD"}
+                                    id="eDate_new_cooked2"
+                                />
                             </div>
                         </div>
                         {this.getNextStepButton()}
@@ -1224,33 +1515,73 @@ class BasicLayout extends React.PureComponent {
                         {this.getNextStepButton()}
                     </React.Fragment>;
                 }
-            } else if ((this.state.selectedWidgetType === "ImageCollection"|| this.state.selectedWidgetType === "DualImageCollection")  && this.state.wizardStep === 2) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">
-
-                        <input type="text" className="form-control" onChange={this.onStartDateChangedDual} value={this.state.startDateDual} placeholder={"YYYY-MM-DD"} id="sDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onStartDateChangedDual}
+                            value={this.state.startDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="sDate_new_cookedDual"
+                        />
                         <div className="input-group-addon">to</div>
-                        <input type="text" className="form-control" onChange={this.onEndDateChangedDual} value={this.state.endDateDual} placeholder={"YYYY-MM-DD"} id="eDate_new_cookedDual"/>
+                        <input
+                            type="text"
+                            className="form-control"
+                            onChange={this.onEndDateChangedDual}
+                            value={this.state.endDateDual}
+                            placeholder={"YYYY-MM-DD"}
+                            id="eDate_new_cookedDual"
+                        />
                     </div>
-                    <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={this.onPrevWizardStep}>&lArr; Step 1</button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-dismiss="modal"
+                        onClick={this.onPrevWizardStep}
+                    >
+                        &lArr; Step 1
+                    </button>
                 </React.Fragment>;
             } else if (this.state.selectedWidgetType === "TimeSeries" && this.state.selectedDataType === "Custom") {
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Collection</label>
-                        <input type="text" name="imageCollection" id="imageCollection" placeholder={"LANDSAT/LC8_L1T_TOA"} value={this.state.imageCollection}
-                               className="form-control" onChange={this.onImageCollectionChange}/>
+                        <input
+                            type="text"
+                            name="imageCollection"
+                            id="imageCollection"
+                            placeholder={"LANDSAT/LC8_L1T_TOA"}
+                            value={this.state.imageCollection}
+                            className="form-control"
+                            onChange={this.onImageCollectionChange}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="graphBand">Band to graph</label>
-                        <input type="text" name="graphBand" id="graphBand" placeholder={"B5"} value={this.state.graphBand}
-                               className="form-control" onChange={this.onGraphBandChange}/>
+                        <input
+                            type="text"
+                            name="graphBand"
+                            id="graphBand"
+                            placeholder={"B5"}
+                            value={this.state.graphBand}
+                            className="form-control"
+                            onChange={this.onGraphBandChange}
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="graphReducer">Reducer</label>
-                        <select name="graphReducer" value={this.state.graphReducer} className="form-control" id="widgetIndicesSelect" onChange={this.onGraphReducerChanged} >
+                        <select
+                            name="graphReducer"
+                            value={this.state.graphReducer}
+                            className="form-control"
+                            id="widgetIndicesSelect"
+                            onChange={this.onGraphReducerChanged}
+                        >
                             <option label="Min" value="Min">Min</option>
                             <option label="Max" value="Max">Max</option>
                             <option label="Mean" value="Mean">Mean</option>
@@ -1259,7 +1590,7 @@ class BasicLayout extends React.PureComponent {
                     <label>Select the Date Range you would like</label>
                     {this.getDateRangeControl()}
                 </React.Fragment>;
-            } else if (this.state.wizardStep === 2){
+            } else if (this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <p>Secondary data form here</p>
                 </React.Fragment>;
@@ -1276,53 +1607,68 @@ class BasicLayout extends React.PureComponent {
     };
 
     onRemoveItem = i => {
-        let removedWidget = _.filter(this.state.widgets, function(w){
+        const removedWidget = _.filter(this.state.widgets, function(w) {
             return w.layout.i === i.toString();
         });
         this.deleteWidgetFromServer(removedWidget[0]);
-        this.setState({ widgets: _.reject(this.state.widgets, function(widget){
-            return widget.layout.i === i.toString(); }),
-                        layout: _.reject(this.state.layout, function(layout){
-                            return layout.i === i.toString(); })
+        this.setState({
+            widgets: _.reject(this.state.widgets, function(widget) {
+                return widget.layout.i === i.toString();
+            }),
+            layout: _.reject(this.state.layout, function(layout) {
+                return layout.i === i.toString();
+            }),
         });
     };
 
     generateLayout = () => {
-        let w = this.state.widgets;
+        const w = this.state.widgets;
         return _.map(w, function(item, i) {
             item.layout.i = i.toString();
             item.layout.minW = 3;
-            item.layout.w = item.layout.w >= 3? item.layout.w: 3;
+            item.layout.w = item.layout.w >= 3 ? item.layout.w : 3;
             return item.layout;
         });
     };
 
     onLayoutChange = layout => {
         if (this.state.haveWidgets) {
-            let w = this.state.widgets;
+            const w = this.state.widgets;
             layout.forEach(function (lay, i) {
                 w[i].layout = lay;
             });
-            this.setState({widgets: w,
-                           layout: layout},
+            this.setState({
+                widgets: w,
+                layout: layout,
+            },
                           this.updateServerWidgets);
         } else {
-            this.setState({layout: layout});
+            this.setState({ layout: layout });
         }
     };
 
     onAddItem = () => {
-        this.setState({isEditing : true});
+        this.setState({ isEditing : true });
     };
 
     render() {
-        const {layout} = this.state;
+        const { layout } = this.state;
         return (
             <React.Fragment>
-                <button id="addWidget" onClick={this.onAddItem} className="btn btn-outline-lightgreen btn-sm" style={{display: "none"}}>Add Widget</button>
-                <ReactGridLayout {...this.props}
-                                 layout={layout}
-                                 onLayoutChange={this.onLayoutChange}>
+                <button
+                    type="button"
+                    id="addWidget"
+                    onClick={this.onAddItem}
+                    className="btn btn-outline-lightgreen btn-sm"
+                    style={{ display: "none" }}
+                >
+                    Add Widget
+                </button>
+                <ReactGridLayout
+                    {...this.props}
+                    layout={layout}
+                    onLayoutChange={this.onLayoutChange}
+                >
                     {this.generateDOM()}
                 </ReactGridLayout>
                 {this.getNewWidgetForm()}
