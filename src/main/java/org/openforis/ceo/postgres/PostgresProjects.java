@@ -256,7 +256,7 @@ public class PostgresProjects implements Projects {
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var plotSummaries = new JsonArray();
-                    final var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
+                    final var sampleValueGroups = parseJson(rs.getString("survey_questions")).getAsJsonArray();
                     final var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
                     var plotHeaders = getPlotHeaders(conn, projectId);
 
@@ -319,7 +319,7 @@ public class PostgresProjects implements Projects {
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     var sampleSummaries = new JsonArray();
-                    final var sampleValueGroups = parseJson(rs.getString("sample_survey")).getAsJsonArray();
+                    final var sampleValueGroups = parseJson(rs.getString("survey_questions")).getAsJsonArray();
                     final var projectName = rs.getString("name").replace(" ", "-").replace(",", "").toLowerCase();
                     final var plotHeaders = getPlotHeaders(conn, projectId);
                     final var sampleHeaders = getSampleHeaders(conn, projectId);
@@ -528,9 +528,11 @@ public class PostgresProjects implements Projects {
 
     private static String loadExternalData(Connection conn, String distribution, Integer projectId, String extFile, String plotsOrSamples, List<String> mustInclude) {
         try {
+            System.out.println(distribution);
             if (distribution.equals("csv")) {
                 final var table_name = "project_" +  projectId + "_" + plotsOrSamples + "_csv";
                 // add empty table to the database
+                System.out.println("create");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM create_new_table(?,?)")) {
                     pstmt.setString(1, table_name);
                     pstmt.setString(2, loadCsvHeaders(extFile, mustInclude));
@@ -540,12 +542,14 @@ public class PostgresProjects implements Projects {
                 runBashScriptForProject(projectId, plotsOrSamples, "csv2postgres.sh", "/csv");
                 var renameFrom = loadCsvHeadersToRename(extFile);
                 // rename columns
+                System.out.println("rename");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.setString(2,renameFrom[0]);
                     pstmt.setString(3,"lon");
                     pstmt.execute();
                 }
+                System.out.println("rename2");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM rename_col(?,?,?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.setString(2,renameFrom[1]);
@@ -553,6 +557,8 @@ public class PostgresProjects implements Projects {
                     pstmt.execute();
                 }
                 // add index for reference
+
+                System.out.println("index");
                 try (var pstmt = conn.prepareStatement("SELECT * FROM add_index_col(?)")) {
                     pstmt.setString(1,table_name);
                     pstmt.execute();

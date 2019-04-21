@@ -83,7 +83,7 @@ public class PostgresUsers implements Users {
                         try (var rs = pstmt_add.executeQuery()) {
                             if (rs.next()) {
                                 // Assign the username and role session attributes
-                                req.session().attribute("userid", Integer.toString(rs.getInt("add_user")));
+                                req.session().attribute("userid", rs.getString("add_user"));
                                 req.session().attribute("username", inputEmail);
                                 req.session().attribute("role", "user");
 
@@ -111,11 +111,12 @@ public class PostgresUsers implements Users {
     }
 
     public Request updateAccount(Request req, Response res) {
-        var storedEmail =                   req.session().attribute("username").toString();
-        var inputEmail =                    req.queryParams("email");
-        var inputPassword =                 req.queryParams("password");
-        var inputPasswordConfirmation =     req.queryParams("password-confirmation");
-        var inputCurrentPassword =          req.queryParams("current-password");
+        final var userId =                        Integer.parseInt(req.params("id"));
+        final var storedEmail =                   (String) req.session().attribute("username");
+        final var inputEmail =                    req.queryParams("email");
+        final var inputPassword =                 req.queryParams("password");
+        final var inputPasswordConfirmation =     req.queryParams("password-confirmation");
+        final var inputCurrentPassword =          req.queryParams("current-password");
 
         // Validate input params and assign flash_message if invalid
         if (inputCurrentPassword.length() == 0) {
@@ -130,18 +131,19 @@ public class PostgresUsers implements Users {
             req.session().attribute("flash_message", "New Password and Password confirmation do not match.");
         } else {
             try (var conn = connect();
-                 var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?)");
+                 var pstmt_user = conn.prepareStatement("SELECT * FROM email_taken(?,?)");
                  var pstmt_email = conn.prepareStatement("SELECT * FROM set_user_email(?,?)");
                  var pstmt_pass = conn.prepareStatement("SELECT * FROM update_password(?,?)")) {
-
-                if (storedEmail != inputEmail) {
+                if (inputEmail.length() > 0 && !storedEmail.equals(inputEmail)) {
                     pstmt_user.setString(1, inputEmail);
+                    pstmt_user.setInt(2, userId);
                     try (var rs_user = pstmt_user.executeQuery()) {
-                        if(rs_user.next()) {
+                        if(rs_user.next() && !rs_user.getBoolean("email_taken")) {
                             pstmt_email.setString(1, storedEmail);
                             pstmt_email.setString(2, inputEmail);
                             pstmt_email.execute();
-                            req.session().attribute("username", inputEmail.length() == 0 ? storedEmail : inputEmail);
+                            req.session().attribute("username", inputEmail);
+                            req.session().attribute("flash_message", "The user emial has been updated.");
                         } else {
                             req.session().attribute("flash_message", "Account " + inputEmail + " already exists.");
                         }
@@ -151,8 +153,8 @@ public class PostgresUsers implements Users {
                     pstmt_pass.setString(1, storedEmail);
                     pstmt_pass.setString(2, inputPassword);
                     pstmt_pass.execute();
+                    req.session().attribute("flash_message", "The user password has been updated.");
                 }
-                req.session().attribute("flash_message", "The user has been updated.");
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
                 req.session().attribute("flash_message", "There was an issue updating your account.  Please check the console.");
@@ -216,7 +218,7 @@ public class PostgresUsers implements Users {
             req.session().attribute("flash_message", "Password and Password confirmation do not match.");
         } else {
             try (var conn = connect();
-                 var pstmt_user = conn.prepareStatement("SELECT * FROM (?)");
+                 var pstmt_user = conn.prepareStatement("SELECT * FROM get_user(?)");
                  var pstmt_pass = conn.prepareStatement("SELECT * FROM update_password(?,?)")) {
 
                 pstmt_user.setString(1, inputEmail);
@@ -275,7 +277,7 @@ public class PostgresUsers implements Users {
             try (var rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     var instUsers = new JsonObject();
-                    instUsers.addProperty("id", rs.getInt("institution_id"));
+                    instUsers.addProperty("id", rs.getInt("user_id"));
                     instUsers.addProperty("email", rs.getString("email"));
                     instUsers.addProperty("role", rs.getBoolean("administrator") ? "admin" : "user");
                     instUsers.addProperty("resetKey", rs.getString("reset_key"));
@@ -291,11 +293,11 @@ public class PostgresUsers implements Users {
     }
 
     public String getUserStats(Request req, Response res) {
-        var userName =     req.params(":userid");
+        var userName =     Integer.parseInt(req.params(":userid"));
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_user_stats(?)");) {
 
-            pstmt.setString(1, userName);
+            pstmt.setInt(1, userName);
             try (var rs = pstmt.executeQuery()) {
                 var userJson = new JsonObject();
                 if (rs.next()) {

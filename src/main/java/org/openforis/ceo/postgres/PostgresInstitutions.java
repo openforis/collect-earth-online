@@ -139,13 +139,14 @@ public class PostgresInstitutions implements Institutions {
                         userPstmt.execute();
                     }
 
-                    try (var adminPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")) {
-                        adminPstmt.setInt(1,newInstitutionId);
-                        adminPstmt.setInt(2,1);
-                        adminPstmt.setInt(3,1);
-                        adminPstmt.execute();
+                    if (userId > 1) {
+                        try (var adminPstmt = conn.prepareStatement("SELECT * FROM add_institution_user(?,?,?)")) {
+                            adminPstmt.setInt(1,newInstitutionId);
+                            adminPstmt.setInt(2,1);
+                            adminPstmt.setInt(3,1);
+                            adminPstmt.execute();
+                        }
                     }
-
                     return getInstitutionById(newInstitutionId);
                 } else {
                     return "";
