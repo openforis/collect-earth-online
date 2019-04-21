@@ -182,7 +182,7 @@ def insert_projects():
                     project_id = project["id"]
                     for dash in dashArr:
                         dash_id = dash["dashboard"]
-                        if int(dash["projectID"]) == int(project_id):
+                        if dash["projectID"].isnumeric() and int(dash["projectID"]) == int(project_id):
                             insert_project_widgets(project_id,dash_id,conn)
                             break
 
@@ -560,13 +560,13 @@ def insert_roles():
 def update_sequence():
     conn = psycopg2.connect(**params)
     cur = conn.cursor()
-    cur.execute("select * from update_sequence('users')")
-    cur.execute("select * from update_sequence('institutions')")
-    cur.execute("select * from update_sequence('imagery')")
-    cur.execute("select * from update_sequence('projects')")
-    cur.execute("select * from update_sequence('user_plots')")
-    cur.execute("select * from update_sequence('sample_values')")
-    cur.execute("select * from update_sequence('plots')")
+    cur.execute("select * from update_sequence('users', 'user_uid')")
+    cur.execute("select * from update_sequence('institutions', 'institution_uid')")
+    cur.execute("select * from update_sequence('imagery', 'imagery_uid')")
+    cur.execute("select * from update_sequence('projects', 'project_uid')")
+    cur.execute("select * from update_sequence('user_plots', 'user_plot_uid')")
+    cur.execute("select * from update_sequence('sample_values', 'sample_value_uid')")
+    cur.execute("select * from update_sequence('plots', 'plot_uid')")
 
 if __name__ == "__main__":
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))

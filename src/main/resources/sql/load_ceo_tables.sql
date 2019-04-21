@@ -103,8 +103,8 @@ CREATE TABLE roles (
 
 CREATE TABLE institution_users (
     inst_user_uid      SERIAL PRIMARY KEY,
-    institution_rid    integer NOT NULL REFERENCES institutions (institution_uid),
-    user_rid           integer NOT NULL REFERENCES users (user_uid),
+    institution_rid    integer NOT NULL REFERENCES institutions (institution_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    user_rid           integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     role_rid           integer NOT NULL REFERENCES roles (role_uid),
     CONSTRAINT per_institution_per_plot UNIQUE(institution_rid, user_rid)
 );
@@ -124,7 +124,7 @@ CREATE TABLE sample_values (
     sample_value_uid      SERIAL PRIMARY KEY,
     user_plot_rid         integer NOT NULL REFERENCES user_plots (user_plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_rid            integer NOT NULL REFERENCES samples (sample_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    imagery_rid           integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    imagery_rid           integer REFERENCES imagery (imagery_uid),
     imagery_attributes    jsonb,
     value                 jsonb,
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
