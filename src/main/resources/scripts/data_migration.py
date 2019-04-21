@@ -167,24 +167,29 @@ def insert_projects():
                     if project["samplesPerPlot"] is None: project["samplesPerPlot"]=0
                     if project["sampleResolution"] is None: project["sampleResolution"]=0
                     if not ("surveyRules" in project): project["surveyRules"]=[]
+                    if not ("created_date" in project): project["created_date"]=None
+                    if not ("published_date" in project): project["published_date"]=None
+                    if not ("closed_date" in project): project["closed_date"]=None
+                    if not ("archived_date" in project): project["archived_date"]=None
 
                     cur.execute("select * from create_project_migration(%s, %s, %s::text, %s::text, %s::text, %s::text, "
                     + "ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), %s::text, %s::text, %s, %s, %s::text, %s, %s::text, "
-                    + "%s, %s, %s::jsonb, %s::jsonb, %s::jsonb)",
+                    + "%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s::date, %s::date, %s::date, %s::date)",
                     (project["id"], project["institution"], project["availability"],
                     project["name"], project["description"], project["privacyLevel"], project["boundary"],
                     project["baseMapSource"], project["plotDistribution"], project["numPlots"],
                     project["plotSpacing"], project["plotShape"], project["plotSize"], project["sampleDistribution"],
                     project["samplesPerPlot"], project["sampleResolution"], json.dumps(project["sampleValues"]),
-                    json.dumps(project["surveyRules"]),
-                    None))
+                    json.dumps(project["surveyRules"]),None, project["created_date"], project["published_date"],
+                    project["closed_date"], project["archived_date"]))
 
                     project_id = project["id"]
                     for dash in dashArr:
                         dash_id = dash["dashboard"]
-                        if dash["projectID"].isnumeric() and int(dash["projectID"]) == int(project_id):
-                            insert_project_widgets(project_id,dash_id,conn)
-                            break
+                        try:
+                            if int(dash["projectID"]) == int(project_id):
+                                insert_project_widgets(project_id,dash_id,conn)
+                        except: pass
 
                     if len(sys.argv) > 1 and sys.argv[1] == "loop":
                         ## insert data by row with loops
