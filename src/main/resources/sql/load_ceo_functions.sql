@@ -152,9 +152,23 @@ CREATE OR REPLACE FUNCTION get_all_users()
 
 $$ LANGUAGE SQL;
 
+-- Get information for single user
+CREATE OR REPLACE FUNCTION get_user(_email text)
+ RETURNS TABLE (
+     user_id          integer,
+     administrator    boolean,
+     reset_key        text
+ ) AS $$
+
+    SELECT user_uid, administrator, reset_key
+    FROM users
+    WHERE email = _email
+
+$$ LANGUAGE SQL;
+
 -- Get all users by institution ID, includes role
 CREATE OR REPLACE FUNCTION get_all_users_by_institution_id(_institution_rid integer)
- RETURNS TABLE(
+ RETURNS TABLE (
     user_id             integer,
     email               text,
     administrator       boolean,
@@ -174,7 +188,7 @@ $$ LANGUAGE SQL;
 
 -- Returns all of the user fields associated with the provided email.
 CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
- RETURNS TABLE(
+ RETURNS TABLE (
     user_id          integer,
     administrator    boolean
  ) AS $$
@@ -187,15 +201,15 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
 $$ LANGUAGE SQL;
 
 -- Returns all of the user fields associated with the provided email.
-CREATE OR REPLACE FUNCTION email_taken(_email text)
+CREATE OR REPLACE FUNCTION email_taken(_email text, _user_uid integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email)
+    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_uid)
 
 $$ LANGUAGE SQL;
 
 -- Returns plot stats for user
-CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
+CREATE OR REPLACE FUNCTION get_user_stats(_user_rid integer)
  RETURNS TABLE (
     total_projects     integer,
     total_plots        integer,
@@ -214,8 +228,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_email text)
         INNER JOIN projects p
             ON pl.project_rid = project_uid
         INNER JOIN users u
-            ON up.user_rid = user_uid
-        WHERE u.email = _user_email
+            ON up.user_rid = _user_rid
     ), user_totals as (
         SELECT COUNT(DISTINCT project_uid)::int as proj_count,
             COUNT(DISTINCT plot_uid)::int as plot_count
@@ -259,7 +272,7 @@ $$ LANGUAGE SQL;
 
 -- Set user 1 as admin for migration
 CREATE OR REPLACE FUNCTION set_admin()
-RETURNS void AS $$
+ RETURNS void AS $$
 
     UPDATE users
     SET administrator = true
@@ -274,18 +287,6 @@ CREATE OR REPLACE FUNCTION set_user_email(_email text, _new_email text)
     UPDATE users
     SET email = _new_email
     WHERE email = _email
-    RETURNING email
-
-$$ LANGUAGE SQL;
-
--- Resets the email for the given user.
-CREATE OR REPLACE FUNCTION set_user_email_and_password(_user_uid integer, _email text, _password text)
- RETURNS text AS $$
-
-    UPDATE users
-    SET email = _email,
-        password = crypt(_password, gen_salt('bf'))
-    WHERE user_uid = _user_uid
     RETURNING email
 
 $$ LANGUAGE SQL;
@@ -529,6 +530,14 @@ CREATE TYPE imagery_return AS (
     extent             jsonb,
     source_config      jsonb
 );
+
+-- Adds institution imagery
+CREATE OR REPLACE FUNCTION check_institution_imagery(_institution_rid integer, _title text)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS(SELECT 1 FROM imagery WHERE institution_rid = _institution_rid AND title = _title)
+
+$$ LANGUAGE SQL;
 
 -- Adds institution imagery
 CREATE OR REPLACE FUNCTION add_institution_imagery(_institution_rid integer, _visibility text, _title text, _attribution text, _extent jsonb, _source_config jsonb)
@@ -1914,18 +1923,18 @@ $$ LANGUAGE SQL;
 
 -- Manually adding rows while specifying id will not update the sequence
 -- Update the sequnce at the end of the migration
-CREATE OR REPLACE FUNCTION update_sequence(_table text)
+CREATE OR REPLACE FUNCTION update_sequence(_table text, _id_name text)
  RETURNS void AS $$
 
  BEGIN
     EXECUTE 'WITH nextval as (
-                SELECT MAX(id)+1 as nextval
+                SELECT MAX(' || quote_ident(_id_name) || ')+1 as nextval
                 FROM ' || quote_ident(_table) ||
             ')
 
             SELECT setval(pg_get_serial_sequence('''
                 || quote_ident(_table) ||
-                ''', ''id''), nextval , false
+                ''', ''' || quote_ident(_id_name) || '''), nextval , false
             ) FROM nextval';
  END
 
