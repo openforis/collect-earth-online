@@ -15,7 +15,17 @@ class Geodash extends React.Component {
             pid: this.getParameterByName("pid"),
         };
         const theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
-        this.state.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
+        this.state.projPairAOI = "[["
+            + theSplit[0] + ","
+            + theSplit[1] + "],["
+            + theSplit[2] + ","
+            + theSplit[1] + "],["
+            + theSplit[2] + ","
+            + theSplit[3] + "],["
+            + theSplit[0] + ","
+            + theSplit[3] + "],["
+            + theSplit[0] + ","
+            + theSplit[1] + "]]";
     }
 
     getParameterByName = (name, url) => {
@@ -82,7 +92,7 @@ class Geodash extends React.Component {
     };
 
     render() {
-        return ( <React.Fragment>
+        return (
             <Widgets
                 widgets={this.state.widgets}
                 projAOI={this.state.projAOI}
@@ -94,7 +104,7 @@ class Geodash extends React.Component {
                 getParameterByName={this.getParameterByName}
                 documentRoot={this.props.documentRoot}
             />
-        </React.Fragment> );
+        );
     }
 }
 
@@ -378,6 +388,7 @@ class MapWidget extends React.Component {
                         : collectionName === "ImageCollectionNDWI"
                             ? ""
                             : collectionName;
+
     addSecondMapLayer = (mapid, token, widgetid) => {
         if (this.state.mapRef) {
             this.addDualLayer(mapid, token, widgetid);
@@ -387,6 +398,7 @@ class MapWidget extends React.Component {
             }, 1000);
         }
     }
+
     componentDidMount() {
         const widget = this.props.widget;
         const basemap = widget.baseMap;
@@ -925,7 +937,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(this.props.documentRoot + "/get-unlocked-plot/" + projectID + "/" + plotID)
+                fetch(this.props.documentRoot + "/get-proj-plot/" + projectID + "/" + plotID)
                     .then(res => res.json())
                     .then(data => {
                         const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;

@@ -7,6 +7,7 @@ function Account(props) {
     return (
         <FormLayout title="Your account!" className="px-2 pb-2">
             <UserStats
+                userId={props.userId}
                 documentRoot={props.documentRoot}
                 userName={props.userName}
             />
@@ -35,7 +36,7 @@ class UserStats extends React.Component {
     }
 
     getUserStats() {
-        fetch(this.props.documentRoot + "/get-user-stats/" + this.props.userName)
+        fetch(this.props.documentRoot + "/get-user-stats/" + this.props.userId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(stats => this.setState({ stats: stats }))
             .catch(response => {

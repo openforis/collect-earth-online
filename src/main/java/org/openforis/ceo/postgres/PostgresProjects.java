@@ -209,7 +209,6 @@ public class PostgresProjects implements Projects {
     }
 
     private static String valueOrBlank(String input) {
-
         return input == null || input.equals("null") ? "" : input;
     }
 
@@ -229,7 +228,6 @@ public class PostgresProjects implements Projects {
         }
         return plotHeaders;
     }
-
 
     private static ArrayList<String> getSampleHeaders(Connection conn, Integer projectId) {
         var sampleHeaders = new ArrayList<String>();
@@ -301,8 +299,8 @@ public class PostgresProjects implements Projects {
 
                         return outputAggregateCsv(res, sampleValueGroups, plotSummaries, projectName, combinedHeaders);
                     }
+                }
             }
-        }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return res.raw();
@@ -576,21 +574,16 @@ public class PostgresProjects implements Projects {
 
     private static String checkLoadPlots(Connection conn, String plotDistribution, Integer projectId, String plotsFile) {
         try {
-
-            if (List.of("csv", "shp").contains(plotDistribution)) {
-                // check if data is also correct after being loaded
-                final var plots_table = loadExternalData(conn, plotDistribution, projectId, plotsFile, "plots", List.of("plotId"));
-                try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")) {
-                    pstmt.setString(1, plots_table);
-                    pstmt.execute();
-                } catch (SQLException s) {
-                    System.out.println(s.getMessage());
-                    throw new RuntimeException("Incorrect sql columns or datatypes");
-                }
-                return plots_table;
-            } else {
-                return null;
+            // check if data is also correct after being loaded
+            final var plots_table = loadExternalData(conn, plotDistribution, projectId, plotsFile, "plots", List.of("plotId"));
+            try (var pstmt = conn.prepareStatement("SELECT * FROM select_partial_table_by_name(?)")) {
+                pstmt.setString(1, plots_table);
+                pstmt.execute();
+            } catch (SQLException s) {
+                System.out.println(s.getMessage());
+                throw new RuntimeException("Incorrect sql columns or datatypes");
             }
+            return plots_table;
         } catch (Exception e) {
             if (plotDistribution.equals("csv")) {
                 throw new RuntimeException("Malformed plot CSV. Fields must be LON,LAT,PLOTID.", e);
@@ -643,52 +636,54 @@ public class PostgresProjects implements Projects {
         var samplesFile =        getOrEmptyString(newProject, "samplesFile").getAsString();
 
         try (var conn = connect()) {
-            // load files into the database (loadPlot, loadSamples) and update projects
-            try (var pstmt =
-                conn.prepareStatement("SELECT * FROM update_project_tables(?,?::text,?::text)")) {
-                pstmt.setInt(1, projectId);
-                pstmt.setString(2, checkLoadPlots(conn, plotDistribution, projectId, plotsFile));
-                pstmt.setString(3, checkLoadSamples(conn, sampleDistribution, projectId, samplesFile));
-                pstmt.execute();
-            } catch (SQLException e) {
-                System.out.println("catch update");
-                throw new  RuntimeException(e);
-            }
-            try (var pstmt =
-                conn.prepareStatement("SELECT * FROM cleanup_project_tables(?,?)")) {
-                pstmt.setInt(1, projectId);
-                pstmt.setDouble(2, plotSize);
-                pstmt.execute();
-            } catch (SQLException e) {
-                System.out.println("catch clean");
-                throw new  RuntimeException(e);
-            }
-
-            // if both are files, adding plots and samples is done inside PG
-            if (List.of("csv", "shp").contains(plotDistribution) && List.of("csv", "shp").contains(sampleDistribution)) {
+            if (List.of("csv", "shp").contains(plotDistribution)) {
+                // load files into the database (loadPlot, loadSamples) and update projects
                 try (var pstmt =
-                    conn.prepareStatement("SELECT * FROM samples_from_plots_with_files(?)")) {
+                    conn.prepareStatement("SELECT * FROM update_project_tables(?,?::text,?::text)")) {
                     pstmt.setInt(1, projectId);
+                    pstmt.setString(2, checkLoadPlots(conn, plotDistribution, projectId, plotsFile));
+                    pstmt.setString(3, checkLoadSamples(conn, sampleDistribution, projectId, samplesFile));
                     pstmt.execute();
                 } catch (SQLException e) {
-                    System.out.println("catch adding 2");
+                    System.out.println("catch update");
                     throw new  RuntimeException(e);
                 }
-            // Add plots from file and use returned plot ID to create samples
-            } else if (List.of("csv", "shp").contains(plotDistribution)) {
                 try (var pstmt =
-                    conn.prepareStatement("SELECT * FROM add_file_plots(?)")) {
-                    pstmt.setInt(1,projectId);
-                    try (var rs = pstmt.executeQuery()) {
-                        while (rs.next()) {
-                            var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
-                            createProjectSamples(conn, rs.getInt("id"), sampleDistribution,
-                                plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, plotDistribution.equals("shp"));
-                        }
-                    }
+                    conn.prepareStatement("SELECT * FROM cleanup_project_tables(?,?)")) {
+                    pstmt.setInt(1, projectId);
+                    pstmt.setDouble(2, plotSize);
+                    pstmt.execute();
                 } catch (SQLException e) {
-                    System.out.println("catch adding 1");
+                    System.out.println("catch clean");
                     throw new  RuntimeException(e);
+                }
+
+                // if both are files, adding plots and samples is done inside PG
+                if (List.of("csv", "shp").contains(sampleDistribution)) {
+                    try (var pstmt =
+                        conn.prepareStatement("SELECT * FROM samples_from_plots_with_files(?)")) {
+                        pstmt.setInt(1, projectId);
+                        pstmt.execute();
+                    } catch (SQLException e) {
+                        System.out.println("catch adding 2");
+                        throw new  RuntimeException(e);
+                    }
+                // Add plots from file and use returned plot ID to create samples
+                } else {
+                    try (var pstmt =
+                        conn.prepareStatement("SELECT * FROM add_file_plots(?)")) {
+                        pstmt.setInt(1,projectId);
+                        try (var rs = pstmt.executeQuery()) {
+                            while (rs.next()) {
+                                var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
+                                createProjectSamples(conn, rs.getInt("id"), sampleDistribution,
+                                    plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, plotDistribution.equals("shp"));
+                            }
+                        }
+                    } catch (SQLException e) {
+                        System.out.println("catch adding 1");
+                        throw new  RuntimeException(e);
+                    }
                 }
             } else {
                 // Convert the lat/lon boundary coordinates to Web Mercator (units: meters) and apply an interior buffer of plotSize / 2
