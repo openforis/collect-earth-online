@@ -720,31 +720,39 @@ CREATE OR REPLACE FUNCTION create_project_migration(
     _sample_resolution       float,
     _survey_questions        jsonb,
     _survey_rules            jsonb,
-    _classification_times    jsonb
+    _classification_times    jsonb,
+    _created_date            date,
+    _published_date          date,
+    _closed_date             date,
+    _archived_date           date
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
-        project_uid,          institution_rid,
-        availability,         name,
-        description,          privacy_level,
-        boundary,             base_map_source,
-        plot_distribution,    num_plots,
-        plot_spacing,         plot_shape,
-        plot_size,            sample_distribution,
-        samples_per_plot,     sample_resolution,
-        survey_questions,     survey_rules,
-        classification_times
+        project_uid,             institution_rid,
+        availability,            name,
+        description,             privacy_level,
+        boundary,                base_map_source,
+        plot_distribution,       num_plots,
+        plot_spacing,            plot_shape,
+        plot_size,               sample_distribution,
+        samples_per_plot,        sample_resolution,
+        survey_questions,        survey_rules,
+        classification_times,    created_date,
+        published_date,          closed_date,
+        archived_date
     ) VALUES (
-        _project_uid,          _institution_rid,
-        _availability,         _name,
-        _description,          _privacy_level,
-        _boundary,             _base_map_source,
-        _plot_distribution,    _num_plots,
-        _plot_spacing,         _plot_shape,
-        _plot_size,            _sample_distribution,
-        _samples_per_plot,     _sample_resolution,
-        _survey_questions,     _survey_rules,
-        _classification_times
+        _project_uid,             _institution_rid,
+        _availability,            _name,
+        _description,             _privacy_level,
+        _boundary,                _base_map_source,
+        _plot_distribution,       _num_plots,
+        _plot_spacing,            _plot_shape,
+        _plot_size,               _sample_distribution,
+        _samples_per_plot,        _sample_resolution,
+        _survey_questions,        _survey_rules,
+        _classification_times,    _created_date,
+        _published_date,          _closed_date,
+        _archived_date
     ) RETURNING project_uid
 
 $$ LANGUAGE SQL;
