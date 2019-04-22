@@ -929,9 +929,9 @@ class BasicLayout extends React.PureComponent {
                     />
                 </div>
             </React.Fragment>;
-        } else if (this.state.selectedWidgetType === "imageAsset" ||
-            this.state.selectedWidgetType === "imageCollectionAsset" ||
-            this.state.selectedWidgetType === "ImageElevation") {
+        } else if (this.state.selectedWidgetType === "imageAsset"
+                    || this.state.selectedWidgetType === "imageCollectionAsset"
+                    || this.state.selectedWidgetType === "ImageElevation") {
             if (this.state.formReady !== true) {
                 this.setState({
                     formReady: true,
@@ -1324,10 +1324,10 @@ class BasicLayout extends React.PureComponent {
                     >
                         &lArr; Step 1
                     </button>
-
-
                 </React.Fragment>;
-            } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 1) {
+            } else if (((this.state.selectedDataType === "imageCollectionAsset"
+                        || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection")
+                        && this.state.wizardStep === 1) {
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <div className="form-group">
@@ -1355,7 +1355,10 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     {this.getNextStepButton()}
                 </React.Fragment>;
-            } else if (((this.state.selectedDataType === "imageCollectionAsset" || this.state.selectedDataType === "imageAsset") && this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 2) {
+            } else if (((this.state.selectedDataType === "imageCollectionAsset"
+                        || this.state.selectedDataType === "imageAsset")
+                        && this.state.selectedWidgetType === "DualImageCollection")
+                        && this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Asset</label>
@@ -1389,7 +1392,10 @@ class BasicLayout extends React.PureComponent {
                         &lArr; Step 1
                     </button>
                 </React.Fragment>;
-            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataType === "Custom" && this.state.wizardStep === 1) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection"
+                        || this.state.selectedWidgetType === "DualImageCollection")
+                        && this.state.selectedDataType === "Custom"
+                        && this.state.wizardStep === 1) {
                 return <React.Fragment>
                     {this.getTitleBlock()}
                     <div className="form-group">
@@ -1420,7 +1426,10 @@ class BasicLayout extends React.PureComponent {
                     {this.getDateRangeControl()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
-            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.selectedDataTypeDual === "Custom" && this.state.wizardStep === 2) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection"
+                        || this.state.selectedWidgetType === "DualImageCollection")
+                        && this.state.selectedDataTypeDual === "Custom"
+                        && this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <div className="form-group">
                         <label htmlFor="imageCollection">GEE Image Collection</label>
@@ -1475,7 +1484,9 @@ class BasicLayout extends React.PureComponent {
                         &lArr; Step 1
                     </button>
                 </React.Fragment>;
-            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 1) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection"
+                        || this.state.selectedWidgetType === "DualImageCollection")
+                        && this.state.wizardStep === 1) {
                 if (this.state.dualLayer === true) {
                     return <React.Fragment>
                         {this.getTitleBlock()}
@@ -1515,7 +1526,9 @@ class BasicLayout extends React.PureComponent {
                         {this.getNextStepButton()}
                     </React.Fragment>;
                 }
-            } else if ((this.state.selectedWidgetType === "ImageCollection" || this.state.selectedWidgetType === "DualImageCollection") && this.state.wizardStep === 2) {
+            } else if ((this.state.selectedWidgetType === "ImageCollection"
+                        || this.state.selectedWidgetType === "DualImageCollection")
+                        && this.state.wizardStep === 2) {
                 return <React.Fragment>
                     <label>Select the Date Range you would like</label>
                     <div className="input-group input-daterange form-group" id="range_new_cooked">

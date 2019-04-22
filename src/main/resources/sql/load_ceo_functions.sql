@@ -644,7 +644,7 @@ CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid intege
 $$ LANGUAGE SQL;
 
 -- Gets project widgets by project id from the database.
-CREATE OR REPLACE FUNCTION get_project_widgets_by_project_rid(_project_rid integer)
+CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_rid integer)
  RETURNS TABLE(
     widget_id        integer,
     project_id       integer,
@@ -1027,13 +1027,13 @@ CREATE OR REPLACE FUNCTION copy_file_tables(_old_project_uid integer, _new_proje
         EXECUTE
             'SELECT regexp_replace(''' || _plots_ext_table || ''', ''(\d+)'', ''' || _new_project_uid || ''')'
                 INTO _plots_ext_table_new;
-        EXECUTE 'CREATE TABLE ' || _plots_ext_table_new || ' AS SELECT * FROM ' || _plots_ext_table;
+        EXECUTE 'CREATE TABLE ext_tables.' || _plots_ext_table_new || ' AS SELECT * FROM ext_tables.' || _plots_ext_table;
         EXECUTE 'UPDATE projects SET plots_ext_table = ''' || _plots_ext_table_new || ''' WHERE project_uid = ' || _new_project_uid;
     END IF;
     IF _samples_ext_table IS NOT NULL AND _samples_ext_table <> '' THEN
         EXECUTE 'SELECT regexp_replace(''' || _samples_ext_table || ''', ''(\d+)'', ''' || _new_project_uid || ''')'
             INTO _samples_ext_table_new;
-        EXECUTE 'CREATE TABLE ' || _samples_ext_table_new || ' AS SELECT * FROM ' || _samples_ext_table;
+        EXECUTE 'CREATE TABLE ext_tables.' || _samples_ext_table_new || ' AS SELECT * FROM ext_tables.' || _samples_ext_table;
         EXECUTE 'UPDATE projects SET samples_ext_table = ''' || _samples_ext_table_new || ''' WHERE project_uid = ' || _new_project_uid;
     END IF;
  END
