@@ -84,34 +84,38 @@ public class Server implements SparkApplication {
 
         // Routing Table: HTML pages (with no side effects)
         get("/",                                      Views.home(freemarker));
-        get("/home",                                  Views.home(freemarker));
         get("/about",                                 Views.about(freemarker));
-        get("/support",                               Views.support(freemarker));
         get("/account/:id",                           Views.account(freemarker));
+        get("/card-test",                             Views.cardTest(freemarker));
         get("/create-institution",                    Views.createInstitution(freemarker));
-        get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/create-project",                        Views.createProject(freemarker));
         get("/collection/:id",                        Views.collection(freemarker));
         get("/geo-dash",                              Views.geodash(freemarker));
         get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
         get("/test-layout-editor",                    Views.testWidgetLayout(freemarker));
         get("/create-project",                        Views.createProject(freemarker));
         get("/review-project/:id",                    Views.reviewProject(freemarker));
-        get("/project-dashboard/:id",                 Views.projectDashboard(freemarker));
-        get("/institution-dashboard/:id",             Views.institutionDashboard(freemarker));
+        get("/geo-dash/geodashhelp",                  Views.geodashhelp(freemarker));
+        get("/home",                                  Views.home(freemarker));
         get("/login",                                 Views.login(freemarker));
-        get("/register",                              Views.register(freemarker));
         get("/password",                              Views.password(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
-        get("/card-test",                             Views.cardTest(freemarker));
-        get("/geo-dash/geodashhelp",                  Views.geodashhelp(freemarker));
+        get("/project-dashboard/:id",                 Views.projectDashboard(freemarker));
+        get("/institution-dashboard/:id",             Views.institutionDashboard(freemarker));
+        get("/register",                              Views.register(freemarker));
+        get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
+        get("/review-project/:id",                    Views.reviewProject(freemarker));
+        get("/support",                               Views.support(freemarker));
+        get("/test-layout-editor",                    Views.testWidgetLayout(freemarker));
+        get("/widget-layout-editor",                  Views.editWidgetLayout(freemarker));
 
         // Routing Table: HTML pages (with side effects)
+        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
         post("/account/:id",                          (req, res) -> Views.account(freemarker).handle(users.updateAccount(req, res), res));
         post("/login",                                (req, res) -> Views.login(freemarker).handle(users.login(req, res), res));
         post("/register",                             (req, res) -> Views.register(freemarker).handle(users.register(req, res), res));
         post("/password",                             (req, res) -> Views.password(freemarker).handle(users.getPasswordResetKey(req, res), res));
         post("/password-reset",                       (req, res) -> Views.passwordReset(freemarker).handle(users.resetPassword(req, res), res));
-        get("/logout",                                (req, res) -> Views.home(freemarker).handle(users.logout(req, res), res));
 
         // Routing Table: Projects API
         get("/dump-project-aggregate-data/:id",       projects::dumpProjectAggregateData);
@@ -119,21 +123,21 @@ public class Server implements SparkApplication {
         get("/get-all-projects",                      projects::getAllProjects);
         get("/get-project-by-id/:id",                 projects::getProjectById);
         get("/get-project-stats/:id",                 projects::getProjectStats);
-        post("/create-project",                       projects::createProject);
         post("/archive-project/:id",                  projects::archiveProject);
         post("/close-project/:id",                    projects::closeProject);
+        post("/create-project",                       projects::createProject);
         post("/publish-project/:id",                  projects::publishProject);
-        
+
         // Routing Table: Plots (projects)
         get("/get-next-plot",                         plots::getNextPlot);
         get("/get-plot-by-id",                        plots::getPlotById);
-        get("/get-project-plots/:id/:max",            plots::getProjectPlots);
         get("/get-prev-plot",                         plots::getPrevPlot);
-        get("/get-unlocked-plot/:projid/:plotid",     plots::getProjectPlot);
+        get("/get-project-plots/:id/:max",            plots::getProjectPlots);
+        get("/get-proj-plot/:projid/:plotid",         plots::getProjectPlot);
         post("/add-user-samples",                     plots::addUserSamples);
         post("/flag-plot",                            plots::flagPlot);
-        post("/reset-plot-lock",                      plots::resetPlotLock);
         post("/release-plot-locks/:userid/:projid",   plots::releasePlotLocks);
+        post("/reset-plot-lock",                      plots::resetPlotLock);
 
         // Routing Table: Users API
         get("/get-all-users",                         users::getAllUsers);
@@ -146,23 +150,23 @@ public class Server implements SparkApplication {
         // Routing Table: Institutions API
         get("/get-all-institutions",                  institutions::getAllInstitutions);
         get("/get-institution-details/:id",           institutions::getInstitutionDetails);
+        post("/archive-institution/:id",              institutions::archiveInstitution);
         post("/create-institution",                   institutions::createInstitution);
         post("/update-institution/:id",               institutions::updateInstitution);
-        post("/archive-institution/:id",              institutions::archiveInstitution);
 
         // Routing Table: Imagery API
         get("/get-all-imagery",                       imagery::getAllImagery);
-        post("/add-institution-imagery",              imagery::addInstitutionImagery);
         post("/add-geodash-imagery",                  imagery::addGeoDashImagery);
+        post("/add-institution-imagery",              imagery::addInstitutionImagery);
         post("/delete-institution-imagery",           imagery::deleteInstitutionImagery);
 
         // Routing Table: GeoDash API
         get("/geo-dash/id/:id",                       geoDash::geodashId);
         get("/geo-dash/update/id/:id",                geoDash::updateDashBoardById);
         post("/geo-dash/createwidget/widget",         geoDash::createDashBoardWidgetById);
-        post("/geo-dash/updatewidget/widget/:id",     geoDash::updateDashBoardWidgetById);
         post("/geo-dash/deletewidget/widget/:id",     geoDash::deleteDashBoardWidgetById);
         post("/geo-dash/gateway-request",             geoDash::gatewayRequest);
+        post("/geo-dash/updatewidget/widget/:id",     geoDash::updateDashBoardWidgetById);
 
         // Routing Table: Page Not Found
         notFound(Views.pageNotFound(freemarker));

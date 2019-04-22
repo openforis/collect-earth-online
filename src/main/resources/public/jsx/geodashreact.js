@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { mercator } from "../js/mercator-openlayers.js";
-var atile;
+
 class Geodash extends React.Component {
     constructor(props) {
         super(props);
@@ -15,7 +15,17 @@ class Geodash extends React.Component {
             pid: this.getParameterByName("pid"),
         };
         const theSplit = decodeURI(this.state.projAOI).replace("[", "").replace("]", "").split(",");
-        this.state.projPairAOI = "[[" + theSplit[0] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[1] + "],[" + theSplit[2] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[3] + "],[" + theSplit[0] + "," + theSplit[1] + "]]";
+        this.state.projPairAOI = "[["
+            + theSplit[0] + ","
+            + theSplit[1] + "],["
+            + theSplit[2] + ","
+            + theSplit[1] + "],["
+            + theSplit[2] + ","
+            + theSplit[3] + "],["
+            + theSplit[0] + ","
+            + theSplit[3] + "],["
+            + theSplit[0] + ","
+            + theSplit[1] + "]]";
     }
 
     getParameterByName = (name, url) => {
@@ -82,7 +92,7 @@ class Geodash extends React.Component {
     };
 
     render() {
-        return ( <React.Fragment>
+        return (
             <Widgets
                 widgets={this.state.widgets}
                 projAOI={this.state.projAOI}
@@ -94,7 +104,7 @@ class Geodash extends React.Component {
                 getParameterByName={this.getParameterByName}
                 documentRoot={this.props.documentRoot}
             />
-        </React.Fragment> );
+        );
     }
 }
 
@@ -196,12 +206,16 @@ class Widget extends React.Component {
                     <div className="panel-heading">
                         <ul className="list-inline panel-actions pull-right">
                             <li style={{ display: "inline" }}>{widget.name}</li>
-                            <li style={{ display: "inline" }}><a
-                                className="list-inline panel-actions panel-fullscreen"
-                                onClick={() => this.props.onFullScreen(this.props.widget)}
-                                role="button"
-                                title="Toggle Fullscreen"
-                                                              ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a></li>
+                            <li style={{ display: "inline" }}>
+                                <a
+                                    className="list-inline panel-actions panel-fullscreen"
+                                    onClick={() => this.props.onFullScreen(this.props.widget)}
+                                    role="button"
+                                    title="Toggle Fullscreen"
+                                >
+                                    <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     <div id={"widget-container_" + widget.id} className="widget-container">
@@ -210,28 +224,33 @@ class Widget extends React.Component {
                 </div>
             </div>);
         } else {
-            return (<div
-                className={widget.isFull
-                ? "fullwidget columnSpan3 rowSpan1 placeholder"
-                : "columnSpan3 rowSpan1 placeholder"}
-            >
-                <div className="panel panel-default" id={"widget_" + widget.id}>
-                    <div className="panel-heading">
-                        <ul className="list-inline panel-actions pull-right">
-                            <li style={{ display: "inline" }}>{widget.name}</li>
-                            <li style={{ display: "inline" }}><a
-                                className="list-inline panel-actions panel-fullscreen"
-                                onClick={() => this.props.onFullScreen(this.props.widget)}
-                                role="button"
-                                title="Toggle Fullscreen"
-                                                              ><i className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/></a></li>
-                        </ul>
+            return (
+                <div
+                    className={widget.isFull
+                    ? "fullwidget columnSpan3 rowSpan1 placeholder"
+                    : "columnSpan3 rowSpan1 placeholder"}
+                >
+                    <div className="panel panel-default" id={"widget_" + widget.id}>
+                        <div className="panel-heading">
+                            <ul className="list-inline panel-actions pull-right">
+                                <li style={{ display: "inline" }}>{widget.name}</li>
+                                <li style={{ display: "inline" }}>
+                                    <a
+                                        className="list-inline panel-actions panel-fullscreen"
+                                        onClick={() => this.props.onFullScreen(this.props.widget)}
+                                        role="button"
+                                        title="Toggle Fullscreen"
+                                    >
+                                        <span className="fas fa-expand-arrows-alt" style={{ color: "#31BAB0" }}/>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div id={"widget-container_" + widget.id} className="widget-container">
+                            {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
+                        </div>
                     </div>
-                    <div id={"widget-container_" + widget.id} className="widget-container">
-                        {this.getWidgetInnerHtml(widget, onSliderChange, onSwipeChange)}
-                    </div>
-                </div>
-            </div>);
+                </div>);
         }
     };
 
@@ -369,6 +388,7 @@ class MapWidget extends React.Component {
                         : collectionName === "ImageCollectionNDWI"
                             ? ""
                             : collectionName;
+
     addSecondMapLayer = (mapid, token, widgetid) => {
         if (this.state.mapRef) {
             this.addDualLayer(mapid, token, widgetid);
@@ -378,6 +398,7 @@ class MapWidget extends React.Component {
             }, 1000);
         }
     }
+
     componentDidMount() {
         const widget = this.props.widget;
         const basemap = widget.baseMap;
@@ -461,7 +482,7 @@ class MapWidget extends React.Component {
             shortWidget.properties.push(collectionName);
             shortWidget.ImageAsset = firstImage.imageAsset;
             shortWidget.ImageCollectionAsset = firstImage.ImageCollectionAsset;
-            url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(shortWidget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gateway-request";
             path = this.getGatewayPath(shortWidget, collectionName);
             shortWidget.visParams = firstImage.visParams;
             shortWidget.min = firstImage.min != null ? firstImage.min : "";
@@ -482,16 +503,15 @@ class MapWidget extends React.Component {
             dualImageObject.collectionName = this.convertCollectionName(dualImageObject.collectionName);
             dualImageObject.dateFrom = secondImage.startDate;
             dualImageObject.dateTo = secondImage.endDate;
+
             const shortWidget2 = {};
             shortWidget2.filterType = secondImage.filterType;
             shortWidget2.properties = [];
             shortWidget2.properties.push(dualImageObject.collectionName);
             shortWidget2.ImageAsset = secondImage.imageAsset;
             shortWidget2.ImageCollectionAsset = secondImage.ImageCollectionAsset;
-            dualImageObject.url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(shortWidget2, dualImageObject.collectionName);
+            dualImageObject.url = this.props.documentRoot + "/geo-dash/gateway-request";
             dualImageObject. path = this.getGatewayPath(shortWidget2, dualImageObject.collectionName);
-
-
             shortWidget2.visParams = secondImage.visParams;
             shortWidget2.min = secondImage.min != null ? secondImage.min : "";
             shortWidget2.max = secondImage.max != null ? secondImage.max : "";
@@ -515,7 +535,6 @@ class MapWidget extends React.Component {
                 dualImageObject.imageName = secondImage.imageAsset;
                 dualImageObject.visParams = secondImage.visParams;
             }
-
             if (firstImage.ImageCollectionAsset) {
                 postObject.ImageCollectionAsset = firstImage.ImageCollectionAsset;
                 postObject.imageName = firstImage.ImageCollectionAsset;
@@ -534,10 +553,8 @@ class MapWidget extends React.Component {
             if (widget.properties[0] === "ImageElevation") {
                 widget.ImageAsset = "USGS/SRTMGL1_003";
             }
-            url = this.props.documentRoot + "/geo-dash/gateway-request"; //this.getGatewayUrl(widget, collectionName);
+            url = this.props.documentRoot + "/geo-dash/gateway-request";
             path = this.getGatewayPath(widget, collectionName);
-
-
             postObject.visParams = this.getImageParams(widget);
 
             if (postObject.visParams.cloudLessThan) {
@@ -558,7 +575,6 @@ class MapWidget extends React.Component {
         postObject.collectionName = collectionName;
         postObject.dateFrom = dateFrom;
         postObject.dateTo = dateTo;
-
         postObject.geometry = JSON.parse(projPairAOI);
         postObject.index = requestedIndex;
         postObject.path = path;
@@ -567,13 +583,6 @@ class MapWidget extends React.Component {
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() - 1);
         if (typeof(Storage) !== "undefined") {
-
-            if (localStorage.getItem("users/fralandcover/L7_2000_India_ALL") && !localStorage.getItem("bug_clear")){
-                localStorage.clear();
-                localStorage.setItem("bug_clear", true);
-            }
-            //check if current time is < localStorage.lastGatewayUpdate + 1 day
-
             if (localStorage.getItem(postObject.ImageAsset)) {
                 needFetch = this.createTileServerFromCache(postObject.ImageAsset, widget.id);
             } else if (localStorage.getItem(postObject.ImageCollectionAsset)) {
@@ -583,8 +592,6 @@ class MapWidget extends React.Component {
             } else if (localStorage.getItem(JSON.stringify(postObject))) {
                 needFetch = this.createTileServerFromCache(JSON.stringify(postObject), widget.id);
             }
-
-            // i should also check if the cooked ones are cached - just need to compare date range
             if (widget.dualImageCollection) {
                 if (localStorage.getItem(dualImageObject.ImageAsset)) {
                     needFetch = this.createTileServerFromCache(dualImageObject.ImageAsset, widget.id, true);
@@ -608,9 +615,14 @@ class MapWidget extends React.Component {
                 },
                 body: JSON.stringify(postObject),
             })
-                .then(res => res.json())
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        Promise.reject();
+                    }
+                })
                 .then(data => {
-
                     if (data.hasOwnProperty("mapid")) {
                         data.lastGatewayUpdate = new Date();
                         if (postObject.ImageAsset) {
@@ -622,8 +634,6 @@ class MapWidget extends React.Component {
                         } else {
                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                         }
-
-
                         this.addTileServer(data.mapid, data.token, "widgetmap_" + widget.id);
                         return true;
                     } else {
@@ -655,12 +665,10 @@ class MapWidget extends React.Component {
                                             localStorage.setItem(postObject.ImageCollectionAsset, JSON.stringify(data));
                                         } else if (postObject.index && postObject.dateFrom + postObject.dateTo) {
                                             localStorage.setItem(postObject.index + postObject.dateFrom + postObject.dateTo, JSON.stringify(data));
-                                        } else{
+                                        } else {
                                             localStorage.setItem(JSON.stringify(postObject), JSON.stringify(data));
                                         }
-
                                         this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
-                                    } else {
                                     }
                                 });
                         } else if (dualImageObject) {
@@ -692,7 +700,6 @@ class MapWidget extends React.Component {
                                             } else {
                                                 localStorage.setItem(JSON.stringify(dualImageObject), JSON.stringify(data));
                                             }
-
                                             this.addDualLayer(data.mapid, data.token, "widgetmap_" + widget.id);
                                         } else {
                                             console.warn("Wrong Data Returned");
@@ -701,6 +708,9 @@ class MapWidget extends React.Component {
                             }
                         }
                     }
+                })
+                .catch((error) => {
+                    console.log(error);
                 });
         }
         window.addEventListener("resize", () => this.handleResize());
@@ -771,7 +781,7 @@ class MapWidget extends React.Component {
                 step = ".01"
                 onChange = {evt => this.onOpacityChange( evt )}
                 onInput = {evt => this.onOpacityChange( evt )}
-                   />;
+            />;
         }
     };
 
@@ -822,17 +832,17 @@ class MapWidget extends React.Component {
             const source = new ol.source.XYZ({
                 url: "https://earthengine.googleapis.com/map/" + imageid + "/{z}/{x}/{y}?token=" + token,
             });
-            // source.on("tileloaderror", function(error) {
-            //     try {
-            //         window.setTimeout(function() {
-            //             console.log("trying to reload the tile: " );
-            //             console.log(error.tile);
-            //             error.tile.load();
-            //         }, 1000);
-            //     } catch (e) {
-            //         console.log(e.message);
-            //     }
-            // });
+            source.on("tileloaderror", function(error) {
+                try {
+                    window.setTimeout(function() {
+                        console.log("trying to reload the tile: " );
+                        console.log(error.tile);
+                        error.tile.load();
+                    }, 1000);
+                } catch (e) {
+                    console.log(e.message);
+                }
+            });
             this.state.mapRef.addLayer(new ol.layer.Tile({
                 source: source,
                 id: mapdiv,
@@ -927,7 +937,7 @@ class MapWidget extends React.Component {
                 });
                 whichMap.addLayer(layer);
             } else {
-                fetch(this.props.documentRoot + "/get-unlocked-plot/" + projectID + "/" + plotID)
+                fetch(this.props.documentRoot + "/get-proj-plot/" + projectID + "/" + plotID)
                     .then(res => res.json())
                     .then(data => {
                         const _geojson_object = typeof(data) === "string" ? JSON.parse(data) : data;
@@ -1160,7 +1170,7 @@ class StatsWidget extends React.Component {
 
     componentDidMount() {
         const projPairAOI = this.props.projPairAOI;
-        fetch(this.props.documentRoot + "/geo-dash/gateway-request", { //window.location.protocol + "//" + window.location.hostname + ":8888/getStats"
+        fetch(this.props.documentRoot + "/geo-dash/gateway-request", {
             method: "POST",
             headers: {
                 "Accept": "application/json",
