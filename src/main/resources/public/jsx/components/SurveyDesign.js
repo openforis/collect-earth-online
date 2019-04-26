@@ -401,6 +401,20 @@ class NewQuestionDesigner extends React.Component {
                                                         <td>Valid Sum: {rule.validSum}</td>
                                                         <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
                                                     </tr>
+                                                } else if (rule.ruleType === "matching-sums") {
+                                                    return <tr id={"rule" + rule.id} key={uid}>
+                                                        <td>
+                                                            <button type="button"
+                                                                    className="btn btn-outline-danger py-0 px-2 mr-1"
+                                                                    onClick={e => this.deleteSurveyRule(e)}><span
+                                                                id={rule.id} className="font-weight-bold">X</span>
+                                                            </button>
+                                                        </td>
+                                                        <td>{"Rule " + rule.id}</td>
+                                                        <td>Type: {rule.ruleType}</td>
+                                                        <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
+                                                        <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
+                                                    </tr>
                                                 } else if (rule.ruleType === "incompatible-answers") {
                                                     return <tr id={"rule" + rule.id} key={uid}>
                                                         <td>
@@ -516,6 +530,10 @@ class SurveyRules extends React.Component {
             answerText1: "",
             answerText2: "",
             questions: [],
+            questionsSet1:[],
+            questionsSet2:[],
+            questionSetIds1:[],
+            questionSetIds2:[],
             questionId: 0,
         };
     }
@@ -540,7 +558,7 @@ class SurveyRules extends React.Component {
         this.setState({validSum: sum});
     };
 
-    updateOptions = (target) => {
+    updateOptions = (target,type) => {
         const selection = Array.from(target.options).filter(option => option.selected);
         if (this.state.selectedRuleType === "incompatible-answers") {
             selection.map(option => {
@@ -574,6 +592,22 @@ class SurveyRules extends React.Component {
                     this.setState({answer2: questionId, answerText2: answer.answer});
                 }
             });
+        } else if (this.state.selectedRuleType === "matching-sums" && selection.length > 1) {
+            const questions = selection.map(option => {
+                const question = this.props.surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
+                return question.question;
+            });
+            if (type === "questionSet1") {
+                this.setState({
+                    questionSetIds1: selection.map(option => parseInt(option.value)),
+                    questionsSet1: questions
+                });
+            } else if (type === "questionSet2") {
+                this.setState({
+                    questionSetIds2: selection.map(option => parseInt(option.value)),
+                    questionsSet2: questions
+                });
+            }
         } else if ((this.state.selectedRuleType === "sum-of-answers" && selection.length > 1) || (this.state.selectedRuleType !== "sum-of-answers" && selection.length > 0)) {
             const questions = selection.map(option => {
                 const question = this.props.surveyQuestions.find(surveyQuestion => surveyQuestion.id === parseInt(option.value));
@@ -581,6 +615,7 @@ class SurveyRules extends React.Component {
             });
             this.setState({questionIds: selection.map(option => parseInt(option.value)), questions: questions});
         }
+
     };
 
     addSurveyRule = (ruleType) => {
@@ -591,11 +626,14 @@ class SurveyRules extends React.Component {
                     ? {...rule, regex: this.state.regex}
                     : (rule.ruleType === "sum-of-answers" && this.state.questionIds.every(qId => rule.questions.includes(qId)))
                         ? {...rule, validSum: this.state.validSum}
-                        : rule;
+                        :(rule.ruleType === "matching-sums" && this.state.questionSetIds1.every(qId => rule.questionSetIds1.includes(qId)) && this.state.questionSetIds2.every(qId => rule.questionSetIds2.includes(qId)))
+                            ? {...rule}
+                            : rule;
         });
         const numExists = this.props.surveyRules.some(rule => rule.ruleType === "numeric-range" && rule.questionId === this.state.questionIds[0]);
         const textExists = this.props.surveyRules.some(rule => rule.ruleType === "text-match" && rule.questionId === this.state.questionIds[0]);
         const sumExists = this.props.surveyRules.some(rule => rule.ruleType === "sum-of-answers" && this.state.questionIds.every(qId => rule.questions.includes(qId)));
+        const matchingSumsExists = this.props.surveyRules.some(rule => rule.ruleType === "matching-sums" && this.state.questionSetIds1.every(qId => rule.questionSetIds1.includes(qId)) && this.state.questionSetIds2.every(qId => rule.questionSetIds2.includes(qId)));
         const incompatibleExists = this.props.surveyRules.some(rule => rule.ruleType === "incompatible-answers"
             && rule.question1 === this.state.question1
             && rule.question2 === this.state.question2
@@ -626,7 +664,16 @@ class SurveyRules extends React.Component {
                         questionsText: this.state.questions,
                         validSum: this.state.validSum
                     }
-                    : (ruleType === "incompatible-answers" && incompatibleExists === false
+                    : (ruleType === "matching-sums" && matchingSumsExists === false && this.state.questionSetIds1.length > 1 && this.state.questionSetIds2.length > 1)
+                        ? {
+                            id: rules.length + 1,
+                            ruleType: ruleType,
+                            questionSetIds1: this.state.questionSetIds1,
+                            questionSetIds2: this.state.questionSetIds2,
+                            questionSetText1: this.state.questionsSet1,
+                            questionSetText2: this.state.questionsSet2,
+                        }
+                        : (ruleType === "incompatible-answers" && incompatibleExists === false
                         && this.state.question1 > 0 && this.state.question2 > 0
                         && this.state.answer1 > 0 && this.state.answer2 > 0)
                         ? {
@@ -642,7 +689,6 @@ class SurveyRules extends React.Component {
                             answerText2: this.state.answerText2
                         }
                         : null;
-
         this.props.setSurveyRules(newRule ? [...rules, newRule] : rules);
     };
 
@@ -663,6 +709,7 @@ class SurveyRules extends React.Component {
                                     <option value="text-match">Text Match</option>
                                     <option value="numeric-range">Numeric Range</option>
                                     <option value="sum-of-answers">Sum of Answers</option>
+                                    <option value="matching-sums">Matching Sums</option>
                                     <option value="incompatible-answers">Incompatible Answers</option>
                                 </select>
                             </td>
@@ -690,6 +737,11 @@ class SurveyRules extends React.Component {
                                               surveyQuestion={this.props.surveyQuestion}
                                               updateMaxSum={this.updateMaxSum}
                                               updateOptions={this.updateOptions}/> :
+                                this.state.selectedRuleType == "matching-sums" ?
+                                    <MatchingSums surveyQuestions={this.props.surveyQuestions}
+                                                  surveyRules={this.props.surveyRules}
+                                                  surveyQuestion={this.props.surveyQuestion}
+                                                  updateOptions={this.updateOptions}/> :
                                 this.state.selectedRuleType == "incompatible-answers" ?
                                     <IncompatibleAnswers answers1={this.state.answers1}
                                                          answers2={this.state.answers2}
@@ -728,7 +780,7 @@ function TextMatch(props) {
                             <label>Survey Question: </label>
                         </td>
                         <td><select className="form-control form-control-sm"
-                                    onChange={e => props.updateOptions(e.target)}>
+                                    onChange={e => props.updateOptions(e.target,"")}>
                             <option value="-1">-select-</option>
                             {
                                 surveyQuestions && surveyQuestions.map((question, uid) =>
@@ -766,7 +818,7 @@ function NumericRange(props) {
                             <label>Survey Question: </label>
                         </td>
                         <td><select className="form-control form-control-sm"
-                                    onChange={e => props.updateOptions(e.target)}>
+                                    onChange={e => props.updateOptions(e.target,"")}>
                             <option value="-1">-select-</option>
                             {
                                 surveyQuestions && surveyQuestions.map((question, uid) =>
@@ -818,7 +870,7 @@ function SumOfAnswers(props) {
                                 questions)</p></label></td>
                         <td>
                             <select className="form-control form-control-sm" multiple="multiple"
-                                    onChange={e => props.updateOptions(e.target)}>
+                                    onChange={e => props.updateOptions(e.target,"")}>
                                 {
                                     surveyQuestions.length > 1 && surveyQuestions.map((question, uid) =>
                                         <option key={uid} value={question.id}>{question.question}</option>)
@@ -834,6 +886,48 @@ function SumOfAnswers(props) {
                                    type="number"
                                    placeholder="Valid sum"
                                    onChange={e => props.updateMaxSum(parseInt(e.target.value))}/>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    );
+}
+
+function MatchingSums(props) {
+    const surveyQuestions = props.surveyQuestions.filter(question => question.dataType === "number");
+    return (
+        <tr>
+            <td>
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <label><p>Select first question set:</p><p>(Hold ctrl/cmd and select multiple
+                                questions)</p></label></td>
+                        <td>
+                            <select className="form-control form-control-sm" multiple="multiple"
+                                    onChange={e => props.updateOptions(e.target,"questionSet1")}>
+                                {
+                                    surveyQuestions.length > 1 && surveyQuestions.map((question, uid) =>
+                                        <option key={uid} value={question.id}>{question.question}</option>)
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label><p>Select second question set:</p><p>(Hold ctrl/cmd and select multiple
+                                questions)</p></label></td>
+                        <td>
+                            <select className="form-control form-control-sm" multiple="multiple"
+                                    onChange={e => props.updateOptions(e.target,"questionSet2")}>
+                                {
+                                    surveyQuestions.length > 1 && surveyQuestions.map((question, uid) =>
+                                        <option key={uid} value={question.id}>{question.question}</option>)
+                                }
+                            </select>
                         </td>
                     </tr>
                     </tbody>
@@ -859,7 +953,7 @@ function IncompatibleAnswers(props) {
                         <td>
                             <select className="form-control form-control-sm"
                                     id="question1"
-                                    onChange={e => props.updateOptions(e.target)}>
+                                    onChange={e => props.updateOptions(e.target,"")}>
                                 <option value="-1">None</option>
                                 {
                                     surveyQuestions && surveyQuestions.map((question, uid) =>
@@ -873,7 +967,7 @@ function IncompatibleAnswers(props) {
                         <td>
                             <select className="form-control form-control-sm"
                                     id="answer1"
-                                    onChange={e => props.updateOptions(e.target)}>
+                                    onChange={e => props.updateOptions(e.target,"")}>
                                 <option value="-1">None</option>
                                 {
                                     props.answers1 && props.answers1.map((answer, uid) =>
@@ -887,7 +981,7 @@ function IncompatibleAnswers(props) {
                         <td>
                             <select className="form-control form-control-sm"
                                     id="question2"
-                                    onChange={e => props.updateOptions(e.target)}>
+                                    onChange={e => props.updateOptions(e.target,"")}>
                                 <option value="-1">None</option>
                                 {
                                     dropdownQuestions && dropdownQuestions.map((question, uid) =>
@@ -901,7 +995,7 @@ function IncompatibleAnswers(props) {
                         <td>
                             <select className="form-control form-control-sm"
                                     id="answer2"
-                                    onChange={e => props.updateOptions(e.target)}>
+                                    onChange={e => props.updateOptions(e.target,"")}>
                                 <option value="-1">None</option>
                                 {
                                     props.answers2 && props.answers2.map((answer, uid) =>

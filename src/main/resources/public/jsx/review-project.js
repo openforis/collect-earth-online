@@ -729,6 +729,13 @@ function SurveyRules(props) {
                                         <td>Valid Sum: {rule.validSum}</td>
                                         <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
                                     </tr>
+                                } else if (rule.ruleType === "matching-sums") {
+                                    return <tr id={"rule" + rule.id} key={uid}>
+                                        <td>{"Rule " + rule.id}</td>
+                                        <td>Type: {rule.ruleType}</td>
+                                        <td>Questions Set 1: {rule.questionSetText2.toString()}</td>
+                                        <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
+                                    </tr>
                                 } else if (rule.ruleType === "incompatible-answers") {
                                     return <tr id={"rule" + rule.id} key={uid}>
                                         <td>{"Rule " + rule.id}</td>
