@@ -607,8 +607,9 @@ class Collection extends React.Component {
     };
 
     getSelectedSampleIds = () => {
-        const features =mercator.getSelectedSamples(this.state.mapConfig).getArray();
-        return (features.length == 0 ?  mercator.getAllFeatures(this.state.mapConfig, "currentSamples") : features.map(sf => sf.get("sampleId")));
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig).getArray();
+        return (selectedFeatures.length === 0 ? allFeatures : selectedFeatures).map(sf => sf.get("sampleId"));
     };
 
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
@@ -998,7 +999,7 @@ function ImageAnalysisPane(props) {
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
             <div id="imagery-info" className="row">
-                <p className="col small">{props.imageryAttribution}</p>
+                <p className="col small">{ props.imageryAttribution }</p>
             </div>
         </div>
     );
