@@ -176,7 +176,7 @@ def insert_projects():
                     + "ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), %s::text, %s::text, %s, %s, %s::text, %s, %s::text, "
                     + "%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s::date, %s::date, %s::date, %s::date)",
                     (project["id"], project["institution"], project["availability"],
-                    project["name"], project["description"], project["privacyLevel"], project["boundary"],
+                    project["name"], project["description"], project["privacyLevel"], project["boundary"].replace("\\", ""),
                     project["baseMapSource"], project["plotDistribution"], project["numPlots"],
                     project["plotSpacing"], project["plotShape"], project["plotSize"], project["sampleDistribution"],
                     project["samplesPerPlot"], project["sampleResolution"], json.dumps(project["sampleValues"]),

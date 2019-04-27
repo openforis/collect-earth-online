@@ -677,29 +677,6 @@ $$ LANGUAGE SQL;
 -- CREATING PROJECTS FUNCTIONS
 --
 
-CREATE TYPE project_return AS (
-    project_id              integer,
-    institution_id          integer,
-    availability            text,
-    name                    text,
-    description             text,
-    privacy_level           text,
-    boundary                text,
-    base_map_source         text,
-    plot_distribution       text,
-    num_plots               integer,
-    plot_spacing            float,
-    plot_shape              text,
-    plot_size               float,
-    sample_distribution     text,
-    samples_per_plot        integer,
-    sample_resolution       float,
-    survey_questions        jsonb,
-    survey_rules            jsonb,
-    classification_times    jsonb,
-    editable                boolean
-);
-
 -- Create a project
 CREATE OR REPLACE FUNCTION create_project_migration(
     _project_uid             integer,
@@ -1116,6 +1093,68 @@ $$ LANGUAGE SQL;
 --
 -- USING PROJECT FUNCTIONS
 --
+
+CREATE TYPE project_return AS (
+    project_id              integer,
+    institution_id          integer,
+    availability            text,
+    name                    text,
+    description             text,
+    privacy_level           text,
+    boundary                text,
+    base_map_source         text,
+    plot_distribution       text,
+    num_plots               integer,
+    plot_spacing            float,
+    plot_shape              text,
+    plot_size               float,
+    sample_distribution     text,
+    samples_per_plot        integer,
+    sample_resolution       float,
+    survey_questions        jsonb,
+    survey_rules            jsonb,
+    classification_times    jsonb,
+    valid_boundary          boolean,
+    editable                boolean
+);
+
+CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS(SELECT 1
+    WHERE ST_IsValid(_boundary)
+          AND NOT (ST_XMax(_boundary) > 180
+            OR ST_XMin(_boundary) < -180
+            OR ST_YMax(_boundary) > 90
+            OR ST_YMin(_boundary) < -90
+            OR ST_XMax(_boundary) <= ST_XMin(_boundary)
+            OR ST_YMax(_boundary) <= ST_YMin(_boundary)))
+
+$$ LANGUAGE SQL;
+
+CREATE VIEW project_boundary AS
+    SELECT
+        project_uid,
+        institution_rid,
+        availability,
+        name,
+        description,
+        privacy_level,
+        ST_AsGeoJSON(boundary),
+        base_map_source,
+        plot_distribution,
+        num_plots,
+        plot_spacing,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        survey_questions,
+        survey_rules,
+        classification_times,
+        valid_boundary(boundary)
+    FROM projects;
 
 -- Returns a row in projects by id.
 CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
