@@ -27,7 +27,7 @@ class Home extends React.Component {
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                this.setState({ projects: data });
+                this.setState({ projects: data.filter(d => d.validBoundary) });
                 return Promise.resolve();
             } else {
                 return Promise.reject("No projects found");
