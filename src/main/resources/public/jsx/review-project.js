@@ -733,7 +733,7 @@ function SurveyRules(props) {
                                     return <tr id={"rule" + rule.id} key={uid}>
                                         <td>{"Rule " + rule.id}</td>
                                         <td>Type: {rule.ruleType}</td>
-                                        <td>Questions Set 1: {rule.questionSetText2.toString()}</td>
+                                        <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
                                         <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
                                     </tr>
                                 } else if (rule.ruleType === "incompatible-answers") {
