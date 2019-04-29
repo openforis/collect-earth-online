@@ -641,7 +641,7 @@ class SurveyRules extends React.Component {
             && rule.answer2 === this.state.answer2);
         const newRule = (ruleType === "numeric-range" && numExists === false && this.state.min >= 0 && this.state.max >= 0)
             ? {
-                id: rules.length + 1,
+                id: rules.length > 0 ? rules[rules.length - 1].id + 1 : 1,
                 ruleType: ruleType,
                 questionId: this.state.questionIds[0],
                 questionsText: this.state.questions,
@@ -650,7 +650,7 @@ class SurveyRules extends React.Component {
             }
             : (ruleType === "text-match" && textExists === false && this.state.regex.length > 0)
                 ? {
-                    id: rules.length + 1,
+                    id: rules.length > 0 ? rules[rules.length - 1].id + 1 : 1,
                     ruleType: ruleType,
                     questionId: this.state.questionIds[0],
                     questionsText: this.state.questions,
@@ -658,7 +658,7 @@ class SurveyRules extends React.Component {
                 }
                 : (ruleType === "sum-of-answers" && sumExists === false && this.state.questions.length > 1)
                     ? {
-                        id: rules.length + 1,
+                        id: rules.length > 0 ? rules[rules.length - 1].id + 1 : 1,
                         ruleType: ruleType,
                         questions: this.state.questionIds,
                         questionsText: this.state.questions,
@@ -666,7 +666,7 @@ class SurveyRules extends React.Component {
                     }
                     : (ruleType === "matching-sums" && matchingSumsExists === false && this.state.questionSetIds1.length > 1 && this.state.questionSetIds2.length > 1)
                         ? {
-                            id: rules.length + 1,
+                            id: rules.length > 0 ? rules[rules.length - 1].id + 1 : 1,
                             ruleType: ruleType,
                             questionSetIds1: this.state.questionSetIds1,
                             questionSetIds2: this.state.questionSetIds2,
@@ -677,7 +677,7 @@ class SurveyRules extends React.Component {
                         && this.state.question1 > 0 && this.state.question2 > 0
                         && this.state.answer1 > 0 && this.state.answer2 > 0)
                         ? {
-                            id: rules.length + 1,
+                            id: rules.length > 0 ? rules[rules.length - 1].id + 1 : 1,
                             ruleType: ruleType,
                             question1: this.state.question1,
                             question2: this.state.question2,
