@@ -1166,7 +1166,7 @@ CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in projects for a user_id.
+-- Returns all public projects.
 CREATE OR REPLACE FUNCTION select_all_projects()
  RETURNS setOf project_return AS $$
 
@@ -1178,7 +1178,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in projects for institution_rid.
+-- Returns projects for institution_rid.
 CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_rid integer)
  RETURNS setOf project_return AS $$
 
@@ -1197,7 +1197,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
     FROM project_boundary as p
     LEFT JOIN get_institution_user_roles(_user_rid) AS roles
         USING (institution_rid)
-    WHERE role = 'admin'
+    WHERE (role = 'admin' AND p.availability <> 'archived')
         OR (role = 'member'
             AND p.privacy_level IN ('public', 'institution')
             AND p.availability = 'published')
@@ -1525,7 +1525,7 @@ CREATE OR REPLACE FUNCTION select_plot_by_id(_project_rid integer, _plot_uid int
  RETURNS setOf plots_return AS $$
 
     SELECT * FROM select_all_project_plots(_project_rid) as spp
-    WHERE spp.plotId = _plot_uid
+    WHERE spp.plot_id = _plot_uid
 
 $$ LANGUAGE SQL;
 
@@ -1819,8 +1819,8 @@ CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username
         (plot_rid, flagged, collection_start, collection_time, user_rid)
     (SELECT _plot_rid,
         _flagged,
-        _collection_time,
         _collection_start,
+        _collection_time,
         (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
      FROM user_id, guest_id)
     RETURNING user_plot_uid
@@ -2014,7 +2014,9 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_rid integer, _json_data te
 
     ), plot_users as (
         SELECT (CASE WHEN useremail IS NULL or useremail = 'null' THEN NULL
-                ELSE add_user_plots_migration(plot_id, useremail, flagged,
+                ELSE add_user_plots_migration(plot_id,
+                                              useremail,
+                                              flagged,
                                               to_timestamp(cstart::bigint / 1000.0)::timestamp,
                                               to_timestamp(ctime::bigint / 1000.0)::timestamp)
                 END) as user_plot_id,

@@ -68,7 +68,10 @@ public class PostgresPlots implements Plots {
             pstmt.setInt(2, plotId);
             try (var rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    return buildPlotJson(rs).toString();
+                    var plotData = new JsonObject();
+                    plotData = buildPlotJson(rs);
+                    plotData.add("samples", getSampleJsonArray(plotData.get("id").getAsInt(), projectId));
+                    return plotData.toString();
                 } else {
                     return "";
                 }
