@@ -606,6 +606,12 @@ class Collection extends React.Component {
         return array1.filter(value => array2.includes(value));
     };
 
+    getSelectedSampleIds = () => {
+        const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+        const selectedFeatures = mercator.getSelectedSamples(this.state.mapConfig).getArray();
+        return (selectedFeatures.length === 0 ? allFeatures : selectedFeatures).map(sf => sf.get("sampleId"));
+    };
+
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id &&
             !RegExp(surveyRule.regex).test(answerText)) {
@@ -630,7 +636,7 @@ class Collection extends React.Component {
         if (surveyRule.questions.includes(questionToSet.id)) {
             const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id != questionToSet.id);
             if (surveyRule.questions.length === answeredQuestions.length + 1) {
-                const sampleIds = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
+                const sampleIds = this.getSelectedSampleIds();
                 const answeredSampleIds = answeredQuestions.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds = answeredSampleIds.reduce(this.intersection, sampleIds);
                 if (commonSampleIds.length > 0) {
@@ -656,11 +662,58 @@ class Collection extends React.Component {
         }
     };
 
+    checkRuleMatchingSums = (surveyRule, questionToSet, answerId, answerText) => {
+        if (surveyRule.questionSetIds1.includes(questionToSet.id) || surveyRule.questionSetIds2.includes(questionToSet.id)) {
+            const answeredQuestions1 = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questionSetIds1.includes(q.id) && q.answered.length > 0 && q.id != questionToSet.id);
+            const answeredQuestions2 = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id != questionToSet.id);
+            if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
+                const sampleIds = this.getSelectedSampleIds();
+                const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
+                const commonSampleIds1 = answeredSampleIds1.reduce(this.intersection, sampleIds);
+                const answeredSampleIds2 = answeredQuestions2.map(q => q.answered.map(a => a.sampleId));
+                const commonSampleIds2 = answeredSampleIds2.reduce(this.intersection, sampleIds);
+                const commonSampleIds = this.intersection(commonSampleIds1, commonSampleIds2);
+                if (commonSampleIds.length > 0) {
+                    const sampleSums = commonSampleIds.map(sampleId => {
+                        const sum1 = answeredQuestions1
+                            .map(q => q.answered.find(a => a.sampleId === sampleId).answerText)
+                            .reduce((sum, num) => sum + parseInt(num), 0);
+                        const sum2 = answeredQuestions2
+                            .map(q => q.answered.find(a => a.sampleId === sampleId).answerText)
+                            .reduce((sum, num) => sum + parseInt(num), 0);
+                        return [sum1, sum2];
+                    });
+                    if (surveyRule.questionSetIds1.includes(questionToSet)) {
+                        const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
+                        if (invalidSum) {
+                            return "Totals of the question sets do not match. Valid answer is " + (invalidSum[1] - invalidSum[0]) + ".";
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
+                        if (invalidSum) {
+                            return "Totals of the question sets do not match. Valid answer is " + (invalidSum[0] - invalidSum[1]) + ".";
+                        } else {
+                            return null;
+                        }
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    };
+
     checkRuleIncompatibleAnswers = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.question1 === questionToSet.id && surveyRule.answer1 === answerId) {
             const ques2 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question2);
             if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
-                const ques1Ids = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
+                const ques1Ids = this.getSelectedSampleIds();
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
@@ -674,7 +727,7 @@ class Collection extends React.Component {
         } else if (surveyRule.question2 === questionToSet.id && surveyRule.answer2 === answerId) {
             const ques1 = this.state.currentProject.surveyQuestions.find(q => q.id === surveyRule.question1);
             if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
-                const ques2Ids = mercator.getSelectedSamples(this.state.mapConfig).getArray().map(sf => sf.get("sampleId"));
+                const ques2Ids = this.getSelectedSampleIds();
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = this.intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
@@ -693,6 +746,7 @@ class Collection extends React.Component {
     ruleFunctions = {"text-match":           this.checkRuleTextMatch,
                      "numeric-range":        this.checkRuleNumericRange,
                      "sum-of-answers":       this.checkRuleSumOfAnswers,
+                     "matching-sums":        this.checkRuleMatchingSums,
                      "incompatible-answers": this.checkRuleIncompatibleAnswers};
 
     rulesViolated = (questionToSet, answerId, answerText) => {
@@ -945,7 +999,7 @@ function ImageAnalysisPane(props) {
         // Mercator hooks into image-analysis-pane
         <div id="image-analysis-pane" className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height">
             <div id="imagery-info" className="row">
-                <p className="col small">{props.imageryAttribution}</p>
+                <p className="col small">{ props.imageryAttribution }</p>
             </div>
         </div>
     );

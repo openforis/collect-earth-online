@@ -104,6 +104,7 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/create-project",
                   {
                       method: "POST",
+                      contentType: "application/json; charset=utf-8",
                       body: JSON.stringify({
                           institution: this.props.institutionId,
                           lonMin: this.state.coordinates.lonMin,

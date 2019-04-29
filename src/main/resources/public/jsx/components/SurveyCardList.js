@@ -167,7 +167,7 @@ function SurveyQuestionTree({
                                     <ul>
                                     {
                                         surveyRules.map((rule, uid) => {
-                                            return [rule.questionId, rule.question1, rule.question2].concat(rule.questions).includes(surveyQuestion.id)
+                                            return [rule.questionId, rule.question1, rule.question2].concat(rule.questions).concat(rule.questionSetIds1).concat(rule.questionSetIds2).includes(surveyQuestion.id)
                                                 ? <li key={uid}><a href={"#rule" + rule.id}>{"Rule " + rule.id + ": " + rule.ruleType}</a></li>
                                                 : null;
                                         })
