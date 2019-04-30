@@ -343,7 +343,7 @@ class Collection extends React.Component {
                 if (data === "done") {
                     if (plotId === -1) {
                         alert(this.state.reviewPlots
-                                ? "You have not reviewd any plots"
+                                ? "You have not reviewed any plots"
                                 : "All plots have been analyzed for this project.");
                     } else {
                         this.setState({ nextPlotButtonDisabled: true });
@@ -617,7 +617,7 @@ class Collection extends React.Component {
     checkRuleTextMatch = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id &&
             !RegExp(surveyRule.regex).test(answerText)) {
-            return "Please enter a regular expression that matches " + surveyRule.regex;
+            return "Text match validation failed: Please enter a regular expression that matches " + surveyRule.regex;
         } else {
             return null;
         }
@@ -628,7 +628,7 @@ class Collection extends React.Component {
             (isNaN(parseInt(answerText)) ||
                 parseInt(answerText) < surveyRule.min ||
                 parseInt(answerText) > surveyRule.max)) {
-            return "Please select a value between " + surveyRule.min + " and " + surveyRule.max;
+            return "Numeric range validation failed: Please select a value between " + surveyRule.min + " and " + surveyRule.max;
         } else {
             return null;
         }
@@ -647,7 +647,7 @@ class Collection extends React.Component {
                                 .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
                                 .reduce((sum, num) => sum + parseInt(num), 0);
                             if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                                return "Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
+                                return "Sum of answers validation failed: Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
                             } else {
                                 return null;
                             }
@@ -688,14 +688,14 @@ class Collection extends React.Component {
                     if (surveyRule.questionSetIds1.includes(questionToSet)) {
                         const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
                         if (invalidSum) {
-                            return "Totals of the question sets do not match. Valid answer is " + (invalidSum[1] - invalidSum[0]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[1] - invalidSum[0]) + ".";
                         } else {
                             return null;
                         }
                     } else {
                         const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
                         if (invalidSum) {
-                            return "Totals of the question sets do not match. Valid answer is " + (invalidSum[0] - invalidSum[1]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[0] - invalidSum[1]) + ".";
                         } else {
                             return null;
                         }
