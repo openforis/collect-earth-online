@@ -688,14 +688,14 @@ class Collection extends React.Component {
                     if (surveyRule.questionSetIds1.includes(questionToSet)) {
                         const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets do not match. Valid answer is " + (invalidSum[1] - invalidSum[0]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[1] - invalidSum[0]) + ".";
                         } else {
                             return null;
                         }
                     } else {
                         const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets do not match. Valid answer is " + (invalidSum[0] - invalidSum[1]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[0] - invalidSum[1]) + ".";
                         } else {
                             return null;
                         }
