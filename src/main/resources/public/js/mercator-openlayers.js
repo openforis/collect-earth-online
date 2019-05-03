@@ -117,7 +117,6 @@ mercator.createSource = function (sourceConfig) {
         } catch (e) {
             visParams = sourceConfig.geeParams.visParams;
         }
-        console.log(visParams);
         const theJson = {
             dateFrom: sourceConfig.geeParams.startDate,
             dateTo: sourceConfig.geeParams.endDate,

@@ -917,6 +917,39 @@ class Collection extends React.Component {
         });
     };
 
+    download = (filename, text) =>  {
+        let element = document.createElement('a');
+        element.setAttribute('href', 'data:earth.kml+xml application/ vnd.google - earth.kmz, ' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+
+    setFileinfo = () => {
+        let bothFeatures = [];
+        this.state.mapConfig.map.getLayers().forEach( layer => {
+            if (layer.get('title') !== undefined && layer.get('title') === 'currentPlot') {
+                const source = layer.getSource();
+                if (source.getFeatures()[0].getGeometry().getType() === "Circle") {
+                    //i have to do something different with the stupid circles
+                } else {
+                    bothFeatures = [...bothFeatures, ...source.getFeatures()];
+                }
+            }
+            else if (layer.get('title') !== undefined && layer.get('title') === 'currentSamples') {
+                        const source = layer.getSource();
+                        bothFeatures = [...bothFeatures, ...source.getFeatures()];
+                    }
+        });
+        this.download("ceo_" + this.props.projectId + "_"+ this.state.currentPlot.plotId +".kml", this.GetKMLFromFeatures(bothFeatures));
+    }
+
+    GetKMLFromFeatures = features => {
+        return new ol.format.KML().writeFeatures(features, {featureProjection: 'EPSG:3857'});
+    }
+
     render() {
         const plotId = this.state.currentPlot
                         && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
@@ -932,6 +965,10 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                 >
+                    {this.state.currentPlot &&
+                    < input type="button" id="dwn-btn" value="Download plot and sample kml"
+                        onClick={this.setFileinfo} className={"btn btn-outline-lightgreen btn-sm btn-block my-2"}/>
+                    }
                     <PlotNavigation
                         plotId={plotId}
                         navButtonsShown={this.state.currentPlot != null}
