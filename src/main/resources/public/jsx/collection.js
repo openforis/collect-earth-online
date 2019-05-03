@@ -933,7 +933,12 @@ class Collection extends React.Component {
             if (layer.get('title') !== undefined && layer.get('title') === 'currentPlot') {
                 const source = layer.getSource();
                 if (source.getFeatures()[0].getGeometry().getType() === "Circle") {
-                    //i have to do something different with the stupid circles
+                    bothFeatures = [...bothFeatures, new ol.Feature({
+                        geometry: ol.geom.Polygon.fromCircle(
+                            source.getFeatures()[0].getGeometry()
+                        ),
+                        name: 'thePlot'
+                    })];
                 } else {
                     bothFeatures = [...bothFeatures, ...source.getFeatures()];
                 }
