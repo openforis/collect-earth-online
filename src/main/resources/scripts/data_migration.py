@@ -101,7 +101,7 @@ def insert_institutions():
             for pending in pendingUsers:
                 if pending not in members and pending not in admins:
                     try:
-                        ur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], pending, 3))
+                        cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], pending, 3))
                     except: pass
                     conn.commit()
         cur.close()
