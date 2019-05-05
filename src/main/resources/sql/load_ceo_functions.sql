@@ -851,9 +851,9 @@ CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
         'WITH duplicates AS (
             SELECT * FROM
                 (SELECT *, COUNT(*) OVER
-                    (PARTITION BY ' || _on_cols || ') as count
+                    (PARTITION BY ' || _on_cols || ') as xx_count
             FROM ext_tables.' || _table_name || ') tableWithCount
-            WHERE tableWithCount.count > 1
+            WHERE tableWithCount.xx_count > 1
         )
 
         DELETE FROM ext_tables.' || _table_name || ' WHERE gid IN
@@ -2011,7 +2011,6 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_rid integer, _json_data te
             (CASE WHEN "collectionTime" ~ '^\d+$' THEN "collectionTime" ELSE NULL END) as ctime,
             (CASE WHEN "collectionStart" ~ '^\d+$' THEN "collectionStart" ELSE NULL END) as cstart
         FROM plotrows as p
-
     ), plot_users as (
         SELECT (CASE WHEN useremail IS NULL or useremail = 'null' THEN NULL
                 ELSE add_user_plots_migration(plot_id,
