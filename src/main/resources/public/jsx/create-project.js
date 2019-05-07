@@ -239,7 +239,7 @@ class Project extends React.Component {
                 projectDetails: { ...templateProject, surveyQuestions: newSurveyQuestions, surveyRules: templateProject.surveyRules || [] },
                 plotList: [],
                 useTemplatePlots: true,
-                surveyMode: templateProject.surveyRules.length > 0? false : true,
+                surveyMode: templateProject.surveyRules.length > 0 ? false : true,
             });
         }
     };
