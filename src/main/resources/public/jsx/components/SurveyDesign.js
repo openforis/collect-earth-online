@@ -102,10 +102,10 @@ export class SurveyDesign extends React.Component {
     render() {
         return (
             <SectionBlock title="Survey Design">
-                <ModeButtons inSimpleMode={this.state.inSimpleMode} toggleSimpleMode={this.toggleSimpleMode} />
+                <ModeButtons inSimpleMode={this.state.inSimpleMode && this.props.surveyMode} toggleSimpleMode={this.toggleSimpleMode} />
                 <div id="survey-design">
                     <SurveyCardList
-                        inSimpleMode={this.state.inSimpleMode}
+                        inSimpleMode={this.state.inSimpleMode && this.props.surveyMode}
                         inDesignMode
                         setSurveyQuestions={this.props.setSurveyQuestions}
                         setSurveyRules={this.props.setSurveyRules}
@@ -125,7 +125,7 @@ export class SurveyDesign extends React.Component {
                     />
 
                     <NewQuestionDesigner
-                        inSimpleMode={this.state.inSimpleMode}
+                        inSimpleMode={this.state.inSimpleMode && this.props.surveyMode}
                         setSurveyQuestions={this.props.setSurveyQuestions}
                         surveyQuestions={this.props.surveyQuestions}
                         surveyRules = {this.props.surveyRules}
