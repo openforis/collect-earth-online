@@ -869,7 +869,7 @@ CREATE OR REPLACE FUNCTION csv_boundary(_project_uid integer, _m_buffer float)
 
     UPDATE projects SET boundary = b
     FROM (
-        SELECT ST_Expand(ST_SetSRID(ST_Extent(center) , 4326) , _m_buffer / 1000.0) as b
+        SELECT ST_Envelope(ST_Buffer(ST_SetSRID(ST_Extent(center) , 4326)::geography , _m_buffer)::geometry) as b
         FROM select_partial_table_by_name((
             SELECT plots_ext_table
             FROM projects
@@ -1586,7 +1586,7 @@ CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_rid integer, _p
  RETURNS setOf plots_return AS $$
 
     SELECT * FROM select_all_unlocked_project_plots(_project_rid) as spp
-    WHERE spp.plot_id = _plot_uid
+    WHERE spp.plotId = _plot_uid
         AND flagged = 0
         AND assigned = 0
 
@@ -1597,7 +1597,7 @@ CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_rid integer, _plot_ui
  RETURNS setOf plots_return AS $$
 
     SELECT * FROM select_all_project_plots(_project_rid) as spp
-    WHERE spp.plot_id = _plot_uid
+    WHERE spp.plotId = _plot_uid
         AND spp.username = _username
 
 $$ LANGUAGE SQL;
