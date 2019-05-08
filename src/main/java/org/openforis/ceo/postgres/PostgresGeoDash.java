@@ -3,6 +3,7 @@ package org.openforis.ceo.postgres;
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
 import static org.openforis.ceo.utils.JsonUtils.elementToObject;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
+import static org.openforis.ceo.utils.ProjectUtils.getOrEmptyString;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -105,7 +106,7 @@ public class PostgresGeoDash implements GeoDash {
     public String updateDashBoardWidgetById(Request req, Response res) {
         var widgetId = req.params(":id");
         var jsonInputs = parseJson(req.body()).getAsJsonObject();
-        var dashboardId = jsonInputs.get("dashID").getAsString();
+        var dashboardId = getOrEmptyString(jsonInputs, "dashID").getAsString();
         var widgetJsonString = jsonInputs.get("widgetJSON").getAsString();
 
         try (var conn = connect();
