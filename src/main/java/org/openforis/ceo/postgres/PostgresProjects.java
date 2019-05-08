@@ -662,7 +662,7 @@ public class PostgresProjects implements Projects {
                         try (var rs = pstmt.executeQuery()) {
                             while (rs.next()) {
                                 var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
-                                createProjectSamples(conn, rs.getInt("id"), sampleDistribution,
+                                createProjectSamples(conn, rs.getInt("plot_uid"), sampleDistribution,
                                     plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, plotDistribution.equals("shp"));
                             }
                         }
