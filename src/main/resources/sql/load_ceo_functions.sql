@@ -634,11 +634,12 @@ CREATE OR REPLACE FUNCTION add_project_widget(_project_rid integer, _dashboard_i
 $$ LANGUAGE SQL;
 
 -- Deletes a delete_project_widget_by_widget_id from the database.
-CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid integer)
+CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid integer, _dashboard_id uuid)
  RETURNS integer AS $$
 
     DELETE FROM project_widgets
-    WHERE CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_uid
+    WHERE dashboard_id = _dashboard_id
+        AND CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_uid
     RETURNING widget_uid
 
 $$ LANGUAGE SQL;

@@ -1,6 +1,7 @@
 package org.openforis.ceo.postgres;
 
 import static org.openforis.ceo.utils.DatabaseUtils.connect;
+import static org.openforis.ceo.utils.JsonUtils.elementToObject;
 import static org.openforis.ceo.utils.JsonUtils.parseJson;
 
 import com.google.gson.JsonArray;
@@ -34,7 +35,7 @@ public class PostgresGeoDash implements GeoDash {
 
         try (var conn = connect();
              var pstmt = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
-                 
+
             pstmt.setInt(1, Integer.parseInt(projectId));
             try(var rs = pstmt.executeQuery()){
                 if (rs.next()) {
@@ -126,11 +127,14 @@ public class PostgresGeoDash implements GeoDash {
     // Deletes a dashboard widget by widget_id
     public String deleteDashBoardWidgetById(Request req, Response res) {
         var widgetId = req.params(":id");
+        var jsonInputs = elementToObject(parseJson(req.body()));
+        var dashboardId = jsonInputs.get("dashID").getAsString();
 
         try (var conn = connect();
-            var pstmt = conn.prepareStatement("SELECT * FROM delete_project_widget_by_widget_id(?)")) {
+            var pstmt = conn.prepareStatement("SELECT * FROM delete_project_widget_by_widget_id(?, ?)")) {
 
             pstmt.setInt(1, Integer.parseInt(widgetId));
+            pstmt.setObject(2, UUID.fromString(dashboardId));
             pstmt.execute();
 
             return "";

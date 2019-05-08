@@ -143,6 +143,7 @@ def insert_project_widgets(project_id, dash_id, conn):
         widget = json.load(dash_json)
         if widget["projectID"] is not None and int(project_id)==int(widget["projectID"]) and len(str(widget["widgets"]))>2:
             for awidget in widget["widgets"]:
+                print("adding single widget")
                 cur.execute("select * from add_project_widget(%s, %s::uuid, %s::jsonb)",
                     (widget["projectID"], widget["dashboardID"], json.dumps(awidget)))
                 conn.commit()
@@ -193,6 +194,7 @@ def insert_projects():
                         dash_id = dash["dashboard"]
                         try:
                             if int(dash["projectID"]) == int(project_id):
+                                print("inserting dash")
                                 insert_project_widgets(project_id,dash_id,conn)
                         except: pass
 
@@ -233,7 +235,7 @@ def insert_plots_samples_by_file(project_id, mainconn):
         conn.commit()
         cur_plot.close()
         conn.close()
-        insert_plots(project_id, mainconn)
+        # insert_plots(project_id, mainconn)
     cur_plot.close()
     conn.close()
 
@@ -602,8 +604,8 @@ if __name__ == "__main__":
         insert_institutions()
         print("inserting imagery")
         insert_imagery()
-        print("inserting projects")
 
+    print("inserting projects")
     insert_projects()
     print("Done with projects")
     update_sequence()
