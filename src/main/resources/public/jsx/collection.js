@@ -31,6 +31,7 @@ class Collection extends React.Component {
             userSamples: {},
             userImages: {},
             storedInterval: null,
+            KMLFeatures: null,
         };
     }
 
@@ -81,7 +82,6 @@ class Collection extends React.Component {
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
             this.showGeoDash();
-
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
@@ -96,6 +96,7 @@ class Collection extends React.Component {
 
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
+                this.createPlotKML();
             }
         }
 
@@ -254,7 +255,7 @@ class Collection extends React.Component {
         });
     };
 
-    updateMapImagery() {
+    updateMapImagery = () => {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
 
@@ -493,6 +494,15 @@ class Collection extends React.Component {
                     + "&daterange=&bcenter=" + currentPlot.center
                     + "&bradius=" + plotRadius,
                     "_geo-dash");
+    };
+
+    createPlotKML = () => {
+        const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
+        const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+        this.setState({
+            KMLFeatures: mercator.getKMLFromFeatures([mercator.asPolygonFeature(plotFeatures[0]),
+                                                      ...sampleFeatures]),
+        });
     };
 
     goToFirstPlot = () => this.getNextPlotData(-1);
@@ -847,7 +857,7 @@ class Collection extends React.Component {
             .filter(feature => {
                 const sampleId = feature.get("sampleId");
                 return this.state.userSamples[sampleId]
-                                && this.state.userSamples[sampleId][question];
+                    && this.state.userSamples[sampleId][question];
             })
             .forEach(feature => {
                 const sampleId = feature.get("sampleId");
@@ -932,6 +942,15 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                 >
+                    {this.state.currentPlot && this.state.KMLFeatures &&
+                    <a className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+                       href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                             + encodeURIComponent(this.state.KMLFeatures)}
+                       download={"ceo_" + this.props.projectId + "_" + (this.state.currentPlot.plotId || this.state.currentPlot.id) + ".kml"}
+                    >
+                        Download Plot KML
+                    </a>
+                    }
                     <PlotNavigation
                         plotId={plotId}
                         navButtonsShown={this.state.currentPlot != null}
