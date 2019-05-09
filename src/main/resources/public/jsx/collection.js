@@ -647,7 +647,7 @@ class Collection extends React.Component {
                                 .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
                                 .reduce((sum, num) => sum + parseInt(num), 0);
                             if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                                return "Sum of answers validation failed: Possible sum for questions [" + surveyRule.questionsText.toString() + "] is "+ (surveyRule.validSum - answeredSum).toString();
+                                return "Sum of answers validation failed: Possible sum for questions [" + surveyRule.questionsText.toString() + "] is " + (surveyRule.validSum - answeredSum).toString() + ".";
                             } else {
                                 return null;
                             }
