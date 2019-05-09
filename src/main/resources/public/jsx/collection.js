@@ -657,7 +657,7 @@ class Collection extends React.Component {
                                 .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
                                 .reduce((sum, num) => sum + parseInt(num), 0);
                             if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                                return "Sum of answers validation failed: Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
+                                return "Sum of answers validation failed: Possible sum for questions [" + surveyRule.questionsText.toString() + "] is " + (surveyRule.validSum - answeredSum).toString() + ".";
                             } else {
                                 return null;
                             }
@@ -698,14 +698,14 @@ class Collection extends React.Component {
                     if (surveyRule.questionSetIds1.includes(questionToSet)) {
                         const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[1] - invalidSum[0]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets [" + surveyRule.questionSetText1.toString() + "] and [" + surveyRule.questionSetText2.toString() + "] do not match. Valid total is " + (invalidSum[1] - invalidSum[0]) + ".";
                         } else {
                             return null;
                         }
                     } else {
                         const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[0] - invalidSum[1]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets [" + surveyRule.questionSetText1.toString() + "] and [" + surveyRule.questionSetText2.toString() + "] do not match. Valid total is " + (invalidSum[0] - invalidSum[1]) + ".";
                         } else {
                             return null;
                         }
