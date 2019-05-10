@@ -3,7 +3,7 @@
 *** Mercator-OpenLayers.js
 ***
 *** Author: Gary W. Johnson
-*** Copyright: 2017-2018 Spatial Informatics Group, LLC
+*** Copyright: 2017-2019 Spatial Informatics Group, LLC
 *** License: LGPLv3
 ***
 *** Description: This library provides a set of functions for
@@ -117,7 +117,6 @@ mercator.createSource = function (sourceConfig) {
         } catch (e) {
             visParams = sourceConfig.geeParams.visParams;
         }
-        console.log(visParams);
         const theJson = {
             dateFrom: sourceConfig.geeParams.startDate,
             dateTo: sourceConfig.geeParams.endDate,
@@ -1111,6 +1110,22 @@ mercator.addPlotLayer = function (mapConfig, plots, callBack) {
     mapConfig.map.on("click", clickHandler);
 
     return mapConfig;
+};
+
+/*****************************************************************************
+***
+*** Functions to export plot and sample features as KML
+***
+*****************************************************************************/
+
+mercator.asPolygonFeature = function (feature) {
+    return feature.getGeometry().getType() === "Circle"
+        ? new ol.Feature({ geometry: ol.geom.Polygon.fromCircle(feature.getGeometry()) })
+        : feature;
+};
+
+mercator.getKMLFromFeatures = function (features) {
+    return (new ol.format.KML()).writeFeatures(features, { featureProjection: "EPSG:3857" });
 };
 
 /*****************************************************************************

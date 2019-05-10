@@ -73,7 +73,7 @@ public class PostgresProjects implements Projects {
             newProject.addProperty("samplesPerPlot",       rs.getInt("samples_per_plot"));
             newProject.addProperty("sampleResolution",     rs.getDouble("sample_resolution"));
             newProject.addProperty("classification_times", "");
-            newProject.addProperty("editable",             rs.getString("editable"));
+            newProject.addProperty("editable",             rs.getBoolean("editable"));
             newProject.addProperty("validBoundary",        rs.getBoolean("valid_boundary"));
             newProject.add("sampleValues", parseJson(rs.getString("survey_questions")).getAsJsonArray());
             newProject.add("surveyRules",  parseJson(rs.getString("survey_rules")).getAsJsonArray());
@@ -662,7 +662,7 @@ public class PostgresProjects implements Projects {
                         try (var rs = pstmt.executeQuery()) {
                             while (rs.next()) {
                                 var plotCenter = new Double[] {rs.getDouble("lon"), rs.getDouble("lat")};
-                                createProjectSamples(conn, rs.getInt("id"), sampleDistribution,
+                                createProjectSamples(conn, rs.getInt("plot_uid"), sampleDistribution,
                                     plotCenter, plotShape, plotSize, samplesPerPlot, sampleResolution, plotDistribution.equals("shp"));
                             }
                         }
