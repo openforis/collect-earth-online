@@ -894,8 +894,7 @@ public class JsonProjects implements Projects {
 
     public static JsonObject newProjectObject(JsonObject newProjectData, JsonObject fileData, Request req) {
         final var newProjectId = newProjectData.get("id").getAsString();
-        if (getOrZero(newProjectData, "useTemplatePlots").getAsBoolean()
-                && getOrZero(newProjectData, "projectTemplate").getAsInt() > 0) {
+        if (getOrZero(newProjectData, "projectTemplate").getAsInt() > 0) {
                     var templateID = newProjectData.get("projectTemplate").getAsString();
                     var templateProject = singleProjectJson(templateID);
                     // Strip plots and samples of user data
