@@ -1,3 +1,3 @@
-cname=${1//-/_}_csv
-csvname=${1}.csv
-PGPASSWORD=ceo psql -h localhost -U ceo -d ceo -c "\copy ext_tables.$cname FROM $csvname DELIMITER ',' CSV HEADER"
+#!/bin/sh
+cname=`printf ext_tables.$1_csv | sed -e 's/-/_/g'`
+PGPASSWORD=ceo psql -h localhost -U ceo -d ceo -c "\copy $cname FROM $1.csv DELIMITER ',' CSV HEADER"

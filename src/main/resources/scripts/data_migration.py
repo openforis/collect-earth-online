@@ -45,16 +45,17 @@ def truncate_all_tables():
 
 def insert_users():
     conn = None
-    user_id=-1
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         dirname = os.path.dirname(os.path.realpath(__file__))
         user_list_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , "user-list.json"))), "r")
         users = json.load(user_list_json)
+        print(len(users))
         for user in users:
-            cur.execute("select * from add_user_migration(%s, %s::text, %s::text)", (user["id"], user["email"], user["password"]))
-            user_id = cur.fetchone()[0]
+            try:
+                cur.execute("select * from add_user_migration(%s, %s::text, %s::text)", (user["id"], user["email"], user["password"]))
+            except: pass
             conn.commit()
         cur.execute("select * from add_user_migration(%s, %s::text, %s::text)", (-1, "guest", "dkh*&jlkjadfjk&^58342bmdjkjhf(*&0984"))
         cur.execute("SELECT * FROM set_admin()")
@@ -93,13 +94,16 @@ def insert_institutions():
                 else:
                     role_id = 2
                 if isinstance(member , int):
-                    cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], member, role_id))
-            conn.commit()
+                    try:
+                        cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], member, role_id))
+                    except: pass
+                    conn.commit()
             for pending in pendingUsers:
                 if pending not in members and pending not in admins:
-                    role_id = 3
-                    cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], pending, role_id))
-            conn.commit()
+                    try:
+                        cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], pending, 3))
+                    except: pass
+                    conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -166,6 +170,7 @@ def insert_projects():
                     if project["plotSize"] is None: project["plotSize"]=0
                     if project["samplesPerPlot"] is None: project["samplesPerPlot"]=0
                     if project["sampleResolution"] is None: project["sampleResolution"]=0
+                    if not ("projectTemplate" in project): project["projectTemplate"]=0
                     if not ("surveyRules" in project): project["surveyRules"]=[]
                     if not ("created_date" in project): project["created_date"]=None
                     if not ("published_date" in project): project["published_date"]=None
@@ -176,7 +181,7 @@ def insert_projects():
                     + "ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326), %s::text, %s::text, %s, %s, %s::text, %s, %s::text, "
                     + "%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s::date, %s::date, %s::date, %s::date)",
                     (project["id"], project["institution"], project["availability"],
-                    project["name"], project["description"], project["privacyLevel"], project["boundary"],
+                    project["name"], project["description"], project["privacyLevel"], project["boundary"].replace("\\", ""),
                     project["baseMapSource"], project["plotDistribution"], project["numPlots"],
                     project["plotSpacing"], project["plotShape"], project["plotSize"], project["sampleDistribution"],
                     project["samplesPerPlot"], project["sampleResolution"], json.dumps(project["sampleValues"]),
@@ -362,22 +367,15 @@ def loadCsvHeaders(csvfile):
             return headers
 
 def merge_files(project, project_id, conn):
-    print("merging external files")
-    cur = conn.cursor()
-    plots_table = ""
-    samples_table = ""
-    dirname = os.path.dirname(os.path.realpath(__file__))
-    ### Plots
     try:
-        # get current values for tables
-        cur.execute("SELECT plots_ext_table, samples_ext_table FROM projects where project_uid = %s" , [project_id])
-        row =  cur.fetchone()
-        plots_table = row[0]
-        samples_table = row[1]
+        print("merging external files")
+        cur = conn.cursor()
+        plots_table = ""
+        samples_table = ""
+        dirname = os.path.dirname(os.path.realpath(__file__))
         need_to_update = 0
         fileprefix = "project-" +  str(project_id)
         tableprefix = "project_" +  str(project_id)
-
 
         # old files do not have a plotId, all columns are extra
         oldFilename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + ".csv")))
@@ -463,17 +461,21 @@ def merge_files(project, project_id, conn):
             else:
                 print (csv_headers)
 
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-plots.zip")))
-        if project["plotDistribution"] == "shp" and os.path.isfile(filename):
-            need_to_update = 2
-            plots_table = "project_" +  str(project_id) + "_plots_shp"
-            cur.execute("DROP TABLE IF EXISTS ext_tables." + plots_table)
-            conn.commit()
-            # run sh
-            dirname = os.path.dirname(os.path.realpath(__file__))
-            shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
-            subprocess.run(["bash", "shp2postgres.sh", fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
+        if project["plotDistribution"] == "shp":
+            filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-plots.zip")))
+            templateFilename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , "project-" + str(project["projectTemplate"]) + "-plots.zip")))
+            if (not os.path.isfile(filename)) and os.path.isfile(templateFilename):
+                shutil.copy(templateFilename, filename)
 
+            if os.path.isfile(filename):
+                need_to_update = 2
+                plots_table = "project_" +  str(project_id) + "_plots_shp"
+                cur.execute("DROP TABLE IF EXISTS ext_tables." + plots_table)
+                conn.commit()
+                # run sh
+                dirname = os.path.dirname(os.path.realpath(__file__))
+                shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
+                subprocess.run(["bash", "shp2postgres.sh", fileprefix + "-plots"], cwd=shpath, stdout=subprocess.PIPE)
 
         # ### Samples
         filename = os.path.abspath(os.path.realpath(os.path.join(dirname, csvpath , fileprefix + "-samples.csv")))
@@ -508,39 +510,44 @@ def merge_files(project, project_id, conn):
                 except:
                     pass
 
-        filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-samples.zip")))
-        if project["sampleDistribution"] == "shp" and os.path.isfile(filename):
-            need_to_update = 3
+        if project["sampleDistribution"] == "shp":
+            filename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , fileprefix + "-samples.zip")))
+            templateFilename = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath , "project-" + str(project["projectTemplate"]) + "-samples.zip")))
+            if (not os.path.isfile(filename)) and os.path.isfile(templateFilename):
+                shutil.copy(templateFilename, filename)
 
-            samples_table = "project_" +  str(project_id) + "_samples_shp"
-            cur.execute("DROP TABLE IF EXISTS ext_tables." + samples_table)
-            conn.commit()
-            # run sh
-            dirname = os.path.dirname(os.path.realpath(__file__))
-            shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
-            subprocess.run(["bash", "shp2postgres.sh", fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
+            if os.path.isfile(filename):
+                need_to_update = 3
 
+                samples_table = "project_" +  str(project_id) + "_samples_shp"
+                cur.execute("DROP TABLE IF EXISTS ext_tables." + samples_table)
+                conn.commit()
+                # run sh
+                dirname = os.path.dirname(os.path.realpath(__file__))
+                shpath = os.path.abspath(os.path.realpath(os.path.join(dirname, shppath)))
+                subprocess.run(["bash", "shp2postgres.sh", fileprefix + "-samples"], cwd=shpath, stdout=subprocess.PIPE)
 
-        # add table names to project
-        cur.execute("SELECT * FROM update_project_tables(%s, %s, %s)" , [project_id, plots_table, samples_table])
-        conn.commit()
-
-        try:
-            if need_to_update >= 2:
-                # clean up project tables
-                cur.execute("SELECT * FROM cleanup_project_tables(%s, %s)" , [project_id, project["plotSize"]])
+        if need_to_update > 0:
+            try:
+                # add table names to project
+                cur.execute("SELECT * FROM update_project_tables(%s, %s, %s)" , [project_id, plots_table, samples_table])
                 conn.commit()
 
-            if need_to_update == 3:
-                # merge files into plots and samples
-                cur.execute("SELECT * FROM merge_plot_and_file(%s)" , [project_id])
-                conn.commit()
-            else:
-                # merge files into plots
-                cur.execute("SELECT * FROM merge_plots_only(%s)" , [project_id])
-                conn.commit()
-        finally:
-            pass
+                if need_to_update >= 2:
+                    # clean up project tables
+                    cur.execute("SELECT * FROM cleanup_project_tables(%s, %s)" , [project_id, project["plotSize"]])
+                    conn.commit()
+
+                if need_to_update == 3:
+                    # merge files into plots and samples
+                    cur.execute("SELECT * FROM merge_plot_and_file(%s)" , [project_id])
+                    conn.commit()
+                else:
+                    # merge files into plots
+                    cur.execute("SELECT * FROM merge_plots_only(%s)" , [project_id])
+                    conn.commit()
+            finally:
+                pass
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("merge file error: "+ str(error))
@@ -595,8 +602,8 @@ if __name__ == "__main__":
         insert_institutions()
         print("inserting imagery")
         insert_imagery()
-        print("inserting projects")
 
+    print("inserting projects")
     insert_projects()
     print("Done with projects")
     update_sequence()

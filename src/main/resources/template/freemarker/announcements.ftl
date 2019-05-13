@@ -1,6 +1,11 @@
 <div style="">
-  <p style="color:#eec922; background-color:#e63232; text-align:center; padding:5px; margin:0px;">
-    This site will be down for maintenance on Sunday, April 28th 2019
-    from 14:00-23:00 GMT. The production server will remain active at <a href="https://collect.earth">collect.earth</a>
-  </p>
+    <p style="color:#eec922; background-color:#e63232; text-align:center; padding:5px; margin:0px;">
+        DigitalGlobe has recently merged with Maxar Technologies and
+        has deprecated its Maps API. As a result, the public
+        DigitalGlobeRecentImagery and
+        DigitalGlobeRecentImagery+Streets layers are currently
+        disabled until we are able to setup a new purchasing agreement
+        for their replacement product. Our apologies for the
+        inconvenience.
+    </p>
 </div>

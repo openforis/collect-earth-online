@@ -634,11 +634,12 @@ CREATE OR REPLACE FUNCTION add_project_widget(_project_rid integer, _dashboard_i
 $$ LANGUAGE SQL;
 
 -- Deletes a delete_project_widget_by_widget_id from the database.
-CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid integer)
+CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid integer, _dashboard_id uuid)
  RETURNS integer AS $$
 
     DELETE FROM project_widgets
-    WHERE CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_uid
+    WHERE dashboard_id = _dashboard_id
+        AND CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_uid
     RETURNING widget_uid
 
 $$ LANGUAGE SQL;
@@ -676,29 +677,6 @@ $$ LANGUAGE SQL;
 --
 -- CREATING PROJECTS FUNCTIONS
 --
-
-CREATE TYPE project_return AS (
-    project_id              integer,
-    institution_id          integer,
-    availability            text,
-    name                    text,
-    description             text,
-    privacy_level           text,
-    boundary                text,
-    base_map_source         text,
-    plot_distribution       text,
-    num_plots               integer,
-    plot_spacing            float,
-    plot_shape              text,
-    plot_size               float,
-    sample_distribution     text,
-    samples_per_plot        integer,
-    sample_resolution       float,
-    survey_questions        jsonb,
-    survey_rules            jsonb,
-    classification_times    jsonb,
-    editable                boolean
-);
 
 -- Create a project
 CREATE OR REPLACE FUNCTION create_project_migration(
@@ -874,9 +852,9 @@ CREATE OR REPLACE FUNCTION delete_duplicates(_table_name text, _on_cols text)
         'WITH duplicates AS (
             SELECT * FROM
                 (SELECT *, COUNT(*) OVER
-                    (PARTITION BY ' || _on_cols || ') as count
+                    (PARTITION BY ' || _on_cols || ') as xx_count
             FROM ext_tables.' || _table_name || ') tableWithCount
-            WHERE tableWithCount.count > 1
+            WHERE tableWithCount.xx_count > 1
         )
 
         DELETE FROM ext_tables.' || _table_name || ' WHERE gid IN
@@ -891,7 +869,7 @@ CREATE OR REPLACE FUNCTION csv_boundary(_project_uid integer, _m_buffer float)
 
     UPDATE projects SET boundary = b
     FROM (
-        SELECT ST_Expand(ST_SetSRID(ST_Extent(center) , 4326) , _m_buffer / 1000.0) as b
+        SELECT ST_Envelope(ST_Buffer(ST_SetSRID(ST_Extent(center) , 4326)::geography , _m_buffer)::geometry) as b
         FROM select_partial_table_by_name((
             SELECT plots_ext_table
             FROM projects
@@ -1117,6 +1095,68 @@ $$ LANGUAGE SQL;
 -- USING PROJECT FUNCTIONS
 --
 
+CREATE TYPE project_return AS (
+    project_id              integer,
+    institution_id          integer,
+    availability            text,
+    name                    text,
+    description             text,
+    privacy_level           text,
+    boundary                text,
+    base_map_source         text,
+    plot_distribution       text,
+    num_plots               integer,
+    plot_spacing            float,
+    plot_shape              text,
+    plot_size               float,
+    sample_distribution     text,
+    samples_per_plot        integer,
+    sample_resolution       float,
+    survey_questions        jsonb,
+    survey_rules            jsonb,
+    classification_times    jsonb,
+    valid_boundary          boolean,
+    editable                boolean
+);
+
+CREATE OR REPLACE FUNCTION valid_boundary(_boundary geometry)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS(SELECT 1
+    WHERE ST_IsValid(_boundary)
+          AND NOT (ST_XMax(_boundary) > 180
+            OR ST_XMin(_boundary) < -180
+            OR ST_YMax(_boundary) > 90
+            OR ST_YMin(_boundary) < -90
+            OR ST_XMax(_boundary) <= ST_XMin(_boundary)
+            OR ST_YMax(_boundary) <= ST_YMin(_boundary)))
+
+$$ LANGUAGE SQL;
+
+CREATE VIEW project_boundary AS
+    SELECT
+        project_uid,
+        institution_rid,
+        availability,
+        name,
+        description,
+        privacy_level,
+        ST_AsGeoJSON(boundary),
+        base_map_source,
+        plot_distribution,
+        num_plots,
+        plot_spacing,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        survey_questions,
+        survey_rules,
+        classification_times,
+        valid_boundary(boundary)
+    FROM projects;
+
 -- Returns a row in projects by id.
 CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
  RETURNS setOf project_return AS $$
@@ -1127,7 +1167,7 @@ CREATE OR REPLACE FUNCTION select_project(_project_uid integer)
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in projects for a user_id.
+-- Returns all public projects.
 CREATE OR REPLACE FUNCTION select_all_projects()
  RETURNS setOf project_return AS $$
 
@@ -1139,7 +1179,7 @@ CREATE OR REPLACE FUNCTION select_all_projects()
 
 $$ LANGUAGE SQL;
 
--- Returns all rows in projects for institution_rid.
+-- Returns projects for institution_rid.
 CREATE OR REPLACE FUNCTION select_all_institution_projects(_institution_rid integer)
  RETURNS setOf project_return AS $$
 
@@ -1158,7 +1198,7 @@ CREATE OR REPLACE FUNCTION select_all_user_projects(_user_rid integer)
     FROM project_boundary as p
     LEFT JOIN get_institution_user_roles(_user_rid) AS roles
         USING (institution_rid)
-    WHERE role = 'admin'
+    WHERE (role = 'admin' AND p.availability <> 'archived')
         OR (role = 'member'
             AND p.privacy_level IN ('public', 'institution')
             AND p.availability = 'published')
@@ -1486,7 +1526,7 @@ CREATE OR REPLACE FUNCTION select_plot_by_id(_project_rid integer, _plot_uid int
  RETURNS setOf plots_return AS $$
 
     SELECT * FROM select_all_project_plots(_project_rid) as spp
-    WHERE spp.plotId = _plot_uid
+    WHERE spp.plot_id = _plot_uid
 
 $$ LANGUAGE SQL;
 
@@ -1546,7 +1586,7 @@ CREATE OR REPLACE FUNCTION select_unassigned_plot_by_id(_project_rid integer, _p
  RETURNS setOf plots_return AS $$
 
     SELECT * FROM select_all_unlocked_project_plots(_project_rid) as spp
-    WHERE spp.plot_id = _plot_uid
+    WHERE spp.plotId = _plot_uid
         AND flagged = 0
         AND assigned = 0
 
@@ -1557,7 +1597,7 @@ CREATE OR REPLACE FUNCTION select_user_plot_by_id(_project_rid integer, _plot_ui
  RETURNS setOf plots_return AS $$
 
     SELECT * FROM select_all_project_plots(_project_rid) as spp
-    WHERE spp.plot_id = _plot_uid
+    WHERE spp.plotId = _plot_uid
         AND spp.username = _username
 
 $$ LANGUAGE SQL;
@@ -1780,8 +1820,8 @@ CREATE OR REPLACE FUNCTION add_user_plots_migration(_plot_rid integer, _username
         (plot_rid, flagged, collection_start, collection_time, user_rid)
     (SELECT _plot_rid,
         _flagged,
-        _collection_time,
         _collection_start,
+        _collection_time,
         (CASE WHEN user_id.user_uid IS NULL THEN guest_id.user_uid ELSE user_id.user_uid END)
      FROM user_id, guest_id)
     RETURNING user_plot_uid
@@ -1972,10 +2012,11 @@ CREATE OR REPLACE FUNCTION add_plots_by_json(_project_rid integer, _json_data te
             (CASE WHEN "collectionTime" ~ '^\d+$' THEN "collectionTime" ELSE NULL END) as ctime,
             (CASE WHEN "collectionStart" ~ '^\d+$' THEN "collectionStart" ELSE NULL END) as cstart
         FROM plotrows as p
-
     ), plot_users as (
         SELECT (CASE WHEN useremail IS NULL or useremail = 'null' THEN NULL
-                ELSE add_user_plots_migration(plot_id, useremail, flagged,
+                ELSE add_user_plots_migration(plot_id,
+                                              useremail,
+                                              flagged,
                                               to_timestamp(cstart::bigint / 1000.0)::timestamp,
                                               to_timestamp(ctime::bigint / 1000.0)::timestamp)
                 END) as user_plot_id,

@@ -49,29 +49,6 @@ CREATE TABLE projects (
     ts_plot_size            integer DEFAULT 1
 );
 
-CREATE VIEW project_boundary AS
-    SELECT
-        project_uid,
-        institution_rid,
-        availability,
-        name,
-        description,
-        privacy_level,
-        ST_AsGeoJSON(boundary),
-        base_map_source,
-        plot_distribution,
-        num_plots,
-        plot_spacing,
-        plot_shape,
-        plot_size,
-        sample_distribution,
-        samples_per_plot,
-        sample_resolution,
-        survey_questions,
-        survey_rules,
-        classification_times
-    FROM projects;
-
 CREATE TABLE plots (
     plot_uid       SERIAL PRIMARY KEY,
     project_rid    integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,

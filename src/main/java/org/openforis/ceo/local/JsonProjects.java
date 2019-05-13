@@ -78,6 +78,7 @@ public class JsonProjects implements Projects {
                             && project.get("availability").getAsString().equals("published"))
                     .map(project -> {
                         project.addProperty("editable", false);
+                        project.addProperty("validBoundary", true);
                         return project;
                     });
             if (institutionId == null || institutionId.isEmpty()) {
@@ -118,6 +119,7 @@ public class JsonProjects implements Projects {
                         } else {
                             project.addProperty("editable", false);
                         }
+                        project.addProperty("validBoundary", true);
                         return project;
                     });
             if (institutionId == null || institutionId.isEmpty()) {
@@ -173,24 +175,24 @@ public class JsonProjects implements Projects {
                     var members = institution.getAsJsonArray("members");
                     if (privacyLevel.equals("private")) {
                         // return all institution admins
-                        return toElementStream(admins).map(element -> 
-                            !element.isJsonNull() && element.isJsonPrimitive() 
-                                ? element.getAsString() 
+                        return toElementStream(admins).map(element ->
+                            !element.isJsonNull() && element.isJsonPrimitive()
+                                ? element.getAsString()
                                 : ""
                         ).toArray(String[]::new);
                     } else if (privacyLevel.equals("institution")) {
                         if (availability.equals("published")) {
                             // return all institution members
-                            return toElementStream(members).map(element -> 
-                                !element.isJsonNull() && element.isJsonPrimitive() 
-                                    ? element.getAsString() 
+                            return toElementStream(members).map(element ->
+                                !element.isJsonNull() && element.isJsonPrimitive()
+                                    ? element.getAsString()
                                     : ""
                             ).toArray(String[]::new);
                         } else {
                             // return all institution admins
-                            return toElementStream(admins).map(element -> 
-                                !element.isJsonNull() && element.isJsonPrimitive() 
-                                    ? element.getAsString() 
+                            return toElementStream(admins).map(element ->
+                                !element.isJsonNull() && element.isJsonPrimitive()
+                                    ? element.getAsString()
                                     : ""
                             ).toArray(String[]::new);
                         }
@@ -365,7 +367,7 @@ public class JsonProjects implements Projects {
                             });
                             plotGeoms.put(plotId, propertyMap);
                         });
-            } 
+            }
         } catch (Exception e) {
             System.out.println("Error Reading SHP");
         }
@@ -392,7 +394,7 @@ public class JsonProjects implements Projects {
                             });
                             plotGeoms.put(sampleId, propertyMap);
                         });
-            } 
+            }
         } catch (Exception e) {
             System.out.println("Error Reading SHP");
         }
@@ -502,13 +504,13 @@ public class JsonProjects implements Projects {
                         plotSummary.add("distribution",
                                 getValueDistribution(samples, getSampleValueTranslations(sampleValueGroups)));
 
-                        if (plotHeaders.size() > 0 && plotData.containsKey(plot.has("plotId") 
-                                ? plot.get("plotId").getAsString() 
+                        if (plotHeaders.size() > 0 && plotData.containsKey(plot.has("plotId")
+                                ? plot.get("plotId").getAsString()
                                 : plot.get("id").getAsString()))
                         {
                             plotHeaders.forEach(head ->
-                                plotSummary.addProperty("pl_" + head, plotData.get(plot.has("plotId") 
-                                    ? plot.get("plotId").getAsString() 
+                                plotSummary.addProperty("pl_" + head, plotData.get(plot.has("plotId")
+                                    ? plot.get("plotId").getAsString()
                                     : plot.get("id").getAsString())
                                 .get(head) )
                             );
@@ -539,7 +541,7 @@ public class JsonProjects implements Projects {
         if (matchingProject.isPresent()) {
             final var project = matchingProject.get();
             final var sampleValueGroups = project.get("sampleValues").getAsJsonArray();
-            
+
             var optionalHeaders = new ArrayList<String>();
 
             final var plotHeaders = getHeadersList(project, "plots");
@@ -586,18 +588,18 @@ public class JsonProjects implements Projects {
                             sampleSummary.addProperty("analyses", analyses);
                             sampleSummary.add("user_id", userId);
                             sampleSummary.add("value", sample.get("value"));
-                            
+
                             sampleSummary.addProperty("collection_time", collectionTime > 0 ? simple.format(new Date(collectionTime)) : "");
                             sampleSummary.addProperty("analysis_duration", finalAnalysisDuration);
                             sampleSummary.addProperty("confidence", confidence);
-                            
+
                             // Add imagery data to output if it exists
                             if (sample.has("userImage")) {
                                 final var imageData = sample.get("userImage").getAsJsonObject();
 
                                 sampleSummary.addProperty("imagery_title", getImageryTitle(imageData.get("id").getAsString()));
                                 if (!optionalHeaders.contains("imagery_title")) optionalHeaders.add("imagery_title");
-                                
+
                                 if (imageData.has("attributes")) {
                                     final var attributes = imageData.get("attributes").getAsJsonObject();
                                     attributes.keySet().forEach(key -> {
@@ -608,22 +610,22 @@ public class JsonProjects implements Projects {
                             }
 
                             if (plotHeaders.size() > 0 && plotData.containsKey(
-                                    plot.has("plotId") 
-                                    ? plot.get("plotId").getAsString() 
+                                    plot.has("plotId")
+                                    ? plot.get("plotId").getAsString()
                                     : plot.get("id").getAsString())
                                 ) {
                                 plotHeaders.forEach(head ->
                                     sampleSummary.addProperty("pl_" + head, plotData.get(
-                                        plot.has("plotId") 
-                                        ? plot.get("plotId").getAsString() 
+                                        plot.has("plotId")
+                                        ? plot.get("plotId").getAsString()
                                         : plot.get("id").getAsString())
                                     .get(head) )
                                 );
                             }
 
                             if (sampleHeaders.size() > 0 && sampleData.containsKey(
-                                    sample.has("sampleId") 
-                                    ? sample.get("sampleId").getAsString() 
+                                    sample.has("sampleId")
+                                    ? sample.get("sampleId").getAsString()
                                     : "")
                                 ) {
                                 sampleHeaders.forEach(head ->
@@ -639,7 +641,7 @@ public class JsonProjects implements Projects {
 
             final var projectName = project.get("name").getAsString().replace(" ", "-").replace(",", "").toLowerCase();
 
-            final var combinedHeaders = 
+            final var combinedHeaders =
                         Stream.concat(
                             optionalHeaders.stream(),
                             Stream.concat(
@@ -651,7 +653,7 @@ public class JsonProjects implements Projects {
                         ).toArray(String[]::new);
 
             return outputRawCsv(res, sampleValueGroups, sampleSummaries, projectName, combinedHeaders);
-                    
+
         } else {
             res.raw().setStatus(SC_NO_CONTENT);
             return res.raw();
@@ -892,8 +894,7 @@ public class JsonProjects implements Projects {
 
     public static JsonObject newProjectObject(JsonObject newProjectData, JsonObject fileData, Request req) {
         final var newProjectId = newProjectData.get("id").getAsString();
-        if (getOrZero(newProjectData, "useTemplatePlots").getAsBoolean() 
-                && getOrZero(newProjectData, "projectTemplate").getAsInt() > 0) {
+        if (getOrZero(newProjectData, "projectTemplate").getAsInt() > 0) {
                     var templateID = newProjectData.get("projectTemplate").getAsString();
                     var templateProject = singleProjectJson(templateID);
                     // Strip plots and samples of user data
@@ -907,7 +908,7 @@ public class JsonProjects implements Projects {
                                         return sample;
                                     })
                                     .collect(intoJsonArray);
-        
+
                                 plot.remove("collectionTime");
                                 plot.remove("confidence");
                                 plot.remove("collectionStart");
@@ -920,7 +921,7 @@ public class JsonProjects implements Projects {
                             .collect(intoJsonArray);
                     // write new plot data to file
                     writeJsonFile("plot-data-" + newProjectId + ".json", newPlots);
-        
+
                     // Update numPlots and samplesPerPlot to match the numbers that were generated
                     newProjectData.remove("lonMin");
                     newProjectData.remove("latMin");
@@ -937,17 +938,17 @@ public class JsonProjects implements Projects {
                     newProjectData.add("boundary", templateProject.get("boundary"));
                     newProjectData.addProperty("numPlots", newPlots.size());
                     newProjectData.addProperty("samplesPerPlot", newPlots.get(0).getAsJsonObject().getAsJsonArray("samples").size());
-        
-                    newProjectData.add("plots-csv", templateProject.has("csv") 
-                                                    ? templateProject.get("csv") 
+
+                    newProjectData.add("plots-csv", templateProject.has("csv")
+                                                    ? templateProject.get("csv")
                                                     : templateProject.get("plots-csv"));
                     newProjectData.add("samples-csv", templateProject.get("samples-csv"));
                     newProjectData.add("plots-shp", templateProject.get("plots-shp"));
                     newProjectData.add("samples-shp", templateProject.get("samples-shp"));
-        
+
                     // Copy uploaded files
                     if (newProjectData.get("plotDistribution").getAsString().equals("csv")) {
-                        final var csvFile = templateProject.has("csv") 
+                        final var csvFile = templateProject.has("csv")
                                 ? templateProject.get("csv").getAsString()
                                 : templateProject.get("plots-csv").getAsString();
                         copyFile(expandResourcePath("/csv"),
@@ -959,7 +960,7 @@ public class JsonProjects implements Projects {
                                 "project-" + templateID + "-plots/project-" + templateID + "-plots.json",
                                 "project-" + newProjectId + "-plots/project-" + newProjectId + "-plots.json");
                     }
-        
+
                     if (newProjectData.get("sampleDistribution").getAsString().equals("csv")) {
                         copyFile(expandResourcePath("/csv"),
                                 templateProject.get("samples-csv").getAsString(),
@@ -969,13 +970,13 @@ public class JsonProjects implements Projects {
                                 "project-" + templateID + "-samples/project-" + templateID + "-samples.json",
                                 "project-" + newProjectId + "-samples/project-" + newProjectId + "-samples.json");
                     }
-        
+
                     return newProjectData;
         } else {
             // Upload the plot-distribution-csv-file if one was provided
             if (newProjectData.get("plotDistribution").getAsString().equals("csv")) {
                 newProjectData.addProperty(
-                    "plots-csv", 
+                    "plots-csv",
                     writeFilePartBase64(
                         fileData.get("plotFileName").getAsString(),
                         fileData.get("plotFileBase64").getAsString(),
@@ -990,7 +991,7 @@ public class JsonProjects implements Projects {
             // Upload the sample-distribution-csv-file if one was provided
             if (newProjectData.get("sampleDistribution").getAsString().equals("csv")) {
                 newProjectData.addProperty(
-                    "samples-csv", 
+                    "samples-csv",
                     writeFilePartBase64(
                         fileData.get("sampleFileName").getAsString(),
                         fileData.get("sampleFileBase64").getAsString(),
@@ -1034,7 +1035,7 @@ public class JsonProjects implements Projects {
 
             // Create the requested plot set and write it to plot-data-<newProject>.json
             return createProjectPlots(newProjectData);
-        
+
         }
     }
 
@@ -1239,12 +1240,12 @@ public class JsonProjects implements Projects {
             newProject.add("sampleValues", jsonInputs.get("sampleValues").getAsJsonArray());
             newProject.add("surveyRules", jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots", jsonInputs.get("useTemplatePlots").getAsBoolean());
-            
+
             // Add constant values
             newProject.addProperty("availability", "unpublished");
             newProject.addProperty("archived", false);
             newProject.addProperty("created_date", LocalDate.now().toString());
-            
+
             // Track file data
             var fileData = new JsonObject();
             fileData.addProperty("plotFileName", getOrEmptyString(jsonInputs, "plotFileName").getAsString());

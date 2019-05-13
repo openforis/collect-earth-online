@@ -27,7 +27,7 @@ class Home extends React.Component {
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(data => {
             if (data.length > 0) {
-                this.setState({ projects: data });
+                this.setState({ projects: data.filter(d => d.validBoundary) });
                 return Promise.resolve();
             } else {
                 return Promise.reject("No projects found");
@@ -97,10 +97,12 @@ class MapPanel extends React.Component {
         };
     }
 
+    // FIXME: Set this.props.imagery.slice(2,3) back to .slice(0,1) once DG layers are reinstated.
+    // FIXME: Set this.props.imagery[2].title back to .imagery[0].title once DG layers are reinstated.
     componentDidUpdate(prevProps, prevState) {
         if (this.state.mapConfig == null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
-            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.props.imagery.slice(0, 1));
-            mercator.setVisibleLayer(mapConfig, this.props.imagery[0].title);
+            const mapConfig = mercator.createMap("home-map-pane", [0.0, 0.0], 1, this.props.imagery.slice(2, 3));
+            mercator.setVisibleLayer(mapConfig, this.props.imagery[2].title);
             this.setState({ mapConfig: mapConfig });
         }
         if (this.state.mapConfig && this.props.projects.length > 0
