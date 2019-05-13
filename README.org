@@ -14,14 +14,14 @@ This is a Java 10 application written with the Spark web framework
 - Tomcat 8+ (optional)
 - PostgreSQL 11+ (optional)
 
-*** Using the text based JSON database
+*** With the text based JSON database
 
 Copy the test files using
 #+begin_src sh
 cp -r test_data/json target/classes/json
 #+end_src
 
-*** Using PostgreSQL database
+*** With PostgreSQL database
 
 Initialize the database using
 #+begin_src sh
