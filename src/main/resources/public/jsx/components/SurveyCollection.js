@@ -68,6 +68,20 @@ export class SurveyCollection extends React.Component {
 
     getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
+    getRulesById = (id) => {
+        const rules = this.props.surveyRules.filter(rule => (rule.questionId && rule.questionId === id)
+            || (rule.questions && rule.questions.includes(id))
+            || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
+            || (rule.question1 && rule.question1 === id ||rule.question2 === id));
+        return rules.map((r) => {
+            return r.questionId ? r.regex? `${'Rule: ' + r.ruleType + ' | Question: ' + r.questionsText + ' | Regex: '+r.regex} ` : `${'Rule: '+r.ruleType + ' | Question: ' + r.questionsText + ' | Min: ' + r.min + ' | Max: ' + r.max} `
+                : r.questions ? `${'Rule: ' + r.ruleType + ' | Questions: ' + r.questionsText + ' | Valid Sum: ' + r.validSum} `
+                    :r.questionSetIds1 ? `${'Rule: ' + r.ruleType + ' | QuestionSet1: ' + r.questionSetText1 + ' | QuestionsSet2: ' + r.questionSetText2} `
+                        : `${'Rule: ' + r.ruleType + ' | Question1: ' + r.questionText1 + ' | Answer1: ' + r.answerText1 + ' | Question2: ' + r.questionText2 + ' | Answer2: ' + r.answerText2} `;
+
+        }).join('\n');
+    };
+
     render() {
         return (
             <fieldset className="mb-3 justify-content-center text-center">
@@ -92,7 +106,7 @@ export class SurveyCollection extends React.Component {
                                     id="top-select"
                                     key={i}
                                     className="btn btn-outline-lightgreen m-2"
-                                    title={removeEnumerator(this.getNodeById(node).question)}
+                                    title={this.getRulesById(node).length > 0 ? this.getRulesById(node) : "No rules available"}
                                     onClick={() => this.setSurveyQuestionTree(i)}
                                     style={{
                                         boxShadow: `${(i === this.state.currentNodeIndex)
