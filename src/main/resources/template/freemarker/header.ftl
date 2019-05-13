@@ -40,9 +40,9 @@
         <script type="text/javascript" src="${root}/js/angular.min.js"></script>
 
         <!-- OpenLayers3.20.1 -->
-        <link rel="stylesheet" type="text/css" href="${root}/css/ol.css">
+        <link rel="stylesheet" type="text/css" href="${root}/css/openlayers-3.20.1.css">
         <link rel="stylesheet" type="text/css" href="${root}/css/ol3-popup.css" />
-        <script type="text/javascript" src="${root}/js/ol.js"></script>
+        <script type="text/javascript" src="${root}/js/openlayers-3.20.1.js"></script>
         <script type="text/javascript" src="${root}/js/ol3-popup.js"></script>
         <!-- Fonts -->
         <!-- <link rel="stylesheet" type="text/css" href="${root}/css/google-fonts-open-sans.css"> -->
