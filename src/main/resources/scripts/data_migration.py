@@ -602,8 +602,8 @@ if __name__ == "__main__":
         insert_institutions()
         print("inserting imagery")
         insert_imagery()
-        print("inserting projects")
 
+    print("inserting projects")
     insert_projects()
     print("Done with projects")
     update_sequence()
