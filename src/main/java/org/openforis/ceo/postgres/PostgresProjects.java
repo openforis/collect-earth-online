@@ -809,18 +809,18 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
                 pstmt.setString(19, null);  //classification times
 
-
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
-                        if (newProject.get("useTemplatePlots").getAsBoolean()
-                                && newProject.get("projectTemplate").getAsInt() > 0) {
-                            // Copy existing plots
-                            try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
-                                copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
-                                copyPstmt.setInt(2, newProjectId);
-                                copyPstmt.execute();
+                        if (newProject.get("projectTemplate").getAsInt() > 0) {
+                            if (newProject.get("useTemplatePlots").getAsBoolean()){
+                                // Copy existing plots
+                                try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
+                                    copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
+                                    copyPstmt.setInt(2, newProjectId);
+                                    copyPstmt.execute();
+                                }
                             }
                             // Copy existing widgets
                             try (var pstmt1 = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
