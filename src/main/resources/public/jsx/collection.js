@@ -191,11 +191,7 @@ class Collection extends React.Component {
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
-        const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
-                        ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-                        : newImagery.title === "PlanetGlobalMosaic"
-                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                            : newImagery.attribution;
+        const newImageryAttribution =  newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -203,29 +199,20 @@ class Collection extends React.Component {
     };
 
     setImageryYearDG = (newImageryYearDG) => {
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-      //  const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearDG + " (" + this.state.stackingProfileDG + ")";
         this.setState({
             imageryYearDG: newImageryYearDG,
-       //     imageryAttribution: newImageryAttribution,
         });
     };
 
     setStackingProfileDG = (newStackingProfileDG) => {
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-      //  const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearDG + " (" + newStackingProfileDG + ")";
         this.setState({
             stackingProfileDG: newStackingProfileDG,
-           // imageryAttribution: newImageryAttribution,
         });
     };
 
     setImageryYearPlanet = (newImageryYearPlanet) => {
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-      //  const newImageryAttribution = imageryInfo.attribution + " | " + newImageryYearPlanet + "-" + this.state.imageryMonthNamePlanet;
         this.setState({
             imageryYearPlanet: newImageryYearPlanet,
-           // imageryAttribution: newImageryAttribution,
         });
     };
 
@@ -245,13 +232,10 @@ class Collection extends React.Component {
             12: "December",
         };
         const newImageryMonthName = monthData[parseInt(newImageryMonthPlanet)];
-        const imageryInfo = this.getImageryByTitle(this.state.currentImagery.title);
-       // const newImageryAttribution = imageryInfo.attribution + " | " + this.state.imageryYearPlanet + "-" + newImageryMonthName;
 
         this.setState({
             imageryMonthPlanet: newImageryMonthPlanet,
             imageryMonthNamePlanet: newImageryMonthName,
-           // imageryAttribution: newImageryAttribution,
         });
     };
 
