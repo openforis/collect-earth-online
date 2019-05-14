@@ -75,12 +75,14 @@ export class SurveyCollection extends React.Component {
             || (rule.question1 && rule.question1 === id || rule.question2 === id));
         return rules.map((r) =>
              r.questionId
-                        ? r.regex
-                            ? `${"Rule: " + r.ruleType + " | Question: " + r.questionsText + " | Regex: " + r.regex}`
-                                : `${"Rule: " + r.ruleType + " | Question: " + r.questionsText + " | Min: " + r.min + " | Max: " + r.max}`
-                        : r.questions ? `${"Rule: " + r.ruleType + " | Questions: " + r.questionsText + " | Valid Sum: " + r.validSum}`
-                            :r.questionSetIds1 ? `${"Rule: " + r.ruleType + " | QuestionSet1: " + r.questionSetText1 + " | QuestionsSet2: " + r.questionSetText2}`
-                                : `${"Rule: " + r.ruleType + " | Question1: " + r.questionText1 + " | Answer1: " + r.answerText1 + " | Question2: " + r.questionText2 + " | Answer2: " + r.answerText2}`
+                ? r.regex
+                    ? `${"Rule: " + r.ruleType + " | Question: " + r.questionsText + " | Regex: " + r.regex}`
+                    : `${"Rule: " + r.ruleType + " | Question: " + r.questionsText + " | Min: " + r.min + " | Max: " + r.max}`
+                : r.questions
+                    ? `${"Rule: " + r.ruleType + " | Questions: " + r.questionsText + " | Valid Sum: " + r.validSum}`
+                    : r.questionSetIds1
+                        ? `${"Rule: " + r.ruleType + " | QuestionSet1: " + r.questionSetText1 + " | QuestionsSet2: " + r.questionSetText2}`
+                        : `${"Rule: " + r.ruleType + " | Question1: " + r.questionText1 + " | Answer1: " + r.answerText1 + " | Question2: " + r.questionText2 + " | Answer2: " + r.answerText2}`
         ).join('\n');
     };
 
