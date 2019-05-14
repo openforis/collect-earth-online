@@ -814,7 +814,7 @@ public class PostgresProjects implements Projects {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
                         if (newProject.get("projectTemplate").getAsInt() > 0) {
-                            if (newProject.get("useTemplatePlots").getAsBoolean()){
+                            if (newProject.get("useTemplatePlots").getAsBoolean()) {
                                 // Copy existing plots
                                 try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
                                     copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
