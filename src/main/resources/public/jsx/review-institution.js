@@ -295,8 +295,8 @@ class InstitutionDescription extends React.Component {
                                 id="institution-dashboard"
                                 type="button"
                                 className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                                onClick={this.gotoInstitutionDashboard}
-                            >Go to Dashboard
+                                onClick={this.gotoInstitutionDashboard}>
+                                Go to Dashboard
                             </button>
                         </div>
                     </div>

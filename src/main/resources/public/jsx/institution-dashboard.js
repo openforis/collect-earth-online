@@ -7,16 +7,15 @@ class InstitutionDashboard extends React.Component {
         this.state = {
             details: []
         };
-    };
+    }
 
     componentDidMount() {
         this.getProjectList();
-    };
+    }
 
     getProjectList = () => {
         fetch(this.props.documentRoot + "/get-all-projects?userId="
-            + this.props.userId + "&institutionId=" + this.props.institutionId
-        )
+            + this.props.userId + "&institutionId=" + this.props.institutionId)
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => {
                 this.setDetails(data);
@@ -28,17 +27,10 @@ class InstitutionDashboard extends React.Component {
     };
 
     setDetails = (projects) => {
-        const details = this.state.details;
-        projects.map(proj => {
+        let details = this.state.details;
+        projects.forEach(proj => {
             fetch(this.props.documentRoot + "/get-project-stats/" + proj.id)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json()
-                    } else {
-                        console.log(response);
-                        alert("Error retrieving project stats. See console for details.");
-                    }
-                })
+                .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
                     details.push({
                         id: proj.id,
@@ -51,71 +43,51 @@ class InstitutionDashboard extends React.Component {
                         members: data.members
                     });
                     this.setState({details: details});
+                })
+                .catch(response => {
+                        console.log(response);
+                        alert("Error retrieving the project stats. See console for details.");
+                    });
                 });
-        });
     };
 
     render() {
         return (
-            <div>
+            <React.Fragment>
+                <div className="bg-darkgreen mb-3 no-container-margin" style={{width: "100%", margin: "0 10px 0 10px"}}>
+                    <h1>Institution Dashboard</h1>
+                </div>
                 <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
-                    <tbody>
+                    <thead>
                     <tr>
-                        <td>
-                            <h2>Project Name</h2>
-                        </td>
-                        <td>
-                            <h2>Project Stats</h2>
-                        </td>
+                        <th>Project Name</th>
+                        <th>Members</th>
+                        <th>Contributors</th>
+                        <th>Total Plots</th>
+                        <th>Flagged Plots</th>
+                        <th>Analyzed Plots</th>
+                        <th>Unanalyzed Plots</th>
                     </tr>
-                    <Project details={this.state.details}/>
+                    </thead>
+                    <tbody>
+                    <ProjectList details={this.state.details}/>
                     </tbody>
                 </table>
-            </div>
+            </React.Fragment>
         );
     }
 }
 
-function Project(props) {
+function ProjectList(props) {
     return props.details.map((project, uid) =>
         <tr key={uid}>
-            <td>
-                {project.name}
-            </td>
-            <td>
-                <div id="project-stats" className="header">
-                    <div className="col">
-                        <table className="table table-sm">
-                            <tbody>
-                            <tr>
-                                <td>Members</td>
-                                <td>{project.members}</td>
-                            </tr>
-                            <tr>
-                                <td>Contributors</td>
-                                <td>{project.contributors}</td>
-                            </tr>
-                            <tr>
-                                <td>Total Plots</td>
-                                <td>{project.numPlots}</td>
-                            </tr>
-                            <tr>
-                                <td>Flagged Plots</td>
-                                <td>{project.flaggedPlots}</td>
-                            </tr>
-                            <tr>
-                                <td>Analyzed Plots</td>
-                                <td>{project.analyzedPlots}</td>
-                            </tr>
-                            <tr>
-                                <td>Unanalyzed Plots</td>
-                                <td>{project.unanalyzedPlots}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </td>
+            <td>{project.name}</td>
+            <td>{project.members}</td>
+            <td>{project.contributors}</td>
+            <td>{project.numPlots}</td>
+            <td>{project.flaggedPlots}</td>
+            <td>{project.analyzedPlots}</td>
+            <td>{project.unanalyzedPlots}</td>
         </tr>
     );
 }
@@ -124,6 +96,6 @@ export function renderInstitutionDashboardPage(args) {
     ReactDOM.render(
         <InstitutionDashboard documentRoot={args.documentRoot} userId={args.userId}
                               institutionId={args.institutionId}/>,
-        document.getElementById("institution_dashboard")
+        document.getElementById("institution-dashboard")
     );
 }

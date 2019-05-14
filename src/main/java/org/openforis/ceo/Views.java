@@ -146,7 +146,7 @@ public class Views {
     public static Route institutionDashboard(FreeMarkerEngine freemarker) {
         Function<Request, String> getInstitutionId = (req) -> req.params(":id");
         return makeAuthenticatedRoute("Institution-Dashboard", freemarker,
-                Map.of("institution_id", getInstitutionId));
+                                      Map.of("institution_id", getInstitutionId));
     }
 
     public static Route login(FreeMarkerEngine freemarker) {
