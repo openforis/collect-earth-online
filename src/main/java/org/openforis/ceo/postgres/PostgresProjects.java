@@ -768,6 +768,7 @@ public class PostgresProjects implements Projects {
             newProject.add("sampleValues",               jsonInputs.get("sampleValues").getAsJsonArray());
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
+            newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
 
             // file part properties
             newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
@@ -813,15 +814,9 @@ public class PostgresProjects implements Projects {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
-                        if (newProject.get("projectTemplate").getAsInt() > 0) {
-                            if (newProject.get("useTemplatePlots").getAsBoolean()){
-                                // Copy existing plots
-                                try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
-                                    copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
-                                    copyPstmt.setInt(2, newProjectId);
-                                    copyPstmt.execute();
-                                }
-                            }
+
+                        if (newProject.get("projectTemplate").getAsInt() > 0
+                                && newProject.get("useTemplateWidgets").getAsBoolean()) {
                             // Copy existing widgets
                             try (var pstmt1 = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
                                 pstmt1.setInt(1, newProject.get("projectTemplate").getAsInt());
@@ -836,6 +831,16 @@ public class PostgresProjects implements Projects {
                                         }
                                     }
                                 }
+                            }
+                        }
+
+                        if (newProject.get("projectTemplate").getAsInt() > 0
+                            && newProject.get("useTemplatePlots").getAsBoolean()) {
+                                // Copy existing plots
+                            try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
+                                copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
+                                copyPstmt.setInt(2, newProjectId);
+                                copyPstmt.execute();
                             }
                         } else {
 
