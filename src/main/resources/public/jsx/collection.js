@@ -941,6 +941,7 @@ class Collection extends React.Component {
                     projectName={this.state.currentProject.name}
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
+                    gotoGeoDash={this.showGeoDash}
                 >
                     {this.state.currentPlot && this.state.KMLFeatures &&
                     <a className="btn btn-outline-lightgreen btn-sm btn-block my-2"
@@ -1053,6 +1054,15 @@ function SideBar(props) {
                         projectId={props.projectId}
                         plotId={props.plotId}
                         userName={props.userName}
+                    />
+                    <input
+                        id="reopen-geodash-button"
+                        className="btn btn-outline-lightgreen btn-sm btn-block"
+                        type="button"
+                        name="open-geodash"
+                        value="Go to Geodash"
+                        onClick={props.gotoGeoDash}
+                        disabled={!props.plotId}
                     />
                     <button
                         id="collection-quit-button"
