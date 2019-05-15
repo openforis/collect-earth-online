@@ -45,6 +45,7 @@ class Project extends React.Component {
                 latMax: "",
             },
             projectList: [],
+            hasNoRules: true,
         };
     }
 
@@ -232,6 +233,7 @@ class Project extends React.Component {
                 plotList: [],
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
+                hasNoRules: true,
             });
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
@@ -242,6 +244,7 @@ class Project extends React.Component {
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
+                hasNoRules: templateProject.surveyRules.length === 0,
             });
         }
     };
@@ -372,6 +375,7 @@ class Project extends React.Component {
                             toggleTemplateWidgets={this.toggleTemplateWidgets}
                             useTemplatePlots={this.state.useTemplatePlots}
                             useTemplateWidgets={this.state.useTemplateWidgets}
+                            hasNoRules={this.state.hasNoRules}
                         />
                         <ProjectManagement createProject={this.createProject} />
                     </Fragment>
@@ -430,6 +434,7 @@ function ProjectDesignForm(props) {
                 surveyRules={props.projectDetails.surveyRules}
                 setSurveyQuestions={props.setSurveyQuestions}
                 setSurveyRules={props.setSurveyRules}
+                hasNoRules={props.hasNoRules}
             />
         </div>
     );
