@@ -97,6 +97,7 @@ public class Server implements SparkApplication {
         get("/password",                              Views.password(freemarker));
         get("/password-reset",                        Views.passwordReset(freemarker));
         get("/project-dashboard/:id",                 Views.projectDashboard(freemarker));
+        get("/institution-dashboard/:id",             Views.institutionDashboard(freemarker));
         get("/register",                              Views.register(freemarker));
         get("/review-institution/:id",                Views.reviewInstitution(freemarker, databaseType.equals("COLLECT") ? "remote" : "local"));
         get("/review-project/:id",                    Views.reviewProject(freemarker));

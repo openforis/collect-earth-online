@@ -203,6 +203,10 @@ class InstitutionDescription extends React.Component {
         }
     };
 
+    gotoInstitutionDashboard = () => {
+        window.open(this.props.documentRoot + "/institution-dashboard/" + this.props.institutionId);
+    };
+
     renderEditButtonGroup = () => <div className="row">
         <div className="col-6">
             <button
@@ -266,7 +270,7 @@ class InstitutionDescription extends React.Component {
                     </div>
                     {this.props.isAdmin &&
                     <div className="row justify-content-center mb-2" id="institution-controls">
-                        <div className="col-6">
+                        <div className="col-3">
                             <button
                                 id="edit-institution"
                                 type="button"
@@ -276,7 +280,7 @@ class InstitutionDescription extends React.Component {
                                 <span className="fa fa-edit mr-1"/>Edit
                             </button>
                         </div>
-                        <div className="col-6">
+                        <div className="col-3">
                             <button
                                 id="delete-institution"
                                 type="button"
@@ -284,6 +288,15 @@ class InstitutionDescription extends React.Component {
                                 onClick={this.deleteInstitution}
                             >
                                 <span className="fa fa-trash-alt mr-1"/>Delete
+                            </button>
+                        </div>
+                        <div className="col-3">
+                            <button
+                                id="institution-dashboard"
+                                type="button"
+                                className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                                onClick={this.gotoInstitutionDashboard}>
+                                Go to Dashboard
                             </button>
                         </div>
                     </div>

@@ -2,16 +2,17 @@ const path = require("path");
 
 module.exports = {
     entry: {
-        home:               path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
-        create_institution: path.resolve(__dirname, "src/main/resources/public/jsx/create-institution.js"),
-        review_institution: path.resolve(__dirname, "src/main/resources/public/jsx/review-institution.js"),
-        collection:         path.resolve(__dirname, "src/main/resources/public/jsx/collection.js"),
-        create_project:     path.resolve(__dirname, "src/main/resources/public/jsx/create-project.js"),
-        review_project:     path.resolve(__dirname, "src/main/resources/public/jsx/review-project.js"),
-        project_dashboard:  path.resolve(__dirname, "src/main/resources/public/jsx/project-dashboard.js"),
-        account:            path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
-        geodashreact:       path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
-        widgetlayouteditor: path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
+        home:                   path.resolve(__dirname, "src/main/resources/public/jsx/home.js"),
+        create_institution:     path.resolve(__dirname, "src/main/resources/public/jsx/create-institution.js"),
+        review_institution:     path.resolve(__dirname, "src/main/resources/public/jsx/review-institution.js"),
+        collection:             path.resolve(__dirname, "src/main/resources/public/jsx/collection.js"),
+        create_project:         path.resolve(__dirname, "src/main/resources/public/jsx/create-project.js"),
+        review_project:         path.resolve(__dirname, "src/main/resources/public/jsx/review-project.js"),
+        project_dashboard:      path.resolve(__dirname, "src/main/resources/public/jsx/project-dashboard.js"),
+        institution_dashboard:  path.resolve(__dirname, "src/main/resources/public/jsx/institution-dashboard.js"),
+        account:                path.resolve(__dirname, "src/main/resources/public/jsx/account.js"),
+        geodashreact:           path.resolve(__dirname, "src/main/resources/public/jsx/geodashreact.js"),
+        widgetlayouteditor:     path.resolve(__dirname, "src/main/resources/public/jsx/geo-dash-widget-editor.js")
     },
     module: {
         rules: [
