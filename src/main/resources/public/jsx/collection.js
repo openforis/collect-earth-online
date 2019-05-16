@@ -1124,8 +1124,8 @@ function SideBar(props) {
 }
 
 function CollapsableTitle({ title, showGroup, toggleShow }) {
-    const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "2px", paddingLeft: "4px" };
-    const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "7px" };
+    const buttonDownStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "1px", paddingLeft: "3px" };
+    const buttonRightStyle = { width: "1.5rem", height: "1.5rem", paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem" };
     const downArrow = "\u25BC";
     const rightArrow = "\u25B6";
     return (

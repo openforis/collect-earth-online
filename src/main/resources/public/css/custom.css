@@ -173,6 +173,12 @@ h4 {font-size: 0.5rem;}
 }
 /* Buttons */
 /*****************/
+
+.btn {
+    border-width: 1.5px;
+    font-weight: bold;
+}
+
 .btn-outline-lightgreen{
     color: #31BAB0;
     background-color: transparent;
