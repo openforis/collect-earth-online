@@ -578,7 +578,7 @@ class Project extends React.Component {
             .then(response => response.ok ? response.json() : Promise.reject(response))
             .then(data => this.setState({
                 boxShadow: data.unanalyzedPlots === 0
-                    ? "0px 0px 6px 1px blue inset"
+                    ? "0px 0px 6px 2px #3bb9d6 inset"
                     : (data.flaggedPlots + data.analyzedPlots) > 0
                         ? "0px 0px 6px 1px yellow inset"
                         : "0px 0px 6px 1px red inset",
