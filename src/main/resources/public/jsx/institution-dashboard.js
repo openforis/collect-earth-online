@@ -45,10 +45,10 @@ class InstitutionDashboard extends React.Component {
                     this.setState({details: details});
                 })
                 .catch(response => {
-                        console.log(response);
-                        alert("Error retrieving the project stats. See console for details.");
-                    });
+                    console.log(response);
+                    alert("Error retrieving the project stats. See console for details.");
                 });
+        });
     };
 
     render() {
