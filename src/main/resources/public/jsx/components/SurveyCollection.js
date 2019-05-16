@@ -72,18 +72,18 @@ export class SurveyCollection extends React.Component {
         const rules = this.props.surveyRules.filter(rule => (rule.questionId && rule.questionId === id)
             || (rule.questions && rule.questions.includes(id))
             || (rule.questionSetIds1 && (rule.questionSetIds1.includes(id) || rule.questionSetIds2.includes(id)))
-            || (rule.question1 && rule.question1 === id || rule.question2 === id));
-        return rules.map((r) =>
+            || (rule.question1 && (rule.question1 === id || rule.question2 === id)));
+        return rules.map(r =>
              r.questionId
                 ? r.regex
-                    ? `${"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex}`
-                    : `${"Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max}`
+                    ? "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
+                    : "Rule: " + r.ruleType + " | Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
                 : r.questions
-                    ? `${"Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum}`
+                    ? "Rule: " + r.ruleType + " | Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
                     : r.questionSetIds1
-                        ? `${"Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'"}`
-                        : `${"Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'"}`
-        ).join('\n');
+                        ? "Rule: " + r.ruleType + " | Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
+                        : "Rule: " + r.ruleType + " | 'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."
+        ).join("\n");
     };
 
     render() {
@@ -189,7 +189,7 @@ class SurveyQuestionTree extends React.Component {
                         type="button"
                         id={this.props.surveyNode.question + "_" + this.props.surveyNode.id}
                         className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
-                        title={this.props.getRulesById(this.props.surveyNode.id).length > 0 ? this.props.getRulesById(this.props.surveyNode.id) : "No rules available"}
+                        title={this.props.getRulesById(this.props.surveyNode.id).length > 0 ? this.props.getRulesById(this.props.surveyNode.id) : "No rules apply to this question."}
                         style={{
                             boxShadow: `${(this.props.surveyNode.id === this.props.selectedQuestion.id)
                                     ? "0px 0px 2px 2px black inset,"
