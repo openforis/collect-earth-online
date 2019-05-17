@@ -840,7 +840,7 @@ function NumericRange(props) {
                     </tr>
                     <tr>
                         <td>
-                            <label>Enter maxinum: </label>
+                            <label>Enter maximum: </label>
                         </td>
                         <td>
                             <input id="max-val"
