@@ -706,6 +706,23 @@ public class JsonProjects implements Projects {
         return "";
     }
 
+    public String updateProject(Request req, Response res) {
+        final var jsonInputs = parseJson(req.body()).getAsJsonObject();
+        mapJsonFile("project-list.json",
+                project -> {
+                    if (project.get("id").getAsString().equals(req.params(":id"))) {
+                        project.addProperty("name",          getOrEmptyString(jsonInputs, "name").getAsString());
+                        project.addProperty("description",   getOrEmptyString(jsonInputs, "description").getAsString());
+                        project.addProperty("privacyLevel",  getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+                        project.addProperty("baseMapSource", getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+                        return project;
+                    } else {
+                        return project;
+                    }
+                });
+        return "";
+    }
+
     private static IntSupplier makeCounter() {
         var counter = new int[]{0}; // Have to use an array to move the value onto the heap
         return () -> { counter[0] += 1; return counter[0]; };

@@ -122,6 +122,7 @@ public class Server implements SparkApplication {
         post("/close-project/:id",                    projects::closeProject);
         post("/create-project",                       projects::createProject);
         post("/publish-project/:id",                  projects::publishProject);
+        post("/update-project/:id",                   projects::updateProject);
 
         // Routing Table: Plots (projects)
         get("/get-next-plot",                         plots::getNextPlot);

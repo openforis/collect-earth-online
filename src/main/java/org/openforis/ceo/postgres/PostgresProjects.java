@@ -440,6 +440,24 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    public String updateProject(Request req, Response res) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?)")) {
+
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
+            pstmt.setInt(1,    Integer.parseInt(req.params(":id")));
+            pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
+            pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
+            pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+            pstmt.setString(5, getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+            pstmt.execute();
+            return "";
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
     private static String loadCsvHeaders(String filename, List<String> mustInclude) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
 
