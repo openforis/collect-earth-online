@@ -1,7 +1,6 @@
 import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
-
 import { SurveyCollection } from "./components/SurveyCollection";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 
@@ -49,17 +48,17 @@ class Collection extends React.Component {
             // release any locks in case of user hitting refresh
             fetch(
                 this.props.documentRoot
-                + "/release-plot-locks/"
-                + this.props.userId + "/"
-                + this.state.currentProject.id,
+                    + "/release-plot-locks/"
+                    + this.props.userId + "/"
+                    + this.state.currentProject.id,
                 { method: "POST" }
             );
             this.getImageryList();
         }
         // Initialize map when imagery list is returned
         if (this.state.imageryList.length > 0
-             && this.state.currentProject.boundary
-             && this.state.mapConfig == null) {
+            && this.state.currentProject.boundary
+            && this.state.mapConfig == null) {
             this.initializeProjectMap();
         }
         // Load all project plots initially
@@ -141,8 +140,8 @@ class Collection extends React.Component {
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(project.availability === "archived"
-                            ? "This project is archived"
-                            : "No project found with ID " + this.props.projectId + ".");
+                                      ? "This project is archived"
+                                      : "No project found with ID " + this.props.projectId + ".");
             }
         });
 
@@ -192,10 +191,10 @@ class Collection extends React.Component {
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
-                        ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-                        : newImagery.title === "PlanetGlobalMosaic"
-                            ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                            : newImagery.attribution;
+              ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
+              : newImagery.title === "PlanetGlobalMosaic"
+                  ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
+                  : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -299,20 +298,19 @@ class Collection extends React.Component {
 
     getPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-plot-by-id"
-                + this.getQueryString({
-                    getUserPlots: this.state.reviewPlots,
-                    plotId: plotId,
-                    projectId: this.props.projectId,
-                    userId: this.props.userId,
-                    userName: this.props.userName,
-                })
-        )
+              + this.getQueryString({
+                  getUserPlots: this.state.reviewPlots,
+                  plotId: plotId,
+                  projectId: this.props.projectId,
+                  userId: this.props.userId,
+                  userName: this.props.userName,
+              }))
             .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     alert(this.state.reviewPlots
-                        ? "This plot was analyzed by someone else."
-                        : "This plot has already been analyzed.");
+                          ? "This plot was analyzed by someone else."
+                          : "This plot has already been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
                     this.setState({
@@ -331,21 +329,20 @@ class Collection extends React.Component {
 
     getNextPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-next-plot"
-                + this.getQueryString({
-                    getUserPlots: this.state.reviewPlots,
-                    plotId: plotId,
-                    projectId: this.props.projectId,
-                    userId: this.props.userId,
-                    userName: this.props.userName,
-                })
-        )
+              + this.getQueryString({
+                  getUserPlots: this.state.reviewPlots,
+                  plotId: plotId,
+                  projectId: this.props.projectId,
+                  userId: this.props.userId,
+                  userName: this.props.userName,
+              }))
             .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     if (plotId === -1) {
                         alert(this.state.reviewPlots
-                                ? "You have not reviewed any plots"
-                                : "All plots have been analyzed for this project.");
+                              ? "You have not reviewed any plots"
+                              : "All plots have been analyzed for this project.");
                     } else {
                         this.setState({ nextPlotButtonDisabled: true });
                         alert("You have reached the end of the plot list.");
@@ -367,21 +364,20 @@ class Collection extends React.Component {
 
     getPrevPlotData = (plotId) => {
         fetch(this.props.documentRoot + "/get-prev-plot"
-                + this.getQueryString({
-                    getUserPlots: this.state.reviewPlots,
-                    plotId: plotId,
-                    projectId: this.props.projectId,
-                    userId: this.props.userId,
-                    userName: this.props.userName,
-                })
-        )
+              + this.getQueryString({
+                  getUserPlots: this.state.reviewPlots,
+                  plotId: plotId,
+                  projectId: this.props.projectId,
+                  userId: this.props.userId,
+                  userName: this.props.userName,
+              }))
             .then(response => response.ok ? response.text() : Promise.reject(response))
             .then(data => {
                 if (data === "done") {
                     this.setState({ prevPlotButtonDisabled: true });
                     alert(this.state.reviewPlots
-                            ? "No previous plots were analyzed by you."
-                            : "All previous plots have been analyzed.");
+                          ? "No previous plots were analyzed by you."
+                          : "All previous plots have been analyzed.");
                 } else {
                     const newPlot = JSON.parse(data);
                     this.setState({
@@ -484,8 +480,8 @@ class Collection extends React.Component {
     showGeoDash = () => {
         const { currentPlot, mapConfig, currentProject } = this.state;
         const plotRadius = currentProject.plotSize
-                           ? currentProject.plotSize / 2.0
-                           : mercator.getViewRadius(mapConfig);
+              ? currentProject.plotSize / 2.0
+              : mercator.getViewRadius(mapConfig);
         window.open(this.props.documentRoot + "/geo-dash?"
                     + "&pid=" + this.props.projectId
                     + "&plotid=" + currentPlot.id
@@ -508,12 +504,12 @@ class Collection extends React.Component {
     goToFirstPlot = () => this.getNextPlotData(-1);
 
     prevPlot = () => this.getPrevPlotData(this.state.currentPlot.plotId
-                        ? parseInt(this.state.currentPlot.plotId)
-                        : this.state.currentPlot.id);
+                                          ? parseInt(this.state.currentPlot.plotId)
+                                          : this.state.currentPlot.id);
 
     nextPlot = () => this.getNextPlotData(this.state.currentPlot.plotId
-                        ? parseInt(this.state.currentPlot.plotId)
-                        : this.state.currentPlot.id);
+                                          ? parseInt(this.state.currentPlot.plotId)
+                                          : this.state.currentPlot.id);
 
     goToPlot = (newPlot) => {
         if (!isNaN(newPlot)) {
@@ -614,9 +610,7 @@ class Collection extends React.Component {
         }
     };
 
-    intersection = (array1, array2) => {
-        return array1.filter(value => array2.includes(value));
-    };
+    intersection = (array1, array2) => array1.filter(value => array2.includes(value));
 
     getSelectedSampleIds = () => {
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
@@ -636,8 +630,8 @@ class Collection extends React.Component {
     checkRuleNumericRange = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionToSet.id &&
             (isNaN(parseInt(answerText)) ||
-                parseInt(answerText) < surveyRule.min ||
-                parseInt(answerText) > surveyRule.max)) {
+             parseInt(answerText) < surveyRule.min ||
+             parseInt(answerText) > surveyRule.max)) {
             return "Numeric range validation failed: Please select a value between " + surveyRule.min + " and " + surveyRule.max;
         } else {
             return null;
@@ -646,23 +640,24 @@ class Collection extends React.Component {
 
     checkRuleSumOfAnswers = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questions.includes(questionToSet.id)) {
-            const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id) && q.answered.length > 0 && q.id != questionToSet.id);
+            const answeredQuestions = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questions.includes(q.id)
+                                                                                       && q.answered.length > 0
+                                                                                       && q.id !== questionToSet.id);
             if (surveyRule.questions.length === answeredQuestions.length + 1) {
                 const sampleIds = this.getSelectedSampleIds();
                 const answeredSampleIds = answeredQuestions.map(q => q.answered.map(a => a.sampleId));
                 const commonSampleIds = answeredSampleIds.reduce(this.intersection, sampleIds);
                 if (commonSampleIds.length > 0) {
                     return commonSampleIds.map(sampleId => {
-                            const answeredSum = answeredQuestions
-                                .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
-                                .reduce((sum, num) => sum + parseInt(num), 0);
-                            if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                                return "Sum of answers validation failed: Possible sum for questions [" + surveyRule.questionsText.toString() + "] is " + (surveyRule.validSum - answeredSum).toString() + ".";
-                            } else {
-                                return null;
-                            }
+                        const answeredSum = answeredQuestions
+                            .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
+                            .reduce((sum, num) => sum + parseInt(num), 0);
+                        if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
+                            return "Sum of answers validation failed: Possible sum for questions [" + surveyRule.questionsText.toString() + "] is " + (surveyRule.validSum - answeredSum).toString() + ".";
+                        } else {
+                            return null;
                         }
-                    ).find(res => res !== null);
+                    }).find(res => res !== null);
                 } else {
                     return null;
                 }
@@ -676,8 +671,12 @@ class Collection extends React.Component {
 
     checkRuleMatchingSums = (surveyRule, questionToSet, answerId, answerText) => {
         if (surveyRule.questionSetIds1.includes(questionToSet.id) || surveyRule.questionSetIds2.includes(questionToSet.id)) {
-            const answeredQuestions1 = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questionSetIds1.includes(q.id) && q.answered.length > 0 && q.id != questionToSet.id);
-            const answeredQuestions2 = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questionSetIds2.includes(q.id) && q.answered.length > 0 && q.id != questionToSet.id);
+            const answeredQuestions1 = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questionSetIds1.includes(q.id)
+                                                                                        && q.answered.length > 0
+                                                                                        && q.id !== questionToSet.id);
+            const answeredQuestions2 = this.state.currentProject.surveyQuestions.filter(q => surveyRule.questionSetIds2.includes(q.id)
+                                                                                        && q.answered.length > 0
+                                                                                        && q.id !== questionToSet.id);
             if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length === answeredQuestions1.length + answeredQuestions2.length + 1) {
                 const sampleIds = this.getSelectedSampleIds();
                 const answeredSampleIds1 = answeredQuestions1.map(q => q.answered.map(a => a.sampleId));
@@ -698,14 +697,26 @@ class Collection extends React.Component {
                     if (surveyRule.questionSetIds1.includes(questionToSet)) {
                         const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets [" + surveyRule.questionSetText1.toString() + "] and [" + surveyRule.questionSetText2.toString() + "] do not match. Valid total is " + (invalidSum[1] - invalidSum[0]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets ["
+                                + surveyRule.questionSetText1.toString()
+                                + "] and ["
+                                + surveyRule.questionSetText2.toString()
+                                + "] do not match. Valid total is "
+                                + (invalidSum[1] - invalidSum[0])
+                                + ".";
                         } else {
                             return null;
                         }
                     } else {
                         const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets [" + surveyRule.questionSetText1.toString() + "] and [" + surveyRule.questionSetText2.toString() + "] do not match. Valid total is " + (invalidSum[0] - invalidSum[1]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets ["
+                                + surveyRule.questionSetText1.toString()
+                                + "] and ["
+                                + surveyRule.questionSetText2.toString()
+                                + "] do not match. Valid total is "
+                                + (invalidSum[0] - invalidSum[1])
+                                + ".";
                         } else {
                             return null;
                         }
@@ -755,21 +766,18 @@ class Collection extends React.Component {
         }
     };
 
-    ruleFunctions = {"text-match":           this.checkRuleTextMatch,
-                     "numeric-range":        this.checkRuleNumericRange,
-                     "sum-of-answers":       this.checkRuleSumOfAnswers,
-                     "matching-sums":        this.checkRuleMatchingSums,
-                     "incompatible-answers": this.checkRuleIncompatibleAnswers};
-
-    rulesViolated = (questionToSet, answerId, answerText) => {
-        if (this.state.currentProject.surveyRules) {
-            return this.state.currentProject.surveyRules.map(surveyRule => {
-                return this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText);
-            }).find(msg => msg !== null);
-        } else {
-            return null;
-        }
+    ruleFunctions = {
+        "text-match":           this.checkRuleTextMatch,
+        "numeric-range":        this.checkRuleNumericRange,
+        "sum-of-answers":       this.checkRuleSumOfAnswers,
+        "matching-sums":        this.checkRuleMatchingSums,
+        "incompatible-answers": this.checkRuleIncompatibleAnswers,
     };
+
+    rulesViolated = (questionToSet, answerId, answerText) => this.state.currentProject.surveyRules &&
+        this.state.currentProject.surveyRules
+            .map(surveyRule => this.ruleFunctions[surveyRule.ruleType](surveyRule, questionToSet, answerId, answerText))
+            .find(msg => msg !== null);
 
     setCurrentValue = (questionToSet, answerId, answerText) => {
         const ruleError = this.rulesViolated(questionToSet, answerId, answerText);
@@ -779,12 +787,12 @@ class Collection extends React.Component {
             alert(ruleError);
             return false;
         } else if (Object.keys(this.state.userSamples).length === 1
-            || (selectedFeatures && selectedFeatures.getLength()
-                && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
+                   || (selectedFeatures && selectedFeatures.getLength()
+                       && this.validateCurrentSelection(selectedFeatures, questionToSet.id))) {
 
             const sampleIds = Object.keys(this.state.userSamples).length === 1
-                ? [Object.keys(this.state.userSamples)[0]]
-                : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
+                  ? [Object.keys(this.state.userSamples)[0]]
+                  : selectedFeatures.getArray().map(sf => sf.get("sampleId"));
 
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
@@ -796,7 +804,7 @@ class Collection extends React.Component {
                 const childQuestionArray = this.getChildQuestions(questionToSet.id);
                 const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
                     .filter(entry => !childQuestionArray.includes(entry[0]))
-                    .reduce((acc, cur) => ({...acc, [cur[0]]: cur[1]}), {});
+                    .reduce((acc, cur) => ({ ...acc, [cur[0]]: cur[1] }), {});
 
                 return {
                     ...acc,
@@ -818,8 +826,8 @@ class Collection extends React.Component {
                 }), {});
 
             this.setState({
-                userSamples: {...this.state.userSamples, ...newSamples},
-                userImages: {...this.state.userImages, ...newUserImages},
+                userSamples: { ...this.state.userSamples, ...newSamples },
+                userImages: { ...this.state.userImages, ...newUserImages },
                 selectedQuestion: questionToSet,
             });
             return true;
@@ -837,8 +845,8 @@ class Collection extends React.Component {
     invertColor(hex) {
         const dehashed = hex.indexOf("#") === 0 ? hex.slice(1) : hex;
         const hexFormatted = dehashed.length === 3
-                            ? dehashed[0] + dehashed[0] + dehashed[1] + dehashed[1] + dehashed[2] + dehashed[2]
-                            : dehashed;
+              ? dehashed[0] + dehashed[0] + dehashed[1] + dehashed[1] + dehashed[2] + dehashed[2]
+              : dehashed;
 
         // invert color components
         const r = (255 - parseInt(hexFormatted.slice(0, 2), 16)).toString(16);
@@ -866,12 +874,12 @@ class Collection extends React.Component {
                     .find(ans => ans.answer === userAnswer);
 
                 const color = this.state.selectedQuestion.componentType === "input"
-                                ? userAnswer.length > 0
-                                    ? this.state.selectedQuestion.answers[0].color
-                                    : this.invertColor(this.state.selectedQuestion.answers[0].color)
-                                : matchingAnswer
-                                    ? matchingAnswer.color
-                                    : "";
+                      ? userAnswer.length > 0
+                          ? this.state.selectedQuestion.answers[0].color
+                          : this.invertColor(this.state.selectedQuestion.answers[0].color)
+                      : matchingAnswer
+                          ? matchingAnswer.color
+                          : "";
 
                 mercator.highlightSampleGeometry(feature, color);
             });
@@ -883,8 +891,8 @@ class Collection extends React.Component {
         const { currentProject : { surveyQuestions }, userSamples } = this.state;
         const { parentQuestion, parentAnswer } = surveyQuestions.find(sq => sq.id === currentQuestionId);
         const parentQuestionText = parentQuestion === -1
-                ? ""
-                : surveyQuestions.find(sq => sq.id === parentQuestion).question;
+              ? ""
+              : surveyQuestions.find(sq => sq.id === parentQuestion).question;
 
         if (parentQuestion === -1) {
             return this.state.currentPlot.samples;
@@ -896,7 +904,7 @@ class Collection extends React.Component {
             return this.getVisibleSamples(parentQuestion)
                 .filter(sample => {
                     const sampleAnswer = userSamples[sample.id][parentQuestionText]
-                                             && userSamples[sample.id][parentQuestionText].answer;
+                          && userSamples[sample.id][parentQuestionText].answer;
                     return (parentAnswer === -1 && sampleAnswer) || correctAnswerText === sampleAnswer;
                 });
         }
@@ -929,7 +937,7 @@ class Collection extends React.Component {
 
     render() {
         const plotId = this.state.currentPlot
-                        && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
+              && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
         return (
             <Fragment>
                 <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution}/>
@@ -943,13 +951,14 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                 >
                     {this.state.currentPlot && this.state.KMLFeatures &&
-                    <a className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-                       href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
-                             + encodeURIComponent(this.state.KMLFeatures)}
-                       download={"ceo_" + this.props.projectId + "_" + (this.state.currentPlot.plotId || this.state.currentPlot.id) + ".kml"}
-                    >
-                        Download Plot KML
-                    </a>
+                        <a
+                            className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+                            href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                                  + encodeURIComponent(this.state.KMLFeatures)}
+                            download={"ceo_" + this.props.projectId + "_" + (this.state.currentPlot.plotId || this.state.currentPlot.id) + ".kml"}
+                        >
+                            Download Plot KML
+                        </a>
                     }
                     <PlotNavigation
                         plotId={plotId}
@@ -992,8 +1001,8 @@ class Collection extends React.Component {
                                 setCurrentValue={this.setCurrentValue}
                                 setSelectedQuestion={this.setSelectedQuestion}
                                 selectedSampleId={Object.keys(this.state.userSamples).length === 1
-                                    ? parseInt(Object.keys(this.state.userSamples)[0])
-                                    : this.state.selectedSampleId}
+                                                  ? parseInt(Object.keys(this.state.userSamples)[0])
+                                                  : this.state.selectedSampleId}
                             />
                         :
                             <fieldset className="mb-3 justify-content-center text-center">
@@ -1115,58 +1124,57 @@ class PlotNavigation extends React.Component {
                                 />
                             </div>
                         }
-
                         {!props.navButtonsShown
-                        ?
-                            <div className="row" id="go-to-first-plot">
-                                <div className="col">
-                                    <input
-                                        id="go-to-first-plot-button"
-                                        className="btn btn-outline-lightgreen btn-sm btn-block"
-                                        type="button"
-                                        name="new-plot"
-                                        value="Go to first plot"
-                                        onClick={props.goToFirstPlot}
-                                    />
-                                </div>
-                            </div>
-                        :
-                            <div className="row justify-content-center py-2" id="plot-nav">
-                                <div className="px-1">
-                                    <input
-                                        id="prev-plot-button"
-                                        className="btn btn-outline-lightgreen"
-                                        type="button"
-                                        name="new-plot"
-                                        value="Prev"
-                                        onClick={props.prevPlot}
-                                        style={{ opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0" }}
-                                        disabled={props.prevPlotButtonDisabled}
-                                    />
-                                </div>
-                                <div className="px-1">
-                                    <input
-                                        id="new-plot-button"
-                                        className="btn btn-outline-lightgreen"
-                                        type="button"
-                                        name="new-plot"
-                                        value="Next"
-                                        onClick={props.nextPlot}
-                                        style={{ opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0" }}
-                                        disabled={props.nextPlotButtonDisabled}
-                                    />
-                                </div>
-                                <div className="px-1">
-                                    <input
-                                        id="flag-plot-button"
-                                        className="btn btn-outline-lightgreen"
-                                        type="button"
-                                        name="flag-plot"
-                                        value="Flag"
-                                        onClick={props.flagPlotInDB}
-                                    />
-                                </div>
-                            </div>
+                             ?
+                                 <div className="row" id="go-to-first-plot">
+                                     <div className="col">
+                                         <input
+                                             id="go-to-first-plot-button"
+                                             className="btn btn-outline-lightgreen btn-sm btn-block"
+                                             type="button"
+                                             name="new-plot"
+                                             value="Go to first plot"
+                                             onClick={props.goToFirstPlot}
+                                         />
+                                     </div>
+                                 </div>
+                             :
+                                 <div className="row justify-content-center py-2" id="plot-nav">
+                                     <div className="px-1">
+                                         <input
+                                             id="prev-plot-button"
+                                             className="btn btn-outline-lightgreen"
+                                             type="button"
+                                             name="new-plot"
+                                             value="Prev"
+                                             onClick={props.prevPlot}
+                                             style={{ opacity: props.prevPlotButtonDisabled ? "0.25" : "1.0" }}
+                                             disabled={props.prevPlotButtonDisabled}
+                                         />
+                                     </div>
+                                     <div className="px-1">
+                                         <input
+                                             id="new-plot-button"
+                                             className="btn btn-outline-lightgreen"
+                                             type="button"
+                                             name="new-plot"
+                                             value="Next"
+                                             onClick={props.nextPlot}
+                                             style={{ opacity: props.nextPlotButtonDisabled ? "0.25" : "1.0" }}
+                                             disabled={props.nextPlotButtonDisabled}
+                                         />
+                                     </div>
+                                     <div className="px-1">
+                                         <input
+                                             id="flag-plot-button"
+                                             className="btn btn-outline-lightgreen"
+                                             type="button"
+                                             name="flag-plot"
+                                             value="Flag"
+                                             onClick={props.flagPlotInDB}
+                                         />
+                                     </div>
+                                 </div>
                         }
 
                         <div className="PlotNavigation__review-option row justify-content-center">
@@ -1230,28 +1238,27 @@ function ImageryOptions(props) {
                         onChange={e => props.setBaseMapSource(parseInt(e.target.value))}
                     >
                         {
-                            props.imageryList.map(
-                                (imagery, uid) =>
-                                    <option key={uid} value={imagery.id}>{imagery.title}</option>
+                            props.imageryList.map((imagery, uid) =>
+                                <option key={uid} value={imagery.id}>{imagery.title}</option>
                             )
                         }
                     </select>
                     {props.imageryTitle === "DigitalGlobeWMSImagery" &&
-                        <DigitalGlobeMenus
-                            imageryYearDG={props.imageryYearDG}
-                            stackingProfileDG={props.stackingProfileDG}
-                            setImageryYearDG={props.setImageryYearDG}
-                            setStackingProfileDG={props.setStackingProfileDG}
-                        />
+                    <DigitalGlobeMenus
+                        imageryYearDG={props.imageryYearDG}
+                        stackingProfileDG={props.stackingProfileDG}
+                        setImageryYearDG={props.setImageryYearDG}
+                        setStackingProfileDG={props.setStackingProfileDG}
+                    />
                     }
                     {props.imageryTitle === "PlanetGlobalMosaic" &&
-                        <PlanetMenus
-                            imageryYearPlanet={props.imageryYearPlanet}
-                            imageryMonthPlanet={props.imageryMonthPlanet}
-                            imageryMonthNamePlanet={props.imageryMonthNamePlanet}
-                            setImageryYearPlanet={props.setImageryYearPlanet}
-                            setImageryMonthPlanet={props.setImageryMonthPlanet}
-                        />
+                    <PlanetMenus
+                        imageryYearPlanet={props.imageryYearPlanet}
+                        imageryMonthPlanet={props.imageryMonthPlanet}
+                        imageryMonthNamePlanet={props.imageryMonthNamePlanet}
+                        setImageryYearPlanet={props.setImageryYearPlanet}
+                        setImageryMonthPlanet={props.setImageryMonthPlanet}
+                    />
                     }
                 </Fragment>
             }
@@ -1356,7 +1363,6 @@ class ProjectStatsGroup extends React.Component {
                     />
                 }
             </div>
-
         );
     }
 }
@@ -1403,7 +1409,7 @@ class ProjectStats extends React.Component {
                                     <td className="small pl-4">My Plots Completed</td>
                                     <td className="small">
                                         {userStats && userStats.plots || "0"}
-                                            ({this.asPercentage(userStats && userStats.plots || 0, numPlots)}%)
+                                        ({this.asPercentage(userStats && userStats.plots || 0, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
@@ -1416,21 +1422,21 @@ class ProjectStats extends React.Component {
                                     <td className="small pl-4">Project Plots Completed</td>
                                     <td className="small">
                                         {stats.analyzedPlots + stats.flaggedPlots || ""}
-                                            ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
+                                        ({this.asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Analyzed</td>
                                     <td className="small">
                                         {stats.analyzedPlots || ""}
-                                            ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        ({this.asPercentage(stats.analyzedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Flagged</td>
                                     <td className="small">
                                         {stats.flaggedPlots || ""}
-                                            ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        ({this.asPercentage(stats.flaggedPlots, numPlots)}%)
                                     </td>
                                 </tr>
                                 <tr>
@@ -1443,10 +1449,10 @@ class ProjectStats extends React.Component {
                                     <td className="small pl-4">-- Users Average time</td>
                                     <td className="small">
                                         {stats.userStats && stats.userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
-                                                ? `${(stats.userStats.reduce((p, c) => p + c.seconds, 0)
+                                            ? `${(stats.userStats.reduce((p, c) => p + c.seconds, 0)
                                                     / stats.userStats.reduce((p, c) => p + c.timedPlots, 0)
                                                     / 1.0).toFixed(2)} secs`
-                                                : "untimed"}
+                                        : "untimed"}
                                     </td>
                                 </tr>
                                 <tr>
