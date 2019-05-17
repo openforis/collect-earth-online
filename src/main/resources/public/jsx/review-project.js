@@ -73,8 +73,7 @@ class Project extends React.Component {
                           name: this.state.projectDetails.name,
                           privacyLevel: this.state.projectDetails.privacyLevel,
                       }),
-                  }
-            )
+                  })
                 .then(response => {
                     if (!response.ok) {
                         console.log(response);
@@ -90,9 +89,8 @@ class Project extends React.Component {
     validateProject = () => {
         const { projectDetails } = this.state;
         if (projectDetails.name === "" || projectDetails.description === "") {
-            alert("A project must contain a name and description");
+            alert("A project must contain a name and description.");
             return false;
-
         } else {
             return true;
         }
@@ -124,8 +122,7 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/close-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                  }
-            )
+                  })
                 .then(response => {
                     utils.hide_element("spinner");
                     if (response.ok) {
@@ -144,8 +141,7 @@ class Project extends React.Component {
             fetch(this.props.documentRoot + "/archive-project/" + this.state.projectDetails.id,
                   {
                       method: "POST",
-                  }
-            )
+                  })
                 .then(response => {
                     utils.hide_element("spinner");
                     if (response.ok) {
@@ -551,7 +547,7 @@ function SurveyRules(props) {
                         })
                     :
                         <tr>
-                            <td colSpan="4"><span>No rules available for this survey</span></td>
+                            <td colSpan="5"><span>No rules available for this survey</span></td>
                         </tr>
                     }
                 </tbody>
