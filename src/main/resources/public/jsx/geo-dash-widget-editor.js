@@ -12,6 +12,7 @@ class BasicLayout extends React.PureComponent {
             widgets: [],
             imagery: [],
             isEditing: false,
+            addCustomImagery: false,
             selectedWidgetType: "-1",
             selectedDataType: "-1",
             widgetTitle: "",
@@ -659,8 +660,12 @@ class BasicLayout extends React.PureComponent {
         this.setState({ widgetTitle: event.target.value });
     };
 
+    onaddCustomImageryChange = event => {
+        this.setState({ addCustomImagery: event.target.value });
+    };
+
     onImageCollectionChange = event => {
-        this.setState({ imageCollection: event.target.value });
+        this.setState({ imageCollection : event.target.value });
     };
 
     onGraphBandChange = event => {
@@ -1164,6 +1169,17 @@ class BasicLayout extends React.PureComponent {
                     />
                 </div>
                 {this.getImageParamsBlock()}
+                <div className="form-group">
+                    <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
+                    <input
+                        type="checkbox"
+                        name="addCustomImagery"
+                        id="addCustomImagery"
+                        value={this.state.addCustomImagery}
+                        className="form-control"
+                        onChange={this.onaddCustomImageryChange}
+                    />
+                </div>
             </React.Fragment>;
         } else if (this.state.selectedDataType === "-1") {
             return "";
