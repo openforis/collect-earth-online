@@ -45,16 +45,17 @@ def truncate_all_tables():
 
 def insert_users():
     conn = None
-    user_id=-1
     try:
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         dirname = os.path.dirname(os.path.realpath(__file__))
         user_list_json = open(os.path.abspath(os.path.realpath(os.path.join(dirname, jsonpath , "user-list.json"))), "r")
         users = json.load(user_list_json)
+        print(len(users))
         for user in users:
-            cur.execute("select * from add_user_migration(%s, %s::text, %s::text)", (user["id"], user["email"], user["password"]))
-            user_id = cur.fetchone()[0]
+            try:
+                cur.execute("select * from add_user_migration(%s, %s::text, %s::text)", (user["id"], user["email"], user["password"]))
+            except: pass
             conn.commit()
         cur.execute("select * from add_user_migration(%s, %s::text, %s::text)", (-1, "guest", "dkh*&jlkjadfjk&^58342bmdjkjhf(*&0984"))
         cur.execute("SELECT * FROM set_admin()")
@@ -93,13 +94,16 @@ def insert_institutions():
                 else:
                     role_id = 2
                 if isinstance(member , int):
-                    cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], member, role_id))
-            conn.commit()
+                    try:
+                        cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], member, role_id))
+                    except: pass
+                    conn.commit()
             for pending in pendingUsers:
                 if pending not in members and pending not in admins:
-                    role_id = 3
-                    cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], pending, role_id))
-            conn.commit()
+                    try:
+                        cur1.execute("select * from add_institution_user(%s, %s, %s)", (institution["id"], pending, 3))
+                    except: pass
+                    conn.commit()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -166,6 +170,7 @@ def insert_projects():
                     if project["plotSize"] is None: project["plotSize"]=0
                     if project["samplesPerPlot"] is None: project["samplesPerPlot"]=0
                     if project["sampleResolution"] is None: project["sampleResolution"]=0
+                    if not ("projectTemplate" in project): project["projectTemplate"]=0
                     if not ("surveyRules" in project): project["surveyRules"]=[]
                     if not ("created_date" in project): project["created_date"]=None
                     if not ("published_date" in project): project["published_date"]=None
@@ -597,8 +602,8 @@ if __name__ == "__main__":
         insert_institutions()
         print("inserting imagery")
         insert_imagery()
-        print("inserting projects")
 
+    print("inserting projects")
     insert_projects()
     print("Done with projects")
     update_sequence()

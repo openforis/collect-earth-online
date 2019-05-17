@@ -31,6 +31,7 @@ class Collection extends React.Component {
             userSamples: {},
             userImages: {},
             storedInterval: null,
+            KMLFeatures: null,
             hasGeoDash: false
         };
     }
@@ -84,7 +85,6 @@ class Collection extends React.Component {
             if(this.state.hasGeoDash) {
                 this.showGeoDash();
             }
-
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
         }
@@ -99,6 +99,7 @@ class Collection extends React.Component {
 
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
+                this.createPlotKML();
             }
         }
 
@@ -274,7 +275,7 @@ class Collection extends React.Component {
         });
     };
 
-    updateMapImagery() {
+    updateMapImagery = () => {
         // FIXME, update mercator to take ID instead of name in cases of duplicate names
         mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.title);
 
@@ -515,6 +516,15 @@ class Collection extends React.Component {
                     "_geo-dash");
     };
 
+    createPlotKML = () => {
+        const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
+        const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+        this.setState({
+            KMLFeatures: mercator.getKMLFromFeatures([mercator.asPolygonFeature(plotFeatures[0]),
+                                                      ...sampleFeatures]),
+        });
+    };
+
     goToFirstPlot = () => this.getNextPlotData(-1);
 
     prevPlot = () => this.getPrevPlotData(this.state.currentPlot.plotId
@@ -667,7 +677,7 @@ class Collection extends React.Component {
                                 .map(q => q.answered.find(ques => ques.sampleId === sampleId).answerText)
                                 .reduce((sum, num) => sum + parseInt(num), 0);
                             if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                                return "Sum of answers validation failed: Check your input. Possible value is " + (surveyRule.validSum - answeredSum).toString();
+                                return "Sum of answers validation failed: Possible sum for questions [" + surveyRule.questionsText.toString() + "] is " + (surveyRule.validSum - answeredSum).toString() + ".";
                             } else {
                                 return null;
                             }
@@ -708,14 +718,14 @@ class Collection extends React.Component {
                     if (surveyRule.questionSetIds1.includes(questionToSet)) {
                         const invalidSum = sampleSums.find(sums => sums[0] + parseInt(answerText) !== sums[1]);
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[1] - invalidSum[0]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets [" + surveyRule.questionSetText1.toString() + "] and [" + surveyRule.questionSetText2.toString() + "] do not match. Valid total is " + (invalidSum[1] - invalidSum[0]) + ".";
                         } else {
                             return null;
                         }
                     } else {
                         const invalidSum = sampleSums.find(sums => sums[0] !== sums[1] + parseInt(answerText));
                         if (invalidSum) {
-                            return "Matching sums validation failed: Totals of the question sets do not match. Valid total is " + (invalidSum[0] - invalidSum[1]) + ".";
+                            return "Matching sums validation failed: Totals of the question sets [" + surveyRule.questionSetText1.toString() + "] and [" + surveyRule.questionSetText2.toString() + "] do not match. Valid total is " + (invalidSum[0] - invalidSum[1]) + ".";
                         } else {
                             return null;
                         }
@@ -867,7 +877,7 @@ class Collection extends React.Component {
             .filter(feature => {
                 const sampleId = feature.get("sampleId");
                 return this.state.userSamples[sampleId]
-                                && this.state.userSamples[sampleId][question];
+                    && this.state.userSamples[sampleId][question];
             })
             .forEach(feature => {
                 const sampleId = feature.get("sampleId");
@@ -937,44 +947,6 @@ class Collection extends React.Component {
         });
     };
 
-    download = (filename, text) =>  {
-        let element = document.createElement('a');
-        element.setAttribute('href', 'data:earth.kml+xml application/ vnd.google - earth.kmz, ' + encodeURIComponent(text));
-        element.setAttribute('download', filename);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    }
-
-    setFileinfo = () => {
-        let bothFeatures = [];
-        this.state.mapConfig.map.getLayers().forEach( layer => {
-            if (layer.get('title') !== undefined && layer.get('title') === 'currentPlot') {
-                const source = layer.getSource();
-                if (source.getFeatures()[0].getGeometry().getType() === "Circle") {
-                    bothFeatures = [...bothFeatures, new ol.Feature({
-                        geometry: ol.geom.Polygon.fromCircle(
-                            source.getFeatures()[0].getGeometry()
-                        ),
-                        name: 'thePlot'
-                    })];
-                } else {
-                    bothFeatures = [...bothFeatures, ...source.getFeatures()];
-                }
-            }
-            else if (layer.get('title') !== undefined && layer.get('title') === 'currentSamples') {
-                        const source = layer.getSource();
-                        bothFeatures = [...bothFeatures, ...source.getFeatures()];
-                    }
-        });
-        this.download("ceo_" + this.props.projectId + "_"+ this.state.currentPlot.plotId +".kml", this.GetKMLFromFeatures(bothFeatures));
-    }
-
-    GetKMLFromFeatures = features => {
-        return new ol.format.KML().writeFeatures(features, {featureProjection: 'EPSG:3857'});
-    }
-
     render() {
         const plotId = this.state.currentPlot
                         && (this.state.currentPlot.plotId ? this.state.currentPlot.plotId : this.state.currentPlot.id);
@@ -990,9 +962,14 @@ class Collection extends React.Component {
                     surveyQuestions={this.state.currentProject.surveyQuestions}
                     userName={this.props.userName}
                 >
-                    {this.state.currentPlot &&
-                    < input type="button" id="dwn-btn" value="Download plot and sample kml"
-                        onClick={this.setFileinfo} className={"btn btn-outline-lightgreen btn-sm btn-block my-2"}/>
+                    {this.state.currentPlot && this.state.KMLFeatures &&
+                    <a className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+                       href={"data:earth.kml+xml application/vnd.google-earth.kmz, "
+                             + encodeURIComponent(this.state.KMLFeatures)}
+                       download={"ceo_" + this.props.projectId + "_" + (this.state.currentPlot.plotId || this.state.currentPlot.id) + ".kml"}
+                    >
+                        Download Plot KML
+                    </a>
                     }
                     <PlotNavigation
                         plotId={plotId}
