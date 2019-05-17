@@ -31,6 +31,7 @@ class Collection extends React.Component {
             userSamples: {},
             userImages: {},
             storedInterval: null,
+            hasGeoDash: false
         };
     }
 
@@ -80,7 +81,9 @@ class Collection extends React.Component {
         // Inititialize on new plot
         if (this.state.currentPlot && this.state.currentPlot !== prevState.currentPlot) {
             this.showProjectPlot();
-            this.showGeoDash();
+            if(this.state.hasGeoDash) {
+                this.showGeoDash();
+            }
 
             clearInterval(this.state.storedInterval);
             this.setState({ storedInterval: setInterval(() => this.resetPlotLock, 2.3 * 60 * 1000) });
@@ -124,7 +127,7 @@ class Collection extends React.Component {
     }
 
     getProjectData = () => {
-        Promise.all([this.getProjectById(), this.getProjectPlots()])
+        Promise.all([this.getProjectById(), this.getProjectPlots(), this.checkForGeodash()])
             .catch(response => {
                 console.log(response);
                 alert("Error retrieving the project info. See console for details.");
@@ -143,6 +146,23 @@ class Collection extends React.Component {
                             ? "This project is archived"
                             : "No project found with ID " + this.props.projectId + ".");
             }
+        });
+
+    checkForGeodash = () => fetch(this.props.documentRoot + "/geo-dash/id/" + this.props.projectId)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(data => {
+            const widgets = Array.isArray(data.widgets)
+                ? data.widgets
+                : Array.isArray(eval(data.widgets))
+                    ? eval(data.widgets)
+                    : [];
+            if (widgets.length > 0){
+                this.setState({hasGeoDash: true});
+            }
+            return Promise.resolve("resolved");
+        })
+        .catch(response => {
+            return Promise.reject(response.message);
         });
 
     getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")
