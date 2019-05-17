@@ -170,31 +170,31 @@ class Collection extends React.Component {
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane", [0.0, 0.0], 1, this.state.imageryList);
         mercator.addVectorLayer(mapConfig,
-                                "currentAOI",
-                                mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
-                                ceoMapStyles.yellowPolygon);
+            "currentAOI",
+            mercator.geometryToVectorSource(mercator.parseGeoJson(this.state.currentProject.boundary, true)),
+            ceoMapStyles.yellowPolygon);
         mercator.zoomMapToLayer(mapConfig, "currentAOI");
         this.setState({ mapConfig: mapConfig });
     };
 
     showProjectPlots = () => {
         mercator.addPlotLayer(this.state.mapConfig,
-                              this.state.plotList,
-                              feature => {
-                                  this.setState({
-                                      prevPlotButtonDisabled: false,
-                                  });
-                                  this.getPlotData(feature.get("features")[0].get("plotId"));
-                              });
+            this.state.plotList,
+            feature => {
+                this.setState({
+                    prevPlotButtonDisabled: false,
+                });
+                this.getPlotData(feature.get("features")[0].get("plotId"));
+            });
     };
 
     setBaseMapSource = (newBaseMapSource) => {
         const newImagery = this.getImageryById(newBaseMapSource);
         const newImageryAttribution = newImagery.title === "DigitalGlobeWMSImagery"
-              ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
-              : newImagery.title === "PlanetGlobalMosaic"
-                  ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
-                  : newImagery.attribution;
+            ? newImagery.attribution + " | " + this.state.imageryYearDG + " (" + this.state.stackingProfileDG + ")"
+            : newImagery.title === "PlanetGlobalMosaic"
+                ? newImagery.attribution + " | " + this.state.imageryYearPlanet + "-" + this.state.imageryMonthPlanet
+                : newImagery.attribution;
         this.setState({
             currentImagery: newImagery,
             imageryAttribution: newImageryAttribution,
@@ -272,24 +272,24 @@ class Collection extends React.Component {
     updateDGWMSLayer = () => {
         const { imageryYearDG, stackingProfileDG } = this.state;
         mercator.updateLayerWmsParams(this.state.mapConfig,
-                                      "DigitalGlobeWMSImagery",
-                                      {
-                                          COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYearDG + "-01-01')"
-                                              + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
-                                          FEATUREPROFILE: stackingProfileDG,
-                                      });
+            "DigitalGlobeWMSImagery",
+            {
+                COVERAGE_CQL_FILTER: "(acquisitionDate>='" + imageryYearDG + "-01-01')"
+                    + "AND(acquisitionDate<='" + imageryYearDG + "-12-31')",
+                FEATUREPROFILE: stackingProfileDG,
+            });
     };
 
     updatePlanetLayer = () => {
         const { imageryMonthPlanet, imageryYearPlanet } = this.state;
         mercator.updateLayerSource(this.state.mapConfig,
-                                   "PlanetGlobalMosaic",
-                                   sourceConfig => {
-                                       sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
-                                       sourceConfig.year = imageryYearPlanet;
-                                       return sourceConfig;
-                                   },
-                                   this);
+            "PlanetGlobalMosaic",
+            sourceConfig => {
+                sourceConfig.month = imageryMonthPlanet < 10 ? "0" + imageryMonthPlanet : imageryMonthPlanet;
+                sourceConfig.year = imageryYearPlanet;
+                return sourceConfig;
+            },
+            this);
     };
 
     getQueryString = (params) => "?" + Object.keys(params)
@@ -395,15 +395,15 @@ class Collection extends React.Component {
 
     resetPlotLock = () => {
         fetch(this.props.documentRoot + "/reset-plot-lock",
-              {
-                  method: "POST",
-                  body: JSON.stringify({
-                      plotId: this.state.currentPlot.id,
-                      projectId: this.props.projectId,
-                      userId: this.props.userId,
-                      userName: this.props.userName,
-                  }),
-              })
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    plotId: this.state.currentPlot.id,
+                    projectId: this.props.projectId,
+                    userId: this.props.userId,
+                    userName: this.props.userName,
+                }),
+            })
             .then(response => {
                 if (!response.ok) {
                     console.log(response);
@@ -445,15 +445,15 @@ class Collection extends React.Component {
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
 
         mercator.addVectorLayer(mapConfig,
-                                "currentPlot",
-                                mercator.geometryToVectorSource(
-                                    currentPlot.geom
-                                        ? mercator.parseGeoJson(currentPlot.geom, true)
-                                        : mercator.getPlotPolygon(currentPlot.center,
-                                                                  currentProject.plotSize,
-                                                                  currentProject.plotShape)
-                                ),
-                                ceoMapStyles.yellowPolygon);
+            "currentPlot",
+            mercator.geometryToVectorSource(
+                currentPlot.geom
+                    ? mercator.parseGeoJson(currentPlot.geom, true)
+                    : mercator.getPlotPolygon(currentPlot.center,
+                    currentProject.plotSize,
+                    currentProject.plotShape)
+            ),
+            ceoMapStyles.yellowPolygon);
 
         mercator.zoomMapToLayer(mapConfig, "currentPlot");
     };
@@ -463,18 +463,18 @@ class Collection extends React.Component {
         mercator.disableSelection(mapConfig);
         mercator.removeLayerByTitle(mapConfig, "currentSamples");
         mercator.addVectorLayer(mapConfig,
-                                "currentSamples",
-                                mercator.samplesToVectorSource(visible),
-                                this.state.sampleOutlineBlack
-                                    ? visible[0].geom
-                                        ? ceoMapStyles.blackPolygon
-                                        : ceoMapStyles.blackCircle
-                                    : visible[0].geom
-                                        ? ceoMapStyles.whitePolygon
-                                        : ceoMapStyles.whiteCircle);
+            "currentSamples",
+            mercator.samplesToVectorSource(visible),
+            this.state.sampleOutlineBlack
+                ? visible[0].geom
+                ? ceoMapStyles.blackPolygon
+                : ceoMapStyles.blackCircle
+                : visible[0].geom
+                ? ceoMapStyles.whitePolygon
+                : ceoMapStyles.whiteCircle);
         mercator.enableSelection(mapConfig,
-                                 "currentSamples",
-                                 (sampleId) => this.setState({ selectedSampleId: sampleId }));
+            "currentSamples",
+            (sampleId) => this.setState({ selectedSampleId: sampleId }));
     };
 
     showGeoDash = () => {
@@ -483,13 +483,13 @@ class Collection extends React.Component {
               ? currentProject.plotSize / 2.0
               : mercator.getViewRadius(mapConfig);
         window.open(this.props.documentRoot + "/geo-dash?"
-                    + "&pid=" + this.props.projectId
-                    + "&plotid=" + currentPlot.id
-                    + "&plotshape=" + encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))
-                    + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(mapConfig) + "]")
-                    + "&daterange=&bcenter=" + currentPlot.center
-                    + "&bradius=" + plotRadius,
-                    "_geo-dash");
+            + "&pid=" + this.props.projectId
+            + "&plotid=" + currentPlot.id
+            + "&plotshape=" + encodeURIComponent((currentPlot.geom ? "polygon" : currentProject.plotShape))
+            + "&aoi=" + encodeURIComponent("[" + mercator.getViewExtent(mapConfig) + "]")
+            + "&daterange=&bcenter=" + currentPlot.center
+            + "&bradius=" + plotRadius,
+            "_geo-dash");
     };
 
     createPlotKML = () => {
@@ -497,7 +497,7 @@ class Collection extends React.Component {
         const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
         this.setState({
             KMLFeatures: mercator.getKMLFromFeatures([mercator.asPolygonFeature(plotFeatures[0]),
-                                                      ...sampleFeatures]),
+                ...sampleFeatures]),
         });
     };
 
@@ -528,15 +528,15 @@ class Collection extends React.Component {
     flagPlotInDB = () => {
         if (this.state.currentPlot != null) {
             fetch(this.props.documentRoot + "/flag-plot",
-                  {
-                      method: "POST",
-                      body: JSON.stringify({
-                          projectId: this.props.projectId,
-                          plotId: this.state.currentPlot.id,
-                          userId: this.props.userId,
-                          userName: this.props.userName,
-                      }),
-                  })
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        projectId: this.props.projectId,
+                        plotId: this.state.currentPlot.id,
+                        userId: this.props.userId,
+                        userName: this.props.userName,
+                    }),
+                })
                 .then(response => {
                     if (response.ok) {
                         this.nextPlot();
@@ -550,23 +550,23 @@ class Collection extends React.Component {
 
     postValuesToDB = () => {
         fetch(this.props.documentRoot + "/add-user-samples",
-              {
-                  method: "post",
-                  headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                      projectId: this.props.projectId,
-                      plotId: this.state.currentPlot.id,
-                      userName: this.props.userName,
-                      userId: this.props.userId,
-                      confidence: -1,
-                      collectionStart: this.state.collectionStart,
-                      userSamples: this.state.userSamples,
-                      userImages: this.state.userImages,
-                  }),
-              })
+            {
+                method: "post",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    projectId: this.props.projectId,
+                    plotId: this.state.currentPlot.id,
+                    userName: this.props.userName,
+                    userId: this.props.userId,
+                    confidence: -1,
+                    collectionStart: this.state.collectionStart,
+                    userSamples: this.state.userSamples,
+                    userImages: this.state.userImages,
+                }),
+            })
             .then(response => {
                 if (response.ok) {
                     this.nextPlot();
@@ -1005,10 +1005,10 @@ class Collection extends React.Component {
                                                   : this.state.selectedSampleId}
                             />
                         :
-                            <fieldset className="mb-3 justify-content-center text-center">
-                                <h3>Survey Questions</h3>
-                                <p>Please go to a plot to see survey questions</p>
-                            </fieldset>
+                        <fieldset className="mb-3 justify-content-center text-center">
+                            <h3>Survey Questions</h3>
+                            <p>Please go to a plot to see survey questions</p>
+                        </fieldset>
                     }
                 </SideBar>
                 <QuitMenu
@@ -1017,7 +1017,7 @@ class Collection extends React.Component {
                     projectId={this.props.projectId}
                 />
                 {this.state.plotList.length === 0 &&
-                    <div id="spinner" style={{ top: "45%", left: "38%" }}></div>
+                <div id="spinner" style={{ top: "45%", left: "38%" }}></div>
                 }
             </Fragment>
         );
@@ -1104,25 +1104,25 @@ class PlotNavigation extends React.Component {
                     ? <h3>Loading plot data...</h3>
                     : <Fragment>
                         {props.plotId &&
-                            <div className="row py-2 justify-content-center">
-                                <h3 className="mt-2">Current Plot ID:</h3>
-                                <input
-                                    type="text"
-                                    id="plotId"
-                                    autoComplete="off"
-                                    className="col-4 px-0 mx-2"
-                                    value={this.state.newPlotInput}
-                                    onChange={e => this.updateNewPlotId(e.target.value)}
-                                />
-                                <input
-                                    id="goto-plot-button"
-                                    className="text-center btn btn-outline-lightgreen btn-sm"
-                                    type="button"
-                                    name="goto-plot"
-                                    value="Go to plot"
-                                    onClick={() => props.goToPlot(this.state.newPlotInput)}
-                                />
-                            </div>
+                        <div className="row py-2 justify-content-center">
+                            <h3 className="mt-2">Current Plot ID:</h3>
+                            <input
+                                type="text"
+                                id="plotId"
+                                autoComplete="off"
+                                className="col-4 px-0 mx-2"
+                                value={this.state.newPlotInput}
+                                onChange={e => this.updateNewPlotId(e.target.value)}
+                            />
+                            <input
+                                id="goto-plot-button"
+                                className="text-center btn btn-outline-lightgreen btn-sm"
+                                type="button"
+                                name="goto-plot"
+                                value="Go to plot"
+                                onClick={() => props.goToPlot(this.state.newPlotInput)}
+                            />
+                        </div>
                         }
                         {!props.navButtonsShown
                              ?
@@ -1356,11 +1356,11 @@ class ProjectStatsGroup extends React.Component {
                     Project Stats
                 </button>
                 {this.state.showStats &&
-                    <ProjectStats
-                        documentRoot={this.props.documentRoot}
-                        projectId={this.props.projectId}
-                        userName={this.props.userName}
-                    />
+                <ProjectStats
+                    documentRoot={this.props.documentRoot}
+                    projectId={this.props.projectId}
+                    userName={this.props.userName}
+                />
                 }
             </div>
         );

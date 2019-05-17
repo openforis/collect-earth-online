@@ -7,11 +7,26 @@ This is a Java 10 application written with the Spark web framework
 
 ** Installation
 
-In order to build and run Collect Earth Online, you will need:
+*** In order to build and run Collect Earth Online, you will need:
 
 - Java Development Kit 1.10+
 - Either Maven 3.3.9+ or Gradle 3.3+
 - Tomcat 8+ (optional)
+- PostgreSQL 11+ (optional)
+
+*** With the text based JSON database
+
+Copy the test files using
+#+begin_src sh
+cp -r test_data/json target/classes/json
+#+end_src
+
+*** With PostgreSQL database
+
+Initialize the database using
+#+begin_src sh
+sh src/main/resources/sql/build_db.sh
+#+end_src
 
 ** Running with an Embedded Jetty Webserver
 
@@ -72,20 +87,20 @@ You will have to replace that with your domain every place you see it in the ins
 #+end_src
 2. Create initial cert:
 #+begin_src sh
-    export CEO_DIR="/home/openforis/github/collect-earth-online" 
+    export CEO_DIR="/home/openforis/github/collect-earth-online"
     export CERT_DOMAIN="collect.earth"
-	
+
     sudo certbot certonly --webroot -w $CEO_DIR/target/classes/public -d $CERT_DOMAIN
 #+end_src
 3. Package the cert into the JKS:
 #+begin_src sh
     export CERT_PASSWORD="collect"
     export CACERT_PASSWORD="changeit"
-	
+
     sudo openssl pkcs12 -export -in /etc/letsencrypt/live/$CERT_DOMAIN/cert.pem -inkey /etc/letsencrypt/live/$CERT_DOMAIN/privkey.pem -out ceo.p12 -name ceo -passout pass:$CERT_PASSWORD
-	
+
 	sudo keytool -importkeystore -destkeystore keystore.jks -srckeystore ceo.p12 -srcstoretype PKCS12 -storepass $CERT_PASSWORD -srcstorepass $CERT_PASSWORD -alias ceo -noprompt
-	
+
 	sudo keytool --importcert -file /etc/letsencrypt/live/$CERT_DOMAIN/fullchain.pem -keystore /etc/ssl/certs/java/cacerts -v -alias ceo_chain -storepass $CACERT_PASSWORD -noprompt
 #+end_src
 4. Edit the gee-gateway config.py CERT and KEY entries to point to the cert.pem and privatekey.pem just created.
@@ -259,31 +274,31 @@ pip install -r requirements.txt
 
 Edit the configuration file (*config.py* or *instance/config.py*)
 
-#begin_src python 
+#begin_src python
 DEBUG = False # {True|False}
 PORT = 8888 # flask server running port
 HOST = '0.0.0.0' # flask server running host
 CO_ORIGINS = '*' # origin or list of origins to allow requests from
 import logging
 LOGGING_LEVEL = logging.INFO # {NOTSET|DEBUG|INFO|WARNING|ERROR|CRITICAL}
-#end_src 
+#end_src
 
 *** EXECUTION
 
 From project root directory
 
-#begin_src sh 
+#begin_src sh
 python run.py
-#end_src 
+#end_src
 
 OR using /virtualenv/ (Optional)
 
-#begin_src sh 
+#begin_src sh
 source env/bin/activate
 python run.py
 #end_src
 
-#begin_src sh 
+#begin_src sh
 usage: run.py [-h] [--gmaps_api_key GMAPS_API_KEY] [--ee_account EE_ACCOUNT]
               [--ee_key_path EE_KEY_PATH]
 

@@ -24,7 +24,7 @@ export class SurveyDesign extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            inSimpleMode: true,
+            inSimpleMode: props.hasNoRules,
         };
     }
 
@@ -840,7 +840,7 @@ function NumericRange(props) {
                     </tr>
                     <tr>
                         <td>
-                            <label>Enter maxinum: </label>
+                            <label>Enter maximum: </label>
                         </td>
                         <td>
                             <input id="max-val"

@@ -210,6 +210,6 @@ export function renderProjectDashboardPage(args) {
         <ProjectDashboard documentRoot={args.documentRoot} userId={args.userId} projectId={args.projectId} institutionId={args.institutionId}
                  project_stats_visibility={args.project_stats_visibility}
                  project_template_visibility={args.project_template_visibility}/>,
-        document.getElementById("project_dashboard")
+        document.getElementById("project-dashboard")
     );
 }
