@@ -440,6 +440,24 @@ public class PostgresProjects implements Projects {
         }
     }
 
+    public String updateProject(Request req, Response res) {
+        try (var conn = connect();
+             var pstmt = conn.prepareStatement("SELECT * FROM update_project(?,?,?,?,?)")) {
+
+            final var jsonInputs = parseJson(req.body()).getAsJsonObject();
+            pstmt.setInt(1,    Integer.parseInt(req.params(":id")));
+            pstmt.setString(2, getOrEmptyString(jsonInputs, "name").getAsString());
+            pstmt.setString(3, getOrEmptyString(jsonInputs, "description").getAsString());
+            pstmt.setString(4, getOrEmptyString(jsonInputs, "privacyLevel").getAsString());
+            pstmt.setString(5, getOrEmptyString(jsonInputs, "baseMapSource").getAsString());
+            pstmt.execute();
+            return "";
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
     private static String loadCsvHeaders(String filename, List<String> mustInclude) {
         try (var lines = Files.lines(Paths.get(expandResourcePath("/csv/" + filename)))) {
 
@@ -768,6 +786,7 @@ public class PostgresProjects implements Projects {
             newProject.add("sampleValues",               jsonInputs.get("sampleValues").getAsJsonArray());
             newProject.add("surveyRules",                jsonInputs.get("surveyRules").getAsJsonArray());
             newProject.addProperty("useTemplatePlots",   getOrFalse(jsonInputs, "useTemplatePlots").getAsBoolean());
+            newProject.addProperty("useTemplateWidgets", getOrFalse(jsonInputs, "useTemplateWidgets").getAsBoolean());
 
             // file part properties
             newProject.addProperty("plotFileName",     getOrEmptyString(jsonInputs, "plotFileName").getAsString());
@@ -809,19 +828,13 @@ public class PostgresProjects implements Projects {
                 pstmt.setString(18, newProject.get("createdDate").getAsString());
                 pstmt.setString(19, null);  //classification times
 
-
                 try (var rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         newProjectId = rs.getInt("create_project");
                         newProject.addProperty("id", newProjectId);
-                        if (newProject.get("useTemplatePlots").getAsBoolean()
-                                && newProject.get("projectTemplate").getAsInt() > 0) {
-                            // Copy existing plots
-                            try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
-                                copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
-                                copyPstmt.setInt(2, newProjectId);
-                                copyPstmt.execute();
-                            }
+
+                        if (newProject.get("projectTemplate").getAsInt() > 0
+                                && newProject.get("useTemplateWidgets").getAsBoolean()) {
                             // Copy existing widgets
                             try (var pstmt1 = conn.prepareStatement("SELECT * FROM get_project_widgets_by_project_id(?)")) {
                                 pstmt1.setInt(1, newProject.get("projectTemplate").getAsInt());
@@ -836,6 +849,16 @@ public class PostgresProjects implements Projects {
                                         }
                                     }
                                 }
+                            }
+                        }
+
+                        if (newProject.get("projectTemplate").getAsInt() > 0
+                            && newProject.get("useTemplatePlots").getAsBoolean()) {
+                                // Copy existing plots
+                            try (var copyPstmt = conn.prepareStatement("SELECT * FROM copy_template_plots(?,?)")) {
+                                copyPstmt.setInt(1, newProject.get("projectTemplate").getAsInt());
+                                copyPstmt.setInt(2, newProjectId);
+                                copyPstmt.execute();
                             }
                         } else {
 

@@ -14,6 +14,7 @@ public interface Projects {
     String publishProject(Request req, Response res);
     String closeProject(Request req, Response res);
     String archiveProject(Request req, Response res);
+    String updateProject(Request req, Response res);
     String createProject(Request req, Response res);
 
 }

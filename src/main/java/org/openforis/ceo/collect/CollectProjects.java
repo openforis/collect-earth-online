@@ -410,6 +410,9 @@ public class CollectProjects implements Projects {
         return "";
     }
 
+    // FIXME Stub
+    public String updateProject(Request req, Response res) {return "";}
+
     // NOTE: This function is extremely complicated. We will need to
     // work together to move it to Collect.
     //
