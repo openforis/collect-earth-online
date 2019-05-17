@@ -244,7 +244,7 @@ class Project extends React.Component {
                 plotList: [],
                 useTemplatePlots: true,
                 useTemplateWidgets: true,
-                hasNoRules: templateProject.surveyRules.length === 0,
+                hasNoRules: !templateProject.surveyRules || templateProject.surveyRules.length === 0,
             });
         }
     };
