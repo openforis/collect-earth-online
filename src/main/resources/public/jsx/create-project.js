@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock } from "./components/FormComponents";
-import { ProjectAOI, PlotReview, SampleReview, ProjectVisibility } from "./components/ProjectComponents";
+import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/ProjectComponents";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
 import { SurveyDesign } from "./components/SurveyDesign";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
@@ -403,20 +403,15 @@ function ProjectDesignForm(props) {
                 name={props.projectDetails.name}
                 description={props.projectDetails.description}
                 setProjectDetail={props.setProjectDetail}
-            />
-            <ProjectVisibility
                 privacyLevel={props.projectDetails.privacyLevel}
+            />
+            <ProjectAOI
+                coordinates={props.coordinates}
+                inDesignMode
+                baseMapSource={props.projectDetails.baseMapSource}
+                imageryList={props.imageryList}
                 setProjectDetail={props.setProjectDetail}
             />
-            <ProjectAOI coordinates={props.coordinates} inDesignMode/>
-            {props.imageryList &&
-                <ProjectImagery
-                    imageryList={props.imageryList}
-                    baseMapSource={props.projectDetails.baseMapSource}
-                    setProjectDetail={props.setProjectDetail}
-                    toggleTemplatePlots={props.toggleTemplatePlots}
-                />
-            }
             {props.useTemplatePlots
             ?
                 <Fragment>
@@ -533,63 +528,6 @@ class ProjectTemplateVisibility extends React.Component {
             </SectionBlock>
         );
     }
-}
-
-function ProjectInfo({ name, description, setProjectDetail }) {
-    return (
-        <SectionBlock title="Project Info">
-            <div id="project-info">
-                <div className="form-group">
-                    <h3 htmlFor="project-name">Name</h3>
-                    <input
-                        className="form-control form-control-sm"
-                        type="text"
-                        id="project-name"
-                        name="name"
-                        autoComplete="off"
-                        value={name}
-                        onChange={e => setProjectDetail("name", e.target.value)}
-                    />
-                </div>
-                <div className="form-group">
-                    <h3 htmlFor="project-description">Description</h3>
-                    <textarea
-                        className="form-control form-control-sm"
-                        id="project-description"
-                        name="description"
-                        value={description}
-                        onChange={e => setProjectDetail("description", e.target.value)}
-                    />
-                </div>
-            </div>
-        </SectionBlock>
-    );
-}
-
-function ProjectImagery({ baseMapSource, imageryList, setProjectDetail }) {
-    return (
-        <SectionBlock title="Project Imagery">
-            <div id="project-imagery">
-                <div className="form-group">
-                    <h3 htmlFor="base-map-source">Basemap Source</h3>
-                    <select
-                        className="form-control form-control-sm"
-                        id="base-map-source"
-                        name="base-map-source"
-                        size="1"
-                        value={baseMapSource || ""}
-                        onChange={e => setProjectDetail("baseMapSource", e.target.value)}
-                    >
-                        {
-                            imageryList.map((imagery, uid) =>
-                                <option key={uid} value={imagery.title}>{imagery.title}</option>
-                            )
-                        }
-                    </select>
-                </div>
-            </div>
-        </SectionBlock>
-    );
 }
 
 function PlotDesign ({

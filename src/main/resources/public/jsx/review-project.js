@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
-import { ProjectAOI, PlotReview, SampleReview, ProjectVisibility } from "./components/ProjectComponents";
+import { ProjectInfo, ProjectAOI, PlotReview, SampleReview } from "./components/ProjectComponents";
 import SurveyCardList from "./components/SurveyCardList";
 import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { mercator, ceoMapStyles } from "../js/mercator-openlayers.js";
@@ -12,7 +12,7 @@ class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projectDetails: null,
+            projectDetails: {},
             imageryList: [],
             mapConfig: null,
             plotList: [],
@@ -30,15 +30,21 @@ class Project extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.projectDetails
+        if (this.state.projectDetails.id
                 && this.state.projectDetails !== prevState.projectDetails) {
             this.getImageryList();
             this.getProjectPlots();
         }
 
-        if (this.state.projectDetails && this.state.imageryList.length > 0
+        if (this.state.projectDetails.baseMapSource && this.state.imageryList.length > 0
                 && prevState.imageryList.length === 0) {
             this.initProjectMap();
+        }
+
+        if (this.state.mapConfig
+            && this.state.projectDetails.baseMapSource !== prevState.projectDetails.baseMapSource) {
+
+            mercator.setVisibleLayer(this.state.mapConfig, this.state.projectDetails.baseMapSource);
         }
 
         if (this.state.mapConfig
@@ -52,6 +58,45 @@ class Project extends React.Component {
         }
 
     }
+
+    updateProject = () => {
+        if (this.validateProject() && confirm("Do you REALLY want to update this project?")) {
+            utils.show_element("spinner");
+
+            fetch(this.props.documentRoot + "/update-project/" + this.state.projectDetails.id,
+                  {
+                      method: "POST",
+                      contentType: "application/json; charset=utf-8",
+                      body: JSON.stringify({
+                          baseMapSource: this.state.projectDetails.baseMapSource,
+                          description: this.state.projectDetails.description,
+                          name: this.state.projectDetails.name,
+                          privacyLevel: this.state.projectDetails.privacyLevel,
+                      }),
+                  }
+            )
+                .then(response => {
+                    if (!response.ok) {
+                        console.log(response);
+                        alert("Error updating project. See console for details.");
+                    } else {
+                        alert("Project successfully updated!");
+                    }
+                })
+                .finally(utils.hide_element("spinner"));
+        }
+    };
+
+    validateProject = () => {
+        const { projectDetails } = this.state;
+        if (projectDetails.name === "" || projectDetails.description === "") {
+            alert("A project must contain a name and description");
+            return false;
+
+        } else {
+            return true;
+        }
+    };
 
     publishProject = () => {
         if (confirm("Do you REALLY want to publish this project?")) {
@@ -218,46 +263,48 @@ class Project extends React.Component {
         }
     };
 
-    render() {
-        return (
-            <FormLayout id="project-design" title="Review Project">
-                {this.state.projectDetails && parseInt(this.state.projectDetails.id) > 0
-                ?
-                    <Fragment>
-                        <ProjectStatsGroup
-                            documentRoot={this.props.documentRoot}
-                            projectId={this.props.projectId}
-                            availability={this.state.projectDetails && this.state.projectDetails.availability}
-                        />
-                        <ProjectDesignReview
-                            projectDetails={this.state.projectDetails}
-                            coordinates={this.state.coordinates}
-                            imageryList={this.state.imageryList}
-                        />
-                        <ProjectManagement
-                            project={this.state}
-                            projectId={this.props.projectId}
-                            configureGeoDash={this.configureGeoDash}
-                            downloadPlotData={this.downloadPlotData}
-                            downloadSampleData={this.downloadSampleData}
-                            changeAvailability={this.changeAvailability}
-                            gotoProjectDashboard={this.gotoProjectDashboard}
-                        />
-                    </Fragment>
-                :
-                    <ProjectNotFount projectId={this.props.projectId} />
-                }
-            </FormLayout>
-        );
-    }
-}
+    setProjectDetail = (key, newValue) =>
+        this.setState({ projectDetails: { ...this.state.projectDetails, [key]: newValue }});
 
-function ProjectNotFount({ projectId }) {
-    return (
+    projectNotFound = (projectId) => (
         <SectionBlock title="Project Information">
             <h3>Project {projectId} not found.</h3>
         </SectionBlock>
     );
+
+    render() {
+        return (
+            <FormLayout id="project-design" title="Review Project">
+                {this.state.projectDetails.id && parseInt(this.state.projectDetails.id) > 0
+                ?
+                    <Fragment>
+                        <ProjectDesignReview
+                            coordinates={this.state.coordinates}
+                            imageryList={this.state.imageryList}
+                            projectDetails={this.state.projectDetails}
+                            setProjectDetail={this.setProjectDetail}
+                        />
+                        <ProjectManagement
+                            changeAvailability={this.changeAvailability}
+                            configureGeoDash={this.configureGeoDash}
+                            downloadPlotData={this.downloadPlotData}
+                            downloadSampleData={this.downloadSampleData}
+                            gotoProjectDashboard={this.gotoProjectDashboard}
+                            project={this.state}
+                            updateProject={this.updateProject}
+                        />
+                        <ProjectStatsGroup
+                            availability={this.state.projectDetails && this.state.projectDetails.availability}
+                            documentRoot={this.props.documentRoot}
+                            projectId={this.props.projectId}
+                        />
+                    </Fragment>
+                :
+                    this.projectNotFound(this.props.projectId)
+                }
+            </FormLayout>
+        );
+    }
 }
 
 class ProjectStatsGroup extends React.Component {
@@ -275,7 +322,7 @@ class ProjectStatsGroup extends React.Component {
             <div className="ProjectStatsGroup">
                 <button
                     type="button"
-                    className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+                    className="btn btn-outline-lightgreen btn-sm btn-block mb-2"
                     onClick={this.updateShown}
                 >
                     Project Stats
@@ -422,45 +469,25 @@ class ProjectStats extends React.Component {
     }
 }
 
-function ProjectDesignReview({ projectDetails, coordinates, imageryList }) {
+function ProjectDesignReview({ projectDetails, coordinates, imageryList, setProjectDetail }) {
     return (
         <div id="project-design-form" className="px-2 pb-2">
-            <ProjectInfoReview
+            <ProjectInfo
                 name={projectDetails.name}
                 description={projectDetails.description}
-            />
-            <ProjectVisibility
                 privacyLevel={projectDetails.privacyLevel}
-                setProjectDetail={(() => alert("You cannot change visibility at this time."))}
+                setProjectDetail={setProjectDetail}
             />
-            <ProjectAOI coordinates={coordinates}/>
-            {imageryList &&
-                <ProjectImageryReview baseMapSource={projectDetails.baseMapSource}/>
-            }
+            <ProjectAOI
+                coordinates={coordinates}
+                baseMapSource={projectDetails.baseMapSource}
+                imageryList={imageryList}
+                setProjectDetail={setProjectDetail}
+            />
             <PlotReview projectDetails={projectDetails}/>
             <SampleReview projectDetails={projectDetails}/>
             <SurveyReview surveyQuestions={projectDetails.surveyQuestions} surveyRules={projectDetails.surveyRules}/>
         </div>
-    );
-}
-
-function ProjectInfoReview({ name, description }) {
-    return (
-        <SectionBlock id="project-info" title="Project Info">
-            <h3 className="font-weight-bold">Name</h3>
-            <p className="ml-2">{name}</p>
-            <h3 className="font-weight-bold">Description</h3>
-            <p className={description ? "ml-2" : "ml-2 font-italic"}>{description || "none"}</p>
-        </SectionBlock>
-    );
-}
-
-function ProjectImageryReview({ baseMapSource }) {
-    return (
-        <SectionBlock id="project-imagery-review" title="Project Imagery">
-            <h3 className="font-weight-bold">Basemap Source</h3>
-            <p className="ml-2">{baseMapSource}</p>
-        </SectionBlock>
     );
 }
 
@@ -481,52 +508,51 @@ function SurveyRules(props) {
             <span className="font-weight-bold">Rules:  </span>
             <table id="srd">
                 <tbody>
-                    {
-                        props.surveyRules && props.surveyRules.length > 0
-                        ?
-                            props.surveyRules.map((rule, uid) => {
-                                if (rule.ruleType === "text-match") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: {rule.ruleType}</td>
-                                        <td>Regex: {rule.regex}</td>
-                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "numeric-range") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: {rule.ruleType}</td>
-                                        <td>Min: {rule.min}</td>
-                                        <td>Max: {rule.max}</td>
-                                        <td>Questions: {rule.questionsText.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "sum-of-answers") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: {rule.ruleType}</td>
-                                        <td>Valid Sum: {rule.validSum}</td>
-                                        <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "matching-sums") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: {rule.ruleType}</td>
-                                        <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
-                                        <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
-                                    </tr>;
-                                } else if (rule.ruleType === "incompatible-answers") {
-                                    return <tr id={"rule" + rule.id} key={uid}>
-                                        <td>{"Rule " + rule.id}</td>
-                                        <td>Type: {rule.ruleType}</td>
-                                        <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
-                                        <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
-                                    </tr>;
-                                }
-                            })
-                        :
-                            <tr>
-                                <td colSpan="4"><span>No rules available for this survey</span></td>
-                            </tr>
+                    {props.surveyRules && props.surveyRules.length > 0
+                    ?
+                        props.surveyRules.map((rule, uid) => {
+                            if (rule.ruleType === "text-match") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Regex: {rule.regex}</td>
+                                    <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                </tr>;
+                            } else if (rule.ruleType === "numeric-range") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Min: {rule.min}</td>
+                                    <td>Max: {rule.max}</td>
+                                    <td>Questions: {rule.questionsText.toString()}</td>
+                                </tr>;
+                            } else if (rule.ruleType === "sum-of-answers") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Valid Sum: {rule.validSum}</td>
+                                    <td colSpan="2">Questions: {rule.questionsText.toString()}</td>
+                                </tr>;
+                            } else if (rule.ruleType === "matching-sums") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Questions Set 1: {rule.questionSetText1.toString()}</td>
+                                    <td colSpan="2">Questions Set 2: {rule.questionSetText2.toString()}</td>
+                                </tr>;
+                            } else if (rule.ruleType === "incompatible-answers") {
+                                return <tr id={"rule" + rule.id} key={uid}>
+                                    <td>{"Rule " + rule.id}</td>
+                                    <td>Type: {rule.ruleType}</td>
+                                    <td>Question 1: {rule.questionText1}, Answer 1: {rule.answerText1}</td>
+                                    <td colSpan="2">Question 2: {rule.questionText2}, Answer 2: {rule.answerText2}</td>
+                                </tr>;
+                            }
+                        })
+                    :
+                        <tr>
+                            <td colSpan="4"><span>No rules available for this survey</span></td>
+                        </tr>
                     }
                 </tbody>
             </table>
@@ -544,57 +570,56 @@ function ProjectManagement(props) {
         archived: "Archive",
     };
     return (
-        <div id="project-management" className="col mb-3">
+        <div id="project-management">
             <h2 className="header px-0">Project Management</h2>
-            <div className="row">
-                {project.projectDetails &&
-                    <React.Fragment>
-                        <input
-                            type="button"
-                            id="project-dashboard"
-                            className="btn btn-outline-lightgreen btn-sm btn-block"
-                            name="project-dashboard"
-                            value="Project Dashboard"
-                            onClick={props.gotoProjectDashboard}
-                            style={{ display:"block" }}
-                        />
-                        <input
-                            type="button"
-                            id="configure-geo-dash"
-                            className="btn btn-outline-lightgreen btn-sm btn-block"
-                            name="configure-geo-dash"
-                            value="Configure Geo-Dash"
-                            onClick={props.configureGeoDash}
-                            style={{ display: project.projectDetails.availability === "unpublished" || project.projectDetails.availability === "published" ? "block" : "none" }}
-                        />
-                        <input
-                            type="button"
-                            id="download-plot-data"
-                            className="btn btn-outline-lightgreen btn-sm btn-block"
-                            name="download-plot-data"
-                            value="Download Plot Data"
-                            onClick={props.downloadPlotData}
-                            style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
-                        />
-                        <input
-                            type="button"
-                            id="download-sample-data"
-                            className="btn btn-outline-lightgreen btn-sm btn-block"
-                            name="download-sample-data"
-                            value="Download Sample Data"
-                            onClick={props.downloadSampleData}
-                            style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
-                        />
-                        <input
-                            type="button"
-                            id="change-availability"
-                            className="btn btn-outline-danger btn-sm btn-block"
-                            name="change-availability"
-                            value={stateTransitions[project.projectDetails.availability] + " Project"}
-                            onClick={props.changeAvailability}
-                        />
-                    </React.Fragment>
-                }
+            <div className="d-flex flex-column">
+                <div className="d-flex justify-content-between mb-2">
+                    <input
+                        type="button"
+                        className="btn btn-outline-danger btn-sm col-6 mr-2"
+                        value={stateTransitions[project.projectDetails.availability] + " Project"}
+                        onClick={props.changeAvailability}
+                    />
+                    <input
+                        type="button"
+                        className="btn btn-outline-danger btn-sm col-6"
+                        value="Update Project"
+                        onClick={props.updateProject}
+                        style={{ display:"block" }}
+                    />
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                    <input
+                        type="button"
+                        className="btn btn-outline-lightgreen btn-sm col-6 mr-2"
+                        value="Project Dashboard"
+                        onClick={props.gotoProjectDashboard}
+                        style={{ display:"block" }}
+                    />
+                    <input
+                        type="button"
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        value="Configure Geo-Dash"
+                        onClick={props.configureGeoDash}
+                        style={{ display: project.projectDetails.availability === "unpublished" || project.projectDetails.availability === "published" ? "block" : "none" }}
+                    />
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                    <input
+                        type="button"
+                        className="btn btn-outline-lightgreen btn-sm col-6 mr-2"
+                        value="Download Plot Data"
+                        onClick={props.downloadPlotData}
+                        style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
+                    />
+                    <input
+                        type="button"
+                        className="btn btn-outline-lightgreen btn-sm col-6"
+                        value="Download Sample Data"
+                        onClick={props.downloadSampleData}
+                        style={{ display: project.projectDetails.availability === "published" || project.projectDetails.availability === "closed" ? "block" : "none" }}
+                    />
+                </div>
                 <div id="spinner"></div>
             </div>
         </div>

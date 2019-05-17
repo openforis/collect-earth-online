@@ -2,7 +2,83 @@ import React, { Fragment } from "react";
 
 import { SectionBlock } from "./FormComponents";
 
-export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, inDesignMode }) {
+export function ProjectInfo({ name, description, privacyLevel, setProjectDetail }) {
+    return (
+        <SectionBlock title="Project Info">
+            <div id="project-info">
+                <div className="form-group">
+                    <h3 htmlFor="project-name">Name</h3>
+                    <input
+                        className="form-control form-control-sm"
+                        type="text"
+                        id="project-name"
+                        name="name"
+                        autoComplete="off"
+                        value={name}
+                        onChange={e => setProjectDetail("name", e.target.value)}
+                    />
+                </div>
+                <div className="form-group">
+                    <h3 htmlFor="project-description">Description</h3>
+                    <textarea
+                        className="form-control form-control-sm"
+                        id="project-description"
+                        name="description"
+                        value={description}
+                        onChange={e => setProjectDetail("description", e.target.value)}
+                    />
+                </div>
+                <h3>Privacy Level</h3>
+                <div id="project-visibility" className="mb-3 small">
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="privacy-public"
+                            name="privacy-level"
+                            value="public"
+                            checked={privacyLevel === "public"}
+                            onChange={() => setProjectDetail("privacyLevel", "public")}
+                        />
+                        <label className="form-check-label" htmlFor="privacy-public">
+                            Public: <i>All Users</i>
+                        </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="privacy-private"
+                            name="privacy-level"
+                            value="private"
+                            onChange={() => setProjectDetail("privacyLevel", "private")}
+                            checked={privacyLevel === "private"}
+                        />
+                        <label className="form-check-label" htmlFor="privacy-private">
+                            Private: <i>Group Admins</i>
+                        </label>
+                    </div>
+                    <div className="form-check form-check-inline">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            id="privacy-institution"
+                            name="privacy-level"
+                            value="institution"
+                            onChange={() => setProjectDetail("privacyLevel", "institution")}
+                            checked={privacyLevel === "institution"}
+                        />
+                        <label className="form-check-label" htmlFor="privacy-institution">
+                            Institution: <i>Group Members</i>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </SectionBlock>
+    );
+}
+
+export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, inDesignMode, baseMapSource, imageryList, setProjectDetail }) {
     return (
         <SectionBlock title="Project AOI">
             <div id="project-aoi">
@@ -14,11 +90,8 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                id="lat-max"
-                                name="lat-max"
                                 defaultValue={latMax}
                                 placeholder="North"
-                                autoComplete="off"
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
@@ -31,11 +104,8 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                id="lon-min"
-                                name="lon-min"
                                 defaultValue={lonMin}
                                 placeholder="West"
-                                autoComplete="off"
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
@@ -46,11 +116,8 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                id="lon-max"
-                                name="lon-max"
                                 defaultValue={lonMax}
                                 placeholder="East"
-                                autoComplete="off"
                                 min="-180.0"
                                 max="180.0"
                                 step="any"
@@ -63,11 +130,8 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                             <input
                                 className="form-control form-control-sm"
                                 type="number"
-                                id="lat-min"
-                                name="lat-min"
                                 defaultValue={latMin}
                                 placeholder="South"
-                                autoComplete="off"
                                 min="-90.0"
                                 max="90.0"
                                 step="any"
@@ -77,6 +141,25 @@ export function ProjectAOI({ coordinates: { latMax, lonMin, lonMax, latMin }, in
                     </div>
                 </div>
             </div>
+            {imageryList &&
+                <div id="project-imagery">
+                    <div className="form-group">
+                        <h3 htmlFor="base-map-source">Basemap Source</h3>
+                        <select
+                            className="form-control form-control-sm"
+                            size="1"
+                            value={baseMapSource || ""}
+                            onChange={e => setProjectDetail("baseMapSource", e.target.value)}
+                        >
+                            {
+                                imageryList.map((imagery, uid) =>
+                                    <option key={uid} value={imagery.title}>{imagery.title}</option>
+                                )
+                            }
+                        </select>
+                    </div>
+                </div>
+            }
         </SectionBlock>
     );
 }
@@ -163,58 +246,6 @@ export function SampleReview({ projectDetails: { sampleDistribution, samplesPerP
 
                     </tbody>
                 </table>
-            </div>
-        </SectionBlock>
-    );
-}
-
-export function ProjectVisibility({ privacyLevel, setProjectDetail }) {
-    return (
-        <SectionBlock title= "Project Visibility">
-            <h3>Privacy Level</h3>
-            <div id="project-visibility" className="mb-3 small">
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="radio"
-                        id="privacy-public"
-                        name="privacy-level"
-                        value="public"
-                        checked={privacyLevel === "public"}
-                        onChange={() => setProjectDetail("privacyLevel", "public")}
-                    />
-                    <label className="form-check-label" htmlFor="privacy-public">
-                        Public: <i>All Users</i>
-                    </label>
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="radio"
-                        id="privacy-private"
-                        name="privacy-level"
-                        value="private"
-                        onChange={() => setProjectDetail("privacyLevel", "private")}
-                        checked={privacyLevel === "private"}
-                    />
-                    <label className="form-check-label" htmlFor="privacy-private">
-                        Private: <i>Group Admins</i>
-                    </label>
-                </div>
-                <div className="form-check form-check-inline">
-                    <input
-                        className="form-check-input"
-                        type="radio"
-                        id="privacy-institution"
-                        name="privacy-level"
-                        value="institution"
-                        onChange={() => setProjectDetail("privacyLevel", "institution")}
-                        checked={privacyLevel === "institution"}
-                    />
-                    <label className="form-check-label" htmlFor="privacy-institution">
-                        Institution: <i>Group Members</i>
-                    </label>
-                </div>
             </div>
         </SectionBlock>
     );
