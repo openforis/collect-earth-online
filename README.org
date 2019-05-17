@@ -16,7 +16,7 @@ This is a Java 10 application written with the Spark web framework
 
 *** With the text based JSON database
 
-The JSON database will initialize automatically when running Maven or Gradle
+The JSON database will initialize automatically when running Maven or Gradle.
 
 *** With PostgreSQL database
 
