@@ -416,7 +416,7 @@ class Collection extends React.Component {
             });
     };
 
-    resetPlotValues = (newPlot) => this.setState({ ...this.newPlotValues(newPlot) })
+    resetPlotValues = (newPlot) => this.setState(this.newPlotValues(newPlot));
 
     newPlotValues = (newPlot) => ({
         newPlotInput: newPlot.plotId ? newPlot.plotId : newPlot.id,
@@ -1401,7 +1401,11 @@ class ProjectTitle extends React.Component {
         const { props } = this;
         return (
             <div style={{ height: "3rem", cursor: "default" }} onClick={() => this.setState({ showStats: !this.state.showStats })}>
-                <h2 className="header" style={{ height: "100%", marginBottom: "0" }}>
+                <h2
+                    className="header overflow-hidden text-truncate"
+                    title={props.projectName}
+                    style={{ height: "100%", marginBottom: "0" }}
+                >
                     {"\u25BC " + props.projectName}
                 </h2>
                 {this.state.showStats &&
