@@ -157,13 +157,8 @@ class Collection extends React.Component {
                 : Array.isArray(eval(data.widgets))
                     ? eval(data.widgets)
                     : [];
-            if (widgets.length > 0){
-                this.setState({hasGeoDash: true});
-            }
+            this.setState({hasGeoDash: widgets.length > 0});
             return Promise.resolve("resolved");
-        })
-        .catch(response => {
-            return Promise.reject(response.message);
         });
 
     getProjectPlots = () => fetch(this.props.documentRoot + "/get-project-plots/" + this.props.projectId + "/1000")

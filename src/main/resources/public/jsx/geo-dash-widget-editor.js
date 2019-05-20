@@ -282,7 +282,8 @@ class BasicLayout extends React.PureComponent {
                 })
                 .then(response => {
                     if (!response.ok) {
-                        console.log("Error adding custom imagery to institution. See console for details.");
+                        alert("Error adding custom imagery to institution. See console for details.")
+                        console.log(response);
                     }
                 });
         }
@@ -670,7 +671,7 @@ class BasicLayout extends React.PureComponent {
     };
 
     onImageCollectionChange = event => {
-        this.setState({ imageCollection : event.target.value });
+        this.setState({ imageCollection: event.target.value });
     };
 
     onGraphBandChange = event => {
@@ -1073,6 +1074,19 @@ class BasicLayout extends React.PureComponent {
         />
     </div>;
 
+    getCustomImageryCheckbox = () => <div className="form-group">
+            <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
+            <input
+                type="checkbox"
+                name="addCustomImagery"
+                id="addCustomImagery"
+                value={this.state.addCustomImagery}
+                className="form-control"
+                onChange={() => this.setState({ addCustomImagery: event.target.checked })}
+                style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
+            />
+        </div>;
+
     getNextStepButton = () => this.state.selectedWidgetType === "DualImageCollection"
         ?
             <button
@@ -1174,18 +1188,7 @@ class BasicLayout extends React.PureComponent {
                     />
                 </div>
                 {this.getImageParamsBlock()}
-                <div className="form-group">
-                    <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
-                    <input
-                        type="checkbox"
-                        name="addCustomImagery"
-                        id="addCustomImagery"
-                        value={this.state.addCustomImagery}
-                        className="form-control"
-                        onChange={this.onaddCustomImageryChange}
-                        style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
-                    />
-                </div>
+                {this.getCustomImageryCheckbox()}
             </React.Fragment>;
         } else if (this.state.selectedDataType === "-1") {
             return "";
@@ -1375,18 +1378,7 @@ class BasicLayout extends React.PureComponent {
                             style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
-                        <input
-                            type="checkbox"
-                            name="addCustomImagery"
-                            id="addCustomImagery"
-                            value={this.state.addCustomImagery}
-                            className="form-control"
-                            onChange={this.onaddCustomImageryChange}
-                            style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
-                        />
-                    </div>
+                    {this.getCustomImageryCheckbox()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
             } else if (((this.state.selectedDataType === "imageCollectionAsset"
@@ -1417,18 +1409,7 @@ class BasicLayout extends React.PureComponent {
                             style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
-                        <input
-                            type="checkbox"
-                            name="addCustomImagery"
-                            id="addCustomImagery"
-                            value={this.state.addCustomImagery}
-                            className="form-control"
-                            onChange={this.onaddCustomImageryChange}
-                            style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
-                        />
-                    </div>
+                    {this.getCustomImageryCheckbox()}
                     <button
                         type="button"
                         className="btn btn-secondary"
@@ -1470,18 +1451,7 @@ class BasicLayout extends React.PureComponent {
                     </div>
                     <label>Select the Date Range you would like</label>
                     {this.getDateRangeControl()}
-                    <div className="form-group">
-                        <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
-                        <input
-                            type="checkbox"
-                            name="addCustomImagery"
-                            id="addCustomImagery"
-                            value={this.state.addCustomImagery}
-                            className="form-control"
-                            onChange={this.onaddCustomImageryChange}
-                            style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
-                        />
-                    </div>
+                    {this.getCustomImageryCheckbox()}
                     {this.getNextStepButton()}
                 </React.Fragment>;
             } else if ((this.state.selectedWidgetType === "ImageCollection"
@@ -1533,18 +1503,7 @@ class BasicLayout extends React.PureComponent {
                             id="eDate_new_cookedDual"
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="addCustomImagery">Add Asset to institution basemaps</label>
-                        <input
-                            type="checkbox"
-                            name="addCustomImagery"
-                            id="addCustomImagery"
-                            value={this.state.addCustomImagery}
-                            className="form-control"
-                            onChange={this.onaddCustomImageryChange}
-                            style={{width:"auto", display: "inline-block", marginLeft: "8px"}}
-                        />
-                    </div>
+                    {this.getCustomImageryCheckbox()}
                     <button
                         type="button"
                         className="btn btn-secondary"
