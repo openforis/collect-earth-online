@@ -599,7 +599,6 @@ function ProjectManagement(props) {
                         onClick={props.configureGeoDash}
                     />
                 </div>
-                {console.log(["published", "closed"].includes(project.projectDetails.availability))}
                 <div
                     className="d-flex justify-content-between mb-2"
                     style={{ display: ["published", "closed"].includes(project.projectDetails.availability) ? "block" : "none !important" }}
