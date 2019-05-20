@@ -597,7 +597,6 @@ function ProjectManagement(props) {
                         className="btn btn-outline-lightgreen btn-sm col-6"
                         value="Configure Geo-Dash"
                         onClick={props.configureGeoDash}
-                        style={{ display: project.projectDetails.availability === "unpublished" || project.projectDetails.availability === "published" ? "block" : "none" }}
                     />
                 </div>
                 <div className="d-flex justify-content-between mb-2">
