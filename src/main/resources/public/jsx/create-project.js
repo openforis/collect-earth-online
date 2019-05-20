@@ -229,12 +229,33 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: { ...this.state.projectDetails, id: 0 },
+                projectDetails: {
+                    archived: false,
+                    availability: "nonexistent",
+                    baseMapSource: "",
+                    boundary: null,
+                    description: "",
+                    id: 0,
+                    name: "",
+                    numPlots: "",
+                    plotDistribution: "random",
+                    plotShape: "circle",
+                    plotSize: "",
+                    plotSpacing: "",
+                    privacyLevel: "public",
+                    sampleDistribution: "random",
+                    sampleResolution: "",
+                    samplesPerPlot: "",
+                    surveyQuestions: [],
+                    surveyRules: [],
+                },
                 plotList: [],
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
-                hasNoRules: true,
+                hasNoRules: true
             });
+            mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
+            mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
         } else {
             const templateProject = this.state.projectList.find(p => p.id === newTemplateId);
             const newSurveyQuestions = convertSampleValuesToSurveyQuestions(templateProject.sampleValues);
