@@ -9,30 +9,32 @@ import { convertSampleValuesToSurveyQuestions } from "./utils/surveyUtils";
 import { encodeFileAsBase64 } from "./utils/fileUtils.js";
 import { utils } from "../js/utils.js";
 
+const blankProject = {
+    archived: false,
+    availability: "nonexistent",
+    baseMapSource: "",
+    boundary: null,
+    description: "",
+    id: 0,
+    name: "",
+    numPlots: "",
+    plotDistribution: "random",
+    plotShape: "circle",
+    plotSize: "",
+    plotSpacing: "",
+    privacyLevel: "public",
+    sampleDistribution: "random",
+    sampleResolution: "",
+    samplesPerPlot: "",
+    surveyQuestions: [],
+    surveyRules: [],
+};
+
 class Project extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            projectDetails: {
-                archived: false,
-                availability: "nonexistent",
-                baseMapSource: "",
-                boundary: null,
-                description: "",
-                id: 0,
-                name: "",
-                numPlots: "",
-                plotDistribution: "random",
-                plotShape: "circle",
-                plotSize: "",
-                plotSpacing: "",
-                privacyLevel: "public",
-                sampleDistribution: "random",
-                sampleResolution: "",
-                samplesPerPlot: "",
-                surveyQuestions: [],
-                surveyRules: [],
-            },
+            projectDetails: blankProject,
             useTemplatePlots: false,
             useTemplateWidgets: false,
             imageryList: [],
@@ -79,7 +81,7 @@ class Project extends React.Component {
                 this.showTemplateBounds();
             } else {
                 mercator.removeLayerByTitle(this.state.mapConfig, "projectPlots");
-                this.showDragBoxDraw();
+                this.showDragBoxDraw(this.state.projectDetails.id === 0);
             }
         }
 
@@ -229,8 +231,14 @@ class Project extends React.Component {
     setProjectTemplate = (newTemplateId) => {
         if (parseInt(newTemplateId) === 0) {
             this.setState({
-                projectDetails: { ...this.state.projectDetails, id: 0 },
+                projectDetails: blankProject,
                 plotList: [],
+                coordinates: {
+                    lonMin: "",
+                    latMin: "",
+                    lonMax: "",
+                    latMax: "",
+                },
                 useTemplatePlots: false,
                 useTemplateWidgets: false,
                 hasNoRules: true,
@@ -310,7 +318,8 @@ class Project extends React.Component {
             });
     };
 
-    showDragBoxDraw = () => {
+    showDragBoxDraw = (clearBox) => {
+        if (clearBox) mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
         const displayDragBoxBounds = (dragBox) => {
             const extent = dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
             mercator.removeLayerByTitle(this.state.mapConfig, "currentAOI");
