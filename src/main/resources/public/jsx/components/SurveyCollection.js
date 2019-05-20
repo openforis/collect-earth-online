@@ -61,10 +61,10 @@ export class SurveyCollection extends React.Component {
     };
 
     getTopColor = (node) => this.checkAllSubAnswers(node.id)
-                                ? "0px 0px 15px 4px green inset"
+                                ? "0px 0px 6px 4px #3bb9d6 inset"
                                 : node.answered.length > 0
-                                    ? "0px 0px 15px 4px yellow inset"
-                                    : "0px 0px 15px 4px red inset";
+                                    ? "0px 0px 6px 4px yellow inset"
+                                    : "0px 0px 6px 4px red inset";
 
     getNodeById = (id) => this.props.surveyQuestions.find(sq => sq.id === id);
 
@@ -171,10 +171,10 @@ class SurveyQuestionTree extends React.Component {
         const childNodes = this.props.surveyQuestions.filter(surveyNode => surveyNode.parentQuestion === this.props.surveyNode.id);
 
         const shadowColor = this.props.surveyNode.answered.length === 0
-                            ? "0px 0px 15px 4px red inset"
+                            ? "0px 0px 6px 4px red inset"
                             : this.props.surveyNode.answered.length === this.props.surveyNode.visible.length
-                                ? "0px 0px 15px 4px green inset"
-                                : "0px 0px 15px 4px yellow inset";
+                                ? "0px 0px 6px 5px #3bb9d6 inset"
+                                : "0px 0px 6px 4px yellow inset";
         return (
             <fieldset className={"mb-1 justify-content-center text-center"}>
                 <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">

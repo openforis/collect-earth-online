@@ -74,6 +74,7 @@ module.exports = {
         "no-console": 0,
         "no-multi-spaces": 2,
         "no-useless-return": 1,
+        "no-unused-vars": 1,
         "no-var": 2,
         "object-curly-newline": [1, { "multiline": true, "consistent": true }],
         "object-curly-spacing": [1, "always", { "objectsInObjects": false }],
